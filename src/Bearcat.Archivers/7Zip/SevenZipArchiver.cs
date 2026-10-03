@@ -179,7 +179,11 @@ public partial class SevenZipArchiver(
         }
 
         arguments.Add(archiveFullPath);
-        arguments.Add(sourceArchivePath);
+        arguments.Add(
+            options.PackSourceFolderAsRootFolder
+                ? sourceArchivePath
+                : Path.Join(sourceArchivePath, "*")
+        );
 
         return arguments;
     }

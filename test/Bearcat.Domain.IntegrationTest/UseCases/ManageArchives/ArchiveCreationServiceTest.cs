@@ -28,6 +28,8 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchives;
 public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
+    private const string PreviouslyComputedMd5Hash = "0123456789ABCDEF0123456789ABCDEF";
+
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
     private string tempRootPath = null!;
@@ -36,7 +38,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     private Mock<IApplicationConfigurationProvider> configurationProviderMock = null!;
     private string additionalContentSourcePath = null!;
     private RecordingTransferProgressTracker progressTracker = null!;
+    private TransferCancellationRegistry cancellationRegistry = null!;
     private long releaseFolderBytesWhilePacking;
+    private int? userCanceledArchiveId;
     private ArchiveCreationService service = null!;
 
     [SetUp]
@@ -79,6 +83,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             .Returns(2);
 
         progressTracker = new RecordingTransferProgressTracker();
+        cancellationRegistry = new TransferCancellationRegistry();
         service = CreateService(new FileSystemService());
     }
 
@@ -98,6 +103,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             configurationProviderMock.Object,
             new ReleaseFolderEntriesForPackingService(fileSystemService),
             progressTracker,
+            cancellationRegistry,
             new FolderSizeProgressReporter()
         );
     }
@@ -153,7 +159,14 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
             CreatedAt = DateTime.UtcNow,
-            ArchiveFiles = [new ArchiveFile { FullFileName = "existing.part1.rar" }],
+            ArchiveFiles =
+            [
+                new ArchiveFile
+                {
+                    FullFileName = "existing.part1.rar",
+                    Md5Hash = PreviouslyComputedMd5Hash,
+                },
+            ],
             Uploads = [],
             ErrorMessages = [],
         };
@@ -229,6 +242,57 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_AssignableArchiveWasAlreadyUploadedToSameHoster_TracksHashChangeProgressOfExistingArchive()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var archiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [new ArchiveFile { FullFileName = archiveFilePath }],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var previousUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var hashChangeIdentifier = new TransferIdentifier(
+            TransferType.ArchiveHashChange,
+            existingArchive.Id
+        );
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldBe([hashChangeIdentifier]);
+        progressTracker
+            .LastSnapshotPerIdentifier[hashChangeIdentifier]
+            .TransferredBytes.ShouldBe(13);
+        progressTracker.StoppedIdentifiers.ShouldContain(hashChangeIdentifier);
+        progressTracker.GetTrackedIds(TransferType.ArchiveHashChange).ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task ProcessAsync_AssignableArchiveWasOnlyUploadedToDifferentHoster_DoesNotChangeArchiveFiles()
     {
         // Arrange
@@ -251,7 +315,14 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
             CreatedAt = DateTime.UtcNow,
-            ArchiveFiles = [new ArchiveFile { FullFileName = archiveFilePath }],
+            ArchiveFiles =
+            [
+                new ArchiveFile
+                {
+                    FullFileName = archiveFilePath,
+                    Md5Hash = PreviouslyComputedMd5Hash,
+                },
+            ],
             Uploads = [],
             ErrorMessages = [],
         };
@@ -418,7 +489,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     513,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(true, ["new-archive.7z.001"], null));
@@ -515,7 +586,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -552,7 +623,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 ),
             Times.Once
         );
@@ -639,6 +710,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         snapshot.TransferredBytes.ShouldBe(13);
         snapshot.TotalBytes.ShouldBe(13);
         progressTracker.StoppedIdentifiers.ShouldContain(identifier);
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldNotContain(
+            new TransferIdentifier(TransferType.ArchiveHashChange, archive.Id)
+        );
         foreach (var archiveFile in archive.ArchiveFiles)
         {
             var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);
@@ -698,7 +772,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<int>(),
                     "secret",
                     It.IsAny<ArchiveOptions>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .Callback(() =>
@@ -741,7 +815,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => o.UseCompression && o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
@@ -789,7 +863,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     513,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
@@ -843,7 +917,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
@@ -856,6 +930,132 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
 
         result.ArchiveFileSizeMb.ShouldBe(512);
+    }
+
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly, false)]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression, true)]
+    [TestCase(ArchiveRepackagingStrategies.IncrementArchiveFileSize, false)]
+    public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCannotChangeHashInPlace_UsesLastArchiveFileSizePlusOne(
+        string strategy,
+        bool expectedSolidCompression
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(strategy);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await AddPreviousArchiveAsync(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFileSizeMb: 512,
+            md5Hash: "0123456789ABCDEF0123456789ABCDEF"
+        );
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(513);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    513,
+                    "secret",
+                    It.Is<ArchiveOptions>(o =>
+                        o.UseCompression == expectedSolidCompression
+                        && o.UseSolidArchive == expectedSolidCompression
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCannotChangeHashInPlaceWithoutPreviousArchive_UsesConfiguredArchiveFileSize()
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(ArchiveRepackagingStrategies.NonceOnly);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await DbContext.SaveChangesAsync();
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+    }
+
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly)]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression)]
+    public async Task ProcessAsync_CreateNonceFileEnabledAndArchiverCannotChangeHashInPlace_UsesConfiguredArchiveFileSize(
+        string strategy
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(strategy);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        await AddPreviousArchiveAsync(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFileSizeMb: 512,
+            md5Hash: "0123456789ABCDEF0123456789ABCDEF"
+        );
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+    }
+
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly, null)]
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly, "0123456789ABCDEF0123456789ABCDEF")]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression, null)]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression, "0123456789ABCDEF0123456789ABCDEF")]
+    public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCanChangeHashInPlace_UsesConfiguredArchiveFileSize(
+        string strategy,
+        string? previousArchiveFileMd5Hash
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(strategy);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await AddPreviousArchiveAsync(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFileSizeMb: 512,
+            md5Hash: previousArchiveFileMd5Hash
+        );
+        SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
     }
 
     [Test]
@@ -946,7 +1146,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(false, [], ["Could not create archive"]));
@@ -981,7 +1181,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 ),
             Times.Once
         );
@@ -1013,7 +1213,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
@@ -1039,7 +1239,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     512,
                     "secret",
                     It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 ),
             Times.Once
         );
@@ -1424,6 +1624,78 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_CreateNonceFileDisabled_DoesNotWriteNonceFileIntoReleaseFolder()
+    {
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var upload = await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+        ]);
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await DbContext.SaveChangesAsync();
+        List<string> releaseFolderEntriesDuringArchiving = [];
+        List<string> persistedEntryNamesDuringArchiving = [];
+        SetupArchiver(
+            async () =>
+            {
+                releaseFolderEntriesDuringArchiving = GetRelativePathsInReleaseFolder();
+                persistedEntryNamesDuringArchiving =
+                    await LoadPersistedReleaseFolderEntriesCopiedForPackingAsync();
+            },
+            new ArchiveResult(true, ["archive.part1.rar"], null)
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
+
+        releaseFolderEntriesDuringArchiving.ShouldBe(
+            ["movie.mkv", "Mirror.txt"],
+            ignoreOrder: true
+        );
+        persistedEntryNamesDuringArchiving.ShouldBe(["Mirror.txt"]);
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ProcessAsync_PackReleaseFolderAsRootFolderConfigured_PassesOptionToArchiver(
+        bool packReleaseFolderAsRootFolder
+    )
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.PackReleaseFolderAsRootFolder =
+            packReleaseFolderAsRootFolder;
+        await DbContext.SaveChangesAsync();
+        SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    512,
+                    "secret",
+                    It.Is<ArchiveOptions>(o =>
+                        o.PackSourceFolderAsRootFolder == packReleaseFolderAsRootFolder
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_AdditionalContentCollidesWithExistingReleaseFile_FailsWithoutTouchingReleaseFolder()
     {
         // Arrange
@@ -1707,6 +1979,553 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
     }
 
+    [Test]
+    public async Task ProcessAsync_UserCancelsArchiveCreationWhilePacking_DeletesArchiveAndCancelsWaitingUploads()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        SetupArchiverRequestingUserCancellationWhilePacking();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await AssertArchiveWasDeletedAndUploadWasCanceledAsync(upload.Id);
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_UserCancelsArchiveCreationWhileHashingAfterPacking_DeletesArchiveAndCancelsWaitingUploads()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        SetupArchiverWritingVolumes(
+            ("bearcat-release.part1.rar", "first"),
+            ("bearcat-release.part2.rar", "second")
+        );
+        progressTracker.CallbackAfterBeginFile = (identifier, _) =>
+        {
+            if (identifier.Type == TransferType.ArchiveHashing)
+            {
+                cancellationRegistry.RequestCancellation(
+                    new TransferIdentifier(TransferType.ArchiveCreation, identifier.Id)
+                );
+                userCanceledArchiveId = identifier.Id;
+            }
+        };
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await AssertArchiveWasDeletedAndUploadWasCanceledAsync(upload.Id);
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldContain(identifier =>
+            identifier.Type == TransferType.ArchiveHashing
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_HostShutsDownWhilePacking_KeepsArchiveCreatingAndUploadsAssigned()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        using var hostStoppingTokenSource = new CancellationTokenSource();
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    string _,
+                    string _,
+                    string _,
+                    int _,
+                    string? _,
+                    ArchiveOptions _,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    await hostStoppingTokenSource.CancelAsync();
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return new ArchiveResult(true, [], null);
+                }
+            );
+
+        // Act
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            service.ProcessAsync(hostStoppingTokenSource.Token)
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.SingleAsync();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        var notificationCount = await DbContext.Notifications.CountAsync();
+
+        archive.ArchiveState.ShouldBe(ArchiveState.Creating);
+        Directory.Exists(archive.ArchiveFolderPath).ShouldBeTrue();
+        result.ArchiveId.ShouldBe(archive.Id);
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        notificationCount.ShouldBe(0);
+        cancellationRegistry
+            .RequestCancellation(new TransferIdentifier(TransferType.ArchiveCreation, archive.Id))
+            .ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_UserCancelsFirstOfTwoArchiveCreations_CreatesSecondArchiveInSameRun()
+    {
+        // Arrange
+        var canceledUpload = await AddUploadWaitingForArchiveAsync();
+        var createdUpload = await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var archiveCallCount = 0;
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    string _,
+                    string destinationPath,
+                    string _,
+                    int _,
+                    string? _,
+                    ArchiveOptions _,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    archiveCallCount++;
+                    var filePath = Path.Combine(destinationPath, "bearcat-release.part1.rar");
+                    await File.WriteAllTextAsync(filePath, "archive", CancellationToken.None);
+
+                    if (archiveCallCount == 1)
+                    {
+                        await RequestUserCancellationOfArchiveInFolderAsync(destinationPath);
+                        cancellationToken.ThrowIfCancellationRequested();
+                    }
+
+                    return new ArchiveResult(true, [filePath], null);
+                }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var canceledResult = await DbContext.Uploads.SingleAsync(u => u.Id == canceledUpload.Id);
+        var createdResult = await DbContext
+            .Uploads.Include(u => u.Archive)
+            .SingleAsync(u => u.Id == createdUpload.Id);
+
+        archiveCallCount.ShouldBe(2);
+        canceledResult.ArchiveId.ShouldBeNull();
+        canceledResult.UploadState.ShouldBe(UploadState.Canceled);
+        createdResult.Archive.ShouldNotBeNull();
+        createdResult.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        createdResult.UploadState.ShouldBe(UploadState.Pending);
+    }
+
+    [Test]
+    public async Task ProcessAsync_UserCancelsHashChangeOfExistingArchive_KeepsArchiveAndCancelsWaitingUploads()
+    {
+        // Arrange
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, int>>>()
+                )
+            )
+            .Returns(1);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var changedFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        var interruptedFilePath = Path.Combine(existingArchiveFolder, "existing.part2.rar");
+        var untouchedFilePath = Path.Combine(existingArchiveFolder, "existing.part3.rar");
+        await File.WriteAllTextAsync(changedFilePath, "first");
+        await File.WriteAllTextAsync(interruptedFilePath, "second");
+        await File.WriteAllTextAsync(untouchedFilePath, "third");
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles =
+            [
+                new ArchiveFile
+                {
+                    FullFileName = changedFilePath,
+                    Md5Hash = ComputeMd5Hash(changedFilePath),
+                },
+                new ArchiveFile
+                {
+                    FullFileName = interruptedFilePath,
+                    Md5Hash = ComputeMd5Hash(interruptedFilePath),
+                },
+                new ArchiveFile
+                {
+                    FullFileName = untouchedFilePath,
+                    Md5Hash = ComputeMd5Hash(untouchedFilePath),
+                },
+            ],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var previousUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+        var changedFileHashBeforeChange = ComputeMd5Hash(changedFilePath);
+        var untouchedFileHash = ComputeMd5Hash(untouchedFilePath);
+        progressTracker.CallbackAfterBeginFile = (identifier, fileId) =>
+        {
+            if (identifier.Type == TransferType.ArchiveHashChange && fileId == 2)
+            {
+                cancellationRegistry.RequestCancellation(
+                    new TransferIdentifier(TransferType.ArchiveCreation, identifier.Id)
+                );
+            }
+        };
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        var notification = await DbContext.Notifications.SingleAsync(n => n.UploadId == upload.Id);
+        var filesByName = archive.ArchiveFiles.ToDictionary(f => f.FullFileName);
+
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        filesByName[changedFilePath].Md5Hash.ShouldBe(ComputeMd5Hash(changedFilePath));
+        filesByName[changedFilePath].Md5Hash.ShouldNotBe(changedFileHashBeforeChange);
+        filesByName[interruptedFilePath].Md5Hash.ShouldBeNull();
+        filesByName[untouchedFilePath].Md5Hash.ShouldBe(untouchedFileHash);
+        (await File.ReadAllTextAsync(untouchedFilePath)).ShouldBe("third");
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.Canceled);
+        notification.NotificationKind.ShouldBe(NotificationKind.UploadCanceled);
+        cancellationRegistry
+            .RequestCancellation(
+                new TransferIdentifier(TransferType.ArchiveCreation, existingArchive.Id)
+            )
+            .ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_HostShutsDownWhileChangingHashesOfExistingArchive_SavesChangedHashesAndKeepsUploadsWaiting()
+    {
+        // Arrange
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, int>>>()
+                )
+            )
+            .Returns(1);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var changedFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        var interruptedFilePath = Path.Combine(existingArchiveFolder, "existing.part2.rar");
+        var untouchedFilePath = Path.Combine(existingArchiveFolder, "existing.part3.rar");
+        await File.WriteAllTextAsync(changedFilePath, "first");
+        await File.WriteAllTextAsync(interruptedFilePath, "second");
+        await File.WriteAllTextAsync(untouchedFilePath, "third");
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles =
+            [
+                new ArchiveFile
+                {
+                    FullFileName = changedFilePath,
+                    Md5Hash = ComputeMd5Hash(changedFilePath),
+                },
+                new ArchiveFile
+                {
+                    FullFileName = interruptedFilePath,
+                    Md5Hash = ComputeMd5Hash(interruptedFilePath),
+                },
+                new ArchiveFile
+                {
+                    FullFileName = untouchedFilePath,
+                    Md5Hash = ComputeMd5Hash(untouchedFilePath),
+                },
+            ],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var previousUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+        var changedFileHashBeforeChange = ComputeMd5Hash(changedFilePath);
+        var untouchedFileHash = ComputeMd5Hash(untouchedFilePath);
+        using var hostShutdown = new CancellationTokenSource();
+        progressTracker.CallbackAfterBeginFile = (identifier, fileId) =>
+        {
+            if (identifier.Type == TransferType.ArchiveHashChange && fileId == 2)
+            {
+                hostShutdown.Cancel();
+            }
+        };
+
+        // Act
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            service.ProcessAsync(hostShutdown.Token)
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        var filesByName = archive.ArchiveFiles.ToDictionary(f => f.FullFileName);
+
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        filesByName[changedFilePath].Md5Hash.ShouldBe(ComputeMd5Hash(changedFilePath));
+        filesByName[changedFilePath].Md5Hash.ShouldNotBe(changedFileHashBeforeChange);
+        filesByName[interruptedFilePath].Md5Hash.ShouldBeNull();
+        filesByName[untouchedFilePath].Md5Hash.ShouldBe(untouchedFileHash);
+        (await File.ReadAllTextAsync(untouchedFilePath)).ShouldBe("third");
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        (await DbContext.Notifications.AnyAsync(n => n.UploadId == upload.Id)).ShouldBeFalse();
+        cancellationRegistry
+            .RequestCancellation(
+                new TransferIdentifier(TransferType.ArchiveCreation, existingArchive.Id)
+            )
+            .ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_AssignableArchiveHasFileWithoutHash_ChangesHashesBeforeAssigningArchive()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var fileWithoutHashPath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        var fileWithHashPath = Path.Combine(existingArchiveFolder, "existing.part2.rar");
+        await File.WriteAllTextAsync(fileWithoutHashPath, "first");
+        await File.WriteAllTextAsync(fileWithHashPath, "second");
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles =
+            [
+                new ArchiveFile { FullFileName = fileWithoutHashPath },
+                new ArchiveFile
+                {
+                    FullFileName = fileWithHashPath,
+                    Md5Hash = ComputeMd5Hash(fileWithHashPath),
+                },
+            ],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(existingArchive);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);
+            fileBytes[^1].ShouldBe((byte)0);
+            archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(fileBytes)));
+        }
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldContain(
+            new TransferIdentifier(TransferType.ArchiveHashChange, existingArchive.Id)
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_AssignableArchiveHasFileWithoutHashAndArchiverCannotChangeHashInPlace_AssignsArchiveWithoutChangingFiles()
+    {
+        // Arrange
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var fileWithoutHashPath = Path.Combine(existingArchiveFolder, "existing.7z.001");
+        await File.WriteAllTextAsync(fileWithoutHashPath, "first");
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [new ArchiveFile { FullFileName = fileWithoutHashPath }],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(existingArchive);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        (await File.ReadAllTextAsync(fileWithoutHashPath)).ShouldBe("first");
+        archive.ArchiveFiles.Single().Md5Hash.ShouldBeNull();
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldNotContain(
+            new TransferIdentifier(TransferType.ArchiveHashChange, existingArchive.Id)
+        );
+    }
+
+    private void SetupArchiverRequestingUserCancellationWhilePacking()
+    {
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    string _,
+                    string destinationPath,
+                    string _,
+                    int _,
+                    string? _,
+                    ArchiveOptions _,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    await File.WriteAllTextAsync(
+                        Path.Combine(destinationPath, "bearcat-release.part1.rar"),
+                        "partial",
+                        CancellationToken.None
+                    );
+                    await RequestUserCancellationOfArchiveInFolderAsync(destinationPath);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return new ArchiveResult(true, [], null);
+                }
+            );
+    }
+
+    private async Task RequestUserCancellationOfArchiveInFolderAsync(string archiveFolderPath)
+    {
+        var archiveId = await DbContext
+            .Archives.Where(a => a.ArchiveFolderPath == archiveFolderPath)
+            .Select(a => a.Id)
+            .SingleAsync();
+
+        cancellationRegistry
+            .RequestCancellation(new TransferIdentifier(TransferType.ArchiveCreation, archiveId))
+            .ShouldBeTrue();
+        userCanceledArchiveId = archiveId;
+    }
+
+    private async Task AssertArchiveWasDeletedAndUploadWasCanceledAsync(int uploadId)
+    {
+        DbContext.ChangeTracker.Clear();
+        var archiveExists = await DbContext.Archives.AnyAsync();
+        var archiveFileExists = await DbContext.ArchiveFiles.AnyAsync();
+        var upload = await DbContext.Uploads.SingleAsync(u => u.Id == uploadId);
+        var notification = await DbContext.Notifications.SingleAsync(n => n.UploadId == uploadId);
+
+        archiveExists.ShouldBeFalse();
+        archiveFileExists.ShouldBeFalse();
+        Directory.GetFileSystemEntries(archiveFilesBasePath).ShouldBeEmpty();
+        upload.ArchiveId.ShouldBeNull();
+        upload.UploadState.ShouldBe(UploadState.Canceled);
+        notification.NotificationKind.ShouldBe(NotificationKind.UploadCanceled);
+        cancellationRegistry
+            .RequestCancellation(
+                new TransferIdentifier(TransferType.ArchiveCreation, userCanceledArchiveId!.Value)
+            )
+            .ShouldBeFalse();
+    }
+
+    private static string ComputeMd5Hash(string filePath)
+    {
+        return Convert.ToHexString(MD5.HashData(File.ReadAllBytes(filePath)));
+    }
+
     private async Task CreateReleaseFolderEntriesLeftBehindByCrashAsync()
     {
         await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
@@ -1811,6 +2630,44 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     return new ArchiveResult(true, createdFileNames, null);
                 }
             );
+    }
+
+    private void SetupArchiveRepackagingStrategy(string strategy)
+    {
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, string?>>>()
+                )
+            )
+            .Returns(strategy);
+    }
+
+    private async Task AddPreviousArchiveAsync(
+        int archiveConfigId,
+        int archiveFileSizeMb,
+        string? md5Hash
+    )
+    {
+        DbContext.Archives.Add(
+            new Archive
+            {
+                ArchiveConfigId = archiveConfigId,
+                ArchiveFolderPath = Directory
+                    .CreateDirectory(Path.Combine(archiveFilesBasePath, "previous"))
+                    .FullName,
+                ArchiveState = ArchiveState.MissingFiles,
+                ArchiveFileSizeMb = archiveFileSizeMb,
+                CreatedAt = DateTime.UtcNow,
+                ArchiveFiles =
+                [
+                    new ArchiveFile { FullFileName = "previous.part1.rar", Md5Hash = md5Hash },
+                ],
+                Uploads = [],
+                ErrorMessages = [],
+            }
+        );
+        await DbContext.SaveChangesAsync();
     }
 
     private List<string> GetRelativePathsInReleaseFolder()

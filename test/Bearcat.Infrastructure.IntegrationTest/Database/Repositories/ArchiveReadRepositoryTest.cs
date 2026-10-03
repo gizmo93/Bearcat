@@ -82,9 +82,142 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldBeNull();
     }
 
-    private async Task<ArchiveSeed> AddArchivesAsync()
+    [Test]
+    public async Task GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync_EmptyArchiveIds_ReturnsCreatingAndRestoringArchives()
     {
-        var archiveConfig = new ArchiveConfig
+        // Arrange
+        var archives = await AddArchivesInAllStatesAsync();
+
+        // Act
+        var result = await repository.GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
+            [],
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(archive => archive.ArchiveId)
+            .ShouldBe(
+                [archives.CreatingArchive.Id, archives.RestoringArchive.Id],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync_CreatedArchiveIdPassed_ReturnsThisCreatedArchiveAdditionally()
+    {
+        // Arrange
+        var archives = await AddArchivesInAllStatesAsync();
+
+        // Act
+        var result = await repository.GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
+            [archives.CreatedArchiveWithPassedId.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(archive => archive.ArchiveId)
+            .ShouldBe(
+                [
+                    archives.CreatingArchive.Id,
+                    archives.RestoringArchive.Id,
+                    archives.CreatedArchiveWithPassedId.Id,
+                ],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync_CreatingArchive_ReturnsProjectedReleaseAndArchiveConfigFields()
+    {
+        // Arrange
+        var archives = await AddArchivesInAllStatesAsync();
+
+        // Act
+        var result = await repository.GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
+            [archives.CreatedArchiveWithPassedId.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Single(archive => archive.ArchiveId == archives.CreatingArchive.Id)
+            .ShouldBe(
+                new RunningArchiveReadModel(
+                    archives.CreatingArchive.Id,
+                    archives.ReleaseId,
+                    "Bearcat.Release.2026-GRP",
+                    "Main archive",
+                    "RarArchiver",
+                    ArchiveState.Creating
+                )
+            );
+        result
+            .Single(archive => archive.ArchiveId == archives.CreatedArchiveWithPassedId.Id)
+            .ArchiveState.ShouldBe(ArchiveState.Created);
+    }
+
+    private async Task<ArchivesInAllStates> AddArchivesInAllStatesAsync()
+    {
+        var archiveConfig = CreateArchiveConfig();
+        var createdAt = new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc);
+        var creatingArchive = CreateArchive(archiveConfig, "/tmp/archives/creating", createdAt, []);
+        creatingArchive.ArchiveState = ArchiveState.Creating;
+        var restoringArchive = CreateArchive(
+            archiveConfig,
+            "/tmp/archives/restoring",
+            createdAt,
+            []
+        );
+        restoringArchive.ArchiveState = ArchiveState.Restoring;
+        var createdArchiveWithPassedId = CreateArchive(
+            archiveConfig,
+            "/tmp/archives/created-passed",
+            createdAt,
+            []
+        );
+        var createdArchive = CreateArchive(archiveConfig, "/tmp/archives/created", createdAt, []);
+        var creationFailedArchive = CreateArchive(
+            archiveConfig,
+            "/tmp/archives/creation-failed",
+            createdAt,
+            []
+        );
+        creationFailedArchive.ArchiveState = ArchiveState.CreationFailed;
+        var missingFilesArchive = CreateArchive(
+            archiveConfig,
+            "/tmp/archives/missing-files",
+            createdAt,
+            []
+        );
+        missingFilesArchive.ArchiveState = ArchiveState.MissingFiles;
+        var deletedArchive = CreateArchive(archiveConfig, "/tmp/archives/deleted", createdAt, []);
+        deletedArchive.ArchiveState = ArchiveState.Deleted;
+
+        DbContext.AddRange(
+            creatingArchive,
+            restoringArchive,
+            createdArchiveWithPassedId,
+            createdArchive,
+            creationFailedArchive,
+            missingFilesArchive,
+            deletedArchive
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return new ArchivesInAllStates(
+            archiveConfig.ReleaseId,
+            creatingArchive,
+            restoringArchive,
+            createdArchiveWithPassedId
+        );
+    }
+
+    private static ArchiveConfig CreateArchiveConfig()
+    {
+        return new ArchiveConfig
         {
             Release = new Release
             {
@@ -104,6 +237,11 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
             ArchiverName = "RarArchiver",
             ArchiveFileSizeMb = 100,
         };
+    }
+
+    private async Task<ArchiveSeed> AddArchivesAsync()
+    {
+        var archiveConfig = CreateArchiveConfig();
         var firstArchive = CreateArchive(
             archiveConfig,
             "/tmp/archives/first",
@@ -151,4 +289,11 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     private sealed record ArchiveSeed(Archive SecondArchive, Archive EmptyArchive);
+
+    private sealed record ArchivesInAllStates(
+        int ReleaseId,
+        Archive CreatingArchive,
+        Archive RestoringArchive,
+        Archive CreatedArchiveWithPassedId
+    );
 }

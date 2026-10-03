@@ -11,6 +11,8 @@ public record ArchiveConfigTemplateReadModel(
     string? ArchivePassword,
     int ArchiveFileSizeMb,
     bool UseReleaseNameAsArchiveName,
+    bool PackReleaseFolderAsRootFolder,
+    bool CreateNonceFile,
     int UploadConfigTemplateCount,
     IReadOnlyList<AssignedAdditionalArchiveContentReadModel> AdditionalArchiveContents
 );

@@ -209,6 +209,8 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
         archiveConfig.ArchiverName.ShouldBe("rar");
         archiveConfig.ArchivePassword.ShouldBe("archive-secret");
         archiveConfig.ArchiveFileSizeMb.ShouldBe(1024);
+        archiveConfig.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        archiveConfig.CreateNonceFile.ShouldBeFalse();
         archiveConfig.ArchiveNamePrefix.ShouldBe(createdRelease.Name);
 
         var uploadConfig = createdRelease.UploadConfigs.Single();
@@ -743,6 +745,8 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
                     ArchivePassword = "archive-secret",
                     ArchiveFileSizeMb = 1024,
                     UseReleaseNameAsArchiveName = true,
+                    PackReleaseFolderAsRootFolder = false,
+                    CreateNonceFile = false,
                 },
             ],
         };

@@ -81,6 +81,14 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
         );
     }
 
+    public IReadOnlyList<int> GetTrackedIds(TransferType type)
+    {
+        return states
+            .Keys.Where(identifier => identifier.Type == type)
+            .Select(identifier => identifier.Id)
+            .ToList();
+    }
+
     private string? GetProxyServerNameOfCurrentScope()
     {
         var scopeState = ProxyCategoryScope.Current;

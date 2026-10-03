@@ -56,4 +56,9 @@ public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
     {
         return inner.Get(identifier);
     }
+
+    public IReadOnlyList<int> GetTrackedIds(TransferType type)
+    {
+        return inner.GetTrackedIds(type);
+    }
 }

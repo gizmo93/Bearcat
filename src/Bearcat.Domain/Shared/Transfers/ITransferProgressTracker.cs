@@ -17,4 +17,6 @@ public interface ITransferProgressTracker
     void StopTracking(TransferIdentifier identifier);
 
     TransferProgressSnapshot? Get(TransferIdentifier identifier);
+
+    IReadOnlyList<int> GetTrackedIds(TransferType type);
 }

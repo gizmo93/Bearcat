@@ -1241,6 +1241,13 @@
   <data name="HashingFileStatus" xml:space="preserve"><value>Hashing progress per file</value></data>
   <data name="ToggleArchiveDetails" xml:space="preserve"><value>Toggle archive details</value></data>
   <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archive #{0} for {1}</value></data>
+  <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packing</value></data>
+  <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 Creating MD5 hashes</value></data>
+  <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>Changing MD5 hashes of existing archive</value></data>
+  <data name="CancelArchiveCreation" xml:space="preserve"><value>Cancel archive creation</value></data>
+  <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Cancel the creation of archive #{0}? A new archive is deleted, an existing archive is kept. The uploads waiting for this archive are canceled.</value></data>
+  <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Cancellation requested for the creation of archive #{0}.</value></data>
+  <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>The creation of archive #{0} already finished.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>
@@ -1505,4 +1512,10 @@
   <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Release information, NFO files and covers from NFO databases.</value></data>
   <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Media databases</value></data>
   <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadata lookups for movies, series and games.</value></data>
+  <data name="PackReleaseFolderAsRootFolder" xml:space="preserve"><value>Pack release folder as root folder</value></data>
+  <data name="PackReleaseFolderAsRootFolderHelp" xml:space="preserve"><value>When enabled, the archive contains one folder named after the release folder. When disabled, the contents of the release folder are packed directly at the top level of the archive. Only affects newly created archives.</value></data>
+  <data name="CreateNonceFile" xml:space="preserve"><value>Create nonce file</value></data>
+  <data name="CreateNonceFileHelp" xml:space="preserve"><value>Writes __nonce.txt with a random value into every new archive so repacked archives get different hashes. Only affects newly created archives.</value></data>
+  <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Without release root folder</value></data>
+  <data name="WithoutNonceFile" xml:space="preserve"><value>Without nonce file</value></data>
 </root>

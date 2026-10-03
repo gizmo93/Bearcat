@@ -195,10 +195,16 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<bool>("CreateNonceFile")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("PackReleaseFolderAsRootFolder")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("ReleaseId")
                         .HasColumnType("integer");
@@ -235,10 +241,16 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<bool>("CreateNonceFile")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("PackReleaseFolderAsRootFolder")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("integer");

@@ -87,6 +87,8 @@ public class ReleaseFromFolderCreationService(
                         ArchiverName = template.ArchiverName,
                         ArchivePassword = template.ArchivePassword,
                         ArchiveFileSizeMb = template.ArchiveFileSizeMb,
+                        PackReleaseFolderAsRootFolder = template.PackReleaseFolderAsRootFolder,
+                        CreateNonceFile = template.CreateNonceFile,
                         ArchiveNamePrefix = template.UseReleaseNameAsArchiveName
                             ? releaseName
                             : null,

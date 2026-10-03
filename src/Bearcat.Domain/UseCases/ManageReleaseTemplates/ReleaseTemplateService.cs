@@ -184,6 +184,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                         ArchivePassword = config.ArchivePassword,
                         ArchiveFileSizeMb = config.ArchiveFileSizeMb,
                         UseReleaseNameAsArchiveName = config.ArchiveNamePrefix == release.Name,
+                        PackReleaseFolderAsRootFolder = config.PackReleaseFolderAsRootFolder,
+                        CreateNonceFile = config.CreateNonceFile,
                         AdditionalArchiveContents = config.AdditionalArchiveContents.ToList(),
                     },
                 })
@@ -265,6 +267,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string? archivePassword,
         int archiveFileSizeMb,
         bool useReleaseNameAsArchiveName,
+        bool packReleaseFolderAsRootFolder,
+        bool createNonceFile,
         IReadOnlyList<int> additionalArchiveContentIds,
         CancellationToken cancellationToken = default
     )
@@ -299,6 +303,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             ArchivePassword = CleanOptional(archivePassword),
             ArchiveFileSizeMb = archiveFileSizeMb,
             UseReleaseNameAsArchiveName = useReleaseNameAsArchiveName,
+            PackReleaseFolderAsRootFolder = packReleaseFolderAsRootFolder,
+            CreateNonceFile = createNonceFile,
             AdditionalArchiveContents = additionalArchiveContents.ToList(),
         };
 
@@ -316,6 +322,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string? archivePassword,
         int archiveFileSizeMb,
         bool useReleaseNameAsArchiveName,
+        bool packReleaseFolderAsRootFolder,
+        bool createNonceFile,
         IReadOnlyList<int> additionalArchiveContentIds,
         CancellationToken cancellationToken = default
     )
@@ -347,6 +355,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         archiveConfigTemplate.ArchivePassword = CleanOptional(archivePassword);
         archiveConfigTemplate.ArchiveFileSizeMb = archiveFileSizeMb;
         archiveConfigTemplate.UseReleaseNameAsArchiveName = useReleaseNameAsArchiveName;
+        archiveConfigTemplate.PackReleaseFolderAsRootFolder = packReleaseFolderAsRootFolder;
+        archiveConfigTemplate.CreateNonceFile = createNonceFile;
         archiveConfigTemplate.AdditionalArchiveContents.Clear();
         archiveConfigTemplate.AdditionalArchiveContents.AddRange(additionalArchiveContents);
 

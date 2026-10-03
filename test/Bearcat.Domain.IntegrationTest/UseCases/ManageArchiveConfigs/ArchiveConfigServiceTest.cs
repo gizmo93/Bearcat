@@ -45,6 +45,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             "secret",
             "Main archive",
             512,
+            false,
+            false,
             []
         );
 
@@ -61,6 +63,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         archiveConfig.ArchivePassword.ShouldBe("secret");
         archiveConfig.Name.ShouldBe("Main archive");
         archiveConfig.ArchiveFileSizeMb.ShouldBe(512);
+        archiveConfig.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        archiveConfig.CreateNonceFile.ShouldBeFalse();
     }
 
     [Test]
@@ -78,6 +82,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Main archive",
             null,
+            true,
+            true,
             []
         );
 
@@ -150,6 +156,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             "new-secret",
             "Updated archive",
             256,
+            false,
+            false,
             []
         );
 
@@ -165,6 +173,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         result.ArchivePassword.ShouldBe("new-secret");
         result.Name.ShouldBe("Updated archive");
         result.ArchiveFileSizeMb.ShouldBe(256);
+        result.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        result.CreateNonceFile.ShouldBeFalse();
     }
 
     [Test]
@@ -181,6 +191,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Updated archive",
             null,
+            true,
+            true,
             []
         );
 
@@ -207,6 +219,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
                 "new-secret",
                 "Updated archive",
                 256,
+                true,
+                true,
                 []
             )
         );
@@ -231,6 +245,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
                 "new-secret",
                 "Updated archive",
                 256,
+                true,
+                true,
                 []
             )
         );
@@ -255,6 +271,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Main archive",
             512,
+            true,
+            true,
             additionalArchiveContents.Select(content => content.Id).ToList()
         );
 
@@ -288,6 +306,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Main archive",
             512,
+            true,
+            true,
             collidingAdditionalArchiveContents.Select(content => content.Id).ToList()
         );
 
@@ -319,6 +339,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Main archive",
             512,
+            true,
+            true,
             [additionalArchiveContents[1].Id]
         );
 
@@ -356,6 +378,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Main archive",
             512,
+            true,
+            true,
             []
         );
 
@@ -390,6 +414,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             null,
             "Updated archive",
             256,
+            true,
+            true,
             collidingAdditionalArchiveContents.Select(content => content.Id).ToList()
         );
 

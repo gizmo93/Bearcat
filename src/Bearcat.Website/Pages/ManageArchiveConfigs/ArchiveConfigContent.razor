@@ -39,6 +39,16 @@
                 <p class="text-xs text-muted-foreground">@L["ArchiveFilesBasePath"]</p>
                 <p class="truncate text-sm">@Config.ArchiveFilesBasePath</p>
             </div>
+
+            <div class="space-y-2">
+                <p class="text-xs text-muted-foreground">@L["PackReleaseFolderAsRootFolder"]</p>
+                <p class="text-sm">@(Config.PackReleaseFolderAsRootFolder ? L["Yes"] : L["No"])</p>
+            </div>
+
+            <div class="space-y-2">
+                <p class="text-xs text-muted-foreground">@L["CreateNonceFile"]</p>
+                <p class="text-sm">@(Config.CreateNonceFile ? L["Yes"] : L["No"])</p>
+            </div>
         </div>
     }
 

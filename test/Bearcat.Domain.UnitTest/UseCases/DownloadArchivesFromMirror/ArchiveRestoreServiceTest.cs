@@ -865,6 +865,11 @@ public class ArchiveRestoreServiceTest
         {
             return inner.Get(identifier);
         }
+
+        public IReadOnlyList<int> GetTrackedIds(TransferType type)
+        {
+            return inner.GetTrackedIds(type);
+        }
     }
 
     private static UploadedFile CreateUploadedFile(int uploadId, int archiveFileId, string link)

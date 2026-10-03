@@ -15,4 +15,8 @@ public interface IUploadReadRepository
         int uploadId,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<RunningUploadReadModel>> GetRunningUploadsAsync(
+        CancellationToken cancellationToken = default
+    );
 }

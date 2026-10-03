@@ -50,7 +50,11 @@ public class RarArchiverTest
             "archive",
             1,
             null,
-            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             CancellationToken.None
         );
 
@@ -80,7 +84,11 @@ public class RarArchiverTest
             "archive",
             1,
             null,
-            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             CancellationToken.None
         );
 
@@ -103,6 +111,87 @@ public class RarArchiverTest
     }
 
     [Test]
+    public async Task ArchiveAsync_PackSourceFolderAsRootFolderEnabled_ExtractsFolderStructureIntoSourceFolderName()
+    {
+        // Arrange
+        await ArchiveExtractionTestHelper.CreateNestedFoldersWithHiddenFilesAndEmptyFoldersAsync(
+            sourceFolderPath
+        );
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath + Path.DirectorySeparatorChar,
+            destinationPath,
+            "archive",
+            1,
+            null,
+            new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
+            CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+
+        // Act
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            CancellationToken.None
+        );
+
+        // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
+        Directory.GetFileSystemEntries(extractPath).Select(Path.GetFileName).ShouldBe(["source"]);
+        ArchiveExtractionTestHelper.ExtractedFolderShouldMatchSourceFolderStructure(
+            sourceFolderPath,
+            Path.Combine(extractPath, "source")
+        );
+    }
+
+    [Test]
+    public async Task ArchiveAsync_PackSourceFolderAsRootFolderDisabled_ExtractsFolderStructureWithoutSourceFolderName()
+    {
+        // Arrange
+        await ArchiveExtractionTestHelper.CreateNestedFoldersWithHiddenFilesAndEmptyFoldersAsync(
+            sourceFolderPath
+        );
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath + Path.DirectorySeparatorChar,
+            destinationPath,
+            "archive",
+            1,
+            null,
+            new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: false
+            ),
+            CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+
+        // Act
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            CancellationToken.None
+        );
+
+        // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
+        ArchiveExtractionTestHelper.ExtractedFolderShouldMatchSourceFolderStructure(
+            sourceFolderPath,
+            extractPath
+        );
+    }
+
+    [Test]
     public async Task ArchiveAsync_CreatedFilesHaveTrailingNullByteAdded_CanStillBeExtracted()
     {
         // Arrange
@@ -117,7 +206,11 @@ public class RarArchiverTest
             "archive",
             1,
             null,
-            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             CancellationToken.None
         );
 
@@ -152,7 +245,11 @@ public class RarArchiverTest
             archiveNamePrefix: "archive",
             targetFileSizeMb: 1,
             password: null,
-            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             cancellationToken: CancellationToken.None
         );
 
@@ -189,7 +286,11 @@ public class RarArchiverTest
             "archive",
             1,
             null,
-            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             CancellationToken.None
         );
 
@@ -460,7 +561,11 @@ public class RarArchiverTest
             archiveNamePrefix: "archive",
             targetFileSizeMb: 1,
             password: null,
-            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             cancellationToken: CancellationToken.None
         );
         archiveResult.IsSuccess.ShouldBeTrue();
@@ -501,7 +606,11 @@ public class RarArchiverTest
             archiveNamePrefix: "archive",
             targetFileSizeMb: 1,
             password: null,
-            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             cancellationToken: CancellationToken.None
         );
         archiveResult.IsSuccess.ShouldBeTrue();
@@ -545,7 +654,11 @@ public class RarArchiverTest
             archiveNamePrefix: "archive",
             targetFileSizeMb: 1,
             password: null,
-            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             cancellationToken: CancellationToken.None
         );
         archiveResult.IsSuccess.ShouldBeTrue();
@@ -577,7 +690,11 @@ public class RarArchiverTest
             archiveNamePrefix: "archive",
             targetFileSizeMb: 1,
             password: "secret",
-            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true
+            ),
             cancellationToken: CancellationToken.None
         );
         archiveResult.IsSuccess.ShouldBeTrue();

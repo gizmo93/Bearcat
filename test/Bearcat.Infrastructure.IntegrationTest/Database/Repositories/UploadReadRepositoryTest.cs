@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -215,6 +216,186 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetRunningUploadsAsync_UploadsInAllStates_ReturnsPendingUploadingAndCancellationRequestedUploads()
+    {
+        // Arrange
+        var uploads = await AddRunningUploadsAsync();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        result
+            .Select(item => item.UploadId)
+            .ShouldBe(
+                [
+                    uploads.PendingUploadWithoutArchive.Id,
+                    uploads.UploadingUpload.Id,
+                    uploads.CancellationRequestedUpload.Id,
+                ],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task GetRunningUploadsAsync_UploadingUploadWithArchive_ReturnsProjectedFieldsAndArchiveFilesWithOwnUploadedFileState()
+    {
+        // Arrange
+        var uploads = await AddRunningUploadsAsync();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        var uploadingUpload = result.Single(item => item.UploadId == uploads.UploadingUpload.Id);
+        uploadingUpload.ReleaseId.ShouldBe(uploads.ReleaseId);
+        uploadingUpload.ReleaseName.ShouldBe("Bearcat.Running.2026-GRP");
+        uploadingUpload.UploadConfigName.ShouldBe("Running upload");
+        uploadingUpload.HosterRegistrationName.ShouldBe("Running hoster");
+        uploadingUpload.UploadState.ShouldBe(UploadState.Uploading);
+        uploadingUpload.ArchiveFiles.ShouldBe([
+            new RunningUploadReadModel.ArchiveFileReadModel(
+                "running.part1.rar",
+                OnlineState.Online
+            ),
+            new RunningUploadReadModel.ArchiveFileReadModel(
+                "running.part2.rar",
+                UploadedFileOnlineState: null
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetRunningUploadsAsync_PendingUploadWithoutArchive_ReturnsEmptyArchiveFiles()
+    {
+        // Arrange
+        var uploads = await AddRunningUploadsAsync();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        var pendingUpload = result.Single(item =>
+            item.UploadId == uploads.PendingUploadWithoutArchive.Id
+        );
+        pendingUpload.UploadState.ShouldBe(UploadState.Pending);
+        pendingUpload.ArchiveFiles.ShouldBeEmpty();
+    }
+
+    private async Task<RunningUploads> AddRunningUploadsAsync()
+    {
+        var hoster = CreateHosterRegistration("Running hoster");
+        var release = CreateRelease("Bearcat.Running.2026-GRP");
+        var archiveConfig = CreateArchiveConfig(release);
+        var uploadConfig = CreateUploadConfig(release, archiveConfig, hoster, "Running upload");
+        var firstArchiveFile = new ArchiveFile { FullFileName = "running.part1.rar" };
+        var secondArchiveFile = new ArchiveFile { FullFileName = "running.part2.rar" };
+        var archive = new Archive
+        {
+            ArchiveConfig = archiveConfig,
+            ArchiveFolderPath = "/tmp/archives/running",
+            CreatedAt = Midnight,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 100,
+            ArchiveFiles = [secondArchiveFile, firstArchiveFile],
+        };
+
+        DbContext.AddRange(uploadConfig, archive);
+        await DbContext.SaveChangesAsync();
+
+        await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight,
+            uploadedAt: Midnight,
+            UploadState.Completed,
+            OnlineState.Offline,
+            upload =>
+            {
+                upload.Archive = archive;
+                upload.UploadedFiles =
+                [
+                    CreateUploadedFileOfArchiveFile(secondArchiveFile, OnlineState.Offline),
+                ];
+            }
+        );
+        var uploadingUpload = await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddSeconds(1),
+            uploadedAt: null,
+            UploadState.Uploading,
+            OnlineState.Unknown,
+            upload =>
+            {
+                upload.Archive = archive;
+                upload.UploadedFiles =
+                [
+                    CreateUploadedFileOfArchiveFile(firstArchiveFile, OnlineState.Online),
+                ];
+            }
+        );
+        var pendingUploadWithoutArchive = await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddSeconds(2),
+            uploadedAt: null,
+            UploadState.Pending,
+            OnlineState.Unknown
+        );
+        var cancellationRequestedUpload = await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddSeconds(3),
+            uploadedAt: null,
+            UploadState.CancellationRequested,
+            OnlineState.Unknown,
+            upload => upload.Archive = archive
+        );
+        await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddSeconds(4),
+            uploadedAt: null,
+            UploadState.WaitingForArchive,
+            OnlineState.Unknown
+        );
+        await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddSeconds(5),
+            uploadedAt: null,
+            UploadState.Failed,
+            OnlineState.Unknown,
+            upload => upload.Archive = archive
+        );
+        await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddSeconds(6),
+            uploadedAt: null,
+            UploadState.Canceled,
+            OnlineState.Unknown,
+            upload => upload.Archive = archive
+        );
+        DbContext.ChangeTracker.Clear();
+
+        return new RunningUploads(
+            release.Id,
+            uploadingUpload,
+            pendingUploadWithoutArchive,
+            cancellationRequestedUpload
+        );
+    }
+
+    private static UploadedFile CreateUploadedFileOfArchiveFile(
+        ArchiveFile archiveFile,
+        OnlineState onlineState
+    )
+    {
+        return new UploadedFile
+        {
+            ArchiveFile = archiveFile,
+            HosterFileLink = $"https://hoster.test/{archiveFile.FullFileName}",
+            OnlineState = onlineState,
+            CreatedAt = Midnight,
+        };
     }
 
     private async Task<SearchUploads> AddSearchUploadsAsync()
@@ -435,5 +616,12 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         Upload UploadedJustAfterMidnight,
         Upload PendingUpload,
         Upload LatestUploadOfSecondHoster
+    );
+
+    private sealed record RunningUploads(
+        int ReleaseId,
+        Upload UploadingUpload,
+        Upload PendingUploadWithoutArchive,
+        Upload CancellationRequestedUpload
     );
 }

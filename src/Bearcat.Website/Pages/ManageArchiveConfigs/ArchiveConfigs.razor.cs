@@ -215,6 +215,8 @@ public partial class ArchiveConfigs(
                 ArchiveNamePrefix = config.ArchiveNamePrefix,
                 ArchivePassword = config.ArchivePassword,
                 ArchiveFileSizeMb = config.ArchiveFileSizeMb,
+                PackReleaseFolderAsRootFolder = config.PackReleaseFolderAsRootFolder,
+                CreateNonceFile = config.CreateNonceFile,
                 Name = config.Name,
                 AdditionalArchiveContentIds = config
                     .AdditionalArchiveContents.Select(content => content.AdditionalArchiveContentId)
