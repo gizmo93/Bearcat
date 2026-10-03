@@ -98,6 +98,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 "archive-secret",
                 1024,
                 true,
+                false,
+                false,
                 [],
                 CancellationToken.None
             )
@@ -136,6 +138,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         archiveConfigTemplate.ArchiverName.ShouldBe("rar");
         archiveConfigTemplate.ArchivePassword.ShouldBe("archive-secret");
         archiveConfigTemplate.ArchiveFileSizeMb.ShouldBe(1024);
+        archiveConfigTemplate.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        archiveConfigTemplate.CreateNonceFile.ShouldBeFalse();
         archiveConfigTemplate.UseReleaseNameAsArchiveName.ShouldBeTrue();
 
         var uploadConfigTemplate = template.UploadConfigTemplates.Single();
@@ -232,6 +236,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             " ",
             2048,
             false,
+            false,
+            false,
             [],
             CancellationToken.None
         );
@@ -245,6 +251,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         result.ArchivePassword.ShouldBeNull();
         result.ArchiveFileSizeMb.ShouldBe(2048);
         result.UseReleaseNameAsArchiveName.ShouldBeFalse();
+        result.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        result.CreateNonceFile.ShouldBeFalse();
     }
 
     [Test]
@@ -261,6 +269,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 "rar",
                 "archive-secret",
                 1024,
+                true,
+                true,
                 true,
                 [],
                 CancellationToken.None
@@ -303,6 +313,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 "archive-secret",
                 1024,
                 true,
+                true,
+                true,
                 [],
                 CancellationToken.None
             )
@@ -337,6 +349,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 "rar",
                 "archive-secret",
                 1024,
+                true,
+                true,
                 true,
                 [],
                 CancellationToken.None
@@ -425,6 +439,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 null,
                 2048,
                 false,
+                true,
+                true,
                 [],
                 CancellationToken.None
             )
@@ -551,6 +567,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         archiveConfigTemplate.ArchivePassword.ShouldBe("archive-secret");
         archiveConfigTemplate.ArchiveFileSizeMb.ShouldBe(1024);
         archiveConfigTemplate.UseReleaseNameAsArchiveName.ShouldBeTrue();
+        archiveConfigTemplate.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        archiveConfigTemplate.CreateNonceFile.ShouldBeFalse();
 
         var uploadConfigTemplate = template.UploadConfigTemplates.Single();
         uploadConfigTemplate.Name.ShouldBeNull();
@@ -611,6 +629,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             null,
             1024,
             true,
+            true,
+            true,
             additionalArchiveContents.Select(content => content.Id).ToList(),
             CancellationToken.None
         );
@@ -646,6 +666,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             null,
             1024,
             true,
+            true,
+            true,
             collidingAdditionalArchiveContents.Select(content => content.Id).ToList(),
             CancellationToken.None
         );
@@ -680,6 +702,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             null,
             2048,
             false,
+            true,
+            true,
             additionalArchiveContents.Select(content => content.Id).ToList(),
             CancellationToken.None
         );
@@ -715,6 +739,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             "rar",
             null,
             1024,
+            true,
+            true,
             true,
             [additionalArchiveContents[1].Id],
             CancellationToken.None
@@ -756,6 +782,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             null,
             1024,
             true,
+            true,
+            true,
             [],
             CancellationToken.None
         );
@@ -791,6 +819,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             null,
             2048,
             false,
+            true,
+            true,
             collidingAdditionalArchiveContents.Select(content => content.Id).ToList(),
             CancellationToken.None
         );
@@ -965,6 +995,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 "rar",
                 "archive-secret",
                 1024,
+                true,
+                true,
                 true,
                 [],
                 CancellationToken.None
@@ -1326,6 +1358,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                     ArchiveNamePrefix = "Bearcat.Release.001",
                     ArchivePassword = "archive-secret",
                     ArchiveFileSizeMb = 1024,
+                    PackReleaseFolderAsRootFolder = false,
+                    CreateNonceFile = false,
                 },
             ],
         };

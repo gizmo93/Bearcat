@@ -584,6 +584,51 @@ public class TransferProgressTrackerTest
         snapshot.Files[3].ProxyServerName.ShouldBeNull();
     }
 
+    [Test]
+    public void GetTrackedIds_TransfersOfDifferentTypesTracked_ReturnsOnlyIdsOfRequestedType()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 3), []);
+        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 7), []);
+        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashing, 5), []);
+
+        // Act
+        var trackedIds = tracker.GetTrackedIds(TransferType.ArchiveHashChange);
+
+        // Assert
+        trackedIds.ShouldBe([3, 7], ignoreOrder: true);
+    }
+
+    [Test]
+    public void GetTrackedIds_TrackingStopped_DoesNotReturnStoppedId()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 3), []);
+        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 7), []);
+        tracker.StopTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 3));
+
+        // Act
+        var trackedIds = tracker.GetTrackedIds(TransferType.ArchiveHashChange);
+
+        // Assert
+        trackedIds.ShouldBe([7]);
+    }
+
+    [Test]
+    public void GetTrackedIds_NothingTracked_ReturnsEmptyList()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+
+        // Act
+        var trackedIds = tracker.GetTrackedIds(TransferType.ArchiveHashChange);
+
+        // Assert
+        trackedIds.ShouldBeEmpty();
+    }
+
     private static ResolvedProxyServer CreateProxyServer(int id, string name)
     {
         return new ResolvedProxyServer(

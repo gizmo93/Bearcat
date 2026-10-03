@@ -15,4 +15,11 @@ public interface IArchiveReadRepository
         ArchiveSearchQuery query,
         CancellationToken cancellationToken = default
     );
+
+    Task<
+        IReadOnlyList<RunningArchiveReadModel>
+    > GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
+        IReadOnlyList<int> archiveIds,
+        CancellationToken cancellationToken = default
+    );
 }

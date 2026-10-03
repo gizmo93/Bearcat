@@ -51,6 +51,14 @@
                                              @bind-Value="FormModel.ArchiveFileSizeMb"
                                              Label="@L["ArchiveFileSizeMb"]" />
 
+                    <BbFormFieldSwitch @bind-Checked="FormModel.PackReleaseFolderAsRootFolder"
+                                       Label="@L["PackReleaseFolderAsRootFolder"]"
+                                       HelperText="@L["PackReleaseFolderAsRootFolderHelp"]" />
+
+                    <BbFormFieldSwitch @bind-Checked="FormModel.CreateNonceFile"
+                                       Label="@L["CreateNonceFile"]"
+                                       HelperText="@L["CreateNonceFileHelp"]" />
+
                     <AdditionalArchiveContentMultiSelect @bind-Values="FormModel.AdditionalArchiveContentIds"
                                                          @bind-Values:after="ClearAdditionalArchiveContentValidationMessages" />
                 </div>

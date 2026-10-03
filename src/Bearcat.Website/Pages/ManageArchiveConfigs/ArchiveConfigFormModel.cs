@@ -12,6 +12,10 @@ public class ArchiveConfigFormModel
 
     public int ArchiveFileSizeMb { get; set; }
 
+    public bool PackReleaseFolderAsRootFolder { get; set; } = true;
+
+    public bool CreateNonceFile { get; set; } = true;
+
     public string? Name { get; set; }
 
     public IEnumerable<int>? AdditionalArchiveContentIds { get; set; }

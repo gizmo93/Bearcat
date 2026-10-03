@@ -975,6 +975,8 @@ public class ReleaseReadRepository(
                 a.ArchiveNamePrefix,
                 a.ArchivePassword,
                 a.ArchiveFileSizeMb,
+                a.PackReleaseFolderAsRootFolder,
+                a.CreateNonceFile,
                 fileExtensionByArchiver[a.ArchiverName],
                 a.Name,
                 a.Archives.OrderByDescending(ar => ar.Id)

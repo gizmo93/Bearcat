@@ -15,6 +15,8 @@ public class ArchiveConfigTemplateConfiguration : IEntityTypeConfiguration<Archi
         builder.Property(a => a.ArchivePassword).IsRequired(false).HasMaxLength(100);
         builder.Property(a => a.ArchiveFileSizeMb).IsRequired();
         builder.Property(a => a.UseReleaseNameAsArchiveName).IsRequired();
+        builder.Property(a => a.PackReleaseFolderAsRootFolder).IsRequired();
+        builder.Property(a => a.CreateNonceFile).IsRequired();
 
         builder
             .HasMany(a => a.UploadConfigTemplates)

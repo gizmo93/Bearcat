@@ -14,6 +14,10 @@ public class ArchiveConfigTemplateFormModel
 
     public bool UseReleaseNameAsArchiveName { get; set; }
 
+    public bool PackReleaseFolderAsRootFolder { get; set; } = true;
+
+    public bool CreateNonceFile { get; set; } = true;
+
     public bool IsEdit { get; set; }
 
     public IEnumerable<int>? AdditionalArchiveContentIds { get; set; }

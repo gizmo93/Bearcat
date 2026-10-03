@@ -1,4 +1,4 @@
-using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
@@ -10,14 +10,13 @@ public partial class FileDetails : ComponentBase
 {
     [Parameter]
     [EditorRequired]
-    public Upload Upload { get; set; } = null!;
+    public RunningUploadReadModel Upload { get; set; } = null!;
 
-    private string GetStatusLabel(ArchiveFile archiveFile)
+    private string GetStatusLabel(RunningUploadReadModel.ArchiveFileReadModel archiveFile)
     {
-        var uploadedFile = Upload.UploadedFiles.FirstOrDefault(x =>
-            x.ArchiveFileId == archiveFile.Id
-        );
-        return uploadedFile is null ? L["Pending"] : L.Localize(uploadedFile.OnlineState);
+        return archiveFile.UploadedFileOnlineState is { } onlineState
+            ? L.Localize(onlineState)
+            : L["Pending"];
     }
 
     private BadgeVariant GetSummaryVariant() =>

@@ -27,7 +27,8 @@ See [Release Information and Metadata](/Bearcat/release-information-and-metadata
 
 ## Archive configurations tab
 
-Sets the archiver, output folder, part size, and password for each set of archives.
+Sets the archiver, output folder, part size, password, and packing options for each set of archives.
+See [Creating the archive](/Bearcat/upload-lifecycle/#3-creating-the-archive) for the packing options.
 Add at least one configuration for a managed release.
 
 ![archive-configurations-tab.png](images/archive-configurations-tab.png)

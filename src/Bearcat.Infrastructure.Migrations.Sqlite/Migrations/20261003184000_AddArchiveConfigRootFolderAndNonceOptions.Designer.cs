@@ -3,6 +3,7 @@ using System;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bearcat.Infrastructure.Migrations.Sqlite
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003184000_AddArchiveConfigRootFolderAndNonceOptions")]
+    partial class AddArchiveConfigRootFolderAndNonceOptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");

@@ -18,10 +18,13 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
 
     public ReleaseFolderEntriesForPackingResult GetReleaseFolderEntriesForPacking(
         string releaseFolderPath,
-        IReadOnlyList<AdditionalArchiveContent> additionalArchiveContents
+        IReadOnlyList<AdditionalArchiveContent> additionalArchiveContents,
+        bool createNonceFile
     )
     {
-        var entries = new List<ReleaseFolderEntryForPacking> { CreateNonceEntry() };
+        var entries = createNonceFile
+            ? new List<ReleaseFolderEntryForPacking> { CreateNonceEntry() }
+            : [];
         var errorMessages = new List<string>();
 
         foreach (var content in additionalArchiveContents)

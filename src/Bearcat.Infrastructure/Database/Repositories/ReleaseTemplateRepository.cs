@@ -254,6 +254,8 @@ public class ReleaseTemplateRepository(
                     a.ArchivePassword,
                     a.ArchiveFileSizeMb,
                     a.UseReleaseNameAsArchiveName,
+                    a.PackReleaseFolderAsRootFolder,
+                    a.CreateNonceFile,
                     a.UploadConfigTemplates.Count,
                     a.AdditionalArchiveContents.OrderBy(content => content.Name)
                         .Select(content => new AssignedAdditionalArchiveContentReadModel(

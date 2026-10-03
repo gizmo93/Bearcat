@@ -88,6 +88,14 @@
                                         {
                                             <p class="mt-1 text-xs text-muted-foreground">@L["PasswordProtected"]</p>
                                         }
+                                        @if (releaseTemplate.ReleaseType is ReleaseType.Managed && !config.PackReleaseFolderAsRootFolder)
+                                        {
+                                            <p class="mt-1 text-xs text-muted-foreground">@L["WithoutReleaseRootFolder"]</p>
+                                        }
+                                        @if (releaseTemplate.ReleaseType is ReleaseType.Managed && !config.CreateNonceFile)
+                                        {
+                                            <p class="mt-1 text-xs text-muted-foreground">@L["WithoutNonceFile"]</p>
+                                        }
                                     </div>
                                     <div class="min-w-0">
                                         <p class="bearcat-mobile-label">@L["Archiver"]</p>

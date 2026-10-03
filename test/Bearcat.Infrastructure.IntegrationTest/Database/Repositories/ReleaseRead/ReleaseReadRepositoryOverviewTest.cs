@@ -565,6 +565,7 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         );
         sevenZipConfig.ArchiveNamePrefix = "bearcat";
         sevenZipConfig.ArchiveFileSizeMb = 250;
+        sevenZipConfig.PackReleaseFolderAsRootFolder = false;
         var olderArchive = testData.AddArchive(
             sevenZipConfig,
             MidnightUtc.AddMilliseconds(100),
@@ -606,6 +607,7 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
             }
         );
         var rarConfig = testData.AddArchiveConfig(release, "Rar", "RarArchiver");
+        rarConfig.CreateNonceFile = false;
 
         var otherRelease = testData.AddRelease("Bearcat.Other.2026-GRP");
         testData.AddArchiveConfig(otherRelease, "Other", "RarArchiver");
@@ -625,6 +627,8 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         rar.ArchiverDisplayName.ShouldBe("RAR");
         rar.ArchiveFileExtension.ShouldBe(".rar");
         rar.ArchivePassword.ShouldBeNull();
+        rar.PackReleaseFolderAsRootFolder.ShouldBeTrue();
+        rar.CreateNonceFile.ShouldBeFalse();
         rar.ArchiveSummaries.ShouldBeEmpty();
         rar.AdditionalArchiveContents.ShouldBeEmpty();
 
@@ -636,6 +640,8 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         sevenZip.ArchiveNamePrefix.ShouldBe("bearcat");
         sevenZip.ArchivePassword.ShouldBe("archive-secret");
         sevenZip.ArchiveFileSizeMb.ShouldBe(250);
+        sevenZip.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        sevenZip.CreateNonceFile.ShouldBeTrue();
         sevenZip
             .ArchiveSummaries.Select(summary =>
                 (

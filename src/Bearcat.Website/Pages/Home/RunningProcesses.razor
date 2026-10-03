@@ -59,10 +59,10 @@
                                                 OnDownloadCanceled="LoadDataAsync" />
                     }
 
-                    @if (creatingArchives.Count > 0)
+                    @if (archivesInCreationOrHashChange.Count > 0)
                     {
-                        <RunningArchives Archives="creatingArchives"
-                                         ArchiveProgress="creatingArchiveProgress" />
+                        <RunningArchives Archives="archivesInCreationOrHashChange"
+                                         ArchiveProgress="archiveCreationOrHashChangeProgress" />
                     }
                 </div>
             }

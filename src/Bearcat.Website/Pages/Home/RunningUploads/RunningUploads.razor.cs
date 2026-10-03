@@ -1,6 +1,7 @@
-using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
@@ -18,14 +19,14 @@ public partial class RunningUploads(
 {
     [Parameter]
     [EditorRequired]
-    public IReadOnlyList<Upload> Uploads { get; set; } = null!;
+    public IReadOnlyList<RunningUploadReadModel> Uploads { get; set; } = null!;
 
     [Parameter]
     public IReadOnlyDictionary<int, TransferProgressSnapshot> UploadProgress { get; set; } =
         new Dictionary<int, TransferProgressSnapshot>();
 
     [Parameter]
-    public IReadOnlyList<Archive> RestoringArchives { get; set; } = [];
+    public IReadOnlyList<RunningArchiveReadModel> RestoringArchives { get; set; } = [];
 
     [Parameter]
     public IReadOnlyDictionary<int, TransferProgressSnapshot> DownloadProgress { get; set; } =
@@ -38,16 +39,17 @@ public partial class RunningUploads(
 
     private readonly HashSet<int> showDownloadDetailIds = [];
 
-    private IEnumerable<Upload> SortedUploads => Uploads.OrderByDescending(u => u.UploadState);
+    private IEnumerable<RunningUploadReadModel> SortedUploads =>
+        Uploads.OrderByDescending(u => u.UploadState);
 
-    private IReadOnlyList<Upload> ExpandedUploads =>
-        SortedUploads.Where(upload => showDetailIds.Contains(upload.Id)).ToList();
+    private IReadOnlyList<RunningUploadReadModel> ExpandedUploads =>
+        SortedUploads.Where(upload => showDetailIds.Contains(upload.UploadId)).ToList();
 
-    private IReadOnlyList<Archive> ExpandedRestores =>
+    private IReadOnlyList<RunningArchiveReadModel> ExpandedRestores =>
         RestoringArchives
             .Where(archive =>
-                showDownloadDetailIds.Contains(archive.Id)
-                && DownloadProgress.ContainsKey(archive.Id)
+                showDownloadDetailIds.Contains(archive.ArchiveId)
+                && DownloadProgress.ContainsKey(archive.ArchiveId)
             )
             .ToList();
 
@@ -71,11 +73,11 @@ public partial class RunningUploads(
         StateHasChanged();
     }
 
-    private async Task CancelUploadAsync(Upload upload)
+    private async Task CancelUploadAsync(RunningUploadReadModel upload)
     {
         var result = await dialogService.ConfirmAsync(
             L["CancelUpload"],
-            L["CancelUploadConfirmation", upload.Id],
+            L["CancelUploadConfirmation", upload.UploadId],
             new ConfirmDialogOptions
             {
                 ConfirmText = L["CancelUpload"],
@@ -90,28 +92,28 @@ public partial class RunningUploads(
         }
 
         var cancellationRequested = await operationRunner.RunAsync(
-            (UploadStateService service) => service.CancelUploadAsync(upload.Id)
+            (UploadStateService service) => service.CancelUploadAsync(upload.UploadId)
         );
 
         if (cancellationRequested)
         {
-            toastService.Success(L["UploadCancellationRequested", upload.Id]);
+            toastService.Success(L["UploadCancellationRequested", upload.UploadId]);
             await OnUploadCanceled.InvokeAsync();
         }
         else
         {
-            toastService.Error(L["UploadCancellationNotAvailable", upload.Id]);
+            toastService.Error(L["UploadCancellationNotAvailable", upload.UploadId]);
         }
     }
 
-    private static bool CanCancelUpload(Upload upload) =>
+    private static bool CanCancelUpload(RunningUploadReadModel upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;
 
-    private async Task CancelDownloadAsync(Archive archive)
+    private async Task CancelDownloadAsync(RunningArchiveReadModel archive)
     {
         var result = await dialogService.ConfirmAsync(
             L["CancelDownloadTitle"],
-            L["CancelDownloadConfirmation", archive.Id],
+            L["CancelDownloadConfirmation", archive.ArchiveId],
             new ConfirmDialogOptions
             {
                 ConfirmText = L["CancelDownload"],
@@ -127,25 +129,29 @@ public partial class RunningUploads(
 
         if (
             transferCancellationRegistry.RequestCancellation(
-                new TransferIdentifier(TransferType.MirrorDownload, archive.Id)
+                new TransferIdentifier(TransferType.MirrorDownload, archive.ArchiveId)
             )
         )
         {
-            toastService.Success(L["DownloadCancellationRequested", archive.Id]);
+            toastService.Success(L["DownloadCancellationRequested", archive.ArchiveId]);
             return;
         }
 
-        toastService.Error(L["DownloadAlreadyFinished", archive.Id]);
+        toastService.Error(L["DownloadAlreadyFinished", archive.ArchiveId]);
     }
 
-    private double GetUploadProgress(Upload upload)
+    private double GetUploadProgress(RunningUploadReadModel upload)
     {
-        return UploadProgress.TryGetValue(upload.Id, out var snapshot) ? snapshot.Percentage : 0;
+        return UploadProgress.TryGetValue(upload.UploadId, out var snapshot)
+            ? snapshot.Percentage
+            : 0;
     }
 
-    private double GetDownloadProgress(Archive archive)
+    private double GetDownloadProgress(RunningArchiveReadModel archive)
     {
-        return DownloadProgress.TryGetValue(archive.Id, out var snapshot) ? snapshot.Percentage : 0;
+        return DownloadProgress.TryGetValue(archive.ArchiveId, out var snapshot)
+            ? snapshot.Percentage
+            : 0;
     }
 
     private TransferProgressSnapshot? GetDownloadSnapshot(int archiveId)
@@ -153,9 +159,9 @@ public partial class RunningUploads(
         return DownloadProgress.GetValueOrDefault(archiveId);
     }
 
-    private string GetDownloadHosterName(Archive archive)
+    private string GetDownloadHosterName(RunningArchiveReadModel archive)
     {
-        return DownloadProgress.TryGetValue(archive.Id, out var snapshot)
+        return DownloadProgress.TryGetValue(archive.ArchiveId, out var snapshot)
             ? snapshot.SourceName
             : "-";
     }

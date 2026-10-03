@@ -134,6 +134,8 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
         sevenZipTemplate.ArchiveConfigTemplateId.ShouldBe(seed.SevenZipArchiveConfigTemplateId);
         sevenZipTemplate.ArchiverName.ShouldBe("7z");
         sevenZipTemplate.ArchiverDisplayName.ShouldBe("7z");
+        sevenZipTemplate.PackReleaseFolderAsRootFolder.ShouldBeFalse();
+        sevenZipTemplate.CreateNonceFile.ShouldBeTrue();
         sevenZipTemplate.UploadConfigTemplateCount.ShouldBe(1);
         sevenZipTemplate.AdditionalArchiveContents.ShouldBeEmpty();
 
@@ -145,6 +147,8 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
         rarTemplate.ArchivePassword.ShouldBe("archive-secret");
         rarTemplate.ArchiveFileSizeMb.ShouldBe(1024);
         rarTemplate.UseReleaseNameAsArchiveName.ShouldBeTrue();
+        rarTemplate.PackReleaseFolderAsRootFolder.ShouldBeTrue();
+        rarTemplate.CreateNonceFile.ShouldBeFalse();
         rarTemplate.UploadConfigTemplateCount.ShouldBe(1);
         rarTemplate.AdditionalArchiveContents.ShouldBe([
             new AssignedAdditionalArchiveContentReadModel(
@@ -364,6 +368,7 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
             ArchivePassword = "archive-secret",
             ArchiveFileSizeMb = 1024,
             UseReleaseNameAsArchiveName = true,
+            CreateNonceFile = false,
             AdditionalArchiveContents = [premiumAdText, premiumAdFolder],
         };
         var sevenZipTemplate = new ArchiveConfigTemplate
@@ -373,6 +378,7 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
             ArchiveFilesBasePath = "/tmp/archives",
             ArchiverName = "7z",
             ArchiveFileSizeMb = 0,
+            PackReleaseFolderAsRootFolder = false,
         };
         var rapidgatorFilecryptTemplate = new UploadConfigLinkCrypterTemplate
         {

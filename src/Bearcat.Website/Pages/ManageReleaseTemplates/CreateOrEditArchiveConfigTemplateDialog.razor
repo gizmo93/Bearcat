@@ -51,6 +51,14 @@
                                      @bind-Value="FormModel.ArchiveFileSizeMb"
                                      Label="@L["ArchiveFileSizeMb"]" />
 
+            <BbFormFieldSwitch @bind-Checked="FormModel.PackReleaseFolderAsRootFolder"
+                               Label="@L["PackReleaseFolderAsRootFolder"]"
+                               HelperText="@L["PackReleaseFolderAsRootFolderHelp"]" />
+
+            <BbFormFieldSwitch @bind-Checked="FormModel.CreateNonceFile"
+                               Label="@L["CreateNonceFile"]"
+                               HelperText="@L["CreateNonceFileHelp"]" />
+
             @if (SelectedArchiver is not null)
             {
                 <div class="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">

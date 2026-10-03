@@ -20,6 +20,10 @@ public class ArchiveConfig
 
     public int ArchiveFileSizeMb { get; set; }
 
+    public bool PackReleaseFolderAsRootFolder { get; set; } = true;
+
+    public bool CreateNonceFile { get; set; } = true;
+
     public List<Archive> Archives { get; set; } = null!;
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;

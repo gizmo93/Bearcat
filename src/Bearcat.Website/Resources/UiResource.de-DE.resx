@@ -1244,6 +1244,13 @@
   <data name="HashingFileStatus" xml:space="preserve"><value>Hashfortschritt pro Datei</value></data>
   <data name="ToggleArchiveDetails" xml:space="preserve"><value>Archivdetails umschalten</value></data>
   <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archiv #{0} für {1}</value></data>
+  <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packen</value></data>
+  <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 MD5-Hashes erstellen</value></data>
+  <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>MD5-Hashes des bestehenden Archivs ändern</value></data>
+  <data name="CancelArchiveCreation" xml:space="preserve"><value>Archiverstellung abbrechen</value></data>
+  <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Erstellung von Archiv #{0} abbrechen? Ein neues Archiv wird gelöscht, ein bestehendes Archiv bleibt erhalten. Die auf dieses Archiv wartenden Uploads werden abgebrochen.</value></data>
+  <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Abbruch für die Erstellung von Archiv #{0} angefragt.</value></data>
+  <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>Die Erstellung von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
@@ -1522,4 +1529,10 @@
   <data name="NoArchivesFound" xml:space="preserve"><value>Keine Archive gefunden</value></data>
   <data name="UploadCountValue" xml:space="preserve"><value>{0} Uploads</value></data>
   <data name="UploadsAndArchives" xml:space="preserve"><value>Uploads und Archive</value></data>
+  <data name="PackReleaseFolderAsRootFolder" xml:space="preserve"><value>Releaseordner als Stammordner packen</value></data>
+  <data name="PackReleaseFolderAsRootFolderHelp" xml:space="preserve"><value>Wenn aktiviert, enthält das Archiv einen Ordner mit dem Namen des Releaseordners. Wenn deaktiviert, wird der Inhalt des Releaseordners direkt auf oberster Ebene ins Archiv gepackt. Gilt nur für neu erstellte Archive.</value></data>
+  <data name="CreateNonceFile" xml:space="preserve"><value>Noncedatei erstellen</value></data>
+  <data name="CreateNonceFileHelp" xml:space="preserve"><value>Schreibt eine __nonce.txt mit zufälligem Wert in jedes neue Archiv, damit neu gepackte Archive andere Hashes erhalten. Gilt nur für neu erstellte Archive.</value></data>
+  <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Ohne Releasestammordner</value></data>
+  <data name="WithoutNonceFile" xml:space="preserve"><value>Ohne Noncedatei</value></data>
 </root>
