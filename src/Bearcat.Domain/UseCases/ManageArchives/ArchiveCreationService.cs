@@ -640,6 +640,7 @@ public class ArchiveCreationService(
         var archiveSettings = await ResolveArchiveSettingsAsync(
             config: config,
             useHashAppendStrategy: useHashAppendStrategy,
+            archiverCanChangeHashInPlace: archiver.CanChangeHashInPlace,
             cancellationToken: cancellationToken
         );
 
@@ -661,7 +662,8 @@ public class ArchiveCreationService(
         var entriesForPacking =
             releaseFolderEntriesForPackingService.GetReleaseFolderEntriesForPacking(
                 releaseFolderPath: releaseFolderPath,
-                additionalArchiveContents: config.AdditionalArchiveContents
+                additionalArchiveContents: config.AdditionalArchiveContents,
+                createNonceFile: config.CreateNonceFile
             );
 
         if (entriesForPacking.ErrorMessages.Count > 0)
@@ -868,12 +870,22 @@ public class ArchiveCreationService(
     private async Task<ArchiveSettings> ResolveArchiveSettingsAsync(
         ArchiveConfig config,
         bool useHashAppendStrategy,
+        bool archiverCanChangeHashInPlace,
         CancellationToken cancellationToken
     )
     {
         var strategy = configurationProvider.GetValue<ArchiveRepackagingConfiguration>(c =>
             c.Strategy
         );
+
+        var uncompressedArchiveOptions = new ArchiveOptions(
+            UseCompression: false,
+            UseSolidArchive: false,
+            PackSourceFolderAsRootFolder: config.PackReleaseFolderAsRootFolder
+        );
+
+        var archiveFileSizeMustChangeForUniqueHashes =
+            !config.CreateNonceFile && !archiverCanChangeHashInPlace;
 
         if (
             string.Equals(
@@ -884,8 +896,12 @@ public class ArchiveCreationService(
         )
         {
             return new ArchiveSettings(
-                ArchiveFileSizeMb: config.ArchiveFileSizeMb,
-                Options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false)
+                ArchiveFileSizeMb: await GetArchiveFileSizeMbAsync(
+                    config: config,
+                    incrementLastArchiveFileSize: archiveFileSizeMustChangeForUniqueHashes,
+                    cancellationToken: cancellationToken
+                ),
+                Options: uncompressedArchiveOptions
             );
         }
 
@@ -898,8 +914,16 @@ public class ArchiveCreationService(
         )
         {
             return new ArchiveSettings(
-                ArchiveFileSizeMb: config.ArchiveFileSizeMb,
-                Options: new ArchiveOptions(UseCompression: true, UseSolidArchive: true)
+                ArchiveFileSizeMb: await GetArchiveFileSizeMbAsync(
+                    config: config,
+                    incrementLastArchiveFileSize: archiveFileSizeMustChangeForUniqueHashes,
+                    cancellationToken: cancellationToken
+                ),
+                Options: new ArchiveOptions(
+                    UseCompression: true,
+                    UseSolidArchive: true,
+                    PackSourceFolderAsRootFolder: config.PackReleaseFolderAsRootFolder
+                )
             );
         }
 
@@ -918,12 +942,25 @@ public class ArchiveCreationService(
             );
         }
 
-        if (useHashAppendStrategy)
+        return new ArchiveSettings(
+            ArchiveFileSizeMb: await GetArchiveFileSizeMbAsync(
+                config: config,
+                incrementLastArchiveFileSize: !useHashAppendStrategy,
+                cancellationToken: cancellationToken
+            ),
+            Options: uncompressedArchiveOptions
+        );
+    }
+
+    private async Task<int> GetArchiveFileSizeMbAsync(
+        ArchiveConfig config,
+        bool incrementLastArchiveFileSize,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!incrementLastArchiveFileSize)
         {
-            return new ArchiveSettings(
-                ArchiveFileSizeMb: config.ArchiveFileSizeMb,
-                Options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false)
-            );
+            return config.ArchiveFileSizeMb;
         }
 
         var lastArchiveFileSizeMb = await repository.GetLastArchiveFileSizeMbAsync(
@@ -931,12 +968,9 @@ public class ArchiveCreationService(
             cancellationToken: cancellationToken
         );
 
-        return new ArchiveSettings(
-            ArchiveFileSizeMb: lastArchiveFileSizeMb is null
-                ? config.ArchiveFileSizeMb
-                : lastArchiveFileSizeMb.Value + 1,
-            Options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false)
-        );
+        return lastArchiveFileSizeMb is null
+            ? config.ArchiveFileSizeMb
+            : lastArchiveFileSizeMb.Value + 1;
     }
 
     private sealed record ArchiveSettings(int ArchiveFileSizeMb, ArchiveOptions Options);

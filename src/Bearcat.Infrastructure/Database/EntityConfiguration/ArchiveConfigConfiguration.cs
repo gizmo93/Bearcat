@@ -16,6 +16,8 @@ public class ArchiveConfigConfiguration : IEntityTypeConfiguration<ArchiveConfig
         builder.Property(a => a.ArchiveFileSizeMb).IsRequired();
         builder.Property(a => a.ArchiveNamePrefix).IsRequired(false).HasMaxLength(200);
         builder.Property(a => a.ArchiveFilesBasePath).IsRequired().HasMaxLength(300);
+        builder.Property(a => a.PackReleaseFolderAsRootFolder).IsRequired();
+        builder.Property(a => a.CreateNonceFile).IsRequired();
 
         builder
             .HasMany(a => a.Archives)

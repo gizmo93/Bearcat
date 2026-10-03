@@ -1508,4 +1508,10 @@
   <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Releaseinformationen, NFO-Dateien und Cover aus NFO-Datenbanken.</value></data>
   <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Mediendatenbanken</value></data>
   <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadatenabfragen für Filme, Serien und Spiele.</value></data>
+  <data name="PackReleaseFolderAsRootFolder" xml:space="preserve"><value>Releaseordner als Stammordner packen</value></data>
+  <data name="PackReleaseFolderAsRootFolderHelp" xml:space="preserve"><value>Wenn aktiviert, enthält das Archiv einen Ordner mit dem Namen des Releaseordners. Wenn deaktiviert, wird der Inhalt des Releaseordners direkt auf oberster Ebene ins Archiv gepackt. Gilt nur für neu erstellte Archive.</value></data>
+  <data name="CreateNonceFile" xml:space="preserve"><value>Noncedatei erstellen</value></data>
+  <data name="CreateNonceFileHelp" xml:space="preserve"><value>Schreibt eine __nonce.txt mit zufälligem Wert in jedes neue Archiv, damit neu gepackte Archive andere Hashes erhalten. Gilt nur für neu erstellte Archive.</value></data>
+  <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Ohne Releasestammordner</value></data>
+  <data name="WithoutNonceFile" xml:space="preserve"><value>Ohne Noncedatei</value></data>
 </root>

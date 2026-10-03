@@ -11,6 +11,8 @@ public record ArchiveConfigReadModel(
     string? ArchiveNamePrefix,
     string? ArchivePassword,
     int ArchiveFileSizeMb,
+    bool PackReleaseFolderAsRootFolder,
+    bool CreateNonceFile,
     string ArchiveFileExtension,
     string Name,
     IReadOnlyList<ArchiveConfigReadModel.ArchiveSummary> ArchiveSummaries,

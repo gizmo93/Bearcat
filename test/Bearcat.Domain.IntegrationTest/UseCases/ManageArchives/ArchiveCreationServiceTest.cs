@@ -858,6 +858,132 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         result.ArchiveFileSizeMb.ShouldBe(512);
     }
 
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly, false)]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression, true)]
+    [TestCase(ArchiveRepackagingStrategies.IncrementArchiveFileSize, false)]
+    public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCannotChangeHashInPlace_UsesLastArchiveFileSizePlusOne(
+        string strategy,
+        bool expectedSolidCompression
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(strategy);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await AddPreviousArchiveAsync(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFileSizeMb: 512,
+            md5Hash: "0123456789ABCDEF0123456789ABCDEF"
+        );
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(513);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    513,
+                    "secret",
+                    It.Is<ArchiveOptions>(o =>
+                        o.UseCompression == expectedSolidCompression
+                        && o.UseSolidArchive == expectedSolidCompression
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCannotChangeHashInPlaceWithoutPreviousArchive_UsesConfiguredArchiveFileSize()
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(ArchiveRepackagingStrategies.NonceOnly);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await DbContext.SaveChangesAsync();
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+    }
+
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly)]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression)]
+    public async Task ProcessAsync_CreateNonceFileEnabledAndArchiverCannotChangeHashInPlace_UsesConfiguredArchiveFileSize(
+        string strategy
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(strategy);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        await AddPreviousArchiveAsync(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFileSizeMb: 512,
+            md5Hash: "0123456789ABCDEF0123456789ABCDEF"
+        );
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+    }
+
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly, null)]
+    [TestCase(ArchiveRepackagingStrategies.NonceOnly, "0123456789ABCDEF0123456789ABCDEF")]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression, null)]
+    [TestCase(ArchiveRepackagingStrategies.SolidCompression, "0123456789ABCDEF0123456789ABCDEF")]
+    public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCanChangeHashInPlace_UsesConfiguredArchiveFileSize(
+        string strategy,
+        string? previousArchiveFileMd5Hash
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(strategy);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await AddPreviousArchiveAsync(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFileSizeMb: 512,
+            md5Hash: previousArchiveFileMd5Hash
+        );
+        SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+    }
+
     [Test]
     public async Task ProcessAsync_AppendedHashCollidesWithKnownHash_AppendsUntilHashIsUnique()
     {
@@ -1424,6 +1550,78 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_CreateNonceFileDisabled_DoesNotWriteNonceFileIntoReleaseFolder()
+    {
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var upload = await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+        ]);
+        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        await DbContext.SaveChangesAsync();
+        List<string> releaseFolderEntriesDuringArchiving = [];
+        List<string> persistedEntryNamesDuringArchiving = [];
+        SetupArchiver(
+            async () =>
+            {
+                releaseFolderEntriesDuringArchiving = GetRelativePathsInReleaseFolder();
+                persistedEntryNamesDuringArchiving =
+                    await LoadPersistedReleaseFolderEntriesCopiedForPackingAsync();
+            },
+            new ArchiveResult(true, ["archive.part1.rar"], null)
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
+
+        releaseFolderEntriesDuringArchiving.ShouldBe(
+            ["movie.mkv", "Mirror.txt"],
+            ignoreOrder: true
+        );
+        persistedEntryNamesDuringArchiving.ShouldBe(["Mirror.txt"]);
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ProcessAsync_PackReleaseFolderAsRootFolderConfigured_PassesOptionToArchiver(
+        bool packReleaseFolderAsRootFolder
+    )
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.PackReleaseFolderAsRootFolder =
+            packReleaseFolderAsRootFolder;
+        await DbContext.SaveChangesAsync();
+        SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    512,
+                    "secret",
+                    It.Is<ArchiveOptions>(o =>
+                        o.PackSourceFolderAsRootFolder == packReleaseFolderAsRootFolder
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_AdditionalContentCollidesWithExistingReleaseFile_FailsWithoutTouchingReleaseFolder()
     {
         // Arrange
@@ -1811,6 +2009,44 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     return new ArchiveResult(true, createdFileNames, null);
                 }
             );
+    }
+
+    private void SetupArchiveRepackagingStrategy(string strategy)
+    {
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, string?>>>()
+                )
+            )
+            .Returns(strategy);
+    }
+
+    private async Task AddPreviousArchiveAsync(
+        int archiveConfigId,
+        int archiveFileSizeMb,
+        string? md5Hash
+    )
+    {
+        DbContext.Archives.Add(
+            new Archive
+            {
+                ArchiveConfigId = archiveConfigId,
+                ArchiveFolderPath = Directory
+                    .CreateDirectory(Path.Combine(archiveFilesBasePath, "previous"))
+                    .FullName,
+                ArchiveState = ArchiveState.MissingFiles,
+                ArchiveFileSizeMb = archiveFileSizeMb,
+                CreatedAt = DateTime.UtcNow,
+                ArchiveFiles =
+                [
+                    new ArchiveFile { FullFileName = "previous.part1.rar", Md5Hash = md5Hash },
+                ],
+                Uploads = [],
+                ErrorMessages = [],
+            }
+        );
+        await DbContext.SaveChangesAsync();
     }
 
     private List<string> GetRelativePathsInReleaseFolder()

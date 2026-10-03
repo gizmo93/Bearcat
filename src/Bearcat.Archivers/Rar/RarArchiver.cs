@@ -144,13 +144,22 @@ public partial class RarArchiver(
             $"-v{targetFileSizeMb}M",
         ];
 
+        if (!options.PackSourceFolderAsRootFolder)
+        {
+            arguments.Add("-r");
+        }
+
         if (!string.IsNullOrWhiteSpace(password))
         {
             arguments.Add($"-p{password}");
         }
 
         arguments.Add(archiveFullPath);
-        arguments.Add(sourceArchivePath);
+        arguments.Add(
+            options.PackSourceFolderAsRootFolder
+                ? sourceArchivePath
+                : Path.Join(sourceArchivePath, "*")
+        );
 
         return arguments;
     }

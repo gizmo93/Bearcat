@@ -68,10 +68,14 @@ Rel.Name/
   Premium.txt
 ```
 
+If **Pack release folder as root folder** is off in the archive configuration, the release files
+and the contents are at the top level of the archive instead.
+
 Before packing, Bearcat checks the source paths and looks for duplicated file names. It then copies
 or writes the selected contents into the release folder and creates the archive.
 
-After packing, Bearcat removes these temporary additions, including its internal `__nonce.txt`.
+After packing, Bearcat removes these temporary additions, including its internal `__nonce.txt`
+if **Create nonce file** is on.
 Cleanup also runs if packing fails. After a crash, leftover additions are cleaned up on the
 next start. Your original release files are kept.
 

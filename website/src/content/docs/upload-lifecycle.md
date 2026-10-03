@@ -32,7 +32,7 @@ flowchart TD
     Append --> Assign
     QInPlace -- "No (e.g. 7-Zip)" --> QManaged
 
-    QManaged -- Yes --> Create[Create archive with __nonce.txt]
+    QManaged -- Yes --> Create[Create archive]
     QManaged -- "No (bring your own archive)" --> WaitTick
 
     Create --> QCreated{Archive created?}
@@ -113,6 +113,15 @@ Only [managed releases](/Bearcat/release-types/) can be repacked. Unmanaged rele
 archive files or a mirror from which to restore them.
 
 The archive configuration sets the archiver, output folder, filename prefix, password, and part size.
+It also has two packing options:
+
+- **Pack release folder as root folder** (default: on): the archive contains one folder named
+  after the release folder on disk. When off, the contents of the release folder are packed
+  directly at the top level of the archive.
+- **Create nonce file** (default: on): Bearcat packs a random `__nonce.txt`. See
+  [The nonce file and repackaging](#the-nonce-file-and-repackaging).
+
+Changing either option only affects archives created afterwards.
 You can also assign [additional archive contents](/Bearcat/additional-archive-contents/), such as
 a text file with a referral link, to include whenever Bearcat creates a new archive.
 
@@ -259,8 +268,8 @@ If so, it waits until a later run.
 
 ### The nonce file and repackaging
 
-Before packing, Bearcat writes a new random value to `__nonce.txt` in the release folder.
-The changed content helps produce different archive hashes.
+If **Create nonce file** is on, Bearcat writes a new random value to `__nonce.txt` in the
+release folder before packing. The changed content helps produce different archive hashes.
 Bearcat removes the nonce file from the release folder after packing, including when packing fails.
 After a crash, leftover temporary additions are cleaned up on the next start.
 
@@ -278,3 +287,9 @@ For 7-Zip, **Archive repackaging** controls how Bearcat produces different files
 The compression and solid-mode settings also apply to RAR, but the `1` MB size increase does not.
 RAR archives created before hash tracking was introduced are repacked once using the selected
 strategy. Later reuploads can use the appended-byte method.
+
+If **Create nonce file** is off, repacking unchanged files produces identical archives:
+
+- RAR keeps the selected strategy. Appended zero bytes still give each part a new hash.
+- 7-Zip always increases the part size by `1` MB from the latest archive, regardless of the
+  selected strategy.

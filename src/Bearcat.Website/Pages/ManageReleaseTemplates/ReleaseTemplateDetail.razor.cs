@@ -163,6 +163,8 @@ public partial class ReleaseTemplateDetail(
                     ArchivePassword = archiveConfig.ArchivePassword,
                     ArchiveFileSizeMb = archiveConfig.ArchiveFileSizeMb,
                     UseReleaseNameAsArchiveName = archiveConfig.UseReleaseNameAsArchiveName,
+                    PackReleaseFolderAsRootFolder = archiveConfig.PackReleaseFolderAsRootFolder,
+                    CreateNonceFile = archiveConfig.CreateNonceFile,
                     AdditionalArchiveContentIds = archiveConfig
                         .AdditionalArchiveContents.Select(content =>
                             content.AdditionalArchiveContentId

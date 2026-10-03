@@ -1505,4 +1505,10 @@
   <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Release information, NFO files and covers from NFO databases.</value></data>
   <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Media databases</value></data>
   <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadata lookups for movies, series and games.</value></data>
+  <data name="PackReleaseFolderAsRootFolder" xml:space="preserve"><value>Pack release folder as root folder</value></data>
+  <data name="PackReleaseFolderAsRootFolderHelp" xml:space="preserve"><value>When enabled, the archive contains one folder named after the release folder. When disabled, the contents of the release folder are packed directly at the top level of the archive. Only affects newly created archives.</value></data>
+  <data name="CreateNonceFile" xml:space="preserve"><value>Create nonce file</value></data>
+  <data name="CreateNonceFileHelp" xml:space="preserve"><value>Writes __nonce.txt with a random value into every new archive so repacked archives get different hashes. Only affects newly created archives.</value></data>
+  <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Without release root folder</value></data>
+  <data name="WithoutNonceFile" xml:space="preserve"><value>Without nonce file</value></data>
 </root>

@@ -69,6 +69,8 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
                         FormModel.ArchivePassword,
                         FormModel.ArchiveFileSizeMb,
                         FormModel.UseReleaseNameAsArchiveName,
+                        FormModel.PackReleaseFolderAsRootFolder,
+                        FormModel.CreateNonceFile,
                         FormModel.GetAdditionalArchiveContentIds()
                     )
                     : service.CreateArchiveConfigTemplateAsync(
@@ -79,6 +81,8 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
                         FormModel.ArchivePassword,
                         FormModel.ArchiveFileSizeMb,
                         FormModel.UseReleaseNameAsArchiveName,
+                        FormModel.PackReleaseFolderAsRootFolder,
+                        FormModel.CreateNonceFile,
                         FormModel.GetAdditionalArchiveContentIds()
                     )
         );

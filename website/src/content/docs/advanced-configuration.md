@@ -122,7 +122,8 @@ Use it to keep a release out of these retention rules. For remote downloads, als
 
 "Repackaging strategy" controls how Bearcat changes newly generated archives for uploads and reuploads. The default is "Change archive file size by 1 MB".
 
-Bearcat always writes a random `__nonce.txt` file into the release folder before packing.
+Bearcat writes a random `__nonce.txt` file into the release folder before packing, unless
+**Create nonce file** is off in the archive configuration.
 The repackaging strategy decides how that nonce file should affect the generated archive files:
 
 | Value | UI label | Behavior |
@@ -136,6 +137,9 @@ When Bearcat creates the next archive for the same archive configuration, it rea
 For the first archive, Bearcat uses the "Archive file size (MB)" from the archive configuration.
 
 RAR and 7Zip both support all three strategies.
+
+With **Create nonce file** off, 7Zip archives always use the latest part size plus `1` MB,
+regardless of the strategy. RAR keeps the selected strategy.
 
 ### Folder automation
 

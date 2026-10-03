@@ -21,6 +21,8 @@ public class ArchiveConfigService(
         string? archivePassword,
         string name,
         int? archiveFileSizeMb,
+        bool packReleaseFolderAsRootFolder,
+        bool createNonceFile,
         IReadOnlyList<int> additionalArchiveContentIds
     )
     {
@@ -47,6 +49,8 @@ public class ArchiveConfigService(
             ArchiveNamePrefix = archiveNamePrefix,
             ArchivePassword = archivePassword,
             ArchiveFileSizeMb = archiveFileSizeMb ?? 0,
+            PackReleaseFolderAsRootFolder = packReleaseFolderAsRootFolder,
+            CreateNonceFile = createNonceFile,
             AdditionalArchiveContents = additionalArchiveContents.ToList(),
         };
 
@@ -79,6 +83,8 @@ public class ArchiveConfigService(
         string? archivePassword,
         string name,
         int? archiveFileSizeMb,
+        bool packReleaseFolderAsRootFolder,
+        bool createNonceFile,
         IReadOnlyList<int> additionalArchiveContentIds
     )
     {
@@ -110,6 +116,8 @@ public class ArchiveConfigService(
         archiveConfig.ArchiveNamePrefix = archiveNamePrefix;
         archiveConfig.ArchivePassword = archivePassword;
         archiveConfig.ArchiveFileSizeMb = archiveFileSizeMb ?? 0;
+        archiveConfig.PackReleaseFolderAsRootFolder = packReleaseFolderAsRootFolder;
+        archiveConfig.CreateNonceFile = createNonceFile;
         archiveConfig.Name = name;
         archiveConfig.AdditionalArchiveContents.Clear();
         archiveConfig.AdditionalArchiveContents.AddRange(additionalArchiveContents);
