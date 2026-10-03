@@ -229,6 +229,57 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_AssignableArchiveWasAlreadyUploadedToSameHoster_TracksHashChangeProgressOfExistingArchive()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var archiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [new ArchiveFile { FullFileName = archiveFilePath }],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var previousUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var hashChangeIdentifier = new TransferIdentifier(
+            TransferType.ArchiveHashChange,
+            existingArchive.Id
+        );
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldBe([hashChangeIdentifier]);
+        progressTracker
+            .LastSnapshotPerIdentifier[hashChangeIdentifier]
+            .TransferredBytes.ShouldBe(13);
+        progressTracker.StoppedIdentifiers.ShouldContain(hashChangeIdentifier);
+        progressTracker.GetTrackedIds(TransferType.ArchiveHashChange).ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task ProcessAsync_AssignableArchiveWasOnlyUploadedToDifferentHoster_DoesNotChangeArchiveFiles()
     {
         // Arrange
@@ -639,6 +690,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         snapshot.TransferredBytes.ShouldBe(13);
         snapshot.TotalBytes.ShouldBe(13);
         progressTracker.StoppedIdentifiers.ShouldContain(identifier);
+        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldNotContain(
+            new TransferIdentifier(TransferType.ArchiveHashChange, archive.Id)
+        );
         foreach (var archiveFile in archive.ArchiveFiles)
         {
             var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);

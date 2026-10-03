@@ -1,10 +1,12 @@
+@using Bearcat.Domain.UseCases.ManageUploads.ReadModels
+
 <section class="rounded-lg border border-border/70 bg-background">
     <div class="border-b border-border/70 px-4 py-3">
         <div class="flex items-center justify-between gap-3">
             <div>
                 <p class="text-sm font-medium">@L["UploadStatus"]</p>
                 <p class="text-xs text-muted-foreground">
-                    @L["UploadStatusSubtitle", Upload.Id, Upload.UploadConfig.Name]
+                    @L["UploadStatusSubtitle", Upload.UploadId, Upload.UploadConfigName]
                 </p>
             </div>
 
@@ -14,33 +16,30 @@
         </div>
     </div>
 
-    <BbDataTable TData="ArchiveFile"
-                 Data="Upload.Archive!.ArchiveFiles.OrderBy(a => a.FullFileName)"
+    <BbDataTable TData="RunningUploadReadModel.ArchiveFileReadModel"
+                 Data="Upload.ArchiveFiles"
                  ShowToolbar="false"
-                 ShowPagination="@(Upload.Archive!.ArchiveFiles.Count > 10)"
+                 ShowPagination="@(Upload.ArchiveFiles.Count > 10)"
                  InitialPageSize="10"
                  AriaLabel="@L["UploadFileStatus"]"
                  Class="border-0">
         <Columns>
-            <BbDataTableColumn TData="ArchiveFile" TValue="string"
+            <BbDataTableColumn TData="RunningUploadReadModel.ArchiveFileReadModel" TValue="string"
                                Header="@L["File"]"
                                Property="@(archiveFile => archiveFile.FullFileName)"
                                Sortable="true"
                                Filterable="true" />
-            <BbDataTableColumn TData="ArchiveFile" TValue="string"
+            <BbDataTableColumn TData="RunningUploadReadModel.ArchiveFileReadModel" TValue="string"
                                Header="@L["Status"]"
                                Property="@(archiveFile => GetStatusLabel(archiveFile))"
                                Sortable="true">
                 <CellTemplate Context="archiveFile">
-                    @{
-                        var uploadedFile = Upload.UploadedFiles.FirstOrDefault(x => x.ArchiveFileId == archiveFile.Id);
-                    }
-                    @if (uploadedFile is not null)
+                    @if (archiveFile.UploadedFileOnlineState is { } onlineState)
                     {
                         <div class="flex items-center gap-2">
-                            <LucideIcon Name="@(uploadedFile.OnlineState == OnlineState.Online ? "circle-check" : "circle-x")"
-                                        class="@($"h-4 w-4 {(uploadedFile.OnlineState == OnlineState.Online ? "text-emerald-500" : "text-red-500")}")" />
-                            <span>@L.Localize(uploadedFile.OnlineState)</span>
+                            <LucideIcon Name="@(onlineState == OnlineState.Online ? "circle-check" : "circle-x")"
+                                        class="@($"h-4 w-4 {(onlineState == OnlineState.Online ? "text-emerald-500" : "text-red-500")}")" />
+                            <span>@L.Localize(onlineState)</span>
                         </div>
                     }
                     else

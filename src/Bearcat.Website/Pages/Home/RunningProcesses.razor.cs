@@ -1,11 +1,12 @@
-using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
+using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
+using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Bearcat.Infrastructure.Database;
 using Bearcat.Website.ScopedOperations;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Website.Pages.Home;
 
@@ -15,17 +16,17 @@ public sealed partial class RunningProcesses(
 ) : IDisposable
 {
     private readonly CancellationTokenSource lifetimeCancellation = new();
-    private IReadOnlyList<Upload> runningUploads = [];
+    private IReadOnlyList<RunningUploadReadModel> runningUploads = [];
 
     private IReadOnlyDictionary<int, TransferProgressSnapshot> uploadProgress =
         new Dictionary<int, TransferProgressSnapshot>();
 
-    private IReadOnlyList<Archive> creatingArchives = [];
+    private IReadOnlyList<RunningArchiveReadModel> archivesInCreationOrHashChange = [];
 
-    private IReadOnlyDictionary<int, TransferProgressSnapshot> creatingArchiveProgress =
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> archiveCreationOrHashChangeProgress =
         new Dictionary<int, TransferProgressSnapshot>();
 
-    private IReadOnlyList<Archive> restoringArchives = [];
+    private IReadOnlyList<RunningArchiveReadModel> restoringArchives = [];
 
     private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
         new Dictionary<int, TransferProgressSnapshot>();
@@ -37,7 +38,7 @@ public sealed partial class RunningProcesses(
 
     private bool SomethingIsRunning =>
         runningUploads.Count > 0
-        || creatingArchives.Count > 0
+        || archivesInCreationOrHashChange.Count > 0
         || restoringArchives.Count > 0
         || remoteDownloads.Count > 0;
 
@@ -60,64 +61,60 @@ public sealed partial class RunningProcesses(
         }
     }
 
-    private async Task LoadRunningUploadsAsync(
-        IBearcatReadDbContext dbRead,
-        CancellationToken cancellationToken
-    )
+    private async Task LoadRunningUploadsAsync(CancellationToken cancellationToken)
     {
-        runningUploads = await dbRead
-            .Uploads.AsSplitQuery()
-            .Include(u => u.UploadedFiles)
-            .Include(u => u.Archive)
-                .ThenInclude(a => a!.ArchiveFiles)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.Release)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(u => u.HosterRegistration)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.ArchiveConfig)
-            .Where(u =>
-                u.UploadState == UploadState.Pending
-                || u.UploadState == UploadState.Uploading
-                || u.UploadState == UploadState.CancellationRequested
-            )
-            .ToListAsync(cancellationToken);
+        runningUploads = await operationRunner.RunAsync<
+            IUploadReadRepository,
+            IReadOnlyList<RunningUploadReadModel>
+        >((repository, token) => repository.GetRunningUploadsAsync(token), cancellationToken);
 
         uploadProgress = GetProgressSnapshots(
             TransferType.Upload,
-            runningUploads.Select(upload => upload.Id).ToList()
+            runningUploads.Select(upload => upload.UploadId).ToList()
         );
     }
 
-    private async Task LoadRunningArchivesAsync(
-        IBearcatReadDbContext dbRead,
-        CancellationToken cancellationToken
-    )
+    private async Task LoadRunningArchivesAsync(CancellationToken cancellationToken)
     {
-        var archives = await dbRead
-            .Archives.Include(a => a.ArchiveConfig)
-                .ThenInclude(ac => ac.Release)
-            .Where(a =>
-                a.ArchiveState == ArchiveState.Creating || a.ArchiveState == ArchiveState.Restoring
-            )
-            .ToListAsync(cancellationToken);
+        var archiveIdsWithHashChange = transferProgressTracker.GetTrackedIds(
+            TransferType.ArchiveHashChange
+        );
 
-        creatingArchives = archives
-            .Where(archive => archive.ArchiveState == ArchiveState.Creating)
+        var archives = await operationRunner.RunAsync<
+            IArchiveReadRepository,
+            IReadOnlyList<RunningArchiveReadModel>
+        >(
+            (repository, token) =>
+                repository.GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
+                    archiveIdsWithHashChange,
+                    token
+                ),
+            cancellationToken
+        );
+
+        archivesInCreationOrHashChange = archives
+            .Where(archive =>
+                archive.ArchiveState == ArchiveState.Creating
+                || archiveIdsWithHashChange.Contains(archive.ArchiveId)
+            )
             .ToList();
 
         restoringArchives = archives
             .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
             .ToList();
 
-        creatingArchiveProgress = GetProgressSnapshotsOfFirstTrackedType(
-            [TransferType.ArchiveCreation, TransferType.ArchiveHashing],
-            creatingArchives.Select(archive => archive.Id).ToList()
+        archiveCreationOrHashChangeProgress = GetProgressSnapshotsOfFirstTrackedType(
+            [
+                TransferType.ArchiveCreation,
+                TransferType.ArchiveHashing,
+                TransferType.ArchiveHashChange,
+            ],
+            archivesInCreationOrHashChange.Select(archive => archive.ArchiveId).ToList()
         );
 
         downloadProgress = GetProgressSnapshots(
             TransferType.MirrorDownload,
-            restoringArchives.Select(archive => archive.Id).ToList()
+            restoringArchives.Select(archive => archive.ArchiveId).ToList()
         );
     }
 
@@ -211,14 +208,8 @@ public sealed partial class RunningProcesses(
 
         try
         {
-            await operationRunner.RunAsync<IBearcatReadDbContext>(
-                async (dbRead, operationCancellationToken) =>
-                {
-                    await LoadRunningUploadsAsync(dbRead, operationCancellationToken);
-                    await LoadRunningArchivesAsync(dbRead, operationCancellationToken);
-                },
-                cancellationToken
-            );
+            await LoadRunningUploadsAsync(cancellationToken);
+            await LoadRunningArchivesAsync(cancellationToken);
             await LoadRemoteDownloadsAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

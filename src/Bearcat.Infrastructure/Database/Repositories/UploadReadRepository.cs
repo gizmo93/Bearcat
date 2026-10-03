@@ -4,6 +4,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -75,6 +76,67 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             .Uploads.Where(u => u.Id == uploadId)
             .Select(ToReadModel)
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<RunningUploadReadModel>> GetRunningUploadsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uploads = await dbRead
+            .Uploads.Where(u =>
+                u.UploadState == UploadState.Pending
+                || u.UploadState == UploadState.Uploading
+                || u.UploadState == UploadState.CancellationRequested
+            )
+            .Select(u => new
+            {
+                u.Id,
+                u.UploadConfig.ReleaseId,
+                ReleaseName = u.UploadConfig.Release.Name,
+                UploadConfigName = u.UploadConfig.Name,
+                HosterRegistrationName = u.UploadConfig.HosterRegistration.Name,
+                u.UploadState,
+                ArchiveFiles = dbRead
+                    .ArchiveFiles.Where(af => af.ArchiveId == u.ArchiveId)
+                    .Select(af => new { af.Id, af.FullFileName })
+                    .ToList(),
+                UploadedFiles = u
+                    .UploadedFiles.Select(uf => new
+                    {
+                        uf.Id,
+                        uf.ArchiveFileId,
+                        uf.OnlineState,
+                    })
+                    .ToList(),
+            })
+            .ToListAsync(cancellationToken);
+
+        return uploads
+            .Select(upload => new RunningUploadReadModel(
+                upload.Id,
+                upload.ReleaseId,
+                upload.ReleaseName,
+                upload.UploadConfigName,
+                upload.HosterRegistrationName,
+                upload.UploadState,
+                upload
+                    .ArchiveFiles.OrderBy(
+                        archiveFile => archiveFile.FullFileName,
+                        StringComparer.Ordinal
+                    )
+                    .Select(archiveFile => new RunningUploadReadModel.ArchiveFileReadModel(
+                        archiveFile.FullFileName,
+                        upload
+                            .UploadedFiles.Where(uploadedFile =>
+                                uploadedFile.ArchiveFileId == archiveFile.Id
+                            )
+                            .OrderBy(uploadedFile => uploadedFile.Id)
+                            .Select(uploadedFile => (OnlineState?)uploadedFile.OnlineState)
+                            .FirstOrDefault()
+                    ))
+                    .ToList()
+            ))
+            .ToList();
     }
 
     private static readonly Expression<Func<Upload, UploadReadModel>> ToReadModel =

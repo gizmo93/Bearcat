@@ -1,3 +1,4 @@
+@using Bearcat.Domain.UseCases.ManageArchives.ReadModels
 @using Bearcat.Website.Formatting
 
 <section class="space-y-3">
@@ -5,7 +6,7 @@
         <h2 class="text-lg font-semibold">@L["RunningArchives"]</h2>
     </div>
 
-    <BbDataTable TData="Archive"
+    <BbDataTable TData="RunningArchiveReadModel"
                  Data="Archives"
                  ShowToolbar="false"
                  ShowPagination="@(Archives.Count > 10)"
@@ -13,58 +14,61 @@
                  AriaLabel="@L["RunningArchives"]"
                  Class="bearcat-data-table bearcat-running-archives-table rounded-lg border border-border/70">
         <Columns>
-            <BbDataTableColumn TData="Archive" TValue="int"
+            <BbDataTableColumn TData="RunningArchiveReadModel" TValue="int"
                                Header="@L["Id"]"
-                               Property="@(archive => archive.Id)"
+                               Property="@(archive => archive.ArchiveId)"
                                Sortable="true">
                 <CellTemplate Context="archive">
                     <span class="bearcat-mobile-cell-label">@L["Id"]</span>
-                    <span class="tabular-nums">@archive.Id</span>
+                    <span class="tabular-nums">@archive.ArchiveId</span>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="Archive" TValue="string"
+            <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                Header="@L["Release"]"
-                               Property="@(archive => archive.ArchiveConfig.Release.Name)"
+                               Property="@(archive => archive.ReleaseName)"
                                Sortable="true"
                                Filterable="true">
                 <CellTemplate Context="archive">
-                    @archive.ArchiveConfig.Release.Name
+                    @archive.ReleaseName
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="Archive" TValue="string"
+            <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                Header="@L["ArchiveConfig"]"
-                               Property="@(archive => archive.ArchiveConfig.Name)"
+                               Property="@(archive => archive.ArchiveConfigName)"
                                Sortable="true"
                                Filterable="true">
                 <CellTemplate Context="archive">
                     <span class="bearcat-mobile-cell-label">@L["ArchiveConfig"]</span>
-                    @archive.ArchiveConfig.Name
+                    @archive.ArchiveConfigName
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="Archive" TValue="string"
+            <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                Header="@L["Archiver"]"
-                               Property="@(archive => archive.ArchiveConfig.ArchiverName)"
+                               Property="@(archive => archive.ArchiverName)"
                                Sortable="true"
                                Filterable="true">
                 <CellTemplate Context="archive">
                     <span class="bearcat-mobile-cell-label">@L["Archiver"]</span>
-                    @archive.ArchiveConfig.ArchiverName
+                    @archive.ArchiverName
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="Archive" TValue="double"
+            <BbDataTableColumn TData="RunningArchiveReadModel" TValue="double"
                                Header="@L["Progress"]"
                                Property="@(GetProgress)"
                                Sortable="true"
                                MinWidth="200px">
                 <CellTemplate Context="archive">
                     <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
-                    @if (ArchiveProgress.TryGetValue(archive.Id, out var snapshot))
+                    @if (ArchiveProgress.TryGetValue(archive.ArchiveId, out var snapshot))
                     {
-                        <TransferProgressCell Percentage="snapshot.Percentage"
-                                              Speed="@TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)"
-                                              IsExpanded="showDetailIds.Contains(archive.Id)"
-                                              ToggleAriaLabel="@L["ToggleArchiveDetails"]"
-                                              OnToggleDetails="@(() => ToggleShowDetails(archive.Id))" />
+                        <div class="flex flex-col gap-1.5">
+                            <BbBadge Variant="BadgeVariant.Secondary" Class="self-start sm:self-end">@GetPhaseLabel(snapshot)</BbBadge>
+                            <TransferProgressCell Percentage="snapshot.Percentage"
+                                                  Speed="@TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)"
+                                                  IsExpanded="showDetailIds.Contains(archive.ArchiveId)"
+                                                  ToggleAriaLabel="@L["ToggleArchiveDetails"]"
+                                                  OnToggleDetails="@(() => ToggleShowDetails(archive.ArchiveId))" />
+                        </div>
                     }
                     else
                     {
@@ -80,8 +84,8 @@
         <div class="space-y-4">
             @foreach (var archive in ExpandedArchives)
             {
-                <TransferFileDetails Snapshot="ArchiveProgress[archive.Id]"
-                                     Subtitle="@L["ArchiveCreationStatusSubtitle", archive.Id, archive.ArchiveConfig.Release.Name]"
+                <TransferFileDetails Snapshot="ArchiveProgress[archive.ArchiveId]"
+                                     Subtitle="@L["ArchiveCreationStatusSubtitle", archive.ArchiveId, archive.ReleaseName]"
                                      StateLabel="@L.Localize(archive.ArchiveState)" />
             }
         </div>

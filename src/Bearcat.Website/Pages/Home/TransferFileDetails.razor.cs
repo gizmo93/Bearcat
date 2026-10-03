@@ -25,6 +25,7 @@ public partial class TransferFileDetails : ComponentBase
             TransferType.RemoteDownloadExtraction => L["ExtractionStatus"],
             TransferType.ArchiveCreation => L["PackingStatus"],
             TransferType.ArchiveHashing => L["HashingStatus"],
+            TransferType.ArchiveHashChange => L["HashingStatus"],
             _ => L["DownloadStatus"],
         };
 
@@ -35,6 +36,7 @@ public partial class TransferFileDetails : ComponentBase
             TransferType.RemoteDownloadExtraction => L["ExtractionArchiveStatus"],
             TransferType.ArchiveCreation => L["PackingProgress"],
             TransferType.ArchiveHashing => L["HashingFileStatus"],
+            TransferType.ArchiveHashChange => L["HashingFileStatus"],
             _ => L["DownloadFileStatus"],
         };
 

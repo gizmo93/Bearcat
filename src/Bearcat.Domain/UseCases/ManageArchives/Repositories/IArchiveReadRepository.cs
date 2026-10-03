@@ -8,4 +8,11 @@ public interface IArchiveReadRepository
         int archiveId,
         CancellationToken cancellationToken = default
     );
+
+    Task<
+        IReadOnlyList<RunningArchiveReadModel>
+    > GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
+        IReadOnlyList<int> archiveIds,
+        CancellationToken cancellationToken = default
+    );
 }

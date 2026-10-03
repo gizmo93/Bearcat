@@ -1244,6 +1244,9 @@
   <data name="HashingFileStatus" xml:space="preserve"><value>Hashfortschritt pro Datei</value></data>
   <data name="ToggleArchiveDetails" xml:space="preserve"><value>Archivdetails umschalten</value></data>
   <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archiv #{0} für {1}</value></data>
+  <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packen</value></data>
+  <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 MD5-Hashes erstellen</value></data>
+  <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>MD5-Hashes des bestehenden Archivs ändern</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>

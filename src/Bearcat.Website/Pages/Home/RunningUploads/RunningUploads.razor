@@ -1,4 +1,6 @@
 @using Bearcat.Domain.Shared.Transfers
+@using Bearcat.Domain.UseCases.ManageArchives.ReadModels
+@using Bearcat.Domain.UseCases.ManageUploads.ReadModels
 @using Bearcat.Website.Formatting
 
 <section class="space-y-3">
@@ -39,7 +41,7 @@
             <span>@L["Uploads"]</span>
         </div>
 
-        <BbDataTable TData="Upload"
+        <BbDataTable TData="RunningUploadReadModel"
                      Data="SortedUploads"
                      ShowToolbar="false"
                      ShowPagination="@(Uploads.Count > 10)"
@@ -47,50 +49,50 @@
                      AriaLabel="@L["RunningUploads"]"
                      Class="bearcat-data-table bearcat-running-uploads-table rounded-lg border border-border/70">
             <Columns>
-                <BbDataTableColumn TData="Upload" TValue="int"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="int"
                                    Header="@L["Id"]"
-                                   Property="@(upload => upload.Id)"
+                                   Property="@(upload => upload.UploadId)"
                                    Sortable="true">
                     <CellTemplate Context="upload">
                         <span class="bearcat-mobile-cell-label">@L["Id"]</span>
-                        <span class="tabular-nums">@upload.Id</span>
+                        <span class="tabular-nums">@upload.UploadId</span>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="string"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="string"
                                    Header="@L["Release"]"
-                                   Property="@(upload => upload.UploadConfig.Release.Name)"
+                                   Property="@(upload => upload.ReleaseName)"
                                    Sortable="true"
                                    Filterable="true">
                     <CellTemplate Context="upload">
-                        <a class="bearcat-upload-release-name text-primary transition hover:underline" href="@($"/releases/{upload.UploadConfig.ReleaseId}")">
-                            @upload.UploadConfig.Release.Name
+                        <a class="bearcat-upload-release-name text-primary transition hover:underline" href="@($"/releases/{upload.ReleaseId}")">
+                            @upload.ReleaseName
                         </a>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="string"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="string"
                                    Header="@L["UploadConfig"]"
-                                   Property="@(upload => upload.UploadConfig.Name)"
+                                   Property="@(upload => upload.UploadConfigName)"
                                    Sortable="true"
                                    Filterable="true">
                     <CellTemplate Context="upload">
                         <span class="bearcat-mobile-cell-label">@L["UploadConfig"]</span>
-                        @upload.UploadConfig.Name
+                        @upload.UploadConfigName
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="string"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="string"
                                    Header="@L["Hoster"]"
-                                   Property="@(upload => upload.UploadConfig.HosterRegistration.Name)"
+                                   Property="@(upload => upload.HosterRegistrationName)"
                                    Sortable="true"
                                    Filterable="true">
                     <CellTemplate Context="upload">
                         <span class="bearcat-mobile-cell-label">@L["Hoster"]</span>
                         <div class="flex flex-wrap items-center gap-2">
-                            <span>@upload.UploadConfig.HosterRegistration.Name</span>
-                            <ProxyServerBadge ProxyServerNames="GetUploadProxyServerNames(upload.Id)" />
+                            <span>@upload.HosterRegistrationName</span>
+                            <ProxyServerBadge ProxyServerNames="GetUploadProxyServerNames(upload.UploadId)" />
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="string"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="string"
                                    Header="@L["State"]"
                                    Property="@(upload => upload.UploadState.ToString())"
                                    Sortable="true">
@@ -100,7 +102,7 @@
                         </BbBadge>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="double"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="double"
                                    Header="@L["Progress"]"
                                    Property="@(GetUploadProgress)"
                                    Sortable="true"
@@ -108,17 +110,17 @@
                     <CellTemplate Context="upload">
                         @{
                             var percentage = GetUploadProgress(upload);
-                            var isExpanded = showDetailIds.Contains(upload.Id);
+                            var isExpanded = showDetailIds.Contains(upload.UploadId);
                         }
                         @if (upload.UploadState is UploadState.Uploading or UploadState.CancellationRequested)
                         {
-                            var uploadSpeed = FormatUploadSpeed(upload.Id);
+                            var uploadSpeed = FormatUploadSpeed(upload.UploadId);
                             <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
                             <TransferProgressCell Percentage="percentage"
                                                   Speed="@uploadSpeed"
                                                   IsExpanded="isExpanded"
                                                   ToggleAriaLabel="@L["ToggleUploadDetails"]"
-                                                  OnToggleDetails="@(() => ToggleShowUploadDetails(upload.Id))" />
+                                                  OnToggleDetails="@(() => ToggleShowUploadDetails(upload.UploadId))" />
                         }
                         else
                         {
@@ -127,9 +129,9 @@
                         }
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="int"
+                <BbDataTableColumn TData="RunningUploadReadModel" TValue="int"
                                    Header=""
-                                   Property="@(upload => upload.Id)"
+                                   Property="@(upload => upload.UploadId)"
                                    Width="56px">
                     <CellTemplate Context="upload">
                         <div class="flex justify-end">
@@ -164,7 +166,7 @@
             <span>@L["MirrorDownloads"]</span>
         </div>
 
-        <BbDataTable TData="Archive"
+        <BbDataTable TData="RunningArchiveReadModel"
                      Data="RestoringArchives"
                      ShowToolbar="false"
                      ShowPagination="@(RestoringArchives.Count > 10)"
@@ -172,37 +174,37 @@
                      AriaLabel="@L["MirrorDownloads"]"
                      Class="bearcat-data-table bearcat-running-downloads-table rounded-lg border border-border/70">
             <Columns>
-                <BbDataTableColumn TData="Archive" TValue="int"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="int"
                                    Header="@L["Id"]"
-                                   Property="@(archive => archive.Id)"
+                                   Property="@(archive => archive.ArchiveId)"
                                    Sortable="true">
                     <CellTemplate Context="archive">
                         <span class="bearcat-mobile-cell-label">@L["Id"]</span>
-                        <span class="tabular-nums">@archive.Id</span>
+                        <span class="tabular-nums">@archive.ArchiveId</span>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Archive" TValue="string"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                    Header="@L["Release"]"
-                                   Property="@(archive => archive.ArchiveConfig.Release.Name)"
+                                   Property="@(archive => archive.ReleaseName)"
                                    Sortable="true"
                                    Filterable="true">
                     <CellTemplate Context="archive">
-                        <a class="bearcat-upload-release-name text-primary transition hover:underline" href="@($"/releases/{archive.ArchiveConfig.ReleaseId}")">
-                            @archive.ArchiveConfig.Release.Name
+                        <a class="bearcat-upload-release-name text-primary transition hover:underline" href="@($"/releases/{archive.ReleaseId}")">
+                            @archive.ReleaseName
                         </a>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Archive" TValue="string"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                    Header="@L["ArchiveConfig"]"
-                                   Property="@(archive => archive.ArchiveConfig.Name)"
+                                   Property="@(archive => archive.ArchiveConfigName)"
                                    Sortable="true"
                                    Filterable="true">
                     <CellTemplate Context="archive">
                         <span class="bearcat-mobile-cell-label">@L["ArchiveConfig"]</span>
-                        @archive.ArchiveConfig.Name
+                        @archive.ArchiveConfigName
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Archive" TValue="string"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                    Header="@L["Hoster"]"
                                    Property="@(GetDownloadHosterName)"
                                    Sortable="true"
@@ -211,11 +213,11 @@
                         <span class="bearcat-mobile-cell-label">@L["Hoster"]</span>
                         <div class="flex flex-wrap items-center gap-2">
                             <span>@GetDownloadHosterName(archive)</span>
-                            <ProxyServerBadge ProxyServerNames="GetDownloadProxyServerNames(archive.Id)" />
+                            <ProxyServerBadge ProxyServerNames="GetDownloadProxyServerNames(archive.ArchiveId)" />
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Archive" TValue="string"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="string"
                                    Header="@L["State"]"
                                    Property="@(archive => archive.ArchiveState.ToString())"
                                    Sortable="true">
@@ -225,7 +227,7 @@
                         </BbBadge>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Archive" TValue="double"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="double"
                                    Header="@L["Progress"]"
                                    Property="@(GetDownloadProgress)"
                                    Sortable="true"
@@ -233,21 +235,21 @@
                     <CellTemplate Context="archive">
                         @{
                             var percentage = GetDownloadProgress(archive);
-                            var downloadSpeed = FormatDownloadSpeed(archive.Id);
-                            var isExpanded = showDownloadDetailIds.Contains(archive.Id);
+                            var downloadSpeed = FormatDownloadSpeed(archive.ArchiveId);
+                            var isExpanded = showDownloadDetailIds.Contains(archive.ArchiveId);
                         }
                         <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
                         <TransferProgressCell Percentage="percentage"
                                               Speed="@downloadSpeed"
                                               IsExpanded="isExpanded"
                                               ToggleAriaLabel="@L["ToggleDownloadDetails"]"
-                                              ToggleDisabled="@(GetDownloadSnapshot(archive.Id) is null)"
-                                              OnToggleDetails="@(() => ToggleShowDownloadDetails(archive.Id))" />
+                                              ToggleDisabled="@(GetDownloadSnapshot(archive.ArchiveId) is null)"
+                                              OnToggleDetails="@(() => ToggleShowDownloadDetails(archive.ArchiveId))" />
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="Archive" TValue="int"
+                <BbDataTableColumn TData="RunningArchiveReadModel" TValue="int"
                                    Header=""
-                                   Property="@(archive => archive.Id)"
+                                   Property="@(archive => archive.ArchiveId)"
                                    Width="56px">
                     <CellTemplate Context="archive">
                         <div class="flex justify-end">
@@ -268,8 +270,8 @@
             <div class="space-y-4">
                 @foreach (var archive in ExpandedRestores)
                 {
-                    <TransferFileDetails Snapshot="GetDownloadSnapshot(archive.Id)!"
-                                         Subtitle="@L["DownloadStatusSubtitle", archive.Id, archive.ArchiveConfig.Name, GetDownloadHosterName(archive)]"
+                    <TransferFileDetails Snapshot="GetDownloadSnapshot(archive.ArchiveId)!"
+                                         Subtitle="@L["DownloadStatusSubtitle", archive.ArchiveId, archive.ArchiveConfigName, GetDownloadHosterName(archive)]"
                                          StateLabel="@L.Localize(archive.ArchiveState)" />
                 }
             </div>

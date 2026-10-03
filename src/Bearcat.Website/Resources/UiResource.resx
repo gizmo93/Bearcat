@@ -1241,6 +1241,9 @@
   <data name="HashingFileStatus" xml:space="preserve"><value>Hashing progress per file</value></data>
   <data name="ToggleArchiveDetails" xml:space="preserve"><value>Toggle archive details</value></data>
   <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archive #{0} for {1}</value></data>
+  <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packing</value></data>
+  <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 Creating MD5 hashes</value></data>
+  <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>Changing MD5 hashes of existing archive</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>

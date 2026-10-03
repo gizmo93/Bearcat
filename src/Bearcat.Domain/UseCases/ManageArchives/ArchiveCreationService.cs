@@ -152,6 +152,7 @@ public class ArchiveCreationService(
                 archive: archive,
                 archiveConfig: archiveConfig,
                 knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
+                transferType: TransferType.ArchiveHashing,
                 cancellationToken: cancellationToken
             );
         }
@@ -289,6 +290,7 @@ public class ArchiveCreationService(
                 archive: assignableArchive,
                 archiveConfig: archiveConfig,
                 knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
+                transferType: TransferType.ArchiveHashChange,
                 cancellationToken: cancellationToken
             );
         }
@@ -406,12 +408,14 @@ public class ArchiveCreationService(
         Archive archive,
         ArchiveConfig archiveConfig,
         HashSet<string> knownHashes,
+        TransferType transferType,
         CancellationToken cancellationToken
     )
     {
         await HashArchiveFilesInParallelWithProgressAsync(
             archive: archive,
             archiveConfig: archiveConfig,
+            transferType: transferType,
             hashArchiveFileAsync: async (archiveFile, progress, fileCancellationToken) =>
             {
                 if (!File.Exists(archiveFile.FullFileName))
@@ -463,6 +467,7 @@ public class ArchiveCreationService(
         await HashArchiveFilesInParallelWithProgressAsync(
             archive: archive,
             archiveConfig: archiveConfig,
+            transferType: TransferType.ArchiveHashing,
             hashArchiveFileAsync: async (archiveFile, progress, fileCancellationToken) =>
             {
                 if (!File.Exists(archiveFile.FullFileName))
@@ -489,11 +494,12 @@ public class ArchiveCreationService(
     private async Task HashArchiveFilesInParallelWithProgressAsync(
         Archive archive,
         ArchiveConfig archiveConfig,
+        TransferType transferType,
         Func<ArchiveFile, ITransferProgress, CancellationToken, Task> hashArchiveFileAsync,
         CancellationToken cancellationToken
     )
     {
-        var transferIdentifier = new TransferIdentifier(TransferType.ArchiveHashing, archive.Id);
+        var transferIdentifier = new TransferIdentifier(transferType, archive.Id);
 
         var plannedFilesPerArchiveFile = archive
             .ArchiveFiles.Select(
