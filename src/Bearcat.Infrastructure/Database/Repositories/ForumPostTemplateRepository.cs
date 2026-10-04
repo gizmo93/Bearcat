@@ -13,18 +13,22 @@ public class ForumPostTemplateRepository(
 {
     public async Task<IReadOnlyList<ForumPostTemplateSummaryReadModel>> GetAllAsync(
         ForumPostTemplateType? type = null,
+        ForumPostTemplateOutputFormat? outputFormat = null,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
             .ForumPostTemplates.Where(template => type == null || template.Type == type)
+            .Where(template => outputFormat == null || template.OutputFormat == outputFormat)
             .OrderBy(template => template.Name)
             .ThenBy(template => template.Id)
             .Select(template => new ForumPostTemplateSummaryReadModel(
                 template.Id,
                 template.Name,
                 template.Type,
-                template.UpdatedAt
+                template.OutputFormat,
+                template.UpdatedAt,
+                dbRead.ForumPostingRules.Count(rule => rule.ForumPostTemplateId == template.Id)
             ))
             .ToListAsync(cancellationToken);
     }
@@ -40,6 +44,7 @@ public class ForumPostTemplateRepository(
                 template.Id,
                 template.Name,
                 template.Type,
+                template.OutputFormat,
                 template.TemplateBody
             ))
             .FirstOrDefaultAsync(cancellationToken);

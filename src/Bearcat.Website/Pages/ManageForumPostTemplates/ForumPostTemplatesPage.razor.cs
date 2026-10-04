@@ -30,6 +30,14 @@ public partial class ForumPostTemplatesPage(
             .Select(type => new SelectOption<ForumPostTemplateType>(type, GetTypeLabel(type)))
             .ToList();
 
+    private IReadOnlyList<SelectOption<ForumPostTemplateOutputFormat>> OutputFormatOptions =>
+        Enum.GetValues<ForumPostTemplateOutputFormat>()
+            .Select(outputFormat => new SelectOption<ForumPostTemplateOutputFormat>(
+                outputFormat,
+                GetOutputFormatLabel(outputFormat)
+            ))
+            .ToList();
+
     private IReadOnlyList<ForumPostTemplateVariableReadModel> FilteredVariables
     {
         get
@@ -97,6 +105,7 @@ public partial class ForumPostTemplatesPage(
             ForumPostTemplateId = template.ForumPostTemplateId,
             Name = template.Name,
             Type = template.Type,
+            OutputFormat = template.OutputFormat,
             TemplateBody = template.TemplateBody,
         };
 
@@ -111,6 +120,7 @@ public partial class ForumPostTemplatesPage(
         {
             Name = string.Empty,
             Type = ForumPostTemplateType.Release,
+            OutputFormat = ForumPostTemplateOutputFormat.BBCode,
             TemplateBody = GetDefaultTemplate(ForumPostTemplateType.Release),
         };
 
@@ -161,7 +171,12 @@ public partial class ForumPostTemplatesPage(
         {
             var templateId = await operationRunner.RunAsync(
                 (ForumPostTemplateService service) =>
-                    service.CreateAsync(formModel.Name, formModel.Type, formModel.TemplateBody)
+                    service.CreateAsync(
+                        formModel.Name,
+                        formModel.Type,
+                        formModel.OutputFormat,
+                        formModel.TemplateBody
+                    )
             );
             await LoadTemplatesAsync(selectFirst: false);
             await SelectTemplateAsync(templateId);
@@ -173,7 +188,7 @@ public partial class ForumPostTemplatesPage(
                 service.UpdateAsync(
                     formModel.ForumPostTemplateId.Value,
                     formModel.Name,
-                    formModel.Type,
+                    formModel.OutputFormat,
                     formModel.TemplateBody
                 )
         );
@@ -226,6 +241,16 @@ public partial class ForumPostTemplatesPage(
             ForumPostTemplateType.Release => L["ForumPostTemplateTypeRelease"],
             ForumPostTemplateType.ReleaseCollection => L["ForumPostTemplateTypeReleaseCollection"],
             _ => type.ToString(),
+        };
+    }
+
+    private string GetOutputFormatLabel(ForumPostTemplateOutputFormat outputFormat)
+    {
+        return outputFormat switch
+        {
+            ForumPostTemplateOutputFormat.BBCode => L["ForumPostTemplateOutputFormatBBCode"],
+            ForumPostTemplateOutputFormat.PlainText => L["ForumPostTemplateOutputFormatPlainText"],
+            _ => outputFormat.ToString(),
         };
     }
 

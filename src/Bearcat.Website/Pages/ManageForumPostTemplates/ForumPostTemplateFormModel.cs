@@ -10,5 +10,8 @@ public class ForumPostTemplateFormModel
 
     public ForumPostTemplateType Type { get; set; } = ForumPostTemplateType.Release;
 
+    public ForumPostTemplateOutputFormat OutputFormat { get; set; } =
+        ForumPostTemplateOutputFormat.BBCode;
+
     public string TemplateBody { get; set; } = string.Empty;
 }

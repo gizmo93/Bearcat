@@ -11,6 +11,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     public async Task<int> CreateAsync(
         string name,
         ForumPostTemplateType type,
+        ForumPostTemplateOutputFormat outputFormat,
         string? templateBody,
         CancellationToken cancellationToken = default
     )
@@ -20,6 +21,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
         {
             Name = name.Trim(),
             Type = type,
+            OutputFormat = outputFormat,
             TemplateBody = templateBody ?? string.Empty,
             CreatedAt = now,
             UpdatedAt = now,
@@ -34,18 +36,45 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     public async Task UpdateAsync(
         int forumPostTemplateId,
         string name,
-        ForumPostTemplateType type,
+        ForumPostTemplateOutputFormat outputFormat,
         string? templateBody,
         CancellationToken cancellationToken = default
     )
     {
         var template = await writeRepository.GetByIdAsync(forumPostTemplateId, cancellationToken);
         template.Name = name.Trim();
-        template.Type = type;
+        template.OutputFormat = outputFormat;
         template.TemplateBody = templateBody ?? string.Empty;
         template.UpdatedAt = DateTime.UtcNow;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> DuplicateAsync(
+        int forumPostTemplateId,
+        string name,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var sourceTemplate = await writeRepository.GetByIdAsync(
+            forumPostTemplateId,
+            cancellationToken
+        );
+        var now = DateTime.UtcNow;
+        var duplicatedTemplate = new ForumPostTemplate
+        {
+            Name = name.Trim(),
+            Type = sourceTemplate.Type,
+            OutputFormat = sourceTemplate.OutputFormat,
+            TemplateBody = sourceTemplate.TemplateBody,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        writeRepository.Add(duplicatedTemplate);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return duplicatedTemplate.Id;
     }
 
     public async Task DeleteAsync(

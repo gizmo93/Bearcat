@@ -100,7 +100,10 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     {
         templates = await operationRunner.RunAsync(
             (IForumPostTemplateReadRepository repository) =>
-                repository.GetAllAsync(ForumPostTemplateType.Release)
+                repository.GetAllAsync(
+                    ForumPostTemplateType.Release,
+                    outputFormat: ForumPostTemplateOutputFormat.BBCode
+                )
         );
 
         await InitializeFormModelAsync();

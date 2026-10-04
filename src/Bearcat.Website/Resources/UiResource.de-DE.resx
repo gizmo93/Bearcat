@@ -790,6 +790,9 @@
   <data name="ForumPostTemplateType" xml:space="preserve"><value>Typ</value></data>
   <data name="ForumPostTemplateTypeRelease" xml:space="preserve"><value>Release</value></data>
   <data name="ForumPostTemplateTypeReleaseCollection" xml:space="preserve"><value>Releasecollection</value></data>
+  <data name="ForumPostTemplateOutputFormat" xml:space="preserve"><value>Ausgabeformat</value></data>
+  <data name="ForumPostTemplateOutputFormatBBCode" xml:space="preserve"><value>BBCode</value></data>
+  <data name="ForumPostTemplateOutputFormatPlainText" xml:space="preserve"><value>Klartext</value></data>
   <data name="SearchConfigurations" xml:space="preserve"><value>Konfigurationen durchsuchen</value></data>
   <data name="NoConfigurationsFound" xml:space="preserve"><value>Keine Konfigurationen gefunden.</value></data>
   <data name="SearchVariables" xml:space="preserve"><value>Variablen suchen</value></data>

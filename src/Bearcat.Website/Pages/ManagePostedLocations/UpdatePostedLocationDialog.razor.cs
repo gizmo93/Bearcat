@@ -40,7 +40,11 @@ public partial class UpdatePostedLocationDialog(IScopedOperationRunner operation
         }
 
         templates = await operationRunner.RunAsync(
-            (IForumPostTemplateReadRepository repository) => repository.GetAllAsync(TemplateType)
+            (IForumPostTemplateReadRepository repository) =>
+                repository.GetAllAsync(
+                    TemplateType,
+                    outputFormat: ForumPostTemplateOutputFormat.BBCode
+                )
         );
 
         selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
