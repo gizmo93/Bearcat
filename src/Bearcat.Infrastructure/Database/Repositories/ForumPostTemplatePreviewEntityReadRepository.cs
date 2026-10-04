@@ -16,6 +16,7 @@ public class ForumPostTemplatePreviewEntityReadRepository(IBearcatReadDbContext 
     )
     {
         var trimmedSearchTerm = SearchTextPatterns.TrimOrNullWhenEmpty(searchTerm);
+
         var pattern = trimmedSearchTerm is null
             ? null
             : SearchTextPatterns.ToLowerCaseContainsPattern(trimmedSearchTerm);
@@ -23,14 +24,14 @@ public class ForumPostTemplatePreviewEntityReadRepository(IBearcatReadDbContext 
         return type switch
         {
             ForumPostTemplateType.Release => await SearchReleasesAsync(
-                pattern,
-                limit,
-                cancellationToken
+                pattern: pattern,
+                limit: limit,
+                cancellationToken: cancellationToken
             ),
             ForumPostTemplateType.ReleaseCollection => await SearchReleaseCollectionsAsync(
-                pattern,
-                limit,
-                cancellationToken
+                pattern: pattern,
+                limit: limit,
+                cancellationToken: cancellationToken
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
         };

@@ -18,10 +18,10 @@ public record ForumPostTemplateVariableNode(
         var text = $"{{{{ {path} }}}}";
 
         return new ForumPostTemplateVariableNode(
-            name,
-            path,
-            description,
-            new ForumPostTemplateVariableInsertion(text, text.Length),
+            Name: name,
+            Path: path,
+            Description: description,
+            Insertion: new ForumPostTemplateVariableInsertion(text, text.Length),
             LoopStatement: null,
             Children: []
         );
@@ -35,12 +35,12 @@ public record ForumPostTemplateVariableNode(
     )
     {
         return new ForumPostTemplateVariableNode(
-            name,
-            path,
-            description,
+            Name: name,
+            Path: path,
+            Description: description,
             Insertion: null,
             LoopStatement: null,
-            children
+            Children: children
         );
     }
 
@@ -56,15 +56,15 @@ public record ForumPostTemplateVariableNode(
         var openingLine = $"{{{{~ {loopStatement} ~}}}}\n";
 
         return new ForumPostTemplateVariableNode(
-            name,
-            path,
-            description,
-            new ForumPostTemplateVariableInsertion(
+            Name: name,
+            Path: path,
+            Description: description,
+            Insertion: new ForumPostTemplateVariableInsertion(
                 $"{openingLine}\n{{{{~ end ~}}}}",
                 openingLine.Length
             ),
-            loopStatement,
-            children
+            LoopStatement: loopStatement,
+            Children: children
         );
     }
 }

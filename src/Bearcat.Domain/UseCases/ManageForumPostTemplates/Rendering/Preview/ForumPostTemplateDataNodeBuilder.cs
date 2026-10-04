@@ -21,19 +21,19 @@ public static class ForumPostTemplateDataNodeBuilder
             string text => new ForumPostTemplateDataNode(name, text, []),
             bool flag => new ForumPostTemplateDataNode(name, flag ? "true" : "false", []),
             IDictionary<string, object?> dictionary => new ForumPostTemplateDataNode(
-                name,
-                null,
-                BuildDictionaryChildren(dictionary)
+                Name: name,
+                Value: null,
+                Children: BuildDictionaryChildren(dictionary)
             ),
             IEnumerable items => new ForumPostTemplateDataNode(
-                name,
-                null,
-                BuildListChildren(items)
+                Name: name,
+                Value: null,
+                Children: BuildListChildren(items)
             ),
             _ when IsScalar(value.GetType()) => new ForumPostTemplateDataNode(
-                name,
-                FormatScalar(value),
-                []
+                Name: name,
+                Value: FormatScalar(value),
+                Children: []
             ),
             _ => new ForumPostTemplateDataNode(name, null, BuildObjectChildren(value)),
         };

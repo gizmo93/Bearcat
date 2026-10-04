@@ -72,8 +72,8 @@ public class ForumPostRenderService(
         return globals is null
             ? null
             : new ForumPostTemplatePreviewData(
-                globals,
-                ForumPostTemplateDataNodeBuilder.Build(globals)
+                globals: globals,
+                dataNodes: ForumPostTemplateDataNodeBuilder.Build(globals)
             );
     }
 
@@ -83,8 +83,8 @@ public class ForumPostRenderService(
     )
     {
         return RenderTemplateBodyAsync(
-            templateBody,
-            [previewData.Globals.Clone(deep: true), new ScriptObject()]
+            templateBody: templateBody,
+            globalsInPushOrder: [previewData.Globals.Clone(deep: true), new ScriptObject()]
         );
     }
 

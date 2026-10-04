@@ -18,6 +18,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     )
     {
         var now = DateTime.UtcNow;
+
         var template = new ForumPostTemplate
         {
             Name = name.Trim(),
@@ -43,6 +44,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     )
     {
         var template = await writeRepository.GetByIdAsync(forumPostTemplateId, cancellationToken);
+
         template.Name = name.Trim();
         template.OutputFormat = outputFormat;
         template.TemplateBody = templateBody ?? string.Empty;
@@ -61,7 +63,9 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
             forumPostTemplateId,
             cancellationToken
         );
+
         var now = DateTime.UtcNow;
+
         var duplicatedTemplate = new ForumPostTemplate
         {
             Name = name.Trim(),
@@ -91,6 +95,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     public static ForumPostTemplateValidationResult Validate(string? templateBody)
     {
         var template = Template.Parse(templateBody ?? string.Empty);
+
         return new ForumPostTemplateValidationResult(
             IsValid: !template.HasErrors,
             Errors: ForumPostTemplateErrorMapper.FromParserMessages(template.Messages)
