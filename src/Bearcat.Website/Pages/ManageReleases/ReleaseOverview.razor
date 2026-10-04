@@ -79,16 +79,7 @@
             </div>
         </div>
 
-        @if (isLoading)
-        {
-            <div class="bearcat-overview-card">
-                <div class="bearcat-release-empty">
-                    <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
-                    <span>@L["Loading"]</span>
-                </div>
-            </div>
-        }
-        else if (overviewUploads.Count == 0)
+        @if (Uploads.Count == 0)
         {
             <div class="bearcat-overview-card">
                 <div class="bearcat-release-empty">
@@ -107,7 +98,7 @@
                         <span class="bearcat-overview-summary-value-suffix">@L["OfTotal", summary.HosterCount]</span>
                     </p>
                     <div class="bearcat-overview-online-segments" aria-hidden="true">
-                        @foreach (var upload in overviewUploads)
+                        @foreach (var upload in Uploads)
                         {
                             <span class="bearcat-overview-online-segment @GetOnlineSegmentClass(upload.UploadId is null ? null : upload.OnlineState)"
                                   title="@upload.UploadConfigName"></span>
@@ -176,7 +167,7 @@
                     <span></span>
                 </div>
 
-                @foreach (var upload in overviewUploads)
+                @foreach (var upload in Uploads)
                 {
                     var isExpanded = expandedUploadConfigIds.Contains(upload.UploadConfigId);
                     var isOffline = upload.UploadId is not null && upload.OnlineState is OnlineState.Offline;
@@ -248,7 +239,7 @@
                                         <BbHoverCard OpenDelay="300" CloseDelay="150">
                                             <BbHoverCardTrigger AsChild="false" Class="bearcat-overview-chip">
                                                 <LucideIcon Name="@(isCreated ? "check" : "x")"
-                                                            class="@($"h-3.5 w-3.5 shrink-0 {(isCreated ? "text-primary" : "text-destructive")}")" />
+                                                            class="@($"h-3.5 w-3.5 shrink-0 {(isCreated ? "text-muted-foreground" : "text-destructive")}")" />
                                                 <span class="truncate">@link.LinkCrypterRegistrationName</span>
                                                 @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
                                                 {

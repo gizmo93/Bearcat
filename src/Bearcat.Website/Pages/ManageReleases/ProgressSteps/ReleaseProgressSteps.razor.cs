@@ -11,9 +11,6 @@ public partial class ReleaseProgressSteps : ComponentBase
     public IReadOnlyList<ReleaseProgressStep> Steps { get; set; } = [];
 
     [Parameter]
-    public string? ActiveTab { get; set; }
-
-    [Parameter]
     public EventCallback<ReleaseProgressStepKind> OnStepSelected { get; set; }
 
     private string GetTitle(ReleaseProgressStepKind kind) =>

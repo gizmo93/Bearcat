@@ -36,11 +36,14 @@ public partial class ReleaseOverview(
     public string? ReleaseFolderPath { get; set; }
 
     [Parameter]
-    public EventCallback OnRefreshed { get; set; }
+    [EditorRequired]
+    public IReadOnlyList<ReleaseOverviewUploadReadModel> Uploads { get; set; } = [];
 
-    private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
+    [Parameter]
+    public EventCallback OnRefreshRequested { get; set; }
+
     private IReadOnlyList<ReleaseOverviewImageUploadReadModel> overviewImageUploads = [];
-    private ReleaseOverviewSummary summary = ReleaseOverviewSummaryCalculator.Calculate([]);
+    private ReleaseOverviewSummary summary = null!;
     private IReadOnlyList<LinkCrypterContainerUrls> containerUrlsByLinkCrypter = [];
     private readonly HashSet<int> expandedUploadConfigIds = [];
     private ReleaseNfoReadModel? releaseNfo;
@@ -58,16 +61,20 @@ public partial class ReleaseOverview(
 
     protected override async Task OnParametersSetAsync()
     {
+        summary = ReleaseOverviewSummaryCalculator.Calculate(Uploads);
+        containerUrlsByLinkCrypter =
+            ReleaseOverviewSummaryCalculator.GroupCreatedContainerUrlsByLinkCrypter(Uploads);
+
         if (
             loadedReleaseId != ReleaseId
             || !string.Equals(loadedReleaseFolderPath, ReleaseFolderPath, StringComparison.Ordinal)
         )
         {
-            await LoadOverviewAsync();
+            await LoadImageUploadsAndNfoAsync();
         }
     }
 
-    private async Task LoadOverviewAsync()
+    private async Task LoadImageUploadsAndNfoAsync()
     {
         isLoading = true;
 
@@ -79,15 +86,9 @@ public partial class ReleaseOverview(
                 nfoContent = null;
                 hasLocalNfo = false;
 
-                overviewUploads = await repository.GetReleaseOverviewAsync(ReleaseId);
                 overviewImageUploads = await repository.GetReleaseOverviewImageUploadsAsync(
                     ReleaseId
                 );
-                summary = ReleaseOverviewSummaryCalculator.Calculate(overviewUploads);
-                containerUrlsByLinkCrypter =
-                    ReleaseOverviewSummaryCalculator.GroupCreatedContainerUrlsByLinkCrypter(
-                        overviewUploads
-                    );
                 releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
                 nfoContent = releaseNfo?.Content;
                 hasLocalNfo = ReleaseNfoService.HasLocalNfo(ReleaseFolderPath);
@@ -103,14 +104,15 @@ public partial class ReleaseOverview(
 
     public async Task ReloadAsync()
     {
-        await LoadOverviewAsync();
+        await LoadImageUploadsAndNfoAsync();
         StateHasChanged();
     }
 
     private async Task RefreshAsync()
     {
-        await LoadOverviewAsync();
-        await OnRefreshed.InvokeAsync();
+        isLoading = true;
+        await OnRefreshRequested.InvokeAsync();
+        await LoadImageUploadsAndNfoAsync();
     }
 
     private async Task SaveNfoFileAsync()
@@ -202,7 +204,7 @@ public partial class ReleaseOverview(
     private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>
         state switch
         {
-            LinkCrypterContainerState.Created => BadgeVariant.Default,
+            LinkCrypterContainerState.Created => BadgeVariant.Secondary,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };

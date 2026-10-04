@@ -68,6 +68,7 @@ public partial class ReleaseDetail(
     private ReleaseUploadsView uploadsView = ReleaseUploadsView.Configuration;
     private IReadOnlyList<ArchiveConfigReadModel> archiveConfigs = [];
     private int archiveConfigCount;
+    private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
     private IReadOnlyList<ReleaseProgressStep> progressSteps = [];
     private int imageUploadConfigCount;
     private PostedLocations? postedLocations;
@@ -137,7 +138,7 @@ public partial class ReleaseDetail(
         await LoadReleaseMetadataAndReleaseInfoAsync();
         await LoadArchiveConfigsAsync();
         await LoadImageUploadConfigCountAsync();
-        await LoadProgressStepsAsync();
+        await LoadOverviewUploadsAndProgressStepsAsync();
         remoteDownloadOrigin = await operationRunner.RunAsync(
             (IRemoteSourceDownloadReadRepository repository) =>
                 repository.GetByReleaseIdAsync(ReleaseId)
@@ -223,9 +224,9 @@ public partial class ReleaseDetail(
         imageUploadConfigCount = imageUploadConfigs.Count;
     }
 
-    private async Task LoadProgressStepsAsync()
+    private async Task LoadOverviewUploadsAndProgressStepsAsync()
     {
-        var overviewUploads = await operationRunner.RunAsync(
+        overviewUploads = await operationRunner.RunAsync(
             (IReleaseReadRepository repository) => repository.GetReleaseOverviewAsync(ReleaseId)
         );
         var postedLocationReadModels = await operationRunner.RunAsync(
@@ -256,7 +257,7 @@ public partial class ReleaseDetail(
         release = releaseReadModel;
         await LoadReleaseMetadataAndReleaseInfoAsync();
         await LoadArchiveConfigsAsync();
-        await LoadProgressStepsAsync();
+        await LoadOverviewUploadsAndProgressStepsAsync();
     }
 
     private async Task LoadUnmanagedArchiveFolderPathsAsync()
@@ -284,7 +285,7 @@ public partial class ReleaseDetail(
         await ReloadProgressAsync();
     }
 
-    private async Task HandleOverviewRefreshedAsync()
+    private async Task HandleOverviewRefreshRequestedAsync()
     {
         await ReloadPostedLocationsAsync();
         await ReloadProgressAsync();

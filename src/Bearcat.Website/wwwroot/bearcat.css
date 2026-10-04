@@ -332,17 +332,6 @@ a {
     border-left: 1px solid var(--border);
 }
 
-.bearcat-release-progress-step-current::after {
-    content: "";
-    position: absolute;
-    right: 0.75rem;
-    bottom: 0;
-    left: 0.75rem;
-    height: 2px;
-    border-radius: 9999px;
-    background: var(--primary);
-}
-
 .bearcat-release-progress-step-marker {
     display: grid;
     width: 1.625rem;
@@ -354,8 +343,9 @@ a {
 }
 
 .bearcat-release-progress-step-marker-done {
-    background: var(--primary);
-    color: var(--primary-foreground);
+    border-color: var(--border);
+    background: var(--muted);
+    color: var(--muted-foreground);
 }
 
 .bearcat-release-progress-step-marker-in-progress {
@@ -374,6 +364,10 @@ a {
     border-color: var(--border);
     background: var(--muted);
     color: var(--muted-foreground);
+}
+
+.bearcat-release-progress-step-marker-pending > * {
+    opacity: 0.7;
 }
 
 .bearcat-release-progress-step-marker-not-applicable {
@@ -395,6 +389,11 @@ a {
 
 .bearcat-release-progress-step-short-title {
     display: none;
+}
+
+.bearcat-release-progress-step-pending .bearcat-release-progress-step-title,
+.bearcat-release-progress-step-pending .bearcat-release-progress-step-short-title {
+    color: var(--muted-foreground);
 }
 
 .bearcat-release-progress-step-description {
@@ -436,11 +435,6 @@ a {
         letter-spacing: -0.01em;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-
-    .bearcat-release-progress-step-current::after {
-        right: 0.375rem;
-        left: 0.375rem;
     }
 }
 
@@ -564,7 +558,7 @@ a {
 }
 
 .bearcat-overview-online-segment-online {
-    background: var(--primary);
+    background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
 }
 
 .bearcat-overview-online-segment-offline {
@@ -572,7 +566,12 @@ a {
 }
 
 .bearcat-overview-online-segment-partially-online {
-    background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+    background: repeating-linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--muted-foreground) 45%, transparent) 0 3px,
+        transparent 3px 6px
+    );
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--muted-foreground) 45%, transparent);
 }
 
 .bearcat-overview-online-segment-unknown {
@@ -790,9 +789,10 @@ a {
     height: 1.75rem;
     flex-shrink: 0;
     place-items: center;
+    border: 1px solid var(--border);
     border-radius: 9999px;
-    background: color-mix(in oklch, var(--primary) 14%, transparent);
-    color: var(--primary);
+    background: var(--muted);
+    color: var(--muted-foreground);
     font-size: 0.75rem;
     font-weight: 700;
 }
@@ -924,8 +924,9 @@ a {
 }
 
 .bearcat-upload-history-marker-online {
-    background: var(--primary);
-    color: var(--primary-foreground);
+    border-color: var(--border);
+    background: var(--muted);
+    color: var(--muted-foreground);
 }
 
 .bearcat-upload-history-marker-offline {
@@ -940,6 +941,7 @@ a {
 
 .bearcat-upload-history-marker-unknown {
     border-color: var(--border);
+    border-style: dashed;
     background: var(--muted);
     color: var(--muted-foreground);
 }

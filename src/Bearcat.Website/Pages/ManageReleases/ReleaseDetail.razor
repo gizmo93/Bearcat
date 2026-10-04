@@ -251,7 +251,6 @@
         </div>
 
         <ReleaseProgressSteps Steps="progressSteps"
-                              ActiveTab="@activeTab"
                               OnStepSelected="HandleProgressStepSelected" />
     </div>
 
@@ -287,7 +286,8 @@
                 ReleaseId="@ReleaseId"
                 ReleaseName="@release.Name"
                 ReleaseFolderPath="@release.ReleaseFolderPath"
-                OnRefreshed="HandleOverviewRefreshedAsync" />
+                Uploads="overviewUploads"
+                OnRefreshRequested="HandleOverviewRefreshRequestedAsync" />
             <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations">
                 <PostedLocations @ref="postedLocations"
                                  ReleaseId="@ReleaseId"
