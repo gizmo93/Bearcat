@@ -53,7 +53,7 @@ If you already have archives to upload, use an [unmanaged release](/Bearcat/rele
 
 ## 4. Choose how to create the archives
 
-On the **Archive configurations** tab, click **Add**:
+On the **Archives** tab, click **Add**:
 
 - Give the configuration a name, for example `Main archive`, and choose RAR or 7z.
 - Choose an output folder within a working directory where Bearcat can write the archives. Use a separate folder from the source files.
@@ -62,7 +62,7 @@ On the **Archive configurations** tab, click **Add**:
 
 ## 5. Choose where to upload
 
-On the **Upload configurations** tab, click **Add**. Give it a name, select your hoster account
+On the **Uploads** tab, open **Configuration** and click **Add**. Give it a name, select your hoster account
 and the `Main archive` configuration, then save. Leave **Links distributed to** empty for now.
 
 ## 6. Wait for the upload and copy the links
@@ -70,7 +70,7 @@ and the `Main archive` configuration, then save. Leave **Links distributed to** 
 Bearcat starts the work automatically. By default, it waits until the release is at least five
 minutes old, then its background tasks create the archives and upload them.
 
-Open **Uploads** to follow progress. Once the upload finishes, copy the download links from **Overview**.
+Open **Uploads** and switch to **History** to follow progress. Once the upload finishes, copy the download links from **Overview**.
 
 ![Release uploads](images/release-uploads-tab.png)
 

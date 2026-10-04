@@ -28,7 +28,7 @@ Choose the hoster and enter any required account information.
 
 ## Image upload configuration
 
-On a release's **Image upload configurations** tab, click **Add**. Choose a name and the image
+On a release's **Images** tab, click **Add** under **Image upload configurations**. Choose a name and the image
 hoster registration that should receive the cover.
 
 Use a name you can recognize in templates. For example, `ImgBB Cover` is available as

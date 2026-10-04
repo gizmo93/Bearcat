@@ -155,7 +155,7 @@ The **Archive upload** background task starts `Pending` uploads and changes thei
 | Some files failed | `Failed` | `PartiallyOnline` |
 
 Bearcat records a timestamp for successful uploads. Follow progress on the release detail page
-under **Uploads**. **Overview** shows the latest upload for each upload configuration.
+under **Uploads** > **History**. **Overview** shows the latest upload for each upload configuration.
 
 ## 5. Link crypter containers
 
@@ -233,7 +233,7 @@ all files** gives them a new upload date together.
 
 ## 8. Manual reuploads
 
-You can also trigger a reupload yourself from the **"Uploads"** tab. Bearcat allows this for uploads that are:
+You can also trigger a reupload yourself with **Create manual reupload** in the `...` menu of an entry in **Uploads** > **History**. Bearcat allows this for uploads that are:
 
 - `Offline`
 - `PartiallyOnline`

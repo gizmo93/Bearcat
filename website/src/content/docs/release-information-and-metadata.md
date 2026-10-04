@@ -101,8 +101,8 @@ The tab displays metadata and scene release information separately. The visible 
 - **Resolve now** is shown when no scene release information exists.
 - **Add NFO** is shown when no NFO is stored.
 
-The `...` menu contains less common actions such as editing an existing NFO, extracting media
-data, and deleting the resolved release information and metadata.
+The `...` menu contains less common actions such as downloading the cover, editing an existing NFO,
+extracting media data, and deleting the resolved release information and metadata.
 
 External IMDb IDs are shown together with their sources. If the same ID was found in the NFO and
 by xREL, it appears once with both source badges.
