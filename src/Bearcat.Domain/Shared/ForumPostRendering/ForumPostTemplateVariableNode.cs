@@ -53,14 +53,14 @@ public record ForumPostTemplateVariableNode(
     )
     {
         var loopStatement = $"for {loopVariable} in {path}";
-        var openingLine = $"{{{{ {loopStatement} }}}}\n";
+        var openingLine = $"{{{{~ {loopStatement} ~}}}}\n";
 
         return new ForumPostTemplateVariableNode(
             name,
             path,
             description,
             new ForumPostTemplateVariableInsertion(
-                $"{openingLine}\n{{{{ end }}}}",
+                $"{openingLine}\n{{{{~ end ~}}}}",
                 openingLine.Length
             ),
             loopStatement,

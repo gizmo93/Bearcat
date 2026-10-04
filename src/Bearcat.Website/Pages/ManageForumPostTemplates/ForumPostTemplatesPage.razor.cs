@@ -804,13 +804,13 @@ public partial class ForumPostTemplatesPage(
         {{ release.nfo }}
         [/SPOILER]
 
-        {{ for upload in uploads }}
+        {{~ for upload in uploads ~}}
         [B]{{ upload.name }}[/B]
-        {{ for crypter in upload.link_crypters }}
+        {{~ for crypter in upload.link_crypters ~}}
         [URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
-        {{ end }}
+        {{~ end ~}}
 
-        {{ end }}
+        {{~ end ~}}
         [/CENTER]
         """;
 
@@ -822,15 +822,15 @@ public partial class ForumPostTemplatesPage(
 
         {{ series.description }}
 
-        {{ for release in releases }}
+        {{~ for release in releases ~}}
         [B]{{ release.name }}[/B]
-        {{ for upload in release.uploads }}
-        {{ for crypter in upload.link_crypters }}
+        {{~ for upload in release.uploads ~}}
+        {{~ for crypter in upload.link_crypters ~}}
         [URL='{{ crypter.container_link }}']{{ upload.name }} - {{ crypter.name }}[/URL]
-        {{ end }}
-        {{ end }}
+        {{~ end ~}}
+        {{~ end ~}}
 
-        {{ end }}
+        {{~ end ~}}
         [/CENTER]
         """;
 }

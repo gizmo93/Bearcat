@@ -65,10 +65,10 @@ public class ForumPostTemplateVariableCatalogTest
         uploads.Path.ShouldBe("uploads");
         uploads.LoopStatement.ShouldBe("for upload in uploads");
         uploads.Insertion.ShouldNotBeNull();
-        uploads.Insertion.Text.ShouldBe("{{ for upload in uploads }}\n\n{{ end }}");
+        uploads.Insertion.Text.ShouldBe("{{~ for upload in uploads ~}}\n\n{{~ end ~}}");
         uploads
             .Insertion.Text[..uploads.Insertion.CursorOffset]
-            .ShouldBe("{{ for upload in uploads }}\n");
+            .ShouldBe("{{~ for upload in uploads ~}}\n");
     }
 
     [Test]
@@ -98,7 +98,7 @@ public class ForumPostTemplateVariableCatalogTest
         linkCrypters.LoopStatement.ShouldBe("for crypter in upload.link_crypters");
         linkCrypters
             .Insertion.ShouldNotBeNull()
-            .Text.ShouldBe("{{ for crypter in upload.link_crypters }}\n\n{{ end }}");
+            .Text.ShouldBe("{{~ for crypter in upload.link_crypters ~}}\n\n{{~ end ~}}");
         linkCrypters.Children.Select(node => node.Path).ShouldBe(["crypter.container_link"]);
     }
 
