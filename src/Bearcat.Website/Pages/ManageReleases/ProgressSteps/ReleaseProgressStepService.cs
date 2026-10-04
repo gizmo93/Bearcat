@@ -3,30 +3,33 @@ using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageReleases.ProgressSteps;
 
-public static class ReleaseProgressStepCalculator
+public static class ReleaseProgressStepService
 {
-    public static IReadOnlyList<ReleaseProgressStep> Calculate(
+    public static IReadOnlyList<ReleaseProgressStep> BuildReleaseProcessSteps(
         ReleaseReadModel release,
         ReleaseInfoReadModel? releaseInfo,
         ReleaseMetadataReadModel? releaseMetadata,
         IReadOnlyList<ArchiveConfigReadModel> archiveConfigs,
         IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads,
         int postedLocationCount
-    ) =>
+    )
+    {
+        return
         [
-            CalculateInfoStep(releaseInfo, releaseMetadata),
-            CalculateArchivedStep(archiveConfigs),
-            CalculateUploadedStep(release, overviewUploads),
-            CalculateLinkContainersStep(overviewUploads),
-            CalculatePostedStep(release, postedLocationCount),
+            BuildInfoStep(releaseInfo, releaseMetadata),
+            BuildArchivedStep(archiveConfigs),
+            BuildUploadedStep(release, overviewUploads),
+            BuildLinkContainersStep(overviewUploads),
+            BuildPostedStep(release, postedLocationCount),
         ];
+    }
 
-    private static ReleaseProgressStep CalculateInfoStep(
+    private static ReleaseProgressStep BuildInfoStep(
         ReleaseInfoReadModel? releaseInfo,
         ReleaseMetadataReadModel? releaseMetadata
     )
     {
-        List<string> databaseNames = [];
+        var databaseNames = new List<string>();
 
         if (releaseMetadata is not null)
         {
@@ -44,16 +47,19 @@ public static class ReleaseProgressStepCalculator
 
         return databaseNames.Count == 0
             ? new ReleaseProgressStep(
-                ReleaseProgressStepKind.Info,
-                ReleaseProgressStepState.Pending
+                Kind: ReleaseProgressStepKind.Info,
+                State: ReleaseProgressStepState.Pending
             )
-            : new ReleaseProgressStep(ReleaseProgressStepKind.Info, ReleaseProgressStepState.Done)
+            : new ReleaseProgressStep(
+                Kind: ReleaseProgressStepKind.Info,
+                State: ReleaseProgressStepState.Done
+            )
             {
                 DatabaseNames = databaseNames,
             };
     }
 
-    private static ReleaseProgressStep CalculateArchivedStep(
+    private static ReleaseProgressStep BuildArchivedStep(
         IReadOnlyList<ArchiveConfigReadModel> archiveConfigs
     )
     {
@@ -81,8 +87,8 @@ public static class ReleaseProgressStepCalculator
         )
         {
             return new ReleaseProgressStep(
-                ReleaseProgressStepKind.Archived,
-                ReleaseProgressStepState.InProgress
+                Kind: ReleaseProgressStepKind.Archived,
+                State: ReleaseProgressStepState.InProgress
             );
         }
 
@@ -92,25 +98,30 @@ public static class ReleaseProgressStepCalculator
 
         return finishedArchiveCount == 0
             ? new ReleaseProgressStep(
-                ReleaseProgressStepKind.Archived,
-                ReleaseProgressStepState.Pending
+                Kind: ReleaseProgressStepKind.Archived,
+                State: ReleaseProgressStepState.Pending
             )
             : new ReleaseProgressStep(
-                ReleaseProgressStepKind.Archived,
-                ReleaseProgressStepState.Done
+                Kind: ReleaseProgressStepKind.Archived,
+                State: ReleaseProgressStepState.Done
             )
             {
                 Count = finishedArchiveCount,
             };
     }
 
-    private static ReleaseProgressStep CreateArchivedAttentionStep(ArchiveState problemState) =>
-        new(ReleaseProgressStepKind.Archived, ReleaseProgressStepState.Attention)
+    private static ReleaseProgressStep CreateArchivedAttentionStep(ArchiveState problemState)
+    {
+        return new ReleaseProgressStep(
+            Kind: ReleaseProgressStepKind.Archived,
+            State: ReleaseProgressStepState.Attention
+        )
         {
             ArchiveProblemState = problemState,
         };
+    }
 
-    private static ReleaseProgressStep CalculateUploadedStep(
+    private static ReleaseProgressStep BuildUploadedStep(
         ReleaseReadModel release,
         IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads
     )
@@ -142,14 +153,14 @@ public static class ReleaseProgressStepCalculator
             state = ReleaseProgressStepState.Attention;
         }
 
-        return new ReleaseProgressStep(ReleaseProgressStepKind.Uploaded, state)
+        return new ReleaseProgressStep(Kind: ReleaseProgressStepKind.Uploaded, State: state)
         {
             Count = release.OnlineUploadConfigsCount,
             TotalCount = release.ActiveUploadConfigsCount,
         };
     }
 
-    private static ReleaseProgressStep CalculateLinkContainersStep(
+    private static ReleaseProgressStep BuildLinkContainersStep(
         IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads
     )
     {
@@ -161,8 +172,8 @@ public static class ReleaseProgressStepCalculator
         if (containers.Count == 0)
         {
             return new ReleaseProgressStep(
-                ReleaseProgressStepKind.LinkContainers,
-                ReleaseProgressStepState.NotApplicable
+                Kind: ReleaseProgressStepKind.LinkContainers,
+                State: ReleaseProgressStepState.NotApplicable
             );
         }
 
@@ -172,16 +183,16 @@ public static class ReleaseProgressStepCalculator
 
         return failedContainerCount > 0
             ? new ReleaseProgressStep(
-                ReleaseProgressStepKind.LinkContainers,
-                ReleaseProgressStepState.Attention
+                Kind: ReleaseProgressStepKind.LinkContainers,
+                State: ReleaseProgressStepState.Attention
             )
             {
                 Count = failedContainerCount,
                 TotalCount = containers.Count,
             }
             : new ReleaseProgressStep(
-                ReleaseProgressStepKind.LinkContainers,
-                ReleaseProgressStepState.Done
+                Kind: ReleaseProgressStepKind.LinkContainers,
+                State: ReleaseProgressStepState.Done
             )
             {
                 Count = containers.Count,
@@ -189,17 +200,22 @@ public static class ReleaseProgressStepCalculator
             };
     }
 
-    private static ReleaseProgressStep CalculatePostedStep(
+    private static ReleaseProgressStep BuildPostedStep(
         ReleaseReadModel release,
         int postedLocationCount
-    ) =>
-        postedLocationCount > 0 || release.UploadsPostedAt is not null
-            ? new ReleaseProgressStep(ReleaseProgressStepKind.Posted, ReleaseProgressStepState.Done)
+    )
+    {
+        return postedLocationCount > 0 || release.UploadsPostedAt is not null
+            ? new ReleaseProgressStep(
+                Kind: ReleaseProgressStepKind.Posted,
+                State: ReleaseProgressStepState.Done
+            )
             {
                 Count = postedLocationCount,
             }
             : new ReleaseProgressStep(
-                ReleaseProgressStepKind.Posted,
-                ReleaseProgressStepState.Pending
+                Kind: ReleaseProgressStepKind.Posted,
+                State: ReleaseProgressStepState.Pending
             );
+    }
 }

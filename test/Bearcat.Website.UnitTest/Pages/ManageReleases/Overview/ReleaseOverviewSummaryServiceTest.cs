@@ -5,13 +5,13 @@ using Shouldly;
 
 namespace Bearcat.Website.UnitTest.Pages.ManageReleases.Overview;
 
-public class ReleaseOverviewSummaryCalculatorTest
+public class ReleaseOverviewSummaryServiceTest
 {
     [Test]
-    public void Calculate_NoUploads_ReturnsEmptySummary()
+    public void BuildReleaseOverviewSummary_NoUploads_ReturnsEmptySummary()
     {
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate([]);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary([]);
 
         // Assert
         summary.ShouldBe(
@@ -27,7 +27,7 @@ public class ReleaseOverviewSummaryCalculatorTest
     }
 
     [Test]
-    public void Calculate_MixedOnlineStates_CountsOnlyOnlineUploads()
+    public void BuildReleaseOverviewSummary_MixedOnlineStates_CountsOnlyOnlineUploads()
     {
         // Arrange
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads =
@@ -39,7 +39,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate(uploads);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(uploads);
 
         // Assert
         summary.OnlineHosterCount.ShouldBe(1);
@@ -47,7 +47,7 @@ public class ReleaseOverviewSummaryCalculatorTest
     }
 
     [Test]
-    public void Calculate_SharedCollectionContainer_CountsContainersOnce()
+    public void BuildReleaseOverviewSummary_SharedCollectionContainer_CountsContainersOnce()
     {
         // Arrange
         var sharedContainer = CreateContainer(1, "Filecrypt", "https://a");
@@ -71,7 +71,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate(uploads);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(uploads);
 
         // Assert
         summary.CreatedLinkContainerCount.ShouldBe(1);
@@ -79,7 +79,7 @@ public class ReleaseOverviewSummaryCalculatorTest
     }
 
     [Test]
-    public void Calculate_UploadsWithAndWithoutUploadedAt_ReturnsNewestTimestamp()
+    public void BuildReleaseOverviewSummary_UploadsWithAndWithoutUploadedAt_ReturnsNewestTimestamp()
     {
         // Arrange
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads =
@@ -99,14 +99,14 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate(uploads);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(uploads);
 
         // Assert
         summary.LatestUploadAt.ShouldBe(new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Local));
     }
 
     [Test]
-    public void Calculate_NoUploadHasPassword_ReturnsNoneArchivePassword()
+    public void BuildReleaseOverviewSummary_NoUploadHasPassword_ReturnsNoneArchivePassword()
     {
         // Arrange
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads =
@@ -116,7 +116,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate(uploads);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(uploads);
 
         // Assert
         summary.ArchivePassword.ShouldBe(
@@ -125,7 +125,7 @@ public class ReleaseOverviewSummaryCalculatorTest
     }
 
     [Test]
-    public void Calculate_AllUploadsShareOnePassword_ReturnsSamePassword()
+    public void BuildReleaseOverviewSummary_AllUploadsShareOnePassword_ReturnsSamePassword()
     {
         // Arrange
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads =
@@ -136,7 +136,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate(uploads);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(uploads);
 
         // Assert
         summary.ArchivePassword.ShouldBe(
@@ -146,7 +146,7 @@ public class ReleaseOverviewSummaryCalculatorTest
 
     [TestCase("other")]
     [TestCase(null)]
-    public void Calculate_UploadsWithDifferentPasswords_ReturnsVariesPerHoster(
+    public void BuildReleaseOverviewSummary_UploadsWithDifferentPasswords_ReturnsVariesPerHoster(
         string? otherPassword
     )
     {
@@ -158,7 +158,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var summary = ReleaseOverviewSummaryCalculator.Calculate(uploads);
+        var summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(uploads);
 
         // Assert
         summary.ArchivePassword.ShouldBe(
@@ -202,9 +202,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var groups = ReleaseOverviewSummaryCalculator.GroupCreatedContainerUrlsByLinkCrypter(
-            uploads
-        );
+        var groups = ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(uploads);
 
         // Assert
         groups.Count.ShouldBe(2);
@@ -241,9 +239,7 @@ public class ReleaseOverviewSummaryCalculatorTest
         ];
 
         // Act
-        var groups = ReleaseOverviewSummaryCalculator.GroupCreatedContainerUrlsByLinkCrypter(
-            uploads
-        );
+        var groups = ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(uploads);
 
         // Assert
         groups.Count.ShouldBe(1);
@@ -258,37 +254,41 @@ public class ReleaseOverviewSummaryCalculatorTest
         DateTime? uploadedAt = null,
         string? archivePassword = null,
         IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>? containers = null
-    ) =>
-        new(
-            uploadConfigId,
-            $"Config {uploadConfigId}",
-            "Hoster",
-            uploadId,
-            createdAt,
-            uploadedAt,
-            uploadId is null ? null : UploadState.Completed,
-            onlineState,
-            null,
-            0,
-            [],
-            archivePassword,
-            containers ?? []
+    )
+    {
+        return new ReleaseOverviewUploadReadModel(
+            UploadConfigId: uploadConfigId,
+            UploadConfigName: $"Config {uploadConfigId}",
+            HosterRegistrationName: "Hoster",
+            UploadId: uploadId,
+            CreatedAt: createdAt,
+            UploadedAt: uploadedAt,
+            UploadState: uploadId is null ? null : UploadState.Completed,
+            OnlineState: onlineState,
+            NotFullyOnlineSince: null,
+            LinkCount: 0,
+            ErrorMessages: [],
+            ArchivePassword: archivePassword,
+            LinkCrypterLinks: containers ?? []
         );
+    }
 
     private static ReleaseOverviewLinkCrypterLinkReadModel CreateContainer(
         int linkCrypterContainerId,
         string linkCrypterRegistrationName,
         string containerUrl,
         LinkCrypterContainerState state = LinkCrypterContainerState.Created
-    ) =>
-        new(
-            linkCrypterContainerId,
-            linkCrypterRegistrationName,
-            "LinkCrypterClass",
-            containerUrl,
-            LinkCrypterContainerScope.Release,
-            state,
-            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Local),
-            []
+    )
+    {
+        return new ReleaseOverviewLinkCrypterLinkReadModel(
+            LinkCrypterContainerId: linkCrypterContainerId,
+            LinkCrypterRegistrationName: linkCrypterRegistrationName,
+            LinkCrypterClassName: "LinkCrypterClass",
+            ContainerUrl: containerUrl,
+            Scope: LinkCrypterContainerScope.Release,
+            State: state,
+            CreatedAt: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Local),
+            Errors: []
         );
+    }
 }

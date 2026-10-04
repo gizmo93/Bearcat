@@ -251,7 +251,7 @@ public partial class ReleaseDetail(
         var postedLocationReadModels = await operationRunner.RunAsync(
             (IPostedLocationReadRepository repository) => repository.GetForReleaseAsync(ReleaseId)
         );
-        progressSteps = ReleaseProgressStepCalculator.Calculate(
+        progressSteps = ReleaseProgressStepService.BuildReleaseProcessSteps(
             release,
             releaseInfo,
             releaseMetadata,

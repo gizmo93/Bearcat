@@ -7,8 +7,9 @@ public static class UploadHistoryMarkerKindResolver
     public static UploadHistoryMarkerKind GetMarkerKind(
         UploadState uploadState,
         OnlineState onlineState
-    ) =>
-        uploadState switch
+    )
+    {
+        return uploadState switch
         {
             UploadState.WaitingForArchive
             or UploadState.Pending
@@ -22,4 +23,5 @@ public static class UploadHistoryMarkerKindResolver
                 _ => UploadHistoryMarkerKind.Unknown,
             },
         };
+    }
 }

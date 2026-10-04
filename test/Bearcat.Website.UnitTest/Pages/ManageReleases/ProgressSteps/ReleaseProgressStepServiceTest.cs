@@ -5,7 +5,7 @@ using Shouldly;
 
 namespace Bearcat.Website.UnitTest.Pages.ManageReleases.ProgressSteps;
 
-public class ReleaseProgressStepCalculatorTest
+public class ReleaseProgressStepServiceTest
 {
     [Test]
     public void Calculate_ReturnsStepsInFixedOrder()
@@ -357,7 +357,7 @@ public class ReleaseProgressStepCalculatorTest
         IReadOnlyList<ReleaseOverviewUploadReadModel>? overviewUploads = null,
         int postedLocationCount = 0
     ) =>
-        ReleaseProgressStepCalculator.Calculate(
+        ReleaseProgressStepService.BuildReleaseProcessSteps(
             release ?? CreateRelease(),
             releaseInfo,
             releaseMetadata,

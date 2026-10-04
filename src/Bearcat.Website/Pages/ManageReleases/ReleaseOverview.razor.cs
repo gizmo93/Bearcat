@@ -61,9 +61,9 @@ public partial class ReleaseOverview(
 
     protected override async Task OnParametersSetAsync()
     {
-        summary = ReleaseOverviewSummaryCalculator.Calculate(Uploads);
+        summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(Uploads);
         containerUrlsByLinkCrypter =
-            ReleaseOverviewSummaryCalculator.GroupCreatedContainerUrlsByLinkCrypter(Uploads);
+            ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(Uploads);
 
         if (
             loadedReleaseId != ReleaseId

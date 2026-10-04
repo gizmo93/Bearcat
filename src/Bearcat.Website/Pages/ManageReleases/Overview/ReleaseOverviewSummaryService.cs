@@ -3,9 +3,9 @@ using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageReleases.Overview;
 
-public static class ReleaseOverviewSummaryCalculator
+public static class ReleaseOverviewSummaryService
 {
-    public static ReleaseOverviewSummary Calculate(
+    public static ReleaseOverviewSummary BuildReleaseOverviewSummary(
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads
     )
     {
@@ -15,28 +15,31 @@ public static class ReleaseOverviewSummaryCalculator
             .ToList();
 
         return new ReleaseOverviewSummary(
-            uploads.Count(upload =>
+            OnlineHosterCount: uploads.Count(upload =>
                 upload.UploadId is not null && upload.OnlineState is OnlineState.Online
             ),
-            uploads.Count,
-            linkContainers.Count(container => container.State is LinkCrypterContainerState.Created),
-            linkContainers.Count,
-            uploads
+            HosterCount: uploads.Count,
+            CreatedLinkContainerCount: linkContainers.Count(container =>
+                container.State is LinkCrypterContainerState.Created
+            ),
+            LinkContainerCount: linkContainers.Count,
+            LatestUploadAt: uploads
                 .Where(upload => upload.UploadId is not null)
                 .Max(upload => upload.UploadedAt ?? upload.CreatedAt),
-            SummarizeArchivePasswords(uploads)
+            ArchivePassword: SummarizeArchivePasswords(uploads)
         );
     }
 
     public static IReadOnlyList<LinkCrypterContainerUrls> GroupCreatedContainerUrlsByLinkCrypter(
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads
-    ) =>
-        uploads
+    )
+    {
+        return uploads
             .SelectMany(upload => upload.LinkCrypterLinks)
             .GroupBy(container => container.LinkCrypterRegistrationName)
             .Select(group => new LinkCrypterContainerUrls(
-                group.Key,
-                group
+                LinkCrypterRegistrationName: group.Key,
+                ContainerUrls: group
                     .Where(container =>
                         container.State is LinkCrypterContainerState.Created
                         && !string.IsNullOrWhiteSpace(container.ContainerUrl)
@@ -46,6 +49,7 @@ public static class ReleaseOverviewSummaryCalculator
                     .ToList()
             ))
             .ToList();
+    }
 
     private static ArchivePasswordSummary SummarizeArchivePasswords(
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads
@@ -61,12 +65,18 @@ public static class ReleaseOverviewSummaryCalculator
 
         return passwords switch
         {
-            [] or [null] => new ArchivePasswordSummary(ArchivePasswordSummaryKind.None, null),
-            [{ } password] => new ArchivePasswordSummary(
-                ArchivePasswordSummaryKind.SamePassword,
-                password
+            [] or [null] => new ArchivePasswordSummary(
+                Kind: ArchivePasswordSummaryKind.None,
+                Password: null
             ),
-            _ => new ArchivePasswordSummary(ArchivePasswordSummaryKind.VariesPerHoster, null),
+            [{ } password] => new ArchivePasswordSummary(
+                Kind: ArchivePasswordSummaryKind.SamePassword,
+                Password: password
+            ),
+            _ => new ArchivePasswordSummary(
+                Kind: ArchivePasswordSummaryKind.VariesPerHoster,
+                Password: null
+            ),
         };
     }
 }
