@@ -5,7 +5,8 @@
         <!-- Overridden by the release workflows via -p:Version=<tag> -->
         <Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NoWarn>S2365,S3220,S1450,NU1902,S8969,S8970,NU1903</NoWarn>
+        <NoWarn>NU1902,NU1903</NoWarn>
+        <AnalysisMode>Recommended</AnalysisMode>
     </PropertyGroup>
     <Import
         Project="Directory.Build.local.props"
@@ -14,11 +15,6 @@
     <ItemGroup>
         <PackageReference
             Include="Shane32.Analyzers"
-            PrivateAssets="all"
-            IncludeAssets="runtime; build; native; contentfiles; analyzers"
-        />
-        <PackageReference
-            Include="SonarAnalyzer.CSharp"
             PrivateAssets="all"
             IncludeAssets="runtime; build; native; contentfiles; analyzers"
         />

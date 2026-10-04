@@ -10,9 +10,7 @@ public class PostgresDesignTimeDbContextFactory : IDesignTimeDbContextFactory<Be
     {
         var optionsBuilder = new DbContextOptionsBuilder<BearcatDbContext>();
         optionsBuilder.UseBearcatPostgres(
-#pragma warning disable S2068
             "Host=localhost;Database=bearcat;Username=postgres;Password=postgres"
-#pragma warning restore S2068
         );
 
         return new BearcatDbContext(optionsBuilder.Options);

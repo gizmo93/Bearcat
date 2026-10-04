@@ -447,9 +447,7 @@ public class ApiClient(
     }
 
     private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
-#pragma warning disable S1172
         string authorization,
-#pragma warning restore S1172
         FileUrlToCheckDto file,
         SemaphoreSlim semaphore,
         CancellationToken cancellationToken
@@ -487,9 +485,7 @@ public class ApiClient(
         }
     }
 
-#pragma warning disable S1144
     private async Task<bool> IsEntryOnlineAsync(
-#pragma warning restore S1144
         string authorization,
         long entryId,
         CancellationToken cancellationToken
