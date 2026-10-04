@@ -1,6 +1,7 @@
 @page "/release-collections/{ReleaseCollectionId:int}"
 @using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.ManageReleaseCollections.DetailTabs
+@using Bearcat.Website.Pages.ManageReleaseCollections.Images
 @using Bearcat.Website.Pages.ManageReleaseCollections.Overview
 @using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps
 @using Bearcat.Website.Pages.ManageReleaseCollections.UploadSlots
@@ -205,8 +206,9 @@
         </BbTabsContent>
 
         <BbTabsContent Value="@ReleaseCollectionDetailTab.Images" Class="space-y-4">
-            <CollectionImageUploads ReleaseCollectionId="@ReleaseCollectionId"
-                                    OnImageUploadsChanged="HandleImageUploadsChangedAsync" />
+            <ReleaseCollectionImageUploads ReleaseCollectionId="@ReleaseCollectionId"
+                                           ImageUploads="imageUploads"
+                                           OnImageUploadsChanged="HandleImageUploadsChangedAsync" />
         </BbTabsContent>
     </BbTabs>
 </section>
