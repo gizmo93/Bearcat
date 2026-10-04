@@ -454,6 +454,14 @@ const releaseStickyHeader = (() => {
     return { attach };
 })();
 
+function scrollElementIntoViewById(elementId) {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(elementId)?.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+    });
+}
+
 window.bearcat = {
     copyText,
     takeCopyResult,
@@ -463,4 +471,5 @@ window.bearcat = {
     saveShortcut,
     logView,
     releaseStickyHeader,
+    scrollElementIntoViewById,
 };

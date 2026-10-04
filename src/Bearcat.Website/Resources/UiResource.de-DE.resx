@@ -1585,4 +1585,23 @@
   <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} wird von {1} Postingregeln verwendet. Ersetze die Vorlage zuerst in diesen Regeln und lösche sie danach.</value></data>
   <data name="CopyFolderPath" xml:space="preserve"><value>Ordnerpfad kopieren</value></data>
   <data name="MoreForumPostOptions" xml:space="preserve"><value>Weitere Forenpostoptionen</value></data>
+  <data name="ReleaseProgress" xml:space="preserve"><value>Releasefortschritt</value></data>
+  <data name="ReleaseProgressInfo" xml:space="preserve"><value>Info</value></data>
+  <data name="ReleaseProgressArchived" xml:space="preserve"><value>Archiviert</value></data>
+  <data name="ReleaseProgressUploaded" xml:space="preserve"><value>Hochgeladen</value></data>
+  <data name="ReleaseProgressLinkContainers" xml:space="preserve"><value>Linkcontainer</value></data>
+  <data name="ReleaseProgressPosted" xml:space="preserve"><value>Gepostet</value></data>
+  <data name="ReleaseProgressNotResolvedYet" xml:space="preserve"><value>Noch nicht ermittelt</value></data>
+  <data name="ReleaseProgressArchiveCountOne" xml:space="preserve"><value>1 Archiv</value></data>
+  <data name="ReleaseProgressArchiveCount" xml:space="preserve"><value>{0} Archive</value></data>
+  <data name="ReleaseProgressArchiving" xml:space="preserve"><value>Wird archiviert</value></data>
+  <data name="ReleaseProgressNoUploadConfigs" xml:space="preserve"><value>Keine Uploadkonfigurationen</value></data>
+  <data name="ReleaseProgressOnlineCount" xml:space="preserve"><value>{0}/{1} online</value></data>
+  <data name="ReleaseProgressNoContainers" xml:space="preserve"><value>Keine</value></data>
+  <data name="ReleaseProgressContainersCreated" xml:space="preserve"><value>{0} erstellt</value></data>
+  <data name="ReleaseProgressContainersFailed" xml:space="preserve"><value>{0} fehlgeschlagen</value></data>
+  <data name="ReleaseProgressForumCountOne" xml:space="preserve"><value>1 Forum</value></data>
+  <data name="ReleaseProgressForumCount" xml:space="preserve"><value>{0} Foren</value></data>
+  <data name="ReleaseProgressMarkedAsPosted" xml:space="preserve"><value>Als gepostet markiert</value></data>
+  <data name="ReleaseProgressNotPostedYet" xml:space="preserve"><value>Noch nicht gepostet</value></data>
 </root>

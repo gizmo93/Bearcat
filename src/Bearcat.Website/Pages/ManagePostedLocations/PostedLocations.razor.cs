@@ -23,6 +23,9 @@ public partial class PostedLocations(
     [Parameter]
     public int? ReleaseCollectionId { get; set; }
 
+    [Parameter]
+    public EventCallback OnLocationsChanged { get; set; }
+
     private IReadOnlyList<PostedLocationReadModel> locations = [];
     private string newUrl = string.Empty;
     private bool isBusy;
@@ -67,6 +70,7 @@ public partial class PostedLocations(
 
             newUrl = string.Empty;
             await ReloadAsync();
+            await OnLocationsChanged.InvokeAsync();
         });
     }
 
@@ -116,6 +120,7 @@ public partial class PostedLocations(
 
             toastService.Success(L["UpdatePostedLocationSucceeded"]);
             await ReloadAsync();
+            await OnLocationsChanged.InvokeAsync();
         });
     }
 
@@ -127,6 +132,7 @@ public partial class PostedLocations(
                 (PostedLocationService service) => service.DeleteAsync(postedLocationId)
             );
             await ReloadAsync();
+            await OnLocationsChanged.InvokeAsync();
         });
     }
 

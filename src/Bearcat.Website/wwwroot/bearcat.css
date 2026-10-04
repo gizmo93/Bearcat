@@ -252,17 +252,21 @@ a {
 }
 
 .bearcat-release-header-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 1.25rem;
     min-width: 0;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     background: var(--card);
+}
+
+.bearcat-release-header-card-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.25rem;
+    min-width: 0;
     padding: 1.25rem;
 }
 
-.bearcat-release-header-card-with-cover {
+.bearcat-release-header-card-body-with-cover {
     grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
@@ -279,6 +283,175 @@ a {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
+}
+
+.bearcat-release-progress-steps {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: 1px solid var(--border);
+}
+
+.bearcat-release-progress-step {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 0.625rem;
+    border: 0;
+    background: transparent;
+    padding: 0.75rem 1rem;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+.bearcat-release-progress-step:hover {
+    background: var(--muted);
+}
+
+.bearcat-release-progress-step:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+.bearcat-release-progress-step:first-child {
+    border-bottom-left-radius: calc(0.75rem - 1px);
+}
+
+.bearcat-release-progress-step:last-child {
+    border-bottom-right-radius: calc(0.75rem - 1px);
+}
+
+.bearcat-release-progress-step + .bearcat-release-progress-step::before {
+    content: "";
+    position: absolute;
+    top: 0.875rem;
+    bottom: 0.875rem;
+    left: 0;
+    border-left: 1px solid var(--border);
+}
+
+.bearcat-release-progress-step-current::after {
+    content: "";
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0;
+    left: 0.75rem;
+    height: 2px;
+    border-radius: 9999px;
+    background: var(--primary);
+}
+
+.bearcat-release-progress-step-marker {
+    display: grid;
+    width: 1.625rem;
+    height: 1.625rem;
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+}
+
+.bearcat-release-progress-step-marker-done {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.bearcat-release-progress-step-marker-in-progress {
+    border: 2px solid var(--primary);
+    background: var(--card);
+    color: var(--primary);
+}
+
+.bearcat-release-progress-step-marker-attention {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+}
+
+.bearcat-release-progress-step-marker-pending,
+.bearcat-release-progress-step-marker-not-applicable {
+    border-color: var(--border);
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.bearcat-release-progress-step-marker-not-applicable {
+    border-style: dashed;
+}
+
+.bearcat-release-progress-step-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.bearcat-release-progress-step-title,
+.bearcat-release-progress-step-short-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+}
+
+.bearcat-release-progress-step-short-title {
+    display: none;
+}
+
+.bearcat-release-progress-step-description {
+    overflow: hidden;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-release-progress-step-description-attention {
+    color: var(--destructive);
+}
+
+@media (max-width: 767px) {
+    .bearcat-release-progress-step {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.625rem 0.125rem;
+        text-align: center;
+    }
+
+    .bearcat-release-progress-step-text {
+        max-width: 100%;
+    }
+
+    .bearcat-release-progress-step-title,
+    .bearcat-release-progress-step-description {
+        display: none;
+    }
+
+    .bearcat-release-progress-step-short-title {
+        display: block;
+        overflow: hidden;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .bearcat-release-progress-step-current::after {
+        right: 0.375rem;
+        left: 0.375rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bearcat-release-progress-step {
+        transition: none;
+    }
+}
+
+.bearcat-release-posted-locations {
+    scroll-margin-top: 8.5rem;
 }
 
 .bearcat-tab-count {
@@ -376,13 +549,13 @@ a {
 }
 
 @media (max-width: 767px) {
-    .bearcat-release-header-card {
+    .bearcat-release-header-card-body {
         grid-template-columns: minmax(0, 1fr);
         gap: 0.875rem;
         padding: 1rem;
     }
 
-    .bearcat-release-header-card-with-cover {
+    .bearcat-release-header-card-body-with-cover {
         grid-template-columns: auto minmax(0, 1fr);
     }
 

@@ -1582,4 +1582,23 @@
   <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} is used by {1} posting rules. Replace the template in those rules first, then delete it.</value></data>
   <data name="CopyFolderPath" xml:space="preserve"><value>Copy folder path</value></data>
   <data name="MoreForumPostOptions" xml:space="preserve"><value>More forum post options</value></data>
+  <data name="ReleaseProgress" xml:space="preserve"><value>Release progress</value></data>
+  <data name="ReleaseProgressInfo" xml:space="preserve"><value>Info</value></data>
+  <data name="ReleaseProgressArchived" xml:space="preserve"><value>Archived</value></data>
+  <data name="ReleaseProgressUploaded" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="ReleaseProgressLinkContainers" xml:space="preserve"><value>Link containers</value></data>
+  <data name="ReleaseProgressPosted" xml:space="preserve"><value>Posted</value></data>
+  <data name="ReleaseProgressNotResolvedYet" xml:space="preserve"><value>Not resolved yet</value></data>
+  <data name="ReleaseProgressArchiveCountOne" xml:space="preserve"><value>1 archive</value></data>
+  <data name="ReleaseProgressArchiveCount" xml:space="preserve"><value>{0} archives</value></data>
+  <data name="ReleaseProgressArchiving" xml:space="preserve"><value>Archiving</value></data>
+  <data name="ReleaseProgressNoUploadConfigs" xml:space="preserve"><value>No upload configurations</value></data>
+  <data name="ReleaseProgressOnlineCount" xml:space="preserve"><value>{0}/{1} online</value></data>
+  <data name="ReleaseProgressNoContainers" xml:space="preserve"><value>None</value></data>
+  <data name="ReleaseProgressContainersCreated" xml:space="preserve"><value>{0} created</value></data>
+  <data name="ReleaseProgressContainersFailed" xml:space="preserve"><value>{0} failed</value></data>
+  <data name="ReleaseProgressForumCountOne" xml:space="preserve"><value>1 forum</value></data>
+  <data name="ReleaseProgressForumCount" xml:space="preserve"><value>{0} forums</value></data>
+  <data name="ReleaseProgressMarkedAsPosted" xml:space="preserve"><value>Marked as posted</value></data>
+  <data name="ReleaseProgressNotPostedYet" xml:space="preserve"><value>Not posted yet</value></data>
 </root>

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
+using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -10,6 +11,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
 using Bearcat.Website.Pages.ManageReleases.DetailTabs;
+using Bearcat.Website.Pages.ManageReleases.ProgressSteps;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -48,6 +50,8 @@ public partial class ReleaseDetail(
     [SupplyParameterFromQuery(Name = "workflow")]
     public string? Workflow { get; set; }
 
+    private const string PostedLocationsElementId = "release-posted-locations";
+
     private ReleaseReadModel release = null!;
     private IReadOnlyList<string> unmanagedArchiveFolderPaths = [];
     private RemoteSourceDownloadReadModel? remoteDownloadOrigin;
@@ -56,12 +60,15 @@ public partial class ReleaseDetail(
     private ElementReference headerCardElement;
     private ElementReference stickyHeaderElement;
     private bool isStickyHeaderVisibilityTrackingRequested;
+    private bool isScrollToPostedLocationsRequested;
     private IJSObjectReference? stickyHeaderVisibilityTrackingHandle;
     private bool isInitialized;
     private int? loadedReleaseId;
     private string? activeTab = ReleaseDetailTab.Overview;
     private ReleaseUploadsView uploadsView = ReleaseUploadsView.Configuration;
+    private IReadOnlyList<ArchiveConfigReadModel> archiveConfigs = [];
     private int archiveConfigCount;
+    private IReadOnlyList<ReleaseProgressStep> progressSteps = [];
     private int imageUploadConfigCount;
     private PostedLocations? postedLocations;
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
@@ -128,7 +135,9 @@ public partial class ReleaseDetail(
         release = releaseReadModel;
         await LoadUnmanagedArchiveFolderPathsAsync();
         await LoadReleaseMetadataAndReleaseInfoAsync();
-        await LoadTabCountsAsync();
+        await LoadArchiveConfigsAsync();
+        await LoadImageUploadConfigCountAsync();
+        await LoadProgressStepsAsync();
         remoteDownloadOrigin = await operationRunner.RunAsync(
             (IRemoteSourceDownloadReadRepository repository) =>
                 repository.GetByReleaseIdAsync(ReleaseId)
@@ -139,7 +148,18 @@ public partial class ReleaseDetail(
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!isInitialized || isStickyHeaderVisibilityTrackingRequested)
+        if (!isInitialized)
+        {
+            return;
+        }
+
+        await AttachStickyHeaderVisibilityTrackingAsync();
+        await ScrollToPostedLocationsIfRequestedAsync();
+    }
+
+    private async Task AttachStickyHeaderVisibilityTrackingAsync()
+    {
+        if (isStickyHeaderVisibilityTrackingRequested)
         {
             return;
         }
@@ -157,6 +177,25 @@ public partial class ReleaseDetail(
         catch (JSDisconnectedException) { }
     }
 
+    private async Task ScrollToPostedLocationsIfRequestedAsync()
+    {
+        if (!isScrollToPostedLocationsRequested)
+        {
+            return;
+        }
+
+        isScrollToPostedLocationsRequested = false;
+
+        try
+        {
+            await jsRuntime.InvokeVoidAsync(
+                "bearcat.scrollElementIntoViewById",
+                PostedLocationsElementId
+            );
+        }
+        catch (JSDisconnectedException) { }
+    }
+
     private async Task LoadReleaseMetadataAndReleaseInfoAsync()
     {
         await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
@@ -166,18 +205,58 @@ public partial class ReleaseDetail(
         });
     }
 
-    private async Task LoadTabCountsAsync()
+    private async Task LoadArchiveConfigsAsync()
     {
-        var archiveConfigs = await operationRunner.RunAsync(
+        archiveConfigs = await operationRunner.RunAsync(
             (IReleaseReadRepository repository) =>
                 repository.GetArchiveConfigsAsync(ReleaseId, CancellationToken.None)
         );
+        archiveConfigCount = archiveConfigs.Count;
+    }
+
+    private async Task LoadImageUploadConfigCountAsync()
+    {
         var imageUploadConfigs = await operationRunner.RunAsync(
             (IImageUploadConfigReadRepository repository) =>
                 repository.GetImageUploadConfigsAsync(ReleaseId)
         );
-        archiveConfigCount = archiveConfigs.Count;
         imageUploadConfigCount = imageUploadConfigs.Count;
+    }
+
+    private async Task LoadProgressStepsAsync()
+    {
+        var overviewUploads = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) => repository.GetReleaseOverviewAsync(ReleaseId)
+        );
+        var postedLocationReadModels = await operationRunner.RunAsync(
+            (IPostedLocationReadRepository repository) => repository.GetForReleaseAsync(ReleaseId)
+        );
+        progressSteps = ReleaseProgressStepCalculator.Calculate(
+            release,
+            releaseInfo,
+            releaseMetadata,
+            archiveConfigs,
+            overviewUploads,
+            postedLocationReadModels.Count
+        );
+    }
+
+    private async Task ReloadProgressAsync()
+    {
+        var releaseReadModel = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) => repository.GetReleaseAsync(ReleaseId)
+        );
+
+        if (releaseReadModel is null)
+        {
+            navigationManager.NotFound();
+            return;
+        }
+
+        release = releaseReadModel;
+        await LoadReleaseMetadataAndReleaseInfoAsync();
+        await LoadArchiveConfigsAsync();
+        await LoadProgressStepsAsync();
     }
 
     private async Task LoadUnmanagedArchiveFolderPathsAsync()
@@ -201,6 +280,14 @@ public partial class ReleaseDetail(
         {
             await component.ReloadAsync();
         }
+
+        await ReloadProgressAsync();
+    }
+
+    private async Task HandleOverviewRefreshedAsync()
+    {
+        await ReloadPostedLocationsAsync();
+        await ReloadProgressAsync();
     }
 
     private async Task ReloadPostedLocationsAsync()
@@ -238,6 +325,7 @@ public partial class ReleaseDetail(
         }
 
         await ReloadPostedLocationsAsync();
+        await ReloadProgressAsync();
     }
 
     private async Task RenderForumPostAsync()
@@ -263,6 +351,21 @@ public partial class ReleaseDetail(
     private void HandleTabChanged(string? value)
     {
         activeTab = value;
+    }
+
+    private void HandleProgressStepSelected(ReleaseProgressStepKind kind)
+    {
+        activeTab = ReleaseProgressStepTabResolver.GetTab(kind);
+
+        if (kind is ReleaseProgressStepKind.Uploaded)
+        {
+            uploadsView = ReleaseUploadsView.History;
+        }
+
+        if (kind is ReleaseProgressStepKind.Posted)
+        {
+            isScrollToPostedLocationsRequested = true;
+        }
     }
 
     private async Task ShowEditReleaseDialogAsync()
@@ -507,19 +610,8 @@ public partial class ReleaseDetail(
 
     private async Task ReloadReleaseAsync()
     {
-        var releaseReadModel = await operationRunner.RunAsync(
-            (IReleaseReadRepository repository) => repository.GetReleaseAsync(ReleaseId)
-        );
-
-        if (releaseReadModel is null)
-        {
-            navigationManager.NotFound();
-            return;
-        }
-
-        release = releaseReadModel;
+        await ReloadProgressAsync();
         await LoadUnmanagedArchiveFolderPathsAsync();
-        await LoadReleaseMetadataAndReleaseInfoAsync();
     }
 
     public async ValueTask DisposeAsync()
