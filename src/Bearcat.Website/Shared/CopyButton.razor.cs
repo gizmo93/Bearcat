@@ -23,6 +23,9 @@ public partial class CopyButton(IJSRuntime jsRuntime, ToastService toastService)
     public bool Disabled { get; set; }
 
     [Parameter]
+    public ButtonVariant Variant { get; set; } = ButtonVariant.Outline;
+
+    [Parameter]
     public string? Class { get; set; }
 
     private string? ButtonClass => ShowLabel ? Class : $"{Class} bearcat-copy-icon-button".Trim();

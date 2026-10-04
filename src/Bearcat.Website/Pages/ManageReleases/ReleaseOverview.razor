@@ -1,306 +1,497 @@
-<section class="space-y-4">
-    <div class="bearcat-section-header">
-        <div>
-            <h2 class="text-lg font-semibold">@L["ReleaseOverview"]</h2>
-        </div>
+@using Bearcat.Website.Pages.ManageReleases.Overview
 
-        <div class="flex flex-wrap items-center gap-2">
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Disabled="isLoading"
-                      OnClick="ShowEditReleaseInfoDialogAsync">
-                <LucideIcon Name="@(releaseInfo is null ? "plus" : "pencil")" class="h-4 w-4" />
-                @(releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"])
-            </BbButton>
+<div class="space-y-6">
+    <section class="space-y-3">
+        <div class="bearcat-overview-section-header">
+            <h2 class="bearcat-overview-section-heading">
+                <LucideIcon Name="server" class="h-4 w-4" />
+                @L["Hosters"]
+            </h2>
 
-            @if (!string.IsNullOrWhiteSpace(coverUrl))
-            {
-                <BbButton Variant="ButtonVariant.Outline"
-                          Size="ButtonSize.Small"
-                          Href="@CoverDownloadUrl"
-                          AriaLabel="@L["DownloadCover"]"
-                          title="@L["DownloadCover"]"
-                          download="@CoverDownloadFileName">
-                    <LucideIcon Name="image-down" class="h-4 w-4" />
-                    @L["DownloadCover"]
-                </BbButton>
-            }
-
-            <BbDropdownMenu>
-                <BbDropdownMenuTrigger>
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Small"
-                              Disabled="isLoading">
-                        <LucideIcon Name="file-text" class="h-4 w-4" />
-                        @L["Nfo"]
-                        <LucideIcon Name="chevron-down" class="h-4 w-4" />
-                    </BbButton>
-                </BbDropdownMenuTrigger>
-                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                    <BbDropdownMenuItem Disabled="@(!CanSaveNfoFile)" OnClick="SaveNfoFileAsync">
-                        <Icon>
-                            <LucideIcon Name="file-down" class="h-4 w-4" />
-                        </Icon>
-                        <ChildContent>@L["SaveNfoFile"]</ChildContent>
-                    </BbDropdownMenuItem>
-                    <BbDropdownMenuItem Disabled="@(!CanCopyNfo)" data-bearcat-copy="@nfoContent" OnClick="CopyNfoAsync">
-                        <Icon>
-                            <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
-                        </Icon>
-                        <ChildContent>@L["CopyNfoIntoClipboard"]</ChildContent>
-                    </BbDropdownMenuItem>
-                </BbDropdownMenuContent>
-            </BbDropdownMenu>
-
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Disabled="isLoading"
-                      OnClick="RefreshAsync">
-                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
-                @L["Refresh"]
-            </BbButton>
-        </div>
-    </div>
-
-    @if (isLoading)
-    {
-        <div class="bearcat-release-overview-list">
-            <div class="bearcat-release-empty">
-                <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
-                <span>@L["Loading"]</span>
-            </div>
-        </div>
-    }
-    else if (overviewUploads.Count == 0)
-    {
-        <div class="bearcat-release-overview-list">
-            <div class="bearcat-release-empty">
-                <LucideIcon Name="inbox" class="h-5 w-5" />
-                <span>@L["NoUploadConfigurationsYet"]</span>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="bearcat-release-overview-list">
-            @foreach (var upload in overviewUploads)
-            {
-                <article class="bearcat-release-overview-item">
-                    <div class="bearcat-release-overview-main">
-                        <div class="min-w-0">
-                            <p class="truncate text-sm font-semibold" title="@upload.UploadConfigName">
-                                @upload.UploadConfigName
-                            </p>
-                            <p class="truncate text-xs text-muted-foreground" title="@upload.HosterRegistrationName">
-                                @upload.HosterRegistrationName
-                            </p>
-                        </div>
-
-                        <div class="min-w-0">
-                            <p class="text-xs text-muted-foreground">@L["LatestUpload"]</p>
-                            @if (upload.UploadId is null)
-                            {
-                                <p class="text-sm text-muted-foreground">@L["NoLatestUpload"]</p>
-                            }
-                            else
-                            {
-                                <p class="text-sm font-medium">#@upload.UploadId</p>
-                                <p class="truncate text-xs text-muted-foreground">
-                                    @((upload.UploadedAt ?? upload.CreatedAt)?.ToString("g") ?? "-")
-                                </p>
-                            }
-                        </div>
-
-                        <div class="min-w-0">
-                            <p class="text-xs text-muted-foreground">@L["OnlineState"]</p>
-                            @if (upload.OnlineState is null)
-                            {
-                                <p class="text-sm text-muted-foreground">-</p>
-                            }
-                            else
-                            {
-                                <OnlineStateBadge Value="@upload.OnlineState"
-                                                  NotFullyOnlineSince="@upload.NotFullyOnlineSince" />
-                            }
-                        </div>
-
-                        <div class="min-w-0">
-                            <p class="text-xs text-muted-foreground">@L["State"]</p>
-                            @if (upload.UploadState is null)
-                            {
-                                <p class="text-sm text-muted-foreground">-</p>
-                            }
-                            else
-                            {
-                                <div class="flex items-center gap-2">
-                                    <UploadStateBadge State="upload.UploadState.Value" />
-                                    <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
-                                </div>
-                            }
-                        </div>
-
-                        <div class="min-w-0">
-                            <p class="text-xs text-muted-foreground">@L["DownloadLinks"]</p>
+            <div class="flex flex-wrap items-center gap-2">
+                @if (containerUrlsByLinkCrypter.Count > 0)
+                {
+                    <BbDropdownMenu>
+                        <BbDropdownMenuTrigger>
                             <BbButton Variant="ButtonVariant.Outline"
                                       Size="ButtonSize.Small"
-                                      Disabled="@(upload.UploadId is null)"
-                                      OnClick="@(async () => await ShowLinksDialogAsync(upload))">
-                                <LucideIcon Name="external-link" class="h-4 w-4" />
-                                @upload.LinkCount
+                                      Disabled="isLoading">
+                                <LucideIcon Name="copy" class="h-4 w-4" />
+                                @L["CopyAllLinks"]
+                                <LucideIcon Name="chevron-down" class="h-4 w-4" />
                             </BbButton>
-                        </div>
-
-                        <div class="min-w-0">
-                            <p class="text-xs text-muted-foreground">@L["ArchivePassword"]</p>
-                            @if (string.IsNullOrWhiteSpace(upload.ArchivePassword))
+                        </BbDropdownMenuTrigger>
+                        <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                            <BbDropdownMenuLabel>@L["LinkContainers"]</BbDropdownMenuLabel>
+                            @foreach (var containerUrls in containerUrlsByLinkCrypter)
                             {
-                                <p class="text-sm text-muted-foreground">@L["NoArchivePassword"]</p>
+                                var text = JoinLines(containerUrls.ContainerUrls);
+                                var hasUrls = containerUrls.ContainerUrls.Count > 0;
+                                <BbDropdownMenuItem Disabled="@(!hasUrls)"
+                                                    data-bearcat-copy="@(hasUrls ? text : null)"
+                                                    OnClick="@(() => CopyTextAsync(text))">
+                                    <Icon>
+                                        <LucideIcon Name="link" class="h-4 w-4" />
+                                    </Icon>
+                                    <ChildContent>@containerUrls.LinkCrypterRegistrationName (@containerUrls.ContainerUrls.Count)</ChildContent>
+                                </BbDropdownMenuItem>
                             }
-                            else
-                            {
-                                <div class="bearcat-release-overview-password">
-                                    <code title="@upload.ArchivePassword">@upload.ArchivePassword</code>
-                                    <CopyButton Value="@upload.ArchivePassword" Label="@L["CopyPassword"]" />
-                                </div>
-                            }
-                        </div>
-                    </div>
+                        </BbDropdownMenuContent>
+                    </BbDropdownMenu>
+                }
 
-                    <div class="bearcat-release-overview-links">
-                        <p class="text-xs font-medium text-muted-foreground">@L["LinkCrypterLinks"]</p>
+                <BbDropdownMenu>
+                    <BbDropdownMenuTrigger>
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Disabled="isLoading">
+                            <LucideIcon Name="file-text" class="h-4 w-4" />
+                            @L["Nfo"]
+                            <LucideIcon Name="chevron-down" class="h-4 w-4" />
+                        </BbButton>
+                    </BbDropdownMenuTrigger>
+                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                        <BbDropdownMenuItem Disabled="@(!CanSaveNfoFile)" OnClick="SaveNfoFileAsync">
+                            <Icon>
+                                <LucideIcon Name="file-down" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["SaveNfoFile"]</ChildContent>
+                        </BbDropdownMenuItem>
+                        <BbDropdownMenuItem Disabled="@(!CanCopyNfo)"
+                                            data-bearcat-copy="@nfoContent"
+                                            OnClick="@(() => CopyTextAsync(nfoContent!))">
+                            <Icon>
+                                <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["CopyNfoIntoClipboard"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    </BbDropdownMenuContent>
+                </BbDropdownMenu>
 
-                        @if (upload.LinkCrypterLinks.Count == 0)
-                        {
-                            <p class="text-sm text-muted-foreground">@L["NoLinkCrypterLinks"]</p>
-                        }
-                        else
-                        {
-                            <div class="bearcat-release-overview-link-list">
-                                @foreach (var link in upload.LinkCrypterLinks)
-                                {
-                                    <div class="bearcat-release-overview-link">
-                                        <div class="min-w-0">
-                                            <div class="flex min-w-0 flex-wrap items-center gap-2">
-                                                <span class="truncate text-sm font-medium" title="@link.LinkCrypterRegistrationName">
-                                                    @link.LinkCrypterRegistrationName
-                                                </span>
-                                                <BbBadge Variant="@GetContainerVariant(link.State)">
-                                                    @L.Localize(link.State)
-                                                </BbBadge>
-                                                @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
-                                                {
-                                                    <BbBadge Variant="BadgeVariant.Secondary">
-                                                        @L["CollectionContainer"]
-                                                    </BbBadge>
-                                                }
-                                                <ErrorMessagesTooltip Messages="link.Errors" />
-
-                                                <CopyButton Value="@link.ContainerUrl"
-                                                            Label="@L["CopyLink"]"
-                                                            Class="bearcat-release-overview-link-copy"
-                                                            Disabled="@string.IsNullOrWhiteSpace(link.ContainerUrl)" />
-                                            </div>
-
-                                            @if (string.IsNullOrWhiteSpace(link.ContainerUrl))
-                                            {
-                                                <p class="text-sm text-muted-foreground">-</p>
-                                            }
-                                            else
-                                            {
-                                                <a class="bearcat-upload-link"
-                                                   href="@link.ContainerUrl"
-                                                   target="_blank"
-                                                   rel="noreferrer noopener"
-                                                   title="@link.ContainerUrl">
-                                                    @link.ContainerUrl
-                                                </a>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                </article>
-            }
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.IconSmall"
+                          Disabled="isLoading"
+                          AriaLabel="@L["Refresh"]"
+                          title="@L["Refresh"]"
+                          OnClick="RefreshAsync">
+                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                </BbButton>
+            </div>
         </div>
-    }
 
-    @if (!isLoading && overviewImageUploads.Count > 0)
-    {
-        <div class="bearcat-release-overview-images">
-            <div class="bearcat-release-overview-images-header">
-                <div class="flex items-center gap-2">
-                    <LucideIcon Name="image" class="h-4 w-4" />
-                    <h3 class="text-sm font-semibold">@L["ImageUploads"]</h3>
+        @if (isLoading)
+        {
+            <div class="bearcat-overview-card">
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+                    <span>@L["Loading"]</span>
+                </div>
+            </div>
+        }
+        else if (overviewUploads.Count == 0)
+        {
+            <div class="bearcat-overview-card">
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="inbox" class="h-5 w-5" />
+                    <span>@L["NoUploadConfigurationsYet"]</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bearcat-overview-card bearcat-overview-summary">
+                <div class="bearcat-overview-summary-cell">
+                    <p class="bearcat-overview-summary-label">@L["HostersOnline"]</p>
+                    <p class="bearcat-overview-summary-value">
+                        @summary.OnlineHosterCount
+                        <span class="bearcat-overview-summary-value-suffix">@L["OfTotal", summary.HosterCount]</span>
+                    </p>
+                    <div class="bearcat-overview-online-segments" aria-hidden="true">
+                        @foreach (var upload in overviewUploads)
+                        {
+                            <span class="bearcat-overview-online-segment @GetOnlineSegmentClass(upload.UploadId is null ? null : upload.OnlineState)"
+                                  title="@upload.UploadConfigName"></span>
+                        }
+                    </div>
+                </div>
+
+                <div class="bearcat-overview-summary-cell">
+                    <p class="bearcat-overview-summary-label">@L["LinkContainers"]</p>
+                    @if (summary.LinkContainerCount == 0)
+                    {
+                        <p class="bearcat-overview-summary-text text-muted-foreground">@L["None"]</p>
+                    }
+                    else
+                    {
+                        <p class="bearcat-overview-summary-value">
+                            @summary.CreatedLinkContainerCount
+                            <span class="bearcat-overview-summary-value-suffix">@L["OfTotal", summary.LinkContainerCount]</span>
+                        </p>
+                    }
+                </div>
+
+                <div class="bearcat-overview-summary-cell">
+                    <p class="bearcat-overview-summary-label">@L["LatestUpload"]</p>
+                    @if (summary.LatestUploadAt is { } latestUploadAt)
+                    {
+                        <p class="bearcat-overview-summary-text" title="@FormatTimestamp(latestUploadAt)">
+                            @HumanizeTimestamp(latestUploadAt)
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="bearcat-overview-summary-text text-muted-foreground">@L["NoLatestUpload"]</p>
+                    }
+                </div>
+
+                <div class="bearcat-overview-summary-cell">
+                    <p class="bearcat-overview-summary-label">@L["ArchivePassword"]</p>
+                    @switch (summary.ArchivePassword.Kind)
+                    {
+                        case ArchivePasswordSummaryKind.SamePassword:
+                            <div class="bearcat-overview-password">
+                                <code title="@summary.ArchivePassword.Password">@summary.ArchivePassword.Password</code>
+                                <CopyButton Value="@summary.ArchivePassword.Password"
+                                            Label="@L["CopyPassword"]"
+                                            Variant="ButtonVariant.Ghost" />
+                            </div>
+                            break;
+                        case ArchivePasswordSummaryKind.VariesPerHoster:
+                            <p class="bearcat-overview-summary-text">@L["ArchivePasswordVariesPerHoster"]</p>
+                            break;
+                        default:
+                            <p class="bearcat-overview-summary-text text-muted-foreground">@L["None"]</p>
+                            break;
+                    }
                 </div>
             </div>
 
-            <div class="bearcat-release-overview-image-list">
-                @foreach (var imageUpload in overviewImageUploads)
+            <div class="bearcat-overview-card">
+                <div class="bearcat-overview-hoster-grid bearcat-overview-hoster-list-header" aria-hidden="true">
+                    <span>@L["Hoster"]</span>
+                    <span>@L["Status"]</span>
+                    <span>@L["LatestUpload"]</span>
+                    <span>@L["Links"]</span>
+                    <span>@L["LinkContainers"]</span>
+                    <span></span>
+                </div>
+
+                @foreach (var upload in overviewUploads)
                 {
-                    <article class="bearcat-release-overview-image-item">
-                        <div class="bearcat-release-overview-image-main">
-                            <div class="min-w-0">
-                                <div class="flex min-w-0 flex-wrap items-center gap-2">
-                                    <span class="truncate text-sm font-semibold" title="@imageUpload.ImageUploadConfigName">
-                                        @imageUpload.ImageUploadConfigName
-                                    </span>
-                                    <BbBadge Variant="BadgeVariant.Outline">@imageUpload.ImageHosterRegistrationName</BbBadge>
+                    var isExpanded = expandedUploadConfigIds.Contains(upload.UploadConfigId);
+                    var isOffline = upload.UploadId is not null && upload.OnlineState is OnlineState.Offline;
+                    var detailsElementId = $"overview-hoster-details-{upload.UploadConfigId}";
+
+                    <div class="bearcat-overview-hoster-row @(isOffline ? "bearcat-overview-hoster-row-offline" : null)">
+                        <div class="bearcat-overview-hoster-grid bearcat-overview-hoster-row-main">
+                            <div class="bearcat-overview-hoster-name-cell">
+                                <span class="bearcat-overview-monogram" aria-hidden="true">@GetMonogram(upload.UploadConfigName)</span>
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-semibold" title="@upload.UploadConfigName">@upload.UploadConfigName</p>
+                                    @if (IsHosterNameShown(upload))
+                                    {
+                                        <p class="truncate text-xs text-muted-foreground" title="@upload.HosterRegistrationName">@upload.HosterRegistrationName</p>
+                                    }
                                 </div>
-                                @if (imageUpload.UploadedAt is not null || imageUpload.CreatedAt is not null)
+                            </div>
+
+                            <div class="bearcat-overview-hoster-status-cell">
+                                <OnlineStateBadge Value="@(upload.UploadId is null ? null : upload.OnlineState)"
+                                                  NotFullyOnlineSince="@upload.NotFullyOnlineSince" />
+                                @if (upload.UploadState is { } uploadState && uploadState is not UploadState.Completed)
                                 {
-                                    <p class="truncate text-xs text-muted-foreground">
-                                        @((imageUpload.UploadedAt ?? imageUpload.CreatedAt)?.ToString("g"))
-                                    </p>
+                                    <UploadStateBadge State="uploadState" />
+                                    <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
                                 }
                             </div>
 
-                            <div class="flex items-center gap-2">
-                                @if (imageUpload.UploadState is null)
+                            <div class="bearcat-overview-hoster-latest-cell">
+                                @if (upload.UploadId is null)
                                 {
-                                    <BbBadge Variant="BadgeVariant.Outline">@L["NoLatestUpload"]</BbBadge>
+                                    <span class="text-sm text-muted-foreground">@L["NoLatestUpload"]</span>
                                 }
                                 else
                                 {
-                                    <UploadStateBadge State="imageUpload.UploadState.Value" />
-                                    <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
+                                    <span class="text-sm font-semibold tabular-nums">#@upload.UploadId</span>
+                                    @if ((upload.UploadedAt ?? upload.CreatedAt) is { } uploadTimestamp)
+                                    {
+                                        <span class="truncate text-xs text-muted-foreground" title="@FormatTimestamp(uploadTimestamp)">
+                                            @HumanizeTimestamp(uploadTimestamp)
+                                        </span>
+                                    }
                                 }
+                            </div>
 
-                                <CopyButton Value="@GetImageUrlsText(imageUpload)"
-                                            Label="@L["CopyImageUrls"]"
-                                            Disabled="@(imageUpload.ImageUrls.Count == 0)" />
+                            <div class="bearcat-overview-hoster-links-cell">
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Size="ButtonSize.Small"
+                                          Disabled="@(upload.UploadId is null)"
+                                          AriaLabel="@L["ViewUploadLinks"]"
+                                          title="@L["ViewUploadLinks"]"
+                                          OnClick="@(() => ShowLinksDialogAsync(upload))">
+                                    <LucideIcon Name="external-link" class="h-4 w-4" />
+                                    @upload.LinkCount
+                                </BbButton>
+                            </div>
+
+                            <div class="bearcat-overview-hoster-containers-cell">
+                                @if (upload.LinkCrypterLinks.Count == 0)
+                                {
+                                    <span class="text-xs text-muted-foreground">@L["NoLinkContainers"]</span>
+                                }
+                                else
+                                {
+                                    @foreach (var link in upload.LinkCrypterLinks)
+                                    {
+                                        var isCreated = link.State is LinkCrypterContainerState.Created;
+                                        var hasUrl = !string.IsNullOrWhiteSpace(link.ContainerUrl);
+                                        <BbHoverCard OpenDelay="300" CloseDelay="150">
+                                            <BbHoverCardTrigger AsChild="false" Class="bearcat-overview-chip">
+                                                <LucideIcon Name="@(isCreated ? "check" : "x")"
+                                                            class="@($"h-3.5 w-3.5 shrink-0 {(isCreated ? "text-primary" : "text-destructive")}")" />
+                                                <span class="truncate">@link.LinkCrypterRegistrationName</span>
+                                                @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
+                                                {
+                                                    <span class="inline-flex shrink-0 text-muted-foreground" title="@L["CollectionContainer"]">
+                                                        <LucideIcon Name="layers" class="h-3.5 w-3.5" />
+                                                    </span>
+                                                }
+                                                <ErrorMessagesTooltip Messages="link.Errors">
+                                                    <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5 text-destructive" />
+                                                </ErrorMessagesTooltip>
+                                                @if (hasUrl)
+                                                {
+                                                    <CopyButton Value="@link.ContainerUrl"
+                                                                Label="@L["CopyLink"]"
+                                                                Variant="ButtonVariant.Ghost"
+                                                                Class="bearcat-overview-chip-copy" />
+                                                }
+                                            </BbHoverCardTrigger>
+                                            <BbHoverCardContent Side="PopoverSide.Top"
+                                                                Align="PopoverAlign.Start"
+                                                                Class="w-auto max-w-[85vw] p-3 sm:max-w-sm">
+                                                <div class="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                                                    <span>@link.LinkCrypterRegistrationName</span>
+                                                    <BbBadge Variant="@GetContainerVariant(link.State)">@L.Localize(link.State)</BbBadge>
+                                                    @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
+                                                    {
+                                                        <BbBadge Variant="BadgeVariant.Secondary">@L["CollectionContainer"]</BbBadge>
+                                                    }
+                                                </div>
+                                                @if (hasUrl)
+                                                {
+                                                    <p class="mt-1.5 break-all font-mono text-xs text-primary">@link.ContainerUrl</p>
+                                                }
+                                            </BbHoverCardContent>
+                                        </BbHoverCard>
+                                    }
+                                }
+                            </div>
+
+                            <div class="bearcat-overview-hoster-expand-cell">
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          AriaLabel="@L["ShowDetails"]"
+                                          title="@L["ShowDetails"]"
+                                          aria-expanded="@(isExpanded ? "true" : "false")"
+                                          aria-controls="@detailsElementId"
+                                          OnClick="@(() => ToggleDetails(upload.UploadConfigId))">
+                                    <LucideIcon Name="chevron-right"
+                                                class="@($"bearcat-overview-expand-chevron h-4 w-4 {(isExpanded ? "bearcat-overview-expand-chevron-expanded" : string.Empty)}")" />
+                                </BbButton>
                             </div>
                         </div>
 
-                        @if (imageUpload.ImageUrls.Count == 0)
+                        @if (isExpanded)
                         {
-                            <p class="text-sm text-muted-foreground">@L["NoImageUploadUrlsFound"]</p>
+                            <div id="@detailsElementId" class="bearcat-overview-hoster-details">
+                                <dl class="bearcat-overview-detail-list">
+                                    <div class="bearcat-overview-detail">
+                                        <dt>@L["State"]</dt>
+                                        <dd>
+                                            @if (upload.UploadState is { } detailUploadState)
+                                            {
+                                                <UploadStateBadge State="detailUploadState" />
+                                                <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted-foreground">@L["NoLatestUpload"]</span>
+                                            }
+                                        </dd>
+                                    </div>
+
+                                    @if (upload.UploadedAt is { } uploadedAt)
+                                    {
+                                        <div class="bearcat-overview-detail">
+                                            <dt>@L["UploadedAt"]</dt>
+                                            <dd class="tabular-nums">@FormatTimestamp(uploadedAt)</dd>
+                                        </div>
+                                    }
+
+                                    @if (upload.CreatedAt is { } createdAt)
+                                    {
+                                        <div class="bearcat-overview-detail">
+                                            <dt>@L["CreatedAt"]</dt>
+                                            <dd class="tabular-nums">@FormatTimestamp(createdAt)</dd>
+                                        </div>
+                                    }
+
+                                    @foreach (var link in upload.LinkCrypterLinks)
+                                    {
+                                        <div class="bearcat-overview-detail">
+                                            <dt>@link.LinkCrypterRegistrationName</dt>
+                                            <dd>
+                                                @if (string.IsNullOrWhiteSpace(link.ContainerUrl))
+                                                {
+                                                    <BbBadge Variant="@GetContainerVariant(link.State)">@L.Localize(link.State)</BbBadge>
+                                                    <ErrorMessagesTooltip Messages="link.Errors" />
+                                                }
+                                                else
+                                                {
+                                                    <a class="bearcat-upload-link font-mono"
+                                                       href="@link.ContainerUrl"
+                                                       target="_blank"
+                                                       rel="noreferrer noopener"
+                                                       title="@link.ContainerUrl">
+                                                        @link.ContainerUrl
+                                                    </a>
+                                                    <CopyButton Value="@link.ContainerUrl"
+                                                                Label="@L["CopyLink"]"
+                                                                Variant="ButtonVariant.Ghost"
+                                                                Class="bearcat-overview-chip-copy" />
+                                                }
+                                            </dd>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(upload.ArchivePassword))
+                                    {
+                                        <div class="bearcat-overview-detail">
+                                            <dt>@L["ArchivePassword"]</dt>
+                                            <dd>
+                                                <code class="truncate" title="@upload.ArchivePassword">@upload.ArchivePassword</code>
+                                                <CopyButton Value="@upload.ArchivePassword"
+                                                            Label="@L["CopyPassword"]"
+                                                            Variant="ButtonVariant.Ghost"
+                                                            Class="bearcat-overview-chip-copy" />
+                                            </dd>
+                                        </div>
+                                    }
+                                </dl>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              Disabled="@(upload.UploadId is null)"
+                                              OnClick="@(() => ShowLinksDialogAsync(upload))">
+                                        <LucideIcon Name="external-link" class="h-4 w-4" />
+                                        @L["ViewUploadLinks"]
+                                    </BbButton>
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              OnClick="@(() => NavigateToUploadsView(upload.UploadConfigId, "history"))">
+                                        <LucideIcon Name="history" class="h-4 w-4" />
+                                        @L["UploadHistory"]
+                                    </BbButton>
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              OnClick="@(() => NavigateToUploadsView(upload.UploadConfigId, "configuration"))">
+                                        <LucideIcon Name="sliders-horizontal" class="h-4 w-4" />
+                                        @L["Configuration"]
+                                    </BbButton>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @if (!isLoading && overviewImageUploads.Count > 0)
+    {
+        <section class="space-y-3">
+            <div class="bearcat-overview-section-header">
+                <h2 class="bearcat-overview-section-heading">
+                    <LucideIcon Name="image" class="h-4 w-4" />
+                    @L["ImageUploads"]
+                </h2>
+            </div>
+
+            <div class="bearcat-overview-card">
+                @foreach (var imageUpload in overviewImageUploads)
+                {
+                    var thumbnailUrl = GetThumbnailUrl(imageUpload);
+                    <div class="bearcat-overview-image-row">
+                        @if (thumbnailUrl is null)
+                        {
+                            <div class="bearcat-overview-image-thumbnail bearcat-overview-image-thumbnail-empty" aria-hidden="true">
+                                <LucideIcon Name="image" class="h-4 w-4" />
+                            </div>
                         }
                         else
                         {
-                            <div class="bearcat-release-overview-image-url-list">
-                                @foreach (var imageUrl in imageUpload.ImageUrls)
+                            <img src="@thumbnailUrl" alt="" loading="lazy" class="bearcat-overview-image-thumbnail" />
+                        }
+
+                        <div class="min-w-0 flex-1 space-y-1.5">
+                            <div class="flex min-w-0 flex-wrap items-center gap-2">
+                                <span class="truncate text-sm font-semibold" title="@imageUpload.ImageUploadConfigName">
+                                    @imageUpload.ImageUploadConfigName
+                                </span>
+                                @if (IsImageHosterNameShown(imageUpload))
                                 {
-                                    <div class="bearcat-release-overview-image-url">
-                                        <BbBadge Variant="BadgeVariant.Secondary">@imageUrl.ImageSize</BbBadge>
-                                        <a class="bearcat-upload-link"
-                                           href="@imageUrl.Url"
-                                           target="_blank"
-                                           rel="noreferrer noopener"
-                                           title="@imageUrl.Url">
-                                            @imageUrl.Url
-                                        </a>
-                                        <CopyButton Value="@imageUrl.Url"
-                                                    Label="@L["CopyLink"]"
-                                                    Class="bearcat-release-overview-link-copy" />
-                                    </div>
+                                    <BbBadge Variant="BadgeVariant.Outline">@imageUpload.ImageHosterRegistrationName</BbBadge>
+                                }
+                                @if ((imageUpload.UploadedAt ?? imageUpload.CreatedAt) is { } imageUploadTimestamp)
+                                {
+                                    <span class="text-xs text-muted-foreground" title="@FormatTimestamp(imageUploadTimestamp)">
+                                        @HumanizeTimestamp(imageUploadTimestamp)
+                                    </span>
                                 }
                             </div>
-                        }
-                    </article>
+
+                            @if (imageUpload.ImageUrls.Count == 0)
+                            {
+                                <p class="text-xs text-muted-foreground">@L["NoImageUploadUrlsFound"]</p>
+                            }
+                            else
+                            {
+                                <div class="flex flex-wrap gap-1.5">
+                                    @foreach (var imageUrl in imageUpload.ImageUrls)
+                                    {
+                                        <span class="bearcat-overview-chip" title="@imageUrl.Url">
+                                            <a href="@imageUrl.Url"
+                                               target="_blank"
+                                               rel="noreferrer noopener"
+                                               class="hover:underline">
+                                                @imageUrl.ImageSize
+                                            </a>
+                                            <CopyButton Value="@imageUrl.Url"
+                                                        Label="@L["CopyLink"]"
+                                                        Variant="ButtonVariant.Ghost"
+                                                        Class="bearcat-overview-chip-copy" />
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-2">
+                            @if (imageUpload.UploadState is { } imageUploadState)
+                            {
+                                <UploadStateBadge State="imageUploadState" />
+                                <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
+                            }
+                            else
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline">@L["NoLatestUpload"]</BbBadge>
+                            }
+                        </div>
+                    </div>
                 }
             </div>
-        </div>
+        </section>
     }
-</section>
+</div>

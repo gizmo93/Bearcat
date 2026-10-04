@@ -38,6 +38,12 @@ public partial class ReleaseInfoPanel(
 
     private bool CanExtractMediaMetadata => ReleaseType == ReleaseType.Managed;
 
+    private bool HasCover => !string.IsNullOrWhiteSpace(releaseMetadata?.CoverUrl);
+
+    private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
+
+    private string CoverDownloadFileName => GetCoverDownloadFileName();
+
     protected override async Task OnInitializedAsync()
     {
         await LoadReleaseInfoAsync();
@@ -266,6 +272,30 @@ public partial class ReleaseInfoPanel(
             && uri.Host.Contains("xrel.to", StringComparison.OrdinalIgnoreCase)
             ? "xREL"
             : LocalizeUrlType(url.Type);
+    }
+
+    private string GetCoverDownloadFileName()
+    {
+        if (Uri.TryCreate(releaseMetadata?.CoverUrl, UriKind.Absolute, out var uri))
+        {
+            var fileName = Path.GetFileName(uri.LocalPath);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                return fileName;
+            }
+        }
+
+        return $"{SanitizeFileName(ReleaseName)}-cover.jpg";
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(
+            value.Select(character => invalidChars.Contains(character) ? '_' : character).ToArray()
+        );
+
+        return string.IsNullOrWhiteSpace(sanitized) ? "release" : sanitized;
     }
 
     private string LocalizeExternalInfoType(ExternalInfoType type) => L[$"ExternalInfoType.{type}"];

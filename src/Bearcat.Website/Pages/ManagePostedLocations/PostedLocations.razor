@@ -1,79 +1,114 @@
+<section class="space-y-3">
+    <div class="bearcat-overview-section-header">
+        <h2 class="bearcat-overview-section-heading">
+            <LucideIcon Name="globe" class="h-4 w-4" />
+            @L["PostedLocations"]
+            <span class="bearcat-overview-count-pill">@locations.Count</span>
+        </h2>
 
-<BbCard Class="border-border/70 shadow-sm">
-    <BbCardHeader>
-        <div class="bearcat-section-header">
-            <div class="flex items-center gap-2">
-                <LucideIcon Name="link" class="h-4 w-4" />
-                <div>
-                    <BbCardTitle class="text-base">@L["PostedLocations"]</BbCardTitle>
-                </div>
-            </div>
-        </div>
-    </BbCardHeader>
-    <BbCardContent>
-        <div class="space-y-4">
-            <div class="flex items-center gap-2">
-                <BbInput @bind-Value="newUrl" class="flex-1" Placeholder="@L["PostedLocationUrlPlaceholder"]" />
-                <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" Disabled="isBusy" OnClick="AddAsync">
-                    <LucideIcon Name="plus" class="h-4 w-4" />
-                    @L["Add"]
-                </BbButton>
-            </div>
+        @if (!isAdding)
+        {
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isBusy"
+                      OnClick="StartAdding">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["Add"]
+            </BbButton>
+        }
+    </div>
 
-            @if (locations.Count == 0)
-            {
-                <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-                    @L["NoPostedLocationsYet"]
-                </div>
-            }
-            else
-            {
-                <div class="space-y-2">
-                    @foreach (var location in locations)
+    <div class="bearcat-overview-card">
+        @if (locations.Count == 0 && !isAdding)
+        {
+            <p class="bearcat-posted-location-empty">@L["NoPostedLocationsYet"]</p>
+        }
+
+        @foreach (var location in locations)
+        {
+            var display = PostedLocationDisplay.FromUrl(location.Url);
+            <div class="bearcat-posted-location-row">
+                <span class="bearcat-posted-location-avatar" aria-hidden="true">@display.Initial</span>
+                <div class="min-w-0 flex-1" title="@location.Url">
+                    <p class="truncate text-sm font-semibold">@display.Title</p>
+                    @if (display.Subtitle is not null)
                     {
-                        <div class="flex items-center gap-2 rounded-md border border-border/70 px-3 py-2">
-                            <LucideIcon Name="link" class="h-4 w-4 shrink-0 text-muted-foreground" />
-                            <a href="@location.Url"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="flex-1 truncate text-sm hover:underline"
-                               title="@location.Url">
-                                @location.Url
-                            </a>
-                            @if (location.DistributionSiteRegistrationId is not null)
-                            {
-                                <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
-                                    <BbTooltipTrigger AsChild="true">
-                                        <BbButton Variant="ButtonVariant.Ghost"
-                                                  Size="ButtonSize.IconSmall"
-                                                  AriaLabel="@L["UpdatePostedLocationTitle"]"
-                                                  Disabled="isBusy"
-                                                  OnClick="@(() => UpdateAsync(location))">
-                                            <LucideIcon Name="file-pen" class="h-4 w-4" />
-                                        </BbButton>
-                                    </BbTooltipTrigger>
-                                    <BbTooltipContent Class="max-w-xs text-xs">
-                                        <p class="font-medium">@L["UpdatePostedLocationTitle"]</p>
-                                        <p>@L["UpdatePostedLocationDescription"]</p>
-                                    </BbTooltipContent>
-                                </BbTooltip>
-                            }
-                            <BbButton Variant="ButtonVariant.Ghost"
-                                      Size="ButtonSize.IconSmall"
-                                      AriaLabel="@L["Delete"]"
-                                      Disabled="isBusy"
-                                      OnClick="@(() => DeleteAsync(location.PostedLocationId))">
-                                <LucideIcon Name="trash-2" class="h-4 w-4" />
-                            </BbButton>
-                        </div>
+                        <p class="truncate text-xs text-muted-foreground">@display.Subtitle</p>
                     }
                 </div>
-            }
+                <div class="flex shrink-0 items-center gap-1">
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              Href="@location.Url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              AriaLabel="@L["Open"]"
+                              title="@L["Open"]">
+                        <LucideIcon Name="external-link" class="h-4 w-4" />
+                    </BbButton>
+                    <CopyButton Value="@location.Url"
+                                Label="@L["CopyLink"]"
+                                Variant="ButtonVariant.Ghost" />
+                    @if (location.DistributionSiteRegistrationId is not null)
+                    {
+                        <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                            <BbTooltipTrigger AsChild="true">
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          AriaLabel="@L["UpdatePostedLocationTitle"]"
+                                          Disabled="isBusy"
+                                          OnClick="@(() => UpdateAsync(location))">
+                                    <LucideIcon Name="file-pen" class="h-4 w-4" />
+                                </BbButton>
+                            </BbTooltipTrigger>
+                            <BbTooltipContent Class="max-w-xs text-xs">
+                                <p class="font-medium">@L["UpdatePostedLocationTitle"]</p>
+                                <p>@L["UpdatePostedLocationDescription"]</p>
+                            </BbTooltipContent>
+                        </BbTooltip>
+                    }
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              AriaLabel="@L["Delete"]"
+                              title="@L["Delete"]"
+                              Disabled="isBusy"
+                              OnClick="@(() => DeleteAsync(location.PostedLocationId))">
+                        <LucideIcon Name="trash-2" class="h-4 w-4" />
+                    </BbButton>
+                </div>
+            </div>
+        }
 
-            @if (errorMessage is not null)
-            {
-                <p class="text-sm text-destructive">@errorMessage</p>
-            }
-        </div>
-    </BbCardContent>
-</BbCard>
+        @if (isAdding)
+        {
+            <form class="bearcat-posted-location-add-form"
+                  novalidate
+                  @onsubmit="AddAsync"
+                  @onsubmit:preventDefault
+                  @onkeydown="HandleAddFormKeyDown">
+                <BbInput @ref="urlInput"
+                         @bind-Value="newUrl"
+                         Type="InputType.Url"
+                         Class="min-w-0 flex-1"
+                         Placeholder="@L["PostedLocationUrlPlaceholder"]"
+                         AriaLabel="@L["PostedLocationUrlPlaceholder"]" />
+                <BbButton Type="ButtonType.Submit"
+                          Size="ButtonSize.Small"
+                          Disabled="isBusy">
+                    @L["Add"]
+                </BbButton>
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="isBusy"
+                          OnClick="CancelAdding">
+                    @L["Cancel"]
+                </BbButton>
+            </form>
+        }
+    </div>
+
+    @if (errorMessage is not null)
+    {
+        <p class="text-sm text-destructive">@errorMessage</p>
+    }
+</section>

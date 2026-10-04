@@ -171,7 +171,6 @@
   <data name="MetadataUpdated" xml:space="preserve"><value>Metadata updated</value></data>
   <data name="DownloadLink" xml:space="preserve"><value>Download link</value></data>
   <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Paste part of a link</value></data>
-  <data name="DownloadLinks" xml:space="preserve"><value>Download links</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
   <data name="Description" xml:space="preserve"><value>Description</value></data>
@@ -242,7 +241,6 @@
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
   <data name="LinkCrypterSettings" xml:space="preserve"><value>Settings</value></data>
   <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Managed on collection page</value></data>
-  <data name="LinkCrypterLinks" xml:space="preserve"><value>Link crypter links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
   <data name="Login" xml:space="preserve"><value>Login</value></data>
@@ -269,7 +267,6 @@
   <data name="Next" xml:space="preserve"><value>Next</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
   <data name="NotFullyOnlineSince" xml:space="preserve"><value>Not fully online since</value></data>
-  <data name="NoArchivePassword" xml:space="preserve"><value>No archive password</value></data>
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>No archive configurations yet.</value></data>
   <data name="NoContainerLinksFound" xml:space="preserve"><value>No container links found</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>No distribution targets</value></data>
@@ -287,7 +284,6 @@
   <data name="NoImageUploadsFound" xml:space="preserve"><value>No image uploads found</value></data>
   <data name="NoImageUploadUrlsFound" xml:space="preserve"><value>No image upload URLs found</value></data>
   <data name="NoLatestUpload" xml:space="preserve"><value>No upload yet</value></data>
-  <data name="NoLinkCrypterLinks" xml:space="preserve"><value>No link crypter links</value></data>
   <data name="NoConfigurationRequired" xml:space="preserve"><value>No configuration required</value></data>
   <data name="NoExternalInfos" xml:space="preserve"><value>No external infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>No NFO file available</value></data>
@@ -1601,4 +1597,12 @@
   <data name="ReleaseProgressForumCount" xml:space="preserve"><value>{0} forums</value></data>
   <data name="ReleaseProgressMarkedAsPosted" xml:space="preserve"><value>Marked as posted</value></data>
   <data name="ReleaseProgressNotPostedYet" xml:space="preserve"><value>Not posted yet</value></data>
+  <data name="HostersOnline" xml:space="preserve"><value>Hosters online</value></data>
+  <data name="OfTotal" xml:space="preserve"><value>of {0}</value></data>
+  <data name="LinkContainers" xml:space="preserve"><value>Link containers</value></data>
+  <data name="None" xml:space="preserve"><value>None</value></data>
+  <data name="ArchivePasswordVariesPerHoster" xml:space="preserve"><value>Varies per hoster</value></data>
+  <data name="NoLinkContainers" xml:space="preserve"><value>No link containers</value></data>
+  <data name="UploadHistory" xml:space="preserve"><value>Upload history</value></data>
+  <data name="ShowDetails" xml:space="preserve"><value>Show details</value></data>
 </root>

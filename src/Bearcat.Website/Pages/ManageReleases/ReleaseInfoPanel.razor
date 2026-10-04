@@ -62,6 +62,15 @@
                     </BbButton>
                 </BbDropdownMenuTrigger>
                 <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                    @if (HasCover)
+                    {
+                        <BbDropdownMenuItem Href="@CoverDownloadUrl" download="@CoverDownloadFileName">
+                            <Icon>
+                                <LucideIcon Name="image-down" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["DownloadCover"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    }
                     @if (releaseNfo is not null)
                     {
                         <BbDropdownMenuItem OnClick="ShowEditReleaseNfoDialogAsync">
