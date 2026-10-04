@@ -2,6 +2,7 @@
 @using Bearcat.Website.Pages.ManageArchiveConfigs
 @using Bearcat.Website.Pages.ManageImageUploadConfigs
 @using Bearcat.Website.Pages.ManageImageUploads
+@using Bearcat.Website.Pages.ManageReleases.DetailTabs
 @using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.ManageUploadConfigs
 @using Bearcat.Website.Pages.PostQueue
@@ -247,36 +248,33 @@
         </div>
     </div>
 
-    <BbTabs @key="ReleaseId" Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">
-        <BbTabsList>
-            <BbTabsTrigger Value="overview">@L["ReleaseOverview"]</BbTabsTrigger>
-            <BbTabsTrigger Value="release-infos">@L["ReleaseInfo"]</BbTabsTrigger>
-            <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
-            <BbTabsTrigger Value="upload-configs">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["UploadConfigurations"]</span>
-                    <span class="text-muted-foreground text-[0.625rem] font-normal leading-none opacity-[0.72]">@release.ActiveUploadConfigsCount</span>
-                </span>
-            </BbTabsTrigger>
-            <BbTabsTrigger Value="image-upload-configs">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["ImageUploadConfigurations"]</span>
-                </span>
-            </BbTabsTrigger>
-            <BbTabsTrigger Value="uploads">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["Uploads"]</span>
-                    <span class="text-muted-foreground text-[0.625rem] font-normal leading-none opacity-[0.72]">@release.OnlineUploadConfigsCount @L["OnlineState.Online"]</span>
-                </span>
-            </BbTabsTrigger>
-            <BbTabsTrigger Value="image-uploads">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["ImageUploads"]</span>
-                </span>
-            </BbTabsTrigger>
-        </BbTabsList>
+    <BbTabs @key="ReleaseId" Value="@activeTab" ValueChanged="HandleTabChanged" Class="space-y-4">
+        <div class="max-sm:hidden">
+            <BbTabsList>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Overview">@L["ReleaseOverview"]</BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.ReleaseInfos">@L["ReleaseInfo"]</BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Archives">
+                    @TabLabelWithCount(L["Archives"], ArchiveConfigCountText, isDestructive: false)
+                </BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Uploads">
+                    @TabLabelWithCount(L["Uploads"], UploadConfigCountText, HasOfflineUploadConfigs)
+                </BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Images">
+                    @TabLabelWithCount(L["Images"], ImageUploadConfigCountText, isDestructive: false)
+                </BbTabsTrigger>
+            </BbTabsList>
+        </div>
 
-        <BbTabsContent Value="overview" Class="space-y-4">
+        <div class="sm:hidden">
+            <BbSelect TValue="string"
+                      Value="@activeTab"
+                      ValueChanged="HandleTabChanged"
+                      Options="TabSelectOptions"
+                      AriaLabel="@L["ReleaseSection"]"
+                      Class="w-full" />
+        </div>
+
+        <BbTabsContent Value="@ReleaseDetailTab.Overview" Class="space-y-4">
             <ReleaseOverview
                 @ref="@reloadableComponents[nameof(ReleaseOverview)]"
                 ReleaseId="@ReleaseId"
@@ -286,41 +284,71 @@
             <PostedLocations @ref="postedLocations" ReleaseId="@ReleaseId" />
         </BbTabsContent>
 
-        <BbTabsContent Value="release-infos" Class="space-y-4">
+        <BbTabsContent Value="@ReleaseDetailTab.ReleaseInfos" Class="space-y-4">
             <ReleaseInfoPanel ReleaseId="@ReleaseId" ReleaseName="@release.Name" ReleaseType="@release.ReleaseType" />
         </BbTabsContent>
 
-        <BbTabsContent Value="archives" Class="space-y-4">
+        <BbTabsContent Value="@ReleaseDetailTab.Archives" Class="space-y-4">
             <ArchiveConfigs
                 @ref="@reloadableComponents[nameof(ArchiveConfigs)]"
                 ReleaseId="ReleaseId"
                 ReleaseType="release.ReleaseType"
                 FocusArchiveConfigId="@FocusArchiveConfigId"
-                OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync" />
+                OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync"
+                OnArchiveConfigCountLoaded="count => archiveConfigCount = count" />
         </BbTabsContent>
 
-        <BbTabsContent Value="upload-configs" Class="space-y-4">
-            <UploadConfigs
-                @ref="@reloadableComponents[nameof(UploadConfigs)]"
+        <BbTabsContent Value="@ReleaseDetailTab.Uploads" Class="space-y-4">
+            <BbToggleGroup TValue="ReleaseUploadsView"
+                           @bind-Value="uploadsView"
+                           Required="true"
+                           Variant="ToggleVariant.Outline"
+                           Size="ToggleSize.Small"
+                           Class="w-fit"
+                           aria-label="@L["UploadsView"]">
+                <BbToggleGroupItem Value="ReleaseUploadsView.Configuration">
+                    <span class="inline-flex items-center gap-2">
+                        <LucideIcon Name="sliders-horizontal" class="h-4 w-4" />
+                        @L["Configuration"]
+                    </span>
+                </BbToggleGroupItem>
+                <BbToggleGroupItem Value="ReleaseUploadsView.History">
+                    <span class="inline-flex items-center gap-2">
+                        <LucideIcon Name="history" class="h-4 w-4" />
+                        @L["History"]
+                    </span>
+                </BbToggleGroupItem>
+            </BbToggleGroup>
+
+            @if (uploadsView is ReleaseUploadsView.Configuration)
+            {
+                <UploadConfigs
+                    @ref="@reloadableComponents[nameof(UploadConfigs)]"
+                    ReleaseId="@ReleaseId"
+                    FocusUploadConfigId="@FocusUploadConfigId" />
+            }
+            else
+            {
+                <ReleaseUploads ReleaseId="@ReleaseId" InitialUploadConfigId="@FocusUploadConfigId" />
+            }
+        </BbTabsContent>
+
+        <BbTabsContent Value="@ReleaseDetailTab.Images" Class="space-y-4">
+            <ImageUploadConfigs
                 ReleaseId="@ReleaseId"
-                FocusUploadConfigId="@FocusUploadConfigId" />
-        </BbTabsContent>
-
-        <BbTabsContent Value="image-upload-configs" Class="space-y-4">
-            <ImageUploadConfigs ReleaseId="@ReleaseId" />
-        </BbTabsContent>
-
-        <BbTabsContent Value="uploads" Class="space-y-4">
-            <ReleaseUploads ReleaseId="@ReleaseId" InitialUploadConfigId="@FocusUploadConfigId" />
-        </BbTabsContent>
-
-        <BbTabsContent Value="image-uploads" Class="space-y-4">
+                OnImageUploadConfigCountLoaded="count => imageUploadConfigCount = count" />
             <ReleaseImageUploads ReleaseId="@ReleaseId" />
         </BbTabsContent>
     </BbTabs>
 </section>
 
 @code {
+    private static RenderFragment TabLabelWithCount(string label, string count, bool isDestructive) =>
+        @<span class="inline-flex items-center gap-2">
+            <span>@label</span>
+            <span class="bearcat-tab-count @(isDestructive ? "bearcat-tab-count-destructive" : null)">@count</span>
+        </span>;
+
     private RenderFragment FolderPathRow(string path, string folderLabel) =>
         @<div class="flex min-w-0 items-center gap-1.5 text-muted-foreground">
             <span class="inline-flex shrink-0" title="@folderLabel">

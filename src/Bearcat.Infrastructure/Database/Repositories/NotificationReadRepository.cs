@@ -184,7 +184,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
                     notification.UploadReleaseName,
                     notification.UploadConfigName
                 ),
-                TargetUrl: $"/releases/{notification.UploadReleaseId}?tab=uploads&uploadConfigId={notification.UploadConfigId}"
+                TargetUrl: $"/releases/{notification.UploadReleaseId}?tab=uploads&view=history&uploadConfigId={notification.UploadConfigId}"
             );
         }
 
@@ -217,7 +217,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
                     notification.LinkUploadConfigName,
                     notification.LinkCrypterName
                 ),
-                TargetUrl: $"/releases/{notification.LinkReleaseId}?tab=upload-configs&uploadConfigId={notification.LinkUploadConfigId}"
+                TargetUrl: $"/releases/{notification.LinkReleaseId}?tab=uploads&view=configuration&uploadConfigId={notification.LinkUploadConfigId}"
             );
         }
 

@@ -30,6 +30,9 @@ public partial class ArchiveConfigs(
     [Parameter]
     public EventCallback<string> OnChangeAffectingOtherComponents { get; set; }
 
+    [Parameter]
+    public EventCallback<int> OnArchiveConfigCountLoaded { get; set; }
+
     private IReadOnlyList<ArchiveConfigReadModel> archiveConfigs = [];
     private string ArchiveGridClass =>
         ReleaseType is not ReleaseType.Managed
@@ -201,6 +204,7 @@ public partial class ArchiveConfigs(
             (IReleaseReadRepository repository) =>
                 repository.GetArchiveConfigsAsync(ReleaseId, CancellationToken.None)
         );
+        await OnArchiveConfigCountLoaded.InvokeAsync(archiveConfigs.Count);
     }
 
     private async Task ShowEditDialogAsync(ArchiveConfigReadModel config)

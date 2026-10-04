@@ -488,6 +488,10 @@
   <data name="UploadIdSearchPlaceholder" xml:space="preserve"><value>e.g. 123 or #123</value></data>
   <data name="UploadLinksTitle" xml:space="preserve"><value>Upload #{0} links</value></data>
   <data name="Uploads" xml:space="preserve"><value>Uploads</value></data>
+  <data name="UploadsView" xml:space="preserve"><value>Uploads view</value></data>
+  <data name="History" xml:space="preserve"><value>History</value></data>
+  <data name="Images" xml:space="preserve"><value>Images</value></data>
+  <data name="ReleaseSection" xml:space="preserve"><value>Release section</value></data>
   <data name="UploadResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} uploads</value></data>
   <data name="ReleaseUploads" xml:space="preserve"><value>Release uploads</value></data>
   <data name="Url" xml:space="preserve"><value>URL</value></data>

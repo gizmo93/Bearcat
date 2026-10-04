@@ -81,7 +81,7 @@ public partial class AllUploadsPage(
 
     private static string GetReleaseUploadsUrl(UploadReadModel upload)
     {
-        return $"/releases/{upload.ReleaseId}?tab=uploads&uploadConfigId={upload.UploadConfigId}";
+        return $"/releases/{upload.ReleaseId}?tab=uploads&view=history&uploadConfigId={upload.UploadConfigId}";
     }
 
     private static string GetArchiveSearchUrl(int archiveId)

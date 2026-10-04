@@ -1,3 +1,5 @@
+using System.Globalization;
+using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -7,10 +9,12 @@ using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
+using Bearcat.Website.Pages.ManageReleases.DetailTabs;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
@@ -32,6 +36,9 @@ public partial class ReleaseDetail(
     [SupplyParameterFromQuery(Name = "tab")]
     public string? RequestedTab { get; set; }
 
+    [SupplyParameterFromQuery(Name = "view")]
+    public string? RequestedUploadsView { get; set; }
+
     [SupplyParameterFromQuery(Name = "uploadConfigId")]
     public int? FocusUploadConfigId { get; set; }
 
@@ -52,7 +59,10 @@ public partial class ReleaseDetail(
     private IJSObjectReference? stickyHeaderVisibilityTrackingHandle;
     private bool isInitialized;
     private int? loadedReleaseId;
-    private string? activeTab = "overview";
+    private string? activeTab = ReleaseDetailTab.Overview;
+    private ReleaseUploadsView uploadsView = ReleaseUploadsView.Configuration;
+    private int archiveConfigCount;
+    private int imageUploadConfigCount;
     private PostedLocations? postedLocations;
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
@@ -61,9 +71,41 @@ public partial class ReleaseDetail(
 
     private string? CoverUrl => releaseMetadata?.CoverUrl;
 
+    private bool HasOfflineUploadConfigs =>
+        release.OnlineUploadConfigsCount < release.ActiveUploadConfigsCount;
+
+    private string UploadConfigCountText =>
+        HasOfflineUploadConfigs
+            ? string.Create(
+                CultureInfo.CurrentCulture,
+                $"{release.OnlineUploadConfigsCount}/{release.ActiveUploadConfigsCount}"
+            )
+            : release.ActiveUploadConfigsCount.ToString(CultureInfo.CurrentCulture);
+
+    private string ArchiveConfigCountText =>
+        archiveConfigCount.ToString(CultureInfo.CurrentCulture);
+
+    private string ImageUploadConfigCountText =>
+        imageUploadConfigCount.ToString(CultureInfo.CurrentCulture);
+
+    private IReadOnlyList<SelectOption<string>> TabSelectOptions =>
+        [
+            new(ReleaseDetailTab.Overview, L["ReleaseOverview"]),
+            new(ReleaseDetailTab.ReleaseInfos, L["ReleaseInfo"]),
+            new(ReleaseDetailTab.Archives, $"{L["Archives"]} ({ArchiveConfigCountText})"),
+            new(ReleaseDetailTab.Uploads, $"{L["Uploads"]} ({UploadConfigCountText})"),
+            new(ReleaseDetailTab.Images, $"{L["Images"]} ({ImageUploadConfigCountText})"),
+        ];
+
     protected override async Task OnParametersSetAsync()
     {
-        activeTab = NormalizeTab(RequestedTab);
+        var tabSelection = ReleaseDetailTabSelectionResolver.Resolve(
+            RequestedTab,
+            RequestedUploadsView,
+            FocusUploadConfigId
+        );
+        activeTab = tabSelection.Tab;
+        uploadsView = tabSelection.UploadsView;
 
         if (loadedReleaseId != ReleaseId)
         {
@@ -86,6 +128,7 @@ public partial class ReleaseDetail(
         release = releaseReadModel;
         await LoadUnmanagedArchiveFolderPathsAsync();
         await LoadReleaseMetadataAndReleaseInfoAsync();
+        await LoadTabCountsAsync();
         remoteDownloadOrigin = await operationRunner.RunAsync(
             (IRemoteSourceDownloadReadRepository repository) =>
                 repository.GetByReleaseIdAsync(ReleaseId)
@@ -121,6 +164,20 @@ public partial class ReleaseDetail(
             releaseMetadata = await repository.GetReleaseMetadataAsync(ReleaseId);
             releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
         });
+    }
+
+    private async Task LoadTabCountsAsync()
+    {
+        var archiveConfigs = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) =>
+                repository.GetArchiveConfigsAsync(ReleaseId, CancellationToken.None)
+        );
+        var imageUploadConfigs = await operationRunner.RunAsync(
+            (IImageUploadConfigReadRepository repository) =>
+                repository.GetImageUploadConfigsAsync(ReleaseId)
+        );
+        archiveConfigCount = archiveConfigs.Count;
+        imageUploadConfigCount = imageUploadConfigs.Count;
     }
 
     private async Task LoadUnmanagedArchiveFolderPathsAsync()
@@ -203,24 +260,10 @@ public partial class ReleaseDetail(
         );
     }
 
-    private Task HandleTabChangedAsync(string? value)
+    private void HandleTabChanged(string? value)
     {
-        activeTab = NormalizeTab(value);
-        return Task.CompletedTask;
+        activeTab = value;
     }
-
-    private static string NormalizeTab(string? tab) =>
-        tab switch
-        {
-            "overview" => "overview",
-            "release-infos" => "release-infos",
-            "upload-configs" => "upload-configs",
-            "image-upload-configs" => "image-upload-configs",
-            "uploads" => "uploads",
-            "image-uploads" => "image-uploads",
-            "archives" => "archives",
-            _ => "overview",
-        };
 
     private async Task ShowEditReleaseDialogAsync()
     {
