@@ -2,8 +2,6 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Bearcat.Website.Pages.ManageForumPostTemplates;
-using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -240,50 +238,6 @@ public partial class ReleaseOverview(
         toastService.Success(L["ReleaseInfoUpdated"]);
         await LoadOverviewAsync();
         StateHasChanged();
-    }
-
-    private async Task ShowPostToForumDialogAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(PostToForumDialog.EntityId)] = ReleaseId,
-            [nameof(PostToForumDialog.EntityName)] = ReleaseName,
-            [nameof(PostToForumDialog.TemplateType)] = ForumPostTemplateType.Release,
-        };
-
-        await dialogService.OpenAsync<PostToForumDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["PostNamedReleaseToForum", ReleaseName],
-                Description = L["PostToForumDescription"],
-                Size = DialogSize.ExtraLarge,
-                ShowClose = true,
-                PreventClose = true,
-            }
-        );
-
-        await OnRefreshed.InvokeAsync();
-    }
-
-    private async Task RenderForumPostAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(RenderForumPostDialog.EntityId)] = ReleaseId,
-            [nameof(RenderForumPostDialog.Type)] = ForumPostTemplateType.Release,
-        };
-
-        await dialogService.OpenAsync<RenderForumPostDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["RenderForumPostForRelease", ReleaseName],
-                Description = L["RenderForumPostDescription"],
-                Size = DialogSize.Full,
-                ShowClose = true,
-            }
-        );
     }
 
     private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>

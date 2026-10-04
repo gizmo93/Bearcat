@@ -1579,4 +1579,6 @@
   <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Forenpostvorlage kann nicht gelöscht werden</value></data>
   <data name="ForumPostTemplateUsedByOnePostingRule" xml:space="preserve"><value>{0} wird von 1 Postingregel verwendet. Ersetze die Vorlage zuerst in dieser Regel und lösche sie danach.</value></data>
   <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} wird von {1} Postingregeln verwendet. Ersetze die Vorlage zuerst in diesen Regeln und lösche sie danach.</value></data>
+  <data name="CopyFolderPath" xml:space="preserve"><value>Ordnerpfad kopieren</value></data>
+  <data name="MoreForumPostOptions" xml:space="preserve"><value>Weitere Forenpostoptionen</value></data>
 </root>

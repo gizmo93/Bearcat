@@ -137,7 +137,7 @@
                             <div class="bearcat-release-info-source-row">
                                 <span class="bearcat-release-info-source">
                                     <LucideIcon Name="database" class="h-3.5 w-3.5" />
-                                    @GetDatabaseDisplayName(releaseMetadata.MetadataDatabaseClassName)
+                                    @DatabaseDisplayName.GetFromClassName(releaseMetadata.MetadataDatabaseClassName)
                                 </span>
                                 @if (!string.IsNullOrWhiteSpace(releaseMetadata.MetadataDatabaseUrl))
                                 {
@@ -190,7 +190,7 @@
                             <div class="bearcat-release-info-source-row">
                                 <span class="bearcat-release-info-source">
                                     <LucideIcon Name="database" class="h-3.5 w-3.5" />
-                                    @GetDatabaseDisplayName(releaseInfo.NfoDatabaseClassName)
+                                    @DatabaseDisplayName.GetFromClassName(releaseInfo.NfoDatabaseClassName)
                                 </span>
                                 @if (!string.IsNullOrWhiteSpace(releaseInfo.ReleaseDatabaseUrl))
                                 {

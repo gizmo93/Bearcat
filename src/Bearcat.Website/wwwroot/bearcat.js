@@ -430,6 +430,30 @@ const logView = (() => {
     return { attach, scrollToBottomIfPinned };
 })();
 
+const releaseStickyHeader = (() => {
+    const visibleClassName = "bearcat-release-sticky-header-visible";
+
+    function attach(headerCardElement, stickyHeaderElement) {
+        const appHeaderHeight = document.querySelector(".bearcat-app-header")?.offsetHeight ?? 0;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                const isHeaderCardScrolledPast =
+                    !entry.isIntersecting && entry.boundingClientRect.top < entry.rootBounds.top;
+                stickyHeaderElement.classList.toggle(visibleClassName, isHeaderCardScrolledPast);
+            },
+            { rootMargin: `-${appHeaderHeight}px 0px 0px 0px`, threshold: 0 }
+        );
+
+        observer.observe(headerCardElement);
+
+        return {
+            detach: () => observer.disconnect(),
+        };
+    }
+
+    return { attach };
+})();
+
 window.bearcat = {
     copyText,
     takeCopyResult,
@@ -438,4 +462,5 @@ window.bearcat = {
     lineNumberedTextarea,
     saveShortcut,
     logView,
+    releaseStickyHeader,
 };

@@ -251,31 +251,137 @@ a {
     padding-inline: 0.25rem;
 }
 
-.bearcat-release-info-bar {
+.bearcat-release-header-card {
     display: grid;
-    gap: 0.9rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.25rem;
     min-width: 0;
-    align-items: center;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     background: var(--card);
-    padding: 0.85rem 1rem;
+    padding: 1.25rem;
 }
 
-.bearcat-release-folder {
+.bearcat-release-header-card-with-cover {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.bearcat-release-header-cover {
+    width: 92px;
+    aspect-ratio: 2 / 3;
+    align-self: start;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    object-fit: cover;
+}
+
+.bearcat-release-header-actions {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.bearcat-release-sticky-area {
+    position: sticky;
+    top: 4rem;
+    z-index: 10;
+    margin-bottom: -1.25rem;
+}
+
+.bearcat-release-sticky-area-with-workflow-bar {
+    margin-bottom: 0;
+}
+
+.bearcat-release-sticky-area-with-workflow-bar > :first-child {
+    margin-bottom: 0;
+}
+
+.bearcat-release-sticky-header {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    left: 0;
     display: flex;
     min-width: 0;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: color-mix(in oklch, var(--card) 88%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    padding: 0.5rem 0.75rem;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-0.5rem);
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease,
+        visibility 0s linear 160ms;
 }
 
-.bearcat-release-path {
-    margin-top: 0.25rem;
-    color: var(--foreground);
-    font-size: 0.875rem;
-    font-weight: 600;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
+.bearcat-release-sticky-header-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease,
+        visibility 0s linear 0s;
+}
+
+.bearcat-release-sticky-header-cover {
+    width: 1.5rem;
+    flex-shrink: 0;
+    aspect-ratio: 2 / 3;
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    object-fit: cover;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .bearcat-release-sticky-header {
+        background: var(--card);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bearcat-release-sticky-header,
+    .bearcat-release-sticky-header-visible {
+        transform: none;
+        transition: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .bearcat-release-header-card {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.875rem;
+        padding: 1rem;
+    }
+
+    .bearcat-release-header-card-with-cover {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .bearcat-release-header-cover {
+        width: 64px;
+    }
+
+    .bearcat-release-header-actions {
+        grid-column: 1 / -1;
+    }
+
+    .bearcat-release-header-actions > [role="group"] {
+        display: flex;
+        flex: 1;
+    }
+
+    .bearcat-release-header-actions > [role="group"] > :first-child {
+        flex: 1;
+    }
 }
 
 .bearcat-release-title {
@@ -3167,19 +3273,9 @@ body:has([aria-modal="true"]) [role="menu"] {
 }
 
 @media (min-width: 1180px) {
-    .bearcat-release-info-bar {
-        grid-template-columns: minmax(0, 1fr) auto;
-    }
-
     .bearcat-release-search-grid {
         grid-template-columns: repeat(5, minmax(0, 1fr));
         align-items: end;
-    }
-}
-
-@media (max-width: 640px) {
-    .bearcat-release-info-bar {
-        border-radius: 0.5rem;
     }
 }
 

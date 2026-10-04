@@ -1576,4 +1576,6 @@
   <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Forum post template cannot be deleted</value></data>
   <data name="ForumPostTemplateUsedByOnePostingRule" xml:space="preserve"><value>{0} is used by 1 posting rule. Replace the template in that rule first, then delete it.</value></data>
   <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} is used by {1} posting rules. Replace the template in those rules first, then delete it.</value></data>
+  <data name="CopyFolderPath" xml:space="preserve"><value>Copy folder path</value></data>
+  <data name="MoreForumPostOptions" xml:space="preserve"><value>More forum post options</value></data>
 </root>

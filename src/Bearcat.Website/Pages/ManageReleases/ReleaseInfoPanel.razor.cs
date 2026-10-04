@@ -254,28 +254,6 @@ public partial class ReleaseInfoPanel(
     private static string GetValueOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
-    private static string GetDatabaseDisplayName(string className)
-    {
-        if (className.Equals("XrelNfoDatabase", StringComparison.OrdinalIgnoreCase))
-        {
-            return "xREL";
-        }
-
-        const string nfoSuffix = "NfoDatabase";
-        if (className.EndsWith(nfoSuffix, StringComparison.Ordinal))
-        {
-            return className[..^nfoSuffix.Length];
-        }
-
-        const string metadataSuffix = "MetadataDatabase";
-        if (className.EndsWith(metadataSuffix, StringComparison.Ordinal))
-        {
-            return className[..^metadataSuffix.Length];
-        }
-
-        return className;
-    }
-
     private string GetUrlLabel(ReleaseExternalInfoUrlReadModel url)
     {
         if (url.Type == UrlType.Imdb)

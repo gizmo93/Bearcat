@@ -5,12 +5,15 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
+using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
@@ -19,8 +22,9 @@ public partial class ReleaseDetail(
     DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner,
-    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
-) : ComponentBase
+    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
+    IJSRuntime jsRuntime
+) : ComponentBase, IAsyncDisposable
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -40,6 +44,12 @@ public partial class ReleaseDetail(
     private ReleaseReadModel release = null!;
     private IReadOnlyList<string> unmanagedArchiveFolderPaths = [];
     private RemoteSourceDownloadReadModel? remoteDownloadOrigin;
+    private ReleaseMetadataReadModel? releaseMetadata;
+    private ReleaseInfoReadModel? releaseInfo;
+    private ElementReference headerCardElement;
+    private ElementReference stickyHeaderElement;
+    private bool isStickyHeaderVisibilityTrackingRequested;
+    private IJSObjectReference? stickyHeaderVisibilityTrackingHandle;
     private bool isInitialized;
     private int? loadedReleaseId;
     private string? activeTab = "overview";
@@ -48,6 +58,8 @@ public partial class ReleaseDetail(
 
     private bool IsPostQueueWorkflow =>
         string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
+
+    private string? CoverUrl => releaseMetadata?.CoverUrl;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -73,12 +85,42 @@ public partial class ReleaseDetail(
 
         release = releaseReadModel;
         await LoadUnmanagedArchiveFolderPathsAsync();
+        await LoadReleaseMetadataAndReleaseInfoAsync();
         remoteDownloadOrigin = await operationRunner.RunAsync(
             (IRemoteSourceDownloadReadRepository repository) =>
                 repository.GetByReleaseIdAsync(ReleaseId)
         );
         loadedReleaseId = ReleaseId;
         isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isInitialized || isStickyHeaderVisibilityTrackingRequested)
+        {
+            return;
+        }
+
+        isStickyHeaderVisibilityTrackingRequested = true;
+
+        try
+        {
+            stickyHeaderVisibilityTrackingHandle = await jsRuntime.InvokeAsync<IJSObjectReference>(
+                "bearcat.releaseStickyHeader.attach",
+                headerCardElement,
+                stickyHeaderElement
+            );
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    private async Task LoadReleaseMetadataAndReleaseInfoAsync()
+    {
+        await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
+        {
+            releaseMetadata = await repository.GetReleaseMetadataAsync(ReleaseId);
+            releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
+        });
     }
 
     private async Task LoadUnmanagedArchiveFolderPathsAsync()
@@ -110,6 +152,55 @@ public partial class ReleaseDetail(
         {
             await postedLocations.ReloadAsync();
         }
+    }
+
+    private async Task ShowPostToForumDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(PostToForumDialog.EntityId)] = release.ReleaseId,
+            [nameof(PostToForumDialog.EntityName)] = release.Name,
+            [nameof(PostToForumDialog.TemplateType)] = ForumPostTemplateType.Release,
+        };
+
+        await dialogService.OpenAsync<PostToForumDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["PostNamedReleaseToForum", release.Name],
+                Description = L["PostToForumDescription"],
+                Size = DialogSize.ExtraLarge,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (reloadableComponents.TryGetValue(nameof(ReleaseOverview), out var releaseOverview))
+        {
+            await releaseOverview.ReloadAsync();
+        }
+
+        await ReloadPostedLocationsAsync();
+    }
+
+    private async Task RenderForumPostAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(RenderForumPostDialog.EntityId)] = release.ReleaseId,
+            [nameof(RenderForumPostDialog.Type)] = ForumPostTemplateType.Release,
+        };
+
+        await dialogService.OpenAsync<RenderForumPostDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["RenderForumPostForRelease", release.Name],
+                Description = L["RenderForumPostDescription"],
+                Size = DialogSize.Full,
+                ShowClose = true,
+            }
+        );
     }
 
     private Task HandleTabChangedAsync(string? value)
@@ -385,5 +476,21 @@ public partial class ReleaseDetail(
 
         release = releaseReadModel;
         await LoadUnmanagedArchiveFolderPathsAsync();
+        await LoadReleaseMetadataAndReleaseInfoAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (stickyHeaderVisibilityTrackingHandle is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await stickyHeaderVisibilityTrackingHandle.InvokeVoidAsync("detach");
+            await stickyHeaderVisibilityTrackingHandle.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
     }
 }
