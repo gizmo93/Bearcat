@@ -24,7 +24,7 @@
   <data name="AdvancedSearch" xml:space="preserve"><value>Erweiterte Suche</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archivkonfig.</value></data>
   <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archivkonfiguration ist erforderlich.</value></data>
-  <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>Die Archivdateigröße ({0} MB) überschreitet die maximale Dateigröße des Hosters von {1} MB.</value></data>
+    <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>Die Archivdateigrösse ({0} MB) überschreitet die maximale Dateigrösse des Hosters von {1} MB.</value></data>
   <data name="ArchiveConfiguration" xml:space="preserve"><value>Archivkonfiguration</value></data>
   <data name="ArchiveConfigurationDialogDescription" xml:space="preserve"><value>Lege fest, wie Archive für dieses Release erstellt werden.</value></data>
   <data name="ArchiveConfigurations" xml:space="preserve"><value>Archivkonfigurationen</value></data>
@@ -134,8 +134,8 @@
   <data name="CoverUrlPlaceholder" xml:space="preserve"><value>https://example.com/cover.jpg</value></data>
   <data name="CoverUrlHelp" xml:space="preserve"><value>Setze die Cover-URL manuell. Falls sie bereits zu ImageHostern hochgeladen wurde, werden diese Uploads entfernt und mit dem neuen Cover erneut hochgeladen.</value></data>
   <data name="CoverPreview" xml:space="preserve"><value>Covervorschau</value></data>
-  <data name="OpenCoverInNewTab" xml:space="preserve"><value>Cover in voller Größe in neuem Tab öffnen</value></data>
-  <data name="SizeUnit" xml:space="preserve"><value>Größeneinheit</value></data>
+  <data name="OpenCoverInNewTab" xml:space="preserve"><value>Cover in voller Grösse in neuem Tab öffnen</value></data>
+  <data name="SizeUnit" xml:space="preserve"><value>Grösseneinheit</value></data>
   <data name="ReleaseDatabaseUrl" xml:space="preserve"><value>Releasedatenbank-URL</value></data>
   <data name="MetadataDatabaseUrl" xml:space="preserve"><value>Metadatenbank-URL</value></data>
   <data name="Title" xml:space="preserve"><value>Titel</value></data>
@@ -216,7 +216,7 @@
   <data name="ImageHosterRegistrationDeactivated" xml:space="preserve"><value>Bildhosterregistrierung {0} deaktiviert</value></data>
   <data name="ImageHosterRegistrations" xml:space="preserve"><value>Bildhosterregistrierungen</value></data>
   <data name="ImageHosters" xml:space="preserve"><value>Bildhoster</value></data>
-  <data name="ImageSize" xml:space="preserve"><value>Bildgröße</value></data>
+  <data name="ImageSize" xml:space="preserve"><value>Bildgrösse</value></data>
     <data name="ImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration</value></data>
   <data name="ImageUploadConfigDialogDescription" xml:space="preserve"><value>Lege fest, wohin Releasebilder hochgeladen werden.</value></data>
     <data name="ImageUploadConfigurations" xml:space="preserve"><value>Bilduploadkonfigurationen</value></data>
@@ -631,7 +631,7 @@
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nur Nonce, keine Kompression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid Archive mit Kompression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Releases automatisch in Unmanaged umwandeln</value></data>
-  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein Release nach Ablauf der Aufbewahrungsfrist in Unmanaged um und meldet den Pfad des Releaseordners. Bearcat löscht den Ordner nicht. Die Rohdateien kannst du anschließend selbst löschen.</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein Release nach Ablauf der Aufbewahrungsfrist in Unmanaged um und meldet den Pfad des Releaseordners. Bearcat löscht den Ordner nicht. Die Rohdateien kannst du anschliessend selbst löschen.</value></data>
   <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>In Unmanaged umwandeln nach (Tagen)</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem Posten der Uploads eines Releases, oder seit dem ersten abgeschlossenen Upload, wenn es nie als gepostet markiert wurde.</value></data>
   <data name="AutoDeleteArchives" xml:space="preserve"><value>Lokale Archive automatisch löschen</value></data>
@@ -648,7 +648,7 @@
   <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Ordner Stabilität (Minuten)</value></data>
   <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>Ein überwachter Ordner wird erst dann in ein Release umgewandelt, wenn sich Dateianzahl und Gesamtgrösse mindestens so viele Minuten lang nicht mehr verändert haben. So werden keine Releases erstellt, während noch Dateien in den Ordner kopiert werden.</value></data>
   <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse (MB)</value></data>
-  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Überwachte Ordner unter dieser Größe werden ignoriert. Mit 0 deaktivierst du die Größenprüfung.</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Überwachte Ordner unter dieser Grösse werden ignoriert. Mit 0 deaktivierst du die Grössenprüfung.</value></data>
   <data name="UploadConcurrency" xml:space="preserve"><value>Uploadparallelität</value></data>
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Dateiuploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
@@ -986,13 +986,13 @@
   <data name="QualityCheckType" xml:space="preserve"><value>Prüfungstyp</value></data>
   <data name="FilePattern" xml:space="preserve"><value>Dateimuster</value></data>
   <data name="FilePatternHelp" xml:space="preserve"><value>Eine Datei mit diesem Muster muss im Releaseordner vorhanden sein (z. B. *.nfo).</value></data>
-  <data name="MinimumFolderSizeMb" xml:space="preserve"><value>Mindestgröße des Ordners (MB)</value></data>
+  <data name="MinimumFolderSizeMb" xml:space="preserve"><value>Mindestgrösse des Ordners (MB)</value></data>
   <data name="RequireCover" xml:space="preserve"><value>Coverbild erforderlich</value></data>
   <data name="RequireDescription" xml:space="preserve"><value>Beschreibung erforderlich</value></data>
   <data name="RequireNfo" xml:space="preserve"><value>NFO erforderlich</value></data>
   <data name="QualityCheckNoConfiguration" xml:space="preserve"><value>Dieser Check hat keine zusätzliche Konfiguration.</value></data>
   <data name="QualityCheckRuleType.FilePatternPresent" xml:space="preserve"><value>Datei mit Muster vorhanden</value></data>
-  <data name="QualityCheckRuleType.MinimumFolderSize" xml:space="preserve"><value>Mindestgröße des Ordners</value></data>
+  <data name="QualityCheckRuleType.MinimumFolderSize" xml:space="preserve"><value>Mindestgrösse des Ordners</value></data>
   <data name="QualityCheckRuleType.RequiredReleaseInfo" xml:space="preserve"><value>Erforderliche Releaseinfos</value></data>
   <data name="QualityCheckRuleType.MediaInfoPresent" xml:space="preserve"><value>MediaInfo vorhanden</value></data>
   <data name="QualityProfile" xml:space="preserve"><value>Qualitätsprofil</value></data>
@@ -1349,9 +1349,9 @@
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität (Minuten)</value></data>
-  <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>Ein Remoteordner wird erst zum Herunterladen vorgemerkt, wenn sich Dateianzahl und Gesamtgröße mindestens so viele Minuten lang nicht verändert haben. So werden keine Releases heruntergeladen, die noch auf den Server hochgeladen werden.</value></data>
-  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergröße (MB)</value></data>
-  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remoteordner unter dieser Größe werden nicht vorgemerkt. Mit 0 deaktivierst du die Größenprüfung.</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>Ein Remoteordner wird erst zum Herunterladen vorgemerkt, wenn sich Dateianzahl und Gesamtgrösse mindestens so viele Minuten lang nicht verändert haben. So werden keine Releases heruntergeladen, die noch auf den Server hochgeladen werden.</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse (MB)</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remoteordner unter dieser Grösse werden nicht vorgemerkt. Mit 0 deaktivierst du die Grössenprüfung.</value></data>
   <data name="RemoteSourceDownloadMaxParallelFileDownloads" xml:space="preserve"><value>Maximale parallele Dateidownloads</value></data>
   <data name="RemoteSourceDownloadMaxParallelFileDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Dateien über alle Remotequellen hinweg. Jede Remotequelle ist zusätzlich durch ihre maximale Anzahl an Verbindungen begrenzt.</value></data>
   <data name="RemoteSourceDownloadMaxDownloadAttempts" xml:space="preserve"><value>Maximale Downloadversuche</value></data>
@@ -1364,7 +1364,7 @@
   <data name="Folder" xml:space="preserve"><value>Ordner</value></data>
   <data name="Automation" xml:space="preserve"><value>Automatisierung</value></data>
   <data name="RemoteSourceDownloadsIntro" xml:space="preserve"><value>Auf Remotequellen gefundene Ordner und der Stand ihrer Downloads.</value></data>
-  <data name="AllStatesExceptIgnored" xml:space="preserve"><value>Alle Status außer ignorierten</value></data>
+    <data name="AllStatesExceptIgnored" xml:space="preserve"><value>Alle Status ausser ignorierten</value></data>
   <data name="NoRemoteSourceDownloadsFound" xml:space="preserve"><value>Keine Remotedownloads für diesen Filter gefunden.</value></data>
   <data name="Timeline" xml:space="preserve"><value>Zeitverlauf</value></data>
   <data name="FileCountValue" xml:space="preserve"><value>{0} Dateien</value></data>
@@ -1401,7 +1401,7 @@
   <data name="AdditionalArchiveContentType.Path" xml:space="preserve"><value>Datei oder Ordner</value></data>
   <data name="AdditionalArchiveContentType.TextFile" xml:space="preserve"><value>Textdatei</value></data>
   <data name="SourcePath" xml:space="preserve"><value>Quellpfad</value></data>
-  <data name="AdditionalArchiveContentSourcePathHelp" xml:space="preserve"><value>Vollständiger Pfad zu einer Datei oder einem Ordner auf dem Host. Pfade außerhalb der Arbeitsverzeichnisse (z. B. Docker Bind Mounts) können manuell eingegeben werden.</value></data>
+  <data name="AdditionalArchiveContentSourcePathHelp" xml:space="preserve"><value>Vollständiger Pfad zu einer Datei oder einem Ordner auf dem Host. Pfade ausserhalb der Arbeitsverzeichnisse (z. B. Docker Bind Mounts) können manuell eingegeben werden.</value></data>
   <data name="BrowseFilesAndFolders" xml:space="preserve"><value>Dateien und Ordner durchsuchen</value></data>
   <data name="SelectFileOrFolder" xml:space="preserve"><value>Datei oder Ordner auswählen</value></data>
   <data name="SelectAdditionalArchiveContentSourceDescription" xml:space="preserve"><value>Wähle eine Datei oder einen Ordner innerhalb der Arbeitsverzeichnisse.</value></data>
