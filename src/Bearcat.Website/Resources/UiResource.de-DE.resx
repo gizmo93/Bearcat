@@ -860,7 +860,7 @@
   <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="SharedLinkCrypters" xml:space="preserve"><value>Container erstellen bei</value></data>
-  <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keiner</value></data>
+  <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keine Linkcrypter</value></data>
   <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Linkcrypter für Container bearbeiten</value></data>
   <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Verwalte die Linkcrypter und Einstellungen für die gemeinsamen Container dieser Uploadgruppe.</value></data>
   <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Änderungen werden auf alle Uploadkonfigurationen dieser Uploadgruppe der Collection angewendet.</value></data>
@@ -1623,4 +1623,6 @@
   <data name="ShowLess" xml:space="preserve"><value>Weniger anzeigen</value></data>
   <data name="OpenRelease" xml:space="preserve"><value>Release öffnen</value></data>
   <data name="LinkContainerCoverageTitle" xml:space="preserve"><value>{0} von {1} Uploads enthalten</value></data>
+  <data name="CollectionUploadSlotReleaseCoverage" xml:space="preserve"><value>{0}/{1} Releases</value></data>
+  <data name="OpenCollectionUploadSlotActions" xml:space="preserve"><value>Uploadslotaktionen öffnen</value></data>
 </root>

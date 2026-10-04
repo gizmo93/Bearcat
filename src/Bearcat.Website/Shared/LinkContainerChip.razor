@@ -52,7 +52,12 @@
         }
         @if (HasUrl)
         {
-            <p class="mt-1.5 break-all font-mono text-xs text-primary">@ContainerUrl</p>
+            <a class="bearcat-overview-chip-url mt-1.5 font-mono text-xs"
+               href="@ContainerUrl"
+               target="_blank"
+               rel="noreferrer noopener">
+                @ContainerUrl
+            </a>
         }
     </BbHoverCardContent>
 </BbHoverCard>

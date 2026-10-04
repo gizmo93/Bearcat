@@ -406,99 +406,6 @@ public partial class ReleaseCollectionDetail(
         );
     }
 
-    private async Task ShowCreateUploadSlotDialogAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(CreateCollectionUploadSlotDialog.FormModel)] = new CollectionUploadSlotFormModel
-            {
-                ReleaseCollectionId = ReleaseCollectionId,
-            },
-            [nameof(CreateCollectionUploadSlotDialog.ExistingSlotKeys)] = releaseCollection
-                .UploadSlots.Select(slot => slot.Key)
-                .ToList(),
-        };
-
-        var dialog = await dialogService.OpenAsync<CreateCollectionUploadSlotDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["NewCollectionUploadSlot"],
-                Description = L["CreateCollectionUploadSlotDialogDescription"],
-                Size = DialogSize.Large,
-                ShowClose = true,
-                PreventClose = true,
-            }
-        );
-
-        if (!dialog.Cancelled)
-        {
-            await LoadReleaseCollectionAsync();
-        }
-    }
-
-    private async Task ShowEditSharedLinkCryptersDialogAsync(
-        CollectionUploadSlotReadModel uploadSlot
-    )
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(EditCollectionUploadSlotLinkCryptersDialog.CollectionUploadSlotId)] =
-                uploadSlot.CollectionUploadSlotId,
-            [nameof(EditCollectionUploadSlotLinkCryptersDialog.SlotName)] = uploadSlot.Name,
-            [nameof(EditCollectionUploadSlotLinkCryptersDialog.SharedLinkCrypters)] =
-                uploadSlot.SharedLinkCrypters,
-        };
-
-        var dialog = await dialogService.OpenAsync<EditCollectionUploadSlotLinkCryptersDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["EditSharedLinkCrypters"],
-                Description = L["SharedLinkCryptersDialogDescription"],
-                Size = DialogSize.Large,
-                ShowClose = true,
-                PreventClose = true,
-            }
-        );
-
-        if (!dialog.Cancelled)
-        {
-            await LoadReleaseCollectionAsync();
-        }
-    }
-
-    private async Task DeleteUploadSlotAsync(CollectionUploadSlotReadModel uploadSlot)
-    {
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", uploadSlot.Name],
-            L[
-                "DeleteCollectionUploadSlotConfirmation",
-                uploadSlot.Name,
-                uploadSlot.UploadConfigCount,
-                uploadSlot.UploadCount,
-                uploadSlot.Containers.Count
-            ],
-            new ConfirmDialogOptions
-            {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
-            }
-        );
-
-        if (!result.Confirmed)
-        {
-            return;
-        }
-
-        await operationRunner.RunAsync(
-            (ReleaseCollectionService service) =>
-                service.DeleteUploadSlotAsync(uploadSlot.CollectionUploadSlotId)
-        );
-        await LoadReleaseCollectionAsync();
-    }
-
     private async Task DeleteFailedContainerAsync(CollectionUploadSlotContainerReadModel container)
     {
         if (container.State != LinkCrypterContainerState.CreationFailed)
@@ -531,14 +438,6 @@ public partial class ReleaseCollectionDetail(
         );
         await LoadReleaseCollectionAsync();
     }
-
-    private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>
-        state switch
-        {
-            LinkCrypterContainerState.Created => BadgeVariant.Default,
-            LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
-            _ => BadgeVariant.Outline,
-        };
 
     public async ValueTask DisposeAsync()
     {

@@ -1,0 +1,261 @@
+@using Bearcat.Website.Pages.ManageReleaseCollections.Overview
+
+<section class="space-y-3">
+    <div class="bearcat-overview-section-header">
+        <div class="min-w-0 space-y-0.5">
+            <h2 class="bearcat-overview-section-heading">
+                <LucideIcon Name="rows-3" class="h-4 w-4" />
+                @L["CollectionUploadSlots"]
+                <span class="bearcat-overview-count-pill">@UploadSlots.Count</span>
+            </h2>
+            <p class="text-sm text-muted-foreground">@L["CollectionUploadSlotsDescription"]</p>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  OnClick="ShowCreateUploadSlotDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewCollectionUploadSlot"]
+        </BbButton>
+    </div>
+
+    <div class="bearcat-overview-card">
+        @if (UploadSlots.Count == 0)
+        {
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoCollectionUploadSlotsFound"]</span>
+            </div>
+        }
+        else
+        {
+            <div class="bearcat-collection-slot-grid bearcat-overview-hoster-list-header" aria-hidden="true">
+                <span>@L["Name"]</span>
+                <span>@L["SharedLinkCrypters"]</span>
+                <span>@L["Releases"]</span>
+                <span>@L["Containers"]</span>
+                <span></span>
+                <span></span>
+            </div>
+
+            @foreach (var uploadSlot in UploadSlots)
+            {
+                var isExpanded = expandedUploadSlotIds.Contains(uploadSlot.CollectionUploadSlotId);
+                var detailsElementId = $"collection-upload-slot-details-{uploadSlot.CollectionUploadSlotId}";
+                var failedContainerCount = GetFailedContainerCount(uploadSlot);
+                var createdContainerCount = uploadSlot.Containers.Count - failedContainerCount;
+
+                <div class="bearcat-overview-hoster-row">
+                    <div class="bearcat-collection-slot-grid bearcat-overview-hoster-row-main bearcat-collection-slot-row-toggle"
+                         @onclick="() => ToggleDetails(uploadSlot.CollectionUploadSlotId)">
+                        <div class="bearcat-overview-hoster-name-cell">
+                            <span class="bearcat-overview-monogram" aria-hidden="true">@MonogramText.GetFromName(uploadSlot.Name)</span>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium" title="@uploadSlot.Name">@uploadSlot.Name</p>
+                                <p class="truncate font-mono text-xs text-muted-foreground" title="@uploadSlot.Key">@uploadSlot.Key</p>
+                            </div>
+                        </div>
+
+                        <div class="bearcat-collection-slot-link-crypters-cell">
+                            @if (uploadSlot.SharedLinkCrypters.Count == 0)
+                            {
+                                <span class="text-xs text-muted-foreground">@L["NoSharedLinkCrypters"]</span>
+                            }
+                            else
+                            {
+                                @foreach (var linkCrypter in uploadSlot.SharedLinkCrypters.Take(MaximumVisibleLinkCrypterCount))
+                                {
+                                    <span class="bearcat-overview-chip bearcat-collection-slot-link-crypter-chip @(linkCrypter.IsActive ? null : "bearcat-collection-slot-link-crypter-chip-inactive")"
+                                          title="@(linkCrypter.IsActive ? null : L["Inactive"].Value)">
+                                        <span class="truncate">@linkCrypter.LinkCrypterRegistrationName</span>
+                                    </span>
+                                }
+                                @if (uploadSlot.SharedLinkCrypters.Count > MaximumVisibleLinkCrypterCount)
+                                {
+                                    <span class="bearcat-overview-chip bearcat-collection-slot-link-crypter-chip tabular-nums"
+                                          title="@GetHiddenLinkCrypterNames(uploadSlot)">
+                                        +@(uploadSlot.SharedLinkCrypters.Count - MaximumVisibleLinkCrypterCount)
+                                    </span>
+                                }
+                            }
+                        </div>
+
+                        <div class="bearcat-collection-slot-coverage-cell">
+                            <span class="@(uploadSlot.UploadConfigCount < ReleaseCount ? "text-foreground" : "text-muted-foreground") text-sm tabular-nums">
+                                @L["CollectionUploadSlotReleaseCoverage", uploadSlot.UploadConfigCount, ReleaseCount]
+                            </span>
+                        </div>
+
+                        <div class="bearcat-collection-slot-containers-cell">
+                            @if (failedContainerCount > 0)
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-sm text-destructive">
+                                    <LucideIcon Name="x" class="h-3.5 w-3.5 shrink-0" />
+                                    @L["ReleaseProgressContainersFailed", failedContainerCount]
+                                </span>
+                            }
+                            else if (createdContainerCount > 0)
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-sm">
+                                    <LucideIcon Name="check" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    @L["ReleaseProgressContainersCreated", createdContainerCount]
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-sm text-muted-foreground">@L["NoLinkContainers"]</span>
+                            }
+                        </div>
+
+                        <div class="bearcat-collection-slot-required-cell">
+                            @if (uploadSlot.IsRequired)
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline">@L["Required"]</BbBadge>
+                            }
+                        </div>
+
+                        <div class="bearcat-collection-slot-actions-cell">
+                            <div @onclick:stopPropagation="true">
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                  Size="ButtonSize.IconSmall"
+                                                  AriaLabel="@L["OpenCollectionUploadSlotActions"]">
+                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                        <BbDropdownMenuItem OnClick="@(() => ShowEditSharedLinkCryptersDialogAsync(uploadSlot))">
+                                            <Icon>
+                                                <LucideIcon Name="pencil" class="h-4 w-4" />
+                                            </Icon>
+                                            <ChildContent>@L["EditSharedLinkCrypters"]</ChildContent>
+                                        </BbDropdownMenuItem>
+                                        <BbDropdownMenuSeparator />
+                                        <BbDropdownMenuItem Class="text-destructive focus:text-destructive"
+                                                            OnClick="@(() => DeleteUploadSlotAsync(uploadSlot))">
+                                            <Icon>
+                                                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                                            </Icon>
+                                            <ChildContent>@L["DeleteCollectionUploadSlot"]</ChildContent>
+                                        </BbDropdownMenuItem>
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                            </div>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["ShowDetails"]"
+                                      title="@L["ShowDetails"]"
+                                      aria-expanded="@(isExpanded ? "true" : "false")"
+                                      aria-controls="@detailsElementId">
+                                <LucideIcon Name="chevron-right"
+                                            class="@($"bearcat-overview-expand-chevron h-4 w-4 {(isExpanded ? "bearcat-overview-expand-chevron-expanded" : string.Empty)}")" />
+                            </BbButton>
+                        </div>
+                    </div>
+
+                    @if (isExpanded)
+                    {
+                        <div id="@detailsElementId" class="bearcat-overview-hoster-details">
+                            <dl class="bearcat-overview-detail-list">
+                                <div class="bearcat-overview-detail">
+                                    <dt>@L["PasswordPolicy"]</dt>
+                                    <dd>
+                                        <span>@L.Localize(uploadSlot.PasswordPolicy)</span>
+                                        @if (!string.IsNullOrEmpty(uploadSlot.ExpectedArchivePassword))
+                                        {
+                                            <code class="truncate" title="@uploadSlot.ExpectedArchivePassword">@uploadSlot.ExpectedArchivePassword</code>
+                                            <CopyButton Value="@uploadSlot.ExpectedArchivePassword"
+                                                        Label="@L["CopyPassword"]"
+                                                        Variant="ButtonVariant.Ghost"
+                                                        Class="bearcat-overview-chip-copy" />
+                                        }
+                                    </dd>
+                                </div>
+                                <div class="bearcat-overview-detail">
+                                    <dt>@L["Required"]</dt>
+                                    <dd>@(uploadSlot.IsRequired ? L["Yes"] : L["No"])</dd>
+                                </div>
+                                <div class="bearcat-overview-detail">
+                                    <dt>@L["UploadConfigurations"]</dt>
+                                    <dd class="tabular-nums">@uploadSlot.UploadConfigCount</dd>
+                                </div>
+                                <div class="bearcat-overview-detail">
+                                    <dt>@L["Uploads"]</dt>
+                                    <dd class="tabular-nums">@uploadSlot.UploadCount</dd>
+                                </div>
+                            </dl>
+
+                            <div class="space-y-1.5">
+                                <p class="text-xs text-muted-foreground">@L["Containers"]</p>
+                                @if (uploadSlot.Containers.Count == 0 && uploadSlot.SharedLinkCrypters.Count == 0)
+                                {
+                                    <p class="text-sm text-muted-foreground">@L["NoLinkContainers"]</p>
+                                }
+                                else
+                                {
+                                    <div class="bearcat-collection-slot-container-list">
+                                        @foreach (var container in uploadSlot.Containers)
+                                        {
+                                            var hasUrl = !string.IsNullOrWhiteSpace(container.ContainerUrl);
+                                            <div class="bearcat-collection-slot-container-row">
+                                                <div class="bearcat-collection-slot-container-meta">
+                                                    <span class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">@container.LinkCrypterRegistrationName</span>
+                                                    <BbBadge Variant="@GetContainerStateBadgeVariant(container.State)">@L.Localize(container.State)</BbBadge>
+                                                    <span class="text-xs tabular-nums text-muted-foreground"
+                                                          title="@L["LinkContainerCoverageTitle", container.SourceUploadCount, uploadSlot.UploadConfigCount]">
+                                                        @container.SourceUploadCount/@uploadSlot.UploadConfigCount
+                                                    </span>
+                                                    <span class="text-xs text-muted-foreground" title="@FormatTimestamp(container.CreatedAt)">
+                                                        @HumanizeTimestamp(container.CreatedAt)
+                                                    </span>
+                                                    <ErrorMessagesTooltip Messages="container.Errors" />
+                                                </div>
+                                                <div class="bearcat-collection-slot-container-link">
+                                                    @if (hasUrl)
+                                                    {
+                                                        <a class="bearcat-upload-link"
+                                                           href="@container.ContainerUrl"
+                                                           target="_blank"
+                                                           rel="noreferrer noopener"
+                                                           title="@container.ContainerUrl">
+                                                            @container.ContainerUrl
+                                                        </a>
+                                                        <CopyButton Value="@container.ContainerUrl"
+                                                                    Label="@L["CopyLink"]"
+                                                                    Variant="ButtonVariant.Ghost"
+                                                                    Class="bearcat-overview-chip-copy" />
+                                                    }
+                                                    @if (container.State is LinkCrypterContainerState.CreationFailed)
+                                                    {
+                                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                                  Size="ButtonSize.IconSmall"
+                                                                  Class="bearcat-overview-chip-delete"
+                                                                  AriaLabel="@L["DeleteLinkCrypterContainer"]"
+                                                                  title="@L["DeleteLinkCrypterContainer"]"
+                                                                  OnClick="@(() => OnDeleteFailedContainerRequested.InvokeAsync(container))">
+                                                            <LucideIcon Name="trash-2" class="h-4 w-4" />
+                                                        </BbButton>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        @foreach (var linkCrypter in CollectionLinkContainerOverviewService.GetSharedLinkCryptersWithoutContainer(uploadSlot))
+                                        {
+                                            <div class="bearcat-collection-slot-container-row text-muted-foreground">
+                                                <div class="bearcat-collection-slot-container-meta">
+                                                    <span class="truncate text-sm font-medium" title="@linkCrypter.LinkCrypterRegistrationName">@linkCrypter.LinkCrypterRegistrationName</span>
+                                                    <span class="text-xs">@L["ReleaseCollectionProgressContainersNotCreatedYet"]</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</section>
