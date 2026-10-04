@@ -2,14 +2,21 @@
 {
     <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
         <BbTooltipTrigger Class="inline-flex">
-            <span class="inline-flex h-6 items-center gap-1 rounded-md border border-destructive/30 px-1.5 text-xs font-medium text-destructive"
-                  aria-label="@L["Errors"]">
-                <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" />
-                @if (VisibleMessages.Count > 1)
-                {
-                    <span>@VisibleMessages.Count</span>
-                }
-            </span>
+            @if (ChildContent is not null)
+            {
+                @ChildContent
+            }
+            else
+            {
+                <span class="inline-flex h-6 items-center gap-1 rounded-md border border-destructive/30 px-1.5 text-xs font-medium text-destructive"
+                      aria-label="@L["Errors"]">
+                    <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" />
+                    @if (VisibleMessages.Count > 1)
+                    {
+                        <span>@VisibleMessages.Count</span>
+                    }
+                </span>
+            }
         </BbTooltipTrigger>
         <BbTooltipContent Class="max-w-md text-xs">
             <div class="space-y-1">
@@ -28,6 +35,9 @@
 @code {
     [Parameter]
     public IReadOnlyList<string>? Messages { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 
     private IReadOnlyList<string> VisibleMessages =>
         Messages?.Where(message => !string.IsNullOrWhiteSpace(message)).ToList() ?? [];

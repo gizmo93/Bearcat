@@ -798,11 +798,7 @@
   <data name="SearchVariables" xml:space="preserve"><value>Variablen suchen</value></data>
   <data name="SelectForumPostTemplate" xml:space="preserve"><value>Forenpostvorlage auswählen</value></data>
   <data name="Template" xml:space="preserve"><value>Vorlage</value></data>
-  <data name="Templates" xml:space="preserve"><value>Vorlagen</value></data>
-  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Templatesyntax ist gültig.</value></data>
-  <data name="ToggleTemplates" xml:space="preserve"><value>Vorlagen ein- oder ausklappen</value></data>
-  <data name="ToggleVariables" xml:space="preserve"><value>Variablen ein- oder ausklappen</value></data>
-  <data name="Validate" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Syntax OK</value></data>
   <data name="CaptchaCode" xml:space="preserve"><value>Captchacode</value></data>
   <data name="CaptchaRequired" xml:space="preserve"><value>Captcha nötig</value></data>
   <data name="OpenCaptchaPage" xml:space="preserve"><value>Captchaseite öffnen</value></data>
@@ -1538,4 +1534,37 @@
   <data name="CreateNonceFileHelp" xml:space="preserve"><value>Schreibt eine __nonce.txt mit zufälligem Wert in jedes neue Archiv, damit neu gepackte Archive andere Hashes erhalten. Gilt nur für neu erstellte Archive.</value></data>
   <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Ohne Releasestammordner</value></data>
   <data name="WithoutNonceFile" xml:space="preserve"><value>Ohne Noncedatei</value></data>
+  <data name="ShowForumPostTemplates" xml:space="preserve"><value>Forenpostvorlagen anzeigen</value></data>
+  <data name="UnsavedChanges" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>
+  <data name="Duplicate" xml:space="preserve"><value>Duplizieren</value></data>
+  <data name="Editor" xml:space="preserve"><value>Editor</value></data>
+  <data name="Variables" xml:space="preserve"><value>Variablen</value></data>
+  <data name="ResizeTemplatesAndVariables" xml:space="preserve"><value>Grösse von Vorlagen und Variablen ändern</value></data>
+  <data name="ResizeTemplateSidebar" xml:space="preserve"><value>Grösse der Vorlagenseitenleiste ändern</value></data>
+  <data name="ResizeEditorAndPreview" xml:space="preserve"><value>Grösse von Editor und Vorschau ändern</value></data>
+  <data name="ForumPostTemplatePreviewPlaceholder" xml:space="preserve"><value>Hier erscheint der gerenderte Forenpost.</value></data>
+  <data name="SyntaxErrorCountOne" xml:space="preserve"><value>1 Fehler</value></data>
+  <data name="SyntaxErrorCount" xml:space="preserve"><value>{0} Fehler</value></data>
+  <data name="CursorPosition" xml:space="preserve"><value>Zeile {0}, Spalte {1}</value></data>
+  <data name="CharacterCountOne" xml:space="preserve"><value>1 Zeichen</value></data>
+  <data name="CharacterCount" xml:space="preserve"><value>{0} Zeichen</value></data>
+  <data name="SaveShortcutHint" xml:space="preserve"><value>zum Speichern</value></data>
+  <data name="LeaveWithoutSavingTitle" xml:space="preserve"><value>Ohne Speichern verlassen?</value></data>
+  <data name="LeaveWithoutSavingMessage" xml:space="preserve"><value>Deine Änderungen an dieser Forenpostvorlage wurden nicht gespeichert. Wenn du die Seite jetzt verlässt, gehen sie verloren.</value></data>
+  <data name="StayOnPage" xml:space="preserve"><value>Auf dieser Seite bleiben</value></data>
+  <data name="LeaveAndDiscardChanges" xml:space="preserve"><value>Verlassen und verwerfen</value></data>
+  <data name="SearchForumPostTemplates" xml:space="preserve"><value>Vorlagen suchen</value></data>
+  <data name="UntitledForumPostTemplate" xml:space="preserve"><value>Unbenannt</value></data>
+  <data name="ForumPostingRuleCountOne" xml:space="preserve"><value>1 Regel</value></data>
+  <data name="ForumPostingRuleCount" xml:space="preserve"><value>{0} Regeln</value></data>
+  <data name="DiscardChangesTitle" xml:space="preserve"><value>Ungespeicherte Änderungen verwerfen?</value></data>
+  <data name="DiscardChangesMessage" xml:space="preserve"><value>Deine Änderungen an dieser Forenpostvorlage wurden nicht gespeichert. Möchtest du sie verwerfen?</value></data>
+  <data name="DiscardChanges" xml:space="preserve"><value>Änderungen verwerfen</value></data>
+  <data name="ForumPostTemplateNameAlreadyExists" xml:space="preserve"><value>Eine Forenpostvorlage mit dem Namen {0} existiert bereits.</value></data>
+  <data name="FixTemplateSyntaxErrorsBeforeSaving" xml:space="preserve"><value>Behebe die Syntaxfehler der Vorlage vor dem Speichern.</value></data>
+  <data name="ForumPostTemplateCopyName" xml:space="preserve"><value>{0} (Kopie)</value></data>
+  <data name="ForumPostTemplateNumberedCopyName" xml:space="preserve"><value>{0} (Kopie {1})</value></data>
+  <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Forenpostvorlage kann nicht gelöscht werden</value></data>
+  <data name="ForumPostTemplateUsedByOnePostingRule" xml:space="preserve"><value>{0} wird von 1 Postingregel verwendet. Ersetze die Vorlage zuerst in dieser Regel und lösche sie danach.</value></data>
+  <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} wird von {1} Postingregeln verwendet. Ersetze die Vorlage zuerst in diesen Regeln und lösche sie danach.</value></data>
 </root>

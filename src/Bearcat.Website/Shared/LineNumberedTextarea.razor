@@ -28,6 +28,12 @@
     [Parameter]
     public int? VisibleLineCount { get; set; }
 
+    [Parameter]
+    public string? CursorPositionTargetId { get; set; }
+
+    [Parameter]
+    public string? CursorPositionFormat { get; set; }
+
     private string? HeightStyle =>
         VisibleLineCount is { } lineCount
             ? $"height: calc({lineCount} * 1.25rem + 1rem + 2px);"
@@ -54,7 +60,9 @@
                 "bearcat.lineNumberedTextarea.attach",
                 textareaRef,
                 gutterRef,
-                mirrorRef
+                mirrorRef,
+                CursorPositionTargetId,
+                CursorPositionFormat
             );
             attached = true;
             lastValue = Value;

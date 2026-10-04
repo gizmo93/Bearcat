@@ -1,6 +1,6 @@
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Primitives.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Layout.Navigation;
@@ -8,33 +8,17 @@ namespace Bearcat.Website.Layout.Navigation;
 public sealed partial class NavigationCommandPalette(
     NavigationManager navigationManager,
     IKeyboardShortcutService keyboardShortcutService,
-    PersistentComponentState applicationState,
-    IHttpContextAccessor httpContextAccessor
+    ClientPlatform clientPlatform
 ) : ComponentBase, IDisposable
 {
     private const string OpenPaletteShortcut = "Ctrl+K";
-    private const string IsMacPlatformStateKey = "bearcat.navigationCommandPalette.isMacPlatform";
 
     private static readonly IReadOnlyList<CommandGroup> commandGroups = BuildCommandGroups();
 
-    private PersistingComponentStateSubscription persistSubscription;
     private IDisposable? shortcutRegistration;
     private bool isOpen;
-    private bool isMacPlatform;
 
-    private string ShortcutHint => isMacPlatform ? "⌘K" : "Ctrl K";
-
-    protected override void OnInitialized()
-    {
-        persistSubscription = applicationState.RegisterOnPersisting(PersistIsMacPlatform);
-
-        isMacPlatform = applicationState.TryTakeFromJson<bool>(
-            IsMacPlatformStateKey,
-            out var persisted
-        )
-            ? persisted
-            : IsMacUserAgent(httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString());
-    }
+    private string ShortcutHint => clientPlatform.IsMac ? "⌘K" : "Ctrl K";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -56,15 +40,6 @@ public sealed partial class NavigationCommandPalette(
             return;
         }
     }
-
-    private Task PersistIsMacPlatform()
-    {
-        applicationState.PersistAsJson(IsMacPlatformStateKey, isMacPlatform);
-        return Task.CompletedTask;
-    }
-
-    private static bool IsMacUserAgent(string? userAgent) =>
-        userAgent?.Contains("Mac OS X", StringComparison.OrdinalIgnoreCase) == true;
 
     private void OpenPalette()
     {
@@ -130,7 +105,6 @@ public sealed partial class NavigationCommandPalette(
     public void Dispose()
     {
         shortcutRegistration?.Dispose();
-        persistSubscription.Dispose();
     }
 
     private sealed record CommandGroup(

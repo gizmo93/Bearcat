@@ -173,7 +173,26 @@ const lineNumberedTextarea = (() => {
         gutter.scrollTop = textarea.scrollTop;
     }
 
-    function attach(textarea, gutter, mirror) {
+    function writeCursorPosition(textarea, cursorPosition) {
+        if (!cursorPosition) {
+            return;
+        }
+
+        const target = document.getElementById(cursorPosition.targetId);
+        if (!target) {
+            return;
+        }
+
+        const textBeforeCursor = textarea.value.slice(0, textarea.selectionStart);
+        const lineStart = textBeforeCursor.lastIndexOf("\n") + 1;
+        const line = textBeforeCursor.split("\n").length;
+        const column = textBeforeCursor.length - lineStart + 1;
+        target.textContent = cursorPosition.format
+            .replace("{0}", String(line))
+            .replace("{1}", String(column));
+    }
+
+    function attach(textarea, gutter, mirror, cursorPositionTargetId, cursorPositionFormat) {
         if (!textarea || !gutter || !mirror) {
             return;
         }
@@ -183,29 +202,72 @@ const lineNumberedTextarea = (() => {
             return;
         }
 
-        const onInput = () => paint(textarea, gutter, mirror);
+        const cursorPosition = cursorPositionTargetId && cursorPositionFormat
+            ? { targetId: cursorPositionTargetId, format: cursorPositionFormat }
+            : null;
+        const onInput = () => {
+            paint(textarea, gutter, mirror);
+            writeCursorPosition(textarea, cursorPosition);
+        };
+        const onCursorMove = () => writeCursorPosition(textarea, cursorPosition);
         const onScroll = () => {
             gutter.scrollTop = textarea.scrollTop;
         };
         const resizeObserver = new ResizeObserver(() => paint(textarea, gutter, mirror));
 
-        registry.set(textarea, { gutter, mirror, onInput, onScroll, resizeObserver });
+        registry.set(textarea, { gutter, mirror, cursorPosition, resizeObserver });
 
         textarea.addEventListener("input", onInput);
         textarea.addEventListener("scroll", onScroll, { passive: true });
+        if (cursorPosition) {
+            for (const eventName of ["click", "keyup", "select", "focus"]) {
+                textarea.addEventListener(eventName, onCursorMove);
+            }
+        }
         resizeObserver.observe(textarea);
 
         paint(textarea, gutter, mirror);
+        writeCursorPosition(textarea, cursorPosition);
     }
 
     function refresh(textarea) {
         const entry = registry.get(textarea);
         if (entry) {
             paint(textarea, entry.gutter, entry.mirror);
+            writeCursorPosition(textarea, entry.cursorPosition);
         }
     }
 
     return { attach, refresh };
+})();
+
+const saveShortcut = (() => {
+    function attach(dotNetReference) {
+        const onKeyDown = event => {
+            if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) {
+                return;
+            }
+
+            if (event.key?.toLowerCase() !== "s") {
+                return;
+            }
+
+            event.preventDefault();
+            if (event.repeat) {
+                return;
+            }
+
+            dotNetReference.invokeMethodAsync("SaveFromShortcutAsync").catch(() => {});
+        };
+
+        document.addEventListener("keydown", onKeyDown, true);
+
+        return {
+            detach: () => document.removeEventListener("keydown", onKeyDown, true),
+        };
+    }
+
+    return { attach };
 })();
 
 const logView = (() => {
@@ -255,5 +317,6 @@ window.bearcat = {
     setCookie,
     updateScrollAwareHeader,
     lineNumberedTextarea,
+    saveShortcut,
     logView,
 };

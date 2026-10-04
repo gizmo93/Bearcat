@@ -1,6 +1,7 @@
 using Bearcat.Website.Layout;
 using Bearcat.Website.Pages.PostQueue;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ public static class ServiceProviderConfig
         services.AddSingleton<IScopedOperationRunner, ScopedOperationRunner>();
         services.AddScoped<PostQueueWorkflowState>();
         services.AddScoped<NavMenuState>();
+        services.AddScoped<ClientPlatform>();
         services
             .AddControllers()
             .AddApplicationPart(typeof(ServiceProviderConfig).Assembly)

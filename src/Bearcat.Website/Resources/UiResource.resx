@@ -795,11 +795,7 @@
   <data name="SearchVariables" xml:space="preserve"><value>Search variables</value></data>
   <data name="SelectForumPostTemplate" xml:space="preserve"><value>Select a forum post template</value></data>
   <data name="Template" xml:space="preserve"><value>Template</value></data>
-  <data name="Templates" xml:space="preserve"><value>Templates</value></data>
-  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Template syntax is valid.</value></data>
-  <data name="ToggleTemplates" xml:space="preserve"><value>Toggle templates</value></data>
-  <data name="ToggleVariables" xml:space="preserve"><value>Toggle variables</value></data>
-  <data name="Validate" xml:space="preserve"><value>Validate</value></data>
+  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Syntax OK</value></data>
   <data name="CaptchaCode" xml:space="preserve"><value>Captcha code</value></data>
   <data name="CaptchaRequired" xml:space="preserve"><value>Captcha required</value></data>
   <data name="OpenCaptchaPage" xml:space="preserve"><value>Open captcha page</value></data>
@@ -1535,4 +1531,37 @@
   <data name="CreateNonceFileHelp" xml:space="preserve"><value>Writes __nonce.txt with a random value into every new archive so repacked archives get different hashes. Only affects newly created archives.</value></data>
   <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Without release root folder</value></data>
   <data name="WithoutNonceFile" xml:space="preserve"><value>Without nonce file</value></data>
+  <data name="ShowForumPostTemplates" xml:space="preserve"><value>Show forum post templates</value></data>
+  <data name="UnsavedChanges" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="Duplicate" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="Editor" xml:space="preserve"><value>Editor</value></data>
+  <data name="Variables" xml:space="preserve"><value>Variables</value></data>
+  <data name="ResizeTemplatesAndVariables" xml:space="preserve"><value>Resize templates and variables</value></data>
+  <data name="ResizeTemplateSidebar" xml:space="preserve"><value>Resize template sidebar</value></data>
+  <data name="ResizeEditorAndPreview" xml:space="preserve"><value>Resize editor and preview</value></data>
+  <data name="ForumPostTemplatePreviewPlaceholder" xml:space="preserve"><value>The rendered forum post will appear here.</value></data>
+  <data name="SyntaxErrorCountOne" xml:space="preserve"><value>1 error</value></data>
+  <data name="SyntaxErrorCount" xml:space="preserve"><value>{0} errors</value></data>
+  <data name="CursorPosition" xml:space="preserve"><value>Line {0}, column {1}</value></data>
+  <data name="CharacterCountOne" xml:space="preserve"><value>1 character</value></data>
+  <data name="CharacterCount" xml:space="preserve"><value>{0} characters</value></data>
+  <data name="SaveShortcutHint" xml:space="preserve"><value>to save</value></data>
+  <data name="LeaveWithoutSavingTitle" xml:space="preserve"><value>Leave without saving?</value></data>
+  <data name="LeaveWithoutSavingMessage" xml:space="preserve"><value>Your changes to this forum post template have not been saved. If you leave now, they are lost.</value></data>
+  <data name="StayOnPage" xml:space="preserve"><value>Stay on this page</value></data>
+  <data name="LeaveAndDiscardChanges" xml:space="preserve"><value>Leave and discard</value></data>
+  <data name="SearchForumPostTemplates" xml:space="preserve"><value>Search templates</value></data>
+  <data name="UntitledForumPostTemplate" xml:space="preserve"><value>Untitled</value></data>
+  <data name="ForumPostingRuleCountOne" xml:space="preserve"><value>1 rule</value></data>
+  <data name="ForumPostingRuleCount" xml:space="preserve"><value>{0} rules</value></data>
+  <data name="DiscardChangesTitle" xml:space="preserve"><value>Discard unsaved changes?</value></data>
+  <data name="DiscardChangesMessage" xml:space="preserve"><value>Your changes to this forum post template have not been saved. Do you want to discard them?</value></data>
+  <data name="DiscardChanges" xml:space="preserve"><value>Discard changes</value></data>
+  <data name="ForumPostTemplateNameAlreadyExists" xml:space="preserve"><value>A forum post template named {0} already exists.</value></data>
+  <data name="FixTemplateSyntaxErrorsBeforeSaving" xml:space="preserve"><value>Fix the template syntax errors before saving.</value></data>
+  <data name="ForumPostTemplateCopyName" xml:space="preserve"><value>{0} (copy)</value></data>
+  <data name="ForumPostTemplateNumberedCopyName" xml:space="preserve"><value>{0} (copy {1})</value></data>
+  <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Forum post template cannot be deleted</value></data>
+  <data name="ForumPostTemplateUsedByOnePostingRule" xml:space="preserve"><value>{0} is used by 1 posting rule. Replace the template in that rule first, then delete it.</value></data>
+  <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} is used by {1} posting rules. Replace the template in those rules first, then delete it.</value></data>
 </root>
