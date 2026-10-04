@@ -795,6 +795,8 @@
   <data name="ForumPostTemplateOutputFormatPlainText" xml:space="preserve"><value>Klartext</value></data>
   <data name="SearchConfigurations" xml:space="preserve"><value>Konfigurationen durchsuchen</value></data>
   <data name="NoConfigurationsFound" xml:space="preserve"><value>Keine Konfigurationen gefunden.</value></data>
+  <data name="ClickVariableToInsertHint" xml:space="preserve"><value>Klicke auf eine Variable, um sie an der Cursorposition einzufügen.</value></data>
+  <data name="InsertVariableNamed" xml:space="preserve"><value>{0} einfügen</value></data>
   <data name="SearchVariables" xml:space="preserve"><value>Variablen suchen</value></data>
   <data name="SelectForumPostTemplate" xml:space="preserve"><value>Forenpostvorlage auswählen</value></data>
   <data name="Template" xml:space="preserve"><value>Vorlage</value></data>

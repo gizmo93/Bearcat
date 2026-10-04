@@ -35,9 +35,13 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     public void GetVariables_KnownType_ReturnsSourceVariables()
     {
         // Arrange
-        var variables = new List<ForumPostTemplateVariableReadModel>
+        var variables = new List<ForumPostTemplateVariableNode>
         {
-            new("{{ release.name }}", "The release name"),
+            ForumPostTemplateVariableNode.CreateValueNode(
+                "release_name",
+                "release_name",
+                "The release name"
+            ),
         };
         renderSourceMock.Setup(source => source.GetVariables()).Returns(variables);
 

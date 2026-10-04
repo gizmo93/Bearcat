@@ -86,7 +86,10 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         result.Content.ShouldBe("Deutsch");
         service
             .GetVariables(ForumPostTemplateType.Release)
-            .ShouldContain(variable => variable.Path == "{{ release.primary_language }}");
+            .Single(node => node.Name == "release")
+            .Children.ShouldContain(node =>
+                node.Insertion != null && node.Insertion.Text == "{{ release.primary_language }}"
+            );
     }
 
     [Test]

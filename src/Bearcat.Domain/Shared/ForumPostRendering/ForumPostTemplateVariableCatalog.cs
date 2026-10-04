@@ -6,9 +6,9 @@ namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 public static class ForumPostTemplateVariableCatalog
 {
-    public static IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables(Type rootType)
+    public static IReadOnlyList<ForumPostTemplateVariableNode> GetVariables(Type rootType)
     {
-        return GetVariables(rootType, null).ToList();
+        return GetVariables(rootType, null);
     }
 
     public static bool ShouldExposeMember(MemberInfo member)
@@ -16,60 +16,61 @@ public static class ForumPostTemplateVariableCatalog
         return member.GetCustomAttribute<ForumPostTemplateVariableAttribute>() is not null;
     }
 
-    private static IEnumerable<ForumPostTemplateVariableReadModel> GetVariables(
-        Type type,
-        string? prefix
-    )
+    private static List<ForumPostTemplateVariableNode> GetVariables(Type type, string? prefix)
     {
+        var nodes = new List<ForumPostTemplateVariableNode>();
+
         foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
             var attribute = property.GetCustomAttribute<ForumPostTemplateVariableAttribute>();
             if (attribute is null)
                 continue;
 
-            var path = CombinePath(prefix, ToSnakeCase(property.Name));
+            var name = ToSnakeCase(property.Name);
+            var path = CombinePath(prefix, name);
 
-            foreach (var variable in GetVariablesForProperty(property, attribute, path))
-                yield return variable;
+            nodes.Add(CreateNode(property, attribute, name, path));
         }
+
+        return nodes;
     }
 
-    private static IEnumerable<ForumPostTemplateVariableReadModel> GetVariablesForProperty(
+    private static ForumPostTemplateVariableNode CreateNode(
         PropertyInfo property,
         ForumPostTemplateVariableAttribute attribute,
+        string name,
         string path
     )
     {
         if (!string.IsNullOrWhiteSpace(attribute.LoopVariable))
         {
-            yield return new ForumPostTemplateVariableReadModel(
-                $"{{{{ for {attribute.LoopVariable} in {path} }}}}",
-                attribute.Description
-            );
-
             var elementType =
                 attribute.ElementType ?? GetEnumerableElementType(property.PropertyType);
-            if (elementType is not null && !IsSimple(elementType))
-            {
-                foreach (var child in GetVariables(elementType, attribute.LoopVariable))
-                    yield return child;
-            }
+            var children =
+                elementType is null || IsSimple(elementType)
+                    ? []
+                    : GetVariables(elementType, attribute.LoopVariable);
 
-            yield break;
+            return ForumPostTemplateVariableNode.CreateLoopNode(
+                name,
+                path,
+                attribute.Description,
+                attribute.LoopVariable,
+                children
+            );
         }
 
         if (attribute.IncludeChildren)
         {
-            foreach (var child in GetVariables(property.PropertyType, path))
-                yield return child;
-
-            yield break;
+            return ForumPostTemplateVariableNode.CreateObjectNode(
+                name,
+                path,
+                attribute.Description,
+                GetVariables(property.PropertyType, path)
+            );
         }
 
-        yield return new ForumPostTemplateVariableReadModel(
-            $"{{{{ {path} }}}}",
-            attribute.Description
-        );
+        return ForumPostTemplateVariableNode.CreateValueNode(name, path, attribute.Description);
     }
 
     private static Type? GetEnumerableElementType(Type type)

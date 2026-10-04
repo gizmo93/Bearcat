@@ -15,9 +15,7 @@ public class ForumPostRenderService(
     IEnumerable<IForumPostRenderSource> renderSources
 ) : IForumPostContentRenderer
 {
-    public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables(
-        ForumPostTemplateType type
-    )
+    public IReadOnlyList<ForumPostTemplateVariableNode> GetVariables(ForumPostTemplateType type)
     {
         return GetSource(type)?.GetVariables() ?? [];
     }

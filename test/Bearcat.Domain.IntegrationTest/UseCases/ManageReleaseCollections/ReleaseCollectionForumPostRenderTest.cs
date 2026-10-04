@@ -125,7 +125,10 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         result.Content.ShouldBe("Deutsch");
         service
             .GetVariables(ForumPostTemplateType.ReleaseCollection)
-            .ShouldContain(variable => variable.Path == "{{ collection.primary_language }}");
+            .Single(node => node.Name == "collection")
+            .Children.ShouldContain(node =>
+                node.Insertion != null && node.Insertion.Text == "{{ collection.primary_language }}"
+            );
     }
 
     [Test]

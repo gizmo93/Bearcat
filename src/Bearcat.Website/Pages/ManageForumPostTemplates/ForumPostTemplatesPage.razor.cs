@@ -40,7 +40,7 @@ public partial class ForumPostTemplatesPage(
     private static readonly double[] DefaultSidebarPanelSizes = [60, 40];
 
     private IReadOnlyList<ForumPostTemplateSummaryReadModel> templates = [];
-    private IReadOnlyList<ForumPostTemplateVariableReadModel> variables = [];
+    private IReadOnlyList<ForumPostTemplateVariableNode> variables = [];
     private ForumPostTemplateFormModel formModel = new();
     private EditorValues savedValues = new(
         string.Empty,
@@ -64,6 +64,7 @@ public partial class ForumPostTemplatesPage(
     private IJSObjectReference? saveShortcutHandle;
     private LineNumberedTextarea templateBodyEditor = null!;
     private ForumPostTemplateError? pendingEditorFocusError;
+    private ForumPostTemplateVariableInsertion? pendingEditorInsertion;
     private readonly Dictionary<ForumPostTemplateType, int> previewEntityIds = [];
     private IReadOnlyList<ForumPostTemplatePreviewEntityReadModel> previewEntities = [];
     private ForumPostTemplatePreviewEntityReadModel? previewEntity;
@@ -116,6 +117,17 @@ public partial class ForumPostTemplatesPage(
             try
             {
                 await templateBodyEditor.FocusPositionAsync(line, focusError.Column ?? 1);
+            }
+            catch (JSDisconnectedException) { }
+        }
+
+        if (pendingEditorInsertion is { } insertion)
+        {
+            pendingEditorInsertion = null;
+
+            try
+            {
+                await templateBodyEditor.InsertTextAsync(insertion.Text, insertion.CursorOffset);
             }
             catch (JSDisconnectedException) { }
         }
@@ -595,6 +607,12 @@ public partial class ForumPostTemplatesPage(
     {
         mobilePane = EditorMobilePane;
         pendingEditorFocusError = error;
+    }
+
+    private void InsertVariable(ForumPostTemplateVariableInsertion insertion)
+    {
+        mobilePane = EditorMobilePane;
+        pendingEditorInsertion = insertion;
     }
 
     private async Task SaveAsync()

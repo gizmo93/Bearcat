@@ -61,6 +61,16 @@
         );
     }
 
+    public async Task InsertTextAsync(string text, int cursorOffset)
+    {
+        await JS.InvokeVoidAsync(
+            "bearcat.lineNumberedTextarea.insertText",
+            textareaRef,
+            text,
+            cursorOffset
+        );
+    }
+
     private async Task SetValueAsync(string? value)
     {
         Value = value;

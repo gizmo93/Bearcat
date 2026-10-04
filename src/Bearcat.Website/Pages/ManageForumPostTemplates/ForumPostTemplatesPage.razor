@@ -136,6 +136,7 @@
                                 OnNewTemplateRequested="CreateNewTemplateAsync" />;
 
     private RenderFragment RenderVariableList() =>
-        @<ForumPostTemplateVariableList Variables="variables"
-                                        @bind-SearchTerm="variableSearchTerm" />;
+        @<ForumPostTemplateVariableTree Variables="variables"
+                                        @bind-SearchTerm="variableSearchTerm"
+                                        OnInsertionRequested="InsertVariable" />;
 }
