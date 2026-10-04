@@ -1,3 +1,4 @@
+using System.Globalization;
 using Npgsql;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -19,6 +20,7 @@ public sealed class SetDbPasswordCommand : AsyncCommand
         if (!File.Exists(BearcatPaths.WindowsServiceConfigPath))
         {
             AnsiConsole.MarkupLineInterpolated(
+                CultureInfo.InvariantCulture,
                 $"No configuration found at {BearcatPaths.WindowsServiceConfigPath}. Run 'setup' first."
             );
             return 1;
@@ -52,6 +54,7 @@ public sealed class SetDbPasswordCommand : AsyncCommand
         if (!success)
         {
             AnsiConsole.MarkupLineInterpolated(
+                CultureInfo.InvariantCulture,
                 $"[red]Could not connect with the new password:[/] {error}"
             );
             AnsiConsole.MarkupLine("Configuration left unchanged.");

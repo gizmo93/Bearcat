@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
@@ -251,7 +252,11 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(SearchTerm: uploads.LatestUploadOfSecondHoster.Id.ToString()),
+            new UploadSearchQuery(
+                SearchTerm: uploads.LatestUploadOfSecondHoster.Id.ToString(
+                    CultureInfo.InvariantCulture
+                )
+            ),
             CancellationToken.None
         );
 

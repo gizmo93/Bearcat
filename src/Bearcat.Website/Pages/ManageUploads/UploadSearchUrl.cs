@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Shared;
@@ -32,8 +33,8 @@ public static class UploadSearchUrl
             ("q", SearchUrlParameters.NormalizeText(query.SearchTerm)),
             ("state", query.UploadState?.ToString()),
             ("online", query.OnlineState?.ToString()),
-            ("hoster", query.HosterRegistrationId?.ToString()),
-            ("group", query.ReleaseGroupId?.ToString()),
+            ("hoster", query.HosterRegistrationId?.ToString(CultureInfo.InvariantCulture)),
+            ("group", query.ReleaseGroupId?.ToString(CultureInfo.InvariantCulture)),
         ];
 
         return SearchUrlParameters.Build(BasePath, filterParameters, page, pageSize);

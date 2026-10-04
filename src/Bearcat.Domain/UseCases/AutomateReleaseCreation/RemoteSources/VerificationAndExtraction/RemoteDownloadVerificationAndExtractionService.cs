@@ -90,7 +90,7 @@ public class RemoteDownloadVerificationAndExtractionService(
         CancellationToken cancellationToken
     )
     {
-        var sfvFilePaths = sfvChecksumVerifier.FindSfvFiles(download.LocalFolderPath);
+        var sfvFilePaths = SfvChecksumVerifier.FindSfvFiles(download.LocalFolderPath);
 
         if (sfvFilePaths.Count == 0)
         {

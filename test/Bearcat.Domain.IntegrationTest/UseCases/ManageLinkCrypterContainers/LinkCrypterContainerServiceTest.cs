@@ -24,6 +24,24 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
     private const string LinkCrypterClassName = "TestCrypter";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
+    private static readonly string[] ExpectedLinksAAndB =
+    [
+        "https://hoster.test/a",
+        "https://hoster.test/b",
+    ];
+    private static readonly string[] ExpectedLinksNewAAndNewB =
+    [
+        "https://hoster.test/new-a",
+        "https://hoster.test/new-b",
+    ];
+    private static readonly string[] ExpectedLinksOfFirstAndSecondEpisode =
+    [
+        "https://hoster.test/e01-a",
+        "https://hoster.test/e01-b",
+        "https://hoster.test/e02-a",
+    ];
+    private static readonly string[] ExpectedLinksOfSecondEpisode = ["https://hoster.test/e02-a"];
+
     private Mock<ILinkCrypter> linkCrypterMock = null!;
     private Mock<ILinkCrypterConfig> linkCrypterConfigMock = null!;
     private Mock<ILinkCrypterFactory> linkCrypterFactoryMock = null!;
@@ -82,11 +100,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     "Bearcat.Release.001",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[] { "https://hoster.test/a", "https://hoster.test/b" }
-                        )
-                    ),
+                    It.Is<IReadOnlyList<string>>(links => links.SequenceEqual(ExpectedLinksAAndB)),
                     true,
                     true,
                     true,
@@ -207,9 +221,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "external-1",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[] { "https://hoster.test/new-a", "https://hoster.test/new-b" }
-                        )
+                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -247,9 +259,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "external-recent",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[] { "https://hoster.test/new-a", "https://hoster.test/new-b" }
-                        )
+                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -285,9 +295,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "external-created",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[] { "https://hoster.test/new-a", "https://hoster.test/new-b" }
-                        )
+                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -387,9 +395,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "Bearcat.Release.001",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[] { "https://hoster.test/new-a", "https://hoster.test/new-b" }
-                        )
+                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -440,14 +446,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "Hostage S01",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[]
-                            {
-                                "https://hoster.test/e01-a",
-                                "https://hoster.test/e01-b",
-                                "https://hoster.test/e02-a",
-                            }
-                        )
+                        links.SequenceEqual(ExpectedLinksOfFirstAndSecondEpisode)
                     ),
                     true,
                     true,
@@ -517,14 +516,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "collection-existing",
                     "changed-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(
-                            new[]
-                            {
-                                "https://hoster.test/e01-a",
-                                "https://hoster.test/e01-b",
-                                "https://hoster.test/e02-a",
-                            }
-                        )
+                        links.SequenceEqual(ExpectedLinksOfFirstAndSecondEpisode)
                     ),
                     false,
                     false,
@@ -629,7 +621,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "collection-existing",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(new[] { "https://hoster.test/e02-a" })
+                        links.SequenceEqual(ExpectedLinksOfSecondEpisode)
                     ),
                     true,
                     true,

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -56,7 +57,7 @@ public partial class CreateOrEditReleaseTemplateDialog(IScopedOperationRunner op
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
         return releaseGroups.FirstOrDefault(group => group.ReleaseGroupId == releaseGroupId)?.Name
-            ?? releaseGroupId.ToString();
+            ?? releaseGroupId.ToString(CultureInfo.CurrentCulture);
     }
 
     private string GetReleaseTypeDisplayText(ReleaseType releaseType)

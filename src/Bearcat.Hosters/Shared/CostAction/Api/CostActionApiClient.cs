@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -145,7 +146,7 @@ public class CostActionApiClient(
 
         if (existingFolderId is not null)
         {
-            return existingFolderId.Value.ToString();
+            return existingFolderId.Value.ToString(CultureInfo.InvariantCulture);
         }
 
         logger.LogInformation(
@@ -180,13 +181,13 @@ public class CostActionApiClient(
 
             if (concurrentlyCreatedFolderId is not null)
             {
-                return concurrentlyCreatedFolderId.Value.ToString();
+                return concurrentlyCreatedFolderId.Value.ToString(CultureInfo.InvariantCulture);
             }
         }
 
         var created = ReadContent(response, "Folder creation");
 
-        return created.Folder?.Id.ToString()
+        return created.Folder?.Id.ToString(CultureInfo.InvariantCulture)
             ?? throw new HttpRequestException(
                 $"Folder creation for {folderName} returned no folder"
             );

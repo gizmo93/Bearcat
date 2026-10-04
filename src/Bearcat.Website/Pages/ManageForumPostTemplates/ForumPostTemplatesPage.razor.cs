@@ -764,6 +764,8 @@ public partial class ForumPostTemplatesPage(
 
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         persistSubscription.Dispose();
         previewRenderDelay.Dispose();
 

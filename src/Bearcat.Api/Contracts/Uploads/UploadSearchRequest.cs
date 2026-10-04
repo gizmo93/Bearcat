@@ -26,7 +26,7 @@ public record UploadSearchRequest
     /// </summary>
     public string? SearchTerm { get; init; }
 
-    public int PageIndex { get; init; } = 0;
+    public int PageIndex { get; init; }
 
     public int PageSize { get; init; } = 10;
 }

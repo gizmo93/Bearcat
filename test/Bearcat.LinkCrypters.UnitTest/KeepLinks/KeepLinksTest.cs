@@ -12,6 +12,12 @@ namespace Bearcat.LinkCrypters.UnitTest.KeepLinks;
 
 public class KeepLinksTest
 {
+    private static readonly string[] ExpectedSingleLinkToProtect = ["https://hoster.test/file"];
+    private static readonly string[] ExpectedCommaSeparatedLinksToProtect =
+    [
+        "https://hoster.test/file-1,https://hoster.test/file-2",
+    ];
+
     private Mock<IKeepLinksApi> apiMock = null!;
     private LinkCrypters.KeepLinks.KeepLinks service = null!;
 
@@ -78,9 +84,7 @@ public class KeepLinksTest
                     && HasFormValue(content, "captchatype", "Re")
                     && HasFormValue(content, "dlc", "on")
                     && FormValues(content, "link-to-protect")
-                        .SequenceEqual(
-                            new[] { "https://hoster.test/file-1,https://hoster.test/file-2" }
-                        )
+                        .SequenceEqual(ExpectedCommaSeparatedLinksToProtect)
                 ),
                 It.IsAny<CancellationToken>()
             )
@@ -171,7 +175,7 @@ public class KeepLinksTest
                     HasFormValue(content, "apihash", "api-key")
                     && HasFormValue(content, "title", "container-name")
                     && FormValues(content, "link-to-protect")
-                        .SequenceEqual(new[] { "https://hoster.test/file" })
+                        .SequenceEqual(ExpectedSingleLinkToProtect)
                     && !HasFormName(content, "password")
                 ),
                 It.IsAny<CancellationToken>()
@@ -224,9 +228,7 @@ public class KeepLinksTest
                     && HasFormValue(content, "captchatype", "Re")
                     && HasFormValue(content, "dlc", "on")
                     && FormValues(content, "link-to-protect")
-                        .SequenceEqual(
-                            new[] { "https://hoster.test/file-1,https://hoster.test/file-2" }
-                        )
+                        .SequenceEqual(ExpectedCommaSeparatedLinksToProtect)
                 ),
                 It.IsAny<CancellationToken>()
             )
@@ -315,7 +317,7 @@ public class KeepLinksTest
                     HasFormValue(content, "apihash", "api-key")
                     && HasFormValue(content, "url-id", "container-id")
                     && FormValues(content, "link-to-protect")
-                        .SequenceEqual(new[] { "https://hoster.test/file" })
+                        .SequenceEqual(ExpectedSingleLinkToProtect)
                 ),
                 It.IsAny<CancellationToken>()
             )

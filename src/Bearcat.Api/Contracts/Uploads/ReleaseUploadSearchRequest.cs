@@ -7,7 +7,7 @@ public record ReleaseUploadSearchRequest
     /// </summary>
     public int? UploadConfigId { get; init; }
 
-    public int PageIndex { get; init; } = 0;
+    public int PageIndex { get; init; }
 
     public int PageSize { get; init; } = 10;
 }

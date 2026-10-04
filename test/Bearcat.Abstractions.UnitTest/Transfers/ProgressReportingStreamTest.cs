@@ -96,7 +96,10 @@ public class ProgressReportingStreamTest
 
         // Assert
         bytesRead.ShouldBe(10);
-        limiter.AcquireAsync(90, CancellationToken.None).IsCompletedSuccessfully.ShouldBeTrue();
+        limiter
+            .AcquireAsync(90, CancellationToken.None)
+            .AsTask()
+            .IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Test]
@@ -115,7 +118,10 @@ public class ProgressReportingStreamTest
 
         // Assert
         bytesRead.ShouldBe(10);
-        limiter.AcquireAsync(90, CancellationToken.None).IsCompletedSuccessfully.ShouldBeTrue();
+        limiter
+            .AcquireAsync(90, CancellationToken.None)
+            .AsTask()
+            .IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     private static ProgressReportingStream CreateStreamInScope(

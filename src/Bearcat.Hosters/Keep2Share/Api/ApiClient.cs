@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -85,7 +86,7 @@ public class ApiClient(
         return new CaptchaChallengeResult(
             IsSuccess: false,
             ErrorMessage: response.Message
-                ?? $"Keep2Share captcha challenge request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}"
+                ?? $"Keep2Share captcha challenge request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString(CultureInfo.InvariantCulture) ?? "null"}"
         );
     }
 
@@ -110,7 +111,7 @@ public class ApiClient(
             ErrorMessage: loginResponse.Status == "success"
                 ? null
                 : loginResponse.Message
-                    ?? $"Keep2Share login failed with status={loginResponse.Status}, code={loginResponse.Code}, errorCode={loginResponse.ErrorCode?.ToString() ?? "null"}"
+                    ?? $"Keep2Share login failed with status={loginResponse.Status}, code={loginResponse.Code}, errorCode={loginResponse.ErrorCode?.ToString(CultureInfo.InvariantCulture) ?? "null"}"
         );
     }
 
@@ -339,7 +340,7 @@ public class ApiClient(
                 );
 
                 throw new HttpRequestException(
-                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}, message={response.Message ?? "null"}"
+                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString(CultureInfo.InvariantCulture) ?? "null"}, message={response.Message ?? "null"}"
                 );
             }
 
@@ -451,7 +452,7 @@ public class ApiClient(
                 );
 
                 throw new HttpRequestException(
-                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}, message={response.Message ?? "null"}"
+                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString(CultureInfo.InvariantCulture) ?? "null"}, message={response.Message ?? "null"}"
                 );
             }
 

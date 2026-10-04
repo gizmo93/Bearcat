@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
@@ -49,7 +50,9 @@ public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunn
         ];
 
     private IReadOnlyList<SelectOption<int>> PageSizeOptions =>
-        pageSizes.Select(size => new SelectOption<int>(size, size.ToString())).ToList();
+        pageSizes
+            .Select(size => new SelectOption<int>(size, size.ToString(CultureInfo.CurrentCulture)))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {

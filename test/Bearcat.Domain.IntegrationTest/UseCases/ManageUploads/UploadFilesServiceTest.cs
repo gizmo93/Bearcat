@@ -926,11 +926,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                 ) =>
                 {
                     await using var cancellationDbContext = CreateDbContext();
-                    var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(u =>
-                        u.Id == upload.Id
+                    var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(
+                        u => u.Id == upload.Id,
+                        cancellationToken
                     );
                     uploadToCancel.UploadState = UploadState.CancellationRequested;
-                    await cancellationDbContext.SaveChangesAsync();
+                    await cancellationDbContext.SaveChangesAsync(cancellationToken);
 
                     await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
@@ -993,15 +994,16 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                     FileDto fileDto,
                     IHosterConfig _,
                     ITransferProgress _,
-                    CancellationToken _
+                    CancellationToken cancellationToken
                 ) =>
                 {
                     await using var cancellationDbContext = CreateDbContext();
-                    var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(u =>
-                        u.Id == upload.Id
+                    var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(
+                        u => u.Id == upload.Id,
+                        cancellationToken
                     );
                     uploadToCancel.UploadState = UploadState.CancellationRequested;
-                    await cancellationDbContext.SaveChangesAsync();
+                    await cancellationDbContext.SaveChangesAsync(cancellationToken);
 
                     return new UploadFileResult(
                         true,
@@ -1116,20 +1118,21 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                     FileDto fileDto,
                     IHosterConfig _,
                     ITransferProgress _,
-                    CancellationToken _
+                    CancellationToken cancellationToken
                 ) =>
                 {
                     if (fileDto.FullFileName == firstArchiveFilePath && !secondUploadQueued)
                     {
                         await using var updateDbContext = CreateDbContext();
-                        var upload = await updateDbContext.Uploads.SingleAsync(u =>
-                            u.Id == secondUpload.Id
+                        var upload = await updateDbContext.Uploads.SingleAsync(
+                            u => u.Id == secondUpload.Id,
+                            cancellationToken
                         );
                         upload.UploadState = UploadState.Pending;
-                        await updateDbContext.SaveChangesAsync();
+                        await updateDbContext.SaveChangesAsync(cancellationToken);
                         secondUploadQueued = true;
 
-                        await Task.Delay(50);
+                        await Task.Delay(50, cancellationToken);
                     }
 
                     return new UploadFileResult(
@@ -1309,15 +1312,16 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                     FileDto fileDto,
                     IHosterConfig _,
                     ITransferProgress _,
-                    CancellationToken _
+                    CancellationToken cancellationToken
                 ) =>
                 {
                     await using var updateDbContext = CreateDbContext();
-                    var uploadToCancel = await updateDbContext.Uploads.SingleAsync(u =>
-                        u.Id == upload.Id
+                    var uploadToCancel = await updateDbContext.Uploads.SingleAsync(
+                        u => u.Id == upload.Id,
+                        cancellationToken
                     );
                     uploadToCancel.UploadState = UploadState.CancellationRequested;
-                    await updateDbContext.SaveChangesAsync();
+                    await updateDbContext.SaveChangesAsync(cancellationToken);
 
                     return new UploadFileResult(false, fileDto, ["Canceled"], null);
                 }
@@ -1363,20 +1367,21 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                     FileDto fileDto,
                     IHosterConfig _,
                     ITransferProgress _,
-                    CancellationToken _
+                    CancellationToken cancellationToken
                 ) =>
                 {
                     if (!otherCancellationRequested)
                     {
                         await using var updateDbContext = CreateDbContext();
-                        var uploadToCancel = await updateDbContext.Uploads.SingleAsync(u =>
-                            u.Id == otherUpload.Id
+                        var uploadToCancel = await updateDbContext.Uploads.SingleAsync(
+                            u => u.Id == otherUpload.Id,
+                            cancellationToken
                         );
                         uploadToCancel.UploadState = UploadState.CancellationRequested;
-                        await updateDbContext.SaveChangesAsync();
+                        await updateDbContext.SaveChangesAsync(cancellationToken);
                         otherCancellationRequested = true;
 
-                        await Task.Delay(50);
+                        await Task.Delay(50, cancellationToken);
                     }
 
                     return new UploadFileResult(

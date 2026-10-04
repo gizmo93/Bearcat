@@ -190,7 +190,7 @@ public class ReleaseForumPostRenderSource(
             MediaInfo = file.MediaInfoText,
             Duration = file.Duration is null
                 ? string.Empty
-                : file.Duration.Value.ToString(@"hh\:mm\:ss"),
+                : file.Duration.Value.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture),
             Container = file.ContainerFormat ?? string.Empty,
             Video = file.VideoStream is null
                 ? ForumPostTemplateVideoStreamModel.Empty

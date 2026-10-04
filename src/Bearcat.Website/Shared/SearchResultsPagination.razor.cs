@@ -1,3 +1,4 @@
+using System.Globalization;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
@@ -35,6 +36,9 @@ public partial class SearchResultsPagination : ComponentBase
 
     private static IReadOnlyList<SelectOption<int>> PageSizeOptions =>
         SearchUrlParameters
-            .PageSizes.Select(size => new SelectOption<int>(size, size.ToString()))
+            .PageSizes.Select(size => new SelectOption<int>(
+                size,
+                size.ToString(CultureInfo.CurrentCulture)
+            ))
             .ToList();
 }

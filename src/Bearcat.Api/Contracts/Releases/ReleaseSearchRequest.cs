@@ -51,7 +51,7 @@ public record ReleaseSearchRequest
     /// </summary>
     public bool? InPostQueue { get; init; }
 
-    public int PageIndex { get; init; } = 0;
+    public int PageIndex { get; init; }
 
     public int PageSize { get; init; } = 10;
 }

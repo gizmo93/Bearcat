@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Api.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OpenApi;
@@ -37,7 +38,7 @@ public class ApiKeySecurityOperationTransformer : IOpenApiOperationTransformer
 
         operation.Responses ??= new OpenApiResponses();
         operation.Responses.TryAdd(
-            StatusCodes.Status401Unauthorized.ToString(),
+            StatusCodes.Status401Unauthorized.ToString(CultureInfo.InvariantCulture),
             new OpenApiResponse
             {
                 Description =
@@ -45,7 +46,7 @@ public class ApiKeySecurityOperationTransformer : IOpenApiOperationTransformer
             }
         );
         operation.Responses.TryAdd(
-            StatusCodes.Status403Forbidden.ToString(),
+            StatusCodes.Status403Forbidden.ToString(CultureInfo.InvariantCulture),
             new OpenApiResponse
             {
                 Description = "Command endpoints are disabled because no API key is configured.",

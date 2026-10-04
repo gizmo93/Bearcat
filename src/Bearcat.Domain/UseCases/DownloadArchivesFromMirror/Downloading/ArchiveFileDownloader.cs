@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
@@ -294,7 +295,7 @@ public class ArchiveFileDownloader(
 
             return new AttemptOutcome(
                 Md5Hash: null,
-                ErrorMessage: $"MD5 mismatch for {Path.GetFileName(download.TargetFilePath)} downloaded from {source.Registration.Name}: expected {expectedHash}, got {actualHash} ({sizeOnDisk.Bytes().Humanize("0.0")} on disk)",
+                ErrorMessage: $"MD5 mismatch for {Path.GetFileName(download.TargetFilePath)} downloaded from {source.Registration.Name}: expected {expectedHash}, got {actualHash} ({sizeOnDisk.Bytes().Humanize("0.0", CultureInfo.InvariantCulture)} on disk)",
                 Exception: null,
                 IsFileMissing: false
             );

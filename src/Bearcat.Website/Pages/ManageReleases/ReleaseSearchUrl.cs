@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Shared;
@@ -57,10 +58,10 @@ public static class ReleaseSearchUrl
                 }
             ),
             ("state", query.OnlineState?.ToString()),
-            ("hoster", query.HosterRegistrationId?.ToString()),
+            ("hoster", query.HosterRegistrationId?.ToString(CultureInfo.InvariantCulture)),
             ("archiver", SearchUrlParameters.NormalizeText(query.ArchiverName)),
-            ("crypter", query.LinkCrypterRegistrationId?.ToString()),
-            ("group", query.ReleaseGroupId?.ToString()),
+            ("crypter", query.LinkCrypterRegistrationId?.ToString(CultureInfo.InvariantCulture)),
+            ("group", query.ReleaseGroupId?.ToString(CultureInfo.InvariantCulture)),
             ("posted", SearchUrlParameters.NormalizeText(query.PostedLocationUrl)),
             ("link", SearchUrlParameters.NormalizeText(query.DownloadLink)),
             ("file", SearchUrlParameters.NormalizeText(query.ArchiveFileName)),

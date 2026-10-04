@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
@@ -56,7 +57,7 @@ public partial class RenderForumPostDialog(IScopedOperationRunner operationRunne
         return templates
                 .FirstOrDefault(template => template.ForumPostTemplateId == templateId)
                 ?.Name
-            ?? templateId.ToString();
+            ?? templateId.ToString(CultureInfo.CurrentCulture);
     }
 
     private async Task RenderAsync()

@@ -2612,7 +2612,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     int _,
                     string? _,
                     ArchiveOptions _,
-                    CancellationToken _
+                    CancellationToken cancellationToken
                 ) =>
                 {
                     releaseFolderBytesWhilePacking = Directory
@@ -2623,7 +2623,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     foreach (var (fileName, content) in volumes)
                     {
                         var filePath = Path.Combine(destinationPath, fileName);
-                        await File.WriteAllTextAsync(filePath, content);
+                        await File.WriteAllTextAsync(filePath, content, cancellationToken);
                         createdFileNames.Add(filePath);
                     }
 

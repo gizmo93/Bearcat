@@ -14,6 +14,8 @@ namespace Bearcat.Hosters.UnitTest.UploadG;
 
 public class ApiClientTest
 {
+    private static readonly int[] ExpectedPartNumbersWithOnlyFirstPart = [1];
+
     private Mock<IUploadGApi> apiMock = null!;
     private Mock<IHttpClientFactory> httpClientFactoryMock = null!;
     private ApiClient apiClient = null!;
@@ -74,7 +76,7 @@ public class ApiClientTest
                 x.SignPartUrlsAsync(
                     "Bearer api-key",
                     It.Is<BatchSignPartUrlsRequest>(request =>
-                        request.PartNumbers.SequenceEqual(new[] { 1 })
+                        request.PartNumbers.SequenceEqual(ExpectedPartNumbersWithOnlyFirstPart)
                         && request.UploadId == "upload-id"
                         && request.Key == "uploads/uuid/storage-name"
                         && request.StorageBucket == "bucket"

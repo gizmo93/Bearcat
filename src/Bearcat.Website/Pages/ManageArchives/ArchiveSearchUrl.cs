@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageArchives.Search;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Shared;
@@ -32,7 +33,7 @@ public static class ArchiveSearchUrl
             ("q", SearchUrlParameters.NormalizeText(query.SearchTerm)),
             ("state", query.ArchiveState?.ToString()),
             ("archiver", SearchUrlParameters.NormalizeText(query.ArchiverName)),
-            ("group", query.ReleaseGroupId?.ToString()),
+            ("group", query.ReleaseGroupId?.ToString(CultureInfo.InvariantCulture)),
             ("disk", query.OnDiskFilter?.ToString()),
         ];
 

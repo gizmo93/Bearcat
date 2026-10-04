@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Sockets;
 using System.Text;
 using Bearcat.Domain.UseCases.ManageProxyServers.ConnectionTest;
@@ -77,7 +78,10 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
             var encodedCredentials = Convert.ToBase64String(
                 Encoding.UTF8.GetBytes($"{request.Username}:{request.Password}")
             );
-            connectRequest.Append($"Proxy-Authorization: Basic {encodedCredentials}\r\n");
+            connectRequest.Append(
+                CultureInfo.InvariantCulture,
+                $"Proxy-Authorization: Basic {encodedCredentials}\r\n"
+            );
         }
 
         connectRequest.Append("\r\n");

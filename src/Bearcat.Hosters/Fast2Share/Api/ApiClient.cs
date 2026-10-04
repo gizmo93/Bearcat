@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -147,7 +148,7 @@ public class ApiClient(
 
         if (existingFolderId is not null)
         {
-            return existingFolderId.Value.ToString();
+            return existingFolderId.Value.ToString(CultureInfo.InvariantCulture);
         }
 
         logger.LogInformation("Creating Fast2Share folder {FolderName}", folderName);
@@ -168,7 +169,7 @@ public class ApiClient(
 
             if (conflictingFolderId is not null)
             {
-                return conflictingFolderId.Value.ToString();
+                return conflictingFolderId.Value.ToString(CultureInfo.InvariantCulture);
             }
         }
 
@@ -181,7 +182,7 @@ public class ApiClient(
             );
         }
 
-        return response.Content.Id.ToString();
+        return response.Content.Id.ToString(CultureInfo.InvariantCulture);
     }
 
     public async Task MoveFileToFolderAsync(

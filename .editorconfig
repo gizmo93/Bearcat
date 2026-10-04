@@ -63,19 +63,16 @@ dotnet_naming_symbols.constant_fields.required_modifiers          = const
 dotnet_diagnostic.SHANE001.severity = error
 dotnet_diagnostic.SHANE002.severity = error
 dotnet_diagnostic.SHANE003.severity = none
-dotnet_diagnostic.S1075.severity = none
-dotnet_diagnostic.S108.severity = none
-dotnet_diagnostic.S2094.severity = none
-dotnet_diagnostic.S6608.severity = none
-dotnet_diagnostic.S1994.severity = none
-dotnet_diagnostic.S927.severity = none
-dotnet_diagnostic.S2365.severity = none
-dotnet_diagnostic.S4144.severity = none
-dotnet_diagnostic.S3220.severity = none
-dotnet_diagnostic.S2365.severity = none
-dotnet_diagnostic.S4790.severity = none
-dotnet_diagnostic.S4036.severity = none
-dotnet_diagnostic.S2092.severity = none
+dotnet_diagnostic.CA1000.severity = none
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1826.severity = none
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA5351.severity = none
 
 # var preferences
 csharp_style_namespace_declarations = file_scoped:warning
@@ -133,6 +130,16 @@ csharp_space_between_method_call_empty_parameter_list_parentheses = false
 # Wrapping preferences
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
+
+[src/Bearcat.Infrastructure/Database/Repositories/**.cs]
+dotnet_diagnostic.CA1304.severity = none
+dotnet_diagnostic.CA1311.severity = none
+dotnet_diagnostic.CA1860.severity = none
+dotnet_diagnostic.CA1862.severity = none
+
+[src/Bearcat.Infrastructure.Migrations.{Postgres,Sqlite}/Migrations/**.cs]
+generated_code = true
+
 ###############################
 # VB Coding Conventions       #
 ###############################

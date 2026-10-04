@@ -5,8 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Infrastructure.BackgroundTasks;
 
-public class BackgroundTaskScheduleCache(IServiceScopeFactory serviceScopeFactory)
-    : IBackgroundTaskScheduleCache
+public sealed class BackgroundTaskScheduleCache(IServiceScopeFactory serviceScopeFactory)
+    : IBackgroundTaskScheduleCache,
+        IDisposable
 {
     private readonly ConcurrentDictionary<string, TimeSpan> overrides = [];
     private readonly ConcurrentDictionary<string, bool> enabledStates = [];
@@ -77,5 +78,10 @@ public class BackgroundTaskScheduleCache(IServiceScopeFactory serviceScopeFactor
     public void SetEnabled(string key, bool isEnabled)
     {
         enabledStates[key] = isEnabled;
+    }
+
+    public void Dispose()
+    {
+        initializationLock.Dispose();
     }
 }

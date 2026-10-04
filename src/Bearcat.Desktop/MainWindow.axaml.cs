@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -146,11 +147,11 @@ public partial class MainWindow : Window
         PostgresRadioButton.IsChecked = settings.DatabaseProvider == DatabaseProvider.Postgres;
         SqliteFilePathTextBox.Text = settings.SqliteFilePath;
         PostgresHostTextBox.Text = settings.PostgresHost;
-        PostgresPortTextBox.Text = settings.PostgresPort.ToString();
+        PostgresPortTextBox.Text = settings.PostgresPort.ToString(CultureInfo.InvariantCulture);
         PostgresDatabaseTextBox.Text = settings.PostgresDatabase;
         PostgresUsernameTextBox.Text = settings.PostgresUsername;
         PostgresPasswordTextBox.Text = settings.PostgresPassword;
-        WebPortTextBox.Text = settings.WebPort.ToString();
+        WebPortTextBox.Text = settings.WebPort.ToString(CultureInfo.InvariantCulture);
         ApiKeyTextBox.Text = settings.ApiKey;
         UpdateDatabaseSettingsVisibility();
     }

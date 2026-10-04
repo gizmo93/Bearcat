@@ -1,3 +1,4 @@
+using System.Globalization;
 using Npgsql;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -45,7 +46,10 @@ public sealed class SetupCommand : AsyncCommand
                 ),
             cancellationToken
         );
-        AnsiConsole.MarkupLineInterpolated($"Database: {GetDisplayName(databaseProvider)}");
+        AnsiConsole.MarkupLineInterpolated(
+            CultureInfo.InvariantCulture,
+            $"Database: {GetDisplayName(databaseProvider)}"
+        );
 
         var database =
             databaseProvider == DatabaseProvider.Sqlite
@@ -129,7 +133,10 @@ public sealed class SetupCommand : AsyncCommand
             WorkingDirectories = workingDirectories,
             Urls = urls,
         }.Save(BearcatPaths.WindowsServiceConfigPath);
-        AnsiConsole.MarkupLineInterpolated($"Wrote {BearcatPaths.WindowsServiceConfigPath}");
+        AnsiConsole.MarkupLineInterpolated(
+            CultureInfo.InvariantCulture,
+            $"Wrote {BearcatPaths.WindowsServiceConfigPath}"
+        );
 
         int result;
         if (OperatingSystem.IsWindows())
@@ -234,6 +241,7 @@ public sealed class SetupCommand : AsyncCommand
         if (!success)
         {
             AnsiConsole.MarkupLineInterpolated(
+                CultureInfo.InvariantCulture,
                 $"[red]Could not connect to the database:[/] {error}"
             );
             return null;
@@ -275,6 +283,7 @@ public sealed class SetupCommand : AsyncCommand
 
             WindowsServiceController.ConfigureRecovery();
             AnsiConsole.MarkupLineInterpolated(
+                CultureInfo.InvariantCulture,
                 $"Registered Windows service '{WindowsServiceController.ServiceName}'."
             );
         }
@@ -346,6 +355,7 @@ public sealed class SetupCommand : AsyncCommand
     {
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLineInterpolated(
+            CultureInfo.InvariantCulture,
             $"[yellow]The working directory {path} is a network path.[/]"
         );
         AnsiConsole.MarkupLine(
@@ -391,6 +401,7 @@ public sealed class SetupCommand : AsyncCommand
                 : "your database";
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLineInterpolated(
+            CultureInfo.InvariantCulture,
             $"[yellow]Back up {keyPath} together with {databaseDescription}.[/]"
         );
         AnsiConsole.MarkupLine(

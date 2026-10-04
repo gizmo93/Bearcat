@@ -344,7 +344,7 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
             return $"https:{url}";
         }
 
-        if (url.StartsWith("/", StringComparison.Ordinal))
+        if (url.StartsWith('/'))
         {
             return $"https://www.xrel.to{url}";
         }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Bearcat.Abstractions.Security;
@@ -531,7 +532,9 @@ public sealed class TelegramNotificationService(
             ' ',
             new[] { chat.FirstName, chat.LastName }.Where(part => !string.IsNullOrWhiteSpace(part))
         );
-        return string.IsNullOrWhiteSpace(name) ? chat.Username ?? chat.Id.ToString() : name;
+        return string.IsNullOrWhiteSpace(name)
+            ? chat.Username ?? chat.Id.ToString(CultureInfo.InvariantCulture)
+            : name;
     }
 
     private static string CreateMessage(
@@ -551,17 +554,19 @@ public sealed class TelegramNotificationService(
 
         var builder = new StringBuilder();
         builder.Append(
+            CultureInfo.InvariantCulture,
             $"{icon} Bearcat: {notification.NotificationSeverity}\n\n{notification.Message}"
         );
 
         if (relatedEntity is not null)
         {
             builder.Append(
+                CultureInfo.InvariantCulture,
                 $"\n\n{DescribeEntityType(relatedEntity.EntityType)}: {relatedEntity.DisplayName}"
             );
         }
 
-        builder.Append($"\n\n{url}");
+        builder.Append(CultureInfo.InvariantCulture, $"\n\n{url}");
         return builder.ToString();
     }
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.MediaMetadataDatabase;
@@ -79,7 +80,7 @@ public class SteamMetadataDatabase(ISteamApi api) : IMediaMetadataDatabase
         }
 
         return await GetAppMetadataAsync(
-            appId: item.Id.ToString(),
+            appId: item.Id.ToString(CultureInfo.InvariantCulture),
             language: language,
             cancellationToken: cancellationToken
         );

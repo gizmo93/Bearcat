@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -44,7 +45,10 @@ public partial class UploadLinksDialog(IScopedOperationRunner operationRunner)
         $"{showFileColumn}-{selectedOnlineState}-{pageIndex}-{pageSize}";
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
-        pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
+        pageSizes.Select(size => new SelectOption<int>(
+            size,
+            size.ToString(CultureInfo.CurrentCulture)
+        ));
 
     private OnlineState? SelectedOnlineStateValue =>
         selectedOnlineState == 0 ? null : (OnlineState)selectedOnlineState;

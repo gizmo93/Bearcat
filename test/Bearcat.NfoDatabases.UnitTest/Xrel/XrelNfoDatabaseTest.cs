@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.NfoDatabases.Xrel;
@@ -271,7 +272,7 @@ public class XrelNfoDatabaseTest
                     headers: new Dictionary<string, string>
                     {
                         ["X-RateLimit-Remaining"] = "0",
-                        ["X-RateLimit-Reset"] = resetAt.ToString(),
+                        ["X-RateLimit-Reset"] = resetAt.ToString(CultureInfo.InvariantCulture),
                     }
                 )
             );

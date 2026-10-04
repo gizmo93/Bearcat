@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -45,7 +46,10 @@ public partial class ReleaseUploads(
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
-        pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
+        pageSizes.Select(size => new SelectOption<int>(
+            size,
+            size.ToString(CultureInfo.CurrentCulture)
+        ));
 
     private IEnumerable<SelectOption<int>> UploadConfigOptions =>
         new[] { new SelectOption<int>(0, L["AllUploadConfigs"]) }.Concat(
@@ -335,7 +339,8 @@ public partial class ReleaseUploads(
 
     private string HumanizeTimestamp(DateTime value) => timeProvider.Humanize(value);
 
-    private static string FormatTimestamp(DateTime value) => value.ToString("g");
+    private static string FormatTimestamp(DateTime value) =>
+        value.ToString("g", CultureInfo.CurrentCulture);
 
     private string FormatAbsoluteTimestamp(ReleaseUploadReadModel upload) =>
         upload.UploadedAt is { } uploadedAt

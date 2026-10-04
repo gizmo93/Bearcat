@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.ValueObjects;
@@ -160,7 +161,7 @@ public static partial class ReleaseNameParser
             }
             else if (index > 0 && IsYear(token))
             {
-                year ??= int.Parse(token);
+                year ??= int.Parse(token, CultureInfo.InvariantCulture);
             }
             else if (IsGameMarker(token, nextToken))
             {
@@ -259,16 +260,16 @@ public static partial class ReleaseNameParser
             return false;
         }
 
-        season = int.Parse(match.Groups["season"].Value);
+        season = int.Parse(match.Groups["season"].Value, CultureInfo.InvariantCulture);
 
         if (match.Groups["episode"].Success)
         {
-            episode = int.Parse(match.Groups["episode"].Value);
+            episode = int.Parse(match.Groups["episode"].Value, CultureInfo.InvariantCulture);
         }
 
         if (match.Groups["episodeEnd"].Success)
         {
-            episodeEnd = int.Parse(match.Groups["episodeEnd"].Value);
+            episodeEnd = int.Parse(match.Groups["episodeEnd"].Value, CultureInfo.InvariantCulture);
         }
 
         return true;

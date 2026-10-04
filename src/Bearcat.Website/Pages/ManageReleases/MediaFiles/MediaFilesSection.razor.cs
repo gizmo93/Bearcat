@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Humanizer;
@@ -31,8 +32,8 @@ public partial class MediaFilesSection : ComponentBase
     }
 
     private static string FormatFileSize(long sizeBytes) =>
-        sizeBytes <= 0 ? "-" : sizeBytes.Bytes().Humanize("0.0");
+        sizeBytes <= 0 ? "-" : sizeBytes.Bytes().Humanize("0.0", CultureInfo.CurrentCulture);
 
     private static string FormatDuration(TimeSpan? duration) =>
-        duration is null ? "-" : duration.Value.ToString(@"hh\:mm\:ss");
+        duration is null ? "-" : duration.Value.ToString(@"hh\:mm\:ss", CultureInfo.CurrentCulture);
 }
