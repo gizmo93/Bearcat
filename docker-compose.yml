@@ -15,6 +15,7 @@ services:
       # Use docker-compose.postgres.yml to run Bearcat with PostgreSQL instead.
       - Database__Provider=Sqlite
       - Bearcat__ApiKey=${BEARCAT_API_KEY:-}
+      - LocalTimezone=${BEARCAT_TIMEZONE:-}
     volumes:
       - ${BEARCAT_DATA_DIR:-./bearcat-data}:/data
       - ${RELEASES_DIR}:/mnt/data/releases
