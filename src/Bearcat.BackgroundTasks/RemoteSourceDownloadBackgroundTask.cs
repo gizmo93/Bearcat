@@ -2,7 +2,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Application.BackgroundTasks;
+namespace Bearcat.BackgroundTasks;
 
 public class RemoteSourceDownloadBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,

@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Application.BackgroundTasks;
+namespace Bearcat.BackgroundTasks;
 
 public class CheckUploadStateBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,

@@ -1,8 +1,8 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Api.InversionOfControl;
-using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
+using Bearcat.BackgroundTasks.InversionOfControl;
 using Bearcat.DistributionSites.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
