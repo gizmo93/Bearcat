@@ -230,3 +230,17 @@ SQLite notes:
 
 Changing `Database:Provider` does not transfer existing data. A new database starts empty.
 The fallback to `Postgres` when the setting is absent keeps older configurations working.
+
+## Time zone
+
+Bearcat shows times such as log entries and task runs in a local time zone. Time-based rules use it as well.
+Without a setting, Bearcat uses the time zone of the operating system.
+
+| Installation | Default | How to change it |
+| --- | --- | --- |
+| Desktop app | Time zone of your computer | Change the time zone of your computer. |
+| Windows service | Time zone of the Windows server | Add `"LocalTimezone": "Europe/Berlin"` to `%ProgramData%\Bearcat\config.json` and restart the service. |
+| Docker | UTC | Set `BEARCAT_TIMEZONE` in `.env`. See [Docker settings](/Bearcat/use-the-docker-image/#docker-settings). |
+
+The value is an IANA time zone ID such as `Europe/Berlin` or `America/New_York`.
+An unknown ID stops Bearcat on startup.

@@ -138,6 +138,7 @@ Keep `bearcat.key` with your database backup. Without it, Bearcat cannot read yo
 | `BEARCAT_DATA_DIR` | Persistent application data: the `bearcat.key` encryption key created on first start, and `bearcat.db` with SQLite. |
 | `BEARCAT_PORT` | Web interface port, normally `8080`. |
 | `BEARCAT_API_KEY` | Key for the REST API command endpoints. Empty disables them. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#api-key). |
+| `BEARCAT_TIMEZONE` | Time zone for displayed times, for example `Europe/Berlin`. Empty uses UTC. See [Time zone](/Bearcat/advanced-configuration/#time-zone). |
 | `BEARCAT_IMAGE` | Image to run. Defaults to `ghcr.io/gizmo93/bearcat:latest`; change it to select a version or your own image. |
 | `BEARCAT_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
 | `BEARCAT_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |
