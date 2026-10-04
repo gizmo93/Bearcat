@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
@@ -13,7 +14,8 @@ public partial class QualityIssuesIndicator(
     private int openCount;
     private Task? pollingTask;
 
-    private string BadgeText => openCount > 99 ? "99+" : openCount.ToString();
+    private string BadgeText =>
+        openCount > 99 ? "99+" : openCount.ToString(CultureInfo.CurrentCulture);
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,6 +55,8 @@ public partial class QualityIssuesIndicator(
 
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         await pollingCancellation.CancelAsync();
         pollingCancellation.Dispose();
 

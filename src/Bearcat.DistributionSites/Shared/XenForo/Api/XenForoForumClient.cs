@@ -348,7 +348,12 @@ public sealed partial class XenForoForumClient : IDisposable
 
         if (ExtractNodeId(forumUrl) is { } nodeId)
         {
-            form.Add(new KeyValuePair<string, string>("c[nodes][0]", nodeId.ToString()));
+            form.Add(
+                new KeyValuePair<string, string>(
+                    "c[nodes][0]",
+                    nodeId.ToString(CultureInfo.InvariantCulture)
+                )
+            );
         }
 
         using var request = new HttpRequestMessage(
@@ -1219,7 +1224,9 @@ public sealed partial class XenForoForumClient : IDisposable
         }
 
         var match = NodeIdPattern().Match(forumUrl.TrimEnd('/'));
-        return match.Success ? int.Parse(match.Groups[1].Value) : null;
+        return match.Success
+            ? int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture)
+            : null;
     }
 
     private static string? ExtractPostId(string postUrl)
@@ -1233,7 +1240,9 @@ public sealed partial class XenForoForumClient : IDisposable
     {
         var match = ThreadIdPattern().Match(threadUrl);
 
-        return match.Success ? int.Parse(match.Groups[1].Value) : null;
+        return match.Success
+            ? int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture)
+            : null;
     }
 
     private static Uri CreateUriWithTrailingSlash(string url)

@@ -9,7 +9,7 @@ public record UploadLinkSearchRequest
     /// </summary>
     public OnlineState? OnlineState { get; init; }
 
-    public int PageIndex { get; init; } = 0;
+    public int PageIndex { get; init; }
 
     public int PageSize { get; init; } = 10;
 }

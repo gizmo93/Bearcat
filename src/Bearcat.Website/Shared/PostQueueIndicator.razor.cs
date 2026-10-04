@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -17,7 +18,8 @@ public partial class PostQueueIndicator(
     private bool enabled = true;
     private Task? pollingTask;
 
-    private string BadgeText => openCount > 99 ? "99+" : openCount.ToString();
+    private string BadgeText =>
+        openCount > 99 ? "99+" : openCount.ToString(CultureInfo.CurrentCulture);
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,6 +70,8 @@ public partial class PostQueueIndicator(
 
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         await pollingCancellation.CancelAsync();
         pollingCancellation.Dispose();
 

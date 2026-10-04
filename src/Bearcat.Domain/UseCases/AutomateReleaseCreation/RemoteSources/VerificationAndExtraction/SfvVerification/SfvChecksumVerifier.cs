@@ -17,7 +17,7 @@ public class SfvChecksumVerifier(
     private const int MaxListedFilePaths = 10;
     private const int ReadBufferSizeBytes = 1024 * 1024;
 
-    public IReadOnlyList<string> FindSfvFiles(string localFolderPath)
+    public static IReadOnlyList<string> FindSfvFiles(string localFolderPath)
     {
         return Directory
             .GetFiles(

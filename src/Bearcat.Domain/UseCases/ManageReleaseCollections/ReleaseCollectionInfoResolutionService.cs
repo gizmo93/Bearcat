@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
@@ -128,7 +129,9 @@ public partial class ReleaseCollectionInfoResolutionService(
             ImdbId: ExtractImdbId(collection),
             SteamAppId: null,
             Title: ExtractSeriesTitle(collection.Name),
-            Year: yearMatch.Success ? int.Parse(yearMatch.Value) : null,
+            Year: yearMatch.Success
+                ? int.Parse(yearMatch.Value, CultureInfo.InvariantCulture)
+                : null,
             SeasonNumber: null,
             EpisodeNumber: null,
             LanguageCode: collection.PrimaryLanguageCode

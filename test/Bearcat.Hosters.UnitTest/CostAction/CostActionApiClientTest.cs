@@ -18,6 +18,13 @@ public class CostActionApiClientTest
 
     private const string AppType = "fd1";
 
+    private static readonly string[] ExpectedFileIdsOnlineDeletedMissing =
+    [
+        "online",
+        "deleted",
+        "missing",
+    ];
+
     private const string FileId = "cye2wolk2zz7";
 
     private const string UploadUrl = "https://s329.turbobit.net/v2/file/token";
@@ -231,7 +238,7 @@ public class CostActionApiClientTest
                     100,
                     It.Is<FilesInfoRequest>(request =>
                         request.AppType == AppType
-                        && request.FileIds.SequenceEqual(new[] { "online", "deleted", "missing" })
+                        && request.FileIds.SequenceEqual(ExpectedFileIdsOnlineDeletedMissing)
                     ),
                     It.IsAny<CancellationToken>()
                 )

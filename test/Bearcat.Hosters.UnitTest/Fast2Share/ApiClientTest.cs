@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -809,7 +810,10 @@ public class ApiClientTest
             UploadedBytes += chunk.Length;
 
             var patchResponse = new HttpResponseMessage(HttpStatusCode.NoContent);
-            patchResponse.Headers.Add("Upload-Offset", UploadedBytes.ToString());
+            patchResponse.Headers.Add(
+                "Upload-Offset",
+                UploadedBytes.ToString(CultureInfo.InvariantCulture)
+            );
 
             return patchResponse;
         }

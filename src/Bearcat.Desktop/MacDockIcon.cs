@@ -36,17 +36,21 @@ public static class MacDockIcon
         }
     }
 
-    [DllImport("/usr/lib/libobjc.A.dylib")]
-    private static extern IntPtr objc_getClass(string name);
+    [DllImport("/usr/lib/libobjc.A.dylib", BestFitMapping = false)]
+    private static extern IntPtr objc_getClass([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
-    [DllImport("/usr/lib/libobjc.A.dylib")]
-    private static extern IntPtr sel_registerName(string name);
+    [DllImport("/usr/lib/libobjc.A.dylib", BestFitMapping = false)]
+    private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
     [DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
     private static extern IntPtr objc_msgSend(IntPtr receiver, IntPtr selector);
 
-    [DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
-    private static extern IntPtr objc_msgSend(IntPtr receiver, IntPtr selector, string argument);
+    [DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend", BestFitMapping = false)]
+    private static extern IntPtr objc_msgSend(
+        IntPtr receiver,
+        IntPtr selector,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string argument
+    );
 
     [DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
     private static extern void objc_msgSend(IntPtr receiver, IntPtr selector, IntPtr argument);

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace Bearcat.Website.Shared;
@@ -43,8 +44,11 @@ public static class SearchUrlParameters
         List<(string Key, string? Value)> parameters =
         [
             .. filterParameters,
-            ("page", page > 1 ? page.ToString() : null),
-            ("size", pageSize == DefaultPageSize ? null : pageSize.ToString()),
+            ("page", page > 1 ? page.ToString(CultureInfo.InvariantCulture) : null),
+            (
+                "size",
+                pageSize == DefaultPageSize ? null : pageSize.ToString(CultureInfo.InvariantCulture)
+            ),
         ];
 
         var activeParameters = parameters

@@ -18,6 +18,11 @@ namespace Bearcat.Hosters.UnitTest.Alfafile;
 
 public class ApiClientTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly AlfafileConfig config = new()
     {
         Username = "user@example.test",
@@ -668,10 +673,7 @@ public class ApiClientTest
 
     private static T DeserializeResponse<T>(string json)
     {
-        return JsonSerializer.Deserialize<T>(
-            json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-        )!;
+        return JsonSerializer.Deserialize<T>(json, JsonSerializerOptions)!;
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(

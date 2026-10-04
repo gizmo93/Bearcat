@@ -54,7 +54,7 @@ public class SfvChecksumVerifierTest
         WriteFile("release.nfo", "");
 
         // Act
-        var sfvFilePaths = verifier.FindSfvFiles(localFolderPath);
+        var sfvFilePaths = SfvChecksumVerifier.FindSfvFiles(localFolderPath);
 
         // Assert
         sfvFilePaths.ShouldBe(

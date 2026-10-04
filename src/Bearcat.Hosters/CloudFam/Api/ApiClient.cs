@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -80,7 +81,7 @@ public class ApiClient(
         }
 
         return new CloudFamUploadResult(
-            FileId: finalized.FileId.ToString(),
+            FileId: finalized.FileId.ToString(CultureInfo.InvariantCulture),
             FileUrl: finalized.DownloadLink
         );
     }
@@ -99,7 +100,7 @@ public class ApiClient(
 
         if (existingFolderId is not null)
         {
-            return existingFolderId.Value.ToString();
+            return existingFolderId.Value.ToString(CultureInfo.InvariantCulture);
         }
 
         logger.LogInformation("Creating CloudFam folder {FolderName}", folderName);
@@ -113,7 +114,7 @@ public class ApiClient(
             "CloudFam folder creation"
         );
 
-        return created.FolderId.ToString();
+        return created.FolderId.ToString(CultureInfo.InvariantCulture);
     }
 
     public async Task MoveFileToFolderAsync(

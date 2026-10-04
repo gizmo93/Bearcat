@@ -74,7 +74,7 @@ public partial class CreateOrEditReleaseDialog(
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
         return releaseGroups.FirstOrDefault(group => group.ReleaseGroupId == releaseGroupId)?.Name
-            ?? releaseGroupId.ToString();
+            ?? releaseGroupId.ToString(CultureInfo.CurrentCulture);
     }
 
     private string GetReleaseTypeDisplayText(ReleaseType releaseType)

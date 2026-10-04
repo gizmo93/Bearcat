@@ -21,6 +21,12 @@ namespace Bearcat.Hosters.UnitTest.Rapidgator;
 
 public class ApiClientTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        PropertyNameCaseInsensitive = true,
+    };
+
     private Mock<IRapidgatorApi> apiMock = null!;
     private RapidgatorApiClient apiClient = null!;
 
@@ -760,14 +766,7 @@ public class ApiClientTest
             """;
 
         // Act
-        var response = JsonSerializer.Deserialize<LoginResponse>(
-            json,
-            new JsonSerializerOptions
-            {
-                NumberHandling = JsonNumberHandling.AllowReadingFromString,
-                PropertyNameCaseInsensitive = true,
-            }
-        )!;
+        var response = JsonSerializer.Deserialize<LoginResponse>(json, JsonSerializerOptions)!;
 
         // Assert
         response.Response!.Token.ShouldBe("token");

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -254,7 +255,7 @@ public partial class ReleaseInfoPanel(
             return "-";
         }
 
-        return $"{releaseInfo.SizeNumber?.ToString() ?? "-"} {releaseInfo.SizeUnit}".Trim();
+        return $"{releaseInfo.SizeNumber?.ToString(CultureInfo.CurrentCulture) ?? "-"} {releaseInfo.SizeUnit}".Trim();
     }
 
     private static string GetValueOrDash(string? value) =>

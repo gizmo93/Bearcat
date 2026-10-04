@@ -23,6 +23,12 @@ public class ApiClient(
 {
     private const int CheckLinkBatchSize = 25;
 
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromSeconds(400));
 
     public async Task<UploadFileResponse> RequestUploadFileAsync(
@@ -249,11 +255,7 @@ public class ApiClient(
 
         var response = JsonSerializer.Deserialize<UploadFileResponse>(
             content,
-            options: new JsonSerializerOptions
-            {
-                NumberHandling = JsonNumberHandling.AllowReadingFromString,
-                PropertyNameCaseInsensitive = true,
-            }
+            options: JsonSerializerOptions
         )!;
 
         if (!((HttpStatusCode)response.Status).IsSuccessStatusCode)

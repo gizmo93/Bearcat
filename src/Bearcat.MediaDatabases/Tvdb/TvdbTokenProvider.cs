@@ -9,7 +9,7 @@ namespace Bearcat.MediaDatabases.Tvdb;
 /// Caches bearer tokens per API key. TheTVDB tokens are valid for roughly a month, so we keep
 /// them in memory and only re-login when a token is missing or the API rejects it.
 /// </summary>
-public class TvdbTokenProvider(ITvdbApi api)
+public sealed class TvdbTokenProvider(ITvdbApi api) : IDisposable
 {
     private readonly ConcurrentDictionary<string, string> tokensByCacheKey = new();
     private readonly SemaphoreSlim loginGate = new(1, 1);
@@ -77,5 +77,10 @@ public class TvdbTokenProvider(ITvdbApi api)
     private static string GetCacheKey(TvdbConfig config)
     {
         return config.ApiKey;
+    }
+
+    public void Dispose()
+    {
+        loginGate.Dispose();
     }
 }

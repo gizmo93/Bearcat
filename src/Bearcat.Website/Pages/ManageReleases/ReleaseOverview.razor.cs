@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -231,7 +232,8 @@ public partial class ReleaseOverview(
 
     private string HumanizeTimestamp(DateTime value) => timeProvider.Humanize(value);
 
-    private static string FormatTimestamp(DateTime value) => value.ToString("g");
+    private static string FormatTimestamp(DateTime value) =>
+        value.ToString("g", CultureInfo.CurrentCulture);
 
     private static string JoinLines(IReadOnlyList<string> lines) =>
         string.Join(Environment.NewLine, lines);

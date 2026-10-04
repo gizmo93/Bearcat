@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -106,7 +107,7 @@ public class ApiClient(
 
         if (existingFolder is not null)
         {
-            return existingFolder.Id!.Value.ToString();
+            return existingFolder.Id!.Value.ToString(CultureInfo.InvariantCulture);
         }
 
         var createdFolder = await SendApiRequestAsync(() =>
@@ -119,7 +120,7 @@ public class ApiClient(
 
         EnsureOk(createdFolder.Status, createdFolder.Message, "1fichier folder creation failed");
 
-        return createdFolder.FolderId?.ToString()
+        return createdFolder.FolderId?.ToString(CultureInfo.InvariantCulture)
             ?? throw new HttpRequestException("1fichier folder creation returned no folder id");
     }
 

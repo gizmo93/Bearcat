@@ -636,6 +636,8 @@ public partial class ReleaseDetail(
 
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         if (stickyHeaderVisibilityTrackingHandle is null)
         {
             return;

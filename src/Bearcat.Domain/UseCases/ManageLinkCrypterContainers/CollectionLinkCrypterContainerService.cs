@@ -393,7 +393,7 @@ public class CollectionLinkCrypterContainerService(
             .Where(upload =>
                 upload.UploadState == UploadState.Completed
                 && upload.OnlineState == OnlineState.Online
-                && upload.UploadedFiles.Any()
+                && upload.UploadedFiles.Count > 0
             )
             .GroupBy(upload => upload.Id)
             .Select(group => group.First())

@@ -11,6 +11,11 @@ namespace Bearcat.Hosters.UnitTest.DDownload;
 
 public class ApiClientTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private Mock<IDDownloadApi> apiMock = null!;
     private ApiClient apiClient = null!;
 
@@ -45,7 +50,7 @@ public class ApiClientTest
         // Act
         var response = JsonSerializer.Deserialize<FolderCreateResponse>(
             json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            JsonSerializerOptions
         );
 
         // Assert
@@ -85,10 +90,7 @@ public class ApiClientTest
             """;
 
         // Act
-        var response = JsonSerializer.Deserialize<FileCheckResponse>(
-            json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-        );
+        var response = JsonSerializer.Deserialize<FileCheckResponse>(json, JsonSerializerOptions);
 
         // Assert
         response.ShouldNotBeNull();

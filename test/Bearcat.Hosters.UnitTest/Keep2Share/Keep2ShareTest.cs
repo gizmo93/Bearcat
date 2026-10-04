@@ -14,6 +14,11 @@ namespace Bearcat.Hosters.UnitTest.Keep2Share;
 
 public class Keep2ShareTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly List<string> temporaryFiles = [];
     private Mock<IKeep2ShareApiClient> apiClientMock = null!;
     private Hosters.Keep2Share.Keep2Share service = null!;
@@ -502,7 +507,7 @@ public class Keep2ShareTest
         // Act
         var result = JsonSerializer.Deserialize<UploadFormDataResponse>(
             rawJson,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            JsonSerializerOptions
         );
 
         // Assert

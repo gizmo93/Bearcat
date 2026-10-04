@@ -1,3 +1,4 @@
+using System.Globalization;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -26,6 +27,7 @@ public sealed class UninstallCommand : Command
         }
 
         AnsiConsole.MarkupLineInterpolated(
+            CultureInfo.InvariantCulture,
             $"Removed Windows service '{WindowsServiceController.ServiceName}'."
         );
 

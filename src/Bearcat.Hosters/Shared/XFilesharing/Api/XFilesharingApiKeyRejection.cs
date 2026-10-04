@@ -8,6 +8,11 @@ public static class XFilesharingApiKeyRejection
 {
     private const string InvalidKeyMessage = "Invalid key";
 
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     public static void ThrowIfRejected(int status, string? message)
     {
         if (
@@ -35,7 +40,7 @@ public static class XFilesharingApiKeyRejection
         {
             response = JsonSerializer.Deserialize<StatusResponse>(
                 responseContent,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                JsonSerializerOptions
             );
         }
         catch (JsonException)

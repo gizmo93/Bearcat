@@ -19,6 +19,12 @@ public abstract class XFilesharingApiClient<TApi>(
 ) : IXFilesharingApiClient
     where TApi : IXFilesharingApi
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        PropertyNameCaseInsensitive = true,
+    };
+
     protected TApi Api => api;
 
     public virtual async Task<Dictionary<string, XFilesharingFileStatus>> FilesExistAsync(
@@ -215,11 +221,7 @@ public abstract class XFilesharingApiClient<TApi>(
 
         var response = JsonSerializer.Deserialize<List<UploadFileResponse>>(
             content,
-            options: new JsonSerializerOptions
-            {
-                NumberHandling = JsonNumberHandling.AllowReadingFromString,
-                PropertyNameCaseInsensitive = true,
-            }
+            options: JsonSerializerOptions
         )!;
 
         return response.First();

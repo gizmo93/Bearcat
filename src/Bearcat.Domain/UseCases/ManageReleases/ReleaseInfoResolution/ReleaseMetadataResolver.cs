@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
@@ -85,12 +86,14 @@ public partial class ReleaseMetadataResolver(
                 ImdbId: imdbId,
                 SteamAppId: steamAppId,
                 Title: externalTitle ?? title,
-                Year: yearMatch.Success ? int.Parse(yearMatch.Value) : null,
+                Year: yearMatch.Success
+                    ? int.Parse(yearMatch.Value, CultureInfo.InvariantCulture)
+                    : null,
                 SeasonNumber: episodeMatch.Success
-                    ? int.Parse(episodeMatch.Groups["season"].Value)
+                    ? int.Parse(episodeMatch.Groups["season"].Value, CultureInfo.InvariantCulture)
                     : null,
                 EpisodeNumber: episodeMatch.Success
-                    ? int.Parse(episodeMatch.Groups["episode"].Value)
+                    ? int.Parse(episodeMatch.Groups["episode"].Value, CultureInfo.InvariantCulture)
                     : null,
                 LanguageCode: release.PrimaryLanguageCode
             ),

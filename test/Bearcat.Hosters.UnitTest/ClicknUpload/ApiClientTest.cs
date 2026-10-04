@@ -6,6 +6,11 @@ namespace Bearcat.Hosters.UnitTest.ClicknUpload;
 
 public class ApiClientTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     [Test]
     public void RequestUploadResponse_UploadUrlField_MapsUploadUrl()
     {
@@ -49,10 +54,7 @@ public class ApiClientTest
             """;
 
         // Act
-        var response = JsonSerializer.Deserialize<FileInfoResponse>(
-            json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-        );
+        var response = JsonSerializer.Deserialize<FileInfoResponse>(json, JsonSerializerOptions);
 
         // Assert
         response.ShouldNotBeNull();
@@ -80,10 +82,7 @@ public class ApiClientTest
             """;
 
         // Act
-        var response = JsonSerializer.Deserialize<FileInfoResponse>(
-            json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-        );
+        var response = JsonSerializer.Deserialize<FileInfoResponse>(json, JsonSerializerOptions);
 
         // Assert
         response.ShouldNotBeNull();

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Archivers.Shared;
 using Microsoft.Extensions.Configuration;
@@ -180,7 +181,10 @@ public partial class RarArchiver(
                     new NewNamingVolumeFile(
                         FilePath: filePath,
                         BaseName: match.Groups["baseName"].Value,
-                        PartNumber: int.Parse(match.Groups["partNumber"].Value)
+                        PartNumber: int.Parse(
+                            match.Groups["partNumber"].Value,
+                            CultureInfo.InvariantCulture
+                        )
                     )
                 );
             }

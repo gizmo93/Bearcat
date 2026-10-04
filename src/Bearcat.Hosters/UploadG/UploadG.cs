@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
@@ -71,7 +72,7 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
                     FileDto: fileDto,
                     ErrorMessages: [],
                     FileUrl: fileUrl,
-                    ExternalId: uploadResponse.FileEntry.Id.ToString()
+                    ExternalId: uploadResponse.FileEntry.Id.ToString(CultureInfo.InvariantCulture)
                 );
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

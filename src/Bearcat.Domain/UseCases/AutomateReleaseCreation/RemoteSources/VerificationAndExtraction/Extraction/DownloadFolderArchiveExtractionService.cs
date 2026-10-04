@@ -141,7 +141,7 @@ public class DownloadFolderArchiveExtractionService(
         if (requiredBytes > availableBytes)
         {
             throw new IOException(
-                $"Extracting the archives needs up to {requiredBytes.Bytes().Humanize()} of free disk space, but only {availableBytes.Bytes().Humanize()} are available for {localFolderPath}"
+                $"Extracting the archives needs up to {requiredBytes.Bytes().Humanize(CultureInfo.InvariantCulture)} of free disk space, but only {availableBytes.Bytes().Humanize(CultureInfo.InvariantCulture)} are available for {localFolderPath}"
             );
         }
     }

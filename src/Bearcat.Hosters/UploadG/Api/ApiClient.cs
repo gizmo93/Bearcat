@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Dto;
@@ -194,7 +195,7 @@ public class ApiClient(
 
         if (existingFolderId is not null)
         {
-            return existingFolderId.Value.ToString();
+            return existingFolderId.Value.ToString(CultureInfo.InvariantCulture);
         }
 
         logger.LogInformation("Creating UploadG folder {FolderName}", folderName);
@@ -214,7 +215,7 @@ public class ApiClient(
             throw new HttpRequestException("UploadG folder creation failed");
         }
 
-        return response.Folder.Id.ToString();
+        return response.Folder.Id.ToString(CultureInfo.InvariantCulture);
     }
 
     public async Task MoveFileToFolderAsync(

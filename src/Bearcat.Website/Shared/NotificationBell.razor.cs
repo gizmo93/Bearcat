@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
@@ -22,7 +23,8 @@ public partial class NotificationBell(
     private bool openedByTriggerClick;
     private Task? pollingTask;
 
-    private string BadgeText => unresolvedCount > 99 ? "99+" : unresolvedCount.ToString();
+    private string BadgeText =>
+        unresolvedCount > 99 ? "99+" : unresolvedCount.ToString(CultureInfo.CurrentCulture);
 
     protected override async Task OnInitializedAsync()
     {
@@ -146,6 +148,8 @@ public partial class NotificationBell(
 
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         navigationManager.LocationChanged -= HandleLocationChanged;
         await pollingCancellation.CancelAsync();
         pollingCancellation.Dispose();

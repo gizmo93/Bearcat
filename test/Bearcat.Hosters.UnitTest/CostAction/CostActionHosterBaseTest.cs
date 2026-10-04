@@ -17,6 +17,8 @@ public class CostActionHosterBaseTest
 {
     private const string ApiKey = "costaction-api-key";
 
+    private static readonly string[] ExpectedFileIdsOnline1AndOffline2 = ["online1", "offline2"];
+
     private Mock<ICostActionApiClient> apiClientMock = null!;
     private Hosters.Turbobit.Turbobit turbobit = null!;
     private Hosters.Hitfile.Hitfile hitfile = null!;
@@ -151,7 +153,7 @@ public class CostActionHosterBaseTest
                     ApiKey,
                     "fd1",
                     It.Is<IReadOnlyList<string>>(ids =>
-                        ids.SequenceEqual(new[] { "online1", "offline2" })
+                        ids.SequenceEqual(ExpectedFileIdsOnline1AndOffline2)
                     ),
                     It.IsAny<CancellationToken>()
                 )

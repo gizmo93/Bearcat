@@ -17,6 +17,11 @@ namespace Bearcat.Hosters.UnitTest.Alfafile;
 
 public class AlfafileTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly List<string> temporaryFiles = [];
     private Mock<IAlfafileApiClient> apiClientMock = null!;
     private Hosters.Alfafile.Alfafile service = null!;
@@ -594,7 +599,7 @@ public class AlfafileTest
                 "details": null
             }
             """,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            JsonSerializerOptions
         )!;
     }
 }

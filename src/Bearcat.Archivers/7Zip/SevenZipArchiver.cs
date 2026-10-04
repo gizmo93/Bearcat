@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Archivers.Shared;
 using Microsoft.Extensions.Configuration;
@@ -87,7 +88,10 @@ public partial class SevenZipArchiver(
                     new MultiVolumeFile(
                         FilePath: filePath,
                         BaseName: volumeMatch.Groups["baseName"].Value,
-                        VolumeNumber: int.Parse(volumeMatch.Groups["volumeNumber"].Value)
+                        VolumeNumber: int.Parse(
+                            volumeMatch.Groups["volumeNumber"].Value,
+                            CultureInfo.InvariantCulture
+                        )
                     )
                 );
             }
