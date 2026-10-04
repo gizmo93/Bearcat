@@ -1,0 +1,111 @@
+<div class="bearcat-forum-template-editor-toolbar">
+    <div class="bearcat-forum-template-editor-mobile-only">
+        <BbSheet Side="SheetSide.Left" Open="TemplateSheetOpen" OpenChanged="TemplateSheetOpenChanged">
+            <BbSheetTrigger>
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.IconSmall"
+                          AriaLabel="@L["ShowForumPostTemplates"]">
+                    <LucideIcon Name="panel-left" class="h-4 w-4" />
+                </BbButton>
+            </BbSheetTrigger>
+            <BbSheetContent Class="bearcat-forum-template-editor-sheet">
+                <BbSheetHeader>
+                    <BbSheetTitle>@L["ForumPostTemplates"]</BbSheetTitle>
+                </BbSheetHeader>
+                <div class="bearcat-forum-template-editor-sheet-list">
+                    @TemplateList
+                </div>
+            </BbSheetContent>
+        </BbSheet>
+    </div>
+
+    <LucideIcon Name="file-code" class="h-4 w-4 shrink-0 text-muted-foreground" />
+    <input class="bearcat-forum-template-editor-name-input"
+           value="@Name"
+           placeholder="@L["ForumPostTemplateNamePlaceholder"]"
+           aria-label="@L["Name"]"
+           @oninput="ChangeNameAsync" />
+
+    @if (IsDirty)
+    {
+        <span class="bearcat-forum-template-editor-dirty-dot"
+              role="status"
+              title="@L["UnsavedChanges"]"
+              aria-label="@L["UnsavedChanges"]"></span>
+    }
+
+    @if (IsNewTemplate)
+    {
+        <BbSelect TValue="ForumPostTemplateType"
+                  Value="Type"
+                  ValueChanged="TypeChanged"
+                  Options="TypeOptions"
+                  AriaLabel="@L["ForumPostTemplateType"]"
+                  Class="bearcat-forum-template-editor-toolbar-select bearcat-forum-template-editor-type-select" />
+    }
+    else
+    {
+        <BbBadge Variant="BadgeVariant.Secondary" Class="bearcat-forum-template-editor-small-badge">
+            @ForumPostTemplateTypeLabels.Get(L, Type)
+        </BbBadge>
+    }
+
+    <BbSelect TValue="ForumPostTemplateOutputFormat"
+              Value="OutputFormat"
+              ValueChanged="OutputFormatChanged"
+              Options="OutputFormatOptions"
+              AriaLabel="@L["ForumPostTemplateOutputFormat"]"
+              Class="bearcat-forum-template-editor-toolbar-select bearcat-forum-template-editor-output-format-select" />
+
+    <div class="bearcat-forum-template-editor-preview-entity">
+        <span class="bearcat-forum-template-editor-preview-entity-label">@L["PreviewWith"]</span>
+        <BbCombobox TValue="int?"
+                    Options="PreviewEntityOptions"
+                    Value="PreviewEntityId"
+                    ValueChanged="SelectPreviewEntityAsync"
+                    SearchQuery="@PreviewEntitySearchTerm"
+                    SearchQueryChanged="PreviewEntitySearchTermChanged"
+                    Placeholder="@NoPreviewEntitiesText"
+                    SearchPlaceholder="@SearchPreviewEntitiesText"
+                    EmptyMessage="@NoPreviewEntitiesText"
+                    Disabled="@(PreviewEntityId is null)"
+                    PopoverWidth="bearcat-forum-template-editor-preview-entity-popover"
+                    AriaLabel="@L["PreviewWith"]"
+                    Class="bearcat-forum-template-editor-preview-entity-select" />
+    </div>
+
+    <div class="bearcat-forum-template-editor-toolbar-spacer"></div>
+
+    @if (!IsNewTemplate)
+    {
+        <BbDropdownMenu>
+            <BbDropdownMenuTrigger>
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.IconSmall"
+                          AriaLabel="@L["Actions"]">
+                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                </BbButton>
+            </BbDropdownMenuTrigger>
+            <BbDropdownMenuContent Align="PopoverAlign.End">
+                <BbDropdownMenuItem OnClick="OnDuplicate">
+                    <Icon>
+                        <LucideIcon Name="copy" class="h-4 w-4" />
+                    </Icon>
+                    <ChildContent>@L["Duplicate"]</ChildContent>
+                </BbDropdownMenuItem>
+                <BbDropdownMenuSeparator />
+                <BbDropdownMenuItem OnClick="OnDelete" Class="bearcat-forum-template-editor-destructive-menu-item">
+                    <Icon>
+                        <LucideIcon Name="trash-2" class="h-4 w-4" />
+                    </Icon>
+                    <ChildContent>@L["Delete"]</ChildContent>
+                </BbDropdownMenuItem>
+            </BbDropdownMenuContent>
+        </BbDropdownMenu>
+    }
+
+    <BbButton Size="ButtonSize.Small" Disabled="@(!IsDirty || IsSaving)" OnClick="OnSave">
+        <LucideIcon Name="save" class="h-4 w-4" />
+        @L["Save"]
+    </BbButton>
+</div>

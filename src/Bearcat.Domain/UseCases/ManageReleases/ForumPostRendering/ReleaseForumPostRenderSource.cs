@@ -15,13 +15,13 @@ public class ReleaseForumPostRenderSource(
 {
     public ForumPostTemplateType Type => ForumPostTemplateType.Release;
 
-    public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
+    public IReadOnlyList<ForumPostTemplateVariableNode> GetVariables()
     {
-        var variables = ForumPostTemplateVariableCatalog
-            .GetVariables(typeof(ForumPostTemplateRenderModel))
-            .ToList();
-        variables.AddRange(ForumPostImageLinkBuilder.Variables);
-        return variables;
+        return
+        [
+            .. ForumPostTemplateVariableCatalog.GetVariables(typeof(ForumPostTemplateRenderModel)),
+            ForumPostImageLinkBuilder.VariableNode,
+        ];
     }
 
     public async Task<ScriptObject?> BuildGlobalsAsync(

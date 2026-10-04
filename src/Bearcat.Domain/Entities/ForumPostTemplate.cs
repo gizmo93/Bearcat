@@ -10,6 +10,9 @@ public class ForumPostTemplate
 
     public ForumPostTemplateType Type { get; set; } = ForumPostTemplateType.Release;
 
+    public ForumPostTemplateOutputFormat OutputFormat { get; set; } =
+        ForumPostTemplateOutputFormat.BBCode;
+
     public string TemplateBody { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }

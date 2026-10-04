@@ -1,0 +1,42 @@
+@using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering.Preview
+
+@if (DataNodes.Count == 0)
+{
+    <div class="bearcat-release-empty">
+        <LucideIcon Name="database" class="h-5 w-5" />
+        <span>@L["NoPreviewDataAvailable"]</span>
+    </div>
+}
+else
+{
+    <BbTreeView TItem="object"
+                ShowIcons="false"
+                AriaLabel="@L["PreviewData"]"
+                Class="bearcat-forum-template-editor-data-tree">
+        @foreach (var node in DataNodes)
+        {
+            @RenderNode(node, node.Name)
+        }
+    </BbTreeView>
+}
+
+@code {
+    private RenderFragment RenderNode(ForumPostTemplateDataNode node, string path) =>
+        @<BbTreeItem @key="path" Value="@path" IsLeaf="@(node.Children.Count == 0)">
+            <LabelTemplate>
+                <span class="bearcat-forum-template-editor-data-node">
+                    <span class="bearcat-forum-template-editor-data-node-name">@node.Name</span>
+                    @if (node.Value is not null)
+                    {
+                        <span class="bearcat-forum-template-editor-data-node-value" title="@node.Value">@node.Value</span>
+                    }
+                </span>
+            </LabelTemplate>
+            <ChildContent>
+                @foreach (var child in node.Children)
+                {
+                    @RenderNode(child, $"{path}/{child.Name}")
+                }
+            </ChildContent>
+        </BbTreeItem>;
+}

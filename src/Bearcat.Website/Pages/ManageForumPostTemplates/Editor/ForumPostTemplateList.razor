@@ -1,0 +1,88 @@
+<div class="bearcat-forum-template-editor-list-header">
+    <BbInput Type="InputType.Search"
+             Value="@SearchTerm"
+             ValueChanged="SearchTermChanged"
+             UpdateTiming="UpdateTiming.Immediate"
+             Placeholder="@L["SearchForumPostTemplates"]"
+             AriaLabel="@L["SearchForumPostTemplates"]"
+             Class="bearcat-forum-template-editor-compact-input" />
+    <BbButton Variant="ButtonVariant.Ghost"
+              Size="ButtonSize.IconSmall"
+              AriaLabel="@L["NewForumPostTemplate"]"
+              OnClick="OnNewTemplateRequested">
+        <LucideIcon Name="plus" class="h-4 w-4" />
+    </BbButton>
+</div>
+
+<div class="bearcat-forum-template-editor-scroll">
+    @if (IsLoading && Templates.Count == 0)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+            <span>@L["Loading"]</span>
+        </div>
+    }
+    else
+    {
+        var anyTemplateVisible = false;
+        foreach (var type in Enum.GetValues<ForumPostTemplateType>())
+        {
+            var visibleTemplates = GetVisibleTemplates(type);
+            var showUnsavedTemplate = UnsavedTemplateType == type;
+            if (visibleTemplates.Count == 0 && !showUnsavedTemplate)
+            {
+                continue;
+            }
+
+            anyTemplateVisible = true;
+            <div class="bearcat-forum-template-editor-group">
+                <p class="bearcat-forum-template-editor-group-label">@ForumPostTemplateTypeLabels.Get(L, type)</p>
+
+                @if (showUnsavedTemplate)
+                {
+                    <button type="button" class="@GetTemplateListItemClass(selected: true)">
+                        <span class="bearcat-forum-template-editor-list-item-name bearcat-forum-template-editor-list-item-unsaved">@UnsavedTemplateDisplayName</span>
+                        @if (IsDirty)
+                        {
+                            <span class="bearcat-forum-template-editor-dirty-dot" aria-label="@L["UnsavedChanges"]"></span>
+                        }
+                    </button>
+                }
+
+                @foreach (var template in visibleTemplates)
+                {
+                    var selected = template.ForumPostTemplateId == SelectedTemplateId;
+                    <button type="button"
+                            class="@GetTemplateListItemClass(selected)"
+                            @onclick="@(() => OnTemplateSelected.InvokeAsync(template.ForumPostTemplateId))">
+                        <span class="bearcat-forum-template-editor-list-item-name">@template.Name</span>
+                        <span class="bearcat-forum-template-editor-list-item-meta">
+                            @if (template.ForumPostingRuleCount > 0)
+                            {
+                                <span>@GetRuleCountText(template.ForumPostingRuleCount)</span>
+                            }
+                            @if (template.OutputFormat == ForumPostTemplateOutputFormat.PlainText)
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline" Class="bearcat-forum-template-editor-small-badge">
+                                    @L["ForumPostTemplateOutputFormatPlainText"]
+                                </BbBadge>
+                            }
+                            @if (selected && IsDirty)
+                            {
+                                <span class="bearcat-forum-template-editor-dirty-dot" aria-label="@L["UnsavedChanges"]"></span>
+                            }
+                        </span>
+                    </button>
+                }
+            </div>
+        }
+
+        if (!anyTemplateVisible)
+        {
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoForumPostTemplatesFound"]</span>
+            </div>
+        }
+    }
+</div>

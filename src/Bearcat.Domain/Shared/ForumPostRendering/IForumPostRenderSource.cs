@@ -11,7 +11,7 @@ public interface IForumPostRenderSource
 {
     ForumPostTemplateType Type { get; }
 
-    IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables();
+    IReadOnlyList<ForumPostTemplateVariableNode> GetVariables();
 
     Task<ScriptObject?> BuildGlobalsAsync(
         int entityId,

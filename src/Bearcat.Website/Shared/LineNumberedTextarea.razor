@@ -28,6 +28,15 @@
     [Parameter]
     public int? VisibleLineCount { get; set; }
 
+    [Parameter]
+    public string? CursorPositionTargetId { get; set; }
+
+    [Parameter]
+    public string? CursorPositionFormat { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<int>? ErrorLineNumbers { get; set; }
+
     private string? HeightStyle =>
         VisibleLineCount is { } lineCount
             ? $"height: calc({lineCount} * 1.25rem + 1rem + 2px);"
@@ -38,6 +47,29 @@
     private ElementReference mirrorRef;
     private bool attached;
     private string? lastValue;
+    private IReadOnlyList<int> lastErrorLineNumbers = [];
+
+    private IReadOnlyList<int> CurrentErrorLineNumbers => ErrorLineNumbers ?? [];
+
+    public async Task FocusPositionAsync(int line, int column)
+    {
+        await JS.InvokeVoidAsync(
+            "bearcat.lineNumberedTextarea.focusPosition",
+            textareaRef,
+            line,
+            column
+        );
+    }
+
+    public async Task InsertTextAsync(string text, int cursorOffset)
+    {
+        await JS.InvokeVoidAsync(
+            "bearcat.lineNumberedTextarea.insertText",
+            textareaRef,
+            text,
+            cursorOffset
+        );
+    }
 
     private async Task SetValueAsync(string? value)
     {
@@ -54,10 +86,14 @@
                 "bearcat.lineNumberedTextarea.attach",
                 textareaRef,
                 gutterRef,
-                mirrorRef
+                mirrorRef,
+                CursorPositionTargetId,
+                CursorPositionFormat,
+                CurrentErrorLineNumbers
             );
             attached = true;
             lastValue = Value;
+            lastErrorLineNumbers = CurrentErrorLineNumbers;
             return;
         }
 
@@ -65,6 +101,16 @@
         {
             lastValue = Value;
             await JS.InvokeVoidAsync("bearcat.lineNumberedTextarea.refresh", textareaRef);
+        }
+
+        if (attached && !lastErrorLineNumbers.SequenceEqual(CurrentErrorLineNumbers))
+        {
+            lastErrorLineNumbers = CurrentErrorLineNumbers;
+            await JS.InvokeVoidAsync(
+                "bearcat.lineNumberedTextarea.setErrorLines",
+                textareaRef,
+                CurrentErrorLineNumbers
+            );
         }
     }
 }

@@ -7,6 +7,7 @@ public interface IForumPostTemplateReadRepository
 {
     Task<IReadOnlyList<ForumPostTemplateSummaryReadModel>> GetAllAsync(
         ForumPostTemplateType? type = null,
+        ForumPostTemplateOutputFormat? outputFormat = null,
         CancellationToken cancellationToken = default
     );
 

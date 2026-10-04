@@ -29,6 +29,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         var id = await service.CreateAsync(
             "  Release template  ",
             ForumPostTemplateType.Release,
+            ForumPostTemplateOutputFormat.PlainText,
             "Body {{ release.name }}",
             CancellationToken.None
         );
@@ -38,6 +39,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         id.ShouldBe(template.Id);
         template.Name.ShouldBe("Release template");
         template.Type.ShouldBe(ForumPostTemplateType.Release);
+        template.OutputFormat.ShouldBe(ForumPostTemplateOutputFormat.PlainText);
         template.TemplateBody.ShouldBe("Body {{ release.name }}");
         template.CreatedAt.ShouldBe(template.UpdatedAt);
     }
@@ -49,6 +51,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         var id = await service.CreateAsync(
             "Empty",
             ForumPostTemplateType.ReleaseCollection,
+            ForumPostTemplateOutputFormat.BBCode,
             templateBody: null,
             CancellationToken.None
         );
@@ -59,12 +62,13 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_TemplateExists_UpdatesAllFields()
+    public async Task UpdateAsync_TemplateExists_UpdatesNameOutputFormatAndBodyAndKeepsType()
     {
         // Arrange
         var id = await service.CreateAsync(
             "Original",
             ForumPostTemplateType.Release,
+            ForumPostTemplateOutputFormat.BBCode,
             "Original body",
             CancellationToken.None
         );
@@ -73,7 +77,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         await service.UpdateAsync(
             id,
             "  Updated  ",
-            ForumPostTemplateType.ReleaseCollection,
+            ForumPostTemplateOutputFormat.PlainText,
             "Updated body",
             CancellationToken.None
         );
@@ -81,7 +85,8 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
         template.Name.ShouldBe("Updated");
-        template.Type.ShouldBe(ForumPostTemplateType.ReleaseCollection);
+        template.Type.ShouldBe(ForumPostTemplateType.Release);
+        template.OutputFormat.ShouldBe(ForumPostTemplateOutputFormat.PlainText);
         template.TemplateBody.ShouldBe("Updated body");
     }
 
@@ -92,6 +97,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         var id = await service.CreateAsync(
             "Original",
             ForumPostTemplateType.Release,
+            ForumPostTemplateOutputFormat.BBCode,
             "Original body",
             CancellationToken.None
         );
@@ -100,7 +106,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         await service.UpdateAsync(
             id,
             "Original",
-            ForumPostTemplateType.Release,
+            ForumPostTemplateOutputFormat.BBCode,
             templateBody: null,
             CancellationToken.None
         );
@@ -108,6 +114,46 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
         template.TemplateBody.ShouldBe(string.Empty);
+    }
+
+    [Test]
+    public async Task DuplicateAsync_TemplateExists_CopiesTypeOutputFormatAndBodyWithTrimmedName()
+    {
+        // Arrange
+        var sourceTemplate = new ForumPostTemplate
+        {
+            Name = "Original",
+            Type = ForumPostTemplateType.ReleaseCollection,
+            OutputFormat = ForumPostTemplateOutputFormat.PlainText,
+            TemplateBody = "Body {{ series.title }}",
+            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            UpdatedAt = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc),
+        };
+        DbContext.ForumPostTemplates.Add(sourceTemplate);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var id = await service.DuplicateAsync(
+            sourceTemplate.Id,
+            "  Original (copy)  ",
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        id.ShouldNotBe(sourceTemplate.Id);
+        var duplicatedTemplate = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
+        duplicatedTemplate.Name.ShouldBe("Original (copy)");
+        duplicatedTemplate.Type.ShouldBe(ForumPostTemplateType.ReleaseCollection);
+        duplicatedTemplate.OutputFormat.ShouldBe(ForumPostTemplateOutputFormat.PlainText);
+        duplicatedTemplate.TemplateBody.ShouldBe("Body {{ series.title }}");
+        duplicatedTemplate.CreatedAt.ShouldBe(duplicatedTemplate.UpdatedAt);
+        duplicatedTemplate.CreatedAt.ShouldBeGreaterThan(sourceTemplate.UpdatedAt);
+        var unchangedSourceTemplate = await DbContext.ForumPostTemplates.SingleAsync(t =>
+            t.Id == sourceTemplate.Id
+        );
+        unchangedSourceTemplate.Name.ShouldBe("Original");
     }
 
     [Test]
@@ -197,39 +243,6 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
         (await DbContext.ForumPostTemplates.SingleAsync()).Id.ShouldBe(template.Id);
         (await DbContext.ForumPostingRules.SingleAsync()).ForumPostTemplateId.ShouldBe(template.Id);
-    }
-
-    [Test]
-    public void Validate_ValidTemplateBody_ReturnsValidResult()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate("Hello {{ release.name }}");
-
-        // Assert
-        result.IsValid.ShouldBeTrue();
-        result.Errors.ShouldBeEmpty();
-    }
-
-    [Test]
-    public void Validate_InvalidTemplateBody_ReturnsErrors()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate("{{ for x in }}");
-
-        // Assert
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldNotBeEmpty();
-    }
-
-    [Test]
-    public void Validate_NullTemplateBody_ReturnsValidResult()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate(null);
-
-        // Assert
-        result.IsValid.ShouldBeTrue();
-        result.Errors.ShouldBeEmpty();
     }
 
     private static ForumPostTemplate CreateTemplate(string name)

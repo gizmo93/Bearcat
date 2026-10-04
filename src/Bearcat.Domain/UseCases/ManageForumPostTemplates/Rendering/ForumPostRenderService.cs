@@ -1,5 +1,7 @@
 using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering.Preview;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Scriban;
@@ -13,9 +15,7 @@ public class ForumPostRenderService(
     IEnumerable<IForumPostRenderSource> renderSources
 ) : IForumPostContentRenderer
 {
-    public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables(
-        ForumPostTemplateType type
-    )
+    public IReadOnlyList<ForumPostTemplateVariableNode> GetVariables(ForumPostTemplateType type)
     {
         return GetSource(type)?.GetVariables() ?? [];
     }
@@ -52,7 +52,40 @@ public class ForumPostRenderService(
         var globals =
             await source.BuildGlobalsAsync(entityId, cancellationToken) ?? new ScriptObject();
 
-        return await RenderBodyAsync(template.TemplateBody, globals);
+        var result = await RenderTemplateBodyAsync(template.TemplateBody, [globals]);
+
+        return new ForumPostTemplateRenderResult(
+            Content: result.Content,
+            Errors: result.Errors.Select(FormatError).ToList()
+        );
+    }
+
+    public async Task<ForumPostTemplatePreviewData?> LoadPreviewDataAsync(
+        ForumPostTemplateType type,
+        int entityId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var source = renderSources.Single(renderSource => renderSource.Type == type);
+        var globals = await source.BuildGlobalsAsync(entityId, cancellationToken);
+
+        return globals is null
+            ? null
+            : new ForumPostTemplatePreviewData(
+                globals: globals,
+                dataNodes: ForumPostTemplateDataNodeBuilder.Build(globals)
+            );
+    }
+
+    public static Task<ForumPostTemplatePreviewResult> RenderPreviewAsync(
+        ForumPostTemplatePreviewData previewData,
+        string templateBody
+    )
+    {
+        return RenderTemplateBodyAsync(
+            templateBody: templateBody,
+            globalsInPushOrder: [previewData.Globals.Clone(deep: true), new ScriptObject()]
+        );
     }
 
     private IForumPostRenderSource? GetSource(ForumPostTemplateType type)
@@ -60,18 +93,25 @@ public class ForumPostRenderService(
         return renderSources.FirstOrDefault(source => source.Type == type);
     }
 
-    private static async Task<ForumPostTemplateRenderResult> RenderBodyAsync(
+    private static string FormatError(ForumPostTemplateError error)
+    {
+        return error.Line is null
+            ? error.Message
+            : $"Line {error.Line}, column {error.Column}: {error.Message}";
+    }
+
+    private static async Task<ForumPostTemplatePreviewResult> RenderTemplateBodyAsync(
         string templateBody,
-        ScriptObject globals
+        IReadOnlyList<IScriptObject> globalsInPushOrder
     )
     {
         var template = Template.Parse(templateBody);
 
         if (template.HasErrors)
         {
-            return new ForumPostTemplateRenderResult(
+            return new ForumPostTemplatePreviewResult(
                 Content: string.Empty,
-                Errors: template.Messages.Select(message => message.ToString()).ToList()
+                Errors: ForumPostTemplateErrorMapper.FromParserMessages(template.Messages)
             );
         }
 
@@ -84,19 +124,28 @@ public class ForumPostRenderService(
             MemberFilter = ForumPostTemplateVariableCatalog.ShouldExposeMember,
         };
 
-        context.PushGlobal(globals);
+        foreach (var globals in globalsInPushOrder)
+        {
+            context.PushGlobal(globals);
+        }
 
         try
         {
             var result = await template.RenderAsync(context);
-            return new ForumPostTemplateRenderResult(Content: result, Errors: []);
+            return new ForumPostTemplatePreviewResult(Content: result, Errors: []);
         }
-        catch (Exception exception)
-            when (exception is ScriptRuntimeException or InvalidOperationException)
+        catch (ScriptRuntimeException exception)
         {
-            return new ForumPostTemplateRenderResult(
+            return new ForumPostTemplatePreviewResult(
                 Content: string.Empty,
-                Errors: [exception.Message]
+                Errors: [ForumPostTemplateErrorMapper.FromRuntimeException(exception)]
+            );
+        }
+        catch (InvalidOperationException exception)
+        {
+            return new ForumPostTemplatePreviewResult(
+                Content: string.Empty,
+                Errors: [new ForumPostTemplateError(exception.Message, Line: null, Column: null)]
             );
         }
     }

@@ -472,6 +472,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("OutputFormat")
+                        .HasColumnType("integer");
+
                     b.Property<string>("TemplateBody")
                         .IsRequired()
                         .HasColumnType("text");

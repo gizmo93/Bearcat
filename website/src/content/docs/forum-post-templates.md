@@ -1,73 +1,41 @@
 ---
-title: "Create BBCode Forum Post Templates"
-description: "Use BBCode and Scriban placeholders to prepare forum posts from release data."
+title: "Forum Post Templates"
+description: "Write a forum post once and let Bearcat fill in release data, links and images."
 ---
 
-Forum post templates combine BBCode with placeholders for release data, download links and images.
-Write a template once, then use it to copy posts by hand or submit them through
-[posting rules](/Bearcat/automatic-forum-posting/).
+A forum post template is a forum post with placeholders. Bearcat fills them with data from a
+release or release collection, for example the name, the NFO, download links and the cover image.
 
-![forum-post-templates-page.png](images/forum-post-templates-page.png)
+You can copy the result by hand or let [posting rules](/Bearcat/automatic-forum-posting/) post it for you.
 
-## Creating a template
+![Forum post templates](images/forum-post-templates-page.png)
 
-Open "Forum post templates" in the sidebar.
+## Create a template
 
-Click "New forum post template", enter a name and write the template body.
-The template body can contain plain text, BBCode and Scriban placeholders.
+1. Open **Forum post templates** and click **+** next to the search field.
+2. Choose the type: **Release** or **Release collection**. You can't change it later.
+3. Choose the output format. Use **BBCode** for forum posts. Only BBCode templates can be posted to forums.
+4. Enter a name, write the template and press **Ctrl+S** (**⌘S** on a Mac) to save.
 
-Start with a release name, size and some link crypter links:
+## Use the editor
 
-```text
-[CENTER]
-[B]{{ release.name }}[/B]
-Size: {{ release_info.size }}
+The editor has three parts: your templates and variables on the left, the template in the middle
+and a live preview on the right.
 
-[SPOILER="NFO"]
-{{ release.nfo }}
-[/SPOILER]
+- **Insert variables:** click a variable under **Available variables** to insert it at the cursor.
+  Lists like `uploads` insert a complete loop. Use the search field to find a variable.
+![forum-post-templates-variables-box.png](images/forum-post-templates-variables-box.png)
 
-{{ for upload in uploads }}
-[B]{{ upload.name }}[/B]
-{{ for crypter in upload.link_crypters }}
-[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
-{{ end }}
+- **Preview:** choose a release under **Preview with**. The preview updates while you type.
+  **Output** shows the finished post, **Data** shows all values of that release.
+- **Errors:** the status bar shows syntax errors. Click them to jump to the line.
 
-{{ end }}
-[/CENTER]
-```
+If a placeholder stays empty in the preview, check the **Data** tab. It shows what the release
+actually has.
 
-If you upload cover images to an image hoster, you can also place the cover directly in the post.
-For example, if your image upload configuration is named `ImgBB Cover`:
+## Template syntax
 
-```text
-[IMG]{{ imagelinks.imgbb_cover.full }}[/IMG]
-```
-
-Click **Validate** to check the Scriban syntax. This does not check whether the release has
-values for every variable.
-
-## Rendering a forum post
-
-Open a release and go to the "Overview" tab.
-Click "Render forum post".
-
-Bearcat opens a dialog where you can select one of your forum post templates.
-It renders the template with the selected release and shows the final text.
-Click "Copy forum post" and paste the result into your forum editor.
-
-![render-template.png](images/render-template.png)
-
-Templates are also used without the dialog: a
-[posting rule](/Bearcat/automatic-forum-posting/) picks one template per subforum and renders it
-when Bearcat posts a release to a forum for you.
-
-Missing values render as empty text. For example, `{{ release.nfo }}` stays empty if the
-release folder has no `.nfo` file.
-
-## Scriban basics
-
-Bearcat uses Scriban syntax for placeholders.
+Templates use [Scriban](https://scriban.github.io/docs/language/). You need three things for most posts.
 
 Print a value:
 
@@ -75,234 +43,63 @@ Print a value:
 {{ release.name }}
 ```
 
-Loop over a list:
+Repeat something for each entry of a list:
 
 ```text
-{{ for upload in uploads }}
+{{~ for upload in uploads ~}}
 [B]{{ upload.name }}[/B]
-{{ end }}
+{{~ end ~}}
 ```
 
-Only render a block when a value exists:
+The `~` removes the line of the `for` and `end` tags from the output. Without it, every loop
+adds empty lines to your post. Use plain `{{ }}` for values inside a line.
+
+Only show something if a value exists:
 
 ```text
-{{ if release.nfo }}
-[SPOILER="NFO"]
-{{ release.nfo }}
-[/SPOILER]
-{{ end }}
+{{~ if release.nfo ~}}
+[SPOILER="NFO"]{{ release.nfo }}[/SPOILER]
+{{~ end ~}}
 ```
 
-For a post with an NFO and link crypter links:
+A complete example with NFO and link crypter links:
 
 ```text
 [CENTER]
 [B]{{ release.name }}[/B]
-Size: {{ release_info.size }}
 
-[SPOILER="NFO"]
-{{ release.nfo }}
-[/SPOILER]
+[SPOILER="NFO"]{{ release.nfo }}[/SPOILER]
 
-{{ for upload in uploads }}
+{{~ for upload in uploads ~}}
 [B]{{ upload.name }}[/B]
-{{ for crypter in upload.link_crypters }}
+{{~ for crypter in upload.link_crypters ~}}
 [URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
-{{ end }}
-
-{{ end }}
+{{~ end ~}}
+{{~ end ~}}
 [/CENTER]
 ```
 
-See the [Scriban documentation](https://scriban.github.io/docs/language/) for more syntax and examples.
+Collection templates work the same way. They loop over the collection's releases with
+`{{~ for release in releases ~}}`.
 
-## Available variables
+## Render a post
 
-The template editor shows the available variables on the right side.
-Use the search field if the list gets long.
+Open a release or release collection and click **Render forum post**. Choose a template and click
+**Copy forum post**, then paste the result into your forum.
 
-Common variables:
+![Render a forum post](images/render-template.png)
 
-| Variable | Description |
-| --- | --- |
-| `{{ release.name }}` | Release name from Bearcat. |
-| `{{ release.nfo }}` | Content of the first `.nfo` file in the release folder. |
-| `{{ release_info.release_name }}` | Resolved scene release name, or the metadata title when no scene release information exists. |
-| `{{ release_info.database_url }}` | Release or metadata database URL. |
-| `{{ release_info.size }}` | Formatted size from the scene release information. |
-| `{{ release_info.video.type }}` | Video type from the scene release information. |
-| `{{ release_info.audio.type }}` | Audio type from the scene release information. |
-| `{{ release_info.genre }}` | Genre from the resolved metadata. |
-| `{{ release_info.description }}` | Description from the resolved metadata. |
+## Good to know
 
-Loop variables:
-
-| Loop | Description |
-| --- | --- |
-| `{{ for external_info in release_info.external_infos }}` | Loops over scene database entries such as movie or TV links. |
-| `{{ for url in external_info.urls }}` | Loops over URLs of an external metadata entry. |
-| `{{ for upload in uploads }}` | Loops over upload configurations. |
-| `{{ for link in upload.links }}` | Loops over direct hoster links of the latest upload. |
-| `{{ for crypter in upload.link_crypters }}` | Loops over link crypter container links. |
-
-Inside `uploads`, these variables are available:
-
-| Variable | Description |
-| --- | --- |
-| `{{ upload.name }}` | Upload configuration name. |
-| `{{ upload.hoster_name }}` | Hoster registration name. |
-| `{{ upload.uploaded_at }}` | Latest upload date. |
-| `{{ upload.archive_password }}` | Archive password of the latest upload. |
-
-Inside `upload.link_crypters`, these variables are available:
-
-| Variable | Description |
-| --- | --- |
-| `{{ crypter.name }}` | Link crypter registration name. |
-| `{{ crypter.container_link }}` | Generated container URL. |
-| `{{ crypter.created_at }}` | Container creation date. |
-
-## Media information
-
-For managed releases, Bearcat reads video metadata with [MediaInfo](https://mediaarea.net/en/MediaInfo).
-You can include individual values or the full MediaInfo output in a post.
-
-### When are the media metadata parsed?
-
-Bearcat needs access to the raw video files to read their metadata:
-
-- **Automatically** when a managed release is created from a release template, after its release info is resolved.
-- **Manually** at any time with the "Extract media metadata" button on a release's "Release info" panel.
-  Use this to (re-)parse the files, for example after the files changed or for releases that were not
-  created automatically.
-
-The button re-reads every video file and replaces the previously stored metadata.
-
-### Main video
-
-`release.main_video` is the largest video file in the release. Use it when you want to show
-information about the main video without looping over all files.
-
-To include the full MediaInfo output:
-
-```text
-[SPOILER="MediaInfo"]
-{{ release.main_video.media_info }}
-[/SPOILER]
-```
-
-Or a short technical summary built from individual fields:
-
-```text
-Video: {{ release.main_video.video.codec }} {{ release.main_video.video.resolution }}
-Audio: {{ release.main_video.default_audio.codec }} {{ release.main_video.default_audio.channel_layout }}
-Runtime: {{ release.main_video.duration }}
-```
-
-| Variable | Description |
-| --- | --- |
-| `{{ release.main_video.path }}` | Relative file path inside the release folder. |
-| `{{ release.main_video.extension }}` | File extension without leading dot, for example `mkv`. |
-| `{{ release.main_video.size_bytes }}` | File size in bytes. |
-| `{{ release.main_video.duration }}` | Duration formatted as `hh:mm:ss`. |
-| `{{ release.main_video.container }}` | Container format, for example `Matroska`. |
-| `{{ release.main_video.media_info }}` | Full MediaInfo text dump for the file. |
-| `{{ release.main_video.video.codec }}` | Video codec, for example `HEVC`. |
-| `{{ release.main_video.video.profile }}` | Video codec profile, for example `Main 10`. |
-| `{{ release.main_video.video.resolution }}` | Resolution formatted as `WxH`, for example `1920x1080`. |
-| `{{ release.main_video.video.width }}` | Frame width in pixels. |
-| `{{ release.main_video.video.height }}` | Frame height in pixels. |
-| `{{ release.main_video.video.fps }}` | Frames per second. |
-| `{{ release.main_video.video.pixel_format }}` | Pixel format, for example `YUV 4:2:0 10 bit`. |
-| `{{ release.main_video.video.bitrate_kbps }}` | Video bitrate in kbit/s. |
-| `{{ release.main_video.video.language }}` | Video stream language. |
-| `{{ release.main_video.video.title }}` | Video stream title. |
-| `{{ release.main_video.default_audio.codec }}` | Codec of the default (or first) audio stream, for example `DTS`. |
-| `{{ release.main_video.default_audio.profile }}` | Audio codec profile, for example `DTS-HD MA`. |
-| `{{ release.main_video.default_audio.channel_layout }}` | Channel layout, for example `5.1`. |
-| `{{ release.main_video.default_audio.channels }}` | Channel count. |
-| `{{ release.main_video.default_audio.sample_rate }}` | Sample rate in Hz. |
-| `{{ release.main_video.default_audio.bitrate_kbps }}` | Audio bitrate in kbit/s. |
-| `{{ release.main_video.default_audio.language }}` | Audio stream language. |
-| `{{ release.main_video.default_audio.title }}` | Audio stream title. |
-
-### All media files
-
-Loop over every parsed video file with `release.media_files`. Each `file` has the same fields as
-`release.main_video`, plus loops over its individual audio and subtitle streams.
-
-| Loop | Description |
-| --- | --- |
-| `{{ for file in release.media_files }}` | Loops over all parsed video files. |
-| `{{ for audio in file.audio_streams }}` | Loops over the audio streams of a file. |
-| `{{ for subtitle in file.subtitle_streams }}` | Loops over the subtitle streams of a file. |
-
-Inside `file.audio_streams`, these variables are available:
-
-| Variable | Description |
-| --- | --- |
-| `{{ audio.codec }}` | Audio codec. |
-| `{{ audio.profile }}` | Audio codec profile. |
-| `{{ audio.language }}` | Stream language. |
-| `{{ audio.title }}` | Stream title. |
-| `{{ audio.channel_layout }}` | Channel layout. |
-| `{{ audio.channels }}` | Channel count. |
-| `{{ audio.sample_rate }}` | Sample rate in Hz. |
-| `{{ audio.bitrate_kbps }}` | Bitrate in kbit/s. |
-| `{{ audio.is_default }}` | Whether this is the default stream. |
-
-Inside `file.subtitle_streams`, these variables are available:
-
-| Variable | Description |
-| --- | --- |
-| `{{ subtitle.codec }}` | Subtitle codec. |
-| `{{ subtitle.language }}` | Stream language. |
-| `{{ subtitle.title }}` | Stream title. |
-| `{{ subtitle.forced }}` | Whether the subtitle is forced. |
-| `{{ subtitle.is_default }}` | Whether this is the default stream. |
-
-## Image links
-
-Image links are available through `imagelinks`.
-Use the name of the image upload configuration and the image size you want to use.
-
-For this short form, Bearcat turns the configuration name into a template-friendly name:
-
-- spaces become `_`
-- letters become lowercase
-- punctuation is removed or replaced
-
-So an image upload configuration named `ImgBB Cover` becomes `imgbb_cover`.
-
-Common examples:
-
-| Variable | Description |
-| --- | --- |
-| `{{ imagelinks.imgbb_cover.full }}` | Full image URL for the `ImgBB Cover` image upload configuration. |
-| `{{ imagelinks.imgbb_cover.medium }}` | Medium image URL, if the image hoster returned one. |
-| `{{ imagelinks.imgbb_cover.thumbnail }}` | Thumbnail URL, if the image hoster returned one. |
-
-You can also use the original configuration name:
-
-```text
-{{ imagelinks["ImgBB Cover"].full }}
-```
-
-That is useful if you are not sure how the name will be normalized.
-
-Bearcat can only render image links after the cover image was uploaded.
-If a release has no cover image, or the image upload has not completed yet, the value stays empty.
-
-## Practical tips
-
-Name upload configurations like you want them to appear in the forum post, for example `Rapidgator` or `DDownload`.
-That makes `{{ upload.name }}` useful directly in the rendered output.
-
-Name image upload configurations clearly, for example `ImgBB Cover`.
-That makes the template variable easy to read later: `{{ imagelinks.imgbb_cover.full }}`.
-
-Render the post only after the release has completed uploads and link crypter containers.
-Before that, upload, container and image link variables may still be empty.
-
-Keep forum-specific formatting in separate templates if you post to multiple forums.
-Different forums often support slightly different BBCode variants.
+- **Empty values:** missing values render as empty text. Render the post after the uploads and link
+  crypter containers are done, otherwise the links are missing.
+- **Image links:** use `{{ imagelinks.imgbb_cover.full }}` for an image upload configuration named
+  `ImgBB Cover`. The name is written in lowercase with `_` instead of spaces. If you are unsure,
+  use the original name: `{{ imagelinks["ImgBB Cover"].full }}`. The value is empty until the cover
+  is uploaded.
+- **Media data:** `release.main_video` and `release.media_files` come from the video files of managed
+  releases. Bearcat reads them automatically for releases created from a release template. For other
+  releases, click **Extract media data** on the release.
+- **Upload names:** name your upload configurations the way they should appear in the post, for
+  example `Rapidgator`. Then you can use `{{ upload.name }}` directly.
+- **Several forums:** forums support slightly different BBCode. Use one template per forum if needed.

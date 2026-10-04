@@ -1,6 +1,8 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering.Preview;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -33,9 +35,13 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     public void GetVariables_KnownType_ReturnsSourceVariables()
     {
         // Arrange
-        var variables = new List<ForumPostTemplateVariableReadModel>
+        var variables = new List<ForumPostTemplateVariableNode>
         {
-            new("{{ release.name }}", "The release name"),
+            ForumPostTemplateVariableNode.CreateValueNode(
+                "release_name",
+                "release_name",
+                "The release name"
+            ),
         };
         renderSourceMock.Setup(source => source.GetVariables()).Returns(variables);
 
@@ -155,6 +161,194 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.Content.ShouldBeEmpty();
         result.Errors.ShouldNotBeEmpty();
+    }
+
+    [Test]
+    public async Task RenderAsync_TemplateHasParseErrors_ReturnsErrorWithLineAndColumn()
+    {
+        // Arrange
+        var template = await AddTemplateAsync(ForumPostTemplateType.Release, "first\n  {{ end }}");
+        renderSourceMock
+            .Setup(source => source.BuildGlobalsAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScriptObject());
+
+        // Act
+        var result = await service.RenderAsync(1, template.Id, CancellationToken.None);
+
+        // Assert
+        result.Errors.ShouldBe([
+            "Line 2, column 8: Error while parsing ScriptPage: Found <end> statement without a corresponding beginning of a block in: ...",
+        ]);
+    }
+
+    [Test]
+    public async Task LoadPreviewDataAsync_EntityExists_ReturnsDataNodesFromGlobals()
+    {
+        // Arrange
+        renderSourceMock
+            .Setup(source => source.BuildGlobalsAsync(7, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScriptObject { ["name"] = "Bearcat" });
+
+        // Act
+        var result = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.Release,
+            7,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.DataNodes.Count.ShouldBe(1);
+        result.DataNodes[0].Name.ShouldBe("name");
+        result.DataNodes[0].Value.ShouldBe("Bearcat");
+        result.DataNodes[0].Children.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task LoadPreviewDataAsync_EntityDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        renderSourceMock
+            .Setup(source => source.BuildGlobalsAsync(404, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ScriptObject?)null);
+
+        // Act
+        var result = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.Release,
+            404,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task RenderPreviewAsync_ValidTemplate_RendersWithPreviewData()
+    {
+        // Arrange
+        var previewData = await LoadPreviewDataAsync(new ScriptObject { ["name"] = "Bearcat" });
+
+        // Act
+        var result = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "Hello {{ name }}"
+        );
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe("Hello Bearcat");
+    }
+
+    [Test]
+    public async Task RenderPreviewAsync_SyntaxError_ReturnsErrorWithLineAndColumn()
+    {
+        // Arrange
+        var previewData = await LoadPreviewDataAsync(new ScriptObject());
+
+        // Act
+        var result = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "line one\nline two {{ x = }}"
+        );
+
+        // Assert
+        result.Content.ShouldBeEmpty();
+        result.Errors.ShouldBe([
+            new ForumPostTemplateError(
+                "Error while parsing assign expression: Expecting <expression> instead of `}}` in: <target_expression> = <value_expression>",
+                Line: 2,
+                Column: 17
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task RenderPreviewAsync_RuntimeError_ReturnsErrorWithLineAndColumn()
+    {
+        // Arrange
+        var previewData = await LoadPreviewDataAsync(new ScriptObject());
+
+        // Act
+        var result = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "x\n  {{ [1, 2] | array.foo }}"
+        );
+
+        // Assert
+        result.Content.ShouldBeEmpty();
+        result.Errors.ShouldBe([
+            new ForumPostTemplateError(
+                "The function `array.foo` was not found",
+                Line: 2,
+                Column: 15
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task RenderPreviewAsync_TemplateAssignsVariable_DoesNotLeakIntoNextRender()
+    {
+        // Arrange
+        var previewData = await LoadPreviewDataAsync(new ScriptObject { ["name"] = "Bearcat" });
+        await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "{{ x = 1 }}{{ name = 'Changed' }}"
+        );
+
+        // Act
+        var result = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "[{{ x }}]{{ name }}"
+        );
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe("[]Bearcat");
+    }
+
+    [Test]
+    public async Task RenderPreviewAsync_TemplateAssignsNestedMember_DoesNotLeakIntoNextRender()
+    {
+        // Arrange
+        var previewData = await LoadPreviewDataAsync(
+            new ScriptObject
+            {
+                ["imagelinks"] = new ScriptObject
+                {
+                    ["cover"] = new ScriptObject { ["full"] = "https://img.example/full.jpg" },
+                },
+            }
+        );
+        await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "{{ imagelinks.cover.full = 'changed' }}"
+        );
+
+        // Act
+        var result = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "{{ imagelinks.cover.full }}"
+        );
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe("https://img.example/full.jpg");
+    }
+
+    private async Task<ForumPostTemplatePreviewData> LoadPreviewDataAsync(ScriptObject globals)
+    {
+        renderSourceMock
+            .Setup(source => source.BuildGlobalsAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(globals);
+
+        var previewData = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.Release,
+            1,
+            CancellationToken.None
+        );
+
+        return previewData.ShouldNotBeNull();
     }
 
     private async Task<ForumPostTemplate> AddTemplateAsync(ForumPostTemplateType type, string body)

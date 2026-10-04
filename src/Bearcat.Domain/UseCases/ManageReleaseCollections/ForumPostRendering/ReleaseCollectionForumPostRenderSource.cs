@@ -14,15 +14,15 @@ public class ReleaseCollectionForumPostRenderSource(
 {
     public ForumPostTemplateType Type => ForumPostTemplateType.ReleaseCollection;
 
-    public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
+    public IReadOnlyList<ForumPostTemplateVariableNode> GetVariables()
     {
-        var variables = ForumPostTemplateVariableCatalog
-            .GetVariables(typeof(ForumPostTemplateCollectionRenderModel))
-            .ToList();
-
-        variables.AddRange(ForumPostImageLinkBuilder.Variables);
-
-        return variables;
+        return
+        [
+            .. ForumPostTemplateVariableCatalog.GetVariables(
+                typeof(ForumPostTemplateCollectionRenderModel)
+            ),
+            ForumPostImageLinkBuilder.VariableNode,
+        ];
     }
 
     public async Task<ScriptObject?> BuildGlobalsAsync(

@@ -1,0 +1,32 @@
+<div class="bearcat-forum-template-editor-status-bar">
+    @if (ValidationResult.IsValid)
+    {
+        <span class="bearcat-forum-template-editor-status-valid inline-flex items-center gap-1">
+            <LucideIcon Name="circle-check" class="h-3.5 w-3.5" />
+            @L["TemplateSyntaxValid"]
+        </span>
+    }
+    else
+    {
+        <ErrorMessagesTooltip Messages="ErrorMessages">
+            <button type="button"
+                    class="bearcat-forum-template-editor-status-errors"
+                    aria-label="@L["JumpToFirstError"]"
+                    @onclick="OnJumpToFirstError">
+                <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" />
+                @SyntaxErrorCountText
+            </button>
+        </ErrorMessagesTooltip>
+    }
+
+    <span id="@CursorPositionElementId" class="tabular-nums">@InitialCursorPosition</span>
+    <span class="tabular-nums">@CharacterCountText</span>
+    @if (PreviewRenderDuration is { } renderDuration)
+    {
+        <span class="tabular-nums">@GetRenderDurationText(renderDuration)</span>
+    }
+    <span class="bearcat-forum-template-editor-status-hint">
+        <BbKbd Keys="@SaveShortcutKeys" Size="KbdSize.Small" />
+        @L["SaveShortcutHint"]
+    </span>
+</div>

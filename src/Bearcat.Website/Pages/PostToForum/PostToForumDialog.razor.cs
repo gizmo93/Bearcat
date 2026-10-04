@@ -238,7 +238,10 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         {
             templates = await operationRunner.RunAsync(
                 (IForumPostTemplateReadRepository repository) =>
-                    repository.GetAllAsync(TemplateType)
+                    repository.GetAllAsync(
+                        TemplateType,
+                        outputFormat: ForumPostTemplateOutputFormat.BBCode
+                    )
             );
             selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
 

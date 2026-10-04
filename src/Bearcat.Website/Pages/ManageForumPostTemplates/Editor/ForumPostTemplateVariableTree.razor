@@ -1,0 +1,85 @@
+@using Bearcat.Domain.Shared.ForumPostRendering
+
+<div class="bearcat-forum-template-editor-list-header">
+    <BbInput Type="InputType.Search"
+             Value="@SearchTerm"
+             ValueChanged="SearchTermChanged"
+             UpdateTiming="UpdateTiming.Immediate"
+             Placeholder="@L["SearchVariables"]"
+             AriaLabel="@L["SearchVariables"]"
+             Class="bearcat-forum-template-editor-compact-input" />
+</div>
+
+<div class="bearcat-forum-template-editor-scroll">
+    @if (visibleNodes.Count == 0)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="search-x" class="h-5 w-5" />
+            <span>@L["NoVariablesFound"]</span>
+        </div>
+    }
+    else
+    {
+        <p class="bearcat-forum-template-editor-variable-tree-hint">@L["ClickVariableToInsertHint"]</p>
+        <BbTreeView TItem="object"
+                    ShowIcons="false"
+                    ExpandOnClick="true"
+                    ExpandedValues="expandedValues"
+                    ExpandedValuesChanged="ChangeExpandedValues"
+                    AriaLabel="@L["AvailableVariables"]"
+                    Class="bearcat-forum-template-editor-variable-tree">
+            @foreach (var node in visibleNodes)
+            {
+                @RenderNode(node, ForumPostTemplateVariableTreeFilter.CreateKey(null, node.Name))
+            }
+        </BbTreeView>
+    }
+</div>
+
+@code {
+    private RenderFragment RenderNode(ForumPostTemplateVariableNode node, string key) =>
+        @<BbTreeItem @key="key" Value="@key" IsLeaf="@(node.Children.Count == 0)">
+            <LabelTemplate>
+                @if (node.Insertion is { } insertion)
+                {
+                    <button type="button"
+                            class="bearcat-forum-template-editor-variable-node bearcat-forum-template-editor-variable-node-insertable"
+                            title="@L["InsertVariableNamed", insertion.Text]"
+                            @onclick="() => OnInsertionRequested.InvokeAsync(insertion)">
+                        @RenderNodeContent(node)
+                    </button>
+                }
+                else
+                {
+                    <span class="bearcat-forum-template-editor-variable-node">
+                        @RenderNodeContent(node)
+                    </span>
+                }
+            </LabelTemplate>
+            <ChildContent>
+                @foreach (var child in node.Children)
+                {
+                    @RenderNode(child, ForumPostTemplateVariableTreeFilter.CreateKey(key, child.Name))
+                }
+            </ChildContent>
+        </BbTreeItem>;
+
+    private static RenderFragment RenderNodeContent(ForumPostTemplateVariableNode node) =>
+        @<text>
+            <span class="bearcat-forum-template-editor-variable-node-header">
+                @if (node.LoopStatement is not null)
+                {
+                    <LucideIcon Name="repeat"
+                                Size="12"
+                                aria-hidden="true"
+                                Class="bearcat-forum-template-editor-variable-node-loop-icon" />
+                }
+                <span class="bearcat-forum-template-editor-variable-node-name">@node.Name</span>
+                @if (node.LoopStatement is not null)
+                {
+                    <span class="bearcat-forum-template-editor-variable-node-loop">@node.LoopStatement</span>
+                }
+            </span>
+            <span class="bearcat-forum-template-editor-variable-node-description">@node.Description</span>
+        </text>;
+}

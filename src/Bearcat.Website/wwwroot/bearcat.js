@@ -130,11 +130,7 @@ initScrollAwareHeader();
 const lineNumberedTextarea = (() => {
     const registry = new WeakMap();
 
-    function paint(textarea, gutter, mirror) {
-        if (!textarea || !gutter) {
-            return;
-        }
-
+    function copyTextStyle(textarea, mirror) {
         const style = window.getComputedStyle(textarea);
         mirror.style.fontFamily = style.fontFamily;
         mirror.style.fontSize = style.fontSize;
@@ -152,8 +148,43 @@ const lineNumberedTextarea = (() => {
         mirror.style.width = Math.max(0, contentWidth) + "px";
 
         mirror.textContent = "x";
-        const rowHeight = mirror.offsetHeight || parseFloat(style.fontSize) * 1.2;
+        return mirror.offsetHeight || parseFloat(style.fontSize) * 1.2;
+    }
 
+    function writeGutter(gutter, numbers, errorLines) {
+        if (errorLines.size === 0) {
+            gutter.textContent = numbers.join("\n");
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        let pendingText = "";
+
+        numbers.forEach((number, index) => {
+            const separator = index === 0 ? "" : "\n";
+            if (number !== "" && errorLines.has(Number(number))) {
+                fragment.append(pendingText + separator);
+                pendingText = "";
+                const marker = document.createElement("span");
+                marker.className = "bearcat-code-editor-gutter-error";
+                marker.textContent = number;
+                fragment.append(marker);
+                return;
+            }
+
+            pendingText += separator + number;
+        });
+
+        fragment.append(pendingText);
+        gutter.replaceChildren(fragment);
+    }
+
+    function paint(textarea, gutter, mirror, errorLines) {
+        if (!textarea || !gutter) {
+            return;
+        }
+
+        const rowHeight = copyTextStyle(textarea, mirror);
         const lines = textarea.value.split("\n");
         const numbers = [];
 
@@ -169,43 +200,193 @@ const lineNumberedTextarea = (() => {
             }
         }
 
-        gutter.textContent = numbers.join("\n");
+        writeGutter(gutter, numbers, errorLines);
         gutter.scrollTop = textarea.scrollTop;
     }
 
-    function attach(textarea, gutter, mirror) {
+    function writeCursorPosition(textarea, cursorPosition) {
+        if (!cursorPosition) {
+            return;
+        }
+
+        const target = document.getElementById(cursorPosition.targetId);
+        if (!target) {
+            return;
+        }
+
+        const textBeforeCursor = textarea.value.slice(0, textarea.selectionStart);
+        const lineStart = textBeforeCursor.lastIndexOf("\n") + 1;
+        const line = textBeforeCursor.split("\n").length;
+        const column = textBeforeCursor.length - lineStart + 1;
+        target.textContent = cursorPosition.format
+            .replace("{0}", String(line))
+            .replace("{1}", String(column));
+    }
+
+    function attach(textarea, gutter, mirror, cursorPositionTargetId, cursorPositionFormat, errorLineNumbers) {
         if (!textarea || !gutter || !mirror) {
             return;
         }
 
         if (registry.has(textarea)) {
-            refresh(textarea);
+            setErrorLines(textarea, errorLineNumbers);
             return;
         }
 
-        const onInput = () => paint(textarea, gutter, mirror);
+        const cursorPosition = cursorPositionTargetId && cursorPositionFormat
+            ? { targetId: cursorPositionTargetId, format: cursorPositionFormat }
+            : null;
+        const entry = {
+            gutter,
+            mirror,
+            cursorPosition,
+            errorLines: new Set(errorLineNumbers ?? []),
+            resizeObserver: null,
+            hasBeenFocused: false,
+        };
+        const onInput = () => {
+            paint(textarea, gutter, mirror, entry.errorLines);
+            writeCursorPosition(textarea, cursorPosition);
+        };
+        const onCursorMove = () => writeCursorPosition(textarea, cursorPosition);
         const onScroll = () => {
             gutter.scrollTop = textarea.scrollTop;
         };
-        const resizeObserver = new ResizeObserver(() => paint(textarea, gutter, mirror));
+        entry.resizeObserver = new ResizeObserver(() =>
+            paint(textarea, gutter, mirror, entry.errorLines)
+        );
 
-        registry.set(textarea, { gutter, mirror, onInput, onScroll, resizeObserver });
+        registry.set(textarea, entry);
 
         textarea.addEventListener("input", onInput);
         textarea.addEventListener("scroll", onScroll, { passive: true });
-        resizeObserver.observe(textarea);
+        textarea.addEventListener("focus", () => {
+            entry.hasBeenFocused = true;
+        });
+        if (cursorPosition) {
+            for (const eventName of ["click", "keyup", "select", "focus"]) {
+                textarea.addEventListener(eventName, onCursorMove);
+            }
+        }
+        entry.resizeObserver.observe(textarea);
 
-        paint(textarea, gutter, mirror);
+        paint(textarea, gutter, mirror, entry.errorLines);
+        writeCursorPosition(textarea, cursorPosition);
     }
 
     function refresh(textarea) {
         const entry = registry.get(textarea);
         if (entry) {
-            paint(textarea, entry.gutter, entry.mirror);
+            paint(textarea, entry.gutter, entry.mirror, entry.errorLines);
+            writeCursorPosition(textarea, entry.cursorPosition);
         }
     }
 
-    return { attach, refresh };
+    function setErrorLines(textarea, errorLineNumbers) {
+        const entry = registry.get(textarea);
+        if (!entry) {
+            return;
+        }
+
+        entry.errorLines = new Set(errorLineNumbers ?? []);
+        paint(textarea, entry.gutter, entry.mirror, entry.errorLines);
+    }
+
+    function getOffset(value, line, column) {
+        const lines = value.split("\n");
+        const lineIndex = Math.min(Math.max(line, 1), lines.length) - 1;
+        let offset = 0;
+
+        for (let i = 0; i < lineIndex; i++) {
+            offset += lines[i].length + 1;
+        }
+
+        return offset + Math.min(Math.max(column, 1) - 1, lines[lineIndex].length);
+    }
+
+    function scrollToOffset(textarea, entry, offset) {
+        const rowHeight = copyTextStyle(textarea, entry.mirror);
+        entry.mirror.textContent = textarea.value.slice(0, offset) + "\u200b";
+        const cursorTop = Math.max(0, entry.mirror.offsetHeight - rowHeight);
+        textarea.scrollTop = Math.max(0, cursorTop - textarea.clientHeight / 2);
+        entry.gutter.scrollTop = textarea.scrollTop;
+    }
+
+    function focusPosition(textarea, line, column) {
+        const entry = registry.get(textarea);
+        if (!entry) {
+            return;
+        }
+
+        const offset = getOffset(textarea.value, line, column);
+        textarea.focus({ preventScroll: true });
+        textarea.setSelectionRange(offset, offset);
+        scrollToOffset(textarea, entry, offset);
+        writeCursorPosition(textarea, entry.cursorPosition);
+    }
+
+    function insertText(textarea, text, cursorOffset) {
+        const entry = registry.get(textarea);
+        if (!entry) {
+            return;
+        }
+
+        if (!entry.hasBeenFocused) {
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+
+        textarea.focus({ preventScroll: true });
+        const insertStart = textarea.selectionStart;
+        const insertEnd = textarea.selectionEnd;
+        const isBlock = text.includes("\n");
+        const needsLeadingNewline =
+            isBlock && insertStart > 0 && textarea.value[insertStart - 1] !== "\n";
+        const needsTrailingNewline =
+            isBlock && insertEnd < textarea.value.length && textarea.value[insertEnd] !== "\n";
+        const leadingText = needsLeadingNewline ? "\n" : "";
+        const insertedText = leadingText + text + (needsTrailingNewline ? "\n" : "");
+
+        if (!document.execCommand("insertText", false, insertedText)) {
+            textarea.setRangeText(insertedText, insertStart, insertEnd, "end");
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
+        const cursor = insertStart + leadingText.length + cursorOffset;
+        textarea.setSelectionRange(cursor, cursor);
+        scrollToOffset(textarea, entry, cursor);
+        writeCursorPosition(textarea, entry.cursorPosition);
+    }
+
+    return { attach, refresh, setErrorLines, focusPosition, insertText };
+})();
+
+const saveShortcut = (() => {
+    function attach(dotNetReference) {
+        const onKeyDown = event => {
+            if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) {
+                return;
+            }
+
+            if (event.key?.toLowerCase() !== "s") {
+                return;
+            }
+
+            event.preventDefault();
+            if (event.repeat) {
+                return;
+            }
+
+            dotNetReference.invokeMethodAsync("SaveFromShortcutAsync").catch(() => {});
+        };
+
+        document.addEventListener("keydown", onKeyDown, true);
+
+        return {
+            detach: () => document.removeEventListener("keydown", onKeyDown, true),
+        };
+    }
+
+    return { attach };
 })();
 
 const logView = (() => {
@@ -255,5 +436,6 @@ window.bearcat = {
     setCookie,
     updateScrollAwareHeader,
     lineNumberedTextarea,
+    saveShortcut,
     logView,
 };

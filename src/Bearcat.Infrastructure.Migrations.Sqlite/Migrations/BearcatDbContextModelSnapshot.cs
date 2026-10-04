@@ -444,6 +444,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OutputFormat")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("TemplateBody")
                         .IsRequired()
                         .HasColumnType("TEXT");
