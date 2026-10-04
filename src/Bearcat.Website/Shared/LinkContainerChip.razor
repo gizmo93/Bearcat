@@ -1,0 +1,58 @@
+<BbHoverCard OpenDelay="300" CloseDelay="150">
+    <BbHoverCardTrigger AsChild="false" Class="bearcat-overview-chip">
+        <LucideIcon Name="@(IsCreated ? "check" : "x")"
+                    class="@($"h-3.5 w-3.5 shrink-0 {(IsCreated ? "text-muted-foreground" : "text-destructive")}")" />
+        <span class="truncate">@LinkCrypterRegistrationName</span>
+        @if (IsCollectionContainer)
+        {
+            <span class="inline-flex shrink-0 text-muted-foreground" title="@L["CollectionContainer"]">
+                <LucideIcon Name="layers" class="h-3.5 w-3.5" />
+            </span>
+        }
+        @if (CoverageText is not null)
+        {
+            <span class="shrink-0 tabular-nums text-muted-foreground" title="@CoverageTitle">@CoverageText</span>
+        }
+        <ErrorMessagesTooltip Messages="Errors">
+            <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5 text-destructive" />
+        </ErrorMessagesTooltip>
+        @if (HasUrl)
+        {
+            <CopyButton Value="@ContainerUrl"
+                        Label="@L["CopyLink"]"
+                        Variant="ButtonVariant.Ghost"
+                        Class="bearcat-overview-chip-copy" />
+        }
+        @if (IsDeleteButtonShown)
+        {
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.IconSmall"
+                      Class="bearcat-overview-chip-delete"
+                      AriaLabel="@L["DeleteLinkCrypterContainer"]"
+                      title="@L["DeleteLinkCrypterContainer"]"
+                      OnClick="OnDeleteRequested">
+                <LucideIcon Name="trash-2" class="h-4 w-4" />
+            </BbButton>
+        }
+    </BbHoverCardTrigger>
+    <BbHoverCardContent Side="PopoverSide.Top"
+                        Align="PopoverAlign.Start"
+                        Class="w-auto max-w-[85vw] p-3 sm:max-w-sm">
+        <div class="flex flex-wrap items-center gap-2 text-sm font-semibold">
+            <span>@LinkCrypterRegistrationName</span>
+            <BbBadge Variant="@StateBadgeVariant">@L.Localize(State)</BbBadge>
+            @if (IsCollectionContainer)
+            {
+                <BbBadge Variant="BadgeVariant.Secondary">@L["CollectionContainer"]</BbBadge>
+            }
+        </div>
+        @if (CoverageTitle is not null)
+        {
+            <p class="mt-1 text-xs text-muted-foreground">@CoverageTitle</p>
+        }
+        @if (HasUrl)
+        {
+            <p class="mt-1.5 break-all font-mono text-xs text-primary">@ContainerUrl</p>
+        }
+    </BbHoverCardContent>
+</BbHoverCard>

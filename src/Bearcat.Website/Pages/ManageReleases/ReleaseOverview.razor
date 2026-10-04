@@ -176,7 +176,7 @@
                     <div class="bearcat-overview-hoster-row @(isOffline ? "bearcat-overview-hoster-row-offline" : null)">
                         <div class="bearcat-overview-hoster-grid bearcat-overview-hoster-row-main">
                             <div class="bearcat-overview-hoster-name-cell">
-                                <span class="bearcat-overview-monogram" aria-hidden="true">@GetMonogram(upload.UploadConfigName)</span>
+                                <span class="bearcat-overview-monogram" aria-hidden="true">@MonogramText.GetFromName(upload.UploadConfigName)</span>
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-semibold" title="@upload.UploadConfigName">@upload.UploadConfigName</p>
                                     @if (IsHosterNameShown(upload))
@@ -234,47 +234,11 @@
                                 {
                                     @foreach (var link in upload.LinkCrypterLinks)
                                     {
-                                        var isCreated = link.State is LinkCrypterContainerState.Created;
-                                        var hasUrl = !string.IsNullOrWhiteSpace(link.ContainerUrl);
-                                        <BbHoverCard OpenDelay="300" CloseDelay="150">
-                                            <BbHoverCardTrigger AsChild="false" Class="bearcat-overview-chip">
-                                                <LucideIcon Name="@(isCreated ? "check" : "x")"
-                                                            class="@($"h-3.5 w-3.5 shrink-0 {(isCreated ? "text-muted-foreground" : "text-destructive")}")" />
-                                                <span class="truncate">@link.LinkCrypterRegistrationName</span>
-                                                @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
-                                                {
-                                                    <span class="inline-flex shrink-0 text-muted-foreground" title="@L["CollectionContainer"]">
-                                                        <LucideIcon Name="layers" class="h-3.5 w-3.5" />
-                                                    </span>
-                                                }
-                                                <ErrorMessagesTooltip Messages="link.Errors">
-                                                    <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5 text-destructive" />
-                                                </ErrorMessagesTooltip>
-                                                @if (hasUrl)
-                                                {
-                                                    <CopyButton Value="@link.ContainerUrl"
-                                                                Label="@L["CopyLink"]"
-                                                                Variant="ButtonVariant.Ghost"
-                                                                Class="bearcat-overview-chip-copy" />
-                                                }
-                                            </BbHoverCardTrigger>
-                                            <BbHoverCardContent Side="PopoverSide.Top"
-                                                                Align="PopoverAlign.Start"
-                                                                Class="w-auto max-w-[85vw] p-3 sm:max-w-sm">
-                                                <div class="flex flex-wrap items-center gap-2 text-sm font-semibold">
-                                                    <span>@link.LinkCrypterRegistrationName</span>
-                                                    <BbBadge Variant="@GetContainerVariant(link.State)">@L.Localize(link.State)</BbBadge>
-                                                    @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
-                                                    {
-                                                        <BbBadge Variant="BadgeVariant.Secondary">@L["CollectionContainer"]</BbBadge>
-                                                    }
-                                                </div>
-                                                @if (hasUrl)
-                                                {
-                                                    <p class="mt-1.5 break-all font-mono text-xs text-primary">@link.ContainerUrl</p>
-                                                }
-                                            </BbHoverCardContent>
-                                        </BbHoverCard>
+                                        <LinkContainerChip LinkCrypterRegistrationName="@link.LinkCrypterRegistrationName"
+                                                           State="link.State"
+                                                           ContainerUrl="@link.ContainerUrl"
+                                                           Errors="link.Errors"
+                                                           IsCollectionContainer="@(link.Scope is LinkCrypterContainerScope.ReleaseCollection)" />
                                     }
                                 }
                             </div>

@@ -1,0 +1,162 @@
+<section class="space-y-3">
+    <div class="bearcat-overview-section-header">
+        <h2 class="bearcat-overview-section-heading">
+            <LucideIcon Name="list-video" class="h-4 w-4" />
+            @L["Releases"]
+            <span class="bearcat-overview-count-pill">@Releases.Count</span>
+        </h2>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  OnClick="ShowAddReleaseDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["AddRelease"]
+        </BbButton>
+    </div>
+
+    <div class="bearcat-overview-card">
+        @if (Releases.Count == 0)
+        {
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleasesFound"]</span>
+            </div>
+        }
+        else
+        {
+            <div class="bearcat-collection-release-grid bearcat-overview-hoster-list-header" aria-hidden="true">
+                <span></span>
+                <span>@L["Release"]</span>
+                <span>@L["HostersOnline"]</span>
+                <span>@L["LatestUpload"]</span>
+                <span></span>
+            </div>
+
+            @foreach (var release in Releases)
+            {
+                var episodeLabel = episodeLabelsByReleaseId[release.ReleaseId];
+                var latestUploadAt = GetLatestUploadAt(release);
+                var isOffline = release.OnlineState is OnlineState.Offline;
+
+                <div class="bearcat-overview-hoster-row @(isOffline ? "bearcat-overview-hoster-row-offline" : null)">
+                    <div class="bearcat-collection-release-grid bearcat-overview-hoster-row-main">
+                        <div class="bearcat-collection-release-episode-cell">
+                            <span class="bearcat-overview-monogram bearcat-collection-episode-marker" aria-hidden="true">
+                                @if (episodeLabel is null)
+                                {
+                                    <LucideIcon Name="list-video" class="h-3.5 w-3.5 text-muted-foreground" />
+                                }
+                                else
+                                {
+                                    @episodeLabel
+                                }
+                            </span>
+                        </div>
+
+                        <div class="bearcat-collection-release-name-cell">
+                            <a class="block truncate text-sm font-medium hover:underline"
+                               href="@GetReleaseUrl(release)"
+                               title="@release.Name">
+                                @release.Name
+                            </a>
+                            <p class="truncate text-xs text-muted-foreground">@L.Localize(release.ReleaseType)</p>
+                        </div>
+
+                        <div class="bearcat-collection-release-online-cell" title="@GetNotFullyOnlineSinceTitle(release)">
+                            @if (release.ActiveUploadConfigsCount == 0)
+                            {
+                                <span class="text-xs text-muted-foreground">@L["ReleaseProgressNoUploadConfigs"]</span>
+                            }
+                            else
+                            {
+                                <div class="bearcat-overview-online-segments" aria-hidden="true">
+                                    @for (var index = 0; index < release.ActiveUploadConfigsCount; index++)
+                                    {
+                                        <span class="bearcat-overview-online-segment @(index < release.OnlineUploadConfigsCount ? "bearcat-overview-online-segment-online" : "bearcat-overview-online-segment-offline")"></span>
+                                    }
+                                </div>
+                                <span class="text-xs tabular-nums text-muted-foreground">
+                                    @release.OnlineUploadConfigsCount/@release.ActiveUploadConfigsCount
+                                </span>
+                            }
+                        </div>
+
+                        <div class="bearcat-collection-release-latest-cell">
+                            @if (latestUploadAt is null)
+                            {
+                                <span class="text-sm text-muted-foreground">@L["NoLatestUpload"]</span>
+                            }
+                            else
+                            {
+                                <span class="truncate text-sm" title="@FormatTimestamp(latestUploadAt.Value)">
+                                    @HumanizeTimestamp(latestUploadAt.Value)
+                                </span>
+                            }
+                        </div>
+
+                        <div class="bearcat-collection-release-actions-cell">
+                            @if (release.LatestUploads.Count == 0)
+                            {
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Size="ButtonSize.Small"
+                                          Disabled="true"
+                                          AriaLabel="@L["ViewUploadLinks"]">
+                                    <LucideIcon Name="external-link" class="h-4 w-4" />
+                                    @release.LatestUploads.Count
+                                </BbButton>
+                            }
+                            else
+                            {
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Outline"
+                                                  Size="ButtonSize.Small"
+                                                  AriaLabel="@L["ViewUploadLinks"]"
+                                                  title="@L["ViewUploadLinks"]">
+                                            <LucideIcon Name="external-link" class="h-4 w-4" />
+                                            @release.LatestUploads.Count
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                        @foreach (var upload in release.LatestUploads)
+                                        {
+                                            <BbDropdownMenuItem OnClick="@(() => ShowUploadLinksDialogAsync(release, upload))">
+                                                @upload.UploadConfigName
+                                            </BbDropdownMenuItem>
+                                        }
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                            }
+
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost"
+                                              Size="ButtonSize.IconSmall"
+                                              AriaLabel="@L["OpenReleaseActions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(() => NavigateToRelease(release))">
+                                        <Icon>
+                                            <LucideIcon Name="arrow-right" class="h-4 w-4" />
+                                        </Icon>
+                                        <ChildContent>@L["OpenRelease"]</ChildContent>
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuSeparator />
+                                    <BbDropdownMenuItem Class="text-destructive focus:text-destructive"
+                                                        OnClick="@(() => RemoveReleaseAsync(release))">
+                                        <Icon>
+                                            <LucideIcon Name="circle-minus" class="h-4 w-4" />
+                                        </Icon>
+                                        <ChildContent>@L["RemoveFromCollection"]</ChildContent>
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>

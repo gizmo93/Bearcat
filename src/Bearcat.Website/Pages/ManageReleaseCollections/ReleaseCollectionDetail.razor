@@ -1,6 +1,7 @@
 @page "/release-collections/{ReleaseCollectionId:int}"
 @using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.ManageReleaseCollections.DetailTabs
+@using Bearcat.Website.Pages.ManageReleaseCollections.Overview
 @using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps
 @using Bearcat.Website.Pages.PostQueue
 
@@ -176,98 +177,17 @@
                       Class="w-full" />
         </div>
 
-        <BbTabsContent Value="@ReleaseCollectionDetailTab.Overview" Class="space-y-4">
-            <BbCard Class="border-border/70 shadow-sm">
-                <BbCardHeader>
-                    <div class="bearcat-section-header">
-                        <div class="flex items-center gap-2">
-                            <LucideIcon Name="upload" class="h-4 w-4" />
-                            <div>
-                                <BbCardTitle class="text-base">@L["Releases"]</BbCardTitle>
-                            </div>
-                        </div>
-                        <BbButton Variant="ButtonVariant.Outline"
-                                  Size="ButtonSize.Small"
-                                  OnClick="ShowAddReleaseDialogAsync">
-                            <LucideIcon Name="plus" class="h-4 w-4" />
-                            @L["AddRelease"]
-                        </BbButton>
-                    </div>
-                </BbCardHeader>
-                <BbCardContent>
-                    @if (releaseCollection.Releases.Count == 0)
-                    {
-                        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-                            @L["NoReleasesFound"]
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="bearcat-config-list">
-                            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
-                                <span>@L["Name"]</span>
-                                <span>@L["OnlineState"]</span>
-                                <span>@L["ReleaseType"]</span>
-                                <span>@L["CreatedAt"]</span>
-                                <span class="text-right">@L["Actions"]</span>
-                            </div>
-                            @foreach (var release in releaseCollection.Releases)
-                            {
-                                <div class="bearcat-config-item">
-                                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
-                                        <a class="bearcat-release-list-name"
-                                           href="@($"/releases/{release.ReleaseId}")">
-                                            @release.Name
-                                        </a>
-                                        <div>
-                                            <p class="bearcat-mobile-label">@L["OnlineState"]</p>
-                                            <OnlineStateBadge Value="@release.OnlineState"
-                                                              NotFullyOnlineSince="@release.NotFullyOnlineSince" />
-                                        </div>
-                                        <div>
-                                            <p class="bearcat-mobile-label">@L["ReleaseType"]</p>
-                                            <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
-                                        </div>
-                                        <div>
-                                            <p class="bearcat-mobile-label">@L["CreatedAt"]</p>
-                                            <span class="text-sm">@release.CreatedAt.ToString("g")</span>
-                                        </div>
-                                        <div class="bearcat-config-actions">
-                                            <p class="bearcat-mobile-label">@L["Actions"]</p>
-                                            @if (release.LatestUploads.Count > 0)
-                                            {
-                                                <BbDropdownMenu>
-                                                    <BbDropdownMenuTrigger>
-                                                        <BbButton Variant="ButtonVariant.Ghost"
-                                                                  Size="ButtonSize.IconSmall"
-                                                                  AriaLabel="@L["ViewUploadLinks"]">
-                                                            <LucideIcon Name="list" class="h-4 w-4" />
-                                                        </BbButton>
-                                                    </BbDropdownMenuTrigger>
-                                                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                                                        @foreach (var upload in release.LatestUploads)
-                                                        {
-                                                            <BbDropdownMenuItem OnClick="@(async _ => await ShowUploadLinksDialogAsync(release, upload))">
-                                                                @upload.UploadConfigName
-                                                            </BbDropdownMenuItem>
-                                                        }
-                                                    </BbDropdownMenuContent>
-                                                </BbDropdownMenu>
-                                            }
-                                            <BbButton Variant="ButtonVariant.Ghost"
-                                                      Size="ButtonSize.IconSmall"
-                                                      AriaLabel="@L["RemoveFromCollection"]"
-                                                      OnClick="@(async () => await RemoveReleaseAsync(release))">
-                                                <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
-                                            </BbButton>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                </BbCardContent>
-            </BbCard>
+        <BbTabsContent Value="@ReleaseCollectionDetailTab.Overview" Class="space-y-6">
+            <ReleaseCollectionReleases ReleaseCollectionId="@ReleaseCollectionId"
+                                       Releases="releaseCollection.Releases"
+                                       OnReleasesChanged="LoadReleaseCollectionAsync" />
+            @if (IsLinkContainersSectionVisible)
+            {
+                <div id="@LinkContainersElementId" class="bearcat-collection-link-containers">
+                    <ReleaseCollectionLinkContainers UploadSlots="releaseCollection.UploadSlots"
+                                                     OnDeleteFailedContainerRequested="DeleteFailedContainerAsync" />
+                </div>
+            }
             <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations">
                 <PostedLocations @ref="postedLocations"
                                  ReleaseCollectionId="@ReleaseCollectionId"

@@ -286,6 +286,8 @@ public class ReleaseCollectionRepository(
                         ReleaseId = upload.UploadConfig.ReleaseId,
                         UploadId = upload.Id,
                         UploadConfigName = upload.UploadConfig.Name,
+                        upload.CreatedAt,
+                        upload.UploadedAt,
                         upload.OnlineState,
                         upload.NotFullyOnlineSince,
                     })
@@ -300,8 +302,10 @@ public class ReleaseCollectionRepository(
                 group =>
                     group
                         .Select(upload => new ReleaseLatestUploadReadModel(
-                            upload.UploadId,
-                            upload.UploadConfigName
+                            UploadId: upload.UploadId,
+                            UploadConfigName: upload.UploadConfigName,
+                            CreatedAt: upload.CreatedAt,
+                            UploadedAt: upload.UploadedAt
                         ))
                         .ToList()
             );

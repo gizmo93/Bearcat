@@ -1618,4 +1618,6 @@
   <data name="Overview" xml:space="preserve"><value>Overview</value></data>
   <data name="ShowMore" xml:space="preserve"><value>Show more</value></data>
   <data name="ShowLess" xml:space="preserve"><value>Show less</value></data>
+  <data name="OpenRelease" xml:space="preserve"><value>Open release</value></data>
+  <data name="LinkContainerCoverageTitle" xml:space="preserve"><value>{0} of {1} uploads included</value></data>
 </root>

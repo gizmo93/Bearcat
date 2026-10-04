@@ -195,10 +195,17 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         e01.LatestUploads.ShouldBe(
             [
                 new ReleaseLatestUploadReadModel(
-                    seed.E01RapidgatorLatestUploadId,
-                    "E01 rapidgator"
+                    UploadId: seed.E01RapidgatorLatestUploadId,
+                    UploadConfigName: "E01 rapidgator",
+                    CreatedAt: LastSecondOfDay.AddSeconds(1),
+                    UploadedAt: null
                 ),
-                new ReleaseLatestUploadReadModel(seed.E01DdownloadLatestUploadId, "E01 ddownload"),
+                new ReleaseLatestUploadReadModel(
+                    UploadId: seed.E01DdownloadLatestUploadId,
+                    UploadConfigName: "E01 ddownload",
+                    CreatedAt: LastSecondOfDay.AddMinutes(-2),
+                    UploadedAt: LastSecondOfDay.AddMilliseconds(700)
+                ),
             ],
             ignoreOrder: true
         );
@@ -209,7 +216,12 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         e02.OnlineUploadConfigsCount.ShouldBe(1);
         e02.NotFullyOnlineSince.ShouldBe(seed.E02NotFullyOnlineSince);
         e02.LatestUploads.ShouldBe([
-            new ReleaseLatestUploadReadModel(seed.E02RapidgatorLatestUploadId, "E02 rapidgator"),
+            new ReleaseLatestUploadReadModel(
+                UploadId: seed.E02RapidgatorLatestUploadId,
+                UploadConfigName: "E02 rapidgator",
+                CreatedAt: LastSecondOfDay.AddSeconds(-20),
+                UploadedAt: LastSecondOfDay.AddMilliseconds(500)
+            ),
         ]);
     }
 

@@ -10,8 +10,8 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
 using Bearcat.Website.Pages.ManageReleaseCollections.DetailTabs;
+using Bearcat.Website.Pages.ManageReleaseCollections.Overview;
 using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps;
-using Bearcat.Website.Pages.ManageReleases;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared.ProgressSteps;
@@ -40,6 +40,7 @@ public partial class ReleaseCollectionDetail(
     public string? Workflow { get; set; }
 
     private const string PostedLocationsElementId = "release-collection-posted-locations";
+    private const string LinkContainersElementId = "release-collection-link-containers";
     private const int CollapsedDescriptionMaximumLength = 160;
 
     private ReleaseCollectionDetailReadModel releaseCollection = null!;
@@ -48,7 +49,7 @@ public partial class ReleaseCollectionDetail(
     private ElementReference headerCardElement;
     private ElementReference stickyHeaderElement;
     private bool isStickyHeaderVisibilityTrackingRequested;
-    private bool isScrollToPostedLocationsRequested;
+    private string? elementIdToScrollIntoView;
     private IJSObjectReference? stickyHeaderVisibilityTrackingHandle;
     private PostedLocations? postedLocations;
     private bool hasActiveForumRegistration;
@@ -62,6 +63,11 @@ public partial class ReleaseCollectionDetail(
         string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
 
     private string? CoverUrl => releaseCollection.Metadata?.CoverUrl;
+
+    private bool IsLinkContainersSectionVisible =>
+        releaseCollection.UploadSlots.Any(
+            CollectionLinkContainerOverviewService.HasSharedLinkCryptersOrContainers
+        );
 
     private string? Description => releaseCollection.Metadata?.Description;
 
@@ -173,7 +179,7 @@ public partial class ReleaseCollectionDetail(
         }
 
         await AttachStickyHeaderVisibilityTrackingAsync();
-        await ScrollToPostedLocationsIfRequestedAsync();
+        await ScrollRequestedElementIntoViewAsync();
     }
 
     private async Task AttachStickyHeaderVisibilityTrackingAsync()
@@ -196,21 +202,19 @@ public partial class ReleaseCollectionDetail(
         catch (JSDisconnectedException) { }
     }
 
-    private async Task ScrollToPostedLocationsIfRequestedAsync()
+    private async Task ScrollRequestedElementIntoViewAsync()
     {
-        if (!isScrollToPostedLocationsRequested)
+        if (elementIdToScrollIntoView is null)
         {
             return;
         }
 
-        isScrollToPostedLocationsRequested = false;
+        var elementId = elementIdToScrollIntoView;
+        elementIdToScrollIntoView = null;
 
         try
         {
-            await jsRuntime.InvokeVoidAsync(
-                "bearcat.scrollElementIntoViewById",
-                PostedLocationsElementId
-            );
+            await jsRuntime.InvokeVoidAsync("bearcat.scrollElementIntoViewById", elementId);
         }
         catch (JSDisconnectedException) { }
     }
@@ -222,20 +226,29 @@ public partial class ReleaseCollectionDetail(
 
     private void HandleProgressStepSelected(ReleaseCollectionProgressStepKind kind)
     {
-        activeTab = kind switch
+        switch (kind)
         {
-            ReleaseCollectionProgressStepKind.Info => ReleaseCollectionDetailTab.Overview,
-            ReleaseCollectionProgressStepKind.Releases => ReleaseCollectionDetailTab.Overview,
-            ReleaseCollectionProgressStepKind.LinkContainers =>
-                ReleaseCollectionDetailTab.UploadSlots,
-            ReleaseCollectionProgressStepKind.Images => ReleaseCollectionDetailTab.Images,
-            ReleaseCollectionProgressStepKind.Posted => ReleaseCollectionDetailTab.Overview,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-        };
-
-        if (kind is ReleaseCollectionProgressStepKind.Posted)
-        {
-            isScrollToPostedLocationsRequested = true;
+            case ReleaseCollectionProgressStepKind.Info:
+            case ReleaseCollectionProgressStepKind.Releases:
+                activeTab = ReleaseCollectionDetailTab.Overview;
+                break;
+            case ReleaseCollectionProgressStepKind.LinkContainers
+                when IsLinkContainersSectionVisible:
+                activeTab = ReleaseCollectionDetailTab.Overview;
+                elementIdToScrollIntoView = LinkContainersElementId;
+                break;
+            case ReleaseCollectionProgressStepKind.LinkContainers:
+                activeTab = ReleaseCollectionDetailTab.UploadSlots;
+                break;
+            case ReleaseCollectionProgressStepKind.Images:
+                activeTab = ReleaseCollectionDetailTab.Images;
+                break;
+            case ReleaseCollectionProgressStepKind.Posted:
+                activeTab = ReleaseCollectionDetailTab.Overview;
+                elementIdToScrollIntoView = PostedLocationsElementId;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
     }
 
@@ -393,30 +406,6 @@ public partial class ReleaseCollectionDetail(
         );
     }
 
-    private async Task ShowUploadLinksDialogAsync(
-        ReleaseCollectionReleaseReadModel release,
-        ReleaseLatestUploadReadModel upload
-    )
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(UploadLinksDialog.ReleaseId)] = release.ReleaseId,
-            [nameof(UploadLinksDialog.UploadId)] = upload.UploadId,
-            [nameof(UploadLinksDialog.UploadConfigName)] = upload.UploadConfigName,
-        };
-
-        await dialogService.OpenAsync<UploadLinksDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["UploadLinksTitle", upload.UploadId],
-                Description = L["UploadLinksDialogDescription", upload.UploadConfigName],
-                Size = DialogSize.Full,
-                ShowClose = true,
-            }
-        );
-    }
-
     private async Task ShowCreateUploadSlotDialogAsync()
     {
         var parameters = new Dictionary<string, object?>
@@ -506,55 +495,6 @@ public partial class ReleaseCollectionDetail(
         await operationRunner.RunAsync(
             (ReleaseCollectionService service) =>
                 service.DeleteUploadSlotAsync(uploadSlot.CollectionUploadSlotId)
-        );
-        await LoadReleaseCollectionAsync();
-    }
-
-    private async Task ShowAddReleaseDialogAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(AddReleaseToCollectionDialog.ReleaseCollectionId)] = ReleaseCollectionId,
-        };
-
-        var dialog = await dialogService.OpenAsync<AddReleaseToCollectionDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["AddRelease"],
-                Description = L["AddReleaseToCollectionDescription"],
-                Size = DialogSize.Large,
-                ShowClose = true,
-            }
-        );
-
-        if (!dialog.Cancelled)
-        {
-            await LoadReleaseCollectionAsync();
-        }
-    }
-
-    private async Task RemoveReleaseAsync(ReleaseCollectionReleaseReadModel release)
-    {
-        var result = await dialogService.ConfirmAsync(
-            L["RemoveFromCollection"],
-            L["RemoveReleaseFromCollectionConfirmation", release.Name],
-            new ConfirmDialogOptions
-            {
-                ConfirmText = L["Remove"],
-                CancelText = L["Cancel"],
-                Destructive = true,
-            }
-        );
-
-        if (!result.Confirmed)
-        {
-            return;
-        }
-
-        await operationRunner.RunAsync(
-            (ReleaseCollectionService service) =>
-                service.RemoveReleaseAsync(ReleaseCollectionId, release.ReleaseId)
         );
         await LoadReleaseCollectionAsync();
     }
