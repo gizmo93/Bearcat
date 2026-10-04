@@ -1,0 +1,37 @@
+@typeparam TKind
+
+<div class="bearcat-release-progress-steps" role="group" aria-label="@AriaLabel">
+    @foreach (var step in Steps)
+    {
+        <button type="button"
+                class="bearcat-release-progress-step @(step.State is ProgressStepState.Pending ? "bearcat-release-progress-step-pending" : null)"
+                aria-label="@($"{step.Title}: {step.Description}")"
+                title="@step.Description"
+                @onclick="() => OnStepSelected.InvokeAsync(step.Kind)">
+            <span class="bearcat-release-progress-step-marker @GetMarkerClass(step.State)" aria-hidden="true">
+                @switch (step.State)
+                {
+                    case ProgressStepState.Done:
+                        <LucideIcon Name="check" class="h-3.5 w-3.5" StrokeWidth="2.5" />
+                        break;
+                    case ProgressStepState.InProgress:
+                        <LucideIcon Name="loader-circle" class="h-3.5 w-3.5 animate-spin" StrokeWidth="2.5" />
+                        break;
+                    case ProgressStepState.Attention:
+                        <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" StrokeWidth="2.5" />
+                        break;
+                    default:
+                        <LucideIcon Name="@step.IconName" class="h-3.5 w-3.5" />
+                        break;
+                }
+            </span>
+            <span class="bearcat-release-progress-step-text" aria-hidden="true">
+                <span class="bearcat-release-progress-step-title">@step.Title</span>
+                <span class="bearcat-release-progress-step-short-title">@step.ShortTitle</span>
+                <span class="bearcat-release-progress-step-description @(step.State is ProgressStepState.Attention ? "bearcat-release-progress-step-description-attention" : null)">
+                    @step.Description
+                </span>
+            </span>
+        </button>
+    }
+</div>

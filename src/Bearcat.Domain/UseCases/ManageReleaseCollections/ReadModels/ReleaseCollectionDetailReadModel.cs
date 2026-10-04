@@ -11,6 +11,7 @@ public record ReleaseCollectionDetailReadModel(
     string ReleaseGroupName,
     string? PrimaryLanguageCode,
     DateTime CreatedAt,
+    DateTime? UploadsPostedAt,
     IReadOnlyList<CollectionUploadSlotReadModel> UploadSlots,
     IReadOnlyList<ReleaseCollectionReleaseReadModel> Releases,
     ReleaseCollectionMetadataReadModel? Metadata

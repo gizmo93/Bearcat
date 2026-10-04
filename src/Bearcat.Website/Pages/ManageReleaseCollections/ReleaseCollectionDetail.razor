@@ -1,5 +1,7 @@
 @page "/release-collections/{ReleaseCollectionId:int}"
 @using Bearcat.Website.Pages.ManagePostedLocations
+@using Bearcat.Website.Pages.ManageReleaseCollections.DetailTabs
+@using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps
 @using Bearcat.Website.Pages.PostQueue
 
 @if (!isInitialized)
@@ -10,386 +12,473 @@
 <PageTitle>@L["ReleaseCollection"] - @releaseCollection.Name - Bearcat</PageTitle>
 
 <section class="bearcat-release-shell">
-    @if (IsPostQueueWorkflow)
-    {
-        <PostQueueWorkflowBar Type="PostQueueWorkflowType.Collection" CurrentId="@ReleaseCollectionId" />
-    }
+    <div class="bearcat-release-sticky-area @(IsPostQueueWorkflow ? "bearcat-release-sticky-area-with-workflow-bar" : null)">
+        @if (IsPostQueueWorkflow)
+        {
+            <PostQueueWorkflowBar Type="PostQueueWorkflowType.Collection" CurrentId="@ReleaseCollectionId" />
+        }
 
-    <div class="bearcat-release-header">
-        <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0 space-y-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <h1 class="bearcat-release-title font-semibold">@releaseCollection.Name</h1>
-                    <CopyButton Value="@releaseCollection.Name" Label="@L["CopyTitle"]" />
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <BbBadge Variant="BadgeVariant.Outline">@releaseCollection.ReleaseGroupName</BbBadge>
-                    @if (string.IsNullOrWhiteSpace(releaseCollection.PrimaryLanguageCode))
-                    {
-                        <BbBadge Variant="BadgeVariant.Outline">@L["PrimaryLanguage"]: @L["NotSet"]</BbBadge>
-                    }
-                    else
-                    {
-                        var culture = CultureInfo.GetCultureInfo(releaseCollection.PrimaryLanguageCode);
-                        <BbBadge Variant="BadgeVariant.Outline">@culture.NativeName (@culture.TwoLetterISOLanguageName)</BbBadge>
-                    }
-                    <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Releases.Count @L["Releases"]</BbBadge>
-                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(releaseCollection.ReleaseContentType)</BbBadge>
-                    <BbButton Variant="ButtonVariant.Ghost"
-                              Size="ButtonSize.IconSmall"
-                              AriaLabel="@L["EditCollectionSettings"]"
-                              OnClick="ShowEditSettingsDialogAsync">
-                        <LucideIcon Name="pencil" class="h-4 w-4" />
-                    </BbButton>
-                </div>
-                <p class="truncate text-sm text-muted-foreground" title="@releaseCollection.Key">
-                    @releaseCollection.Key
-                </p>
-            </div>
+        <div @ref="stickyHeaderElement" class="bearcat-release-sticky-header">
+            @if (!string.IsNullOrWhiteSpace(CoverUrl))
+            {
+                <img src="@CoverUrl" alt="" class="bearcat-release-sticky-header-cover" />
+            }
+            <span class="min-w-0 flex-1 truncate text-sm font-semibold" title="@releaseCollection.Name">@releaseCollection.Name</span>
+            @ForumPostActions(isInStickyHeader: true)
         </div>
     </div>
 
-    <div class="space-y-4">
-        <BbCard Class="border-border/70 shadow-sm">
-            <BbCardHeader>
-                <div class="bearcat-section-header">
-                    <div class="flex items-center gap-2">
-                        <LucideIcon Name="clapperboard" class="h-4 w-4" />
-                        <div>
-                            <BbCardTitle class="text-base">@L["SeriesMetadata"]</BbCardTitle>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <BbButton
-                            Size="ButtonSize.Small"
-                            OnClick="ShowPostToForumDialogAsync">
-                            <LucideIcon Name="send" class="h-4 w-4" />
-                            @L["PostToForum"]
-                        </BbButton>
-                        <BbButton Variant="ButtonVariant.Outline"
-                                  Size="ButtonSize.Small"
-                                  OnClick="ShowRenderForumPostDialogAsync">
-                            <LucideIcon Name="file-output" class="h-4 w-4" />
-                            @L["RenderForumPost"]
-                        </BbButton>
-                        <BbButton Variant="ButtonVariant.Outline"
-                                  Size="ButtonSize.Small"
-                                  OnClick="ShowEditMetadataDialogAsync">
-                            <LucideIcon Name="pencil" class="h-4 w-4" />
-                            @L["EditMetadata"]
-                        </BbButton>
-                        <BbButton Variant="ButtonVariant.Outline"
-                                  Size="ButtonSize.Small"
-                                  Disabled="isResolvingMetadata"
-                                  OnClick="ResolveMetadataAsync">
-                            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolvingMetadata ? "animate-spin" : string.Empty)}")" />
-                            @L["RefreshMetadata"]
-                        </BbButton>
-                    </div>
+    <div @ref="headerCardElement" class="bearcat-release-header-card">
+        <div class="bearcat-release-header-card-body @(string.IsNullOrWhiteSpace(CoverUrl) ? null : "bearcat-release-header-card-body-with-cover")">
+            @if (!string.IsNullOrWhiteSpace(CoverUrl))
+            {
+                <img src="@CoverUrl" alt="@releaseCollection.Metadata?.Title" class="bearcat-release-header-cover" />
+            }
+
+            <div class="flex min-w-0 flex-col gap-2">
+                <div class="flex min-w-0 items-start gap-1.5">
+                    <h1 class="bearcat-release-title min-w-0 font-semibold">@releaseCollection.Name</h1>
+                    <CopyButton Value="@releaseCollection.Name" Label="@L["CopyTitle"]" />
                 </div>
-            </BbCardHeader>
-            <BbCardContent>
-                @if (releaseCollection.Metadata is null)
+
+                @if (releaseCollection.Metadata is { } metadata)
                 {
-                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-                        @L["NoSeriesMetadataYet"]
-                    </div>
-                }
-                else
-                {
-                    <div class="flex flex-col gap-4 sm:flex-row">
-                        @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.CoverUrl))
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                        <span>@metadata.Title</span>
+                        @if (!string.IsNullOrWhiteSpace(metadata.MetadataDatabaseUrl))
                         {
-                            <a href="@releaseCollection.Metadata.CoverUrl"
+                            <a class="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                               href="@metadata.MetadataDatabaseUrl"
                                target="_blank"
                                rel="noreferrer noopener"
-                               title="@L["OpenCoverInNewTab"]">
-                                <img src="@releaseCollection.Metadata.CoverUrl"
-                                     alt="@releaseCollection.Metadata.Title"
-                                     class="bearcat-series-cover" />
+                               title="@metadata.MetadataDatabaseUrl">
+                                @metadata.MetadataDatabaseName
+                                <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
                             </a>
                         }
-                        <div class="min-w-0 space-y-3">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h2 class="text-lg font-semibold">@releaseCollection.Metadata.Title</h2>
-                                @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.MetadataDatabaseUrl))
-                                {
-                                    <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                                       href="@releaseCollection.Metadata.MetadataDatabaseUrl"
-                                       target="_blank"
-                                       rel="noreferrer noopener">
-                                        <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.MetadataDatabaseName</BbBadge>
-                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
-                                    </a>
-                                }
-                                else
-                                {
-                                    <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.MetadataDatabaseName</BbBadge>
-                                }
-                            </div>
-                            @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.Description))
-                            {
-                                <p class="whitespace-pre-line text-sm text-muted-foreground">@releaseCollection.Metadata.Description</p>
-                            }
-                            else
-                            {
-                                <p class="text-sm text-muted-foreground">@L["NoSeriesDescription"]</p>
-                            }
-                        </div>
-                    </div>
-                }
-            </BbCardContent>
-        </BbCard>
-        
-        <CollectionImageUploads ReleaseCollectionId="@ReleaseCollectionId" />
-        
-        <BbCard Class="border-border/70 shadow-sm">
-            <BbCardHeader>
-                <div class="bearcat-section-header">
-                    <div class="flex items-center gap-2">
-                        <LucideIcon Name="rows-3" class="h-4 w-4" />
-                        <div>
-                            <BbCardTitle class="text-base">@L["CollectionUploadSlots"]</BbCardTitle>
-                            <BbCardDescription>@L["CollectionUploadSlotsDescription"]</BbCardDescription>
-                        </div>
-                    </div>
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Small"
-                              OnClick="ShowCreateUploadSlotDialogAsync">
-                        <LucideIcon Name="plus" class="h-4 w-4" />
-                        @L["NewCollectionUploadSlot"]
-                    </BbButton>
-                </div>
-            </BbCardHeader>
-            <BbCardContent>
-                @if (releaseCollection.UploadSlots.Count == 0)
-                {
-                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-                        @L["NoCollectionUploadSlotsFound"]
-                    </div>
-                }
-                else
-                {
-                    <div class="bearcat-config-list">
-                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_minmax(160px,0.75fr)_150px_110px_120px_84px]">
-                            <span>@L["Name"]</span>
-                            <span>@L["SharedLinkCrypters"]</span>
-                            <span>@L["PasswordPolicy"]</span>
-                            <span>@L["Required"]</span>
-                            <span>@L["UploadConfigurations"]</span>
-                            <span class="text-right">@L["Actions"]</span>
-                        </div>
-                        @foreach (var slot in releaseCollection.UploadSlots)
+                        else
                         {
-                            <div class="bearcat-config-item">
-                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_minmax(160px,0.75fr)_150px_110px_120px_84px]">
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold" title="@slot.Name">@slot.Name</p>
-                                        <p class="mt-1 truncate text-xs text-muted-foreground" title="@slot.Key">@slot.Key</p>
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["SharedLinkCrypters"]</p>
-                                        @if (slot.SharedLinkCrypters.Count == 0)
-                                        {
-                                            <span class="text-sm text-muted-foreground">@L["NoSharedLinkCrypters"]</span>
-                                        }
-                                        else
-                                        {
-                                            <div class="flex flex-wrap gap-1">
-                                                @foreach (var linkCrypter in slot.SharedLinkCrypters)
-                                                {
-                                                    <BbBadge Variant="@(linkCrypter.IsActive ? BadgeVariant.Secondary : BadgeVariant.Outline)">
-                                                        @linkCrypter.LinkCrypterRegistrationName
-                                                    </BbBadge>
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["PasswordPolicy"]</p>
-                                        <BbBadge Variant="BadgeVariant.Outline">@L.Localize(slot.PasswordPolicy)</BbBadge>
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["Required"]</p>
-                                        <BbBadge Variant="@(slot.IsRequired ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                            @(slot.IsRequired ? L["Yes"] : L["No"])
-                                        </BbBadge>
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
-                                        <span class="text-sm font-medium">@slot.UploadConfigCount</span>
-                                    </div>
-                                    <div class="bearcat-config-actions">
-                                        <BbButton Variant="ButtonVariant.Ghost"
-                                                  Size="ButtonSize.IconSmall"
-                                                  AriaLabel="@L["EditSharedLinkCrypters"]"
-                                                  OnClick="@(async () => await ShowEditSharedLinkCryptersDialogAsync(slot))">
-                                            <LucideIcon Name="pencil" class="h-4 w-4" />
-                                        </BbButton>
-                                        <BbButton Variant="ButtonVariant.Ghost"
-                                                  Size="ButtonSize.IconSmall"
-                                                  AriaLabel="@L["DeleteCollectionUploadSlot"]"
-                                                  OnClick="@(async () => await DeleteUploadSlotAsync(slot))">
-                                            <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
-                                        </BbButton>
+                            <span>@metadata.MetadataDatabaseName</span>
+                        }
+                    </div>
+                }
+
+                <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm">
+                    <span class="inline-flex items-center leading-none" title="@L["ReleaseContentType"]">
+                        <BbBadge Variant="BadgeVariant.Outline">@L.Localize(releaseCollection.ReleaseContentType)</BbBadge>
+                    </span>
+                    <span class="inline-flex min-w-0 items-center gap-1.5" title="@L["ReleaseGroup"]">
+                        <LucideIcon Name="layers" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span class="sr-only">@L["ReleaseGroup"]:</span>
+                        <span class="min-w-0 [overflow-wrap:anywhere]">@releaseCollection.ReleaseGroupName</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5" title="@L["PrimaryLanguage"]">
+                        <LucideIcon Name="languages" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span class="sr-only">@L["PrimaryLanguage"]:</span>
+                        @if (string.IsNullOrWhiteSpace(releaseCollection.PrimaryLanguageCode))
+                        {
+                            @L["NotSet"]
+                        }
+                        else
+                        {
+                            var culture = CultureInfo.GetCultureInfo(releaseCollection.PrimaryLanguageCode);
+                            @($"{culture.NativeName} ({culture.TwoLetterISOLanguageName})")
+                        }
+                    </span>
+                    <span class="inline-flex items-center gap-1.5" title="@L["Releases"]">
+                        <LucideIcon Name="list-video" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        @ReleaseCountText
+                    </span>
+                </div>
+
+                <div class="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                    <span class="inline-flex shrink-0" title="@L["ReleaseCollectionKey"]">
+                        <LucideIcon Name="key" class="h-3.5 w-3.5" />
+                        <span class="sr-only">@L["ReleaseCollectionKey"]:</span>
+                    </span>
+                    <code class="min-w-0 truncate font-mono text-xs" title="@releaseCollection.Key">@releaseCollection.Key</code>
+                    <CopyButton Value="@releaseCollection.Key" Label="@L["CopyReleaseCollectionKey"]" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Description))
+                {
+                    <div class="flex min-w-0 flex-col items-start gap-1">
+                        <p class="@(isDescriptionExpanded ? null : "line-clamp-2") whitespace-pre-line text-sm text-muted-foreground">@Description</p>
+                        @if (IsDescriptionToggleVisible)
+                        {
+                            <button type="button"
+                                    class="text-xs font-medium text-primary hover:underline"
+                                    aria-expanded="@(isDescriptionExpanded ? "true" : "false")"
+                                    @onclick="ToggleDescription">
+                                @(isDescriptionExpanded ? L["ShowLess"] : L["ShowMore"])
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="bearcat-release-header-actions">
+                @ForumPostActions(isInStickyHeader: false)
+
+                <BbDropdownMenu>
+                    <BbDropdownMenuTrigger>
+                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseCollectionActions"]">
+                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                        </BbButton>
+                    </BbDropdownMenuTrigger>
+                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                        <BbDropdownMenuItem OnClick="ShowEditSettingsDialogAsync">
+                            <Icon>
+                                <LucideIcon Name="settings-2" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["EditCollectionSettings"]</ChildContent>
+                        </BbDropdownMenuItem>
+                        <BbDropdownMenuItem OnClick="ShowEditMetadataDialogAsync">
+                            <Icon>
+                                <LucideIcon Name="pencil" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["EditMetadata"]</ChildContent>
+                        </BbDropdownMenuItem>
+                        <BbDropdownMenuItem Disabled="isResolvingMetadata" OnClick="ResolveMetadataAsync">
+                            <Icon>
+                                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolvingMetadata ? "animate-spin" : string.Empty)}")" />
+                            </Icon>
+                            <ChildContent>@L["RefreshMetadata"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    </BbDropdownMenuContent>
+                </BbDropdownMenu>
+            </div>
+        </div>
+
+        <ReleaseCollectionProgressSteps Steps="progressSteps"
+                                        OnStepSelected="HandleProgressStepSelected" />
+    </div>
+
+    <BbTabs @key="ReleaseCollectionId" Value="@activeTab" ValueChanged="HandleTabChanged" Class="space-y-4">
+        <div class="max-sm:hidden">
+            <BbTabsList>
+                <BbTabsTrigger Value="@ReleaseCollectionDetailTab.Overview">@L["Overview"]</BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseCollectionDetailTab.UploadSlots">
+                    @TabLabelWithCount(L["CollectionUploadSlots"], UploadSlotCountText)
+                </BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseCollectionDetailTab.Images">
+                    @TabLabelWithCount(L["Images"], ImageUploadConfigCountText)
+                </BbTabsTrigger>
+            </BbTabsList>
+        </div>
+
+        <div class="sm:hidden">
+            <BbSelect TValue="string"
+                      Value="@activeTab"
+                      ValueChanged="HandleTabChanged"
+                      Options="TabSelectOptions"
+                      AriaLabel="@L["ReleaseCollectionSection"]"
+                      Class="w-full" />
+        </div>
+
+        <BbTabsContent Value="@ReleaseCollectionDetailTab.Overview" Class="space-y-4">
+            <BbCard Class="border-border/70 shadow-sm">
+                <BbCardHeader>
+                    <div class="bearcat-section-header">
+                        <div class="flex items-center gap-2">
+                            <LucideIcon Name="upload" class="h-4 w-4" />
+                            <div>
+                                <BbCardTitle class="text-base">@L["Releases"]</BbCardTitle>
+                            </div>
+                        </div>
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  OnClick="ShowAddReleaseDialogAsync">
+                            <LucideIcon Name="plus" class="h-4 w-4" />
+                            @L["AddRelease"]
+                        </BbButton>
+                    </div>
+                </BbCardHeader>
+                <BbCardContent>
+                    @if (releaseCollection.Releases.Count == 0)
+                    {
+                        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                            @L["NoReleasesFound"]
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bearcat-config-list">
+                            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
+                                <span>@L["Name"]</span>
+                                <span>@L["OnlineState"]</span>
+                                <span>@L["ReleaseType"]</span>
+                                <span>@L["CreatedAt"]</span>
+                                <span class="text-right">@L["Actions"]</span>
+                            </div>
+                            @foreach (var release in releaseCollection.Releases)
+                            {
+                                <div class="bearcat-config-item">
+                                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
+                                        <a class="bearcat-release-list-name"
+                                           href="@($"/releases/{release.ReleaseId}")">
+                                            @release.Name
+                                        </a>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["OnlineState"]</p>
+                                            <OnlineStateBadge Value="@release.OnlineState"
+                                                              NotFullyOnlineSince="@release.NotFullyOnlineSince" />
+                                        </div>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["ReleaseType"]</p>
+                                            <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
+                                        </div>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["CreatedAt"]</p>
+                                            <span class="text-sm">@release.CreatedAt.ToString("g")</span>
+                                        </div>
+                                        <div class="bearcat-config-actions">
+                                            <p class="bearcat-mobile-label">@L["Actions"]</p>
+                                            @if (release.LatestUploads.Count > 0)
+                                            {
+                                                <BbDropdownMenu>
+                                                    <BbDropdownMenuTrigger>
+                                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                                  Size="ButtonSize.IconSmall"
+                                                                  AriaLabel="@L["ViewUploadLinks"]">
+                                                            <LucideIcon Name="list" class="h-4 w-4" />
+                                                        </BbButton>
+                                                    </BbDropdownMenuTrigger>
+                                                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                                        @foreach (var upload in release.LatestUploads)
+                                                        {
+                                                            <BbDropdownMenuItem OnClick="@(async _ => await ShowUploadLinksDialogAsync(release, upload))">
+                                                                @upload.UploadConfigName
+                                                            </BbDropdownMenuItem>
+                                                        }
+                                                    </BbDropdownMenuContent>
+                                                </BbDropdownMenu>
+                                            }
+                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                      Size="ButtonSize.IconSmall"
+                                                      AriaLabel="@L["RemoveFromCollection"]"
+                                                      OnClick="@(async () => await RemoveReleaseAsync(release))">
+                                                <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
+                                            </BbButton>
+                                        </div>
                                     </div>
                                 </div>
-                                @if (slot.Containers.Count > 0)
-                                {
-                                    <div class="bearcat-collection-containers">
-                                        <p class="bearcat-collection-containers-title">@L["ContainerLinks"]</p>
-                                        <div class="bearcat-collection-container-list">
-                                            @foreach (var container in slot.Containers)
+                            }
+                        </div>
+                    }
+                </BbCardContent>
+            </BbCard>
+            <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations">
+                <PostedLocations @ref="postedLocations"
+                                 ReleaseCollectionId="@ReleaseCollectionId"
+                                 OnLocationsChanged="LoadReleaseCollectionAsync" />
+            </div>
+        </BbTabsContent>
+
+        <BbTabsContent Value="@ReleaseCollectionDetailTab.UploadSlots" Class="space-y-4">
+            <BbCard Class="border-border/70 shadow-sm">
+                <BbCardHeader>
+                    <div class="bearcat-section-header">
+                        <div class="flex items-center gap-2">
+                            <LucideIcon Name="rows-3" class="h-4 w-4" />
+                            <div>
+                                <BbCardTitle class="text-base">@L["CollectionUploadSlots"]</BbCardTitle>
+                                <BbCardDescription>@L["CollectionUploadSlotsDescription"]</BbCardDescription>
+                            </div>
+                        </div>
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  OnClick="ShowCreateUploadSlotDialogAsync">
+                            <LucideIcon Name="plus" class="h-4 w-4" />
+                            @L["NewCollectionUploadSlot"]
+                        </BbButton>
+                    </div>
+                </BbCardHeader>
+                <BbCardContent>
+                    @if (releaseCollection.UploadSlots.Count == 0)
+                    {
+                        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                            @L["NoCollectionUploadSlotsFound"]
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bearcat-config-list">
+                            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_minmax(160px,0.75fr)_150px_110px_120px_84px]">
+                                <span>@L["Name"]</span>
+                                <span>@L["SharedLinkCrypters"]</span>
+                                <span>@L["PasswordPolicy"]</span>
+                                <span>@L["Required"]</span>
+                                <span>@L["UploadConfigurations"]</span>
+                                <span class="text-right">@L["Actions"]</span>
+                            </div>
+                            @foreach (var slot in releaseCollection.UploadSlots)
+                            {
+                                <div class="bearcat-config-item">
+                                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_minmax(160px,0.75fr)_150px_110px_120px_84px]">
+                                        <div class="min-w-0">
+                                            <p class="truncate text-sm font-semibold" title="@slot.Name">@slot.Name</p>
+                                            <p class="mt-1 truncate text-xs text-muted-foreground" title="@slot.Key">@slot.Key</p>
+                                        </div>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["SharedLinkCrypters"]</p>
+                                            @if (slot.SharedLinkCrypters.Count == 0)
                                             {
-                                                <div class="bearcat-collection-container-row">
-                                                    <div class="bearcat-collection-container-meta">
-                                                        <span class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">
-                                                            @container.LinkCrypterRegistrationName
-                                                        </span>
-                                                        <BbBadge Variant="@GetContainerVariant(container.State)">
-                                                            @L.Localize(container.State)
+                                                <span class="text-sm text-muted-foreground">@L["NoSharedLinkCrypters"]</span>
+                                            }
+                                            else
+                                            {
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach (var linkCrypter in slot.SharedLinkCrypters)
+                                                    {
+                                                        <BbBadge Variant="@(linkCrypter.IsActive ? BadgeVariant.Secondary : BadgeVariant.Outline)">
+                                                            @linkCrypter.LinkCrypterRegistrationName
                                                         </BbBadge>
-                                                        <BbBadge Variant="BadgeVariant.Outline">
-                                                            @container.SourceUploadCount @L["Uploads"]
-                                                        </BbBadge>
-                                                        <ErrorMessagesTooltip Messages="container.Errors" />
-                                                    </div>
-                                                    <div class="bearcat-collection-container-link">
-                                                        @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
-                                                        {
-                                                            <span class="text-sm text-muted-foreground">-</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <a class="bearcat-upload-link"
-                                                               href="@container.ContainerUrl"
-                                                               target="_blank"
-                                                               rel="noreferrer noopener"
-                                                               title="@container.ContainerUrl">
-                                                                @container.ContainerUrl
-                                                            </a>
-                                                        }
-                                                        <div class="bearcat-collection-container-actions">
-                                                            @if (!string.IsNullOrWhiteSpace(container.ContainerUrl))
-                                                            {
-                                                                <CopyButton Value="@container.ContainerUrl" Label="@L["CopyLink"]" />
-                                                            }
-                                                            @if (container.State is LinkCrypterContainerState.CreationFailed)
-                                                            {
-                                                                <BbButton Variant="ButtonVariant.Ghost"
-                                                                          Size="ButtonSize.IconSmall"
-                                                                          AriaLabel="@L["DeleteLinkCrypterContainer"]"
-                                                                          OnClick="@(async () => await DeleteFailedContainerAsync(container))">
-                                                                    <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
-                                                                </BbButton>
-                                                            }
-                                                        </div>
-                                                    </div>
+                                                    }
                                                 </div>
                                             }
                                         </div>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["PasswordPolicy"]</p>
+                                            <BbBadge Variant="BadgeVariant.Outline">@L.Localize(slot.PasswordPolicy)</BbBadge>
+                                        </div>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["Required"]</p>
+                                            <BbBadge Variant="@(slot.IsRequired ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                @(slot.IsRequired ? L["Yes"] : L["No"])
+                                            </BbBadge>
+                                        </div>
+                                        <div>
+                                            <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
+                                            <span class="text-sm font-medium">@slot.UploadConfigCount</span>
+                                        </div>
+                                        <div class="bearcat-config-actions">
+                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                      Size="ButtonSize.IconSmall"
+                                                      AriaLabel="@L["EditSharedLinkCrypters"]"
+                                                      OnClick="@(async () => await ShowEditSharedLinkCryptersDialogAsync(slot))">
+                                                <LucideIcon Name="pencil" class="h-4 w-4" />
+                                            </BbButton>
+                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                      Size="ButtonSize.IconSmall"
+                                                      AriaLabel="@L["DeleteCollectionUploadSlot"]"
+                                                      OnClick="@(async () => await DeleteUploadSlotAsync(slot))">
+                                                <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
+                                            </BbButton>
+                                        </div>
                                     </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
-            </BbCardContent>
-        </BbCard>
-        
-        <BbCard Class="border-border/70 shadow-sm">
-            <BbCardHeader>
-                <div class="bearcat-section-header">
-                    <div class="flex items-center gap-2">
-                        <LucideIcon Name="upload" class="h-4 w-4" />
-                        <div>
-                            <BbCardTitle class="text-base">@L["Releases"]</BbCardTitle>
-                        </div>
-                    </div>
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Small"
-                              OnClick="ShowAddReleaseDialogAsync">
-                        <LucideIcon Name="plus" class="h-4 w-4" />
-                        @L["AddRelease"]
-                    </BbButton>
-                </div>
-            </BbCardHeader>
-            <BbCardContent>
-                @if (releaseCollection.Releases.Count == 0)
-                {
-                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-                        @L["NoReleasesFound"]
-                    </div>
-                }
-                else
-                {
-                    <div class="bearcat-config-list">
-                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
-                            <span>@L["Name"]</span>
-                            <span>@L["OnlineState"]</span>
-                            <span>@L["ReleaseType"]</span>
-                            <span>@L["CreatedAt"]</span>
-                            <span class="text-right">@L["Actions"]</span>
-                        </div>
-                        @foreach (var release in releaseCollection.Releases)
-                        {
-                            <div class="bearcat-config-item">
-                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
-                                    <a class="bearcat-release-list-name"
-                                       href="@($"/releases/{release.ReleaseId}")">
-                                        @release.Name
-                                    </a>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["OnlineState"]</p>
-                                        <OnlineStateBadge Value="@release.OnlineState"
-                                                          NotFullyOnlineSince="@release.NotFullyOnlineSince" />
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["ReleaseType"]</p>
-                                        <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["CreatedAt"]</p>
-                                        <span class="text-sm">@release.CreatedAt.ToString("g")</span>
-                                    </div>
-                                    <div class="bearcat-config-actions">
-                                        <p class="bearcat-mobile-label">@L["Actions"]</p>
-                                        @if (release.LatestUploads.Count > 0)
-                                        {
-                                            <BbDropdownMenu>
-                                                <BbDropdownMenuTrigger>
-                                                    <BbButton Variant="ButtonVariant.Ghost"
-                                                              Size="ButtonSize.IconSmall"
-                                                              AriaLabel="@L["ViewUploadLinks"]">
-                                                        <LucideIcon Name="list" class="h-4 w-4" />
-                                                    </BbButton>
-                                                </BbDropdownMenuTrigger>
-                                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                                                    @foreach (var upload in release.LatestUploads)
-                                                    {
-                                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowUploadLinksDialogAsync(release, upload))">
-                                                            @upload.UploadConfigName
-                                                        </BbDropdownMenuItem>
-                                                    }
-                                                </BbDropdownMenuContent>
-                                            </BbDropdownMenu>
-                                        }
-                                        <BbButton Variant="ButtonVariant.Ghost"
-                                                  Size="ButtonSize.IconSmall"
-                                                  AriaLabel="@L["RemoveFromCollection"]"
-                                                  OnClick="@(async () => await RemoveReleaseAsync(release))">
-                                            <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
-                                        </BbButton>
-                                    </div>
+                                    @if (slot.Containers.Count > 0)
+                                    {
+                                        <div class="bearcat-collection-containers">
+                                            <p class="bearcat-collection-containers-title">@L["ContainerLinks"]</p>
+                                            <div class="bearcat-collection-container-list">
+                                                @foreach (var container in slot.Containers)
+                                                {
+                                                    <div class="bearcat-collection-container-row">
+                                                        <div class="bearcat-collection-container-meta">
+                                                            <span class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">
+                                                                @container.LinkCrypterRegistrationName
+                                                            </span>
+                                                            <BbBadge Variant="@GetContainerVariant(container.State)">
+                                                                @L.Localize(container.State)
+                                                            </BbBadge>
+                                                            <BbBadge Variant="BadgeVariant.Outline">
+                                                                @container.SourceUploadCount @L["Uploads"]
+                                                            </BbBadge>
+                                                            <ErrorMessagesTooltip Messages="container.Errors" />
+                                                        </div>
+                                                        <div class="bearcat-collection-container-link">
+                                                            @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
+                                                            {
+                                                                <span class="text-sm text-muted-foreground">-</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <a class="bearcat-upload-link"
+                                                                   href="@container.ContainerUrl"
+                                                                   target="_blank"
+                                                                   rel="noreferrer noopener"
+                                                                   title="@container.ContainerUrl">
+                                                                    @container.ContainerUrl
+                                                                </a>
+                                                            }
+                                                            <div class="bearcat-collection-container-actions">
+                                                                @if (!string.IsNullOrWhiteSpace(container.ContainerUrl))
+                                                                {
+                                                                    <CopyButton Value="@container.ContainerUrl" Label="@L["CopyLink"]" />
+                                                                }
+                                                                @if (container.State is LinkCrypterContainerState.CreationFailed)
+                                                                {
+                                                                    <BbButton Variant="ButtonVariant.Ghost"
+                                                                              Size="ButtonSize.IconSmall"
+                                                                              AriaLabel="@L["DeleteLinkCrypterContainer"]"
+                                                                              OnClick="@(async () => await DeleteFailedContainerAsync(container))">
+                                                                        <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
+                                                                    </BbButton>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
-                            </div>
-                        }
-                    </div>
-                }
-            </BbCardContent>
-        </BbCard>
-        
-        <PostedLocations ReleaseCollectionId="@ReleaseCollectionId" />
-        
-    </div>
+                            }
+                        </div>
+                    }
+                </BbCardContent>
+            </BbCard>
+        </BbTabsContent>
+
+        <BbTabsContent Value="@ReleaseCollectionDetailTab.Images" Class="space-y-4">
+            <CollectionImageUploads ReleaseCollectionId="@ReleaseCollectionId"
+                                    OnImageUploadsChanged="HandleImageUploadsChangedAsync" />
+        </BbTabsContent>
+    </BbTabs>
 </section>
+
+@code {
+    private RenderFragment ForumPostActions(bool isInStickyHeader) =>
+        @<text>
+            @if (hasActiveForumRegistration)
+            {
+                <BbSplitButton Size="ButtonSize.Small"
+                               Variant="@(IsPostingToForumPending ? ButtonVariant.Default : ButtonVariant.Outline)"
+                               OnClick="ShowPostToForumDialogAsync"
+                               AriaLabel="@L["PostToForum"]"
+                               DropdownAriaLabel="@L["MoreForumPostOptions"]">
+                    <Icon>
+                        <LucideIcon Name="send" class="h-4 w-4" />
+                    </Icon>
+                    <ChildContent>
+                        <span class="@(isInStickyHeader ? "hidden sm:inline" : null)">@L["PostToForum"]</span>
+                    </ChildContent>
+                    <DropdownContent>
+                        <BbSplitButtonItem OnClick="ShowRenderForumPostDialogAsync">
+                            <span class="inline-flex items-center gap-2">
+                                <LucideIcon Name="file-output" class="h-4 w-4" />
+                                @L["RenderForumPost"]
+                            </span>
+                        </BbSplitButtonItem>
+                    </DropdownContent>
+                </BbSplitButton>
+            }
+            else
+            {
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          OnClick="ShowRenderForumPostDialogAsync"
+                          AriaLabel="@L["RenderForumPost"]">
+                    <LucideIcon Name="file-output" class="h-4 w-4" />
+                    <span class="@(isInStickyHeader ? "hidden sm:inline" : null)">@L["RenderForumPost"]</span>
+                </BbButton>
+            }
+        </text>;
+
+    private static RenderFragment TabLabelWithCount(string label, string count) =>
+        @<span class="inline-flex items-center gap-2">
+            <span>@label</span>
+            <span class="bearcat-tab-count">@count</span>
+        </span>;
+}

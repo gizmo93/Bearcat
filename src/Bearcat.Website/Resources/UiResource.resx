@@ -887,10 +887,7 @@
   <data name="MediaDatabaseRegistrationActivated" xml:space="preserve"><value>Metadata source {0} activated</value></data>
   <data name="MediaDatabaseRegistrationDeactivated" xml:space="preserve"><value>Metadata source {0} deactivated</value></data>
   <data name="DeleteMediaDatabaseRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete metadata source {0}?</value></data>
-  <data name="SeriesMetadata" xml:space="preserve"><value>Series information</value></data>
   <data name="RefreshMetadata" xml:space="preserve"><value>Resolve metadata</value></data>
-  <data name="NoSeriesMetadataYet" xml:space="preserve"><value>No series metadata resolved yet.</value></data>
-  <data name="NoSeriesDescription" xml:space="preserve"><value>No description available.</value></data>
   <data name="SeriesMetadataResolved" xml:space="preserve"><value>Series metadata resolved.</value></data>
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>No matching series found.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update to {0}</value></data>
@@ -1609,4 +1606,16 @@
   <data name="UploadHistoryContainerCountOne" xml:space="preserve"><value>1 container</value></data>
   <data name="UploadHistoryContainerCount" xml:space="preserve"><value>{0} containers</value></data>
   <data name="ShowDetails" xml:space="preserve"><value>Show details</value></data>
+  <data name="ReleaseCollectionProgress" xml:space="preserve"><value>Collection progress</value></data>
+  <data name="ReleaseCollectionProgressContainersNotCreatedYet" xml:space="preserve"><value>Not created yet</value></data>
+  <data name="ReleaseCollectionProgressImagesFailed" xml:space="preserve"><value>{0} failed</value></data>
+  <data name="ReleaseCollectionProgressImagesUploaded" xml:space="preserve"><value>{0} uploaded</value></data>
+  <data name="ReleaseCollectionReleaseCountOne" xml:space="preserve"><value>1 release</value></data>
+  <data name="ReleaseCollectionReleaseCount" xml:space="preserve"><value>{0} releases</value></data>
+  <data name="ReleaseCollectionSection" xml:space="preserve"><value>Collection section</value></data>
+  <data name="ReleaseCollectionKey" xml:space="preserve"><value>Collection key</value></data>
+  <data name="CopyReleaseCollectionKey" xml:space="preserve"><value>Copy collection key</value></data>
+  <data name="Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="ShowMore" xml:space="preserve"><value>Show more</value></data>
+  <data name="ShowLess" xml:space="preserve"><value>Show less</value></data>
 </root>

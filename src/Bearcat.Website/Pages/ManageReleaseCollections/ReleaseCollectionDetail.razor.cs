@@ -1,14 +1,24 @@
+using System.Globalization;
+using Bearcat.Abstractions.DistributionSite;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
+using Bearcat.Website.Pages.ManagePostedLocations;
+using Bearcat.Website.Pages.ManageReleaseCollections.DetailTabs;
+using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps;
 using Bearcat.Website.Pages.ManageReleases;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared.ProgressSteps;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
@@ -16,30 +26,93 @@ public partial class ReleaseCollectionDetail(
     DialogService dialogService,
     ToastService toastService,
     NavigationManager navigationManager,
-    IScopedOperationRunner operationRunner
-)
+    IScopedOperationRunner operationRunner,
+    IJSRuntime jsRuntime
+) : ComponentBase, IAsyncDisposable
 {
     [Parameter]
     public int ReleaseCollectionId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? RequestedTab { get; set; }
+
     [SupplyParameterFromQuery(Name = "workflow")]
     public string? Workflow { get; set; }
 
+    private const string PostedLocationsElementId = "release-collection-posted-locations";
+    private const int CollapsedDescriptionMaximumLength = 160;
+
     private ReleaseCollectionDetailReadModel releaseCollection = null!;
+    private IReadOnlyList<CollectionImageUploadReadModel> imageUploads = [];
+    private IReadOnlyList<ReleaseCollectionProgressStep> progressSteps = [];
+    private ElementReference headerCardElement;
+    private ElementReference stickyHeaderElement;
+    private bool isStickyHeaderVisibilityTrackingRequested;
+    private bool isScrollToPostedLocationsRequested;
+    private IJSObjectReference? stickyHeaderVisibilityTrackingHandle;
+    private PostedLocations? postedLocations;
+    private bool hasActiveForumRegistration;
     private bool isInitialized;
     private bool isResolvingMetadata;
+    private bool isDescriptionExpanded;
     private int? loadedReleaseCollectionId;
+    private string? activeTab = ReleaseCollectionDetailTab.Overview;
 
     private bool IsPostQueueWorkflow =>
         string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
 
+    private string? CoverUrl => releaseCollection.Metadata?.CoverUrl;
+
+    private string? Description => releaseCollection.Metadata?.Description;
+
+    private bool IsDescriptionToggleVisible =>
+        Description is not null && Description.Length > CollapsedDescriptionMaximumLength;
+
+    private bool IsPostingToForumPending =>
+        releaseCollection.Releases.Any(release => release.OnlineUploadConfigsCount > 0)
+        && progressSteps.Single(step => step.Kind == ReleaseCollectionProgressStepKind.Posted).State
+            == ProgressStepState.Pending;
+
+    private string ReleaseCountText =>
+        releaseCollection.Releases.Count == 1
+            ? L["ReleaseCollectionReleaseCountOne"]
+            : L["ReleaseCollectionReleaseCount", releaseCollection.Releases.Count];
+
+    private string UploadSlotCountText =>
+        releaseCollection.UploadSlots.Count.ToString(CultureInfo.CurrentCulture);
+
+    private string ImageUploadConfigCountText =>
+        imageUploads.Count.ToString(CultureInfo.CurrentCulture);
+
+    private IReadOnlyList<SelectOption<string>> TabSelectOptions =>
+        [
+            new(ReleaseCollectionDetailTab.Overview, L["Overview"]),
+            new(
+                ReleaseCollectionDetailTab.UploadSlots,
+                $"{L["CollectionUploadSlots"]} ({UploadSlotCountText})"
+            ),
+            new(ReleaseCollectionDetailTab.Images, $"{L["Images"]} ({ImageUploadConfigCountText})"),
+        ];
+
     protected override async Task OnParametersSetAsync()
     {
+        activeTab = GetTabFromRequestedTab(RequestedTab);
+
         if (loadedReleaseCollectionId != ReleaseCollectionId)
         {
+            isDescriptionExpanded = false;
             await LoadReleaseCollectionAsync();
+            await LoadHasActiveForumRegistrationAsync();
         }
     }
+
+    private static string GetTabFromRequestedTab(string? requestedTab) =>
+        requestedTab switch
+        {
+            ReleaseCollectionDetailTab.UploadSlots => ReleaseCollectionDetailTab.UploadSlots,
+            ReleaseCollectionDetailTab.Images => ReleaseCollectionDetailTab.Images,
+            _ => ReleaseCollectionDetailTab.Overview,
+        };
 
     private async Task LoadReleaseCollectionAsync()
     {
@@ -55,8 +128,126 @@ public partial class ReleaseCollectionDetail(
         }
 
         releaseCollection = detail;
+        await LoadImageUploadsAsync();
+        await LoadProgressStepsAsync();
         loadedReleaseCollectionId = ReleaseCollectionId;
         isInitialized = true;
+    }
+
+    private async Task LoadImageUploadsAsync()
+    {
+        imageUploads = await operationRunner.RunAsync(
+            (IReleaseCollectionReadRepository repository) =>
+                repository.GetImageUploadsAsync(ReleaseCollectionId)
+        );
+    }
+
+    private async Task LoadProgressStepsAsync()
+    {
+        var postedLocationReadModels = await operationRunner.RunAsync(
+            (IPostedLocationReadRepository repository) =>
+                repository.GetForCollectionAsync(ReleaseCollectionId)
+        );
+        progressSteps = ReleaseCollectionProgressStepService.BuildReleaseCollectionProgressSteps(
+            releaseCollection,
+            imageUploads,
+            postedLocationReadModels.Count
+        );
+    }
+
+    private async Task LoadHasActiveForumRegistrationAsync()
+    {
+        var distributionSiteRegistrations = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
+        hasActiveForumRegistration = distributionSiteRegistrations.Any(registration =>
+            registration.Kind == DistributionSiteKind.Forum && registration.IsActive
+        );
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isInitialized)
+        {
+            return;
+        }
+
+        await AttachStickyHeaderVisibilityTrackingAsync();
+        await ScrollToPostedLocationsIfRequestedAsync();
+    }
+
+    private async Task AttachStickyHeaderVisibilityTrackingAsync()
+    {
+        if (isStickyHeaderVisibilityTrackingRequested)
+        {
+            return;
+        }
+
+        isStickyHeaderVisibilityTrackingRequested = true;
+
+        try
+        {
+            stickyHeaderVisibilityTrackingHandle = await jsRuntime.InvokeAsync<IJSObjectReference>(
+                "bearcat.releaseStickyHeader.attach",
+                headerCardElement,
+                stickyHeaderElement
+            );
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    private async Task ScrollToPostedLocationsIfRequestedAsync()
+    {
+        if (!isScrollToPostedLocationsRequested)
+        {
+            return;
+        }
+
+        isScrollToPostedLocationsRequested = false;
+
+        try
+        {
+            await jsRuntime.InvokeVoidAsync(
+                "bearcat.scrollElementIntoViewById",
+                PostedLocationsElementId
+            );
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    private void HandleTabChanged(string? value)
+    {
+        activeTab = value;
+    }
+
+    private void HandleProgressStepSelected(ReleaseCollectionProgressStepKind kind)
+    {
+        activeTab = kind switch
+        {
+            ReleaseCollectionProgressStepKind.Info => ReleaseCollectionDetailTab.Overview,
+            ReleaseCollectionProgressStepKind.Releases => ReleaseCollectionDetailTab.Overview,
+            ReleaseCollectionProgressStepKind.LinkContainers =>
+                ReleaseCollectionDetailTab.UploadSlots,
+            ReleaseCollectionProgressStepKind.Images => ReleaseCollectionDetailTab.Images,
+            ReleaseCollectionProgressStepKind.Posted => ReleaseCollectionDetailTab.Overview,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+        };
+
+        if (kind is ReleaseCollectionProgressStepKind.Posted)
+        {
+            isScrollToPostedLocationsRequested = true;
+        }
+    }
+
+    private void ToggleDescription()
+    {
+        isDescriptionExpanded = !isDescriptionExpanded;
+    }
+
+    private async Task HandleImageUploadsChangedAsync()
+    {
+        await LoadImageUploadsAsync();
+        await LoadProgressStepsAsync();
     }
 
     private async Task ShowEditSettingsDialogAsync()
@@ -173,6 +364,13 @@ public partial class ReleaseCollectionDetail(
                 PreventClose = true,
             }
         );
+
+        if (postedLocations is not null)
+        {
+            await postedLocations.ReloadAsync();
+        }
+
+        await LoadReleaseCollectionAsync();
     }
 
     private async Task ShowRenderForumPostDialogAsync()
@@ -401,4 +599,21 @@ public partial class ReleaseCollectionDetail(
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
+
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+
+        if (stickyHeaderVisibilityTrackingHandle is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await stickyHeaderVisibilityTrackingHandle.InvokeVoidAsync("detach");
+            await stickyHeaderVisibilityTrackingHandle.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+    }
 }

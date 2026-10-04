@@ -1,8 +1,9 @@
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Shared.ProgressSteps;
 
 namespace Bearcat.Website.Pages.ManageReleases.ProgressSteps;
 
-public record ReleaseProgressStep(ReleaseProgressStepKind Kind, ReleaseProgressStepState State)
+public record ReleaseProgressStep(ReleaseProgressStepKind Kind, ProgressStepState State)
 {
     public int Count { get; init; }
 

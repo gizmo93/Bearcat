@@ -180,6 +180,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         result.ReleaseGroupName.ShouldBe("Series");
         result.PrimaryLanguageCode.ShouldBe("de");
         result.CreatedAt.ShouldBe(LastSecondOfDay.AddMilliseconds(10));
+        result.UploadsPostedAt.ShouldBeNull();
         result.Metadata.ShouldBeNull();
 
         result.Releases.Select(release => release.ReleaseId).ShouldBe([seed.E01Id, seed.E02Id]);
@@ -286,6 +287,24 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         keeplinksContainer.State.ShouldBe(LinkCrypterContainerState.Created);
         keeplinksContainer.SourceUploadCount.ShouldBe(0);
         keeplinksContainer.Errors.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetDetailAsync_UploadsPostedAtSet_ReturnsUploadsPostedAt()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
+        collection.UploadsPostedAt = LastSecondOfDay.AddMilliseconds(750);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetDetailAsync(collection.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.UploadsPostedAt.ShouldBe(LastSecondOfDay.AddMilliseconds(750));
     }
 
     [Test]

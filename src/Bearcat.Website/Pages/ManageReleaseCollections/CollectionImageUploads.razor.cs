@@ -17,6 +17,9 @@ public partial class CollectionImageUploads(
     [EditorRequired]
     public int ReleaseCollectionId { get; set; }
 
+    [Parameter]
+    public EventCallback OnImageUploadsChanged { get; set; }
+
     private IReadOnlyList<CollectionImageUploadReadModel> imageUploads = [];
     private bool isLoading;
 
@@ -64,7 +67,7 @@ public partial class CollectionImageUploads(
 
         if (!dialog.Cancelled)
         {
-            await RefreshAsync();
+            await RefreshAndNotifyAsync();
         }
     }
 
@@ -92,7 +95,7 @@ public partial class CollectionImageUploads(
 
         if (!dialog.Cancelled)
         {
-            await RefreshAsync();
+            await RefreshAndNotifyAsync();
         }
     }
 
@@ -118,7 +121,13 @@ public partial class CollectionImageUploads(
             (ImageUploadConfigService service) => service.DeleteAsync(config.ImageUploadConfigId)
         );
 
+        await RefreshAndNotifyAsync();
+    }
+
+    private async Task RefreshAndNotifyAsync()
+    {
         await RefreshAsync();
+        await OnImageUploadsChanged.InvokeAsync();
     }
 
     private static string GetImageUrlsText(CollectionImageUploadReadModel config) =>

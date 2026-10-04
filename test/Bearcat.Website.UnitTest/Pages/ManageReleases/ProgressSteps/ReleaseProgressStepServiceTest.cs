@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageReleases.ProgressSteps;
+using Bearcat.Website.Shared.ProgressSteps;
 using Shouldly;
 
 namespace Bearcat.Website.UnitTest.Pages.ManageReleases.ProgressSteps;
@@ -35,11 +36,11 @@ public class ReleaseProgressStepServiceTest
         steps
             .Select(step => step.State)
             .ShouldBe([
-                ReleaseProgressStepState.Pending,
-                ReleaseProgressStepState.Pending,
-                ReleaseProgressStepState.Pending,
-                ReleaseProgressStepState.NotApplicable,
-                ReleaseProgressStepState.Pending,
+                ProgressStepState.Pending,
+                ProgressStepState.Pending,
+                ProgressStepState.Pending,
+                ProgressStepState.NotApplicable,
+                ProgressStepState.Pending,
             ]);
     }
 
@@ -56,7 +57,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.DatabaseNames.ShouldBe(["Tmdb", "xREL"]);
     }
 
@@ -70,7 +71,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.DatabaseNames.ShouldBe(["SrrDb"]);
     }
 
@@ -84,7 +85,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Pending);
+        step.State.ShouldBe(ProgressStepState.Pending);
     }
 
     [Test]
@@ -103,7 +104,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.Count.ShouldBe(2);
     }
 
@@ -126,7 +127,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.InProgress);
+        step.State.ShouldBe(ProgressStepState.InProgress);
     }
 
     [TestCase(ArchiveState.CreationFailed)]
@@ -148,7 +149,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Attention);
+        step.State.ShouldBe(ProgressStepState.Attention);
         step.ArchiveProblemState.ShouldBe(archiveState);
     }
 
@@ -189,7 +190,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.Count.ShouldBe(1);
     }
 
@@ -203,7 +204,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Pending);
+        step.State.ShouldBe(ProgressStepState.Pending);
     }
 
     [TestCase(UploadState.WaitingForArchive)]
@@ -226,7 +227,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.InProgress);
+        step.State.ShouldBe(ProgressStepState.InProgress);
     }
 
     [Test]
@@ -246,7 +247,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Attention);
+        step.State.ShouldBe(ProgressStepState.Attention);
         step.Count.ShouldBe(6);
         step.TotalCount.ShouldBe(7);
     }
@@ -264,7 +265,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.Count.ShouldBe(7);
         step.TotalCount.ShouldBe(7);
     }
@@ -292,7 +293,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.Count.ShouldBe(2);
     }
 
@@ -315,7 +316,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Attention);
+        step.State.ShouldBe(ProgressStepState.Attention);
         step.Count.ShouldBe(1);
         step.TotalCount.ShouldBe(2);
     }
@@ -327,7 +328,7 @@ public class ReleaseProgressStepServiceTest
         var step = GetStep(Calculate(postedLocationCount: 2), ReleaseProgressStepKind.Posted);
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.Count.ShouldBe(2);
     }
 
@@ -345,7 +346,7 @@ public class ReleaseProgressStepServiceTest
         );
 
         // Assert
-        step.State.ShouldBe(ReleaseProgressStepState.Done);
+        step.State.ShouldBe(ProgressStepState.Done);
         step.Count.ShouldBe(0);
     }
 
