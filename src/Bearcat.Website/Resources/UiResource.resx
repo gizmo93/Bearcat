@@ -1604,5 +1604,9 @@
   <data name="ArchivePasswordVariesPerHoster" xml:space="preserve"><value>Varies per hoster</value></data>
   <data name="NoLinkContainers" xml:space="preserve"><value>No link containers</value></data>
   <data name="UploadHistory" xml:space="preserve"><value>Upload history</value></data>
+  <data name="UploadHistoryLinkCountOne" xml:space="preserve"><value>1 link</value></data>
+  <data name="UploadHistoryLinkCount" xml:space="preserve"><value>{0} links</value></data>
+  <data name="UploadHistoryContainerCountOne" xml:space="preserve"><value>1 container</value></data>
+  <data name="UploadHistoryContainerCount" xml:space="preserve"><value>{0} containers</value></data>
   <data name="ShowDetails" xml:space="preserve"><value>Show details</value></data>
 </root>
