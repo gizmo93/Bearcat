@@ -12,4 +12,9 @@ public class TimeProvider(IConfiguration configuration)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, localTimeZone);
     }
+
+    public virtual DateTimeOffset ConvertToLocalTime(DateTimeOffset value)
+    {
+        return TimeZoneInfo.ConvertTime(value, localTimeZone);
+    }
 }

@@ -3,11 +3,15 @@ using Bearcat.Infrastructure.Logging;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.Logs;
 
-public sealed partial class LogsPage(LogStreamBroadcaster broadcaster, IJSRuntime jsRuntime)
-    : IDisposable
+public sealed partial class LogsPage(
+    LogStreamBroadcaster broadcaster,
+    IJSRuntime jsRuntime,
+    TimeProvider timeProvider
+) : IDisposable
 {
     private const int MaxDisplayedLines = 1000;
 
@@ -135,9 +139,11 @@ public sealed partial class LogsPage(LogStreamBroadcaster broadcaster, IJSRuntim
         lines.RemoveRange(0, lines.Count - MaxDisplayedLines);
     }
 
-    private static string FormatTimestamp(LogLine line)
+    private string FormatTimestamp(LogLine line)
     {
-        return line.Timestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+        return timeProvider
+            .ConvertToLocalTime(line.Timestamp)
+            .ToString("HH:mm:ss", CultureInfo.InvariantCulture);
     }
 
     private static string FormatLevel(LogLevel level)
