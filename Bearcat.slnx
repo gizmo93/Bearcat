@@ -9,10 +9,10 @@
     </Folder>
     <Folder Name="/3_Core/">
         <Project Path="src/Bearcat.Api/Bearcat.Api.csproj" />
-        <Project Path="src/Bearcat.Application/Bearcat.Application.csproj" />
         <Project Path="src/Bearcat.Domain/Bearcat.Domain.csproj" />
         <Project Path="src/Bearcat.Infrastructure/Bearcat.Infrastructure.csproj" />
         <Project Path="src/Bearcat.Website/Bearcat.Website.csproj" />
+        <Project Path="src\Bearcat.BackgroundTasks\Bearcat.BackgroundTasks.csproj" />
     </Folder>
     <Folder Name="/4_Migrations/">
         <Project Path="src/Bearcat.Infrastructure.Migrations.Postgres/Bearcat.Infrastructure.Migrations.Postgres.csproj" />

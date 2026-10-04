@@ -1,7 +1,6 @@
-using Bearcat.Application.BackgroundTasks;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bearcat.Application.InversionOfControl;
+namespace Bearcat.BackgroundTasks.InversionOfControl;
 
 public static class ServiceProviderConfig
 {

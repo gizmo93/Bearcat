@@ -1,15 +1,15 @@
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Application.BackgroundTasks;
+namespace Bearcat.BackgroundTasks;
 
-public class ReleaseFolderAutomationBackgroundTask(
+public class RemoteSourceScanBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<ReleaseFolderAutomationBackgroundTask> logger
+    ILogger<RemoteSourceScanBackgroundTask> logger
 ) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
-    protected override string DisplayName => "Release folder automation";
+    protected override string DisplayName => "Remote source scan";
 
     protected override TimeSpan DefaultInterval => TimeSpan.FromMinutes(2);
 
@@ -18,7 +18,7 @@ public class ReleaseFolderAutomationBackgroundTask(
         CancellationToken stoppingToken
     )
     {
-        var service = serviceProvider.GetRequiredService<LocalFolderScanService>();
+        var service = serviceProvider.GetRequiredService<RemoteSourceScanService>();
         await service.ProcessAsync(stoppingToken);
     }
 }

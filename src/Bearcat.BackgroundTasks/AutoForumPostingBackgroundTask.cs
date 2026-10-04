@@ -2,7 +2,7 @@ using Bearcat.Domain.UseCases.PostToForums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Application.BackgroundTasks;
+namespace Bearcat.BackgroundTasks;
 
 public class AutoForumPostingBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
