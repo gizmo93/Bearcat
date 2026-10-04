@@ -1,10 +1,8 @@
-<section class="space-y-4">
-    <div class="bearcat-section-header">
-        <div>
-            <h2 class="text-lg font-semibold">@L["Uploads"]</h2>
-        </div>
+@using Bearcat.Website.Pages.ManageReleases.UploadHistory
 
-        <div class="bearcat-upload-filter-row">
+<section class="space-y-4">
+    <div class="bearcat-overview-card">
+        <div class="bearcat-upload-history-toolbar">
             <label class="bearcat-page-size">
                 <span>@L["UploadConfig"]</span>
                 <BbSelect TValue="int"
@@ -12,152 +10,143 @@
                           @bind-Value:after="OnUploadConfigFilterChangedAsync"
                           Options="UploadConfigOptions"
                           Placeholder="@L["AllUploadConfigs"]"
-                          Class="w-56" />
+                          Class="bearcat-upload-history-filter" />
             </label>
 
-            <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="RefreshUploadsAsync">
-                <LucideIcon Name="refresh-cw" class="h-4 w-4" />
-                @L["Refresh"]
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.IconSmall"
+                      Disabled="isLoading"
+                      AriaLabel="@L["Refresh"]"
+                      title="@L["Refresh"]"
+                      OnClick="RefreshUploadsAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
             </BbButton>
         </div>
-    </div>
 
-    <BbDataTable TData="ReleaseUploadReadModel"
-                 @key="UploadsTableKey"
-                 Data="uploads"
-                 ShowToolbar="false"
-                 ShowPagination="false"
-                 InitialPageSize="@pageSize"
-                 IsLoading="isLoading"
-                 AriaLabel="@L["ReleaseUploads"]"
-                 Class="bearcat-data-table bearcat-release-uploads-table">
-        <Columns>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"
-                               Header="@L["UploadConfig"]"
-                               Property="@(upload => upload.UploadConfigName)"
-                               MinWidth="220px">
-                <CellTemplate Context="upload">
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-medium" title="@upload.UploadConfigName">
-                            @upload.UploadConfigName
-                        </p>
-                        <p class="truncate text-xs text-muted-foreground" title="@upload.HosterRegistrationName">
-                            @upload.HosterRegistrationName
-                        </p>
-                    </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"
-                               Header="@L["OnlineState"]"
-                               Property="@(upload => upload.OnlineState.ToString())"
-                               Width="150px">
-                <CellTemplate Context="upload">
-                    <OnlineStateBadge Value="@upload.OnlineState"
-                                      NotFullyOnlineSince="@upload.NotFullyOnlineSince" />
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"
-                               Header="@L["State"]"
-                               Property="@(upload => upload.UploadState.ToString())"
-                               Width="165px">
-                <CellTemplate Context="upload">
-                    <div class="flex items-center gap-2">
-                        <UploadStateBadge State="upload.UploadState" />
-                        <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
-                    </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="DateTime?"
-                               Header="@L["UploadedAt"]"
-                               Property="@(upload => upload.UploadedAt)"
-                               Width="190px">
-                <CellTemplate Context="upload">
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-medium">
-                            @(upload.UploadedAt?.ToString("g") ?? "-")
-                        </p>
-                        <p class="truncate text-xs text-muted-foreground">
-                            @L["CreatedAt"]: @upload.CreatedAt.ToString("g")
-                        </p>
-                    </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="int"
-                               Header="@L["Links"]"
-                               Property="@(upload => upload.LinkCount)"
-                               Width="110px">
-                <CellTemplate Context="upload">
-                    <BbBadge Variant="BadgeVariant.Outline">@upload.LinkCount</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="int"
-                               Header="@L["Containers"]"
-                               Property="@(upload => upload.ContainerCount)"
-                               Width="120px">
-                <CellTemplate Context="upload">
-                    <BbBadge Variant="BadgeVariant.Outline">@upload.ContainerCount</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="int"
-                               Header=""
-                               Property="@(upload => upload.UploadId)"
-                               Width="56px">
-                <CellTemplate Context="upload">
-                    <BbDropdownMenu>
-                        <BbDropdownMenuTrigger>
-                            <BbButton Variant="ButtonVariant.Ghost"
-                                      Size="ButtonSize.IconSmall"
-                                      AriaLabel="@L["UploadActions"]">
-                                <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                            </BbButton>
-                        </BbDropdownMenuTrigger>
-                        <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                            <BbDropdownMenuItem Disabled="@(!CanCheckOnlineStateNow(upload))"
-                                                OnClick="@(async _ => await CheckOnlineStateNowAsync(upload))">
-                                @L["CheckOnlineStateNow"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuItem Disabled="@(!CanSetUploadOffline(upload))"
-                                                OnClick="@(async _ => await SetUploadOfflineAsync(upload))">
-                                @L["SetUploadOffline"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuSeparator />
-                            <BbDropdownMenuItem Disabled="@(upload.LinkCount == 0)"
-                                                OnClick="@(async _ => await ShowLinksDialogAsync(upload))">
-                                @L["ViewUploadLinks"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuItem Disabled="@(upload.ContainerCount == 0)"
-                                                OnClick="@(async _ => await ShowContainerLinksDialogAsync(upload))">
-                                @L["ViewContainerLinks"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuItem Disabled="@(!CanCreateManualReupload(upload))"
-                                                OnClick="@(async _ => await CreateManualReuploadAsync(upload))">
-                                @L["CreateManualReupload"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuItem Disabled="@(!CanCancelUpload(upload))"
-                                                OnClick="@(async _ => await CancelUploadAsync(upload))">
-                                @L["CancelUpload"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuItem Disabled="@(!CanResumeUpload(upload))"
-                                                OnClick="@(async _ => await ResumeUploadAsync(upload))">
-                                @L["ResumeUpload"]
-                            </BbDropdownMenuItem>
-                            <BbDropdownMenuSeparator />
-                            <BbDropdownMenuItem Disabled="@(!CanDeleteUpload(upload))"
-                                                OnClick="@(async _ => await DeleteUploadAsync(upload))">
-                                @L["DeleteUpload"]
-                            </BbDropdownMenuItem>
-                        </BbDropdownMenuContent>
-                    </BbDropdownMenu>
-                </CellTemplate>
-            </BbDataTableColumn>
-        </Columns>
-        <EmptyTemplate>
+        @if (isLoading)
+        {
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+                <span>@L["Loading"]</span>
+            </div>
+        }
+        else if (uploads.Count == 0)
+        {
             <div class="bearcat-release-empty">
                 <LucideIcon Name="inbox" class="h-5 w-5" />
                 <span>@L["NoUploadsFound"]</span>
             </div>
-        </EmptyTemplate>
-    </BbDataTable>
+        }
+        else
+        {
+            <ol class="bearcat-upload-history" aria-label="@L["ReleaseUploads"]">
+                @foreach (var upload in uploads)
+                {
+                    var markerKind = UploadHistoryMarkerKindResolver.GetMarkerKind(upload.UploadState, upload.OnlineState);
+                    var timestamp = upload.UploadedAt ?? upload.CreatedAt;
+
+                    <li @key="upload.UploadId" class="bearcat-upload-history-entry">
+                        <span class="bearcat-upload-history-marker @GetMarkerClass(markerKind)" aria-hidden="true">
+                            <LucideIcon Name="@GetMarkerIconName(markerKind)"
+                                        class="@(markerKind is UploadHistoryMarkerKind.InProgress ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5")" />
+                        </span>
+
+                        <div class="bearcat-upload-history-body">
+                            <div class="bearcat-upload-history-title">
+                                <span class="bearcat-upload-history-config-name">@upload.UploadConfigName</span>
+                                @if (IsHosterNameShown(upload))
+                                {
+                                    <span class="text-muted-foreground">@upload.HosterRegistrationName</span>
+                                }
+                                <span class="tabular-nums text-muted-foreground">#@upload.UploadId</span>
+                                <OnlineStateBadge Value="@upload.OnlineState"
+                                                  NotFullyOnlineSince="@upload.NotFullyOnlineSince" />
+                                @if (upload.UploadState is not UploadState.Completed)
+                                {
+                                    <UploadStateBadge State="upload.UploadState" />
+                                }
+                                <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
+                                @if (upload.HosterHasUnreadableSecrets)
+                                {
+                                    <UnreadableSecretsBadge />
+                                }
+                            </div>
+
+                            <div class="bearcat-upload-history-meta">
+                                <span>@FormatAbsoluteTimestamp(upload)</span>
+                                <span aria-hidden="true">·</span>
+                                <span>@HumanizeTimestamp(timestamp)</span>
+                                <span aria-hidden="true">·</span>
+                                <button type="button"
+                                        class="bearcat-upload-history-count-button"
+                                        disabled="@(upload.LinkCount == 0)"
+                                        title="@L["ViewUploadLinks"]"
+                                        @onclick="() => ShowLinksDialogAsync(upload)">
+                                    @FormatLinkCount(upload.LinkCount)
+                                </button>
+                                <span aria-hidden="true">·</span>
+                                <button type="button"
+                                        class="bearcat-upload-history-count-button"
+                                        disabled="@(upload.ContainerCount == 0)"
+                                        title="@L["ViewContainerLinks"]"
+                                        @onclick="() => ShowContainerLinksDialogAsync(upload)">
+                                    @FormatContainerCount(upload.ContainerCount)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bearcat-upload-history-actions">
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost"
+                                              Size="ButtonSize.IconSmall"
+                                              AriaLabel="@L["UploadActions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem Disabled="@(!CanCheckOnlineStateNow(upload))"
+                                                        OnClick="@(async _ => await CheckOnlineStateNowAsync(upload))">
+                                        @L["CheckOnlineStateNow"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem Disabled="@(!CanSetUploadOffline(upload))"
+                                                        OnClick="@(async _ => await SetUploadOfflineAsync(upload))">
+                                        @L["SetUploadOffline"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuSeparator />
+                                    <BbDropdownMenuItem Disabled="@(upload.LinkCount == 0)"
+                                                        OnClick="@(async _ => await ShowLinksDialogAsync(upload))">
+                                        @L["ViewUploadLinks"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem Disabled="@(upload.ContainerCount == 0)"
+                                                        OnClick="@(async _ => await ShowContainerLinksDialogAsync(upload))">
+                                        @L["ViewContainerLinks"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem Disabled="@(!CanCreateManualReupload(upload))"
+                                                        OnClick="@(async _ => await CreateManualReuploadAsync(upload))">
+                                        @L["CreateManualReupload"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem Disabled="@(!CanCancelUpload(upload))"
+                                                        OnClick="@(async _ => await CancelUploadAsync(upload))">
+                                        @L["CancelUpload"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem Disabled="@(!CanResumeUpload(upload))"
+                                                        OnClick="@(async _ => await ResumeUploadAsync(upload))">
+                                        @L["ResumeUpload"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuSeparator />
+                                    <BbDropdownMenuItem Disabled="@(!CanDeleteUpload(upload))"
+                                                        OnClick="@(async _ => await DeleteUploadAsync(upload))">
+                                        @L["DeleteUpload"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+    </div>
 
     <div class="bearcat-release-pagination">
         <p class="text-sm text-muted-foreground">

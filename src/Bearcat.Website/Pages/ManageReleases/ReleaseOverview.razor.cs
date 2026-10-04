@@ -1,14 +1,17 @@
+using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Bearcat.Website.Pages.ManageForumPostTemplates;
-using Bearcat.Website.Pages.PostToForum;
+using Bearcat.Website.Formatting;
+using Bearcat.Website.Pages.ManageReleases.DetailTabs;
+using Bearcat.Website.Pages.ManageReleases.Overview;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
@@ -16,7 +19,9 @@ public partial class ReleaseOverview(
     ToastService toastService,
     DialogService dialogService,
     IScopedOperationRunner operationRunner,
-    IJSRuntime jsRuntime
+    IJSRuntime jsRuntime,
+    NavigationManager navigationManager,
+    TimeProvider timeProvider
 ) : ComponentBase, IReloadableComponent
 {
     [Parameter]
@@ -31,15 +36,17 @@ public partial class ReleaseOverview(
     public string? ReleaseFolderPath { get; set; }
 
     [Parameter]
-    public EventCallback OnRefreshed { get; set; }
+    [EditorRequired]
+    public IReadOnlyList<ReleaseOverviewUploadReadModel> Uploads { get; set; } = [];
 
-    private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
+    [Parameter]
+    public EventCallback OnRefreshRequested { get; set; }
+
     private IReadOnlyList<ReleaseOverviewImageUploadReadModel> overviewImageUploads = [];
+    private ReleaseOverviewSummary summary = null!;
+    private IReadOnlyList<LinkCrypterContainerUrls> containerUrlsByLinkCrypter = [];
+    private readonly HashSet<int> expandedUploadConfigIds = [];
     private ReleaseNfoReadModel? releaseNfo;
-    private ReleaseInfoReadModel? releaseInfo;
-    private ReleaseMetadataReadModel? releaseMetadata;
-    private IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers = [];
-    private string? coverUrl;
     private string? nfoContent;
     private bool hasLocalNfo;
     private bool isLoading;
@@ -52,21 +59,22 @@ public partial class ReleaseOverview(
         && !hasLocalNfo
         && !string.IsNullOrWhiteSpace(ReleaseFolderPath);
 
-    private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
-    private string CoverDownloadFileName => GetCoverDownloadFileName();
-
     protected override async Task OnParametersSetAsync()
     {
+        summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(Uploads);
+        containerUrlsByLinkCrypter =
+            ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(Uploads);
+
         if (
             loadedReleaseId != ReleaseId
             || !string.Equals(loadedReleaseFolderPath, ReleaseFolderPath, StringComparison.Ordinal)
         )
         {
-            await LoadOverviewAsync();
+            await LoadImageUploadsAndNfoAsync();
         }
     }
 
-    private async Task LoadOverviewAsync()
+    private async Task LoadImageUploadsAndNfoAsync()
     {
         isLoading = true;
 
@@ -75,23 +83,12 @@ public partial class ReleaseOverview(
             await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
             {
                 releaseNfo = null;
-                releaseInfo = null;
-                releaseMetadata = null;
-                externalIdentifiers = [];
-                coverUrl = null;
                 nfoContent = null;
                 hasLocalNfo = false;
 
-                overviewUploads = await repository.GetReleaseOverviewAsync(ReleaseId);
                 overviewImageUploads = await repository.GetReleaseOverviewImageUploadsAsync(
                     ReleaseId
                 );
-                releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
-                releaseMetadata = await repository.GetReleaseMetadataAsync(ReleaseId);
-                externalIdentifiers = await repository.GetReleaseExternalIdentifiersAsync(
-                    ReleaseId
-                );
-                coverUrl = releaseMetadata?.CoverUrl;
                 releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
                 nfoContent = releaseNfo?.Content;
                 hasLocalNfo = ReleaseNfoService.HasLocalNfo(ReleaseFolderPath);
@@ -107,14 +104,15 @@ public partial class ReleaseOverview(
 
     public async Task ReloadAsync()
     {
-        await LoadOverviewAsync();
+        await LoadImageUploadsAndNfoAsync();
         StateHasChanged();
     }
 
     private async Task RefreshAsync()
     {
-        await LoadOverviewAsync();
-        await OnRefreshed.InvokeAsync();
+        isLoading = true;
+        await OnRefreshRequested.InvokeAsync();
+        await LoadImageUploadsAndNfoAsync();
     }
 
     private async Task SaveNfoFileAsync()
@@ -155,18 +153,12 @@ public partial class ReleaseOverview(
         }
     }
 
-    private async Task CopyNfoAsync()
+    private async Task CopyTextAsync(string text)
     {
-        if (string.IsNullOrEmpty(nfoContent))
-        {
-            return;
-        }
-
         try
         {
             var result = await jsRuntime.InvokeAsync<bool?>("bearcat.takeCopyResult");
-            var copied =
-                result ?? await jsRuntime.InvokeAsync<bool>("bearcat.copyText", nfoContent);
+            var copied = result ?? await jsRuntime.InvokeAsync<bool>("bearcat.copyText", text);
 
             if (copied)
             {
@@ -209,115 +201,69 @@ public partial class ReleaseOverview(
         );
     }
 
-    private async Task ShowEditReleaseInfoDialogAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(EditReleaseInfoDialog.ReleaseId)] = ReleaseId,
-            [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
-            [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
-            [nameof(EditReleaseInfoDialog.ReleaseMetadata)] = releaseMetadata,
-            [nameof(EditReleaseInfoDialog.ExternalIdentifiers)] = externalIdentifiers,
-        };
-
-        var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"],
-                Description = L["EditReleaseInfoDescription"],
-                Size = DialogSize.Large,
-                ShowClose = true,
-                PreventClose = true,
-            }
-        );
-
-        if (dialog.Cancelled)
-        {
-            return;
-        }
-
-        toastService.Success(L["ReleaseInfoUpdated"]);
-        await LoadOverviewAsync();
-        StateHasChanged();
-    }
-
-    private async Task ShowPostToForumDialogAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(PostToForumDialog.EntityId)] = ReleaseId,
-            [nameof(PostToForumDialog.EntityName)] = ReleaseName,
-            [nameof(PostToForumDialog.TemplateType)] = ForumPostTemplateType.Release,
-        };
-
-        await dialogService.OpenAsync<PostToForumDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["PostNamedReleaseToForum", ReleaseName],
-                Description = L["PostToForumDescription"],
-                Size = DialogSize.ExtraLarge,
-                ShowClose = true,
-                PreventClose = true,
-            }
-        );
-
-        await OnRefreshed.InvokeAsync();
-    }
-
-    private async Task RenderForumPostAsync()
-    {
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(RenderForumPostDialog.EntityId)] = ReleaseId,
-            [nameof(RenderForumPostDialog.Type)] = ForumPostTemplateType.Release,
-        };
-
-        await dialogService.OpenAsync<RenderForumPostDialog>(
-            parameters,
-            new DialogOpenOptions
-            {
-                Title = L["RenderForumPostForRelease", ReleaseName],
-                Description = L["RenderForumPostDescription"],
-                Size = DialogSize.Full,
-                ShowClose = true,
-            }
-        );
-    }
-
     private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>
         state switch
         {
-            LinkCrypterContainerState.Created => BadgeVariant.Default,
+            LinkCrypterContainerState.Created => BadgeVariant.Secondary,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
 
-    private static string GetImageUrlsText(ReleaseOverviewImageUploadReadModel imageUpload) =>
-        string.Join(Environment.NewLine, imageUpload.ImageUrls.Select(url => url.Url));
-
-    private string GetCoverDownloadFileName()
+    private void ToggleDetails(int uploadConfigId)
     {
-        if (Uri.TryCreate(coverUrl, UriKind.Absolute, out var uri))
+        if (!expandedUploadConfigIds.Remove(uploadConfigId))
         {
-            var fileName = Path.GetFileName(uri.LocalPath);
-            if (!string.IsNullOrWhiteSpace(fileName))
-            {
-                return fileName;
-            }
+            expandedUploadConfigIds.Add(uploadConfigId);
         }
-
-        return $"{SanitizeFileName(ReleaseName)}-cover.jpg";
     }
 
-    private static string SanitizeFileName(string value)
-    {
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new string(
-            value.Select(character => invalidChars.Contains(character) ? '_' : character).ToArray()
+    private void NavigateToUploadsView(int uploadConfigId, string view) =>
+        navigationManager.NavigateTo(
+            navigationManager.GetUriWithQueryParameters(
+                new Dictionary<string, object?>
+                {
+                    ["tab"] = ReleaseDetailTab.Uploads,
+                    ["view"] = view,
+                    ["uploadConfigId"] = uploadConfigId,
+                }
+            )
         );
 
-        return string.IsNullOrWhiteSpace(sanitized) ? "release" : sanitized;
-    }
+    private string HumanizeTimestamp(DateTime value) => timeProvider.Humanize(value);
+
+    private static string FormatTimestamp(DateTime value) => value.ToString("g");
+
+    private static string JoinLines(IReadOnlyList<string> lines) =>
+        string.Join(Environment.NewLine, lines);
+
+    private static string GetMonogram(string name) => name.Length <= 2 ? name : name[..2];
+
+    private static bool IsHosterNameShown(ReleaseOverviewUploadReadModel upload) =>
+        !string.Equals(
+            upload.UploadConfigName,
+            upload.HosterRegistrationName,
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    private static bool IsImageHosterNameShown(ReleaseOverviewImageUploadReadModel imageUpload) =>
+        !string.Equals(
+            imageUpload.ImageUploadConfigName,
+            imageUpload.ImageHosterRegistrationName,
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    private static string GetOnlineSegmentClass(OnlineState? onlineState) =>
+        onlineState switch
+        {
+            OnlineState.Online => "bearcat-overview-online-segment-online",
+            OnlineState.Offline => "bearcat-overview-online-segment-offline",
+            OnlineState.PartiallyOnline => "bearcat-overview-online-segment-partially-online",
+            _ => "bearcat-overview-online-segment-unknown",
+        };
+
+    private static string? GetThumbnailUrl(ReleaseOverviewImageUploadReadModel imageUpload) =>
+        (
+            imageUpload.ImageUrls.FirstOrDefault(url => url.ImageSize == ImageSize.Thumbnail)
+            ?? imageUpload.ImageUrls.FirstOrDefault()
+        )?.Url;
 }

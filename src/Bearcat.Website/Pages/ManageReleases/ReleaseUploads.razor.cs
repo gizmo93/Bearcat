@@ -5,17 +5,21 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
+using Bearcat.Website.Pages.ManageReleases.UploadHistory;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseUploads(
     DialogService dialogService,
     IScopedOperationRunner operationRunner,
-    ToastService toastService
+    ToastService toastService,
+    TimeProvider timeProvider
 ) : ComponentBase
 {
     [Parameter]
@@ -25,21 +29,20 @@ public partial class ReleaseUploads(
     [Parameter]
     public int? InitialUploadConfigId { get; set; }
 
-    private readonly int[] pageSizes = [5, 10, 20, 50, 100];
+    private readonly int[] pageSizes = [10, 20, 50, 100];
     private IReadOnlyList<ReleaseUploadReadModel> uploads = [];
     private IReadOnlyList<UploadConfigReadModel> uploadConfigs = [];
     private int totalCount;
     private int pageIndex;
-    private int pageSize = 5;
+    private int pageSize = 20;
     private int selectedUploadConfigId;
     private int? appliedInitialUploadConfigId;
-    private bool isLoading;
+    private bool isLoading = true;
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
-    private string UploadsTableKey => $"{selectedUploadConfigId}-{pageIndex}-{pageSize}";
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
@@ -329,6 +332,53 @@ public partial class ReleaseUploads(
         appliedInitialUploadConfigId = InitialUploadConfigId;
         selectedUploadConfigId = InitialUploadConfigId ?? 0;
     }
+
+    private string HumanizeTimestamp(DateTime value) => timeProvider.Humanize(value);
+
+    private static string FormatTimestamp(DateTime value) => value.ToString("g");
+
+    private string FormatAbsoluteTimestamp(ReleaseUploadReadModel upload) =>
+        upload.UploadedAt is { } uploadedAt
+            ? FormatTimestamp(uploadedAt)
+            : $"{L["CreatedAt"]} {FormatTimestamp(upload.CreatedAt)}";
+
+    private string FormatLinkCount(int linkCount) =>
+        linkCount == 1 ? L["UploadHistoryLinkCountOne"] : L["UploadHistoryLinkCount", linkCount];
+
+    private string FormatContainerCount(int containerCount) =>
+        containerCount == 1
+            ? L["UploadHistoryContainerCountOne"]
+            : L["UploadHistoryContainerCount", containerCount];
+
+    private static bool IsHosterNameShown(ReleaseUploadReadModel upload) =>
+        !string.Equals(
+            upload.UploadConfigName,
+            upload.HosterRegistrationName,
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    private static string GetMarkerClass(UploadHistoryMarkerKind markerKind) =>
+        markerKind switch
+        {
+            UploadHistoryMarkerKind.InProgress => "bearcat-upload-history-marker-in-progress",
+            UploadHistoryMarkerKind.Online => "bearcat-upload-history-marker-online",
+            UploadHistoryMarkerKind.PartiallyOnline =>
+                "bearcat-upload-history-marker-partially-online",
+            UploadHistoryMarkerKind.Offline => "bearcat-upload-history-marker-offline",
+            UploadHistoryMarkerKind.Unknown => "bearcat-upload-history-marker-unknown",
+            _ => throw new ArgumentOutOfRangeException(nameof(markerKind), markerKind, null),
+        };
+
+    private static string GetMarkerIconName(UploadHistoryMarkerKind markerKind) =>
+        markerKind switch
+        {
+            UploadHistoryMarkerKind.InProgress => "loader-circle",
+            UploadHistoryMarkerKind.Online => "check",
+            UploadHistoryMarkerKind.PartiallyOnline => "minus",
+            UploadHistoryMarkerKind.Offline => "x",
+            UploadHistoryMarkerKind.Unknown => "history",
+            _ => throw new ArgumentOutOfRangeException(nameof(markerKind), markerKind, null),
+        };
 
     private static bool CanCheckOnlineStateNow(ReleaseUploadReadModel upload) =>
         upload

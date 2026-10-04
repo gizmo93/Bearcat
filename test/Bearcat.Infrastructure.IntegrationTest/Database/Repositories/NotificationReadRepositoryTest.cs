@@ -160,7 +160,7 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
             new NotificationRelatedEntityReadModel(
                 EntityType: "Upload",
                 DisplayName: "Bearcat.Release.001 / Main upload",
-                TargetUrl: $"/releases/{uploadConfig.ReleaseId}?tab=uploads&uploadConfigId={uploadConfig.Id}"
+                TargetUrl: $"/releases/{uploadConfig.ReleaseId}?tab=uploads&view=history&uploadConfigId={uploadConfig.Id}"
             )
         );
     }
@@ -235,7 +235,7 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
             new NotificationRelatedEntityReadModel(
                 EntityType: "LinkCrypterContainer",
                 DisplayName: "Bearcat.Release.001 / Main upload / Crypter",
-                TargetUrl: $"/releases/{uploadConfig.ReleaseId}?tab=upload-configs&uploadConfigId={uploadConfig.Id}"
+                TargetUrl: $"/releases/{uploadConfig.ReleaseId}?tab=uploads&view=configuration&uploadConfigId={uploadConfig.Id}"
             )
         );
     }

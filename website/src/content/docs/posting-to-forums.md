@@ -37,8 +37,8 @@ dedicated implementation in Bearcat.
 
 ## Posting a release
 
-Open a release and go to the **Overview** tab. Click **Post to forum**, next to **Render forum
-post**. 
+Open a release and click **Post to forum** in the header. **Render forum post** is in the arrow
+menu of the same button.
 
 ![Post to forum button](images/post-to-forum-button.png)
 

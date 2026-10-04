@@ -3,65 +3,58 @@ title: "The Release Detail Page"
 description: "Find upload progress, download links, metadata, and archive settings for a release."
 ---
 
-Open **Releases** and click a release name to see these tabs. For a walkthrough, see [Your first upload](/Bearcat/post-installation/).
+Open **Releases** and click a release name. For a walkthrough, see [Your first upload](/Bearcat/post-installation/).
 
 ![release-detail-page.png](images/release-detail-page.png)
 
-## Overview tab
+## Header
 
-Shows the latest uploads, download and container links, image links, and archive passwords.
-If the release folder contains a `.nfo` file, you can copy it here too.
-Use this tab to copy the links and details for a forum post.
+**Post to forum** opens the [forum posting dialog](/Bearcat/posting-to-forums/). It is highlighted
+while at least one hoster is online and the release is not posted yet. Without an active forum
+distribution site, only **Render forum post** is shown.
+
+The `...` menu also converts between [release types](/Bearcat/release-types/#converting-between-types).
+
+The steps below the header summarize the release state. Red means something needs attention. Click
+a step to open the matching tab.
+
+## Overview
 
 ![overview.png](images/overview.png)
 
-## Release info tab
+**Copy all links** copies the container URLs of one link crypter for all hosters at once. See
+[Posted locations](/Bearcat/posting-to-forums/#posted-locations) for the list at the bottom.
 
-This tab separates scene release information from movie or TV metadata. It also shows the NFO,
-external IDs with their sources, and technical media data. You can resolve, refresh, or edit these
-values manually.
+## Release info
 
 ![release-infos-tab.png](images/release-infos-tab.png)
 
-See [Release Information and Metadata](/Bearcat/release-information-and-metadata/) for details.
+See [Release Information and Metadata](/Bearcat/release-information-and-metadata/).
 
-## Archive configurations tab
-
-Sets the archiver, output folder, part size, password, and packing options for each set of archives.
-See [Creating the archive](/Bearcat/upload-lifecycle/#3-creating-the-archive) for the packing options.
-Add at least one configuration for a managed release.
+## Archives
 
 ![archive-configurations-tab.png](images/archive-configurations-tab.png)
 
-## Upload configurations tab
+A managed release needs at least one archive configuration. See
+[Creating the archive](/Bearcat/upload-lifecycle/#3-creating-the-archive) for the packing options.
 
-Connects an archive configuration to a hoster account. You can also add link crypters to create containers for the upload links.
+## Uploads
+
+**Configuration** connects an archive configuration to a hoster account and optional link crypters.
 
 ![upload-configurations-tab.png](images/upload-configurations-tab.png)
 
-## Uploads tab
-
-Lists upload runs and their links. You can create manual reuploads, cancel running uploads,
-or delete finished and failed entries.
+**History** lists every upload run with its actions, for example a manual reupload.
 
 ![release-uploads-tab.png](images/release-uploads-tab.png)
 ![upload-links-dialog.png](images/upload-links-dialog.png)
 ![crypter-links-dialog.png](images/crypter-links-dialog.png)
 
-## Image upload configurations tab
-
-Selects the image hoster accounts that receive the release cover. These are separate from file upload configurations.
+## Images
 
 ![image-upload-config.png](images/image-upload-config.png)
 
-The release needs a cover URL before Bearcat can upload an image. It normally comes from a metadata
-source such as TMDB, with the xREL cover as a fallback. No cover means no image upload or image links.
-
-## Image uploads tab
-
-Lists image upload runs and the URLs returned by the image hoster.
+Image uploads need a cover URL, normally from a metadata source such as TMDB, with the xREL cover as
+a fallback.
 
 ![image-uploads.png](images/image-uploads.png)
-
-Depending on the image hoster, Bearcat may receive different image sizes, for example full size, medium size or thumbnail.
-You can also copy these links from the **Overview** tab.

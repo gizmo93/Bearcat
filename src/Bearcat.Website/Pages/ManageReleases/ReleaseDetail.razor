@@ -2,6 +2,8 @@
 @using Bearcat.Website.Pages.ManageArchiveConfigs
 @using Bearcat.Website.Pages.ManageImageUploadConfigs
 @using Bearcat.Website.Pages.ManageImageUploads
+@using Bearcat.Website.Pages.ManageReleases.DetailTabs
+@using Bearcat.Website.Pages.ManageReleases.ProgressSteps
 @using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.ManageUploadConfigs
 @using Bearcat.Website.Pages.PostQueue
@@ -14,220 +16,361 @@
 <PageTitle>@L["Release"] - @release.Name - Bearcat</PageTitle>
 
 <section class="bearcat-release-shell">
-    @if (IsPostQueueWorkflow)
-    {
-        <PostQueueWorkflowBar Type="PostQueueWorkflowType.Release" CurrentId="@ReleaseId" />
-    }
+    <div class="bearcat-release-sticky-area @(IsPostQueueWorkflow ? "bearcat-release-sticky-area-with-workflow-bar" : null)">
+        @if (IsPostQueueWorkflow)
+        {
+            <PostQueueWorkflowBar Type="PostQueueWorkflowType.Release" CurrentId="@ReleaseId" />
+        }
 
-    <div class="bearcat-release-header">
-        <div class="min-w-0 space-y-4">
-            <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                <div class="min-w-0 space-y-2">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="bearcat-release-title font-semibold">
-                            @release.Name
-                        </h1>
-                        <CopyButton Value="@release.Name" Label="@L["CopyTitle"]" />
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
-                            <BbTooltipTrigger>
-                                <span class="inline-flex items-center leading-none">
-                                    <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
-                                </span>
-                            </BbTooltipTrigger>
-                            <BbTooltipContent Class="max-w-xs text-xs">
-                                @L.LocalizeDescription(release.ReleaseType)
-                            </BbTooltipContent>
-                        </BbTooltip>
-                        <OnlineStateBadge Value="release.OnlineState" />
-                    </div>
-                </div>
-
-                <BbDropdownMenu>
-                    <BbDropdownMenuTrigger>
-                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseActions"]">
-                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                        </BbButton>
-                    </BbDropdownMenuTrigger>
-                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                        <BbDropdownMenuItem OnClick="ShowEditReleaseDialogAsync">
-                            @L["Edit"]
-                        </BbDropdownMenuItem>
-                        <BbDropdownMenuItem OnClick="SaveAsTemplateAsync">
-                            @L["SaveAsTemplate"]
-                        </BbDropdownMenuItem>
-                        @if (CanConvertToUnmanaged)
-                        {
-                            <BbDropdownMenuItem OnClick="ConvertToUnmanagedAsync">
-                                @L["ConvertToUnmanaged"]
-                            </BbDropdownMenuItem>
-                        }
-                        @if (IsUnmanaged)
-                        {
-                            <BbDropdownMenuItem OnClick="ConvertToManagedAsync">
-                                @L["ConvertToManaged"]
-                            </BbDropdownMenuItem>
-                        }
-                        <BbDropdownMenuItem OnClick="DeleteLocalArchivesAsync">
-                            @L["DeleteLocalArchives"]
-                        </BbDropdownMenuItem>
-                        <BbDropdownMenuItem OnClick="DeleteReleaseAsync">
-                            @L["DeleteRelease"]
-                        </BbDropdownMenuItem>
-                    </BbDropdownMenuContent>
-                </BbDropdownMenu>
-            </div>
+        <div @ref="stickyHeaderElement" class="bearcat-release-sticky-header">
+            @if (!string.IsNullOrWhiteSpace(CoverUrl))
+            {
+                <img src="@CoverUrl" alt="" class="bearcat-release-sticky-header-cover" />
+            }
+            <span class="min-w-0 flex-1 truncate text-sm font-semibold" title="@release.Name">@release.Name</span>
+            <OnlineStateBadge Value="release.OnlineState" />
+            @ForumPostActions(isInStickyHeader: true)
         </div>
     </div>
 
-    <div class="bearcat-release-info-bar">
-        <div class="bearcat-release-folder">
-            <LucideIcon Name="folder" class="h-4 w-4 shrink-0 text-muted-foreground" />
-            <div class="min-w-0">
+    <div @ref="headerCardElement" class="bearcat-release-header-card">
+        <div class="bearcat-release-header-card-body @(string.IsNullOrWhiteSpace(CoverUrl) ? null : "bearcat-release-header-card-body-with-cover")">
+            @if (!string.IsNullOrWhiteSpace(CoverUrl))
+            {
+                <img src="@CoverUrl" alt="@releaseMetadata?.Title" class="bearcat-release-header-cover" />
+            }
+
+            <div class="flex min-w-0 flex-col gap-2">
+                <div class="flex min-w-0 items-start gap-1.5">
+                    <h1 class="bearcat-release-title min-w-0 font-semibold">@release.Name</h1>
+                    <CopyButton Value="@release.Name" Label="@L["CopyTitle"]" />
+                </div>
+
+                @if (releaseMetadata is not null || !string.IsNullOrWhiteSpace(releaseInfo?.ReleaseDatabaseUrl))
+                {
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                        @if (releaseMetadata is not null)
+                        {
+                            <span>@releaseMetadata.Title</span>
+                            @if (!string.IsNullOrWhiteSpace(releaseMetadata.Genre))
+                            {
+                                <span aria-hidden="true">·</span>
+                                <span>@releaseMetadata.Genre</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(releaseMetadata.MetadataDatabaseUrl))
+                            {
+                                <a class="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                                   href="@releaseMetadata.MetadataDatabaseUrl"
+                                   target="_blank"
+                                   rel="noreferrer noopener"
+                                   title="@releaseMetadata.MetadataDatabaseUrl">
+                                    @DatabaseDisplayName.GetFromClassName(releaseMetadata.MetadataDatabaseClassName)
+                                    <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                </a>
+                            }
+                        }
+                        @if (!string.IsNullOrWhiteSpace(releaseInfo?.ReleaseDatabaseUrl))
+                        {
+                            <a class="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                               href="@releaseInfo.ReleaseDatabaseUrl"
+                               target="_blank"
+                               rel="noreferrer noopener"
+                               title="@releaseInfo.ReleaseDatabaseUrl">
+                                @DatabaseDisplayName.GetFromClassName(releaseInfo.NfoDatabaseClassName)
+                                <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                            </a>
+                        }
+                    </div>
+                }
+
+                <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm">
+                    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                        <BbTooltipTrigger>
+                            <span class="inline-flex items-center leading-none">
+                                <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
+                            </span>
+                        </BbTooltipTrigger>
+                        <BbTooltipContent Class="max-w-xs text-xs">
+                            @L.LocalizeDescription(release.ReleaseType)
+                        </BbTooltipContent>
+                    </BbTooltip>
+                    <OnlineStateBadge Value="release.OnlineState" />
+                    <span class="inline-flex min-w-0 items-center gap-1.5" title="@L["ReleaseGroup"]">
+                        <LucideIcon Name="layers" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span class="sr-only">@L["ReleaseGroup"]:</span>
+                        <span class="min-w-0 [overflow-wrap:anywhere]">@release.ReleaseGroupName</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5" title="@L["ReleaseContentType"]">
+                        <LucideIcon Name="clapperboard" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span class="sr-only">@L["ReleaseContentType"]:</span>
+                        @L.Localize(release.ReleaseContentType)
+                    </span>
+                    <span class="inline-flex items-center gap-1.5" title="@L["PrimaryLanguage"]">
+                        <LucideIcon Name="languages" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span class="sr-only">@L["PrimaryLanguage"]:</span>
+                        @if (string.IsNullOrWhiteSpace(release.PrimaryLanguageCode))
+                        {
+                            @L["NotSet"]
+                        }
+                        else
+                        {
+                            var culture = CultureInfo.GetCultureInfo(release.PrimaryLanguageCode);
+                            @($"{culture.NativeName} ({culture.TwoLetterISOLanguageName})")
+                        }
+                    </span>
+                </div>
+
                 @if (IsUnmanaged)
                 {
-                    <p class="text-xs text-muted-foreground">@L["ArchiveFolder"]</p>
                     @if (unmanagedArchiveFolderPaths.Count == 0)
                     {
-                        <p class="bearcat-release-path">@L["NoArchivesYet"]</p>
+                        <div class="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground" title="@L["ArchiveFolder"]">
+                            <LucideIcon Name="folder" class="h-3.5 w-3.5 shrink-0" />
+                            <span>@L["NoArchivesYet"]</span>
+                        </div>
                     }
                     else
                     {
                         @foreach (var path in unmanagedArchiveFolderPaths)
                         {
-                            <p class="bearcat-release-path">@path</p>
+                            @FolderPathRow(path, L["ArchiveFolder"])
                         }
                     }
                 }
                 else
                 {
-                    <p class="text-xs text-muted-foreground">@L["ReleaseFolder"]</p>
-                    <p class="bearcat-release-path">@release.ReleaseFolderPath</p>
+                    @FolderPathRow(release.ReleaseFolderPath!, L["ReleaseFolder"])
                 }
-            </div>
-        </div>
 
-        <div class="bearcat-release-folder">
-            <LucideIcon Name="layers" class="h-4 w-4 shrink-0 text-muted-foreground" />
-            <div class="min-w-0">
-                <p class="text-xs text-muted-foreground">@L["ReleaseGroup"]</p>
-                <p class="bearcat-release-path">@release.ReleaseGroupName</p>
-            </div>
-        </div>
-
-        <div class="bearcat-release-folder">
-            <LucideIcon Name="clapperboard" class="h-4 w-4 shrink-0 text-muted-foreground" />
-            <div class="min-w-0">
-                <p class="text-xs text-muted-foreground">@L["ReleaseContentType"]</p>
-                <p class="bearcat-release-path">@L.Localize(release.ReleaseContentType)</p>
-            </div>
-        </div>
-
-        <div class="bearcat-release-folder">
-            <LucideIcon Name="languages" class="h-4 w-4 shrink-0 text-muted-foreground" />
-            <div class="min-w-0">
-                <p class="text-xs text-muted-foreground">@L["PrimaryLanguage"]</p>
-                @if (string.IsNullOrWhiteSpace(release.PrimaryLanguageCode))
+                @if (remoteDownloadOrigin is not null)
                 {
-                    <p class="bearcat-release-path">@L["NotSet"]</p>
-                }
-                else
-                {
-                    var culture = CultureInfo.GetCultureInfo(release.PrimaryLanguageCode);
-                    <p class="bearcat-release-path">@culture.NativeName (@culture.TwoLetterISOLanguageName)</p>
+                    <div class="flex min-w-0 items-start gap-1.5 text-xs text-muted-foreground">
+                        <LucideIcon Name="folder-down" class="mt-px h-3.5 w-3.5 shrink-0" />
+                        <p class="min-w-0 [overflow-wrap:anywhere]">
+                            <span>@L["RemoteDownloadOrigin"]: @remoteDownloadOrigin.SourceName: @remoteDownloadOrigin.RemoteFolderPath</span>
+                            @if (remoteDownloadOrigin.CompletedAt is { } completedAt)
+                            {
+                                <span> · @L["DownloadCompletedAt"]: @completedAt.ToString("g")</span>
+                            }
+                            <span> · </span>
+                            <a class="text-primary transition hover:underline" href="/remote-source-downloads">@L["RemoteSourceDownloads"]</a>
+                        </p>
+                    </div>
                 }
             </div>
-        </div>
 
-        @if (remoteDownloadOrigin is not null)
-        {
-            <div class="bearcat-release-folder">
-                <LucideIcon Name="folder-down" class="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div class="min-w-0">
-                    <p class="text-xs text-muted-foreground">@L["RemoteDownloadOrigin"]</p>
-                    <p class="bearcat-release-path">@remoteDownloadOrigin.SourceName: @remoteDownloadOrigin.RemoteFolderPath</p>
-                    <p class="mt-0.5 text-xs text-muted-foreground">
-                        @if (remoteDownloadOrigin.CompletedAt is { } completedAt)
+            <div class="bearcat-release-header-actions">
+                @ForumPostActions(isInStickyHeader: false)
+
+                <BbDropdownMenu>
+                    <BbDropdownMenuTrigger>
+                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseActions"]">
+                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                        </BbButton>
+                    </BbDropdownMenuTrigger>
+                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                        <BbDropdownMenuItem OnClick="ShowEditReleaseDialogAsync">
+                            <Icon>
+                                <LucideIcon Name="pencil" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["Edit"]</ChildContent>
+                        </BbDropdownMenuItem>
+                        <BbDropdownMenuItem OnClick="SaveAsTemplateAsync">
+                            <Icon>
+                                <LucideIcon Name="bookmark" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["SaveAsTemplate"]</ChildContent>
+                        </BbDropdownMenuItem>
+                        @if (CanConvertToUnmanaged)
                         {
-                            <span>@L["DownloadCompletedAt"]: @completedAt.ToString("g") · </span>
+                            <BbDropdownMenuItem OnClick="ConvertToUnmanagedAsync">
+                                <Icon>
+                                    <LucideIcon Name="arrow-left-right" class="h-4 w-4" />
+                                </Icon>
+                                <ChildContent>@L["ConvertToUnmanaged"]</ChildContent>
+                            </BbDropdownMenuItem>
                         }
-                        <a class="text-primary transition hover:underline" href="/remote-source-downloads">@L["RemoteSourceDownloads"]</a>
-                    </p>
-                </div>
+                        @if (IsUnmanaged)
+                        {
+                            <BbDropdownMenuItem OnClick="ConvertToManagedAsync">
+                                <Icon>
+                                    <LucideIcon Name="arrow-left-right" class="h-4 w-4" />
+                                </Icon>
+                                <ChildContent>@L["ConvertToManaged"]</ChildContent>
+                            </BbDropdownMenuItem>
+                        }
+                        <BbDropdownMenuSeparator />
+                        <BbDropdownMenuItem Class="text-destructive focus:text-destructive" OnClick="DeleteLocalArchivesAsync">
+                            <Icon>
+                                <LucideIcon Name="archive-x" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["DeleteLocalArchives"]</ChildContent>
+                        </BbDropdownMenuItem>
+                        <BbDropdownMenuItem Class="text-destructive focus:text-destructive" OnClick="DeleteReleaseAsync">
+                            <Icon>
+                                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["DeleteRelease"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    </BbDropdownMenuContent>
+                </BbDropdownMenu>
             </div>
-        }
+        </div>
+
+        <ReleaseProgressSteps Steps="progressSteps"
+                              OnStepSelected="HandleProgressStepSelected" />
     </div>
 
-    <BbTabs @key="ReleaseId" Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">
-        <BbTabsList>
-            <BbTabsTrigger Value="overview">@L["ReleaseOverview"]</BbTabsTrigger>
-            <BbTabsTrigger Value="release-infos">@L["ReleaseInfo"]</BbTabsTrigger>
-            <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
-            <BbTabsTrigger Value="upload-configs">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["UploadConfigurations"]</span>
-                    <span class="text-muted-foreground text-[0.625rem] font-normal leading-none opacity-[0.72]">@release.ActiveUploadConfigsCount</span>
-                </span>
-            </BbTabsTrigger>
-            <BbTabsTrigger Value="image-upload-configs">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["ImageUploadConfigurations"]</span>
-                </span>
-            </BbTabsTrigger>
-            <BbTabsTrigger Value="uploads">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["Uploads"]</span>
-                    <span class="text-muted-foreground text-[0.625rem] font-normal leading-none opacity-[0.72]">@release.OnlineUploadConfigsCount @L["OnlineState.Online"]</span>
-                </span>
-            </BbTabsTrigger>
-            <BbTabsTrigger Value="image-uploads">
-                <span class="inline-flex items-baseline gap-[0.45rem]">
-                    <span>@L["ImageUploads"]</span>
-                </span>
-            </BbTabsTrigger>
-        </BbTabsList>
+    <BbTabs @key="ReleaseId" Value="@activeTab" ValueChanged="HandleTabChanged" Class="space-y-4">
+        <div class="max-sm:hidden">
+            <BbTabsList>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Overview">@L["ReleaseOverview"]</BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.ReleaseInfos">@L["ReleaseInfo"]</BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Archives">
+                    @TabLabelWithCount(L["Archives"], ArchiveConfigCountText, isDestructive: false)
+                </BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Uploads">
+                    @TabLabelWithCount(L["Uploads"], UploadConfigCountText, HasOfflineUploadConfigs)
+                </BbTabsTrigger>
+                <BbTabsTrigger Value="@ReleaseDetailTab.Images">
+                    @TabLabelWithCount(L["Images"], ImageUploadConfigCountText, isDestructive: false)
+                </BbTabsTrigger>
+            </BbTabsList>
+        </div>
 
-        <BbTabsContent Value="overview" Class="space-y-4">
+        <div class="sm:hidden">
+            <BbSelect TValue="string"
+                      Value="@activeTab"
+                      ValueChanged="HandleTabChanged"
+                      Options="TabSelectOptions"
+                      AriaLabel="@L["ReleaseSection"]"
+                      Class="w-full" />
+        </div>
+
+        <BbTabsContent Value="@ReleaseDetailTab.Overview" Class="space-y-4">
             <ReleaseOverview
                 @ref="@reloadableComponents[nameof(ReleaseOverview)]"
                 ReleaseId="@ReleaseId"
                 ReleaseName="@release.Name"
                 ReleaseFolderPath="@release.ReleaseFolderPath"
-                OnRefreshed="ReloadPostedLocationsAsync" />
-            <PostedLocations @ref="postedLocations" ReleaseId="@ReleaseId" />
+                Uploads="overviewUploads"
+                OnRefreshRequested="HandleOverviewRefreshRequestedAsync" />
+            <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations">
+                <PostedLocations @ref="postedLocations"
+                                 ReleaseId="@ReleaseId"
+                                 OnLocationsChanged="ReloadProgressAsync" />
+            </div>
         </BbTabsContent>
 
-        <BbTabsContent Value="release-infos" Class="space-y-4">
+        <BbTabsContent Value="@ReleaseDetailTab.ReleaseInfos" Class="space-y-4">
             <ReleaseInfoPanel ReleaseId="@ReleaseId" ReleaseName="@release.Name" ReleaseType="@release.ReleaseType" />
         </BbTabsContent>
 
-        <BbTabsContent Value="archives" Class="space-y-4">
+        <BbTabsContent Value="@ReleaseDetailTab.Archives" Class="space-y-4">
             <ArchiveConfigs
                 @ref="@reloadableComponents[nameof(ArchiveConfigs)]"
                 ReleaseId="ReleaseId"
                 ReleaseType="release.ReleaseType"
                 FocusArchiveConfigId="@FocusArchiveConfigId"
-                OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync" />
+                OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync"
+                OnArchiveConfigCountLoaded="count => archiveConfigCount = count" />
         </BbTabsContent>
 
-        <BbTabsContent Value="upload-configs" Class="space-y-4">
-            <UploadConfigs
-                @ref="@reloadableComponents[nameof(UploadConfigs)]"
+        <BbTabsContent Value="@ReleaseDetailTab.Uploads" Class="space-y-4">
+            <BbToggleGroup TValue="ReleaseUploadsView"
+                           @bind-Value="uploadsView"
+                           Required="true"
+                           Variant="ToggleVariant.Outline"
+                           Size="ToggleSize.Small"
+                           Class="w-fit"
+                           aria-label="@L["UploadsView"]">
+                <BbToggleGroupItem Value="ReleaseUploadsView.Configuration">
+                    <span class="inline-flex items-center gap-2">
+                        <LucideIcon Name="sliders-horizontal" class="h-4 w-4" />
+                        @L["Configuration"]
+                    </span>
+                </BbToggleGroupItem>
+                <BbToggleGroupItem Value="ReleaseUploadsView.History">
+                    <span class="inline-flex items-center gap-2">
+                        <LucideIcon Name="history" class="h-4 w-4" />
+                        @L["History"]
+                    </span>
+                </BbToggleGroupItem>
+            </BbToggleGroup>
+
+            @if (uploadsView is ReleaseUploadsView.Configuration)
+            {
+                <UploadConfigs
+                    @ref="@reloadableComponents[nameof(UploadConfigs)]"
+                    ReleaseId="@ReleaseId"
+                    FocusUploadConfigId="@FocusUploadConfigId" />
+            }
+            else
+            {
+                <ReleaseUploads ReleaseId="@ReleaseId" InitialUploadConfigId="@FocusUploadConfigId" />
+            }
+        </BbTabsContent>
+
+        <BbTabsContent Value="@ReleaseDetailTab.Images" Class="space-y-4">
+            <ImageUploadConfigs
                 ReleaseId="@ReleaseId"
-                FocusUploadConfigId="@FocusUploadConfigId" />
-        </BbTabsContent>
-
-        <BbTabsContent Value="image-upload-configs" Class="space-y-4">
-            <ImageUploadConfigs ReleaseId="@ReleaseId" />
-        </BbTabsContent>
-
-        <BbTabsContent Value="uploads" Class="space-y-4">
-            <ReleaseUploads ReleaseId="@ReleaseId" InitialUploadConfigId="@FocusUploadConfigId" />
-        </BbTabsContent>
-
-        <BbTabsContent Value="image-uploads" Class="space-y-4">
+                OnImageUploadConfigCountLoaded="count => imageUploadConfigCount = count" />
             <ReleaseImageUploads ReleaseId="@ReleaseId" />
         </BbTabsContent>
     </BbTabs>
 </section>
+
+@code {
+    private RenderFragment ForumPostActions(bool isInStickyHeader) =>
+        @<text>
+            @if (hasActiveForumRegistration)
+            {
+                <BbSplitButton Size="ButtonSize.Small"
+                               Variant="@(IsPostingToForumPending ? ButtonVariant.Default : ButtonVariant.Outline)"
+                               OnClick="ShowPostToForumDialogAsync"
+                               AriaLabel="@L["PostToForum"]"
+                               DropdownAriaLabel="@L["MoreForumPostOptions"]">
+                    <Icon>
+                        <LucideIcon Name="send" class="h-4 w-4" />
+                    </Icon>
+                    <ChildContent>
+                        <span class="@(isInStickyHeader ? "hidden sm:inline" : null)">@L["PostToForum"]</span>
+                    </ChildContent>
+                    <DropdownContent>
+                        <BbSplitButtonItem OnClick="RenderForumPostAsync">
+                            <span class="inline-flex items-center gap-2">
+                                <LucideIcon Name="file-output" class="h-4 w-4" />
+                                @L["RenderForumPost"]
+                            </span>
+                        </BbSplitButtonItem>
+                    </DropdownContent>
+                </BbSplitButton>
+            }
+            else
+            {
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          OnClick="RenderForumPostAsync"
+                          AriaLabel="@L["RenderForumPost"]">
+                    <LucideIcon Name="file-output" class="h-4 w-4" />
+                    <span class="@(isInStickyHeader ? "hidden sm:inline" : null)">@L["RenderForumPost"]</span>
+                </BbButton>
+            }
+        </text>;
+
+    private static RenderFragment TabLabelWithCount(string label, string count, bool isDestructive) =>
+        @<span class="inline-flex items-center gap-2">
+            <span>@label</span>
+            <span class="bearcat-tab-count @(isDestructive ? "bearcat-tab-count-destructive" : null)">@count</span>
+        </span>;
+
+    private RenderFragment FolderPathRow(string path, string folderLabel) =>
+        @<div class="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+            <span class="inline-flex shrink-0" title="@folderLabel">
+                <LucideIcon Name="folder" class="h-3.5 w-3.5" />
+                <span class="sr-only">@folderLabel:</span>
+            </span>
+            <code class="min-w-0 truncate font-mono text-xs" title="@path">@path</code>
+            <CopyButton Value="@path" Label="@L["CopyFolderPath"]" />
+        </div>;
+}

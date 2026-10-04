@@ -8,6 +8,7 @@ using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Bearcat.Website.Pages.ManagePostedLocations;
 
@@ -23,8 +24,14 @@ public partial class PostedLocations(
     [Parameter]
     public int? ReleaseCollectionId { get; set; }
 
+    [Parameter]
+    public EventCallback OnLocationsChanged { get; set; }
+
     private IReadOnlyList<PostedLocationReadModel> locations = [];
-    private string newUrl = string.Empty;
+    private string? newUrl;
+    private BbInput? urlInput;
+    private bool isAdding;
+    private bool isUrlInputFocusRequested;
     private bool isBusy;
     private string? errorMessage;
 
@@ -45,6 +52,38 @@ public partial class PostedLocations(
         StateHasChanged();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!isUrlInputFocusRequested || urlInput is null)
+        {
+            return;
+        }
+
+        isUrlInputFocusRequested = false;
+        await urlInput.FocusAsync();
+    }
+
+    private void StartAdding()
+    {
+        isAdding = true;
+        isUrlInputFocusRequested = true;
+        errorMessage = null;
+    }
+
+    private void CancelAdding()
+    {
+        isAdding = false;
+        newUrl = null;
+    }
+
+    private void HandleAddFormKeyDown(KeyboardEventArgs eventArgs)
+    {
+        if (eventArgs.Key == "Escape")
+        {
+            CancelAdding();
+        }
+    }
+
     private async Task AddAsync()
     {
         if (string.IsNullOrWhiteSpace(newUrl))
@@ -52,21 +91,25 @@ public partial class PostedLocations(
             return;
         }
 
+        var url = newUrl;
+
         await RunBusyAsync(async () =>
         {
             await operationRunner.RunAsync<PostedLocationService>(async service =>
             {
                 if (ReleaseCollectionId is { } collectionId)
                 {
-                    await service.AddForCollectionAsync(collectionId, newUrl);
+                    await service.AddForCollectionAsync(collectionId, url);
                     return;
                 }
 
-                await service.AddForReleaseAsync(ReleaseId!.Value, newUrl);
+                await service.AddForReleaseAsync(ReleaseId!.Value, url);
             });
 
-            newUrl = string.Empty;
+            newUrl = null;
+            isAdding = false;
             await ReloadAsync();
+            await OnLocationsChanged.InvokeAsync();
         });
     }
 
@@ -116,6 +159,7 @@ public partial class PostedLocations(
 
             toastService.Success(L["UpdatePostedLocationSucceeded"]);
             await ReloadAsync();
+            await OnLocationsChanged.InvokeAsync();
         });
     }
 
@@ -127,6 +171,7 @@ public partial class PostedLocations(
                 (PostedLocationService service) => service.DeleteAsync(postedLocationId)
             );
             await ReloadAsync();
+            await OnLocationsChanged.InvokeAsync();
         });
     }
 

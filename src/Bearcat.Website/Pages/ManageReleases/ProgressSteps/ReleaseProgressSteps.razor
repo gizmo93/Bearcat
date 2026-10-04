@@ -1,0 +1,38 @@
+<div class="bearcat-release-progress-steps" role="group" aria-label="@L["ReleaseProgress"]">
+    @foreach (var step in Steps)
+    {
+        var title = GetTitle(step.Kind);
+        var description = GetDescription(step);
+
+        <button type="button"
+                class="bearcat-release-progress-step @(step.State is ReleaseProgressStepState.Pending ? "bearcat-release-progress-step-pending" : null)"
+                aria-label="@($"{title}: {description}")"
+                title="@description"
+                @onclick="() => OnStepSelected.InvokeAsync(step.Kind)">
+            <span class="bearcat-release-progress-step-marker @GetMarkerClass(step.State)" aria-hidden="true">
+                @switch (step.State)
+                {
+                    case ReleaseProgressStepState.Done:
+                        <LucideIcon Name="check" class="h-3.5 w-3.5" StrokeWidth="2.5" />
+                        break;
+                    case ReleaseProgressStepState.InProgress:
+                        <LucideIcon Name="loader-circle" class="h-3.5 w-3.5 animate-spin" StrokeWidth="2.5" />
+                        break;
+                    case ReleaseProgressStepState.Attention:
+                        <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" StrokeWidth="2.5" />
+                        break;
+                    default:
+                        <LucideIcon Name="@GetIconName(step.Kind)" class="h-3.5 w-3.5" />
+                        break;
+                }
+            </span>
+            <span class="bearcat-release-progress-step-text" aria-hidden="true">
+                <span class="bearcat-release-progress-step-title">@title</span>
+                <span class="bearcat-release-progress-step-short-title">@GetShortTitle(step.Kind)</span>
+                <span class="bearcat-release-progress-step-description @(step.State is ReleaseProgressStepState.Attention ? "bearcat-release-progress-step-description-attention" : null)">
+                    @description
+                </span>
+            </span>
+        </button>
+    }
+</div>

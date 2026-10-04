@@ -17,6 +17,9 @@ public partial class ImageUploadConfigs(
     [EditorRequired]
     public int ReleaseId { get; set; }
 
+    [Parameter]
+    public EventCallback<int> OnImageUploadConfigCountLoaded { get; set; }
+
     private IReadOnlyList<ImageUploadConfigReadModel> imageUploadConfigs = [];
 
     protected override async Task OnInitializedAsync()
@@ -106,6 +109,7 @@ public partial class ImageUploadConfigs(
             (IImageUploadConfigReadRepository repository) =>
                 repository.GetImageUploadConfigsAsync(ReleaseId)
         );
+        await OnImageUploadConfigCountLoaded.InvokeAsync(imageUploadConfigs.Count);
     }
 
     public async Task ReloadAsync()
