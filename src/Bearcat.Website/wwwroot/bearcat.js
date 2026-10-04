@@ -130,11 +130,7 @@ initScrollAwareHeader();
 const lineNumberedTextarea = (() => {
     const registry = new WeakMap();
 
-    function paint(textarea, gutter, mirror) {
-        if (!textarea || !gutter) {
-            return;
-        }
-
+    function copyTextStyle(textarea, mirror) {
         const style = window.getComputedStyle(textarea);
         mirror.style.fontFamily = style.fontFamily;
         mirror.style.fontSize = style.fontSize;
@@ -152,8 +148,43 @@ const lineNumberedTextarea = (() => {
         mirror.style.width = Math.max(0, contentWidth) + "px";
 
         mirror.textContent = "x";
-        const rowHeight = mirror.offsetHeight || parseFloat(style.fontSize) * 1.2;
+        return mirror.offsetHeight || parseFloat(style.fontSize) * 1.2;
+    }
 
+    function writeGutter(gutter, numbers, errorLines) {
+        if (errorLines.size === 0) {
+            gutter.textContent = numbers.join("\n");
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        let pendingText = "";
+
+        numbers.forEach((number, index) => {
+            const separator = index === 0 ? "" : "\n";
+            if (number !== "" && errorLines.has(Number(number))) {
+                fragment.append(pendingText + separator);
+                pendingText = "";
+                const marker = document.createElement("span");
+                marker.className = "bearcat-code-editor-gutter-error";
+                marker.textContent = number;
+                fragment.append(marker);
+                return;
+            }
+
+            pendingText += separator + number;
+        });
+
+        fragment.append(pendingText);
+        gutter.replaceChildren(fragment);
+    }
+
+    function paint(textarea, gutter, mirror, errorLines) {
+        if (!textarea || !gutter) {
+            return;
+        }
+
+        const rowHeight = copyTextStyle(textarea, mirror);
         const lines = textarea.value.split("\n");
         const numbers = [];
 
@@ -169,7 +200,7 @@ const lineNumberedTextarea = (() => {
             }
         }
 
-        gutter.textContent = numbers.join("\n");
+        writeGutter(gutter, numbers, errorLines);
         gutter.scrollTop = textarea.scrollTop;
     }
 
@@ -192,30 +223,39 @@ const lineNumberedTextarea = (() => {
             .replace("{1}", String(column));
     }
 
-    function attach(textarea, gutter, mirror, cursorPositionTargetId, cursorPositionFormat) {
+    function attach(textarea, gutter, mirror, cursorPositionTargetId, cursorPositionFormat, errorLineNumbers) {
         if (!textarea || !gutter || !mirror) {
             return;
         }
 
         if (registry.has(textarea)) {
-            refresh(textarea);
+            setErrorLines(textarea, errorLineNumbers);
             return;
         }
 
         const cursorPosition = cursorPositionTargetId && cursorPositionFormat
             ? { targetId: cursorPositionTargetId, format: cursorPositionFormat }
             : null;
+        const entry = {
+            gutter,
+            mirror,
+            cursorPosition,
+            errorLines: new Set(errorLineNumbers ?? []),
+            resizeObserver: null,
+        };
         const onInput = () => {
-            paint(textarea, gutter, mirror);
+            paint(textarea, gutter, mirror, entry.errorLines);
             writeCursorPosition(textarea, cursorPosition);
         };
         const onCursorMove = () => writeCursorPosition(textarea, cursorPosition);
         const onScroll = () => {
             gutter.scrollTop = textarea.scrollTop;
         };
-        const resizeObserver = new ResizeObserver(() => paint(textarea, gutter, mirror));
+        entry.resizeObserver = new ResizeObserver(() =>
+            paint(textarea, gutter, mirror, entry.errorLines)
+        );
 
-        registry.set(textarea, { gutter, mirror, cursorPosition, resizeObserver });
+        registry.set(textarea, entry);
 
         textarea.addEventListener("input", onInput);
         textarea.addEventListener("scroll", onScroll, { passive: true });
@@ -224,21 +264,62 @@ const lineNumberedTextarea = (() => {
                 textarea.addEventListener(eventName, onCursorMove);
             }
         }
-        resizeObserver.observe(textarea);
+        entry.resizeObserver.observe(textarea);
 
-        paint(textarea, gutter, mirror);
+        paint(textarea, gutter, mirror, entry.errorLines);
         writeCursorPosition(textarea, cursorPosition);
     }
 
     function refresh(textarea) {
         const entry = registry.get(textarea);
         if (entry) {
-            paint(textarea, entry.gutter, entry.mirror);
+            paint(textarea, entry.gutter, entry.mirror, entry.errorLines);
             writeCursorPosition(textarea, entry.cursorPosition);
         }
     }
 
-    return { attach, refresh };
+    function setErrorLines(textarea, errorLineNumbers) {
+        const entry = registry.get(textarea);
+        if (!entry) {
+            return;
+        }
+
+        entry.errorLines = new Set(errorLineNumbers ?? []);
+        paint(textarea, entry.gutter, entry.mirror, entry.errorLines);
+    }
+
+    function getOffset(value, line, column) {
+        const lines = value.split("\n");
+        const lineIndex = Math.min(Math.max(line, 1), lines.length) - 1;
+        let offset = 0;
+
+        for (let i = 0; i < lineIndex; i++) {
+            offset += lines[i].length + 1;
+        }
+
+        return offset + Math.min(Math.max(column, 1) - 1, lines[lineIndex].length);
+    }
+
+    function focusPosition(textarea, line, column) {
+        const entry = registry.get(textarea);
+        if (!entry) {
+            return;
+        }
+
+        const offset = getOffset(textarea.value, line, column);
+        textarea.focus({ preventScroll: true });
+        textarea.setSelectionRange(offset, offset);
+
+        const rowHeight = copyTextStyle(textarea, entry.mirror);
+        entry.mirror.textContent = textarea.value.slice(0, offset) + "\u200b";
+        const cursorTop = Math.max(0, entry.mirror.offsetHeight - rowHeight);
+        textarea.scrollTop = Math.max(0, cursorTop - textarea.clientHeight / 2);
+        entry.gutter.scrollTop = textarea.scrollTop;
+
+        writeCursorPosition(textarea, entry.cursorPosition);
+    }
+
+    return { attach, refresh, setErrorLines, focusPosition };
 })();
 
 const saveShortcut = (() => {

@@ -128,6 +128,53 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             .ShouldContain(variable => variable.Path == "{{ collection.primary_language }}");
     }
 
+    [Test]
+    public async Task LoadPreviewDataAsync_ExistingCollection_ReturnsDataNodesAndRendersPreview()
+    {
+        // Arrange
+        var collection = await AddCollectionWithUploadAsync();
+
+        // Act
+        var previewData = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.ReleaseCollection,
+            collection.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        previewData.ShouldNotBeNull();
+        previewData
+            .DataNodes.Select(node => node.Name)
+            .ShouldBe(["collection", "series", "releases", "imagelinks"]);
+        var firstRelease = previewData
+            .DataNodes.Single(node => node.Name == "releases")
+            .Children.Single();
+        firstRelease.Name.ShouldBe("[0]");
+        firstRelease
+            .Children.Single(node => node.Name == "name")
+            .Value.ShouldBe("Bodies.2023.S01E01-GRP");
+        var renderResult = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "{{ series.title }}{{ for release in releases }}|{{ release.name }}{{ end }}"
+        );
+        renderResult.Errors.ShouldBeEmpty();
+        renderResult.Content.ShouldBe("Bodies|Bodies.2023.S01E01-GRP");
+    }
+
+    [Test]
+    public async Task LoadPreviewDataAsync_MissingCollection_ReturnsNull()
+    {
+        // Act
+        var previewData = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.ReleaseCollection,
+            999,
+            CancellationToken.None
+        );
+
+        // Assert
+        previewData.ShouldBeNull();
+    }
+
     private async Task<ReleaseCollection> AddCollectionWithImageUploadAsync()
     {
         var releaseGroup = new ReleaseGroup

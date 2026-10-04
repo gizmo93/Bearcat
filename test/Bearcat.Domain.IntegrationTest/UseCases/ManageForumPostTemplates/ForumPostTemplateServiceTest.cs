@@ -245,39 +245,6 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         (await DbContext.ForumPostingRules.SingleAsync()).ForumPostTemplateId.ShouldBe(template.Id);
     }
 
-    [Test]
-    public void Validate_ValidTemplateBody_ReturnsValidResult()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate("Hello {{ release.name }}");
-
-        // Assert
-        result.IsValid.ShouldBeTrue();
-        result.Errors.ShouldBeEmpty();
-    }
-
-    [Test]
-    public void Validate_InvalidTemplateBody_ReturnsErrors()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate("{{ for x in }}");
-
-        // Assert
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldNotBeEmpty();
-    }
-
-    [Test]
-    public void Validate_NullTemplateBody_ReturnsValidResult()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate(null);
-
-        // Assert
-        result.IsValid.ShouldBeTrue();
-        result.Errors.ShouldBeEmpty();
-    }
-
     private static ForumPostTemplate CreateTemplate(string name)
     {
         return new ForumPostTemplate

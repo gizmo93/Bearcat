@@ -153,6 +153,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();
             services.AddScoped<IForumPostTemplateReadRepository, ForumPostTemplateRepository>();
             services.AddScoped<IForumPostTemplateWriteRepository, ForumPostTemplateRepository>();
+            services.AddScoped<
+                IForumPostTemplatePreviewEntityReadRepository,
+                ForumPostTemplatePreviewEntityReadRepository
+            >();
             services.AddScoped<IForumPostingRuleReadRepository, ForumPostingRuleRepository>();
             services.AddScoped<IForumPostingRuleWriteRepository, ForumPostingRuleRepository>();
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();

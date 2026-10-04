@@ -1542,9 +1542,19 @@
   <data name="ResizeTemplatesAndVariables" xml:space="preserve"><value>Grösse von Vorlagen und Variablen ändern</value></data>
   <data name="ResizeTemplateSidebar" xml:space="preserve"><value>Grösse der Vorlagenseitenleiste ändern</value></data>
   <data name="ResizeEditorAndPreview" xml:space="preserve"><value>Grösse von Editor und Vorschau ändern</value></data>
-  <data name="ForumPostTemplatePreviewPlaceholder" xml:space="preserve"><value>Hier erscheint der gerenderte Forenpost.</value></data>
   <data name="SyntaxErrorCountOne" xml:space="preserve"><value>1 Fehler</value></data>
   <data name="SyntaxErrorCount" xml:space="preserve"><value>{0} Fehler</value></data>
+  <data name="PreviewWith" xml:space="preserve"><value>Vorschau mit</value></data>
+  <data name="PreviewOutput" xml:space="preserve"><value>Ausgabe</value></data>
+  <data name="PreviewData" xml:space="preserve"><value>Daten</value></data>
+  <data name="CopyOutput" xml:space="preserve"><value>Ausgabe kopieren</value></data>
+  <data name="NoPreviewDataAvailable" xml:space="preserve"><value>Keine Daten verfügbar</value></data>
+  <data name="ForumPostTemplatePreviewNoRelease" xml:space="preserve"><value>Es gibt noch kein Release, mit dem du diese Vorlage in der Vorschau ansehen kannst.</value></data>
+  <data name="ForumPostTemplatePreviewNoReleaseCollection" xml:space="preserve"><value>Es gibt noch keine Releasecollection, mit der du diese Vorlage in der Vorschau ansehen kannst.</value></data>
+  <data name="ForumPostTemplateErrorPosition" xml:space="preserve"><value>Zeile {0}, Spalte {1}</value></data>
+  <data name="ForumPostTemplateErrorWithPosition" xml:space="preserve"><value>Zeile {0}, Spalte {1}: {2}</value></data>
+  <data name="PreviewRenderedInMilliseconds" xml:space="preserve"><value>Gerendert in {0} ms</value></data>
+  <data name="JumpToFirstError" xml:space="preserve"><value>Zum ersten Fehler springen</value></data>
   <data name="CursorPosition" xml:space="preserve"><value>Zeile {0}, Spalte {1}</value></data>
   <data name="CharacterCountOne" xml:space="preserve"><value>1 Zeichen</value></data>
   <data name="CharacterCount" xml:space="preserve"><value>{0} Zeichen</value></data>

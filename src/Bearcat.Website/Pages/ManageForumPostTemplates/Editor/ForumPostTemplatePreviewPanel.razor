@@ -1,0 +1,65 @@
+<BbTabs @bind-Value="activeTab" Class="bearcat-forum-template-editor-pane bearcat-forum-template-editor-preview">
+    <div class="bearcat-forum-template-editor-pane-header bearcat-forum-template-editor-preview-header">
+        <BbTabsList Class="bearcat-forum-template-editor-preview-tabs">
+            <BbTabsTrigger Value="@OutputTab">@L["PreviewOutput"]</BbTabsTrigger>
+            <BbTabsTrigger Value="@DataTab">@L["PreviewData"]</BbTabsTrigger>
+        </BbTabsList>
+        <div class="bearcat-forum-template-editor-toolbar-spacer"></div>
+        <CopyButton Value="@Content"
+                    Label="@L["CopyOutput"]"
+                    Class="bearcat-forum-template-editor-preview-copy-button" />
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="bearcat-forum-template-editor-preview-body">
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+                <span>@L["Loading"]</span>
+            </div>
+        </div>
+    }
+    else if (!HasPreviewEntity)
+    {
+        <div class="bearcat-forum-template-editor-preview-body">
+            <BbEmpty Description="@NoPreviewEntityText" Size="EmptySize.Small">
+                <Icon>
+                    <LucideIcon Name="eye-off" />
+                </Icon>
+            </BbEmpty>
+        </div>
+    }
+    else
+    {
+        <BbTabsContent Value="@OutputTab" Class="bearcat-forum-template-editor-preview-body">
+            @if (Errors.Count > 0)
+            {
+                <ul class="bearcat-forum-template-editor-preview-errors" role="alert">
+                    @foreach (var error in Errors)
+                    {
+                        <li>
+                            <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5 shrink-0" />
+                            @if (error.Line is { } line)
+                            {
+                                <button type="button"
+                                        class="bearcat-forum-template-editor-preview-error-position"
+                                        @onclick="@(() => OnErrorPositionSelected.InvokeAsync(error))">
+                                    @L["ForumPostTemplateErrorPosition", line, error.Column ?? 1]
+                                </button>
+                            }
+                            <span>@error.Message</span>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (Content is not null)
+            {
+                <pre class="@OutputClass">@Content</pre>
+            }
+        </BbTabsContent>
+        <BbTabsContent Value="@DataTab" Class="bearcat-forum-template-editor-preview-body">
+            <ForumPostTemplateDataTree DataNodes="DataNodes" />
+        </BbTabsContent>
+    }
+</BbTabs>

@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Globalization;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering.Preview;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
@@ -20,8 +22,7 @@ public partial class ForumPostTemplatesPage(
     IScopedOperationRunner operationRunner,
     IJSRuntime js,
     PersistentComponentState applicationState,
-    IHttpContextAccessor httpContextAccessor,
-    ClientPlatform clientPlatform
+    IHttpContextAccessor httpContextAccessor
 ) : IAsyncDisposable
 {
     private const string PanelSizesKey = "bearcat.forumPostTemplates.panelSizes";
@@ -30,6 +31,10 @@ public partial class ForumPostTemplatesPage(
     private const string EditorMobilePane = "editor";
     private const string PreviewMobilePane = "preview";
     private const string VariablesMobilePane = "variables";
+    private const string PreviewEntityKeyPrefix = "bearcat.forumPostTemplates.previewEntity.";
+    private const int PreviewEntitySearchLimit = 20;
+
+    private static readonly TimeSpan PreviewRenderDelay = TimeSpan.FromMilliseconds(300);
 
     private static readonly double[] DefaultPanelSizes = [20, 40, 40];
     private static readonly double[] DefaultSidebarPanelSizes = [60, 40];
@@ -57,6 +62,19 @@ public partial class ForumPostTemplatesPage(
     private PersistingComponentStateSubscription persistSubscription;
     private DotNetObjectReference<ForumPostTemplatesPage>? dotNetReference;
     private IJSObjectReference? saveShortcutHandle;
+    private LineNumberedTextarea templateBodyEditor = null!;
+    private ForumPostTemplateError? pendingEditorFocusError;
+    private readonly Dictionary<ForumPostTemplateType, int> previewEntityIds = [];
+    private IReadOnlyList<ForumPostTemplatePreviewEntityReadModel> previewEntities = [];
+    private ForumPostTemplatePreviewEntityReadModel? previewEntity;
+    private string previewEntitySearchTerm = string.Empty;
+    private ForumPostTemplateType? previewDataType;
+    private ForumPostTemplatePreviewData? previewData;
+    private bool isPreviewLoading;
+    private string? previewContent;
+    private IReadOnlyList<ForumPostTemplateError> previewErrors = [];
+    private TimeSpan? previewRenderDuration;
+    private readonly RestartableDelay previewRenderDelay = new();
 
     private bool IsNewTemplate => formModel.ForumPostTemplateId is null;
 
@@ -65,64 +83,21 @@ public partial class ForumPostTemplatesPage(
     private EditorValues CurrentValues =>
         new(formModel.Name, formModel.Type, formModel.OutputFormat, formModel.TemplateBody);
 
-    private string SaveShortcutKeys => clientPlatform.IsMac ? "⌘S" : "Ctrl S";
-
     private string CursorPositionFormat => L["CursorPosition"];
 
-    private string InitialCursorPosition =>
-        string.Format(CultureInfo.CurrentCulture, CursorPositionFormat, 1, 1);
-
-    private string CharacterCountText =>
-        formModel.TemplateBody.Length == 1
-            ? L["CharacterCountOne"]
-            : L[
-                "CharacterCount",
-                formModel.TemplateBody.Length.ToString("N0", CultureInfo.CurrentCulture)
-            ];
-
-    private string SyntaxErrorCountText =>
-        validationResult.Errors.Count == 1
-            ? L["SyntaxErrorCountOne"]
-            : L["SyntaxErrorCount", validationResult.Errors.Count];
-
-    private string UnsavedTemplateDisplayName =>
-        string.IsNullOrWhiteSpace(formModel.Name) ? L["UntitledForumPostTemplate"] : formModel.Name;
-
-    private IReadOnlyList<SelectOption<ForumPostTemplateType>> TypeOptions =>
-        Enum.GetValues<ForumPostTemplateType>()
-            .Select(type => new SelectOption<ForumPostTemplateType>(type, GetTypeLabel(type)))
+    private IReadOnlyList<int> ErrorLineNumbers =>
+        validationResult
+            .Errors.Concat(previewErrors)
+            .Select(error => error.Line)
+            .OfType<int>()
+            .Distinct()
+            .Order()
             .ToList();
-
-    private IReadOnlyList<SelectOption<ForumPostTemplateOutputFormat>> OutputFormatOptions =>
-        Enum.GetValues<ForumPostTemplateOutputFormat>()
-            .Select(outputFormat => new SelectOption<ForumPostTemplateOutputFormat>(
-                outputFormat,
-                GetOutputFormatLabel(outputFormat)
-            ))
-            .ToList();
-
-    private IReadOnlyList<ForumPostTemplateVariableReadModel> FilteredVariables
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(variableSearchTerm))
-            {
-                return variables;
-            }
-
-            var searchTerm = variableSearchTerm.Trim();
-            return variables
-                .Where(variable =>
-                    variable.Path.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-                    || variable.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-                )
-                .ToList();
-        }
-    }
 
     protected override async Task OnInitializedAsync()
     {
-        persistSubscription = applicationState.RegisterOnPersisting(PersistPanelSizes);
+        persistSubscription = applicationState.RegisterOnPersisting(PersistUiState);
+        RestorePreviewEntityIds();
         panelSizes =
             RestorePanelSizes(PanelSizesKey, DefaultPanelSizes.Length) ?? DefaultPanelSizes;
         sidebarPanelSizes =
@@ -134,6 +109,17 @@ public partial class ForumPostTemplatesPage(
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (pendingEditorFocusError is { Line: { } line } focusError)
+        {
+            pendingEditorFocusError = null;
+
+            try
+            {
+                await templateBodyEditor.FocusPositionAsync(line, focusError.Column ?? 1);
+            }
+            catch (JSDisconnectedException) { }
+        }
+
         if (!firstRender)
         {
             return;
@@ -180,10 +166,52 @@ public partial class ForumPostTemplatesPage(
             : null;
     }
 
-    private Task PersistPanelSizes()
+    private void RestorePreviewEntityIds()
+    {
+        foreach (var type in Enum.GetValues<ForumPostTemplateType>())
+        {
+            if (RestorePreviewEntityId(GetPreviewEntityKey(type)) is { } entityId)
+            {
+                previewEntityIds[type] = entityId;
+            }
+        }
+    }
+
+    private int? RestorePreviewEntityId(string key)
+    {
+        if (applicationState.TryTakeFromJson<int>(key, out var persisted))
+        {
+            return persisted;
+        }
+
+        return
+            httpContextAccessor.HttpContext?.Request.Cookies.TryGetValue(key, out var cookie)
+                == true
+            && int.TryParse(
+                cookie,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var entityId
+            )
+            ? entityId
+            : null;
+    }
+
+    private static string GetPreviewEntityKey(ForumPostTemplateType type)
+    {
+        return PreviewEntityKeyPrefix + type;
+    }
+
+    private Task PersistUiState()
     {
         applicationState.PersistAsJson(PanelSizesKey, panelSizes.ToArray());
         applicationState.PersistAsJson(SidebarPanelSizesKey, sidebarPanelSizes.ToArray());
+
+        foreach (var (type, entityId) in previewEntityIds)
+        {
+            applicationState.PersistAsJson(GetPreviewEntityKey(type), entityId);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -223,7 +251,7 @@ public partial class ForumPostTemplatesPage(
             }
             else if (selectFirst)
             {
-                StartNewTemplate();
+                await StartNewTemplateAsync();
             }
         }
         finally
@@ -258,7 +286,7 @@ public partial class ForumPostTemplatesPage(
             return;
         }
 
-        StartNewTemplate();
+        await StartNewTemplateAsync();
     }
 
     private async Task<bool> ConfirmDiscardChangesAsync()
@@ -293,7 +321,7 @@ public partial class ForumPostTemplatesPage(
             return;
         }
 
-        ShowInEditor(
+        await ShowInEditorAsync(
             new ForumPostTemplateFormModel
             {
                 ForumPostTemplateId = template.ForumPostTemplateId,
@@ -305,9 +333,9 @@ public partial class ForumPostTemplatesPage(
         );
     }
 
-    private void StartNewTemplate()
+    private async Task StartNewTemplateAsync()
     {
-        ShowInEditor(
+        await ShowInEditorAsync(
             new ForumPostTemplateFormModel
             {
                 Name = string.Empty,
@@ -318,32 +346,40 @@ public partial class ForumPostTemplatesPage(
         );
     }
 
-    private void ShowInEditor(ForumPostTemplateFormModel model)
+    private async Task ShowInEditorAsync(ForumPostTemplateFormModel model)
     {
         formModel = model;
         savedValues = CurrentValues;
         saveErrorMessage = null;
         ValidateTemplateBody();
         ReloadVariables();
+        await ShowPreviewForCurrentTemplateAsync();
     }
 
-    private void ChangeNewTemplateType(ForumPostTemplateType type)
+    private async Task ChangeNewTemplateTypeAsync(ForumPostTemplateType type)
     {
         formModel.Type = type;
         formModel.TemplateBody = GetDefaultTemplate(type);
         ValidateTemplateBody();
         ReloadVariables();
+        await ShowPreviewForCurrentTemplateAsync();
     }
 
-    private void ChangeName(ChangeEventArgs args)
+    private void ChangeName(string name)
     {
-        formModel.Name = args.Value?.ToString() ?? string.Empty;
+        formModel.Name = name;
+    }
+
+    private void ChangeOutputFormat(ForumPostTemplateOutputFormat outputFormat)
+    {
+        formModel.OutputFormat = outputFormat;
     }
 
     private void ChangeTemplateBody(string? templateBody)
     {
         formModel.TemplateBody = templateBody ?? string.Empty;
         ValidateTemplateBody();
+        SchedulePreviewRender();
     }
 
     private void ValidateTemplateBody()
@@ -356,6 +392,209 @@ public partial class ForumPostTemplatesPage(
         variables = operationRunner.Run(
             (ForumPostRenderService service) => service.GetVariables(formModel.Type)
         );
+    }
+
+    private async Task ShowPreviewForCurrentTemplateAsync()
+    {
+        previewRenderDelay.Cancel();
+        previewContent = null;
+        previewErrors = [];
+        previewRenderDuration = null;
+
+        var type = formModel.Type;
+        if (previewDataType != type)
+        {
+            previewDataType = null;
+            previewData = null;
+            previewEntity = null;
+            previewEntities = [];
+            isPreviewLoading = true;
+            var entity = await ResolvePreviewEntityAsync(type);
+            await LoadPreviewDataAsync(type, entity);
+        }
+
+        await RenderPreviewNowAsync();
+    }
+
+    private async Task<ForumPostTemplatePreviewEntityReadModel?> ResolvePreviewEntityAsync(
+        ForumPostTemplateType type
+    )
+    {
+        if (previewEntityIds.TryGetValue(type, out var entityId))
+        {
+            var rememberedEntity = await operationRunner.RunAsync(
+                (IForumPostTemplatePreviewEntityReadRepository repository) =>
+                    repository.GetAsync(type, entityId)
+            );
+            if (rememberedEntity is not null)
+            {
+                return rememberedEntity;
+            }
+        }
+
+        var newestEntities = await operationRunner.RunAsync(
+            (IForumPostTemplatePreviewEntityReadRepository repository) =>
+                repository.SearchAsync(type, searchTerm: null, limit: 1)
+        );
+
+        return newestEntities.FirstOrDefault();
+    }
+
+    private async Task LoadPreviewDataAsync(
+        ForumPostTemplateType type,
+        ForumPostTemplatePreviewEntityReadModel? entity
+    )
+    {
+        isPreviewLoading = true;
+
+        try
+        {
+            var loadedPreviewData = entity is null
+                ? null
+                : await operationRunner.RunAsync(
+                    (ForumPostRenderService service) =>
+                        service.LoadPreviewDataAsync(type, entity.EntityId)
+                );
+            var loadedEntities = loadedPreviewData is null
+                ? []
+                : await operationRunner.RunAsync(
+                    (IForumPostTemplatePreviewEntityReadRepository repository) =>
+                        repository.SearchAsync(type, searchTerm: null, PreviewEntitySearchLimit)
+                );
+
+            if (formModel.Type != type)
+            {
+                return;
+            }
+
+            previewDataType = type;
+            previewData = loadedPreviewData;
+            previewEntity = loadedPreviewData is null ? null : entity;
+            previewEntitySearchTerm = string.Empty;
+            previewEntities = IncludeSelectedPreviewEntity(loadedEntities);
+
+            if (previewEntity is not null)
+            {
+                previewEntityIds[type] = previewEntity.EntityId;
+            }
+        }
+        finally
+        {
+            isPreviewLoading = false;
+        }
+    }
+
+    private async Task SelectPreviewEntityAsync(int entityId)
+    {
+        if (previewEntity?.EntityId == entityId)
+        {
+            return;
+        }
+
+        var type = formModel.Type;
+        var entity = previewEntities.Single(candidate => candidate.EntityId == entityId);
+        await SetCookieAsync(
+            GetPreviewEntityKey(type),
+            entityId.ToString(CultureInfo.InvariantCulture)
+        );
+
+        previewRenderDelay.Cancel();
+        await LoadPreviewDataAsync(type, entity);
+        await RenderPreviewNowAsync();
+    }
+
+    private async Task SearchPreviewEntitiesAsync(string searchTerm)
+    {
+        previewEntitySearchTerm = searchTerm;
+        var type = formModel.Type;
+        var entities = await operationRunner.RunAsync(
+            (IForumPostTemplatePreviewEntityReadRepository repository) =>
+                repository.SearchAsync(type, searchTerm, PreviewEntitySearchLimit)
+        );
+
+        if (formModel.Type != type || previewEntitySearchTerm != searchTerm)
+        {
+            return;
+        }
+
+        previewEntities = IncludeSelectedPreviewEntity(entities);
+    }
+
+    private IReadOnlyList<ForumPostTemplatePreviewEntityReadModel> IncludeSelectedPreviewEntity(
+        IReadOnlyList<ForumPostTemplatePreviewEntityReadModel> entities
+    )
+    {
+        if (previewEntity is null || entities.Contains(previewEntity))
+        {
+            return entities;
+        }
+
+        return [previewEntity, .. entities];
+    }
+
+    private void SchedulePreviewRender()
+    {
+        if (previewData is null)
+        {
+            previewRenderDelay.Cancel();
+            return;
+        }
+
+        _ = RenderPreviewAfterDelayAsync();
+    }
+
+    private async Task RenderPreviewAfterDelayAsync()
+    {
+        if (!await previewRenderDelay.WaitAsync(PreviewRenderDelay))
+        {
+            return;
+        }
+
+        await InvokeAsync(async () =>
+        {
+            await RenderPreviewNowAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task RenderPreviewNowAsync()
+    {
+        previewRenderDelay.Cancel();
+
+        if (previewData is null)
+        {
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        var result = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            formModel.TemplateBody
+        );
+        previewRenderDuration = stopwatch.Elapsed;
+        previewErrors = result.Errors;
+
+        if (result.Errors.Count == 0)
+        {
+            previewContent = result.Content;
+        }
+    }
+
+    private void JumpToFirstError()
+    {
+        var firstErrorWithPosition = validationResult.Errors.FirstOrDefault(error =>
+            error.Line is not null
+        );
+        if (firstErrorWithPosition is not null)
+        {
+            JumpToError(firstErrorWithPosition);
+        }
+    }
+
+    private void JumpToError(ForumPostTemplateError error)
+    {
+        mobilePane = EditorMobilePane;
+        pendingEditorFocusError = error;
     }
 
     private async Task SaveAsync()
@@ -505,59 +744,10 @@ public partial class ForumPostTemplatesPage(
         );
     }
 
-    private IReadOnlyList<ForumPostTemplateSummaryReadModel> GetVisibleTemplates(
-        ForumPostTemplateType type
-    )
-    {
-        var searchTerm = templateSearchTerm?.Trim() ?? string.Empty;
-        return templates
-            .Where(template =>
-                template.Type == type
-                && (
-                    searchTerm.Length == 0
-                    || template.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-                )
-            )
-            .ToList();
-    }
-
-    private string GetRuleCountText(int ruleCount)
-    {
-        return ruleCount == 1
-            ? L["ForumPostingRuleCountOne"]
-            : L["ForumPostingRuleCount", ruleCount];
-    }
-
-    private static string GetTemplateListItemClass(bool selected)
-    {
-        return selected
-            ? "bearcat-forum-template-editor-list-item bearcat-forum-template-editor-list-item-selected"
-            : "bearcat-forum-template-editor-list-item";
-    }
-
-    private string GetTypeLabel(ForumPostTemplateType type)
-    {
-        return type switch
-        {
-            ForumPostTemplateType.Release => L["ForumPostTemplateTypeRelease"],
-            ForumPostTemplateType.ReleaseCollection => L["ForumPostTemplateTypeReleaseCollection"],
-            _ => type.ToString(),
-        };
-    }
-
-    private string GetOutputFormatLabel(ForumPostTemplateOutputFormat outputFormat)
-    {
-        return outputFormat switch
-        {
-            ForumPostTemplateOutputFormat.BBCode => L["ForumPostTemplateOutputFormatBBCode"],
-            ForumPostTemplateOutputFormat.PlainText => L["ForumPostTemplateOutputFormatPlainText"],
-            _ => outputFormat.ToString(),
-        };
-    }
-
     public async ValueTask DisposeAsync()
     {
         persistSubscription.Dispose();
+        previewRenderDelay.Dispose();
 
         if (saveShortcutHandle is not null)
         {

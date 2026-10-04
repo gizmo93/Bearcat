@@ -1,101 +1,28 @@
 @page "/forum-post-templates"
+@using Bearcat.Website.Pages.ManageForumPostTemplates.Editor
 
 <PageTitle>@L["ForumPostTemplates"] - Bearcat</PageTitle>
 
 <section class="bearcat-forum-template-editor" data-mobile-pane="@mobilePane">
-    <div class="bearcat-forum-template-editor-toolbar">
-        <div class="bearcat-forum-template-editor-mobile-only">
-            <BbSheet Side="SheetSide.Left" @bind-Open="templateSheetOpen">
-                <BbSheetTrigger>
-                    <BbButton Variant="ButtonVariant.Ghost"
-                              Size="ButtonSize.IconSmall"
-                              AriaLabel="@L["ShowForumPostTemplates"]">
-                        <LucideIcon Name="panel-left" class="h-4 w-4" />
-                    </BbButton>
-                </BbSheetTrigger>
-                <BbSheetContent Class="bearcat-forum-template-editor-sheet">
-                    <BbSheetHeader>
-                        <BbSheetTitle>@L["ForumPostTemplates"]</BbSheetTitle>
-                    </BbSheetHeader>
-                    <div class="bearcat-forum-template-editor-sheet-list">
-                        @RenderTemplateList()
-                    </div>
-                </BbSheetContent>
-            </BbSheet>
-        </div>
-
-        <LucideIcon Name="file-code" class="h-4 w-4 shrink-0 text-muted-foreground" />
-        <input class="bearcat-forum-template-editor-name-input"
-               value="@formModel.Name"
-               placeholder="@L["ForumPostTemplateNamePlaceholder"]"
-               aria-label="@L["Name"]"
-               @oninput="ChangeName" />
-
-        @if (IsDirty)
-        {
-            <span class="bearcat-forum-template-editor-dirty-dot"
-                  role="status"
-                  title="@L["UnsavedChanges"]"
-                  aria-label="@L["UnsavedChanges"]"></span>
-        }
-
-        @if (IsNewTemplate)
-        {
-            <BbSelect TValue="ForumPostTemplateType"
-                      Value="formModel.Type"
-                      ValueChanged="ChangeNewTemplateType"
-                      Options="TypeOptions"
-                      AriaLabel="@L["ForumPostTemplateType"]"
-                      Class="bearcat-forum-template-editor-toolbar-select bearcat-forum-template-editor-type-select" />
-        }
-        else
-        {
-            <BbBadge Variant="BadgeVariant.Secondary" Class="bearcat-forum-template-editor-small-badge">
-                @GetTypeLabel(formModel.Type)
-            </BbBadge>
-        }
-
-        <BbSelect TValue="ForumPostTemplateOutputFormat"
-                  @bind-Value="formModel.OutputFormat"
-                  Options="OutputFormatOptions"
-                  AriaLabel="@L["ForumPostTemplateOutputFormat"]"
-                  Class="bearcat-forum-template-editor-toolbar-select bearcat-forum-template-editor-output-format-select" />
-
-        <div class="bearcat-forum-template-editor-toolbar-spacer"></div>
-
-        @if (!IsNewTemplate)
-        {
-            <BbDropdownMenu>
-                <BbDropdownMenuTrigger>
-                    <BbButton Variant="ButtonVariant.Ghost"
-                              Size="ButtonSize.IconSmall"
-                              AriaLabel="@L["Actions"]">
-                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                    </BbButton>
-                </BbDropdownMenuTrigger>
-                <BbDropdownMenuContent Align="PopoverAlign.End">
-                    <BbDropdownMenuItem OnClick="DuplicateAsync">
-                        <Icon>
-                            <LucideIcon Name="copy" class="h-4 w-4" />
-                        </Icon>
-                        <ChildContent>@L["Duplicate"]</ChildContent>
-                    </BbDropdownMenuItem>
-                    <BbDropdownMenuSeparator />
-                    <BbDropdownMenuItem OnClick="DeleteAsync" Class="bearcat-forum-template-editor-destructive-menu-item">
-                        <Icon>
-                            <LucideIcon Name="trash-2" class="h-4 w-4" />
-                        </Icon>
-                        <ChildContent>@L["Delete"]</ChildContent>
-                    </BbDropdownMenuItem>
-                </BbDropdownMenuContent>
-            </BbDropdownMenu>
-        }
-
-        <BbButton Size="ButtonSize.Small" Disabled="@(!IsDirty || isSaving)" OnClick="SaveAsync">
-            <LucideIcon Name="save" class="h-4 w-4" />
-            @L["Save"]
-        </BbButton>
-    </div>
+    <ForumPostTemplateEditorToolbar Name="@formModel.Name"
+                                    NameChanged="ChangeName"
+                                    Type="formModel.Type"
+                                    TypeChanged="ChangeNewTemplateTypeAsync"
+                                    OutputFormat="formModel.OutputFormat"
+                                    OutputFormatChanged="ChangeOutputFormat"
+                                    IsNewTemplate="IsNewTemplate"
+                                    IsDirty="IsDirty"
+                                    IsSaving="isSaving"
+                                    @bind-TemplateSheetOpen="templateSheetOpen"
+                                    TemplateList="RenderTemplateList()"
+                                    PreviewEntities="previewEntities"
+                                    PreviewEntityId="previewEntity?.EntityId"
+                                    OnPreviewEntitySelected="SelectPreviewEntityAsync"
+                                    PreviewEntitySearchTerm="@previewEntitySearchTerm"
+                                    PreviewEntitySearchTermChanged="SearchPreviewEntitiesAsync"
+                                    OnSave="SaveAsync"
+                                    OnDuplicate="DuplicateAsync"
+                                    OnDelete="DeleteAsync" />
 
     @if (!string.IsNullOrWhiteSpace(saveErrorMessage))
     {
@@ -135,7 +62,7 @@
                     <BbResizablePanel DefaultSize="sidebarPanelSizes[1]" MinSize="15">
                         <div class="bearcat-forum-template-editor-pane">
                             <div class="bearcat-forum-template-editor-pane-header">@L["AvailableVariables"]</div>
-                            @RenderVariablesSection()
+                            @RenderVariableList()
                         </div>
                     </BbResizablePanel>
                 </BbResizablePanelGroup>
@@ -149,12 +76,14 @@
                 <div class="bearcat-forum-template-editor-pane">
                     <div class="bearcat-forum-template-editor-pane-header">Scriban</div>
                     <div class="bearcat-forum-template-editor-code-body">
-                        <LineNumberedTextarea Value="@formModel.TemplateBody"
+                        <LineNumberedTextarea @ref="templateBodyEditor"
+                                              Value="@formModel.TemplateBody"
                                               ValueChanged="ChangeTemplateBody"
                                               Placeholder="@L["ForumPostTemplateBodyPlaceholder"]"
                                               Class="bearcat-code-editor-fill"
                                               CursorPositionTargetId="@CursorPositionElementId"
-                                              CursorPositionFormat="@CursorPositionFormat" />
+                                              CursorPositionFormat="@CursorPositionFormat"
+                                              ErrorLineNumbers="ErrorLineNumbers" />
                     </div>
                 </div>
             </BbResizablePanel>
@@ -164,49 +93,27 @@
             <BbResizablePanel DefaultSize="panelSizes[2]"
                               MinSize="15"
                               Class="bearcat-forum-template-editor-preview-panel">
-                <div class="bearcat-forum-template-editor-pane">
-                    <div class="bearcat-forum-template-editor-pane-header">@L["Preview"]</div>
-                    <div class="bearcat-forum-template-editor-scroll">
-                        <BbEmpty Description="@L["ForumPostTemplatePreviewPlaceholder"]" Size="EmptySize.Small">
-                            <Icon>
-                                <LucideIcon Name="eye" />
-                            </Icon>
-                        </BbEmpty>
-                    </div>
-                </div>
+                <ForumPostTemplatePreviewPanel Type="formModel.Type"
+                                               IsLoading="isPreviewLoading"
+                                               HasPreviewEntity="@(previewEntity is not null)"
+                                               Content="@previewContent"
+                                               Errors="previewErrors"
+                                               DataNodes="@(previewData?.DataNodes ?? [])"
+                                               OnErrorPositionSelected="JumpToError" />
             </BbResizablePanel>
         </BbResizablePanelGroup>
 
         <div class="bearcat-forum-template-editor-mobile-variables">
-            @RenderVariablesSection()
+            @RenderVariableList()
         </div>
     </div>
 
-    <div class="bearcat-forum-template-editor-status-bar">
-        @if (validationResult.IsValid)
-        {
-            <span class="bearcat-forum-template-editor-status-valid inline-flex items-center gap-1">
-                <LucideIcon Name="circle-check" class="h-3.5 w-3.5" />
-                @L["TemplateSyntaxValid"]
-            </span>
-        }
-        else
-        {
-            <ErrorMessagesTooltip Messages="validationResult.Errors">
-                <span class="inline-flex items-center gap-1 text-destructive">
-                    <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" />
-                    @SyntaxErrorCountText
-                </span>
-            </ErrorMessagesTooltip>
-        }
-
-        <span id="@CursorPositionElementId" class="tabular-nums">@InitialCursorPosition</span>
-        <span class="tabular-nums">@CharacterCountText</span>
-        <span class="bearcat-forum-template-editor-status-hint">
-            <BbKbd Keys="@SaveShortcutKeys" Size="KbdSize.Small" />
-            @L["SaveShortcutHint"]
-        </span>
-    </div>
+    <ForumPostTemplateEditorStatusBar ValidationResult="validationResult"
+                                      CharacterCount="formModel.TemplateBody.Length"
+                                      CursorPositionElementId="@CursorPositionElementId"
+                                      CursorPositionFormat="@CursorPositionFormat"
+                                      PreviewRenderDuration="previewRenderDuration"
+                                      OnJumpToFirstError="JumpToFirstError" />
 </section>
 
 <BbExitPrompt Enabled="@(IsDirty && !pageLeft)"
@@ -218,125 +125,17 @@
 
 @code {
     private RenderFragment RenderTemplateList() =>
-        @<text>
-            <div class="bearcat-forum-template-editor-list-header">
-                <BbInput Type="InputType.Search"
-                         @bind-Value="templateSearchTerm"
-                         UpdateTiming="UpdateTiming.Immediate"
-                         Placeholder="@L["SearchForumPostTemplates"]"
-                         AriaLabel="@L["SearchForumPostTemplates"]"
-                         Class="bearcat-forum-template-editor-compact-input" />
-                <BbButton Variant="ButtonVariant.Ghost"
-                          Size="ButtonSize.IconSmall"
-                          AriaLabel="@L["NewForumPostTemplate"]"
-                          OnClick="CreateNewTemplateAsync">
-                    <LucideIcon Name="plus" class="h-4 w-4" />
-                </BbButton>
-            </div>
+        @<ForumPostTemplateList Templates="templates"
+                                IsLoading="isLoading"
+                                SelectedTemplateId="formModel.ForumPostTemplateId"
+                                UnsavedTemplateType="@(IsNewTemplate ? formModel.Type : (ForumPostTemplateType?)null)"
+                                UnsavedTemplateName="@formModel.Name"
+                                IsDirty="IsDirty"
+                                @bind-SearchTerm="templateSearchTerm"
+                                OnTemplateSelected="SelectTemplateAsync"
+                                OnNewTemplateRequested="CreateNewTemplateAsync" />;
 
-            <div class="bearcat-forum-template-editor-scroll">
-                @if (isLoading && templates.Count == 0)
-                {
-                    <div class="bearcat-release-empty">
-                        <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
-                        <span>@L["Loading"]</span>
-                    </div>
-                }
-                else
-                {
-                    var anyTemplateVisible = false;
-                    foreach (var type in Enum.GetValues<ForumPostTemplateType>())
-                    {
-                        var visibleTemplates = GetVisibleTemplates(type);
-                        var showUnsavedTemplate = IsNewTemplate && formModel.Type == type;
-                        if (visibleTemplates.Count == 0 && !showUnsavedTemplate)
-                        {
-                            continue;
-                        }
-
-                        anyTemplateVisible = true;
-                        <div class="bearcat-forum-template-editor-group">
-                            <p class="bearcat-forum-template-editor-group-label">@GetTypeLabel(type)</p>
-
-                            @if (showUnsavedTemplate)
-                            {
-                                <button type="button" class="@GetTemplateListItemClass(selected: true)">
-                                    <span class="bearcat-forum-template-editor-list-item-name bearcat-forum-template-editor-list-item-unsaved">@UnsavedTemplateDisplayName</span>
-                                    @if (IsDirty)
-                                    {
-                                        <span class="bearcat-forum-template-editor-dirty-dot" aria-label="@L["UnsavedChanges"]"></span>
-                                    }
-                                </button>
-                            }
-
-                            @foreach (var template in visibleTemplates)
-                            {
-                                var selected = template.ForumPostTemplateId == formModel.ForumPostTemplateId;
-                                <button type="button"
-                                        class="@GetTemplateListItemClass(selected)"
-                                        @onclick="@(() => SelectTemplateAsync(template.ForumPostTemplateId))">
-                                    <span class="bearcat-forum-template-editor-list-item-name">@template.Name</span>
-                                    <span class="bearcat-forum-template-editor-list-item-meta">
-                                        @if (template.ForumPostingRuleCount > 0)
-                                        {
-                                            <span>@GetRuleCountText(template.ForumPostingRuleCount)</span>
-                                        }
-                                        @if (template.OutputFormat == ForumPostTemplateOutputFormat.PlainText)
-                                        {
-                                            <BbBadge Variant="BadgeVariant.Outline" Class="bearcat-forum-template-editor-small-badge">
-                                                @L["ForumPostTemplateOutputFormatPlainText"]
-                                            </BbBadge>
-                                        }
-                                        @if (selected && IsDirty)
-                                        {
-                                            <span class="bearcat-forum-template-editor-dirty-dot" aria-label="@L["UnsavedChanges"]"></span>
-                                        }
-                                    </span>
-                                </button>
-                            }
-                        </div>
-                    }
-
-                    if (!anyTemplateVisible)
-                    {
-                        <div class="bearcat-release-empty">
-                            <LucideIcon Name="inbox" class="h-5 w-5" />
-                            <span>@L["NoForumPostTemplatesFound"]</span>
-                        </div>
-                    }
-                }
-            </div>
-        </text>;
-
-    private RenderFragment RenderVariablesSection() =>
-        @<text>
-            <div class="bearcat-forum-template-editor-list-header">
-                <BbInput Type="InputType.Search"
-                         @bind-Value="variableSearchTerm"
-                         UpdateTiming="UpdateTiming.Immediate"
-                         Placeholder="@L["SearchVariables"]"
-                         AriaLabel="@L["SearchVariables"]"
-                         Class="bearcat-forum-template-editor-compact-input" />
-            </div>
-
-            <div class="bearcat-forum-template-editor-scroll">
-                @if (FilteredVariables.Count == 0)
-                {
-                    <div class="bearcat-release-empty">
-                        <LucideIcon Name="search-x" class="h-5 w-5" />
-                        <span>@L["NoVariablesFound"]</span>
-                    </div>
-                }
-                else
-                {
-                    foreach (var variable in FilteredVariables)
-                    {
-                        <div class="bearcat-forum-template-editor-variable">
-                            <code>@variable.Path</code>
-                            <p>@variable.Description</p>
-                        </div>
-                    }
-                }
-            </div>
-        </text>;
+    private RenderFragment RenderVariableList() =>
+        @<ForumPostTemplateVariableList Variables="variables"
+                                        @bind-SearchTerm="variableSearchTerm" />;
 }

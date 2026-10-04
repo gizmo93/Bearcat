@@ -89,6 +89,50 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             .ShouldContain(variable => variable.Path == "{{ release.primary_language }}");
     }
 
+    [Test]
+    public async Task LoadPreviewDataAsync_ExistingRelease_ReturnsDataNodesAndRendersPreview()
+    {
+        // Arrange
+        var release = await AddReleaseAsync();
+
+        // Act
+        var previewData = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.Release,
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        previewData.ShouldNotBeNull();
+        previewData
+            .DataNodes.Select(node => node.Name)
+            .ShouldBe(["release", "release_info", "classification", "uploads", "imagelinks"]);
+        previewData
+            .DataNodes.Single(node => node.Name == "release")
+            .Children.Single(node => node.Name == "name")
+            .Value.ShouldBe("Bearcat.Release.2026-GRP");
+        var renderResult = await ForumPostRenderService.RenderPreviewAsync(
+            previewData,
+            "{{ release.name }}|{{ imagelinks.imgbb_cover.full }}"
+        );
+        renderResult.Errors.ShouldBeEmpty();
+        renderResult.Content.ShouldBe("Bearcat.Release.2026-GRP|https://img.example/full.jpg");
+    }
+
+    [Test]
+    public async Task LoadPreviewDataAsync_MissingRelease_ReturnsNull()
+    {
+        // Act
+        var previewData = await service.LoadPreviewDataAsync(
+            ForumPostTemplateType.Release,
+            999,
+            CancellationToken.None
+        );
+
+        // Assert
+        previewData.ShouldBeNull();
+    }
+
     private async Task<Release> AddReleaseAsync()
     {
         var releaseGroup = new ReleaseGroup

@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Scriban;
@@ -92,7 +93,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
         var template = Template.Parse(templateBody ?? string.Empty);
         return new ForumPostTemplateValidationResult(
             IsValid: !template.HasErrors,
-            Errors: template.Messages.Select(message => message.ToString()).ToList()
+            Errors: ForumPostTemplateErrorMapper.FromParserMessages(template.Messages)
         );
     }
 }

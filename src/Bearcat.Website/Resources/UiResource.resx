@@ -1539,9 +1539,19 @@
   <data name="ResizeTemplatesAndVariables" xml:space="preserve"><value>Resize templates and variables</value></data>
   <data name="ResizeTemplateSidebar" xml:space="preserve"><value>Resize template sidebar</value></data>
   <data name="ResizeEditorAndPreview" xml:space="preserve"><value>Resize editor and preview</value></data>
-  <data name="ForumPostTemplatePreviewPlaceholder" xml:space="preserve"><value>The rendered forum post will appear here.</value></data>
   <data name="SyntaxErrorCountOne" xml:space="preserve"><value>1 error</value></data>
   <data name="SyntaxErrorCount" xml:space="preserve"><value>{0} errors</value></data>
+  <data name="PreviewWith" xml:space="preserve"><value>Preview with</value></data>
+  <data name="PreviewOutput" xml:space="preserve"><value>Output</value></data>
+  <data name="PreviewData" xml:space="preserve"><value>Data</value></data>
+  <data name="CopyOutput" xml:space="preserve"><value>Copy output</value></data>
+  <data name="NoPreviewDataAvailable" xml:space="preserve"><value>No data available</value></data>
+  <data name="ForumPostTemplatePreviewNoRelease" xml:space="preserve"><value>There is no release to preview this template with yet.</value></data>
+  <data name="ForumPostTemplatePreviewNoReleaseCollection" xml:space="preserve"><value>There is no release collection to preview this template with yet.</value></data>
+  <data name="ForumPostTemplateErrorPosition" xml:space="preserve"><value>Line {0}, column {1}</value></data>
+  <data name="ForumPostTemplateErrorWithPosition" xml:space="preserve"><value>Line {0}, column {1}: {2}</value></data>
+  <data name="PreviewRenderedInMilliseconds" xml:space="preserve"><value>Rendered in {0} ms</value></data>
+  <data name="JumpToFirstError" xml:space="preserve"><value>Jump to first error</value></data>
   <data name="CursorPosition" xml:space="preserve"><value>Line {0}, column {1}</value></data>
   <data name="CharacterCountOne" xml:space="preserve"><value>1 character</value></data>
   <data name="CharacterCount" xml:space="preserve"><value>{0} characters</value></data>
