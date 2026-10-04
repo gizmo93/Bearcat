@@ -1,4 +1,6 @@
 using System.Globalization;
+using Bearcat.Abstractions.DistributionSite;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -72,12 +74,18 @@ public partial class ReleaseDetail(
     private IReadOnlyList<ReleaseProgressStep> progressSteps = [];
     private int imageUploadConfigCount;
     private PostedLocations? postedLocations;
+    private bool hasActiveForumRegistration;
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
     private bool IsPostQueueWorkflow =>
         string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
 
     private string? CoverUrl => releaseMetadata?.CoverUrl;
+
+    private bool IsPostingToForumPending =>
+        release.OnlineUploadConfigsCount > 0
+        && progressSteps.Single(step => step.Kind == ReleaseProgressStepKind.Posted).State
+            == ReleaseProgressStepState.Pending;
 
     private bool HasOfflineUploadConfigs =>
         release.OnlineUploadConfigsCount < release.ActiveUploadConfigsCount;
@@ -139,6 +147,7 @@ public partial class ReleaseDetail(
         await LoadArchiveConfigsAsync();
         await LoadImageUploadConfigCountAsync();
         await LoadOverviewUploadsAndProgressStepsAsync();
+        await LoadHasActiveForumRegistrationAsync();
         remoteDownloadOrigin = await operationRunner.RunAsync(
             (IRemoteSourceDownloadReadRepository repository) =>
                 repository.GetByReleaseIdAsync(ReleaseId)
@@ -222,6 +231,16 @@ public partial class ReleaseDetail(
                 repository.GetImageUploadConfigsAsync(ReleaseId)
         );
         imageUploadConfigCount = imageUploadConfigs.Count;
+    }
+
+    private async Task LoadHasActiveForumRegistrationAsync()
+    {
+        var distributionSiteRegistrations = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
+        hasActiveForumRegistration = distributionSiteRegistrations.Any(registration =>
+            registration.Kind == DistributionSiteKind.Forum && registration.IsActive
+        );
     }
 
     private async Task LoadOverviewUploadsAndProgressStepsAsync()

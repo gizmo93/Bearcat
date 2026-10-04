@@ -29,25 +29,7 @@
             }
             <span class="min-w-0 flex-1 truncate text-sm font-semibold" title="@release.Name">@release.Name</span>
             <OnlineStateBadge Value="release.OnlineState" />
-            <BbSplitButton Size="ButtonSize.Small"
-                           OnClick="ShowPostToForumDialogAsync"
-                           AriaLabel="@L["PostToForum"]"
-                           DropdownAriaLabel="@L["MoreForumPostOptions"]">
-                <Icon>
-                    <LucideIcon Name="send" class="h-4 w-4" />
-                </Icon>
-                <ChildContent>
-                    <span class="hidden sm:inline">@L["PostToForum"]</span>
-                </ChildContent>
-                <DropdownContent>
-                    <BbSplitButtonItem OnClick="RenderForumPostAsync">
-                        <span class="inline-flex items-center gap-2">
-                            <LucideIcon Name="file-output" class="h-4 w-4" />
-                            @L["RenderForumPost"]
-                        </span>
-                    </BbSplitButtonItem>
-                </DropdownContent>
-            </BbSplitButton>
+            @ForumPostActions(isInStickyHeader: true)
         </div>
     </div>
 
@@ -178,22 +160,7 @@
             </div>
 
             <div class="bearcat-release-header-actions">
-                <BbSplitButton Size="ButtonSize.Small"
-                               OnClick="ShowPostToForumDialogAsync"
-                               DropdownAriaLabel="@L["MoreForumPostOptions"]">
-                    <Icon>
-                        <LucideIcon Name="send" class="h-4 w-4" />
-                    </Icon>
-                    <ChildContent>@L["PostToForum"]</ChildContent>
-                    <DropdownContent>
-                        <BbSplitButtonItem OnClick="RenderForumPostAsync">
-                            <span class="inline-flex items-center gap-2">
-                                <LucideIcon Name="file-output" class="h-4 w-4" />
-                                @L["RenderForumPost"]
-                            </span>
-                        </BbSplitButtonItem>
-                    </DropdownContent>
-                </BbSplitButton>
+                @ForumPostActions(isInStickyHeader: false)
 
                 <BbDropdownMenu>
                     <BbDropdownMenuTrigger>
@@ -354,6 +321,43 @@
 </section>
 
 @code {
+    private RenderFragment ForumPostActions(bool isInStickyHeader) =>
+        @<text>
+            @if (hasActiveForumRegistration)
+            {
+                <BbSplitButton Size="ButtonSize.Small"
+                               Variant="@(IsPostingToForumPending ? ButtonVariant.Default : ButtonVariant.Outline)"
+                               OnClick="ShowPostToForumDialogAsync"
+                               AriaLabel="@L["PostToForum"]"
+                               DropdownAriaLabel="@L["MoreForumPostOptions"]">
+                    <Icon>
+                        <LucideIcon Name="send" class="h-4 w-4" />
+                    </Icon>
+                    <ChildContent>
+                        <span class="@(isInStickyHeader ? "hidden sm:inline" : null)">@L["PostToForum"]</span>
+                    </ChildContent>
+                    <DropdownContent>
+                        <BbSplitButtonItem OnClick="RenderForumPostAsync">
+                            <span class="inline-flex items-center gap-2">
+                                <LucideIcon Name="file-output" class="h-4 w-4" />
+                                @L["RenderForumPost"]
+                            </span>
+                        </BbSplitButtonItem>
+                    </DropdownContent>
+                </BbSplitButton>
+            }
+            else
+            {
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          OnClick="RenderForumPostAsync"
+                          AriaLabel="@L["RenderForumPost"]">
+                    <LucideIcon Name="file-output" class="h-4 w-4" />
+                    <span class="@(isInStickyHeader ? "hidden sm:inline" : null)">@L["RenderForumPost"]</span>
+                </BbButton>
+            }
+        </text>;
+
     private static RenderFragment TabLabelWithCount(string label, string count, bool isDestructive) =>
         @<span class="inline-flex items-center gap-2">
             <span>@label</span>

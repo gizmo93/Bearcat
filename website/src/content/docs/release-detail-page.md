@@ -19,7 +19,9 @@ The header shows:
 - The remote download origin, if the release came from a [remote download](/Bearcat/remote-downloads/).
 
 **Post to forum** opens the [forum posting dialog](/Bearcat/posting-to-forums/). Its arrow menu
-contains [**Render forum post**](/Bearcat/forum-post-templates/#render-a-post).
+contains [**Render forum post**](/Bearcat/forum-post-templates/#render-a-post). The button is
+highlighted while at least one hoster is online and the release has not been posted yet. Without an
+active forum [distribution site](/Bearcat/posting-to-forums/), only **Render forum post** is shown.
 
 The `...` menu contains **Edit**, **Save as template**, **Convert to unmanaged** or **Convert to
 managed** (see [Release types](/Bearcat/release-types/#converting-between-types)), **Delete local
