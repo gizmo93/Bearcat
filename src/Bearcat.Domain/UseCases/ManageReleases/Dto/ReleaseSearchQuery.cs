@@ -17,6 +17,7 @@ public record ReleaseSearchQuery(
     string? ArchiveFileName = null,
     string? UploadId = null,
     bool? InPostQueue = null,
+    ReleaseSearchSortOrder SortOrder = ReleaseSearchSortOrder.NameAscending,
     int PageIndex = 0,
     int PageSize = 10
 );

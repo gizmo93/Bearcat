@@ -65,15 +65,136 @@ public class ReleaseReadRepository(
         var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
         var totalCount = await releasesQuery.CountAsync(cancellationToken);
 
-        var releases = await releasesQuery
-            .OrderBy(r => r.Name)
-            .ThenBy(r => r.Id)
+        var releases = await ApplyReleaseSortOrder(releasesQuery, query.SortOrder)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
             .Select(ToReleaseReadModel())
             .ToListAsync(cancellationToken: cancellationToken);
 
         return new PagedResult<ReleaseReadModel>(releases, totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<PagedResult<ReleaseSearchResultReadModel>> SearchReleaseResultsAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        var pageIndex = Math.Max(0, query.PageIndex);
+
+        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
+        var totalCount = await releasesQuery.CountAsync(cancellationToken);
+
+        var releaseRows = await ApplyReleaseSortOrder(releasesQuery, query.SortOrder)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(r => new
+            {
+                ReleaseId = r.Id,
+                r.Name,
+                r.ReleaseType,
+                r.ReleaseContentType,
+                r.PrimaryLanguageCode,
+                r.ReleaseGroupId,
+                ReleaseGroupName = r.ReleaseGroup.Name,
+                r.ReleaseFolderPath,
+                r.CreatedAt,
+                r.UploadsPostedAt,
+                MetadataTitle = r.Metadata == null ? null : r.Metadata.Title,
+                CoverUrl = r.Metadata == null ? null : r.Metadata.CoverUrl,
+                Year = r.Classification == null ? null : r.Classification.Year,
+                Resolution = r.Classification == null
+                || r.Classification.Resolution == ReleaseResolution.Unknown
+                    ? null
+                    : (ReleaseResolution?)r.Classification.Resolution,
+                Source = r.Classification == null
+                || r.Classification.Source == ReleaseSource.Unknown
+                    ? null
+                    : (ReleaseSource?)r.Classification.Source,
+                UploadConfigs = r
+                    .UploadConfigs.OrderBy(uc => uc.HosterRegistration.Name)
+                    .ThenBy(uc => uc.Id)
+                    .Select(uc => new ReleaseSearchResultUploadConfigReadModel(
+                        uc.Id,
+                        uc.HosterRegistration.Name,
+                        uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                    ))
+                    .ToList(),
+            })
+            .ToListAsync(cancellationToken);
+
+        var pageReleaseIds = releaseRows.Select(row => row.ReleaseId).ToList();
+
+        var readyForPostQueueReleaseIds = await dbRead
+            .Releases.Where(r => pageReleaseIds.Contains(r.Id))
+            .Where(IsReadyForPostQueue)
+            .Select(r => r.Id)
+            .ToHashSetAsync(cancellationToken);
+
+        var releases = releaseRows
+            .Select(row => new ReleaseSearchResultReadModel(
+                ReleaseId: row.ReleaseId,
+                Name: row.Name,
+                ReleaseType: row.ReleaseType,
+                ReleaseContentType: row.ReleaseContentType,
+                PrimaryLanguageCode: row.PrimaryLanguageCode,
+                ReleaseGroupId: row.ReleaseGroupId,
+                ReleaseGroupName: row.ReleaseGroupName,
+                ReleaseFolderPath: row.ReleaseFolderPath,
+                CreatedAt: row.CreatedAt,
+                UploadsPostedAt: row.UploadsPostedAt,
+                MetadataTitle: row.MetadataTitle,
+                CoverUrl: row.CoverUrl,
+                Year: row.Year,
+                Resolution: row.Resolution,
+                Source: row.Source,
+                UploadConfigs: row.UploadConfigs,
+                IsReadyForPostQueue: readyForPostQueueReleaseIds.Contains(row.ReleaseId)
+            ))
+            .ToList();
+
+        return new PagedResult<ReleaseSearchResultReadModel>(
+            Items: releases,
+            TotalCount: totalCount,
+            PageIndex: pageIndex,
+            PageSize: pageSize
+        );
+    }
+
+    public async Task<ReleaseOnlineStateCounts> CountReleasesByOnlineStateAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query with { OnlineState = null });
+
+        var countsByOnlineState = await releasesQuery
+            .Select(r => new
+            {
+                UploadConfigsCount = r.UploadConfigs.Count,
+                OnlineUploadConfigsCount = r.UploadConfigs.Count(uc =>
+                    uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                ),
+            })
+            .Select(r =>
+                r.UploadConfigsCount == 0 ? OnlineState.Unknown
+                : r.OnlineUploadConfigsCount == r.UploadConfigsCount ? OnlineState.Online
+                : r.OnlineUploadConfigsCount > 0 ? OnlineState.PartiallyOnline
+                : OnlineState.Offline
+            )
+            .GroupBy(onlineState => onlineState)
+            .Select(group => new { OnlineState = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.OnlineState, group => group.Count, cancellationToken);
+
+        return new ReleaseOnlineStateCounts(
+            TotalCount: countsByOnlineState.Values.Sum(),
+            OnlineCount: countsByOnlineState.GetValueOrDefault(OnlineState.Online),
+            PartiallyOnlineCount: countsByOnlineState.GetValueOrDefault(
+                OnlineState.PartiallyOnline
+            ),
+            OfflineCount: countsByOnlineState.GetValueOrDefault(OnlineState.Offline),
+            WithoutUploadConfigsCount: countsByOnlineState.GetValueOrDefault(OnlineState.Unknown)
+        );
     }
 
     public IReadOnlyList<ArchiverDto> GetArchiverFilterOptions()
@@ -1401,6 +1522,34 @@ public class ReleaseReadRepository(
         }
 
         return releases;
+    }
+
+    private static IOrderedQueryable<Release> ApplyReleaseSortOrder(
+        IQueryable<Release> releases,
+        ReleaseSearchSortOrder sortOrder
+    )
+    {
+        return sortOrder switch
+        {
+            ReleaseSearchSortOrder.NameAscending => releases.OrderBy(r => r.Name).ThenBy(r => r.Id),
+            ReleaseSearchSortOrder.CreatedAtDescending => releases
+                .OrderByDescending(r => r.CreatedAt)
+                .ThenByDescending(r => r.Id),
+            ReleaseSearchSortOrder.UploadsPostedAtDescending => releases
+                .OrderBy(r => r.UploadsPostedAt == null)
+                .ThenByDescending(r => r.UploadsPostedAt)
+                .ThenBy(r => r.Name)
+                .ThenBy(r => r.Id),
+            ReleaseSearchSortOrder.OfflineUploadConfigCountDescending => releases
+                .OrderByDescending(r =>
+                    r.UploadConfigs.Count(uc =>
+                        !uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                    )
+                )
+                .ThenBy(r => r.Name)
+                .ThenBy(r => r.Id),
+            _ => throw new ArgumentOutOfRangeException(nameof(sortOrder), sortOrder, null),
+        };
     }
 
     private static IQueryable<Release> ApplyOnlineStateFilter(

@@ -89,7 +89,7 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
     )
     {
         // Arrange
-        AddOnlineStateReleases();
+        testData.AddOnlineStateReleases();
         await DbContext.SaveChangesAsync();
 
         // Act
@@ -109,7 +109,7 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
     public async Task SearchReleasesAsync_ConfigWithSeveralOnlineUploads_CountsOnlineUploadConfigOnce()
     {
         // Arrange
-        AddOnlineStateReleases();
+        testData.AddOnlineStateReleases();
         await DbContext.SaveChangesAsync();
 
         // Act
@@ -403,57 +403,55 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
             .ShouldBe(["Bearcat.Page.06.2026-GRP", "Bearcat.Page.07.2026-GRP"]);
     }
 
-    private void AddOnlineStateReleases()
+    [Test]
+    public async Task SearchReleasesAsync_NoSortOrder_ReturnsReleasesOrderedByName()
     {
-        testData.AddRelease("Bearcat.NoUploadConfigs.2026-GRP");
+        // Arrange
+        testData.AddSortOrderReleases();
+        await DbContext.SaveChangesAsync();
 
-        var allOnlineRelease = testData.AddRelease("Bearcat.AllOnline.2026-GRP");
-        var allOnlineFirstConfig = testData.AddUploadConfig(allOnlineRelease, "All online 1");
-        testData.AddUpload(
-            allOnlineFirstConfig,
-            MidnightUtc,
-            MidnightUtc,
-            onlineState: OnlineState.Offline
-        );
-        testData.AddUpload(allOnlineFirstConfig, MidnightUtc.AddHours(1), MidnightUtc.AddHours(1));
-        testData.AddUpload(
-            testData.AddUploadConfig(allOnlineRelease, "All online 2"),
-            MidnightUtc,
-            MidnightUtc
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(),
+            CancellationToken.None
         );
 
-        var partiallyOnlineRelease = testData.AddRelease("Bearcat.PartiallyOnline.2026-GRP");
-        var partiallyOnlineFirstConfig = testData.AddUploadConfig(
-            partiallyOnlineRelease,
-            "Partially online 1"
-        );
-        testData.AddUpload(partiallyOnlineFirstConfig, MidnightUtc, MidnightUtc);
-        testData.AddUpload(
-            partiallyOnlineFirstConfig,
-            MidnightUtc.AddMilliseconds(500),
-            MidnightUtc.AddMilliseconds(500)
-        );
-        testData.AddUpload(
-            testData.AddUploadConfig(partiallyOnlineRelease, "Partially online 2"),
-            MidnightUtc,
-            MidnightUtc,
-            onlineState: OnlineState.Offline
-        );
-        testData.AddUploadConfig(partiallyOnlineRelease, "Partially online 3");
+        // Assert
+        result
+            .Items.Select(item => item.Name)
+            .ShouldBe([
+                "Bearcat.A.2026-GRP",
+                "Bearcat.B.2026-GRP",
+                "Bearcat.C.2026-GRP",
+                "Bearcat.D.2026-GRP",
+            ]);
+    }
 
-        var offlineRelease = testData.AddRelease("Bearcat.Offline.2026-GRP");
-        testData.AddUpload(
-            testData.AddUploadConfig(offlineRelease, "Offline 1"),
-            MidnightUtc,
-            MidnightUtc,
-            onlineState: OnlineState.Offline
+    [TestCase(ReleaseSearchSortOrder.NameAscending, new[] { "A", "B", "C", "D" })]
+    [TestCase(ReleaseSearchSortOrder.CreatedAtDescending, new[] { "B", "C", "A", "D" })]
+    [TestCase(ReleaseSearchSortOrder.UploadsPostedAtDescending, new[] { "C", "B", "D", "A" })]
+    [TestCase(
+        ReleaseSearchSortOrder.OfflineUploadConfigCountDescending,
+        new[] { "C", "A", "B", "D" }
+    )]
+    public async Task SearchReleasesAsync_SortOrder_ReturnsReleasesInThatOrder(
+        ReleaseSearchSortOrder sortOrder,
+        string[] expectedReleaseNameParts
+    )
+    {
+        // Arrange
+        testData.AddSortOrderReleases();
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(SortOrder: sortOrder),
+            CancellationToken.None
         );
-        testData.AddUpload(
-            testData.AddUploadConfig(offlineRelease, "Offline 2"),
-            MidnightUtc,
-            null,
-            UploadState.Failed,
-            OnlineState.Unknown
-        );
+
+        // Assert
+        result
+            .Items.Select(item => item.Name)
+            .ShouldBe(expectedReleaseNameParts.Select(part => $"Bearcat.{part}.2026-GRP"));
     }
 }

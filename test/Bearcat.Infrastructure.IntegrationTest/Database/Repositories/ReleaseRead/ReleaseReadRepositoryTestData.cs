@@ -326,6 +326,82 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
         return imageUpload;
     }
 
+    public void AddOnlineStateReleases()
+    {
+        AddRelease("Bearcat.NoUploadConfigs.2026-GRP");
+
+        var allOnlineRelease = AddRelease("Bearcat.AllOnline.2026-GRP");
+        var allOnlineFirstConfig = AddUploadConfig(allOnlineRelease, "All online 1");
+        AddUpload(allOnlineFirstConfig, MidnightUtc, MidnightUtc, onlineState: OnlineState.Offline);
+        AddUpload(allOnlineFirstConfig, MidnightUtc.AddHours(1), MidnightUtc.AddHours(1));
+        AddUpload(AddUploadConfig(allOnlineRelease, "All online 2"), MidnightUtc, MidnightUtc);
+
+        var partiallyOnlineRelease = AddRelease("Bearcat.PartiallyOnline.2026-GRP");
+        var partiallyOnlineFirstConfig = AddUploadConfig(
+            partiallyOnlineRelease,
+            "Partially online 1"
+        );
+        AddUpload(partiallyOnlineFirstConfig, MidnightUtc, MidnightUtc);
+        AddUpload(
+            partiallyOnlineFirstConfig,
+            MidnightUtc.AddMilliseconds(500),
+            MidnightUtc.AddMilliseconds(500)
+        );
+        AddUpload(
+            AddUploadConfig(partiallyOnlineRelease, "Partially online 2"),
+            MidnightUtc,
+            MidnightUtc,
+            onlineState: OnlineState.Offline
+        );
+        AddUploadConfig(partiallyOnlineRelease, "Partially online 3");
+
+        var offlineRelease = AddRelease("Bearcat.Offline.2026-GRP");
+        AddUpload(
+            AddUploadConfig(offlineRelease, "Offline 1"),
+            MidnightUtc,
+            MidnightUtc,
+            onlineState: OnlineState.Offline
+        );
+        AddUpload(
+            AddUploadConfig(offlineRelease, "Offline 2"),
+            MidnightUtc,
+            null,
+            UploadState.Failed,
+            OnlineState.Unknown
+        );
+    }
+
+    public void AddSortOrderReleases()
+    {
+        var firstRelease = AddRelease("Bearcat.A.2026-GRP");
+        firstRelease.CreatedAt = MidnightUtc.AddDays(1);
+        AddUpload(
+            AddUploadConfig(firstRelease, "A offline"),
+            MidnightUtc,
+            MidnightUtc,
+            onlineState: OnlineState.Offline
+        );
+
+        var secondRelease = AddRelease("Bearcat.B.2026-GRP");
+        secondRelease.CreatedAt = MidnightUtc.AddDays(3);
+        secondRelease.UploadsPostedAt = MidnightUtc.AddDays(5);
+
+        var thirdRelease = AddRelease("Bearcat.C.2026-GRP");
+        thirdRelease.CreatedAt = MidnightUtc.AddDays(2);
+        thirdRelease.UploadsPostedAt = MidnightUtc.AddDays(6);
+        AddUploadConfig(thirdRelease, "C without upload");
+        AddUpload(
+            AddUploadConfig(thirdRelease, "C offline"),
+            MidnightUtc,
+            MidnightUtc,
+            onlineState: OnlineState.Offline
+        );
+
+        var fourthRelease = AddRelease("Bearcat.D.2026-GRP");
+        fourthRelease.UploadsPostedAt = MidnightUtc.AddDays(4);
+        AddUpload(AddUploadConfig(fourthRelease, "D online"), MidnightUtc, MidnightUtc);
+    }
+
     public static ImageUploadUrl CreateImageUrl(ImageSize imageSize, string url)
     {
         return new ImageUploadUrl { ImageSize = imageSize, Url = url };

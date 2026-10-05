@@ -13,6 +13,16 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<PagedResult<ReleaseSearchResultReadModel>> SearchReleaseResultsAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ReleaseOnlineStateCounts> CountReleasesByOnlineStateAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken = default
+    );
+
     IReadOnlyList<ArchiverDto> GetArchiverFilterOptions();
 
     Task<ReleaseReadModel?> GetReleaseAsync(
