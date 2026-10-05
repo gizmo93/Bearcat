@@ -1,11 +1,14 @@
 @page "/releases"
+@using Bearcat.Website.Pages.ManageReleases.Results
+@using Bearcat.Website.Pages.ManageReleases.Search
 
 <PageTitle>@L["Releases"] - Bearcat</PageTitle>
 
-<section class="bearcat-releases-page space-y-4">
+<section class="@SectionClass">
     <div class="bearcat-page-header">
         <div>
             <h1 class="text-3xl font-semibold tracking-tight">@L["Releases"]</h1>
+            <p class="mt-1 text-sm text-muted-foreground">@ReleaseTotalCountText</p>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -20,183 +23,57 @@
         </div>
     </div>
 
-    <ReleaseSearchForm HosterRegistrations="hosterRegistrations"
-                       Archivers="archiverOptions"
-                       ReleaseGroups="releaseGroups"
-                       LinkCrypterRegistrations="linkCrypterRegistrations"
-                       Query="searchQuery"
-                       OnSearch="ApplySearchAsync" />
+    <div class="space-y-3">
+        <ReleaseSearchBar Query="searchQuery"
+                          OnQueryChanged="ApplySearchAsync"
+                          OnSearchTermTyped="ApplyTypedSearchAsync" />
 
-    <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/25 px-3 py-2">
-        @if (selectedReleaseIds.Count > 0)
-        {
-            <p class="text-sm font-medium">@L["SelectedReleaseCount", selectedReleaseIds.Count]</p>
-            <div class="flex flex-wrap items-center gap-2">
-                @if (!AreAllVisibleReleasesSelected)
-                {
-                    <BbButton Variant="ButtonVariant.Secondary"
-                              Size="ButtonSize.Small"
-                              Disabled="@(releases.Count == 0)"
-                              OnClick="SelectAllVisibleReleases">
-                        <LucideIcon Name="list-checks" class="h-4 w-4" />
-                        @L["SelectAll"]
-                    </BbButton>
-                }
-                <BbButton Variant="ButtonVariant.Secondary"
-                          Size="ButtonSize.Small"
-                          OnClick="DeselectAllReleases">
-                    <LucideIcon Name="list-x" class="h-4 w-4" />
-                    @L["DeselectAll"]
-                </BbButton>
-                <BbSelect TValue="int"
-                          @bind-Value="selectedBulkReleaseGroupId"
-                          Options="ReleaseGroupOptions"
-                          Placeholder="@L["SelectReleaseGroup"]"
-                          Class="w-56" />
-                <BbButton Variant="ButtonVariant.Outline"
-                          Size="ButtonSize.Small"
-                          Disabled="@(selectedBulkReleaseGroupId == 0)"
-                          OnClick="ApplyBulkReleaseGroupAsync">
-                    <LucideIcon Name="layers" class="h-4 w-4" />
-                    @L["ChangeReleaseGroup"]
-                </BbButton>
-                <BbCombobox TValue="string"
-                            @bind-Value="selectedBulkPrimaryLanguageCode"
-                            Options="BulkLanguageOptions"
-                            SearchPlaceholder="@L["SearchLanguage"]"
-                            EmptyMessage="@L["NoLanguagesFound"]"
-                            Class="w-56"
-                            MatchTriggerWidth="true" />
-                <BbButton Variant="ButtonVariant.Outline"
-                          Size="ButtonSize.Small"
-                          Disabled="@(selectedBulkPrimaryLanguageCode == NoBulkLanguageSelected)"
-                          OnClick="ApplyBulkPrimaryLanguageAsync">
-                    <LucideIcon Name="languages" class="h-4 w-4" />
-                    @L["ChangePrimaryLanguage"]
-                </BbButton>
+        <ReleaseSearchFilters Query="searchQuery"
+                              HosterRegistrations="hosterRegistrations"
+                              Archivers="archiverOptions"
+                              ReleaseGroups="releaseGroups"
+                              LinkCrypterRegistrations="linkCrypterRegistrations"
+                              OnQueryChanged="ApplySearchAsync" />
+
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <ReleaseOnlineStateSegments Counts="onlineStateCounts"
+                                        SelectedOnlineState="searchQuery.OnlineState"
+                                        SelectedOnlineStateChanged="ApplyOnlineStateAsync" />
+            <div class="flex items-center gap-2">
+                <ReleaseSortOrderSelect Value="searchQuery.SortOrder"
+                                        ValueChanged="ApplySortOrderAsync" />
+                <ReleaseSearchResultViewToggle Value="resultView"
+                                               ValueChanged="ChangeResultViewAsync" />
             </div>
-        }
-        else
-        {
-            <p class="text-sm text-muted-foreground">@L["NoReleasesSelected"]</p>
-            <BbButton Variant="ButtonVariant.Secondary"
-                      Size="ButtonSize.Small"
-                      Disabled="@(releases.Count == 0)"
-                      OnClick="SelectAllVisibleReleases">
-                <LucideIcon Name="list-checks" class="h-4 w-4" />
-                @L["SelectAll"]
-            </BbButton>
-        }
+        </div>
     </div>
 
-    <BbDataTable TData="ReleaseReadModel"
-                 @key="ReleasesTableKey"
-                 Data="releases"
-                 ShowToolbar="false"
-                 ShowPagination="false"
-                 InitialPageSize="@pageSize"
-                 IsLoading="isLoading"
-                 AriaLabel="@L["Releases"]"
-                 Class="bearcat-releases-table">
-        <Columns>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="bool"
-                               Header=""
-                               Property="@(release => selectedReleaseIds.Contains(release.ReleaseId))"
-                               Width="48px">
-                <CellTemplate Context="release">
-                    <div class="flex justify-center" @onclick:stopPropagation="true">
-                        <BbCheckbox Checked="@selectedReleaseIds.Contains(release.ReleaseId)"
-                                    AriaLabel="@L["Selected"]"
-                                    CheckedChanged="@((bool selected) => ToggleReleaseSelection(release.ReleaseId, selected))" />
-                    </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header="@L["Name"]"
-                               Property="@(release => release.Name)">
-                <CellTemplate Context="release">
-                    <a class="bearcat-release-list-name"
-                       href="@($"/releases/{release.ReleaseId}")">
-                        @release.Name
-                    </a>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header="@L["OnlineState"]"
-                               Property="@(release => release.OnlineState.ToString())"
-                               Width="140px">
-                <CellTemplate Context="release">
-                    <OnlineStateBadge Value="@release.OnlineState" />
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header="@L["ReleaseType"]"
-                               Property="@(release => release.ReleaseType.ToString())"
-                               Width="140px">
-                <CellTemplate Context="release">
-                    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
-                        <BbTooltipTrigger>
-                            <span class="inline-flex items-center leading-none">
-                                <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
-                            </span>
-                        </BbTooltipTrigger>
-                        <BbTooltipContent Class="max-w-xs text-xs">
-                            @L.LocalizeDescription(release.ReleaseType)
-                        </BbTooltipContent>
-                    </BbTooltip>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header="@L["ReleaseContentType"]"
-                               Property="@(release => release.ReleaseContentType.ToString())"
-                               Width="150px">
-                <CellTemplate Context="release">
-                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(release.ReleaseContentType)</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header="@L["ReleaseGroup"]"
-                               Property="@(release => release.ReleaseGroupName)"
-                               Width="180px">
-                <CellTemplate Context="release">
-                    <BbBadge Variant="BadgeVariant.Outline">@release.ReleaseGroupName</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header=""
-                               Property="@(release => release.Name)"
-                               Width="56px">
-                <CellTemplate Context="release">
-                    <div class="flex justify-end">
-                        <BbDropdownMenu>
-                            <BbDropdownMenuTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseActions"]">
-                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                                </BbButton>
-                            </BbDropdownMenuTrigger>
-                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                                <BbDropdownMenuItem Href="@($"/releases/{release.ReleaseId}")">
-                                    @L["OpenDetails"]
-                                </BbDropdownMenuItem>
-                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditReleaseDialogAsync(release))">
-                                    @L["Edit"]
-                                </BbDropdownMenuItem>
-                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteReleaseAsync(release))">
-                                    @L["DeleteRelease"]
-                                </BbDropdownMenuItem>
-                            </BbDropdownMenuContent>
-                        </BbDropdownMenu>
-                    </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-        </Columns>
-        <EmptyTemplate>
-            <div class="bearcat-release-empty">
-                <LucideIcon Name="inbox" class="h-5 w-5" />
-                <span>@L["NoReleasesFound"]</span>
-            </div>
-        </EmptyTemplate>
-    </BbDataTable>
+    @if (resultView == ReleaseSearchResultView.Covers)
+    {
+        <ReleaseSearchResultCoverGrid Releases="releases"
+                                      Selection="selection"
+                                      SearchTerm="@searchQuery.SearchTerm"
+                                      FocusedReleaseId="keyboardFocus.FocusedReleaseId"
+                                      IsLoading="isLoading"
+                                      HasActiveFilters="HasActiveFilters"
+                                      OnResetFilters="ResetFiltersAsync"
+                                      OnSelectionChanged="StateHasChanged"
+                                      OnQuickLook="OpenQuickLook" />
+    }
+    else
+    {
+        <ReleaseSearchResultList Releases="releases"
+                                 Selection="selection"
+                                 SearchTerm="@searchQuery.SearchTerm"
+                                 FocusedReleaseId="keyboardFocus.FocusedReleaseId"
+                                 IsLoading="isLoading"
+                                 HasActiveFilters="HasActiveFilters"
+                                 OnResetFilters="ResetFiltersAsync"
+                                 OnSelectionChanged="StateHasChanged"
+                                 OnQuickLook="OpenQuickLook"
+                                 OnEditRelease="ShowEditReleaseDialogAsync"
+                                 OnDeleteRelease="DeleteReleaseAsync" />
+    }
 
     <SearchResultsPagination TotalCount="totalCount"
                              PageIndex="pageIndex"
@@ -204,4 +81,17 @@
                              ResultsSummaryResourceKey="ReleaseResultsSummary"
                              GetPageUrl="GetPageUri"
                              PageSizeChanged="ChangePageSize" />
+
+    <ReleaseKeyboardShortcutHint />
+
+    <ReleaseQuickLookSheet Release="FocusedRelease"
+                           Open="IsQuickLookOpen"
+                           OpenChanged="SetQuickLookOpen"
+                           OnEdit="ShowEditReleaseDialogAsync" />
+
+    <ReleaseBulkActionBar Selection="selection"
+                          VisibleReleaseIds="VisibleReleaseIds"
+                          ReleaseGroups="releaseGroups"
+                          OnSelectionChanged="StateHasChanged"
+                          OnReleasesUpdated="RefreshReleasesAsync" />
 </section>

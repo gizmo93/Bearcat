@@ -10,37 +10,48 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleases.Results;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
-using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
     DialogService dialogService,
-    ToastService toastService,
     IScopedOperationRunner operationRunner,
-    NavigationManager navigationManager
-) : IReleaseSearchUrlValues
+    NavigationManager navigationManager,
+    IJSRuntime js,
+    PersistentComponentState applicationState,
+    IHttpContextAccessor httpContextAccessor
+) : IReleaseSearchUrlValues, IAsyncDisposable
 {
-    private const string NoBulkLanguageSelected = "__not_selected__";
+    private const string ResultViewKey = "bearcat.releases.resultView";
 
-    private IReadOnlyList<ReleaseReadModel> releases = [];
+    private IReadOnlyList<ReleaseSearchResultReadModel>? releases;
     private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
     private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
-    private readonly HashSet<int> selectedReleaseIds = [];
+    private readonly ReleaseSelection selection = new();
+    private readonly ReleaseKeyboardFocus keyboardFocus = new();
+    private ReleaseSearchResultView resultView = ReleaseSearchResultView.List;
+    private PersistingComponentStateSubscription persistSubscription;
+    private DotNetObjectReference<AllReleasesPage>? dotNetReference;
+    private IJSObjectReference? keyboardHandle;
+    private bool isQuickLookOpen;
+    private bool scrollFocusedReleaseIntoView;
     private ReleaseSearchQuery searchQuery = new();
+    private ReleaseOnlineStateCounts? onlineStateCounts;
     private SearchUrlState<ReleaseSearchQuery>? loadedState;
     private int totalCount;
     private int pageIndex;
     private int pageSize = SearchUrlParameters.DefaultPageSize;
-    private int selectedBulkReleaseGroupId;
-    private string selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
     private bool isLoading;
 
     [SupplyParameterFromQuery(Name = "q")]
@@ -82,43 +93,45 @@ public partial class AllReleasesPage(
     [SupplyParameterFromQuery(Name = "upload")]
     public string? UploadId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string? SortOrder { get; set; }
+
     [SupplyParameterFromQuery(Name = "page")]
     public int? Page { get; set; }
 
     [SupplyParameterFromQuery(Name = "size")]
     public int? PageSize { get; set; }
 
+    private string ReleaseTotalCountText =>
+        L[
+            totalCount == 1 ? "ReleaseTotalCountOne" : "ReleaseTotalCount",
+            totalCount.ToString("N0", CultureInfo.CurrentCulture)
+        ];
+
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-    private string ReleasesTableKey => $"{pageIndex}-{pageSize}-{searchQuery.GetHashCode()}";
-    private bool AreAllVisibleReleasesSelected =>
-        releases.Count > 0 && releases.All(r => selectedReleaseIds.Contains(r.ReleaseId));
 
-    private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
-        [
-            new(0, L["SelectReleaseGroup"]),
-            .. releaseGroups.Select(group => new SelectOption<int>(
-                group.ReleaseGroupId,
-                group.Name
-            )),
-        ];
+    private IReadOnlyList<int> VisibleReleaseIds =>
+        releases?.Select(release => release.ReleaseId).ToList() ?? [];
 
-    private IReadOnlyList<SelectOption<string>> BulkLanguageOptions =>
-        [
-            new(NoBulkLanguageSelected, L["SelectLanguage"]),
-            new(string.Empty, L["NotSet"]),
-            .. CultureInfo
-                .GetCultures(CultureTypes.NeutralCultures)
-                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
-                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
-                .OrderBy(culture => culture.NativeName)
-                .Select(culture => new SelectOption<string>(
-                    culture.TwoLetterISOLanguageName,
-                    culture.NativeName
-                )),
-        ];
+    private bool HasActiveFilters => searchQuery != EmptySearchQuery;
+
+    private ReleaseSearchQuery EmptySearchQuery => new(SortOrder: searchQuery.SortOrder);
+
+    private ReleaseSearchResultReadModel? FocusedRelease =>
+        releases?.FirstOrDefault(release => release.ReleaseId == keyboardFocus.FocusedReleaseId);
+
+    private bool IsQuickLookOpen => isQuickLookOpen && FocusedRelease is not null;
+
+    private string SectionClass =>
+        selection.Count > 0
+            ? "bearcat-releases-page space-y-4 pb-20"
+            : "bearcat-releases-page space-y-4";
 
     protected override async Task OnInitializedAsync()
     {
+        resultView = RestoreResultView();
+        persistSubscription = applicationState.RegisterOnPersisting(PersistResultView);
+
         hosterRegistrations = await operationRunner.RunAsync(
             (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
         );
@@ -144,8 +157,11 @@ public partial class AllReleasesPage(
 
         if (loadedState is not null && loadedState.Query != state.Query)
         {
-            selectedReleaseIds.Clear();
+            selection.Clear();
         }
+
+        keyboardFocus.Clear();
+        isQuickLookOpen = false;
 
         searchQuery = state.Query;
         pageIndex = state.PageIndex;
@@ -153,12 +169,151 @@ public partial class AllReleasesPage(
         await RefreshReleasesAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                dotNetReference = DotNetObjectReference.Create(this);
+                keyboardHandle = await js.InvokeAsync<IJSObjectReference>(
+                    "bearcat.releaseSearchKeyboard.attach",
+                    dotNetReference
+                );
+            }
+
+            if (scrollFocusedReleaseIntoView && keyboardFocus.FocusedReleaseId is { } releaseId)
+            {
+                scrollFocusedReleaseIntoView = false;
+                await js.InvokeVoidAsync(
+                    "bearcat.releaseSearchKeyboard.scrollReleaseIntoView",
+                    releaseId
+                );
+            }
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    [JSInvokable]
+    public void HandleKeyboardShortcut(string key, bool shiftKey)
+    {
+        switch (key)
+        {
+            case "j" or "ArrowDown":
+                keyboardFocus.MoveToNext(VisibleReleaseIds);
+                scrollFocusedReleaseIntoView = true;
+                break;
+            case "k" or "ArrowUp":
+                keyboardFocus.MoveToPrevious(VisibleReleaseIds);
+                scrollFocusedReleaseIntoView = true;
+                break;
+            case "x":
+                ToggleFocusedReleaseSelection(extendRange: shiftKey);
+                break;
+            case "Space":
+                ToggleQuickLook();
+                break;
+            case "Enter":
+                OpenFocusedRelease();
+                break;
+            case "Escape":
+                selection.Clear();
+                break;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ToggleFocusedReleaseSelection(bool extendRange)
+    {
+        if (keyboardFocus.FocusedReleaseId is { } releaseId)
+        {
+            selection.Toggle(VisibleReleaseIds, releaseId, extendRange);
+        }
+    }
+
+    private void ToggleQuickLook()
+    {
+        if (IsQuickLookOpen)
+        {
+            isQuickLookOpen = false;
+            return;
+        }
+
+        if (keyboardFocus.FocusedReleaseId is null)
+        {
+            keyboardFocus.MoveToNext(VisibleReleaseIds);
+            scrollFocusedReleaseIntoView = true;
+        }
+
+        isQuickLookOpen = true;
+    }
+
+    private void OpenFocusedRelease()
+    {
+        if (FocusedRelease is { } release)
+        {
+            navigationManager.NavigateTo($"/releases/{release.ReleaseId}");
+        }
+    }
+
+    private void OpenQuickLook(ReleaseSearchResultReadModel release)
+    {
+        keyboardFocus.Focus(release.ReleaseId);
+        isQuickLookOpen = true;
+    }
+
+    private void SetQuickLookOpen(bool open)
+    {
+        isQuickLookOpen = open;
+    }
+
+    private ReleaseSearchResultView RestoreResultView()
+    {
+        if (
+            applicationState.TryTakeFromJson<ReleaseSearchResultView>(
+                ResultViewKey,
+                out var persisted
+            )
+        )
+        {
+            return persisted;
+        }
+
+        return
+            httpContextAccessor.HttpContext?.Request.Cookies.TryGetValue(
+                ResultViewKey,
+                out var cookie
+            ) == true
+            && Enum.TryParse<ReleaseSearchResultView>(cookie, out var view)
+            && Enum.IsDefined(view)
+            ? view
+            : ReleaseSearchResultView.List;
+    }
+
+    private Task PersistResultView()
+    {
+        applicationState.PersistAsJson(ResultViewKey, resultView);
+        return Task.CompletedTask;
+    }
+
+    private async Task ChangeResultViewAsync(ReleaseSearchResultView view)
+    {
+        resultView = view;
+
+        try
+        {
+            await js.InvokeVoidAsync("bearcat.setCookie", ResultViewKey, view.ToString());
+        }
+        catch (JSException) { }
+    }
+
     private string GetPageUri(int page)
     {
         return ReleaseSearchUrl.Build(searchQuery, page, pageSize);
     }
 
-    private async Task DeleteReleaseAsync(ReleaseReadModel release)
+    private async Task DeleteReleaseAsync(ReleaseSearchResultReadModel release)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseTitle", release.Name],
@@ -220,7 +375,7 @@ public partial class AllReleasesPage(
         }
     }
 
-    private async Task ShowEditReleaseDialogAsync(ReleaseReadModel release)
+    private async Task ShowEditReleaseDialogAsync(ReleaseSearchResultReadModel release)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -263,7 +418,7 @@ public partial class AllReleasesPage(
         {
             var result = await operationRunner.RunAsync(
                 (IReleaseReadRepository repository) =>
-                    repository.SearchReleasesAsync(
+                    repository.SearchReleaseResultsAsync(
                         searchQuery with
                         {
                             PageIndex = pageIndex,
@@ -276,7 +431,8 @@ public partial class AllReleasesPage(
             totalCount = result.TotalCount;
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;
-            selectedReleaseIds.RemoveWhere(id => releases.All(r => r.ReleaseId != id));
+            selection.KeepOnly(VisibleReleaseIds);
+            keyboardFocus.KeepOnly(VisibleReleaseIds);
 
             if (totalCount > 0 && pageIndex >= TotalPages)
             {
@@ -285,6 +441,10 @@ public partial class AllReleasesPage(
                 return;
             }
 
+            onlineStateCounts = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) =>
+                    repository.CountReleasesByOnlineStateAsync(searchQuery)
+            );
             loadedState = new SearchUrlState<ReleaseSearchQuery>(searchQuery, pageIndex, pageSize);
         }
         finally
@@ -293,7 +453,32 @@ public partial class AllReleasesPage(
         }
     }
 
-    private async Task ApplySearchAsync(ReleaseSearchQuery query)
+    private Task ApplySearchAsync(ReleaseSearchQuery query)
+    {
+        return NavigateToSearchAsync(query, replaceHistoryEntry: false);
+    }
+
+    private Task ApplyTypedSearchAsync(ReleaseSearchQuery query)
+    {
+        return NavigateToSearchAsync(query, replaceHistoryEntry: true);
+    }
+
+    private Task ApplyOnlineStateAsync(OnlineState? onlineState)
+    {
+        return ApplySearchAsync(searchQuery with { OnlineState = onlineState });
+    }
+
+    private Task ApplySortOrderAsync(ReleaseSearchSortOrder sortOrder)
+    {
+        return ApplySearchAsync(searchQuery with { SortOrder = sortOrder });
+    }
+
+    private Task ResetFiltersAsync()
+    {
+        return ApplySearchAsync(EmptySearchQuery);
+    }
+
+    private async Task NavigateToSearchAsync(ReleaseSearchQuery query, bool replaceHistoryEntry)
     {
         var targetUri = navigationManager
             .ToAbsoluteUri(ReleaseSearchUrl.Build(query, page: 1, pageSize))
@@ -305,77 +490,7 @@ public partial class AllReleasesPage(
             return;
         }
 
-        navigationManager.NavigateTo(targetUri);
-    }
-
-    private void ToggleReleaseSelection(int releaseId, bool selected)
-    {
-        if (selected)
-        {
-            selectedReleaseIds.Add(releaseId);
-            return;
-        }
-
-        selectedReleaseIds.Remove(releaseId);
-    }
-
-    private void SelectAllVisibleReleases()
-    {
-        foreach (var release in releases)
-        {
-            selectedReleaseIds.Add(release.ReleaseId);
-        }
-    }
-
-    private void DeselectAllReleases()
-    {
-        selectedReleaseIds.Clear();
-        selectedBulkReleaseGroupId = 0;
-        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
-    }
-
-    private async Task ApplyBulkReleaseGroupAsync()
-    {
-        if (selectedReleaseIds.Count == 0 || selectedBulkReleaseGroupId == 0)
-        {
-            return;
-        }
-
-        var releaseIds = selectedReleaseIds.ToList();
-
-        await operationRunner.RunAsync(
-            (ReleaseService service) =>
-                service.UpdateReleaseGroupAsync(releaseIds, selectedBulkReleaseGroupId)
-        );
-
-        toastService.Success(L["ReleaseGroupChangedForReleases", releaseIds.Count]);
-        selectedReleaseIds.Clear();
-        selectedBulkReleaseGroupId = 0;
-        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
-        await RefreshReleasesAsync();
-    }
-
-    private async Task ApplyBulkPrimaryLanguageAsync()
-    {
-        if (
-            selectedReleaseIds.Count == 0
-            || selectedBulkPrimaryLanguageCode == NoBulkLanguageSelected
-        )
-        {
-            return;
-        }
-
-        var releaseIds = selectedReleaseIds.ToList();
-        await operationRunner.RunAsync(
-            (ReleaseService service) =>
-                service.UpdatePrimaryLanguageAsync(releaseIds, selectedBulkPrimaryLanguageCode)
-        );
-
-        toastService.Success(L["PrimaryLanguageChangedForReleases", releaseIds.Count]);
-        selectedReleaseIds.Clear();
-        selectedBulkReleaseGroupId = 0;
-        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
-        await RefreshReleasesAsync();
+        navigationManager.NavigateTo(targetUri, replace: replaceHistoryEntry);
     }
 
     private void ChangePageSize(int selectedPageSize)
@@ -383,5 +498,23 @@ public partial class AllReleasesPage(
         navigationManager.NavigateTo(
             ReleaseSearchUrl.Build(searchQuery, page: 1, selectedPageSize)
         );
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        persistSubscription.Dispose();
+
+        if (keyboardHandle is not null)
+        {
+            try
+            {
+                await keyboardHandle.InvokeVoidAsync("detach");
+                await keyboardHandle.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
+        }
+
+        dotNetReference?.Dispose();
     }
 }

@@ -1,0 +1,37 @@
+@if (Selection.Count > 0)
+{
+    <div class="bearcat-release-bulk-action-bar">
+        <span class="shrink-0 px-1.5 text-sm font-medium tabular-nums">@L["SelectedCount", Selection.Count]</span>
+        @if (!Selection.AreAllSelected(VisibleReleaseIds))
+        {
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.Small"
+                      Class="shrink-0"
+                      AriaLabel="@L["SelectAllOnPage"]"
+                      title="@L["SelectAllOnPage"]"
+                      OnClick="SelectAllOnPageAsync">
+                <LucideIcon Name="list-checks" class="h-4 w-4" />
+                <span class="hidden sm:inline">@L["SelectAllOnPage"]</span>
+            </BbButton>
+        }
+        <span class="h-5 w-px shrink-0 bg-border" aria-hidden="true"></span>
+        <ReleaseBulkActionMenuButton TValue="int"
+                                     Label="@L["ReleaseGroup"]"
+                                     Icon="layers"
+                                     Options="ReleaseGroupOptions"
+                                     OnSelect="ApplyReleaseGroupAsync" />
+        <ReleaseBulkActionMenuButton TValue="string"
+                                     Label="@L["PrimaryLanguage"]"
+                                     Icon="languages"
+                                     Options="PrimaryLanguageOptions"
+                                     OnSelect="ApplyPrimaryLanguageAsync" />
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.IconSmall"
+                  Class="shrink-0"
+                  AriaLabel="@L["DeselectAll"]"
+                  title="@L["DeselectAll"]"
+                  OnClick="ClearSelectionAsync">
+            <LucideIcon Name="x" class="h-4 w-4" />
+        </BbButton>
+    </div>
+}

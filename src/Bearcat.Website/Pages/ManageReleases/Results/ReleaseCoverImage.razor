@@ -1,0 +1,14 @@
+@if (Release.CoverUrl is { } coverUrl)
+{
+    <img class="bearcat-release-cover-image" src="@coverUrl" alt="" loading="lazy" />
+}
+else
+{
+    <div class="bearcat-release-cover-placeholder">
+        <LucideIcon Name="@ContentTypeIconName" class="h-6 w-6 shrink-0" />
+        @if (ShowMetadataTitle && Release.MetadataTitle is { } metadataTitle)
+        {
+            <span class="bearcat-release-cover-placeholder-title">@metadataTitle</span>
+        }
+    </div>
+}

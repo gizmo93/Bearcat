@@ -1,0 +1,70 @@
+@typeparam TValue
+
+<BbPopover Open="@isOpen" OpenChanged="HandleOpenChanged">
+    <BbPopoverTrigger>
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  Class="@TriggerClass"
+                  OnClick="HandleTriggerClick">
+            @if (IsActive)
+            {
+                <span>@Label</span>
+                <span class="h-4 w-px shrink-0 bg-border" aria-hidden="true"></span>
+                <span class="max-w-48 truncate font-medium">@SelectedOptionText</span>
+            }
+            else
+            {
+                <LucideIcon Name="circle-plus" class="h-3.5 w-3.5 text-muted-foreground" />
+                <span>@Label</span>
+            }
+        </BbButton>
+    </BbPopoverTrigger>
+    <BbPopoverContent Align="PopoverAlign.Start"
+                      Class="bearcat-release-option-menu"
+                      ScrollToSelected="true"
+                      ScrollToSelectedSelector="[data-selected-filter-option='true']"
+                      AutoFocusId="@(ShowSearch ? searchInputId : null)">
+        <BbCommand FilterFunction="MatchesSearchQuery">
+            @if (ShowSearch)
+            {
+                <BbCommandInput Id="@searchInputId"
+                                Placeholder="@L["FilterOptionsSearchPlaceholder"]"
+                                DisableDebounce="true" />
+            }
+            <BbCommandList>
+                <BbCommandEmpty>@L["NoFilterOptionsFound"]</BbCommandEmpty>
+                <BbCommandGroup>
+                    @for (var optionIndex = 0; optionIndex < Options.Count; optionIndex++)
+                    {
+                        var option = Options[optionIndex];
+                        <BbCommandItem Value="@optionIndex.ToString(CultureInfo.InvariantCulture)"
+                                       SearchText="@option.Text"
+                                       data-selected-filter-option="@(IsSelected(option.Value) ? "true" : "false")"
+                                       OnSelect="@(() => SelectAsync(option.Value))">
+                            <Icon>
+                                <LucideIcon Name="check" class="@GetCheckIconClass(option.Value)" />
+                            </Icon>
+                            <ChildContent>
+                                <span class="truncate">@option.Text</span>
+                            </ChildContent>
+                        </BbCommandItem>
+                    }
+                </BbCommandGroup>
+                @if (IsActive)
+                {
+                    <BbCommandSeparator />
+                    <BbCommandGroup>
+                        <BbCommandItem Value="@ClearFilterItemValue" OnSelect="ClearAsync">
+                            <Icon>
+                                <LucideIcon Name="x" class="h-4 w-4 text-muted-foreground" />
+                            </Icon>
+                            <ChildContent>
+                                @L["ClearFilter"]
+                            </ChildContent>
+                        </BbCommandItem>
+                    </BbCommandGroup>
+                }
+            </BbCommandList>
+        </BbCommand>
+    </BbPopoverContent>
+</BbPopover>

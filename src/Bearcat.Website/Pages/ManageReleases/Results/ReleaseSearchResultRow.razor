@@ -1,0 +1,76 @@
+@using Bearcat.Website.Formatting
+
+<div class="@RowClass"
+     data-release-id="@Release.ReleaseId"
+     data-selected="@(IsSelected ? "true" : "false")"
+     data-keyboard-focused="@(IsKeyboardFocused ? "true" : "false")">
+    <div class="bearcat-release-result-checkbox" @onclick="ToggleSelectionAsync">
+        <BbCheckbox Checked="IsSelected" AriaLabel="@L["SelectRelease", Release.Name]" />
+    </div>
+
+    <div class="min-w-0">
+        <a class="bearcat-release-result-name" href="@($"/releases/{Release.ReleaseId}")">
+            <HighlightedReleaseName Name="@Release.Name" SearchTerm="@SearchTerm" />
+        </a>
+        <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            @if (MetadataTitleText is not null)
+            {
+                <span class="min-w-0 [overflow-wrap:anywhere]">@MetadataTitleText</span>
+            }
+            <ReleaseTags Release="Release" ShowReleaseGroup="true" />
+        </div>
+    </div>
+
+    <div class="bearcat-release-result-details">
+        <div class="min-w-0">
+            <ReleaseUploadConfigOnlineBars UploadConfigs="Release.UploadConfigs" />
+        </div>
+        <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LucideIcon Name="@ContentTypeIconName" class="h-3.5 w-3.5 shrink-0" />
+                <span>@L.Localize(Release.ReleaseContentType)</span>
+            </span>
+        </div>
+        <div class="@LanguageCellClass">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LucideIcon Name="languages" class="h-3.5 w-3.5 shrink-0 xl:hidden" />
+                <span class="font-mono uppercase">@(Release.PrimaryLanguageCode ?? "-")</span>
+            </span>
+        </div>
+        <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground" title="@Release.CreatedAt?.ToString("g")">
+                <LucideIcon Name="clock" class="h-3.5 w-3.5 shrink-0 xl:hidden" />
+                <span>@(Release.CreatedAt is { } createdAt ? timeProvider.Humanize(createdAt) : "-")</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="bearcat-config-actions bearcat-release-result-actions">
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.IconSmall"
+                  AriaLabel="@L["QuickLook"]"
+                  title="@L["QuickLook"]"
+                  OnClick="OnQuickLook">
+            <LucideIcon Name="eye" class="h-4 w-4" />
+        </BbButton>
+        <CopyButton Value="@Release.Name" Label="@L["CopyReleaseName"]" Variant="ButtonVariant.Ghost" />
+        <BbDropdownMenu>
+            <BbDropdownMenuTrigger>
+                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseActions"]">
+                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                </BbButton>
+            </BbDropdownMenuTrigger>
+            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                <BbDropdownMenuItem Href="@($"/releases/{Release.ReleaseId}")">
+                    @L["OpenDetails"]
+                </BbDropdownMenuItem>
+                <BbDropdownMenuItem OnClick="@(_ => OnEdit.InvokeAsync())">
+                    @L["Edit"]
+                </BbDropdownMenuItem>
+                <BbDropdownMenuItem OnClick="@(_ => OnDelete.InvokeAsync())">
+                    @L["DeleteRelease"]
+                </BbDropdownMenuItem>
+            </BbDropdownMenuContent>
+        </BbDropdownMenu>
+    </div>
+</div>

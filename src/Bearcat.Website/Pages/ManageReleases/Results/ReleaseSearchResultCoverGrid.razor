@@ -1,0 +1,29 @@
+<ReleaseSearchResultStates Releases="Releases"
+                           IsLoading="IsLoading"
+                           HasActiveFilters="HasActiveFilters"
+                           OnResetFilters="OnResetFilters"
+                           ContainerClass="bearcat-release-cover-grid">
+    <SkeletonContent>
+        @for (var skeletonIndex = 0; skeletonIndex < SkeletonCardCount; skeletonIndex++)
+        {
+            <div class="space-y-2">
+                <BbSkeleton Width="100%" style="aspect-ratio: 2 / 3" />
+                <BbSkeleton Height="12px" Class="w-4/5" />
+                <BbSkeleton Height="10px" Class="w-3/5" />
+            </div>
+        }
+    </SkeletonContent>
+    <ChildContent>
+        @foreach (var release in Releases!)
+        {
+            <ReleaseSearchResultCoverCard @key="release.ReleaseId"
+                                          Release="release"
+                                          SearchTerm="@SearchTerm"
+                                          IsSelected="Selection.IsSelected(release.ReleaseId)"
+                                          IsSelectionActive="Selection.Count > 0"
+                                          IsKeyboardFocused="release.ReleaseId == FocusedReleaseId"
+                                          OnSelectionToggled="@(extendRange => ToggleReleaseAsync(release.ReleaseId, extendRange))"
+                                          OnQuickLook="@(() => OnQuickLook.InvokeAsync(release))" />
+        }
+    </ChildContent>
+</ReleaseSearchResultStates>

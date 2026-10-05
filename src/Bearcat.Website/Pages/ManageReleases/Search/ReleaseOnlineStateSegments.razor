@@ -1,0 +1,25 @@
+<div class="max-w-full overflow-x-auto [scrollbar-width:none]">
+    <div role="tablist"
+         aria-label="@L["OnlineState"]"
+         class="inline-flex items-center gap-1 rounded-lg bg-muted p-1">
+        @foreach (var segment in Segments)
+        {
+            var isSelected = segment.OnlineState == SelectedOnlineState;
+            <button type="button"
+                    role="tab"
+                    aria-selected="@(isSelected ? "true" : "false")"
+                    class="@GetSegmentClass(isSelected)"
+                    @onclick="() => SelectAsync(segment.OnlineState)">
+                @if (segment.StateDotClass is not null)
+                {
+                    <span class="@segment.StateDotClass" aria-hidden="true"></span>
+                }
+                <span>@segment.Label</span>
+                @if (Counts is not null)
+                {
+                    <span class="tabular-nums text-muted-foreground">@segment.Count.ToString("N0", CultureInfo.CurrentCulture)</span>
+                }
+            </button>
+        }
+    </div>
+</div>

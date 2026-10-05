@@ -10,6 +10,9 @@ public static class ReleaseSearchUrl
     private const string BasePath = "/releases";
     private const string LanguageNotSetValue = "none";
 
+    public const ReleaseSearchSortOrder DefaultSortOrder =
+        ReleaseSearchSortOrder.CreatedAtDescending;
+
     public static SearchUrlState<ReleaseSearchQuery> Parse(IReleaseSearchUrlValues values)
     {
         var query = new ReleaseSearchQuery(
@@ -32,7 +35,9 @@ public static class ReleaseSearchUrl
             PostedLocationUrl: SearchUrlParameters.NormalizeText(values.PostedLocationUrl),
             DownloadLink: SearchUrlParameters.NormalizeText(values.DownloadLink),
             ArchiveFileName: SearchUrlParameters.NormalizeText(values.ArchiveFileName),
-            UploadId: SearchUrlParameters.NormalizeText(values.UploadId)
+            UploadId: SearchUrlParameters.NormalizeText(values.UploadId),
+            SortOrder: SearchUrlParameters.ParseEnum<ReleaseSearchSortOrder>(values.SortOrder)
+                ?? DefaultSortOrder
         );
 
         return new SearchUrlState<ReleaseSearchQuery>(
@@ -66,6 +71,7 @@ public static class ReleaseSearchUrl
             ("link", SearchUrlParameters.NormalizeText(query.DownloadLink)),
             ("file", SearchUrlParameters.NormalizeText(query.ArchiveFileName)),
             ("upload", SearchUrlParameters.NormalizeText(query.UploadId)),
+            ("sort", query.SortOrder == DefaultSortOrder ? null : query.SortOrder.ToString()),
         ];
 
         return SearchUrlParameters.Build(BasePath, filterParameters, page, pageSize);

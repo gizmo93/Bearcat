@@ -95,6 +95,42 @@ document.addEventListener("keydown", event => {
     options.find(isSelectableCommandItem)?.click();
 }, true);
 
+const releaseSearchInputSelector = "[data-release-search-input]";
+
+function isEditableElement(element) {
+    return element instanceof HTMLElement
+        && (element.isContentEditable || element.closest("input, textarea, select") !== null);
+}
+
+document.addEventListener("keydown", event => {
+    if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) {
+        return;
+    }
+
+    if (isEditableElement(event.target)) {
+        return;
+    }
+
+    const searchInput = document.querySelector(releaseSearchInputSelector);
+    if (!searchInput) {
+        return;
+    }
+
+    event.preventDefault();
+    searchInput.focus();
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+        return;
+    }
+
+    const searchInput = event.target.closest?.(releaseSearchInputSelector);
+    if (searchInput?.getAttribute("aria-expanded") === "true") {
+        event.preventDefault();
+    }
+}, true);
+
 export async function takeCopyResult() {
     const pending = pendingCopies.shift();
     return pending === undefined ? null : await pending;
@@ -389,6 +425,89 @@ const saveShortcut = (() => {
     return { attach };
 })();
 
+const releaseSearchKeyboard = (() => {
+    const quickLookSelector = "[data-release-quick-look]";
+    const openOverlaySelector =
+        "[role='dialog']:not([data-release-quick-look]), [role='alertdialog'], [role='menu'], [role='listbox']";
+    const interactiveElementSelector =
+        "a, button, [role='button'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='combobox'], summary";
+    const comboboxSelector = "[role='combobox']";
+    const handledKeys = new Set(["j", "k", "ArrowDown", "ArrowUp", "x", "Space", "Enter", "Escape"]);
+    const quickLookKeys = new Set(["j", "k", "ArrowDown", "ArrowUp", "Space", "Escape"]);
+
+    function getKeyName(event) {
+        if (event.key === " ") {
+            return "Space";
+        }
+
+        return event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    }
+
+    function isTargetHandlingKey(key, target) {
+        if (!(target instanceof Element)) {
+            return false;
+        }
+
+        if (key === "Space" || key === "Enter") {
+            return target.closest(interactiveElementSelector) !== null;
+        }
+
+        if (key === "ArrowDown" || key === "ArrowUp") {
+            return target.closest(comboboxSelector) !== null;
+        }
+
+        return false;
+    }
+
+    function attach(dotNetReference) {
+        const onKeyDown = event => {
+            if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) {
+                return;
+            }
+
+            const key = getKeyName(event);
+            if (!handledKeys.has(key)) {
+                return;
+            }
+
+            if (isEditableElement(event.target) || document.querySelector(openOverlaySelector)) {
+                return;
+            }
+
+            const isQuickLookOpen = document.querySelector(quickLookSelector) !== null;
+            if (isQuickLookOpen && (key === "Escape" || !quickLookKeys.has(key))) {
+                return;
+            }
+
+            if (isTargetHandlingKey(key, event.target)) {
+                return;
+            }
+
+            if (key !== "Escape") {
+                event.preventDefault();
+            }
+
+            dotNetReference
+                .invokeMethodAsync("HandleKeyboardShortcut", key, event.shiftKey)
+                .catch(() => {});
+        };
+
+        document.addEventListener("keydown", onKeyDown, true);
+
+        return {
+            detach: () => document.removeEventListener("keydown", onKeyDown, true),
+        };
+    }
+
+    function scrollReleaseIntoView(releaseId) {
+        document
+            .querySelector(`[data-release-id="${releaseId}"]`)
+            ?.scrollIntoView({ block: "nearest" });
+    }
+
+    return { attach, scrollReleaseIntoView };
+})();
+
 const logView = (() => {
     const registry = new WeakMap();
     const bottomThreshold = 24;
@@ -548,6 +667,7 @@ window.bearcat = {
     updateScrollAwareHeader,
     lineNumberedTextarea,
     saveShortcut,
+    releaseSearchKeyboard,
     logView,
     releaseStickyHeader,
     configurationSectionSpy,

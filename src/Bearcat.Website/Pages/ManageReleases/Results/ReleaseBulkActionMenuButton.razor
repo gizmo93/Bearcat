@@ -1,0 +1,40 @@
+@typeparam TValue
+
+<BbPopover Open="@isOpen" OpenChanged="HandleOpenChanged">
+    <BbPopoverTrigger>
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Class="shrink-0"
+                  AriaLabel="@Label"
+                  title="@Label"
+                  OnClick="HandleTriggerClick">
+            <LucideIcon Name="@Icon" class="h-4 w-4" />
+            <span class="hidden sm:inline">@Label</span>
+        </BbButton>
+    </BbPopoverTrigger>
+    <BbPopoverContent Side="PopoverSide.Top"
+                      Align="PopoverAlign.Start"
+                      Offset="8"
+                      Class="bearcat-release-option-menu"
+                      AutoFocusId="@searchInputId">
+        <BbCommand FilterFunction="MatchesSearchQuery">
+            <BbCommandInput Id="@searchInputId"
+                            Placeholder="@L["FilterOptionsSearchPlaceholder"]"
+                            DisableDebounce="true" />
+            <BbCommandList>
+                <BbCommandEmpty>@L["NoFilterOptionsFound"]</BbCommandEmpty>
+                <BbCommandGroup>
+                    @for (var optionIndex = 0; optionIndex < Options.Count; optionIndex++)
+                    {
+                        var option = Options[optionIndex];
+                        <BbCommandItem Value="@optionIndex.ToString(CultureInfo.InvariantCulture)"
+                                       SearchText="@option.Text"
+                                       OnSelect="@(() => SelectAsync(option.Value))">
+                            <span class="truncate">@option.Text</span>
+                        </BbCommandItem>
+                    }
+                </BbCommandGroup>
+            </BbCommandList>
+        </BbCommand>
+    </BbPopoverContent>
+</BbPopover>

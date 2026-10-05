@@ -1,0 +1,31 @@
+@if (UploadConfigs.Count == 0)
+{
+    <span class="text-xs text-muted-foreground">@L["NoUploads"]</span>
+}
+else
+{
+    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+        <BbTooltipTrigger Class="inline-flex">
+            <span class="inline-flex items-center gap-2" aria-label="@AriaLabel">
+                <span class="flex max-w-24 flex-wrap items-center gap-0.5" aria-hidden="true">
+                    @foreach (var uploadConfig in UploadConfigs)
+                    {
+                        <span class="@GetBarClass(uploadConfig)"></span>
+                    }
+                </span>
+                <span class="@CountClass">@MirrorOnlineCount.Text</span>
+            </span>
+        </BbTooltipTrigger>
+        <BbTooltipContent Class="max-w-xs text-xs">
+            <ul class="space-y-0.5">
+                @foreach (var uploadConfig in UploadConfigs)
+                {
+                    <li class="flex items-center justify-between gap-4">
+                        <span class="truncate">@uploadConfig.HosterRegistrationName</span>
+                        <span class="@(uploadConfig.IsOnline ? string.Empty : "font-medium")">@L.Localize(uploadConfig.IsOnline ? OnlineState.Online : OnlineState.Offline)</span>
+                    </li>
+                }
+            </ul>
+        </BbTooltipContent>
+    </BbTooltip>
+}

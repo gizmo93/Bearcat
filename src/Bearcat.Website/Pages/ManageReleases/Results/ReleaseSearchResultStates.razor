@@ -1,0 +1,30 @@
+@if (Releases is null)
+{
+    <div class="@ContainerClass" aria-busy="true">
+        @SkeletonContent
+    </div>
+}
+else if (Releases.Count == 0)
+{
+    <div class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border/70 px-4 py-12 text-center">
+        <LucideIcon Name="inbox" class="h-6 w-6 text-muted-foreground" />
+        @if (HasActiveFilters)
+        {
+            <p class="text-sm font-medium">@L["NoReleasesMatch"]</p>
+            <p class="max-w-sm text-sm text-muted-foreground">@L["NoReleasesMatchHint"]</p>
+            <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="mt-2" OnClick="OnResetFilters">
+                @L["ResetFilters"]
+            </BbButton>
+        }
+        else
+        {
+            <p class="text-sm text-muted-foreground">@L["NoReleasesFound"]</p>
+        }
+    </div>
+}
+else
+{
+    <div class="@ResultsClass" aria-busy="@(IsLoading ? "true" : "false")">
+        @ChildContent
+    </div>
+}

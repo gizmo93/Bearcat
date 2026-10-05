@@ -2,6 +2,7 @@ using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Localization;
 
@@ -59,6 +60,11 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReleaseSource source
     ) => localizer[$"ReleaseSource.{source}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ReleaseSearchSortOrder sortOrder
+    ) => localizer[$"ReleaseSearchSortOrder.{sortOrder}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

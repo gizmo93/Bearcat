@@ -21,7 +21,6 @@
   <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Add Link Crypter Container</value></data>
   <data name="AddNfoDatabase" xml:space="preserve"><value>Add NFO database</value></data>
   <data name="AddUploadConfig" xml:space="preserve"><value>Add Upload Config</value></data>
-  <data name="AdvancedSearch" xml:space="preserve"><value>Advanced search</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archive config</value></data>
   <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archive config is required.</value></data>
   <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>The archive file size ({0} MB) exceeds the hoster's maximum file size of {1} MB.</value></data>
@@ -44,9 +43,7 @@
   <data name="Archives" xml:space="preserve"><value>Archives</value></data>
   <data name="AnyArchiver" xml:space="preserve"><value>Any archiver</value></data>
   <data name="AnyHosterConfig" xml:space="preserve"><value>Any hoster config</value></data>
-  <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Any link crypter config</value></data>
   <data name="AnyReleaseGroup" xml:space="preserve"><value>Any release group</value></data>
-  <data name="AnyReleaseType" xml:space="preserve"><value>Any release type</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Any online state</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>All upload configs</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Base path is required</value></data>
@@ -168,7 +165,6 @@
   <data name="EditMetadataDescription" xml:space="preserve"><value>Edit the series metadata manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
   <data name="MetadataUpdated" xml:space="preserve"><value>Metadata updated</value></data>
   <data name="DownloadLink" xml:space="preserve"><value>Download link</value></data>
-  <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Paste part of a link</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
   <data name="Description" xml:space="preserve"><value>Description</value></data>
@@ -336,7 +332,6 @@
   <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release info deleted</value></data>
   <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Release online state</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
-  <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Content type</value></data>
   <data name="EditCollectionSettings" xml:space="preserve"><value>Edit collection settings</value></data>
   <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Choose the content type and primary language for this release collection.</value></data>
@@ -408,8 +403,6 @@
   <data name="Reload" xml:space="preserve"><value>Reload</value></data>
   <data name="ResetFilters" xml:space="preserve"><value>Reset filters</value></data>
   <data name="RowsPerPage" xml:space="preserve"><value>Rows per page</value></data>
-  <data name="RarFile" xml:space="preserve"><value>RAR file</value></data>
-  <data name="RarFileSearchPlaceholder" xml:space="preserve"><value>Filename or path</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Running and pending uploads</value></data>
   <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload queues, status, and per-file progress.</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
@@ -471,8 +464,7 @@
   <data name="UploadedAt" xml:space="preserve"><value>Uploaded at</value></data>
   <data name="UploadsPerDay" xml:space="preserve"><value>Uploads per day</value></data>
   <data name="UploadsPerDayByHoster" xml:space="preserve"><value>Completed uploads split by hoster.</value></data>
-  <data name="UploadId" xml:space="preserve"><value>UploadId</value></data>
-  <data name="UploadIdSearchPlaceholder" xml:space="preserve"><value>e.g. 123 or #123</value></data>
+  <data name="UploadId" xml:space="preserve"><value>Upload ID</value></data>
   <data name="UploadLinksTitle" xml:space="preserve"><value>Upload #{0} links</value></data>
   <data name="Uploads" xml:space="preserve"><value>Uploads</value></data>
   <data name="UploadsView" xml:space="preserve"><value>Uploads view</value></data>
@@ -541,7 +533,6 @@
   <data name="AssignedReleases" xml:space="preserve"><value>Assigned releases</value></data>
   <data name="AutomaticReuploads" xml:space="preserve"><value>Automatic reuploads</value></data>
   <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Create replacement uploads automatically when checked offline files are old enough.</value></data>
-  <data name="ChangeReleaseGroup" xml:space="preserve"><value>Change group</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Create manual reupload</value></data>
   <data name="CheckOnlineStateNow" xml:space="preserve"><value>Check online state now</value></data>
   <data name="ResumeUpload" xml:space="preserve"><value>Resume upload</value></data>
@@ -592,7 +583,6 @@
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} can not be deleted in its current state.</value></data>
   <data name="NewReleaseGroup" xml:space="preserve"><value>New release group</value></data>
   <data name="NoReleaseGroupsFound" xml:space="preserve"><value>No release groups found</value></data>
-  <data name="NoReleasesSelected" xml:space="preserve"><value>No releases selected</value></data>
   <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Open release group actions</value></data>
   <data name="ReleaseGroup" xml:space="preserve"><value>Release group</value></data>
   <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Release group changed for {0} release(s).</value></data>
@@ -604,8 +594,6 @@
   <data name="ReleaseOverview" xml:space="preserve"><value>Release overview</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Select release group</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
-  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
-  <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} release(s) selected</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when release folders are released for deletion and when local archive files are deleted. Bearcat never deletes the release folder itself.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
@@ -884,7 +872,6 @@
   <data name="PostedLocations" xml:space="preserve"><value>Posted locations</value></data>
   <data name="NoPostedLocationsYet" xml:space="preserve"><value>No posted locations yet.</value></data>
   <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.example/threads/...</value></data>
-  <data name="PostedLocationSearchPlaceholder" xml:space="preserve"><value>Forum post or page URL</value></data>
   <data name="PostedLocationRecorded" xml:space="preserve"><value>Saved where you posted.</value></data>
   <data name="PostedLocationManualHelp" xml:space="preserve"><value>Could not detect the post automatically. Paste the URL of your post to save it.</value></data>
   <data name="PostedLocationUrlRequired" xml:space="preserve"><value>A URL is required.</value></data>
@@ -983,10 +970,7 @@
         <value>Release</value>
     </data>
   <data name="PrimaryLanguage" xml:space="preserve"><value>Primary language</value></data>
-  <data name="AnyLanguage" xml:space="preserve"><value>Any language</value></data>
   <data name="NotSet" xml:space="preserve"><value>&lt;Not set&gt;</value></data>
-  <data name="SelectLanguage" xml:space="preserve"><value>Select language</value></data>
-  <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Change language</value></data>
   <data name="PrimaryLanguageChangedForReleases" xml:space="preserve"><value>Primary language changed for {0} release(s).</value></data>
   <data name="Unknown" xml:space="preserve"><value>Unknown</value></data>
   <data name="SearchLanguage" xml:space="preserve"><value>Search language...</value></data>
@@ -1639,4 +1623,46 @@
   <data name="ConfigurationUnit.Seconds" xml:space="preserve"><value>s</value></data>
   <data name="ConfigurationUnit.Megabytes" xml:space="preserve"><value>MB</value></data>
   <data name="ConfigurationUnit.MegabytesPerSecond" xml:space="preserve"><value>MB/s</value></data>
+  <data name="ReleaseTotalCount" xml:space="preserve"><value>{0} releases</value></data>
+  <data name="ReleaseTotalCountOne" xml:space="preserve"><value>{0} release</value></data>
+  <data name="ReleaseSearchBarPlaceholder" xml:space="preserve"><value>Search by name or folder. Paste a link, archive file or upload ID to search those.</value></data>
+  <data name="SearchIn" xml:space="preserve"><value>Search in</value></data>
+  <data name="NameOrFolder" xml:space="preserve"><value>Name or folder</value></data>
+  <data name="ArchiveFile" xml:space="preserve"><value>Archive file</value></data>
+  <data name="LooksLikeMatch" xml:space="preserve"><value>Looks like a match</value></data>
+  <data name="RemoveSearchScopeChip" xml:space="preserve"><value>Remove {0}</value></data>
+  <data name="FilterOptionsSearchPlaceholder" xml:space="preserve"><value>Search...</value></data>
+  <data name="NoFilterOptionsFound" xml:space="preserve"><value>No options found.</value></data>
+  <data name="ClearFilter" xml:space="preserve"><value>Clear filter</value></data>
+  <data name="ResetAllFilters" xml:space="preserve"><value>Reset all</value></data>
+  <data name="NoUploads" xml:space="preserve"><value>No uploads</value></data>
+  <data name="SortOrder" xml:space="preserve"><value>Sort order</value></data>
+  <data name="ReleaseSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Recently added</value></data>
+  <data name="ReleaseSearchSortOrder.NameAscending" xml:space="preserve"><value>Name A to Z</value></data>
+  <data name="ReleaseSearchSortOrder.UploadsPostedAtDescending" xml:space="preserve"><value>Recently posted</value></data>
+  <data name="ReleaseSearchSortOrder.OfflineUploadConfigCountDescending" xml:space="preserve"><value>Most offline mirrors</value></data>
+  <data name="Mirrors" xml:space="preserve"><value>Mirrors</value></data>
+  <data name="Added" xml:space="preserve"><value>Added</value></data>
+  <data name="LanguageShort" xml:space="preserve"><value>Lang</value></data>
+  <data name="ReadyToPost" xml:space="preserve"><value>Ready to post</value></data>
+  <data name="NoReleasesMatch" xml:space="preserve"><value>No releases match</value></data>
+  <data name="NoReleasesMatchHint" xml:space="preserve"><value>Remove a filter or search for a shorter part of the name.</value></data>
+  <data name="SelectedCount" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="SelectAllOnPage" xml:space="preserve"><value>Select all on page</value></data>
+  <data name="SelectRelease" xml:space="preserve"><value>Select {0}</value></data>
+  <data name="CopyReleaseName" xml:space="preserve"><value>Copy release name</value></data>
+  <data name="QuickLook" xml:space="preserve"><value>Quick look</value></data>
+  <data name="QuickLookFor" xml:space="preserve"><value>Quick look: {0}</value></data>
+  <data name="Posted" xml:space="preserve"><value>Posted</value></data>
+  <data name="NotPosted" xml:space="preserve"><value>Not posted</value></data>
+  <data name="ResultView" xml:space="preserve"><value>Result view</value></data>
+  <data name="ListView" xml:space="preserve"><value>List view</value></data>
+  <data name="CoverView" xml:space="preserve"><value>Cover view</value></data>
+  <data name="KeyboardHintSearch" xml:space="preserve"><value>search</value></data>
+  <data name="KeyboardHintMove" xml:space="preserve"><value>move</value></data>
+  <data name="KeyboardHintSelect" xml:space="preserve"><value>select</value></data>
+  <data name="KeyboardHintQuickLook" xml:space="preserve"><value>quick look</value></data>
+  <data name="KeyboardHintOpen" xml:space="preserve"><value>open</value></data>
+  <data name="KeySpace" xml:space="preserve"><value>Space</value></data>
+  <data name="KeyEnter" xml:space="preserve"><value>Enter</value></data>
 </root>

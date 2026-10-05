@@ -15,6 +15,7 @@ public interface IReleaseSearchUrlValues
     string? DownloadLink { get; }
     string? ArchiveFileName { get; }
     string? UploadId { get; }
+    string? SortOrder { get; }
     int? Page { get; }
     int? PageSize { get; }
 }

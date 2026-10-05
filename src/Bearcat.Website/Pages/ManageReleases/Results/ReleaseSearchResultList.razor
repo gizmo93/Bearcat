@@ -1,0 +1,53 @@
+<ReleaseSearchResultStates Releases="Releases"
+                           IsLoading="IsLoading"
+                           HasActiveFilters="HasActiveFilters"
+                           OnResetFilters="OnResetFilters"
+                           ContainerClass="bearcat-config-list bearcat-release-result-list">
+    <SkeletonContent>
+        @for (var skeletonIndex = 0; skeletonIndex < SkeletonRowCount; skeletonIndex++)
+        {
+            <div class="bearcat-config-row bearcat-release-result-row @GridColumnsClass">
+                <BbSkeleton Width="16px" Height="16px" />
+                <div class="min-w-0 space-y-2">
+                    <BbSkeleton Height="14px" Class="w-3/5" />
+                    <BbSkeleton Height="10px" Class="w-2/5" />
+                </div>
+                <div class="bearcat-release-result-details">
+                    <BbSkeleton Width="64px" Height="12px" />
+                    <BbSkeleton Width="72px" Height="12px" />
+                    <BbSkeleton Width="20px" Height="12px" />
+                    <BbSkeleton Width="56px" Height="12px" />
+                </div>
+                <div></div>
+            </div>
+        }
+    </SkeletonContent>
+    <ChildContent>
+        <div class="bearcat-config-header bearcat-release-result-header @GridColumnsClass">
+            <div class="flex items-center">
+                <BbCheckbox Checked="AreAllVisibleReleasesSelected"
+                            Indeterminate="AreSomeVisibleReleasesSelected"
+                            AriaLabel="@L["SelectAllOnPage"]"
+                            CheckedChanged="@(_ => ToggleAllVisibleReleasesAsync())" />
+            </div>
+            <span>@L["Release"]</span>
+            <span>@L["Mirrors"]</span>
+            <span>@L["ReleaseContentType"]</span>
+            <span>@L["LanguageShort"]</span>
+            <span>@L["Added"]</span>
+            <span></span>
+        </div>
+        @foreach (var release in Releases!)
+        {
+            <ReleaseSearchResultRow @key="release.ReleaseId"
+                                    Release="release"
+                                    SearchTerm="@SearchTerm"
+                                    IsSelected="Selection.IsSelected(release.ReleaseId)"
+                                    IsKeyboardFocused="release.ReleaseId == FocusedReleaseId"
+                                    OnSelectionToggled="@(extendRange => ToggleReleaseAsync(release.ReleaseId, extendRange))"
+                                    OnQuickLook="@(() => OnQuickLook.InvokeAsync(release))"
+                                    OnEdit="@(() => OnEditRelease.InvokeAsync(release))"
+                                    OnDelete="@(() => OnDeleteRelease.InvokeAsync(release))" />
+        }
+    </ChildContent>
+</ReleaseSearchResultStates>
