@@ -9,11 +9,13 @@ public class FolderAutomationConfiguration : IApplicationConfiguration
         "FolderAutomationStabilityMinutes",
         "FolderAutomationStabilityMinutesDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Minutes)]
     public int StabilityMinutes { get; set; } = 5;
 
     [ApplicationConfigurationProperty(
         "FolderAutomationMinimumFolderSizeMegabytes",
         "FolderAutomationMinimumFolderSizeMegabytesDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Megabytes)]
     public int MinimumFolderSizeMegabytes { get; set; } = 1;
 }

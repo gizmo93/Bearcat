@@ -620,28 +620,28 @@
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid Archive mit Kompression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Releases automatisch in Unmanaged umwandeln</value></data>
   <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein Release nach Ablauf der Aufbewahrungsfrist in Unmanaged um und meldet den Pfad des Releaseordners. Bearcat löscht den Ordner nicht. Die Rohdateien kannst du anschliessend selbst löschen.</value></data>
-  <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>In Unmanaged umwandeln nach (Tagen)</value></data>
+  <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>In Unmanaged umwandeln nach</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem Posten der Uploads eines Releases, oder seit dem ersten abgeschlossenen Upload, wenn es nie als gepostet markiert wurde.</value></data>
   <data name="AutoDeleteArchives" xml:space="preserve"><value>Lokale Archive automatisch löschen</value></data>
   <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Löscht die lokalen Archivdateien einer Archivkonfiguration nach Ablauf der Aufbewahrung. Passiert nur, wenn die Archive von einem Onlinemirror wiederhergestellt oder aus einem vorhandenen Releaseordner neu gepackt werden können.</value></data>
-  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Lokale Archive löschen nach (Tagen)</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Lokale Archive löschen nach</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem letzten abgeschlossenen Upload einer Archivkonfiguration. Jeder Reupload startet diese Frist neu.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initiale Uploads</value></data>
   <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
-  <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads (Minuten)</value></data>
+  <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads</value></data>
     <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload gestartet wird.</value></data>
   <data name="FolderAutomation" xml:space="preserve"><value>Ordnerautomation</value></data>
   <data name="FolderAutomationDescription" xml:space="preserve"><value>Steuert, wie überwachte Ordner automatisch in Releases umgewandelt werden.</value></data>
-  <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Ordner Stabilität (Minuten)</value></data>
+  <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität</value></data>
   <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>Ein überwachter Ordner wird erst dann in ein Release umgewandelt, wenn sich Dateianzahl und Gesamtgrösse mindestens so viele Minuten lang nicht mehr verändert haben. So werden keine Releases erstellt, während noch Dateien in den Ordner kopiert werden.</value></data>
-  <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse (MB)</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse</value></data>
   <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Überwachte Ordner unter dieser Grösse werden ignoriert. Mit 0 deaktivierst du die Grössenprüfung.</value></data>
   <data name="UploadConcurrency" xml:space="preserve"><value>Uploadparallelität</value></data>
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Dateiuploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>Das globale Limit gleichzeitig laufender Dateiuploads über alle Hoster hinweg.</value></data>
-  <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Uploadgeschwindigkeit (MB/s)</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Uploadgeschwindigkeit</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>Die globale Obergrenze der Uploadgeschwindigkeit in MB/s, geteilt von allen laufenden Uploads über alle Hoster hinweg. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für unbegrenzt. Sehr niedrige Limits können Uploads zu Hostern mit Zeitlimits pro Anfrage scheitern lassen, zum Beispiel brechen Hoster hinter Cloudflare Anfragen nach etwa 100 Sekunden ab.</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hosterstandard</value></data>
@@ -665,7 +665,6 @@
   <data name="ParallelUploads" xml:space="preserve"><value>Parallele Uploads</value></data>
   <data name="ParallelUploadsViaApi" xml:space="preserve"><value>Über API</value></data>
   <data name="DefaultValueWithNumber" xml:space="preserve"><value>Standard: {0}</value></data>
-  <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="Reupload" xml:space="preserve"><value>Reupload</value></data>
   <data name="ReuploadFollowsReleaseGroup" xml:space="preserve"><value>Standard der Releasegruppe</value></data>
@@ -1199,9 +1198,9 @@
   <data name="MaxParallelHashOperationsDescription" xml:space="preserve"><value>Maximalanzahl gleichzeitig gehashter Archivdateien. Höhere Werte beschleunigen das Hashen auf SSDs, bei Festplatten vermeidet ein niedriger Wert Overhead.</value></data>
   <data name="MaxDownloadAttempts" xml:space="preserve"><value>Maximale Downloadversuche</value></data>
   <data name="MaxDownloadAttemptsDescription" xml:space="preserve"><value>Wie oft eine einzelne Archivdatei erneut geladen wird, bevor die Wiederherstellung des Archivs fehlschlägt.</value></data>
-  <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung (Sekunden)</value></data>
+  <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung</value></data>
   <data name="DownloadRetryDelaySecondsDescription" xml:space="preserve"><value>Wie lange Bearcat nach einem fehlgeschlagenen Versuch wartet, bevor eine Archivdatei erneut geladen wird.</value></data>
-  <data name="DownloadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Downloadgeschwindigkeit (MB/s)</value></data>
+  <data name="DownloadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Downloadgeschwindigkeit</value></data>
   <data name="DownloadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>Die globale Obergrenze der Downloadgeschwindigkeit in MB/s beim Wiederherstellen von Archiven von Mirrors, geteilt von allen laufenden Downloads. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für unbegrenzt.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Für Mirrordownloads verwenden</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Erlaubt Bearcat, Archivdateien von diesem Hoster zu laden, wenn lokale Archive für einen Reupload wiederhergestellt werden müssen.</value></data>
@@ -1317,15 +1316,15 @@
   <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Bereit zur Releaseerstellung</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
-  <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität (Minuten)</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität</value></data>
   <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>Ein Remoteordner wird erst zum Herunterladen vorgemerkt, wenn sich Dateianzahl und Gesamtgrösse mindestens so viele Minuten lang nicht verändert haben. So werden keine Releases heruntergeladen, die noch auf den Server hochgeladen werden.</value></data>
-  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse (MB)</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse</value></data>
   <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remoteordner unter dieser Grösse werden nicht vorgemerkt. Mit 0 deaktivierst du die Grössenprüfung.</value></data>
   <data name="RemoteSourceDownloadMaxParallelFileDownloads" xml:space="preserve"><value>Maximale parallele Dateidownloads</value></data>
   <data name="RemoteSourceDownloadMaxParallelFileDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Dateien über alle Remotequellen hinweg. Jede Remotequelle ist zusätzlich durch ihre maximale Anzahl an Verbindungen begrenzt.</value></data>
   <data name="RemoteSourceDownloadMaxDownloadAttempts" xml:space="preserve"><value>Maximale Downloadversuche</value></data>
   <data name="RemoteSourceDownloadMaxDownloadAttemptsDescription" xml:space="preserve"><value>Wie oft eine einzelne Datei erneut geladen wird, bevor der Download des ganzen Ordners fehlschlägt.</value></data>
-  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung (Sekunden)</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung</value></data>
   <data name="RemoteSourceDownloadRetryDelaySecondsDescription" xml:space="preserve"><value>Wie lange Bearcat nach einem fehlgeschlagenen Versuch wartet, bevor eine Datei erneut von einer Remotequelle geladen wird.</value></data>
   <data name="Priority" xml:space="preserve"><value>Priorität</value></data>
   <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Kleinere Werte werden zuerst geprüft. Nur relevant, wenn sich die Muster mehrerer Automatisierungen auf demselben Remoteordner überschneiden.</value></data>
@@ -1621,4 +1620,26 @@
   <data name="ArchiveCreationPhases" xml:space="preserve"><value>Phasen der Archiverstellung</value></data>
   <data name="ArchiveCreationPhasePack" xml:space="preserve"><value>Packen</value></data>
   <data name="ArchiveCreationPhaseMd5Hashes" xml:space="preserve"><value>MD5-Hashes</value></data>
+  <data name="ConfigurationSettingsSummary" xml:space="preserve"><value>{0} Einstellungen · {1} geändert</value></data>
+  <data name="ConfigurationFilter" xml:space="preserve"><value>Einstellungen filtern</value></data>
+  <data name="ConfigurationFilterChanged" xml:space="preserve"><value>Geändert ({0})</value></data>
+  <data name="ConfigurationSections" xml:space="preserve"><value>Bereiche</value></data>
+  <data name="ConfigurationSectionChangedCount" xml:space="preserve"><value>{0} geändert</value></data>
+  <data name="ConfigurationSettingChanged" xml:space="preserve"><value>Geändert</value></data>
+  <data name="ConfigurationDefaultValue" xml:space="preserve"><value>Default: {0}</value></data>
+  <data name="ConfigurationSettingSaved" xml:space="preserve"><value>{0} gespeichert</value></data>
+  <data name="ConfigurationSettingReset" xml:space="preserve"><value>{0} auf Default zurückgesetzt</value></data>
+  <data name="ConfigurationValueInvalid" xml:space="preserve"><value>Gib eine gültige Zahl für {0} ein.</value></data>
+  <data name="Discard" xml:space="preserve"><value>Verwerfen</value></data>
+  <data name="NoChangedConfigurations" xml:space="preserve"><value>Keine geänderten Einstellungen.</value></data>
+  <data name="NotificationGroupEnabledCount" xml:space="preserve"><value>{0} von {1} an</value></data>
+  <data name="ConfigurationCategory.Transfers" xml:space="preserve"><value>Übertragungen</value></data>
+  <data name="ConfigurationCategory.Automation" xml:space="preserve"><value>Automatisierung</value></data>
+  <data name="ConfigurationCategory.Archives" xml:space="preserve"><value>Archive</value></data>
+  <data name="ConfigurationCategory.Notifications" xml:space="preserve"><value>Benachrichtigungen</value></data>
+  <data name="ConfigurationUnit.Days" xml:space="preserve"><value>Tage</value></data>
+  <data name="ConfigurationUnit.Minutes" xml:space="preserve"><value>min</value></data>
+  <data name="ConfigurationUnit.Seconds" xml:space="preserve"><value>s</value></data>
+  <data name="ConfigurationUnit.Megabytes" xml:space="preserve"><value>MB</value></data>
+  <data name="ConfigurationUnit.MegabytesPerSecond" xml:space="preserve"><value>MB/s</value></data>
 </root>

@@ -1,0 +1,38 @@
+@using Bearcat.Website.Pages.ManageApplicationConfigurations.Settings
+
+<div class="flex items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5">
+    <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+            @if (Setting.IsOverridden)
+            {
+                <ConfigurationChangedDot />
+            }
+            <p class="text-sm font-medium">@L[Setting.DisplayName]</p>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Setting.Description))
+        {
+            <p class="mt-0.5 line-clamp-2 text-xs text-muted-foreground" title="@L[Setting.Description]">@L[Setting.Description]</p>
+        }
+    </div>
+    <div class="flex shrink-0 items-center gap-1">
+        @if (Setting.IsOverridden)
+        {
+            <BbTooltip DelayDuration="200">
+                <BbTooltipTrigger AsChild="true">
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              Class="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              AriaLabel="@L["ResetToDefault"]"
+                              OnClick="ResetAsync">
+                        <LucideIcon Name="rotate-ccw" class="h-3.5 w-3.5" />
+                    </BbButton>
+                </BbTooltipTrigger>
+                <BbTooltipContent>@L["ResetToDefault"]</BbTooltipContent>
+            </BbTooltip>
+        }
+        <BbSwitch Checked="@(Setting.CurrentValue is true)"
+                  CheckedChanged="SaveAsync"
+                  Size="SwitchSize.Small"
+                  AriaLabel="@L[Setting.DisplayName]" />
+    </div>
+</div>

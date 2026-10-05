@@ -28,6 +28,7 @@ public class ApplicationConfigurationsPageTest
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<IJSRuntime, UnusedJsRuntime>();
+        services.AddSingleton<NavigationManager, UnusedNavigationManager>();
         services.AddBearcatBlueprintComponents(configuration);
         services.AddApplicationConfiguration<InitialUploadConfiguration>();
         services.AddApplicationConfiguration<NotificationConfiguration>();
@@ -56,7 +57,7 @@ public class ApplicationConfigurationsPageTest
             return component.ToHtmlString();
         });
 
-        html.ShouldContain("<div id=\"notification-settings\">");
+        html.ShouldContain("id=\"notifications\"");
         html.ShouldContain("Notification settings");
         html.ShouldContain("Upload completed");
         html.ShouldContain("Availability");
@@ -85,6 +86,14 @@ public class ApplicationConfigurationsPageTest
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class UnusedNavigationManager : NavigationManager
+    {
+        public UnusedNavigationManager()
+        {
+            Initialize("http://localhost/", "http://localhost/configurations");
+        }
     }
 
     private sealed class UnusedJsRuntime : IJSRuntime

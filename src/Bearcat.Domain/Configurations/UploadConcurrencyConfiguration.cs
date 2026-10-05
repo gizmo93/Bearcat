@@ -12,5 +12,6 @@ public class UploadConcurrencyConfiguration : IApplicationConfiguration
         "UploadSpeedLimitMegabytesPerSecond",
         "UploadSpeedLimitMegabytesPerSecondDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.MegabytesPerSecond)]
     public decimal? UploadSpeedLimitMegabytesPerSecond { get; set; }
 }

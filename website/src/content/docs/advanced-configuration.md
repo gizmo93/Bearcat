@@ -50,11 +50,15 @@ Use "Refresh" to reload the latest state.
 ## Configurations
 
 Open "Configurations" in the sidebar to change global application behavior.
-Each configuration property shows its current value and its default value.
+Settings are grouped into sections. Use the section list on the left, or the chips below the title on small screens, to jump to a section.
+Search filters by name and description. The "Changed" filter shows only settings that differ from their default.
+
+Switches and selects save immediately.
+Number fields show a save and a discard button while you edit. Press Enter to save or Escape to discard.
 
 When you change a value, Bearcat stores it as an override.
-Overridden values show an "Override" badge.
-Use the reset button next to a property to remove the override and return to the default.
+A changed setting shows a dot before its name and its default value.
+Click "Reset" to remove the override and return to the default.
 
 Configuration changes are stored in the database.
 They survive container restarts.
@@ -64,8 +68,8 @@ They survive container restarts.
 "Auto cleanup" frees disk space once a release has been online for a while.
 It has two independent rules, and both are disabled by default:
 
-- "Convert releases to unmanaged automatically" with "Convert to unmanaged after (days)", default `14`.
-- "Delete local archives automatically" with "Delete local archives after (days)", default `30`.
+- "Convert releases to unmanaged automatically" with "Convert to unmanaged after", default `14` days.
+- "Delete local archives automatically" with "Delete local archives after", default `30` days.
 
 You can enable either one on its own.
 The "Auto cleanup" background task runs the release folder rule first and the archive rule second, so a release gets converted to unmanaged before its archives are considered.
@@ -145,8 +149,8 @@ regardless of the strategy. RAR keeps the selected strategy.
 
 Bearcat creates a release from a watched folder once both conditions are met:
 
-- Its total file count and size stay unchanged for "Folder stability (minutes)", default `5`.
-- It reaches "Minimum folder size (MB)", default `1`.
+- Its total file count and size stay unchanged for "Folder stability", default `5` minutes.
+- It reaches "Minimum folder size", default `1` MB.
 
 This helps avoid creating releases and reading media metadata while files are still being copied.
 Bearcat compares file count and size between scans because copied folders may retain their original modification dates.
@@ -161,10 +165,10 @@ For [FTP / FTPS downloads](/Bearcat/remote-downloads/), open **Configurations** 
 
 | Setting | Default | Effect |
 | --- | --- | --- |
-| Folder stability (minutes) | `5` | Wait until the remote folder's file count and total size stay unchanged for this long. |
-| Minimum folder size (MB) | `1` | Keep smaller folders in **Observing**. Set to `0` to disable the size check. |
+| Folder stability | `5` min | Wait until the remote folder's file count and total size stay unchanged for this long. |
+| Minimum folder size | `1` MB | Keep smaller folders in **Observing**. Set to `0` to disable the size check. |
 | Maximum parallel file downloads | `4` | Limit how many files are downloaded at the same time. The source's **Max connections** also applies. |
-| Download retry delay (seconds) | `30` | Wait this long before retrying a failed download attempt. |
+| Download retry delay | `30` s | Wait this long before retrying a failed download attempt. |
 
 Increase the stability period if files arrive slowly or uploads to the FTP server often pause.
 Bearcat downloads one release folder at a time, with several files in parallel. Lower the connection
@@ -172,7 +176,7 @@ limit if the server rejects simultaneous transfers.
 
 ### Initial upload cooldown
 
-"Initial upload cooldown (minutes)" defaults to `5`. It gives you time to finish setting up a release before archiving and uploading begin.
+"Initial upload cooldown" defaults to `5` minutes. It gives you time to finish setting up a release before archiving and uploading begin.
 
 Once an upload configuration exists and the release is older than the cooldown, the next "Upload state check" run creates the first upload record.
 The wait is measured from release creation. Set it to `0` to allow the first upload on the next check.
@@ -188,7 +192,7 @@ View and, where allowed, override individual limits on the "Hoster registrations
 
 Lower the global limit to reduce bandwidth and CPU usage. Raise it to transfer more files at once.
 
-"Maximum upload speed (MB/s)" is empty by default, which means no limit. It caps the combined upload
+"Maximum upload speed" (MB/s) is empty by default, which means no limit. It caps the combined upload
 speed of all running uploads across all hosters. Decimal values such as `0.5` or `0,5` are allowed.
 Each hoster registration can set its own limit as well. See
 [Upload speed limit per hoster](/Bearcat/account-settings/#upload-speed-limit-per-hoster).

@@ -75,6 +75,7 @@ public class ApplicationConfigurationRegistry
                     p.GetCustomAttribute<ApplicationConfigurationPropertyAttribute>();
                 var optionsAttribute =
                     p.GetCustomAttribute<ApplicationConfigurationOptionsAttribute>();
+                var unitAttribute = p.GetCustomAttribute<ApplicationConfigurationUnitAttribute>();
 
                 return new ApplicationConfigurationPropertyDefinition(
                     Name: p.Name,
@@ -82,7 +83,8 @@ public class ApplicationConfigurationRegistry
                     Description: propertyAttribute?.Description,
                     PropertyType: p.PropertyType,
                     PropertyInfo: p,
-                    Options: optionsAttribute?.Values ?? []
+                    Options: optionsAttribute?.Values ?? [],
+                    Unit: unitAttribute?.Unit
                 );
             })
             .ToList();
@@ -106,20 +108,3 @@ public class ApplicationConfigurationRegistry
             || underlyingType == typeof(string);
     }
 }
-
-public sealed record ApplicationConfigurationDefinition(
-    string Key,
-    string DisplayName,
-    string? Description,
-    Type ConfigurationType,
-    IReadOnlyList<ApplicationConfigurationPropertyDefinition> Properties
-);
-
-public sealed record ApplicationConfigurationPropertyDefinition(
-    string Name,
-    string DisplayName,
-    string? Description,
-    Type PropertyType,
-    PropertyInfo PropertyInfo,
-    IReadOnlyList<string> Options
-);

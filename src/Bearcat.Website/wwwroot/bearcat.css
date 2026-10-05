@@ -4505,3 +4505,42 @@ body:has([aria-modal="true"]) [role="menu"] {
     border: 0;
     border-radius: 0;
 }
+
+.bearcat-configuration-section {
+    scroll-margin-top: 5rem;
+}
+
+.bearcat-configuration-section-link,
+.bearcat-configuration-section-chip {
+    color: var(--muted-foreground);
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        color 120ms ease;
+}
+
+.bearcat-configuration-section-link:hover,
+.bearcat-configuration-section-chip:hover {
+    background: color-mix(in oklch, var(--accent) 60%, transparent);
+    color: var(--foreground);
+}
+
+.bearcat-configuration-section-link[aria-current="true"],
+.bearcat-configuration-section-chip[aria-current="true"] {
+    background: var(--accent);
+    color: var(--foreground);
+    font-weight: 500;
+}
+
+.bearcat-configuration-section-link[aria-current="true"] .bearcat-configuration-section-icon,
+.bearcat-configuration-section-chip[aria-current="true"] .bearcat-configuration-section-icon {
+    color: var(--primary);
+}
+
+.bearcat-configuration-chip-row {
+    scrollbar-width: none;
+}
+
+.bearcat-configuration-chip-row::-webkit-scrollbar {
+    display: none;
+}

@@ -9,5 +9,6 @@ public class InitialUploadConfiguration : IApplicationConfiguration
         "InitialUploadCooldownMinutes",
         "InitialUploadCooldownMinutesDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Minutes)]
     public int CooldownMinutes { get; set; } = 5;
 }

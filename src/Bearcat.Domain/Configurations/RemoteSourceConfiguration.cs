@@ -13,12 +13,14 @@ public class RemoteSourceConfiguration : IApplicationConfiguration
         "RemoteSourceDownloadStabilityMinutes",
         "RemoteSourceDownloadStabilityMinutesDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Minutes)]
     public int StabilityMinutes { get; set; } = 5;
 
     [ApplicationConfigurationProperty(
         "RemoteSourceDownloadMinimumFolderSizeMegabytes",
         "RemoteSourceDownloadMinimumFolderSizeMegabytesDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Megabytes)]
     public int MinimumFolderSizeMegabytes { get; set; } = 1;
 
     [ApplicationConfigurationProperty(
@@ -37,5 +39,6 @@ public class RemoteSourceConfiguration : IApplicationConfiguration
         "RemoteSourceDownloadRetryDelaySeconds",
         "RemoteSourceDownloadRetryDelaySecondsDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Seconds)]
     public int DownloadRetryDelaySeconds { get; set; } = 30;
 }

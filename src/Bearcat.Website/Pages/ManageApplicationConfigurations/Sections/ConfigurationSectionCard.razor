@@ -1,0 +1,42 @@
+@using Bearcat.Website.Pages.ManageApplicationConfigurations.Notifications
+@using Bearcat.Website.Pages.ManageApplicationConfigurations.Settings
+
+<section id="@Section.AnchorId" class="bearcat-configuration-section" aria-labelledby="@TitleId">
+    <BbCard Class="@@container border-border/70 shadow-sm">
+        <BbCardHeader Class="pb-4">
+            <div class="flex items-start gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted text-foreground/80">
+                    <LucideIcon Name="@Section.Appearance.Icon" class="h-4 w-4" />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <BbCardTitle As="h2" Class="text-base font-semibold" id="@TitleId">@L[Section.Configuration.DisplayName]</BbCardTitle>
+                    @if (!string.IsNullOrWhiteSpace(Section.Configuration.Description))
+                    {
+                        <BbCardDescription Class="mt-1">@L[Section.Configuration.Description]</BbCardDescription>
+                    }
+                </div>
+                @if (Section.ChangedSettingCount > 0)
+                {
+                    <span class="shrink-0 rounded-full border border-border/70 bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+                        @L["ConfigurationSectionChangedCount", Section.ChangedSettingCount]
+                    </span>
+                }
+            </div>
+        </BbCardHeader>
+        <BbCardContent Class="@ContentClass">
+            @if (IsNotificationSection)
+            {
+                <NotificationSettingGroupList Settings="Section.VisibleSettings" OnSave="OnSave" OnReset="OnReset" />
+            }
+            else
+            {
+                <div class="divide-y divide-border/60 border-t border-border/60">
+                    @foreach (var setting in Section.VisibleSettings)
+                    {
+                        <ConfigurationSettingRow @key="setting.Name" Setting="setting" OnSave="OnSave" OnReset="OnReset" />
+                    }
+                </div>
+            }
+        </BbCardContent>
+    </BbCard>
+</section>

@@ -454,6 +454,85 @@ const releaseStickyHeader = (() => {
     return { attach };
 })();
 
+const configurationSectionSpy = (() => {
+    const sectionLinkSelector = "[data-configuration-section-link]";
+    const scrolledToBottomTolerance = 2;
+
+    function attach(pageElement, sectionIds) {
+        const appHeaderHeight = document.querySelector(".bearcat-app-header")?.offsetHeight ?? 0;
+        const sections = sectionIds
+            .map((sectionId) => document.getElementById(sectionId))
+            .filter((section) => section !== null);
+        const intersectingSectionIds = new Set();
+
+        function markCurrentSection(sectionId) {
+            for (const link of pageElement.querySelectorAll(sectionLinkSelector)) {
+                if (link.dataset.configurationSectionLink === sectionId) {
+                    link.setAttribute("aria-current", "true");
+                } else {
+                    link.removeAttribute("aria-current");
+                }
+            }
+        }
+
+        function isScrolledToBottom() {
+            const scrollHeight = document.documentElement.scrollHeight;
+            return (
+                scrollHeight > window.innerHeight &&
+                window.innerHeight + window.scrollY >= scrollHeight - scrolledToBottomTolerance
+            );
+        }
+
+        function updateCurrentSection() {
+            if (sections.length === 0) {
+                return;
+            }
+
+            const currentSection = isScrolledToBottom()
+                ? sections[sections.length - 1]
+                : sections.find((section) => intersectingSectionIds.has(section.id));
+
+            if (currentSection) {
+                markCurrentSection(currentSection.id);
+            }
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        intersectingSectionIds.add(entry.target.id);
+                    } else {
+                        intersectingSectionIds.delete(entry.target.id);
+                    }
+                }
+
+                updateCurrentSection();
+            },
+            { rootMargin: `-${appHeaderHeight}px 0px -60% 0px`, threshold: 0 }
+        );
+
+        for (const section of sections) {
+            observer.observe(section);
+        }
+
+        if (sections.length > 0) {
+            markCurrentSection(sections[0].id);
+        }
+
+        window.addEventListener("scroll", updateCurrentSection, { passive: true });
+
+        return {
+            detach: () => {
+                observer.disconnect();
+                window.removeEventListener("scroll", updateCurrentSection);
+            },
+        };
+    }
+
+    return { attach };
+})();
+
 function scrollElementIntoViewById(elementId) {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     document.getElementById(elementId)?.scrollIntoView({
@@ -471,5 +550,6 @@ window.bearcat = {
     saveShortcut,
     logView,
     releaseStickyHeader,
+    configurationSectionSpy,
     scrollElementIntoViewById,
 };

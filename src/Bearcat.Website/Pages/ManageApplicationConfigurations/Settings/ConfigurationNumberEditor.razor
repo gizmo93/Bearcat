@@ -1,0 +1,37 @@
+<div class="w-full @@xl:w-56" @onkeydown="OnKeyDownAsync">
+    <BbInputGroup>
+        <BbInputGroupInput Value="@DisplayedText"
+                           ValueChanged="OnTextChanged"
+                           UpdateTiming="UpdateTiming.Immediate"
+                           Placeholder="@Placeholder"
+                           AriaLabel="@L[Setting.DisplayName]"
+                           inputmode="@InputMode"
+                           autocomplete="off"
+                           Class="min-w-0 tabular-nums focus-visible:ring-0!" />
+        <BbInputGroupAddon Align="InputGroupAlign.InlineEnd" Class="gap-0.5">
+            @if (Setting.Unit is { } unit)
+            {
+                <BbInputGroupText Class="px-1 text-xs text-muted-foreground">@ConfigurationSettingFormatter.FormatUnit(L, unit)</BbInputGroupText>
+            }
+            @if (IsDirty)
+            {
+                <BbInputGroupButton Variant="ButtonVariant.Ghost"
+                                    Size="ButtonSize.IconSmall"
+                                    Class="h-6! w-6! text-muted-foreground hover:text-foreground"
+                                    AriaLabel="@L["Discard"]"
+                                    title="@L["Discard"]"
+                                    OnClick="Discard">
+                    <LucideIcon Name="x" class="h-3.5 w-3.5" />
+                </BbInputGroupButton>
+                <BbInputGroupButton Variant="ButtonVariant.Default"
+                                    Size="ButtonSize.IconSmall"
+                                    Class="h-6! w-6!"
+                                    AriaLabel="@L["Save"]"
+                                    title="@L["Save"]"
+                                    OnClick="SaveAsync">
+                    <LucideIcon Name="check" class="h-3.5 w-3.5" />
+                </BbInputGroupButton>
+            }
+        </BbInputGroupAddon>
+    </BbInputGroup>
+</div>
