@@ -1,0 +1,20 @@
+@using Bearcat.Website.Formatting
+
+@if (Parts.Count > 0)
+{
+    <div class="bearcat-activity-upload-parts">
+        <div class="bearcat-overview-online-segments" aria-hidden="true">
+            @foreach (var part in Parts)
+            {
+                <span class="bearcat-overview-online-segment @GetSegmentClass(part.State)" title="@part.FileName"></span>
+            }
+        </div>
+        <p class="bearcat-activity-upload-parts-summary">
+            <span>@L["UploadPartsOnline", OnlinePartCount, Parts.Count]</span>
+            @if (Snapshot is { TotalBytes: > 0 })
+            {
+                <span> · @L["TransferredBytesOfTotalBytes", TransferFormatting.FormatBytes(Snapshot.TransferredBytes), TransferFormatting.FormatBytes(Snapshot.TotalBytes)]</span>
+            }
+        </p>
+    </div>
+}

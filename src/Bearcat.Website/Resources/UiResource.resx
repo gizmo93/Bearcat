@@ -49,7 +49,6 @@
   <data name="AnyReleaseType" xml:space="preserve"><value>Any release type</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Any online state</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>All upload configs</value></data>
-  <data name="AutoRefresh" xml:space="preserve"><value>Auto refresh</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Base path is required</value></data>
   <data name="Browse" xml:space="preserve"><value>Browse</value></data>
   <data name="BrowseArchiveFolders" xml:space="preserve"><value>Browse archive folders</value></data>
@@ -103,7 +102,6 @@
   <data name="CrypterDialogDescription" xml:space="preserve"><value>Enter the account details for this link crypter.</value></data>
   <data name="CrypterRegistrations" xml:space="preserve"><value>Crypter registrations</value></data>
   <data name="Crypters" xml:space="preserve"><value>Crypters</value></data>
-  <data name="CurrentlyNothingRunning" xml:space="preserve"><value>Currently nothing is running.</value></data>
   <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
   <data name="DateRange" xml:space="preserve"><value>Date range</value></data>
   <data name="Delete" xml:space="preserve"><value>Delete</value></data>
@@ -320,7 +318,6 @@
   <data name="Pending" xml:space="preserve"><value>Pending</value></data>
   <data name="Preview" xml:space="preserve"><value>Preview</value></data>
   <data name="Previous" xml:space="preserve"><value>Previous</value></data>
-  <data name="Progress" xml:space="preserve"><value>Progress</value></data>
   <data name="RandomArchiveNameWillBeGenerated" xml:space="preserve"><value>A random archive name will be generated</value></data>
   <data name="RandomName" xml:space="preserve"><value>Random name</value></data>
   <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
@@ -414,9 +411,6 @@
   <data name="RarFile" xml:space="preserve"><value>RAR file</value></data>
   <data name="RarFileSearchPlaceholder" xml:space="preserve"><value>Filename or path</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Running and pending uploads</value></data>
-  <data name="RunningArchives" xml:space="preserve"><value>Running archives</value></data>
-  <data name="RunningProcesses" xml:space="preserve"><value>Running processes</value></data>
-  <data name="RunningUploads" xml:space="preserve"><value>Running uploads</value></data>
   <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload queues, status, and per-file progress.</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
   <data name="SaveNfoFile" xml:space="preserve"><value>Save NFO file</value></data>
@@ -458,11 +452,9 @@
   <data name="ToggleConfigurationDetails" xml:space="preserve"><value>Toggle configuration details</value></data>
   <data name="TogglePasswordVisibility" xml:space="preserve"><value>Toggle password visibility</value></data>
   <data name="ToggleUploadConfigDetails" xml:space="preserve"><value>Toggle upload config details</value></data>
-  <data name="ToggleUploadDetails" xml:space="preserve"><value>Toggle upload details</value></data>
   <data name="ToggleVisibility" xml:space="preserve"><value>Toggle visibility</value></data>
   <data name="TotalConfigured" xml:space="preserve"><value>total configured</value></data>
   <data name="TotalReleases" xml:space="preserve"><value>Total releases</value></data>
-  <data name="TotalUploadSpeed" xml:space="preserve"><value>Upload total</value></data>
   <data name="TryLogin" xml:space="preserve"><value>Try login</value></data>
   <data name="UnhandledError" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>
@@ -471,7 +463,6 @@
   <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload config link crypters</value></data>
     <data name="UploadConfigs" xml:space="preserve"><value>Total upload configs</value></data>
   <data name="UploadConfigurations" xml:space="preserve"><value>Upload configurations</value></data>
-  <data name="UploadFileStatus" xml:space="preserve"><value>Upload file status</value></data>
   <data name="UploadLink" xml:space="preserve"><value>Upload link</value></data>
   <data name="UploadLinkResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} upload links</value></data>
   <data name="UploadLinks" xml:space="preserve"><value>Upload links</value></data>
@@ -499,8 +490,6 @@
   <data name="UploadState.WaitingForArchive" xml:space="preserve"><value>Waiting for archive</value></data>
   <data name="UploadState.CancellationRequested" xml:space="preserve"><value>Cancel requested</value></data>
   <data name="UploadState.Canceled" xml:space="preserve"><value>Canceled</value></data>
-  <data name="UploadStatus" xml:space="preserve"><value>Upload status</value></data>
-  <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} for {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload target</value></data>
   <data name="UrlType.Imdb" xml:space="preserve"><value>IMDB</value></data>
   <data name="UrlType.Other" xml:space="preserve"><value>Other</value></data>
@@ -514,7 +503,6 @@
   <data name="CompleteDownloadsHint" xml:space="preserve"><value>Estimated number of complete downloads: the sum of the average download count per upload.</value></data>
   <data name="ViewContainerLinks" xml:space="preserve"><value>View container links</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>View upload links</value></data>
-  <data name="Welcome" xml:space="preserve"><value>Welcome</value></data>
     <data name="Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="Loading" xml:space="preserve"><value>Loading</value></data>
   <data name="Message" xml:space="preserve"><value>Message</value></data>
@@ -1223,22 +1211,6 @@
   <data name="DeleteLocalArchivesConfirmationManaged" xml:space="preserve"><value>Bearcat will restore the archives from an online mirror when a reupload is needed, or repackage them from the release folder. These archive folders will be emptied and deleted now: {0}</value></data>
   <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Local archives can only be deleted when no uploads are running and every archive config has a fully online upload on a hoster that is enabled for mirror downloads (or the release folder still exists for managed releases).</value></data>
   <data name="LocalArchivesDeleted" xml:space="preserve"><value>Local archives of {0} deleted</value></data>
-  <data name="RunningTransfers" xml:space="preserve"><value>Running transfers</value></data>
-  <data name="TotalDownloadSpeed" xml:space="preserve"><value>Download total</value></data>
-  <data name="ToggleDownloadDetails" xml:space="preserve"><value>Toggle download details</value></data>
-  <data name="DownloadStatus" xml:space="preserve"><value>Download status</value></data>
-  <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Restore of archive #{0} for {1} from {2}</value></data>
-  <data name="DownloadFileStatus" xml:space="preserve"><value>Download progress per file</value></data>
-  <data name="VerificationStatus" xml:space="preserve"><value>Verification status</value></data>
-  <data name="VerificationFileStatus" xml:space="preserve"><value>Verification progress per file</value></data>
-  <data name="ExtractionStatus" xml:space="preserve"><value>Extraction status</value></data>
-  <data name="ExtractionArchiveStatus" xml:space="preserve"><value>Extraction progress per archive</value></data>
-  <data name="PackingStatus" xml:space="preserve"><value>Packing status</value></data>
-  <data name="PackingProgress" xml:space="preserve"><value>Packing progress</value></data>
-  <data name="HashingStatus" xml:space="preserve"><value>Hashing status</value></data>
-  <data name="HashingFileStatus" xml:space="preserve"><value>Hashing progress per file</value></data>
-  <data name="ToggleArchiveDetails" xml:space="preserve"><value>Toggle archive details</value></data>
-  <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archive #{0} for {1}</value></data>
   <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packing</value></data>
   <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 Creating MD5 hashes</value></data>
   <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>Changing MD5 hashes of existing archive</value></data>
@@ -1377,7 +1349,6 @@
   <data name="RetryWithoutDownloadingAgainQueued" xml:space="preserve"><value>{0} was queued again with the files already downloaded.</value></data>
   <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} is ignored from now on.</value></data>
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>The state of {0} changed in the meantime. The list was reloaded.</value></data>
-  <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download of {0} from {1}</value></data>
   <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Downloaded from remote source</value></data>
   <data name="Activity" xml:space="preserve"><value>Activity</value></data>
   <data name="ReleaseSettings" xml:space="preserve"><value>Release settings</value></data>
@@ -1622,4 +1593,29 @@
   <data name="LinkContainerCoverageTitle" xml:space="preserve"><value>{0} of {1} uploads included</value></data>
   <data name="CollectionUploadSlotReleaseCoverage" xml:space="preserve"><value>{0}/{1} releases</value></data>
   <data name="OpenCollectionUploadSlotActions" xml:space="preserve"><value>Open upload slot actions</value></data>
+  <data name="ActivityRunningCountOne" xml:space="preserve"><value>1 running</value></data>
+  <data name="ActivityRunningCount" xml:space="preserve"><value>{0} running</value></data>
+  <data name="ActivityQueuedCountOne" xml:space="preserve"><value>1 queued</value></data>
+  <data name="ActivityQueuedCount" xml:space="preserve"><value>{0} queued</value></data>
+  <data name="ActivityNothingRunning" xml:space="preserve"><value>Nothing running</value></data>
+  <data name="AutoRefreshPaused" xml:space="preserve"><value>Auto refresh paused</value></data>
+  <data name="AllQuiet" xml:space="preserve"><value>All quiet</value></data>
+  <data name="NoUploadsDownloadsOrArchivesRunning" xml:space="preserve"><value>No uploads, downloads or archives are running.</value></data>
+  <data name="UploadSpeed" xml:space="preserve"><value>Upload speed</value></data>
+  <data name="DownloadSpeed" xml:space="preserve"><value>Download speed</value></data>
+  <data name="Queued" xml:space="preserve"><value>Queued</value></data>
+  <data name="UploadWaiting" xml:space="preserve"><value>upload waiting</value></data>
+  <data name="UploadsWaiting" xml:space="preserve"><value>uploads waiting</value></data>
+  <data name="TransferTimeLeft" xml:space="preserve"><value>{0} left</value></data>
+  <data name="TransferredBytesOfTotalBytes" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="UploadPartsOnline" xml:space="preserve"><value>{0} of {1} parts online</value></data>
+  <data name="ShowFiles" xml:space="preserve"><value>Show files</value></data>
+  <data name="HideFiles" xml:space="preserve"><value>Hide files</value></data>
+  <data name="RemoteDownloadPhases" xml:space="preserve"><value>Remote download phases</value></data>
+  <data name="RemoteDownloadPhaseDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="RemoteDownloadPhaseVerify" xml:space="preserve"><value>Verify</value></data>
+  <data name="RemoteDownloadPhaseExtract" xml:space="preserve"><value>Extract</value></data>
+  <data name="ArchiveCreationPhases" xml:space="preserve"><value>Archive creation phases</value></data>
+  <data name="ArchiveCreationPhasePack" xml:space="preserve"><value>Pack</value></data>
+  <data name="ArchiveCreationPhaseMd5Hashes" xml:space="preserve"><value>MD5 hashes</value></data>
 </root>

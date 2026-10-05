@@ -1,0 +1,32 @@
+@using Bearcat.Website.Shared.ProgressSteps
+
+@{
+    var currentPhaseIndex = GetCurrentPhaseIndex();
+}
+
+<ol class="bearcat-transfer-phase-steps" aria-label="@AriaLabel">
+    @for (var index = 0; index < Phases.Count; index++)
+    {
+        var phase = Phases[index];
+        var state = GetState(index, currentPhaseIndex);
+        var stepNumber = index + 1;
+        <li class="bearcat-transfer-phase-step @GetStepClass(state)"
+            aria-current="@(state is ProgressStepState.InProgress ? "step" : null)">
+            <span class="bearcat-transfer-phase-step-marker" aria-hidden="true">
+                @switch (state)
+                {
+                    case ProgressStepState.Done:
+                        <LucideIcon Name="check" class="h-3 w-3" StrokeWidth="2.5" />
+                        break;
+                    case ProgressStepState.InProgress:
+                        <LucideIcon Name="loader-circle" class="h-3 w-3 animate-spin" StrokeWidth="2.5" />
+                        break;
+                    default:
+                        <span>@stepNumber</span>
+                        break;
+                }
+            </span>
+            <span class="bearcat-transfer-phase-step-label">@phase.Label</span>
+        </li>
+    }
+</ol>

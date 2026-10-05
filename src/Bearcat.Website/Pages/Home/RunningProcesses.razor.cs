@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.Home.Summary;
 using Bearcat.Website.ScopedOperations;
 
 namespace Bearcat.Website.Pages.Home;
@@ -15,7 +16,14 @@ public sealed partial class RunningProcesses(
     IScopedOperationRunner operationRunner
 ) : IDisposable
 {
+    private const int SpeedHistoryCapacity = 40;
+
     private readonly CancellationTokenSource lifetimeCancellation = new();
+
+    private readonly TransferSpeedHistory uploadSpeedHistory = new(SpeedHistoryCapacity);
+
+    private readonly TransferSpeedHistory downloadSpeedHistory = new(SpeedHistoryCapacity);
+
     private IReadOnlyList<RunningUploadReadModel> runningUploads = [];
 
     private IReadOnlyDictionary<int, TransferProgressSnapshot> uploadProgress =
@@ -41,6 +49,54 @@ public sealed partial class RunningProcesses(
         || archivesInCreationOrHashChange.Count > 0
         || restoringArchives.Count > 0
         || remoteDownloads.Count > 0;
+
+    private int QueuedUploadCount =>
+        runningUploads.Count(upload => upload.UploadState is UploadState.Pending);
+
+    private int RunningCount =>
+        runningUploads.Count
+        - QueuedUploadCount
+        + archivesInCreationOrHashChange.Count
+        + restoringArchives.Count
+        + remoteDownloads.Count;
+
+    private double TotalUploadBytesPerSecond => SumBytesPerSecond(uploadProgress.Values.ToList());
+
+    private double TotalDownloadBytesPerSecond =>
+        SumBytesPerSecond([
+            .. downloadProgress.Values,
+            .. remoteDownloadProgress.Values.Where(snapshot =>
+                snapshot.Identifier.Type is TransferType.RemoteDownload
+            ),
+        ]);
+
+    private string StatusText
+    {
+        get
+        {
+            List<string> parts = [];
+
+            if (RunningCount > 0)
+            {
+                parts.Add(
+                    RunningCount == 1
+                        ? L["ActivityRunningCountOne"]
+                        : L["ActivityRunningCount", RunningCount]
+                );
+            }
+
+            if (QueuedUploadCount > 0)
+            {
+                parts.Add(
+                    QueuedUploadCount == 1
+                        ? L["ActivityQueuedCountOne"]
+                        : L["ActivityQueuedCount", QueuedUploadCount]
+                );
+            }
+
+            return parts.Count == 0 ? L["ActivityNothingRunning"] : string.Join(" · ", parts);
+        }
+    }
 
     private bool autoRefresh = true;
 
@@ -226,7 +282,17 @@ public sealed partial class RunningProcesses(
             return;
         }
 
+        uploadSpeedHistory.Add(TotalUploadBytesPerSecond);
+        downloadSpeedHistory.Add(TotalDownloadBytesPerSecond);
         StateHasChanged();
+    }
+
+    private static double SumBytesPerSecond(IReadOnlyList<TransferProgressSnapshot> snapshots)
+    {
+        return snapshots
+            .Select(snapshot => snapshot.BytesPerSecond)
+            .Where(speed => speed > 0)
+            .Sum();
     }
 
     private void StopAutoRefreshTimer()

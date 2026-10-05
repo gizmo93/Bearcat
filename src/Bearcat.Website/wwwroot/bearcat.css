@@ -1861,20 +1861,6 @@ button .bearcat-nav-group-label:hover {
     min-height: 4rem;
 }
 
-.bearcat-running-uploads-table :where(table),
-.bearcat-running-downloads-table :where(table),
-.bearcat-running-remote-downloads-table :where(table),
-.bearcat-running-archives-table :where(table) {
-    table-layout: auto;
-}
-
-.bearcat-running-uploads-table :where(td),
-.bearcat-running-downloads-table :where(td),
-.bearcat-running-remote-downloads-table :where(td),
-.bearcat-running-archives-table :where(td) {
-    overflow-wrap: anywhere;
-}
-
 @media (min-width: 641px) {
     .bearcat-hosters-table :where(.rounded-md.border) {
         overflow-x: auto;
@@ -1894,52 +1880,539 @@ button .bearcat-nav-group-label:hover {
     }
 }
 
-.bearcat-transfer-direction {
+.bearcat-activity-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.bearcat-activity-status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background: var(--muted-foreground);
+    opacity: 0.6;
+}
+
+.bearcat-activity-status-dot-live {
+    background: var(--primary);
+    opacity: 1;
+    animation: bearcat-activity-status-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes bearcat-activity-status-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+}
+
+.bearcat-activity-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.bearcat-activity-summary-tile {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    border-radius: 0.75rem;
+    background: var(--muted);
+    padding: 0.75rem 0.875rem;
+}
+
+.bearcat-activity-summary-label {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.bearcat-activity-summary-value {
+    margin-top: 0.25rem;
+    overflow: hidden;
+    font-size: 1.375rem;
+    font-weight: 650;
+    line-height: 1.75rem;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-activity-summary-sub-label {
+    overflow: hidden;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-activity-sparkline {
+    display: block;
+    width: 100%;
+    height: 1.75rem;
+    margin-top: 0.375rem;
+    color: var(--primary);
+    overflow: visible;
+}
+
+.bearcat-activity-sparkline-area {
+    fill: currentColor;
+    fill-opacity: 0.1;
+    stroke: none;
+}
+
+.bearcat-activity-sparkline-line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.bearcat-activity-lane {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.bearcat-activity-lane-heading {
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    color: var(--muted-foreground);
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     text-transform: uppercase;
+}
+
+.bearcat-activity-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card);
+    padding: 0.75rem 0.875rem;
+}
+
+.bearcat-activity-card-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "body actions"
+        "chips chips"
+        "phases phases"
+        "metrics metrics";
+    align-items: start;
+    gap: 0 0.75rem;
+}
+
+.bearcat-activity-card-icon {
+    display: none;
+    width: 1.875rem;
+    height: 1.875rem;
+    flex-shrink: 0;
+    grid-area: icon;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 0.4375rem;
+    background: var(--muted);
     color: var(--muted-foreground);
 }
 
-.bearcat-upload-release-name {
+.bearcat-activity-card-icon-active {
+    border-color: color-mix(in oklch, var(--primary) 25%, transparent);
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+    color: var(--primary);
+}
+
+.bearcat-activity-card-body {
+    display: flex;
+    min-width: 0;
+    grid-area: body;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.bearcat-activity-card-title {
+    overflow: hidden;
     font-size: 0.9375rem;
     font-weight: 600;
-}
-
-.bearcat-total-speed {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+    line-height: 1.375rem;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 0.4rem 0.7rem;
-    border-radius: var(--radius);
-    background: color-mix(in oklch, var(--primary) 12%, transparent);
 }
 
-.bearcat-total-speed::before {
-    content: "";
-    width: 0.45rem;
-    height: 0.45rem;
-    flex: none;
-    border-radius: 9999px;
+.bearcat-activity-card-title-link {
+    display: block;
+    color: inherit;
+}
+
+.bearcat-activity-card-title-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.bearcat-activity-card-subtitle {
+    overflow: hidden;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-activity-card-chips {
+    display: flex;
+    min-width: 0;
+    grid-area: chips;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+}
+
+.bearcat-overview-chip.bearcat-activity-chip {
+    padding-inline: 0.5rem;
+}
+
+.bearcat-activity-card-phases {
+    display: flex;
+    min-width: 0;
+    grid-area: phases;
+    flex-wrap: wrap;
+    margin-top: 0.375rem;
+}
+
+.bearcat-activity-card-metrics {
+    display: flex;
+    min-width: 0;
+    grid-area: metrics;
+    margin-top: 0.5rem;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.bearcat-activity-card-metrics:empty {
+    display: none;
+}
+
+.bearcat-activity-card-percentage {
+    font-size: 1.25rem;
+    font-weight: 650;
+    line-height: 1.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.bearcat-activity-card-metrics-text {
+    overflow: hidden;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-activity-card-actions {
+    display: flex;
+    grid-area: actions;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.bearcat-activity-card-chevron {
+    color: var(--muted-foreground);
+    transition: transform 0.15s ease;
+}
+
+.bearcat-activity-card-chevron-expanded {
+    transform: rotate(180deg);
+}
+
+.bearcat-activity-card-progress {
+    height: 0.375rem;
+}
+
+.bearcat-activity-card-files {
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+}
+
+.bearcat-activity-upload-parts .bearcat-overview-online-segments {
+    margin-top: 0;
+}
+
+.bearcat-activity-upload-parts .bearcat-overview-online-segment {
+    height: 4px;
+}
+
+.bearcat-activity-segment-uploading {
     background: var(--primary);
 }
 
-.bearcat-total-speed-value {
-    font-size: 0.875rem;
-    font-weight: 600;
+.bearcat-activity-upload-parts-summary {
+    margin-top: 0.375rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
-    color: var(--foreground);
 }
 
-.bearcat-total-speed-label {
+.bearcat-transfer-phase-steps {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.bearcat-transfer-phase-step {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
     font-size: 0.75rem;
     font-weight: 500;
+}
+
+.bearcat-transfer-phase-step + .bearcat-transfer-phase-step::before {
+    content: "";
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+}
+
+.bearcat-transfer-phase-step-marker {
+    display: grid;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.bearcat-transfer-phase-step-done .bearcat-transfer-phase-step-marker {
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.bearcat-transfer-phase-step-done .bearcat-transfer-phase-step-label {
+    color: var(--muted-foreground);
+}
+
+.bearcat-transfer-phase-step-in-progress .bearcat-transfer-phase-step-marker {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.bearcat-transfer-phase-step-in-progress .bearcat-transfer-phase-step-label {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+.bearcat-transfer-phase-step-pending .bearcat-transfer-phase-step-marker {
+    background: transparent;
+    color: var(--muted-foreground);
+}
+
+.bearcat-transfer-phase-step-pending .bearcat-transfer-phase-step-label {
+    color: var(--muted-foreground);
+}
+
+.bearcat-activity-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.bearcat-activity-file-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "name name"
+        "progress status";
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.bearcat-activity-file-name {
+    display: flex;
+    min-width: 0;
+    grid-area: name;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bearcat-activity-file-progress {
+    width: 100%;
+    height: 0.25rem;
+    grid-area: progress;
+}
+
+.bearcat-activity-file-progress-done {
+    background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
+}
+
+.bearcat-activity-file-status {
+    grid-area: status;
+    justify-self: end;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.bearcat-activity-file-status-icon-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.bearcat-activity-queue {
+    border: 1px dashed var(--border);
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+}
+
+.bearcat-activity-queue-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.bearcat-activity-queue-list {
+    margin-top: 0.375rem;
+}
+
+.bearcat-activity-queue-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "release cancel"
+        "target cancel";
+    align-items: center;
+    column-gap: 0.75rem;
+    padding-block: 0.25rem;
+}
+
+.bearcat-activity-queue-row + .bearcat-activity-queue-row {
+    border-top: 1px solid var(--border);
+}
+
+.bearcat-activity-queue-release {
+    overflow: hidden;
+    grid-area: release;
+    color: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-activity-queue-release:hover {
     color: var(--primary);
+    text-decoration: underline;
+}
+
+.bearcat-activity-queue-target {
+    overflow: hidden;
+    grid-area: target;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-activity-queue-row > :last-child {
+    grid-area: cancel;
+}
+
+.bearcat-activity-empty-icon {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    border-radius: 9999px;
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+@media (min-width: 640px) {
+    .bearcat-activity-card-main {
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            "icon body metrics actions"
+            "icon chips metrics actions"
+            "icon phases metrics actions";
+    }
+
+    .bearcat-activity-card-icon {
+        display: grid;
+    }
+
+    .bearcat-transfer-phase-step + .bearcat-transfer-phase-step::before {
+        width: 1rem;
+    }
+
+    .bearcat-activity-card-metrics {
+        margin-top: 0;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0;
+        text-align: right;
+    }
+
+    .bearcat-activity-file-row {
+        grid-template-columns: minmax(0, 1fr) 6rem minmax(4.5rem, auto);
+        grid-template-areas: "name progress status";
+    }
+
+    .bearcat-activity-queue-row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto;
+        grid-template-areas: "release target cancel";
+    }
+
+    .bearcat-activity-queue-target {
+        max-width: 16rem;
+        text-align: right;
+    }
+}
+
+@media (min-width: 1024px) {
+    .bearcat-activity-summary {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bearcat-activity-status-dot-live {
+        animation: none;
+    }
+
+    .bearcat-activity-card-chevron {
+        transition: none;
+    }
 }
 
 .bearcat-captcha-action-button {
@@ -2079,10 +2552,6 @@ button .bearcat-nav-group-label:hover {
 
 @media (max-width: 640px) {
     .bearcat-background-tasks-table,
-    .bearcat-running-uploads-table,
-    .bearcat-running-downloads-table,
-    .bearcat-running-remote-downloads-table,
-    .bearcat-running-archives-table,
     .bearcat-folder-automations-table,
     .bearcat-release-groups-table,
     .bearcat-release-templates-table,
@@ -2093,10 +2562,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(.rounded-md.border),
-    .bearcat-running-uploads-table :where(.rounded-md.border),
-    .bearcat-running-downloads-table :where(.rounded-md.border),
-    .bearcat-running-remote-downloads-table :where(.rounded-md.border),
-    .bearcat-running-archives-table :where(.rounded-md.border),
     .bearcat-folder-automations-table :where(.rounded-md.border),
     .bearcat-release-groups-table :where(.rounded-md.border),
     .bearcat-release-templates-table :where(.rounded-md.border),
@@ -2108,10 +2573,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(table),
-    .bearcat-running-uploads-table :where(table),
-    .bearcat-running-downloads-table :where(table),
-    .bearcat-running-remote-downloads-table :where(table),
-    .bearcat-running-archives-table :where(table),
     .bearcat-folder-automations-table :where(table),
     .bearcat-release-groups-table :where(table),
     .bearcat-release-templates-table :where(table),
@@ -2124,10 +2585,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(thead),
-    .bearcat-running-uploads-table :where(thead),
-    .bearcat-running-downloads-table :where(thead),
-    .bearcat-running-remote-downloads-table :where(thead),
-    .bearcat-running-archives-table :where(thead),
     .bearcat-folder-automations-table :where(thead),
     .bearcat-release-groups-table :where(thead),
     .bearcat-release-templates-table :where(thead),
@@ -2138,10 +2595,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(tbody),
-    .bearcat-running-uploads-table :where(tbody),
-    .bearcat-running-downloads-table :where(tbody),
-    .bearcat-running-remote-downloads-table :where(tbody),
-    .bearcat-running-archives-table :where(tbody),
     .bearcat-folder-automations-table :where(tbody),
     .bearcat-release-groups-table :where(tbody),
     .bearcat-release-templates-table :where(tbody),
@@ -2153,10 +2606,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(tbody tr),
-    .bearcat-running-uploads-table :where(tbody tr),
-    .bearcat-running-downloads-table :where(tbody tr),
-    .bearcat-running-remote-downloads-table :where(tbody tr),
-    .bearcat-running-archives-table :where(tbody tr),
     .bearcat-folder-automations-table :where(tbody tr),
     .bearcat-release-groups-table :where(tbody tr),
     .bearcat-release-templates-table :where(tbody tr),
@@ -2173,10 +2622,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(tbody tr:hover),
-    .bearcat-running-uploads-table :where(tbody tr:hover),
-    .bearcat-running-downloads-table :where(tbody tr:hover),
-    .bearcat-running-remote-downloads-table :where(tbody tr:hover),
-    .bearcat-running-archives-table :where(tbody tr:hover),
     .bearcat-folder-automations-table :where(tbody tr:hover),
     .bearcat-release-groups-table :where(tbody tr:hover),
     .bearcat-release-templates-table :where(tbody tr:hover),
@@ -2187,10 +2632,6 @@ button .bearcat-nav-group-label:hover {
     }
 
     .bearcat-background-tasks-table :where(tbody td),
-    .bearcat-running-uploads-table :where(tbody td),
-    .bearcat-running-downloads-table :where(tbody td),
-    .bearcat-running-remote-downloads-table :where(tbody td),
-    .bearcat-running-archives-table :where(tbody td),
     .bearcat-folder-automations-table :where(tbody td),
     .bearcat-release-groups-table :where(tbody td),
     .bearcat-release-templates-table :where(tbody td),
@@ -2292,101 +2733,6 @@ button .bearcat-nav-group-label:hover {
     .bearcat-background-tasks-table :where(tbody td:nth-child(7) .max-w-md) {
         max-width: 100%;
         white-space: normal;
-        overflow-wrap: anywhere;
-    }
-
-    .bearcat-running-uploads-table :where(tbody tr) {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: start;
-    }
-
-    .bearcat-running-uploads-table :where(tbody td:nth-child(2)) {
-        grid-column: 1;
-        grid-row: 1;
-        color: var(--foreground);
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
-        overflow-wrap: anywhere;
-    }
-
-    .bearcat-running-uploads-table :where(tbody td:nth-child(5)) {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-    }
-
-    .bearcat-running-uploads-table :where(tbody td:nth-child(1)),
-    .bearcat-running-uploads-table :where(tbody td:nth-child(3)),
-    .bearcat-running-uploads-table :where(tbody td:nth-child(4)),
-    .bearcat-running-uploads-table :where(tbody td:nth-child(6)),
-    .bearcat-running-uploads-table :where(tbody td:nth-child(7)) {
-        grid-column: 1 / -1;
-    }
-
-    .bearcat-running-downloads-table :where(tbody tr) {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: start;
-    }
-
-    .bearcat-running-downloads-table :where(tbody td:nth-child(2)) {
-        grid-column: 1;
-        grid-row: 1;
-        color: var(--foreground);
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
-        overflow-wrap: anywhere;
-    }
-
-    .bearcat-running-downloads-table :where(tbody td:nth-child(4)) {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-    }
-
-    .bearcat-running-downloads-table :where(tbody td:nth-child(1)),
-    .bearcat-running-downloads-table :where(tbody td:nth-child(3)),
-    .bearcat-running-downloads-table :where(tbody td:nth-child(5)) {
-        grid-column: 1 / -1;
-    }
-
-    .bearcat-running-remote-downloads-table :where(tbody tr) {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: start;
-    }
-
-    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(1)) {
-        grid-column: 1;
-        grid-row: 1;
-        color: var(--foreground);
-        font-size: 0.9375rem;
-        line-height: 1.35;
-        overflow-wrap: anywhere;
-    }
-
-    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(4)) {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-    }
-
-    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(2)),
-    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(3)),
-    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(5)),
-    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(6)) {
-        grid-column: 1 / -1;
-    }
-
-    .bearcat-running-archives-table :where(tbody tr) {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .bearcat-running-archives-table :where(tbody td:nth-child(2)) {
-        color: var(--foreground);
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
         overflow-wrap: anywhere;
     }
 

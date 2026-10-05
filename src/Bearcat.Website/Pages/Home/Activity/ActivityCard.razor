@@ -1,0 +1,95 @@
+<article class="bearcat-activity-card">
+    <div class="bearcat-activity-card-main">
+        <span class="bearcat-activity-card-icon @(IsActive ? "bearcat-activity-card-icon-active" : null)" aria-hidden="true">
+            <LucideIcon Name="@IconName" class="h-4 w-4" />
+        </span>
+
+        <div class="bearcat-activity-card-body">
+            @if (TitleHref is not null)
+            {
+                <a class="bearcat-activity-card-title bearcat-activity-card-title-link" href="@TitleHref" title="@Title">@Title</a>
+            }
+            else
+            {
+                <p class="bearcat-activity-card-title" title="@Title">@Title</p>
+            }
+
+            @if (Subtitle is not null)
+            {
+                <p class="bearcat-activity-card-subtitle" title="@Subtitle">@Subtitle</p>
+            }
+
+        </div>
+
+        @if (Chips is not null)
+        {
+            <div class="bearcat-activity-card-chips">
+                @Chips
+            </div>
+        }
+
+        @if (Phases is not null)
+        {
+            <div class="bearcat-activity-card-phases">
+                @Phases
+            </div>
+        }
+
+        <div class="bearcat-activity-card-metrics">
+            @if (Snapshot is not null)
+            {
+                <span class="bearcat-activity-card-percentage">@Snapshot.Percentage%</span>
+                var metricsText = GetMetricsText(Snapshot);
+                @if (metricsText is not null)
+                {
+                    <span class="bearcat-activity-card-metrics-text">@metricsText</span>
+                }
+            }
+            else
+            {
+                @StateBadge
+            }
+        </div>
+
+        <div class="bearcat-activity-card-actions">
+            @if (Files is not null)
+            {
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.IconSmall"
+                          AriaLabel="@(isFilesExpanded ? L["HideFiles"] : L["ShowFiles"])"
+                          title="@(isFilesExpanded ? L["HideFiles"] : L["ShowFiles"])"
+                          aria-expanded="@(isFilesExpanded ? "true" : "false")"
+                          OnClick="ToggleFiles">
+                    <LucideIcon Name="chevron-down"
+                                class="@($"bearcat-activity-card-chevron h-4 w-4 {(isFilesExpanded ? "bearcat-activity-card-chevron-expanded" : string.Empty)}")" />
+                </BbButton>
+            }
+
+            @if (OnCancel.HasDelegate)
+            {
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.IconSmall"
+                          Disabled="@(!CanCancel)"
+                          AriaLabel="@CancelLabel"
+                          title="@CancelLabel"
+                          OnClick="@(() => OnCancel.InvokeAsync())">
+                    <LucideIcon Name="ban" class="h-4 w-4" />
+                </BbButton>
+            }
+        </div>
+    </div>
+
+    @if (Snapshot is not null)
+    {
+        <BbProgress Value="Snapshot.Percentage" Class="bearcat-activity-card-progress" />
+    }
+
+    @BelowProgress
+
+    @if (isFilesExpanded && Files is not null)
+    {
+        <div class="bearcat-activity-card-files">
+            @Files
+        </div>
+    }
+</article>

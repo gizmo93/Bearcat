@@ -1,77 +1,85 @@
-@* ReSharper disable once RedundantUsingDirective *@
-@using Bearcat.Website.Pages.Home.RunningArchives
-@* ReSharper disable once RedundantUsingDirective *@
-@using Bearcat.Website.Pages.Home.RunningUploads
-@using Bearcat.Website.Pages.Home.RunningRemoteDownloads
+@using Bearcat.Website.Pages.Home.Archives
+@using Bearcat.Website.Pages.Home.Downloads
+@using Bearcat.Website.Pages.Home.Summary
+@using Bearcat.Website.Pages.Home.Uploads
 @implements IDisposable
 
-<section class="space-y-4">
-    <BbCard Class="border-border/70 shadow-sm">
-        <BbCardHeader Class="space-y-4">
-            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div class="space-y-2">
-                    <div class="flex items-center gap-3">
-                        <BbCardTitle>@L["RunningProcesses"]</BbCardTitle>
-                        @if (autoRefresh)
-                        {
-                            <BbBadge Variant="BadgeVariant.Secondary">@L["AutoRefresh"]</BbBadge>
-                        }
-                    </div>
-                </div>
+<section class="space-y-6">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-1">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Activity"]</h1>
+            <p class="bearcat-activity-status">
+                <span class="bearcat-activity-status-dot @(autoRefresh ? "bearcat-activity-status-dot-live" : null)" aria-hidden="true"></span>
+                <span>@StatusText</span>
+                @if (!autoRefresh)
+                {
+                    <span>· @L["AutoRefreshPaused"]</span>
+                }
+            </p>
+        </div>
 
-                <div class="flex items-center gap-2">
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Icon"
-                              Disabled="refreshInProgress"
-                              AriaLabel="@L["Refresh"]"
-                              OnClick="@(LoadDataAsync)">
-                        <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(refreshInProgress ? "animate-spin" : string.Empty)}")" />
-                    </BbButton>
+        <div class="bearcat-page-action flex items-center gap-2">
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Icon"
+                      Disabled="refreshInProgress"
+                      AriaLabel="@L["Refresh"]"
+                      title="@L["Refresh"]"
+                      OnClick="@(LoadDataAsync)">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(refreshInProgress ? "animate-spin" : string.Empty)}")" />
+            </BbButton>
 
-                    <BbButton Variant="ButtonVariant.Ghost"
-                              Size="ButtonSize.Small"
-                              Disabled="refreshInProgress"
-                              OnClick="@(ToggleAutoRefresh)">
-                        <LucideIcon Name="@(autoRefresh ? "pause" : "play")" class="h-4 w-4" />
-                        @(autoRefresh ? L["PauseRefresh"] : L["EnableRefresh"])
-                    </BbButton>
-                </div>
-            </div>
-        </BbCardHeader>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.Small"
+                      Disabled="refreshInProgress"
+                      OnClick="@(ToggleAutoRefresh)">
+                <LucideIcon Name="@(autoRefresh ? "pause" : "play")" class="h-4 w-4" />
+                @(autoRefresh ? L["PauseRefresh"] : L["EnableRefresh"])
+            </BbButton>
+        </div>
+    </div>
 
-        <BbCardContent>
-            @if (SomethingIsRunning)
-            {
-                <div class="space-y-6">
-                    @if (runningUploads.Count > 0 || restoringArchives.Count > 0)
-                    {
-                        <RunningUploads Uploads="runningUploads"
-                                        UploadProgress="uploadProgress"
-                                        RestoringArchives="restoringArchives"
-                                        DownloadProgress="downloadProgress"
-                                        OnUploadCanceled="LoadDataAsync" />
-                    }
+    @if (SomethingIsRunning)
+    {
+        <ActivitySummary UploadBytesPerSecond="TotalUploadBytesPerSecond"
+                         DownloadBytesPerSecond="TotalDownloadBytesPerSecond"
+                         UploadSpeedHistory="uploadSpeedHistory"
+                         DownloadSpeedHistory="downloadSpeedHistory"
+                         RunningArchives="archivesInCreationOrHashChange"
+                         ArchiveProgress="archiveCreationOrHashChangeProgress"
+                         QueuedUploadCount="QueuedUploadCount" />
 
-                    @if (remoteDownloads.Count > 0)
-                    {
-                        <RunningRemoteDownloads Downloads="remoteDownloads"
-                                                DownloadProgress="remoteDownloadProgress"
-                                                OnDownloadCanceled="LoadDataAsync" />
-                    }
+        @if (runningUploads.Count > 0)
+        {
+            <UploadLane Uploads="runningUploads"
+                        UploadProgress="uploadProgress"
+                        OnUploadCanceled="LoadDataAsync" />
+        }
 
-                    @if (archivesInCreationOrHashChange.Count > 0)
-                    {
-                        <RunningArchives Archives="archivesInCreationOrHashChange"
-                                         ArchiveProgress="archiveCreationOrHashChangeProgress" />
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-200">
-                    @L["CurrentlyNothingRunning"]
-                </div>
-            }
-        </BbCardContent>
-    </BbCard>
+        @if (restoringArchives.Count > 0 || remoteDownloads.Count > 0)
+        {
+            <DownloadLane RestoringArchives="restoringArchives"
+                          MirrorDownloadProgress="downloadProgress"
+                          RemoteDownloads="remoteDownloads"
+                          RemoteDownloadProgress="remoteDownloadProgress"
+                          OnRemoteDownloadCanceled="LoadDataAsync" />
+        }
+
+        @if (archivesInCreationOrHashChange.Count > 0)
+        {
+            <ArchiveLane Archives="archivesInCreationOrHashChange"
+                         ArchiveProgress="archiveCreationOrHashChangeProgress" />
+        }
+    }
+    else
+    {
+        <BbEmpty Title="@L["AllQuiet"]"
+                 Description="@L["NoUploadsDownloadsOrArchivesRunning"]"
+                 Class="bearcat-activity-empty">
+            <Icon>
+                <span class="bearcat-activity-empty-icon">
+                    <LucideIcon Name="moon" class="h-7 w-7" />
+                </span>
+            </Icon>
+        </BbEmpty>
+    }
 </section>

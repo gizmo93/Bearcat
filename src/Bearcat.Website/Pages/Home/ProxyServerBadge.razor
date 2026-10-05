@@ -1,9 +1,0 @@
-@if (ProxyServerNames.Count > 0)
-{
-    <BbBadge Variant="BadgeVariant.Outline"
-             Class="max-w-full font-normal text-muted-foreground"
-             title="@L["TransferRunsViaProxyServer", JoinedProxyServerNames]">
-        <LucideIcon Name="network" class="mr-1 h-3 w-3 shrink-0" />
-        <span class="truncate">@L["ViaProxyServer", JoinedProxyServerNames]</span>
-    </BbBadge>
-}

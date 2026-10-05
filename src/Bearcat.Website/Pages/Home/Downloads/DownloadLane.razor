@@ -1,0 +1,66 @@
+@using Bearcat.Website.Pages.Home.Activity
+
+<section class="bearcat-activity-lane" aria-label="@L["Downloads"]">
+    <ActivityLaneHeading IconName="download" Label="@L["Downloads"]" Count="@(RestoringArchives.Count + RemoteDownloads.Count)" />
+
+    @foreach (var archive in RestoringArchives)
+    {
+        var snapshot = MirrorDownloadProgress.GetValueOrDefault(archive.ArchiveId);
+        RenderFragment? files = snapshot is null ? null : @<TransferFileList Snapshot="snapshot" />;
+        <ActivityCard @key="@($"mirror-{archive.ArchiveId}")"
+                      IconName="download"
+                      IsActive="@(snapshot is not null)"
+                      Title="@archive.ReleaseName"
+                      TitleHref="@($"/releases/{archive.ReleaseId}")"
+                      Snapshot="snapshot"
+                      Files="files"
+                      CancelLabel="@L["CancelDownload"]"
+                      OnCancel="@(() => CancelMirrorDownloadAsync(archive))">
+            <Chips>
+                <ActivityChip IconName="sliders-horizontal" Text="@archive.ArchiveConfigName" />
+                @if (snapshot is { SourceName.Length: > 0 })
+                {
+                    <ActivityChip IconName="server" Text="@snapshot.SourceName" />
+                }
+                <ProxyServerChip ProxyServerNames="@(snapshot?.ProxyServerNames ?? [])" />
+            </Chips>
+            <StateBadge>
+                <ArchiveStateBadge State="archive.ArchiveState" />
+            </StateBadge>
+        </ActivityCard>
+    }
+
+    @foreach (var download in RemoteDownloads)
+    {
+        var snapshot = RemoteDownloadProgress.GetValueOrDefault(download.Id);
+        RenderFragment? files = snapshot is null ? null : @<TransferFileList Snapshot="snapshot" />;
+        RenderFragment? phases = snapshot is null
+            ? null
+            : @<TransferPhaseSteps Phases="RemoteDownloadPhases"
+                                   CurrentPhase="snapshot.Identifier.Type"
+                                   AriaLabel="@L["RemoteDownloadPhases"]" />;
+        <ActivityCard @key="@($"remote-{download.Id}")"
+                      IconName="cloud-download"
+                      IsActive="@(snapshot is not null)"
+                      Title="@download.FolderName"
+                      TitleHref="@(download.ReleaseId is { } releaseId ? $"/releases/{releaseId}" : null)"
+                      Subtitle="@download.RemoteFolderPath"
+                      Snapshot="snapshot"
+                      Phases="phases"
+                      Files="files"
+                      CancelLabel="@L["CancelDownload"]"
+                      OnCancel="@GetRemoteDownloadCancelCallback(download)">
+            <Chips>
+                <ActivityChip IconName="server" Text="@download.SourceName" />
+                @if (download.AutomationName is not null)
+                {
+                    <ActivityChip IconName="workflow" Text="@download.AutomationName" />
+                }
+                <ProxyServerChip ProxyServerNames="@(snapshot?.ProxyServerNames ?? [])" />
+            </Chips>
+            <StateBadge>
+                <RemoteSourceDownloadStateBadge State="download.State" />
+            </StateBadge>
+        </ActivityCard>
+    }
+</section>
