@@ -1,0 +1,38 @@
+@using Bearcat.Website.Pages.Home.Activity
+
+<div class="bearcat-activity-file-list">
+    @foreach (var part in Parts)
+    {
+        <ActivityFileRow @key="part.FileName"
+                         FileName="@part.FileName"
+                         Percentage="GetPercentage(part)"
+                         ProxyServerName="@(IsProxyServerShownPerFile ? part.Progress?.ProxyServerName : null)"
+                         ProgressIndicatorClass="@GetProgressIndicatorClass(part.State)">
+            <Status>
+                @switch (part.State)
+                {
+                    case UploadPartState.Online:
+                        <span class="bearcat-activity-file-status-icon-text">
+                            <LucideIcon Name="circle-check" class="h-3.5 w-3.5" />
+                            @L.Localize(part.OnlineState!.Value)
+                        </span>
+                        break;
+                    case UploadPartState.Offline:
+                        <span class="bearcat-activity-file-status-icon-text text-destructive">
+                            <LucideIcon Name="circle-x" class="h-3.5 w-3.5" />
+                            @L.Localize(part.OnlineState!.Value)
+                        </span>
+                        break;
+                    case UploadPartState.Uploading:
+                        <span class="tabular-nums text-foreground">@part.Progress!.Percentage%</span>
+                        break;
+                    case UploadPartState.Pending:
+                        <span>@L["Pending"]</span>
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(part.State), part.State, null);
+                }
+            </Status>
+        </ActivityFileRow>
+    }
+</div>

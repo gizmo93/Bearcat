@@ -1,0 +1,13 @@
+<div class="bearcat-activity-file-row">
+    <div class="bearcat-activity-file-name">
+        <span class="truncate" title="@FileName">@FileName</span>
+        @if (ProxyServerName is not null)
+        {
+            <ProxyServerChip ProxyServerNames="[ProxyServerName]" />
+        }
+    </div>
+    <BbProgress Value="Percentage" Class="bearcat-activity-file-progress" IndicatorClass="@ProgressIndicatorClass" />
+    <div class="bearcat-activity-file-status">
+        @Status
+    </div>
+</div>

@@ -1,0 +1,11 @@
+@if (Points is not null)
+{
+    <svg class="bearcat-activity-sparkline"
+         viewBox="@($"0 0 {SparklinePointsBuilder.Width} {SparklinePointsBuilder.Height}")"
+         preserveAspectRatio="none"
+         aria-hidden="true"
+         focusable="false">
+        <polygon class="bearcat-activity-sparkline-area" points="@Points.AreaPoints" />
+        <polyline class="bearcat-activity-sparkline-line" points="@Points.LinePoints" vector-effect="non-scaling-stroke" />
+    </svg>
+}

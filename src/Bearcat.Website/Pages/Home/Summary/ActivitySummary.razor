@@ -1,0 +1,20 @@
+@using Bearcat.Website.Formatting
+
+<div class="bearcat-activity-summary">
+    <ActivitySummaryTile IconName="upload"
+                         Label="@L["UploadSpeed"]"
+                         Value="@TransferFormatting.FormatSpeed(UploadBytesPerSecond)"
+                         SpeedHistory="UploadSpeedHistory" />
+    <ActivitySummaryTile IconName="download"
+                         Label="@L["DownloadSpeed"]"
+                         Value="@TransferFormatting.FormatSpeed(DownloadBytesPerSecond)"
+                         SpeedHistory="DownloadSpeedHistory" />
+    <ActivitySummaryTile IconName="file-archive"
+                         Label="@L["Archives"]"
+                         Value="@(RunningArchives.Count == 0 ? null : RunningArchives.Count.ToString(CultureInfo.CurrentCulture))"
+                         SubLabel="@ArchiveSubLabel" />
+    <ActivitySummaryTile IconName="hourglass"
+                         Label="@L["Queued"]"
+                         Value="@(QueuedUploadCount == 0 ? null : QueuedUploadCount.ToString(CultureInfo.CurrentCulture))"
+                         SubLabel="@(QueuedUploadCount == 1 ? L["UploadWaiting"] : L["UploadsWaiting"])" />
+</div>

@@ -89,8 +89,8 @@ upload to these hosters.
 
 ## Cancel a running download
 
-Running mirror downloads show up on the start page under "Running transfers", with progress, speed
-and a per file breakdown. Each row has a cancel button.
+Running mirror downloads show up on the **Activity** page (the start page) under "Downloads", with
+progress, speed, remaining time and a per file breakdown. Each card has a cancel button.
 
 Canceling discards the partial download and cancels the uploads that were waiting for that archive,
 so they do not start over on the next run. The archive goes back to the state it had before, and

@@ -1,0 +1,28 @@
+<div class="bearcat-activity-queue">
+    <p class="bearcat-activity-queue-heading">
+        <LucideIcon Name="hourglass" class="h-3.5 w-3.5" />
+        <span>@L["Queued"]</span>
+        <span class="bearcat-overview-count-pill">@Uploads.Count</span>
+    </p>
+
+    <ul class="bearcat-activity-queue-list">
+        @foreach (var upload in Uploads)
+        {
+            <li @key="upload.UploadId" class="bearcat-activity-queue-row">
+                <a class="bearcat-activity-queue-release" href="@($"/releases/{upload.ReleaseId}")" title="@upload.ReleaseName">
+                    @upload.ReleaseName
+                </a>
+                <span class="bearcat-activity-queue-target" title="@($"{upload.HosterRegistrationName} · {upload.UploadConfigName}")">
+                    @upload.HosterRegistrationName · @upload.UploadConfigName
+                </span>
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.IconSmall"
+                          AriaLabel="@L["CancelUpload"]"
+                          title="@L["CancelUpload"]"
+                          OnClick="@(() => OnCancel.InvokeAsync(upload))">
+                    <LucideIcon Name="ban" class="h-4 w-4" />
+                </BbButton>
+            </li>
+        }
+    </ul>
+</div>

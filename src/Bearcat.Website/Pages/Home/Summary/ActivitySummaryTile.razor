@@ -1,0 +1,22 @@
+<div class="bearcat-activity-summary-tile">
+    <p class="bearcat-activity-summary-label">
+        <LucideIcon Name="@IconName" class="h-3.5 w-3.5 shrink-0" />
+        <span class="truncate">@Label</span>
+    </p>
+    @if (Value is null)
+    {
+        <p class="bearcat-activity-summary-value text-muted-foreground">-</p>
+    }
+    else
+    {
+        <p class="bearcat-activity-summary-value">@Value</p>
+    }
+    @if (SubLabel is not null)
+    {
+        <p class="bearcat-activity-summary-sub-label" title="@SubLabel">@SubLabel</p>
+    }
+    @if (SpeedHistory is not null)
+    {
+        <SpeedSparkline History="SpeedHistory" />
+    }
+</div>

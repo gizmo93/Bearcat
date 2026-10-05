@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 
-namespace Bearcat.Website.Pages.Home;
+namespace Bearcat.Website.Pages.Home.Activity;
 
-public partial class ProxyServerBadge : ComponentBase
+public partial class ProxyServerChip : ComponentBase
 {
     [Parameter]
     [EditorRequired]

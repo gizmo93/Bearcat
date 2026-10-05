@@ -1,0 +1,44 @@
+@using Bearcat.Website.Pages.Home.Activity
+
+<section class="bearcat-activity-lane" aria-label="@L["Uploads"]">
+    <ActivityLaneHeading IconName="upload" Label="@L["Uploads"]" Count="Uploads.Count" />
+
+    @foreach (var upload in ActiveUploads)
+    {
+        var snapshot = UploadProgress.GetValueOrDefault(upload.UploadId);
+        var parts = UploadPartListBuilder.Build(upload.ArchiveFiles, snapshot);
+        <ActivityCard @key="upload.UploadId"
+                      IconName="upload"
+                      IsActive="@(snapshot is not null)"
+                      Title="@upload.ReleaseName"
+                      TitleHref="@($"/releases/{upload.ReleaseId}")"
+                      Snapshot="snapshot"
+                      CancelLabel="@L["CancelUpload"]"
+                      CanCancel="@CanCancelUpload(upload)"
+                      OnCancel="@(() => CancelUploadAsync(upload))">
+            <Chips>
+                <ActivityChip IconName="server" Text="@upload.HosterRegistrationName" />
+                <ActivityChip IconName="sliders-horizontal" Text="@upload.UploadConfigName" />
+                <ProxyServerChip ProxyServerNames="@(snapshot?.ProxyServerNames ?? [])" />
+                @if (snapshot is not null && upload.UploadState is not UploadState.Uploading)
+                {
+                    <UploadStateBadge State="upload.UploadState" />
+                }
+            </Chips>
+            <StateBadge>
+                <UploadStateBadge State="upload.UploadState" />
+            </StateBadge>
+            <BelowProgress>
+                <UploadPartSegments Parts="parts" Snapshot="snapshot" />
+            </BelowProgress>
+            <Files>
+                <UploadFileList Parts="parts" Snapshot="snapshot" />
+            </Files>
+        </ActivityCard>
+    }
+
+    @if (QueuedUploads.Count > 0)
+    {
+        <QueuedUploadList Uploads="QueuedUploads" OnCancel="CancelUploadAsync" />
+    }
+</section>

@@ -1,0 +1,14 @@
+<div class="bearcat-activity-file-list">
+    @foreach (var file in Snapshot.Files)
+    {
+        <ActivityFileRow @key="file.FileId"
+                         FileName="@file.FileName"
+                         Percentage="file.Percentage"
+                         ProxyServerName="@(IsProxyServerShownPerFile ? file.ProxyServerName : null)"
+                         ProgressIndicatorClass="@(IsFileDone(file) ? "bearcat-activity-file-progress-done" : null)">
+            <Status>
+                <span class="tabular-nums">@FormatFileStatus(file)</span>
+            </Status>
+        </ActivityFileRow>
+    }
+</div>

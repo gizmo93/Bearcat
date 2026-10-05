@@ -107,8 +107,8 @@ After every download, Bearcat looks for `.sfv` files in the release folder and i
 compares the CRC32 checksum of each listed file. If a listed file is missing or its checksum does not
 match, the download fails and the files stay on disk.
 
-Running downloads also appear on the start page under **Running transfers**, with progress, speed,
-and file details. The release detail page records which remote source it came from.
+Running downloads also appear on the **Activity** page (the start page) under **Downloads**, with
+progress, speed, remaining time, the current phase (download, verify, extract) and file details. The release detail page records which remote source it came from.
 
 ![running-remote-download.png](images/running-remote-download.png)
 

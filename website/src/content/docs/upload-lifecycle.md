@@ -133,8 +133,8 @@ For reuploads, Bearcat may need to change the archive hashes or repack the files
 
 ### Cancel a running archive creation
 
-Running archive creations show up on the start page under "Running archives". Each row has a
-cancel button. It covers packing, creating the MD5 hashes, and changing the MD5 hashes of a
+Running archive creations show up on the **Activity** page (the start page) under "Archives". Each
+card has a cancel button. It covers packing, creating the MD5 hashes, and changing the MD5 hashes of a
 reused archive.
 
 - **New archive:** Bearcat deletes the archive and its files.
