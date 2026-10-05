@@ -1,0 +1,21 @@
+@using Bearcat.Website.Pages.ManageReleases.Results
+
+<BbToggleGroup TValue="ReleaseSearchResultView"
+               Value="Value"
+               ValueChanged="SelectAsync"
+               Required="true"
+               Variant="ToggleVariant.Outline"
+               Size="ToggleSize.Small"
+               Class="bearcat-release-view-toggle"
+               aria-label="@L["ResultView"]">
+    <BbToggleGroupItem Value="ReleaseSearchResultView.List"
+                       aria-label="@L["ListView"]"
+                       title="@L["ListView"]">
+        <LucideIcon Name="list" class="h-4 w-4" />
+    </BbToggleGroupItem>
+    <BbToggleGroupItem Value="ReleaseSearchResultView.Covers"
+                       aria-label="@L["CoverView"]"
+                       title="@L["CoverView"]">
+        <LucideIcon Name="layout-grid" class="h-4 w-4" />
+    </BbToggleGroupItem>
+</BbToggleGroup>

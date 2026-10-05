@@ -1,0 +1,126 @@
+@using Bearcat.Website.Formatting
+
+<BbSheet Side="SheetSide.Right" Open="Open" OpenChanged="OpenChanged">
+    <BbSheetContent Class="bearcat-release-quick-look"
+                    InitialFocus="FocusTrapInitialFocus.Container"
+                    data-release-quick-look="true">
+        @if (Release is not null)
+        {
+            <div class="bearcat-release-quick-look-body">
+                <BbSheetHeader Class="bearcat-release-quick-look-header">
+                    <div class="bearcat-release-quick-look-cover">
+                        <ReleaseCoverImage Release="Release" />
+                    </div>
+                    <div class="min-w-0 flex-1 space-y-1">
+                        <div class="flex items-start gap-1">
+                            <BbSheetTitle Class="min-w-0 flex-1 text-base leading-snug [overflow-wrap:anywhere]">
+                                @Release.Name
+                            </BbSheetTitle>
+                            <CopyButton Value="@Release.Name" Label="@L["CopyReleaseName"]" Variant="ButtonVariant.Ghost" Class="-mt-1 shrink-0" />
+                        </div>
+                        @if (SubtitleText is not null)
+                        {
+                            <BbSheetDescription>@SubtitleText</BbSheetDescription>
+                        }
+                    </div>
+                </BbSheetHeader>
+
+                @if (HasTags)
+                {
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <ReleaseTags Release="Release" />
+                    </div>
+                }
+
+                <section class="space-y-2">
+                    <h3 class="bearcat-release-quick-look-section-title">@L["Mirrors"]</h3>
+                    @if (Release.UploadConfigs.Count == 0)
+                    {
+                        <p class="text-sm text-muted-foreground">@L["NoUploads"]</p>
+                    }
+                    else
+                    {
+                        <ul class="divide-y divide-border rounded-lg border border-border">
+                            @foreach (var uploadConfig in Release.UploadConfigs)
+                            {
+                                <li class="flex items-center gap-2.5 px-3 py-2 text-sm">
+                                    <span class="@GetStatusDotClass(uploadConfig)" aria-hidden="true"></span>
+                                    <span class="min-w-0 flex-1 truncate">@uploadConfig.HosterRegistrationName</span>
+                                    <span class="@GetStateTextClass(uploadConfig)">@L.Localize(GetOnlineState(uploadConfig))</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                <section class="space-y-2">
+                    <h3 class="bearcat-release-quick-look-section-title">@L["Details"]</h3>
+                    <dl class="bearcat-release-quick-look-details">
+                        <dt>@L["ReleaseContentType"]</dt>
+                        <dd>
+                            <span class="inline-flex items-center gap-1.5">
+                                <LucideIcon Name="@ContentTypeIconName" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                @L.Localize(Release.ReleaseContentType)
+                            </span>
+                        </dd>
+
+                        <dt>@L["ReleaseType"]</dt>
+                        <dd>@L.Localize(Release.ReleaseType)</dd>
+
+                        <dt>@L["ReleaseGroup"]</dt>
+                        <dd>@Release.ReleaseGroupName</dd>
+
+                        <dt>@L["Language"]</dt>
+                        <dd>@LanguageText</dd>
+
+                        @if (Release.ReleaseFolderPath is { } releaseFolderPath)
+                        {
+                            <dt>@L["Folder"]</dt>
+                            <dd class="flex items-start gap-1">
+                                <span class="min-w-0 flex-1 font-mono text-xs leading-5 [overflow-wrap:anywhere]">@releaseFolderPath</span>
+                                <CopyButton Value="@releaseFolderPath" Label="@L["CopyFolderPath"]" Variant="ButtonVariant.Ghost" Class="-my-1 shrink-0" />
+                            </dd>
+                        }
+
+                        <dt>@L["Added"]</dt>
+                        <dd>
+                            @if (Release.CreatedAt is { } createdAt)
+                            {
+                                <span>@timeProvider.Humanize(createdAt)</span>
+                                <span class="text-muted-foreground"> · @createdAt.ToString("g")</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </dd>
+
+                        <dt>@L["Posted"]</dt>
+                        <dd>
+                            @if (Release.UploadsPostedAt is { } uploadsPostedAt)
+                            {
+                                <span>@timeProvider.Humanize(uploadsPostedAt)</span>
+                                <span class="text-muted-foreground"> · @uploadsPostedAt.ToString("g")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted-foreground">@L["NotPosted"]</span>
+                            }
+                        </dd>
+                    </dl>
+                </section>
+            </div>
+
+            <BbSheetFooter Class="bearcat-release-quick-look-footer">
+                <BbButton Variant="ButtonVariant.Outline" OnClick="EditAsync">
+                    <LucideIcon Name="pencil" class="h-4 w-4" />
+                    @L["Edit"]
+                </BbButton>
+                <BbButton Href="@($"/releases/{Release.ReleaseId}")">
+                    <LucideIcon Name="arrow-up-right" class="h-4 w-4" />
+                    @L["OpenRelease"]
+                </BbButton>
+            </BbSheetFooter>
+        }
+    </BbSheetContent>
+</BbSheet>

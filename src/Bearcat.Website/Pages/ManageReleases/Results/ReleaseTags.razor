@@ -1,0 +1,27 @@
+@if (Release.Resolution is { } resolution)
+{
+    <span class="@MutedTagClass">@L.Localize(resolution)</span>
+}
+@if (Release.Source is { } source)
+{
+    <span class="@MutedTagClass">@L.Localize(source)</span>
+}
+@if (ShowReleaseGroup)
+{
+    <span class="@MutedTagClass">@Release.ReleaseGroupName</span>
+}
+@if (Release.ReleaseType == ReleaseType.Unmanaged)
+{
+    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+        <BbTooltipTrigger Class="inline-flex">
+            <span class="@OutlineTagClass">@L.Localize(Release.ReleaseType)</span>
+        </BbTooltipTrigger>
+        <BbTooltipContent Class="max-w-xs text-xs">
+            @L.LocalizeDescription(Release.ReleaseType)
+        </BbTooltipContent>
+    </BbTooltip>
+}
+@if (Release.IsReadyForPostQueue)
+{
+    <span class="@PrimaryTagClass">@L["ReadyToPost"]</span>
+}

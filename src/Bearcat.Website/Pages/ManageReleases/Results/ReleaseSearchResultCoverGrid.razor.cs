@@ -3,12 +3,9 @@ using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases.Results;
 
-public partial class ReleaseSearchResultList : ComponentBase
+public partial class ReleaseSearchResultCoverGrid : ComponentBase
 {
-    public const string GridColumnsClass =
-        "grid-cols-[1.75rem_minmax(0,1fr)_auto] xl:grid-cols-[1.75rem_minmax(0,1fr)_8rem_7rem_3.5rem_6rem_6.75rem]";
-
-    private const int SkeletonRowCount = 8;
+    private const int SkeletonCardCount = 12;
 
     [Parameter]
     public IReadOnlyList<ReleaseSearchResultReadModel>? Releases { get; set; }
@@ -38,37 +35,12 @@ public partial class ReleaseSearchResultList : ComponentBase
     [Parameter]
     public EventCallback<ReleaseSearchResultReadModel> OnQuickLook { get; set; }
 
-    [Parameter]
-    public EventCallback<ReleaseSearchResultReadModel> OnEditRelease { get; set; }
-
-    [Parameter]
-    public EventCallback<ReleaseSearchResultReadModel> OnDeleteRelease { get; set; }
-
     private IReadOnlyList<int> VisibleReleaseIds =>
         Releases?.Select(release => release.ReleaseId).ToList() ?? [];
-
-    private bool AreAllVisibleReleasesSelected => Selection.AreAllSelected(VisibleReleaseIds);
-
-    private bool AreSomeVisibleReleasesSelected =>
-        Selection.AreSomeButNotAllSelected(VisibleReleaseIds);
 
     private async Task ToggleReleaseAsync(int releaseId, bool extendRange)
     {
         Selection.Toggle(VisibleReleaseIds, releaseId, extendRange);
-        await OnSelectionChanged.InvokeAsync();
-    }
-
-    private async Task ToggleAllVisibleReleasesAsync()
-    {
-        if (AreAllVisibleReleasesSelected)
-        {
-            Selection.Clear();
-        }
-        else
-        {
-            Selection.SelectAll(VisibleReleaseIds);
-        }
-
         await OnSelectionChanged.InvokeAsync();
     }
 }

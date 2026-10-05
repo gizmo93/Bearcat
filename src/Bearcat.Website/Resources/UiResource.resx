@@ -1651,4 +1651,18 @@
   <data name="SelectAllOnPage" xml:space="preserve"><value>Select all on page</value></data>
   <data name="SelectRelease" xml:space="preserve"><value>Select {0}</value></data>
   <data name="CopyReleaseName" xml:space="preserve"><value>Copy release name</value></data>
+  <data name="QuickLook" xml:space="preserve"><value>Quick look</value></data>
+  <data name="QuickLookFor" xml:space="preserve"><value>Quick look: {0}</value></data>
+  <data name="Posted" xml:space="preserve"><value>Posted</value></data>
+  <data name="NotPosted" xml:space="preserve"><value>Not posted</value></data>
+  <data name="ResultView" xml:space="preserve"><value>Result view</value></data>
+  <data name="ListView" xml:space="preserve"><value>List view</value></data>
+  <data name="CoverView" xml:space="preserve"><value>Cover view</value></data>
+  <data name="KeyboardHintSearch" xml:space="preserve"><value>search</value></data>
+  <data name="KeyboardHintMove" xml:space="preserve"><value>move</value></data>
+  <data name="KeyboardHintSelect" xml:space="preserve"><value>select</value></data>
+  <data name="KeyboardHintQuickLook" xml:space="preserve"><value>quick look</value></data>
+  <data name="KeyboardHintOpen" xml:space="preserve"><value>open</value></data>
+  <data name="KeySpace" xml:space="preserve"><value>Space</value></data>
+  <data name="KeyEnter" xml:space="preserve"><value>Enter</value></data>
 </root>

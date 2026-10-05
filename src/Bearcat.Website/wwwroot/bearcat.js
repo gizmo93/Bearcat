@@ -425,12 +425,48 @@ const saveShortcut = (() => {
     return { attach };
 })();
 
-const selectionEscapeKey = (() => {
-    const openOverlaySelector = "[role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox']";
+const releaseSearchKeyboard = (() => {
+    const quickLookSelector = "[data-release-quick-look]";
+    const openOverlaySelector =
+        "[role='dialog']:not([data-release-quick-look]), [role='alertdialog'], [role='menu'], [role='listbox']";
+    const interactiveElementSelector =
+        "a, button, [role='button'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='combobox'], summary";
+    const comboboxSelector = "[role='combobox']";
+    const handledKeys = new Set(["j", "k", "ArrowDown", "ArrowUp", "x", "Space", "Enter", "Escape"]);
+    const quickLookKeys = new Set(["j", "k", "ArrowDown", "ArrowUp", "Space", "Escape"]);
+
+    function getKeyName(event) {
+        if (event.key === " ") {
+            return "Space";
+        }
+
+        return event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    }
+
+    function isTargetHandlingKey(key, target) {
+        if (!(target instanceof Element)) {
+            return false;
+        }
+
+        if (key === "Space" || key === "Enter") {
+            return target.closest(interactiveElementSelector) !== null;
+        }
+
+        if (key === "ArrowDown" || key === "ArrowUp") {
+            return target.closest(comboboxSelector) !== null;
+        }
+
+        return false;
+    }
 
     function attach(dotNetReference) {
         const onKeyDown = event => {
-            if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) {
+            if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) {
+                return;
+            }
+
+            const key = getKeyName(event);
+            if (!handledKeys.has(key)) {
                 return;
             }
 
@@ -438,7 +474,22 @@ const selectionEscapeKey = (() => {
                 return;
             }
 
-            dotNetReference.invokeMethodAsync("ClearSelectionFromEscapeKeyAsync").catch(() => {});
+            const isQuickLookOpen = document.querySelector(quickLookSelector) !== null;
+            if (isQuickLookOpen && (key === "Escape" || !quickLookKeys.has(key))) {
+                return;
+            }
+
+            if (isTargetHandlingKey(key, event.target)) {
+                return;
+            }
+
+            if (key !== "Escape") {
+                event.preventDefault();
+            }
+
+            dotNetReference
+                .invokeMethodAsync("HandleKeyboardShortcut", key, event.shiftKey)
+                .catch(() => {});
         };
 
         document.addEventListener("keydown", onKeyDown, true);
@@ -448,7 +499,13 @@ const selectionEscapeKey = (() => {
         };
     }
 
-    return { attach };
+    function scrollReleaseIntoView(releaseId) {
+        document
+            .querySelector(`[data-release-id="${releaseId}"]`)
+            ?.scrollIntoView({ block: "nearest" });
+    }
+
+    return { attach, scrollReleaseIntoView };
 })();
 
 const logView = (() => {
@@ -610,7 +667,7 @@ window.bearcat = {
     updateScrollAwareHeader,
     lineNumberedTextarea,
     saveShortcut,
-    selectionEscapeKey,
+    releaseSearchKeyboard,
     logView,
     releaseStickyHeader,
     configurationSectionSpy,

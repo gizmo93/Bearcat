@@ -4,19 +4,14 @@ using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleases.Results;
 
 public partial class ReleaseBulkActionBar(
     IScopedOperationRunner operationRunner,
-    ToastService toastService,
-    IJSRuntime jsRuntime
-) : ComponentBase, IAsyncDisposable
+    ToastService toastService
+) : ComponentBase
 {
-    private DotNetObjectReference<ReleaseBulkActionBar>? dotNetReference;
-    private IJSObjectReference? escapeKeyHandle;
-
     [Parameter]
     [EditorRequired]
     public ReleaseSelection Selection { get; set; } = null!;
@@ -40,36 +35,6 @@ public partial class ReleaseBulkActionBar(
 
     private IReadOnlyList<SelectOption<string>> PrimaryLanguageOptions =>
         PrimaryLanguageSelectOptions.Create(L["NotSet"]);
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        dotNetReference = DotNetObjectReference.Create(this);
-
-        try
-        {
-            escapeKeyHandle = await jsRuntime.InvokeAsync<IJSObjectReference>(
-                "bearcat.selectionEscapeKey.attach",
-                dotNetReference
-            );
-        }
-        catch (JSDisconnectedException) { }
-    }
-
-    [JSInvokable]
-    public async Task ClearSelectionFromEscapeKeyAsync()
-    {
-        if (Selection.Count == 0)
-        {
-            return;
-        }
-
-        await ClearSelectionAsync();
-    }
 
     private async Task SelectAllOnPageAsync()
     {
@@ -108,22 +73,5 @@ public partial class ReleaseBulkActionBar(
         toastService.Success(L["PrimaryLanguageChangedForReleases", releaseIds.Count]);
         Selection.Clear();
         await OnReleasesUpdated.InvokeAsync();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        if (escapeKeyHandle is not null)
-        {
-            try
-            {
-                await escapeKeyHandle.InvokeVoidAsync("detach");
-                await escapeKeyHandle.DisposeAsync();
-            }
-            catch (JSDisconnectedException) { }
-        }
-
-        dotNetReference?.Dispose();
     }
 }

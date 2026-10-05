@@ -1654,4 +1654,18 @@
   <data name="SelectAllOnPage" xml:space="preserve"><value>Alle auf der Seite auswählen</value></data>
   <data name="SelectRelease" xml:space="preserve"><value>{0} auswählen</value></data>
   <data name="CopyReleaseName" xml:space="preserve"><value>Releasenamen kopieren</value></data>
+  <data name="QuickLook" xml:space="preserve"><value>Schnellansicht</value></data>
+  <data name="QuickLookFor" xml:space="preserve"><value>Schnellansicht: {0}</value></data>
+  <data name="Posted" xml:space="preserve"><value>Gepostet</value></data>
+  <data name="NotPosted" xml:space="preserve"><value>Nicht gepostet</value></data>
+  <data name="ResultView" xml:space="preserve"><value>Ergebnisansicht</value></data>
+  <data name="ListView" xml:space="preserve"><value>Listenansicht</value></data>
+  <data name="CoverView" xml:space="preserve"><value>Coveransicht</value></data>
+  <data name="KeyboardHintSearch" xml:space="preserve"><value>suchen</value></data>
+  <data name="KeyboardHintMove" xml:space="preserve"><value>bewegen</value></data>
+  <data name="KeyboardHintSelect" xml:space="preserve"><value>auswählen</value></data>
+  <data name="KeyboardHintQuickLook" xml:space="preserve"><value>Schnellansicht</value></data>
+  <data name="KeyboardHintOpen" xml:space="preserve"><value>öffnen</value></data>
+  <data name="KeySpace" xml:space="preserve"><value>Leertaste</value></data>
+  <data name="KeyEnter" xml:space="preserve"><value>Enter</value></data>
 </root>

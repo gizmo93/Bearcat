@@ -13,14 +13,15 @@ public partial class ReleaseUploadConfigOnlineBars : ComponentBase
     [EditorRequired]
     public IReadOnlyList<ReleaseSearchResultUploadConfigReadModel> UploadConfigs { get; set; } = [];
 
-    private int OnlineCount => UploadConfigs.Count(uploadConfig => uploadConfig.IsOnline);
+    private ReleaseMirrorOnlineCount MirrorOnlineCount =>
+        ReleaseMirrorOnlineCount.From(UploadConfigs);
 
     private string CountClass =>
-        OnlineCount == UploadConfigs.Count
+        MirrorOnlineCount.AreAllOnline
             ? "text-xs tabular-nums text-muted-foreground"
             : "text-xs font-medium tabular-nums text-destructive";
 
-    private string AriaLabel => $"{L["Mirrors"]}: {OnlineCount}/{UploadConfigs.Count}";
+    private string AriaLabel => $"{L["Mirrors"]}: {MirrorOnlineCount.Text}";
 
     private static string GetBarClass(ReleaseSearchResultUploadConfigReadModel uploadConfig) =>
         uploadConfig.IsOnline ? OnlineBarClass : OfflineBarClass;

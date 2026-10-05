@@ -1,0 +1,24 @@
+<div class="bearcat-release-cover-card"
+     data-release-id="@Release.ReleaseId"
+     data-selected="@(IsSelected ? "true" : "false")"
+     data-selection-active="@(IsSelectionActive ? "true" : "false")"
+     data-keyboard-focused="@(IsKeyboardFocused ? "true" : "false")"
+     @onclick="OnQuickLook">
+    <div class="bearcat-release-cover-poster">
+        <button type="button"
+                class="bearcat-release-cover-poster-button"
+                aria-label="@L["QuickLookFor", Release.Name]">
+            <ReleaseCoverImage Release="Release" ShowMetadataTitle="true" />
+        </button>
+        <div class="bearcat-release-cover-checkbox"
+             @onclick="ToggleSelectionAsync"
+             @onclick:stopPropagation="true">
+            <BbCheckbox Checked="IsSelected" AriaLabel="@L["SelectRelease", Release.Name]" />
+        </div>
+        <span class="@MirrorBadgeClass">@MirrorBadgeText</span>
+    </div>
+    <div class="bearcat-release-cover-name">
+        <HighlightedReleaseName Name="@Release.Name" SearchTerm="@SearchTerm" />
+    </div>
+    <p class="bearcat-release-cover-details">@DetailsText</p>
+</div>

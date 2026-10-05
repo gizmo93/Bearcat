@@ -17,21 +17,35 @@ using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
     DialogService dialogService,
     IScopedOperationRunner operationRunner,
-    NavigationManager navigationManager
-) : IReleaseSearchUrlValues
+    NavigationManager navigationManager,
+    IJSRuntime js,
+    PersistentComponentState applicationState,
+    IHttpContextAccessor httpContextAccessor
+) : IReleaseSearchUrlValues, IAsyncDisposable
 {
+    private const string ResultViewKey = "bearcat.releases.resultView";
+
     private IReadOnlyList<ReleaseSearchResultReadModel>? releases;
     private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
     private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private readonly ReleaseSelection selection = new();
+    private readonly ReleaseKeyboardFocus keyboardFocus = new();
+    private ReleaseSearchResultView resultView = ReleaseSearchResultView.List;
+    private PersistingComponentStateSubscription persistSubscription;
+    private DotNetObjectReference<AllReleasesPage>? dotNetReference;
+    private IJSObjectReference? keyboardHandle;
+    private bool isQuickLookOpen;
+    private bool scrollFocusedReleaseIntoView;
     private ReleaseSearchQuery searchQuery = new();
     private ReleaseOnlineStateCounts? onlineStateCounts;
     private SearchUrlState<ReleaseSearchQuery>? loadedState;
@@ -103,6 +117,11 @@ public partial class AllReleasesPage(
 
     private ReleaseSearchQuery EmptySearchQuery => new(SortOrder: searchQuery.SortOrder);
 
+    private ReleaseSearchResultReadModel? FocusedRelease =>
+        releases?.FirstOrDefault(release => release.ReleaseId == keyboardFocus.FocusedReleaseId);
+
+    private bool IsQuickLookOpen => isQuickLookOpen && FocusedRelease is not null;
+
     private string SectionClass =>
         selection.Count > 0
             ? "bearcat-releases-page space-y-4 pb-20"
@@ -110,6 +129,9 @@ public partial class AllReleasesPage(
 
     protected override async Task OnInitializedAsync()
     {
+        resultView = RestoreResultView();
+        persistSubscription = applicationState.RegisterOnPersisting(PersistResultView);
+
         hosterRegistrations = await operationRunner.RunAsync(
             (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
         );
@@ -138,10 +160,152 @@ public partial class AllReleasesPage(
             selection.Clear();
         }
 
+        keyboardFocus.Clear();
+        isQuickLookOpen = false;
+
         searchQuery = state.Query;
         pageIndex = state.PageIndex;
         pageSize = state.PageSize;
         await RefreshReleasesAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                dotNetReference = DotNetObjectReference.Create(this);
+                keyboardHandle = await js.InvokeAsync<IJSObjectReference>(
+                    "bearcat.releaseSearchKeyboard.attach",
+                    dotNetReference
+                );
+            }
+
+            if (scrollFocusedReleaseIntoView && keyboardFocus.FocusedReleaseId is { } releaseId)
+            {
+                scrollFocusedReleaseIntoView = false;
+                await js.InvokeVoidAsync(
+                    "bearcat.releaseSearchKeyboard.scrollReleaseIntoView",
+                    releaseId
+                );
+            }
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    [JSInvokable]
+    public void HandleKeyboardShortcut(string key, bool shiftKey)
+    {
+        switch (key)
+        {
+            case "j" or "ArrowDown":
+                keyboardFocus.MoveToNext(VisibleReleaseIds);
+                scrollFocusedReleaseIntoView = true;
+                break;
+            case "k" or "ArrowUp":
+                keyboardFocus.MoveToPrevious(VisibleReleaseIds);
+                scrollFocusedReleaseIntoView = true;
+                break;
+            case "x":
+                ToggleFocusedReleaseSelection(extendRange: shiftKey);
+                break;
+            case "Space":
+                ToggleQuickLook();
+                break;
+            case "Enter":
+                OpenFocusedRelease();
+                break;
+            case "Escape":
+                selection.Clear();
+                break;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ToggleFocusedReleaseSelection(bool extendRange)
+    {
+        if (keyboardFocus.FocusedReleaseId is { } releaseId)
+        {
+            selection.Toggle(VisibleReleaseIds, releaseId, extendRange);
+        }
+    }
+
+    private void ToggleQuickLook()
+    {
+        if (IsQuickLookOpen)
+        {
+            isQuickLookOpen = false;
+            return;
+        }
+
+        if (keyboardFocus.FocusedReleaseId is null)
+        {
+            keyboardFocus.MoveToNext(VisibleReleaseIds);
+            scrollFocusedReleaseIntoView = true;
+        }
+
+        isQuickLookOpen = true;
+    }
+
+    private void OpenFocusedRelease()
+    {
+        if (FocusedRelease is { } release)
+        {
+            navigationManager.NavigateTo($"/releases/{release.ReleaseId}");
+        }
+    }
+
+    private void OpenQuickLook(ReleaseSearchResultReadModel release)
+    {
+        keyboardFocus.Focus(release.ReleaseId);
+        isQuickLookOpen = true;
+    }
+
+    private void SetQuickLookOpen(bool open)
+    {
+        isQuickLookOpen = open;
+    }
+
+    private ReleaseSearchResultView RestoreResultView()
+    {
+        if (
+            applicationState.TryTakeFromJson<ReleaseSearchResultView>(
+                ResultViewKey,
+                out var persisted
+            )
+        )
+        {
+            return persisted;
+        }
+
+        return
+            httpContextAccessor.HttpContext?.Request.Cookies.TryGetValue(
+                ResultViewKey,
+                out var cookie
+            ) == true
+            && Enum.TryParse<ReleaseSearchResultView>(cookie, out var view)
+            && Enum.IsDefined(view)
+            ? view
+            : ReleaseSearchResultView.List;
+    }
+
+    private Task PersistResultView()
+    {
+        applicationState.PersistAsJson(ResultViewKey, resultView);
+        return Task.CompletedTask;
+    }
+
+    private async Task ChangeResultViewAsync(ReleaseSearchResultView view)
+    {
+        resultView = view;
+
+        try
+        {
+            await js.InvokeVoidAsync("bearcat.setCookie", ResultViewKey, view.ToString());
+        }
+        catch (JSException) { }
     }
 
     private string GetPageUri(int page)
@@ -268,6 +432,7 @@ public partial class AllReleasesPage(
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;
             selection.KeepOnly(VisibleReleaseIds);
+            keyboardFocus.KeepOnly(VisibleReleaseIds);
 
             if (totalCount > 0 && pageIndex >= TotalPages)
             {
@@ -333,5 +498,23 @@ public partial class AllReleasesPage(
         navigationManager.NavigateTo(
             ReleaseSearchUrl.Build(searchQuery, page: 1, selectedPageSize)
         );
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        persistSubscription.Dispose();
+
+        if (keyboardHandle is not null)
+        {
+            try
+            {
+                await keyboardHandle.InvokeVoidAsync("detach");
+                await keyboardHandle.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
+        }
+
+        dotNetReference?.Dispose();
     }
 }

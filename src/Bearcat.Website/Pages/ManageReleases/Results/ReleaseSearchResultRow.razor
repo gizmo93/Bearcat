@@ -1,43 +1,23 @@
 @using Bearcat.Website.Formatting
 
-<div class="@RowClass" data-selected="@(IsSelected ? "true" : "false")">
+<div class="@RowClass"
+     data-release-id="@Release.ReleaseId"
+     data-selected="@(IsSelected ? "true" : "false")"
+     data-keyboard-focused="@(IsKeyboardFocused ? "true" : "false")">
     <div class="bearcat-release-result-checkbox" @onclick="ToggleSelectionAsync">
         <BbCheckbox Checked="IsSelected" AriaLabel="@L["SelectRelease", Release.Name]" />
     </div>
 
     <div class="min-w-0">
         <a class="bearcat-release-result-name" href="@($"/releases/{Release.ReleaseId}")">
-            <BbHighlighter Text="@Release.Name" Query="@SearchTerm" MarkClass="bearcat-search-highlight" />
+            <HighlightedReleaseName Name="@Release.Name" SearchTerm="@SearchTerm" />
         </a>
         <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             @if (MetadataTitleText is not null)
             {
                 <span class="min-w-0 [overflow-wrap:anywhere]">@MetadataTitleText</span>
             }
-            @if (Release.Resolution is { } resolution)
-            {
-                <span class="@MutedTagClass">@L.Localize(resolution)</span>
-            }
-            @if (Release.Source is { } source)
-            {
-                <span class="@MutedTagClass">@L.Localize(source)</span>
-            }
-            <span class="@MutedTagClass">@Release.ReleaseGroupName</span>
-            @if (Release.ReleaseType == ReleaseType.Unmanaged)
-            {
-                <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
-                    <BbTooltipTrigger Class="inline-flex">
-                        <span class="@OutlineTagClass">@L.Localize(Release.ReleaseType)</span>
-                    </BbTooltipTrigger>
-                    <BbTooltipContent Class="max-w-xs text-xs">
-                        @L.LocalizeDescription(Release.ReleaseType)
-                    </BbTooltipContent>
-                </BbTooltip>
-            }
-            @if (Release.IsReadyForPostQueue)
-            {
-                <span class="@PrimaryTagClass">@L["ReadyToPost"]</span>
-            }
+            <ReleaseTags Release="Release" ShowReleaseGroup="true" />
         </div>
     </div>
 
@@ -66,6 +46,13 @@
     </div>
 
     <div class="bearcat-config-actions bearcat-release-result-actions">
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.IconSmall"
+                  AriaLabel="@L["QuickLook"]"
+                  title="@L["QuickLook"]"
+                  OnClick="OnQuickLook">
+            <LucideIcon Name="eye" class="h-4 w-4" />
+        </BbButton>
         <CopyButton Value="@Release.Name" Label="@L["CopyReleaseName"]" Variant="ButtonVariant.Ghost" />
         <BbDropdownMenu>
             <BbDropdownMenuTrigger>

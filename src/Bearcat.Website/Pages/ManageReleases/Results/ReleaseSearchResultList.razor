@@ -1,6 +1,9 @@
-@if (Releases is null)
-{
-    <div class="bearcat-config-list bearcat-release-result-list" aria-busy="true">
+<ReleaseSearchResultStates Releases="Releases"
+                           IsLoading="IsLoading"
+                           HasActiveFilters="HasActiveFilters"
+                           OnResetFilters="OnResetFilters"
+                           ContainerClass="bearcat-config-list bearcat-release-result-list">
+    <SkeletonContent>
         @for (var skeletonIndex = 0; skeletonIndex < SkeletonRowCount; skeletonIndex++)
         {
             <div class="bearcat-config-row bearcat-release-result-row @GridColumnsClass">
@@ -18,29 +21,8 @@
                 <div></div>
             </div>
         }
-    </div>
-}
-else if (Releases.Count == 0)
-{
-    <div class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border/70 px-4 py-12 text-center">
-        <LucideIcon Name="inbox" class="h-6 w-6 text-muted-foreground" />
-        @if (HasActiveFilters)
-        {
-            <p class="text-sm font-medium">@L["NoReleasesMatch"]</p>
-            <p class="max-w-sm text-sm text-muted-foreground">@L["NoReleasesMatchHint"]</p>
-            <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="mt-2" OnClick="OnResetFilters">
-                @L["ResetFilters"]
-            </BbButton>
-        }
-        else
-        {
-            <p class="text-sm text-muted-foreground">@L["NoReleasesFound"]</p>
-        }
-    </div>
-}
-else
-{
-    <div class="@ListClass" aria-busy="@(IsLoading ? "true" : "false")">
+    </SkeletonContent>
+    <ChildContent>
         <div class="bearcat-config-header bearcat-release-result-header @GridColumnsClass">
             <div class="flex items-center">
                 <BbCheckbox Checked="AreAllVisibleReleasesSelected"
@@ -55,15 +37,17 @@ else
             <span>@L["Added"]</span>
             <span></span>
         </div>
-        @foreach (var release in Releases)
+        @foreach (var release in Releases!)
         {
             <ReleaseSearchResultRow @key="release.ReleaseId"
                                     Release="release"
                                     SearchTerm="@SearchTerm"
                                     IsSelected="Selection.IsSelected(release.ReleaseId)"
+                                    IsKeyboardFocused="release.ReleaseId == FocusedReleaseId"
                                     OnSelectionToggled="@(extendRange => ToggleReleaseAsync(release.ReleaseId, extendRange))"
+                                    OnQuickLook="@(() => OnQuickLook.InvokeAsync(release))"
                                     OnEdit="@(() => OnEditRelease.InvokeAsync(release))"
                                     OnDelete="@(() => OnDeleteRelease.InvokeAsync(release))" />
         }
-    </div>
-}
+    </ChildContent>
+</ReleaseSearchResultStates>

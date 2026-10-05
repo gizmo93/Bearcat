@@ -39,20 +39,41 @@
             <ReleaseOnlineStateSegments Counts="onlineStateCounts"
                                         SelectedOnlineState="searchQuery.OnlineState"
                                         SelectedOnlineStateChanged="ApplyOnlineStateAsync" />
-            <ReleaseSortOrderSelect Value="searchQuery.SortOrder"
-                                    ValueChanged="ApplySortOrderAsync" />
+            <div class="flex items-center gap-2">
+                <ReleaseSortOrderSelect Value="searchQuery.SortOrder"
+                                        ValueChanged="ApplySortOrderAsync" />
+                <ReleaseSearchResultViewToggle Value="resultView"
+                                               ValueChanged="ChangeResultViewAsync" />
+            </div>
         </div>
     </div>
 
-    <ReleaseSearchResultList Releases="releases"
-                             Selection="selection"
-                             SearchTerm="@searchQuery.SearchTerm"
-                             IsLoading="isLoading"
-                             HasActiveFilters="HasActiveFilters"
-                             OnResetFilters="ResetFiltersAsync"
-                             OnSelectionChanged="StateHasChanged"
-                             OnEditRelease="ShowEditReleaseDialogAsync"
-                             OnDeleteRelease="DeleteReleaseAsync" />
+    @if (resultView == ReleaseSearchResultView.Covers)
+    {
+        <ReleaseSearchResultCoverGrid Releases="releases"
+                                      Selection="selection"
+                                      SearchTerm="@searchQuery.SearchTerm"
+                                      FocusedReleaseId="keyboardFocus.FocusedReleaseId"
+                                      IsLoading="isLoading"
+                                      HasActiveFilters="HasActiveFilters"
+                                      OnResetFilters="ResetFiltersAsync"
+                                      OnSelectionChanged="StateHasChanged"
+                                      OnQuickLook="OpenQuickLook" />
+    }
+    else
+    {
+        <ReleaseSearchResultList Releases="releases"
+                                 Selection="selection"
+                                 SearchTerm="@searchQuery.SearchTerm"
+                                 FocusedReleaseId="keyboardFocus.FocusedReleaseId"
+                                 IsLoading="isLoading"
+                                 HasActiveFilters="HasActiveFilters"
+                                 OnResetFilters="ResetFiltersAsync"
+                                 OnSelectionChanged="StateHasChanged"
+                                 OnQuickLook="OpenQuickLook"
+                                 OnEditRelease="ShowEditReleaseDialogAsync"
+                                 OnDeleteRelease="DeleteReleaseAsync" />
+    }
 
     <SearchResultsPagination TotalCount="totalCount"
                              PageIndex="pageIndex"
@@ -60,6 +81,13 @@
                              ResultsSummaryResourceKey="ReleaseResultsSummary"
                              GetPageUrl="GetPageUri"
                              PageSizeChanged="ChangePageSize" />
+
+    <ReleaseKeyboardShortcutHint />
+
+    <ReleaseQuickLookSheet Release="FocusedRelease"
+                           Open="IsQuickLookOpen"
+                           OpenChanged="SetQuickLookOpen"
+                           OnEdit="ShowEditReleaseDialogAsync" />
 
     <ReleaseBulkActionBar Selection="selection"
                           VisibleReleaseIds="VisibleReleaseIds"
