@@ -21,7 +21,6 @@
   <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Add Link Crypter Container</value></data>
   <data name="AddNfoDatabase" xml:space="preserve"><value>Add NFO database</value></data>
   <data name="AddUploadConfig" xml:space="preserve"><value>Add Upload Config</value></data>
-  <data name="AdvancedSearch" xml:space="preserve"><value>Advanced search</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archive config</value></data>
   <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archive config is required.</value></data>
   <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>The archive file size ({0} MB) exceeds the hoster's maximum file size of {1} MB.</value></data>
@@ -44,9 +43,7 @@
   <data name="Archives" xml:space="preserve"><value>Archives</value></data>
   <data name="AnyArchiver" xml:space="preserve"><value>Any archiver</value></data>
   <data name="AnyHosterConfig" xml:space="preserve"><value>Any hoster config</value></data>
-  <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Any link crypter config</value></data>
   <data name="AnyReleaseGroup" xml:space="preserve"><value>Any release group</value></data>
-  <data name="AnyReleaseType" xml:space="preserve"><value>Any release type</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Any online state</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>All upload configs</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Base path is required</value></data>
@@ -168,7 +165,6 @@
   <data name="EditMetadataDescription" xml:space="preserve"><value>Edit the series metadata manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
   <data name="MetadataUpdated" xml:space="preserve"><value>Metadata updated</value></data>
   <data name="DownloadLink" xml:space="preserve"><value>Download link</value></data>
-  <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Paste part of a link</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
   <data name="Description" xml:space="preserve"><value>Description</value></data>
@@ -336,7 +332,6 @@
   <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release info deleted</value></data>
   <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Release online state</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
-  <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Content type</value></data>
   <data name="EditCollectionSettings" xml:space="preserve"><value>Edit collection settings</value></data>
   <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Choose the content type and primary language for this release collection.</value></data>
@@ -408,8 +403,6 @@
   <data name="Reload" xml:space="preserve"><value>Reload</value></data>
   <data name="ResetFilters" xml:space="preserve"><value>Reset filters</value></data>
   <data name="RowsPerPage" xml:space="preserve"><value>Rows per page</value></data>
-  <data name="RarFile" xml:space="preserve"><value>RAR file</value></data>
-  <data name="RarFileSearchPlaceholder" xml:space="preserve"><value>Filename or path</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Running and pending uploads</value></data>
   <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload queues, status, and per-file progress.</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
@@ -471,8 +464,7 @@
   <data name="UploadedAt" xml:space="preserve"><value>Uploaded at</value></data>
   <data name="UploadsPerDay" xml:space="preserve"><value>Uploads per day</value></data>
   <data name="UploadsPerDayByHoster" xml:space="preserve"><value>Completed uploads split by hoster.</value></data>
-  <data name="UploadId" xml:space="preserve"><value>UploadId</value></data>
-  <data name="UploadIdSearchPlaceholder" xml:space="preserve"><value>e.g. 123 or #123</value></data>
+  <data name="UploadId" xml:space="preserve"><value>Upload ID</value></data>
   <data name="UploadLinksTitle" xml:space="preserve"><value>Upload #{0} links</value></data>
   <data name="Uploads" xml:space="preserve"><value>Uploads</value></data>
   <data name="UploadsView" xml:space="preserve"><value>Uploads view</value></data>
@@ -884,7 +876,6 @@
   <data name="PostedLocations" xml:space="preserve"><value>Posted locations</value></data>
   <data name="NoPostedLocationsYet" xml:space="preserve"><value>No posted locations yet.</value></data>
   <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.example/threads/...</value></data>
-  <data name="PostedLocationSearchPlaceholder" xml:space="preserve"><value>Forum post or page URL</value></data>
   <data name="PostedLocationRecorded" xml:space="preserve"><value>Saved where you posted.</value></data>
   <data name="PostedLocationManualHelp" xml:space="preserve"><value>Could not detect the post automatically. Paste the URL of your post to save it.</value></data>
   <data name="PostedLocationUrlRequired" xml:space="preserve"><value>A URL is required.</value></data>
@@ -983,7 +974,6 @@
         <value>Release</value>
     </data>
   <data name="PrimaryLanguage" xml:space="preserve"><value>Primary language</value></data>
-  <data name="AnyLanguage" xml:space="preserve"><value>Any language</value></data>
   <data name="NotSet" xml:space="preserve"><value>&lt;Not set&gt;</value></data>
   <data name="SelectLanguage" xml:space="preserve"><value>Select language</value></data>
   <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Change language</value></data>
@@ -1639,4 +1629,17 @@
   <data name="ConfigurationUnit.Seconds" xml:space="preserve"><value>s</value></data>
   <data name="ConfigurationUnit.Megabytes" xml:space="preserve"><value>MB</value></data>
   <data name="ConfigurationUnit.MegabytesPerSecond" xml:space="preserve"><value>MB/s</value></data>
+  <data name="ReleaseTotalCount" xml:space="preserve"><value>{0} releases</value></data>
+  <data name="ReleaseTotalCountOne" xml:space="preserve"><value>{0} release</value></data>
+  <data name="ReleaseSearchBarPlaceholder" xml:space="preserve"><value>Search by name or folder. Paste a link, archive file or upload ID to search those.</value></data>
+  <data name="SearchIn" xml:space="preserve"><value>Search in</value></data>
+  <data name="NameOrFolder" xml:space="preserve"><value>Name or folder</value></data>
+  <data name="ArchiveFile" xml:space="preserve"><value>Archive file</value></data>
+  <data name="LooksLikeMatch" xml:space="preserve"><value>Looks like a match</value></data>
+  <data name="RemoveSearchScopeChip" xml:space="preserve"><value>Remove {0}</value></data>
+  <data name="FilterOptionsSearchPlaceholder" xml:space="preserve"><value>Search...</value></data>
+  <data name="NoFilterOptionsFound" xml:space="preserve"><value>No options found.</value></data>
+  <data name="ClearFilter" xml:space="preserve"><value>Clear filter</value></data>
+  <data name="ResetAllFilters" xml:space="preserve"><value>Reset all</value></data>
+  <data name="NoUploads" xml:space="preserve"><value>No uploads</value></data>
 </root>

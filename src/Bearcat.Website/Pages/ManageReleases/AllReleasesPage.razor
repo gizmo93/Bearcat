@@ -1,4 +1,5 @@
 @page "/releases"
+@using Bearcat.Website.Pages.ManageReleases.Search
 
 <PageTitle>@L["Releases"] - Bearcat</PageTitle>
 
@@ -6,6 +7,7 @@
     <div class="bearcat-page-header">
         <div>
             <h1 class="text-3xl font-semibold tracking-tight">@L["Releases"]</h1>
+            <p class="mt-1 text-sm text-muted-foreground">@ReleaseTotalCountText</p>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -20,12 +22,22 @@
         </div>
     </div>
 
-    <ReleaseSearchForm HosterRegistrations="hosterRegistrations"
-                       Archivers="archiverOptions"
-                       ReleaseGroups="releaseGroups"
-                       LinkCrypterRegistrations="linkCrypterRegistrations"
-                       Query="searchQuery"
-                       OnSearch="ApplySearchAsync" />
+    <div class="space-y-3">
+        <ReleaseSearchBar Query="searchQuery"
+                          OnQueryChanged="ApplySearchAsync"
+                          OnSearchTermTyped="ApplyTypedSearchAsync" />
+
+        <ReleaseSearchFilters Query="searchQuery"
+                              HosterRegistrations="hosterRegistrations"
+                              Archivers="archiverOptions"
+                              ReleaseGroups="releaseGroups"
+                              LinkCrypterRegistrations="linkCrypterRegistrations"
+                              OnQueryChanged="ApplySearchAsync" />
+
+        <ReleaseOnlineStateSegments Counts="onlineStateCounts"
+                                    SelectedOnlineState="searchQuery.OnlineState"
+                                    SelectedOnlineStateChanged="ApplyOnlineStateAsync" />
+    </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/25 px-3 py-2">
         @if (selectedReleaseIds.Count > 0)

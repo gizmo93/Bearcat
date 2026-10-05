@@ -1,0 +1,72 @@
+<div class="relative">
+    <div class="relative flex min-h-12 w-full flex-wrap items-center gap-x-2 gap-y-1.5 rounded-xl border border-input bg-card py-1.5 pl-10 pr-3.5 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+        <LucideIcon Name="search" class="pointer-events-none absolute left-3.5 top-4 h-4 w-4 text-muted-foreground" />
+
+        @foreach (var chip in Chips)
+        {
+            <span class="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-0.5 text-xs">
+                <span class="shrink-0 text-muted-foreground">@GetScopeLabel(chip.Scope)</span>
+                <span class="min-w-0 max-w-56 truncate font-mono sm:max-w-80" title="@chip.Value">@chip.Value</span>
+                <button type="button"
+                        class="-mr-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label="@L["RemoveSearchScopeChip", GetScopeLabel(chip.Scope)]"
+                        @onclick="() => RemoveChipAsync(chip.Scope)">
+                    <LucideIcon Name="x" class="h-3 w-3" />
+                </button>
+            </span>
+        }
+
+        <input type="text"
+               class="h-8 min-w-48 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
+               placeholder="@L["ReleaseSearchBarPlaceholder"]"
+               aria-label="@L["SearchReleases"]"
+               autocomplete="off"
+               spellcheck="false"
+               role="combobox"
+               aria-autocomplete="list"
+               aria-controls="@ScopeListId"
+               aria-expanded="@(IsScopeListOpen ? "true" : "false")"
+               aria-activedescendant="@(IsScopeListOpen ? GetScopeEntryId(highlightedEntryIndex) : null)"
+               data-release-search-input
+               @bind="inputText"
+               @bind:event="oninput"
+               @bind:after="HandleInputChanged"
+               @onkeydown="HandleKeyDownAsync"
+               @onfocus="HandleFocus"
+               @onblur="HandleBlur" />
+
+        @if (!isFocused)
+        {
+            <BbKbd Keys="/" Size="KbdSize.Small" Class="ml-auto hidden shrink-0 sm:inline-flex" />
+        }
+    </div>
+
+    @if (IsScopeListOpen)
+    {
+        var scopeEntries = ScopeEntries;
+        <div id="@ScopeListId"
+             role="listbox"
+             aria-label="@L["SearchIn"]"
+             class="absolute inset-x-0 top-full z-40 mt-1.5 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md">
+            <p class="px-2 pb-1 pt-1.5 text-xs font-medium text-muted-foreground">@L["SearchIn"]</p>
+            @for (var entryIndex = 0; entryIndex < scopeEntries.Count; entryIndex++)
+            {
+                var entry = scopeEntries[entryIndex];
+                var isHighlighted = entryIndex == highlightedEntryIndex;
+                <div id="@GetScopeEntryId(entryIndex)"
+                     role="option"
+                     aria-selected="@(isHighlighted ? "true" : "false")"
+                     class="@GetScopeEntryClass(isHighlighted)"
+                     @onmousedown:preventDefault
+                     @onclick="() => PickScopeEntryAsync(entry)">
+                    <LucideIcon Name="@GetScopeIconName(entry.Scope)" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">@GetScopeLabel(entry.Scope)</span>
+                    @if (entry.LooksLikeMatch)
+                    {
+                        <span class="ml-auto shrink-0 text-xs text-muted-foreground">@L["LooksLikeMatch"]</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

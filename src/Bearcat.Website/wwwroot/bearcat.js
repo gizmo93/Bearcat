@@ -95,6 +95,42 @@ document.addEventListener("keydown", event => {
     options.find(isSelectableCommandItem)?.click();
 }, true);
 
+const releaseSearchInputSelector = "[data-release-search-input]";
+
+function isEditableElement(element) {
+    return element instanceof HTMLElement
+        && (element.isContentEditable || element.closest("input, textarea, select") !== null);
+}
+
+document.addEventListener("keydown", event => {
+    if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) {
+        return;
+    }
+
+    if (isEditableElement(event.target)) {
+        return;
+    }
+
+    const searchInput = document.querySelector(releaseSearchInputSelector);
+    if (!searchInput) {
+        return;
+    }
+
+    event.preventDefault();
+    searchInput.focus();
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+        return;
+    }
+
+    const searchInput = event.target.closest?.(releaseSearchInputSelector);
+    if (searchInput?.getAttribute("aria-expanded") === "true") {
+        event.preventDefault();
+    }
+}, true);
+
 export async function takeCopyResult() {
     const pending = pendingCopies.shift();
     return pending === undefined ? null : await pending;

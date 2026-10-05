@@ -1,0 +1,57 @@
+<div class="flex flex-wrap items-center gap-2">
+    <ReleaseSearchFilterButton TValue="ReleaseContentType?"
+                               Label="@L["ReleaseContentType"]"
+                               Options="ReleaseContentTypeOptions"
+                               Value="Query.ReleaseContentType"
+                               ValueChanged="@((ReleaseContentType? value) => ApplyAsync(Query with { ReleaseContentType = value }))" />
+
+    <ReleaseSearchFilterButton TValue="ReleaseType?"
+                               Label="@L["ReleaseType"]"
+                               Options="ReleaseTypeOptions"
+                               Value="Query.ReleaseType"
+                               ValueChanged="@((ReleaseType? value) => ApplyAsync(Query with { ReleaseType = value }))" />
+
+    <ReleaseSearchFilterButton TValue="string"
+                               Label="@L["Language"]"
+                               Options="PrimaryLanguageOptions"
+                               Value="@Query.PrimaryLanguageCode"
+                               ValueChanged="@((string? value) => ApplyAsync(Query with { PrimaryLanguageCode = value }))"
+                               ShowSearch="true" />
+
+    <ReleaseSearchFilterButton TValue="int?"
+                               Label="@L["ReleaseGroup"]"
+                               Options="ReleaseGroupOptions"
+                               Value="Query.ReleaseGroupId"
+                               ValueChanged="@((int? value) => ApplyAsync(Query with { ReleaseGroupId = value }))"
+                               ShowSearch="true" />
+
+    <ReleaseSearchFilterButton TValue="int?"
+                               Label="@L["Hoster"]"
+                               Options="HosterRegistrationOptions"
+                               Value="Query.HosterRegistrationId"
+                               ValueChanged="@((int? value) => ApplyAsync(Query with { HosterRegistrationId = value }))"
+                               ShowSearch="true" />
+
+    <ReleaseSearchFilterButton TValue="string"
+                               Label="@L["Archiver"]"
+                               Options="ArchiverOptions"
+                               Value="@Query.ArchiverName"
+                               ValueChanged="@((string? value) => ApplyAsync(Query with { ArchiverName = value }))" />
+
+    <ReleaseSearchFilterButton TValue="int?"
+                               Label="@L["LinkCrypter"]"
+                               Options="LinkCrypterRegistrationOptions"
+                               Value="Query.LinkCrypterRegistrationId"
+                               ValueChanged="@((int? value) => ApplyAsync(Query with { LinkCrypterRegistrationId = value }))"
+                               ShowSearch="true" />
+
+    @if (HasActiveSearch)
+    {
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Class="text-muted-foreground"
+                  OnClick="ResetAllAsync">
+            @L["ResetAllFilters"]
+        </BbButton>
+    }
+</div>

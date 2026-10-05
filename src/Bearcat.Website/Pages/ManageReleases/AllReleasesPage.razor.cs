@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -35,6 +36,7 @@ public partial class AllReleasesPage(
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private readonly HashSet<int> selectedReleaseIds = [];
     private ReleaseSearchQuery searchQuery = new();
+    private ReleaseOnlineStateCounts? onlineStateCounts;
     private SearchUrlState<ReleaseSearchQuery>? loadedState;
     private int totalCount;
     private int pageIndex;
@@ -87,6 +89,12 @@ public partial class AllReleasesPage(
 
     [SupplyParameterFromQuery(Name = "size")]
     public int? PageSize { get; set; }
+
+    private string ReleaseTotalCountText =>
+        L[
+            totalCount == 1 ? "ReleaseTotalCountOne" : "ReleaseTotalCount",
+            totalCount.ToString("N0", CultureInfo.CurrentCulture)
+        ];
 
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private string ReleasesTableKey => $"{pageIndex}-{pageSize}-{searchQuery.GetHashCode()}";
@@ -285,6 +293,10 @@ public partial class AllReleasesPage(
                 return;
             }
 
+            onlineStateCounts = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) =>
+                    repository.CountReleasesByOnlineStateAsync(searchQuery)
+            );
             loadedState = new SearchUrlState<ReleaseSearchQuery>(searchQuery, pageIndex, pageSize);
         }
         finally
@@ -293,7 +305,22 @@ public partial class AllReleasesPage(
         }
     }
 
-    private async Task ApplySearchAsync(ReleaseSearchQuery query)
+    private Task ApplySearchAsync(ReleaseSearchQuery query)
+    {
+        return NavigateToSearchAsync(query, replaceHistoryEntry: false);
+    }
+
+    private Task ApplyTypedSearchAsync(ReleaseSearchQuery query)
+    {
+        return NavigateToSearchAsync(query, replaceHistoryEntry: true);
+    }
+
+    private Task ApplyOnlineStateAsync(OnlineState? onlineState)
+    {
+        return ApplySearchAsync(searchQuery with { OnlineState = onlineState });
+    }
+
+    private async Task NavigateToSearchAsync(ReleaseSearchQuery query, bool replaceHistoryEntry)
     {
         var targetUri = navigationManager
             .ToAbsoluteUri(ReleaseSearchUrl.Build(query, page: 1, pageSize))
@@ -305,7 +332,7 @@ public partial class AllReleasesPage(
             return;
         }
 
-        navigationManager.NavigateTo(targetUri);
+        navigationManager.NavigateTo(targetUri, replace: replaceHistoryEntry);
     }
 
     private void ToggleReleaseSelection(int releaseId, bool selected)
