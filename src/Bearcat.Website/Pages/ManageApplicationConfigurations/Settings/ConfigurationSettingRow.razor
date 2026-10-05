@@ -1,0 +1,50 @@
+<div class="@RowClass">
+    <div class="min-w-0">
+        <div class="flex items-center gap-2">
+            @if (Setting.IsOverridden)
+            {
+                <ConfigurationChangedDot />
+            }
+            <p class="text-sm font-medium">@L[Setting.DisplayName]</p>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Setting.Description))
+        {
+            <p class="mt-1 text-sm text-muted-foreground">@L[Setting.Description]</p>
+        }
+        @if (Setting.IsOverridden)
+        {
+            <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span>@L["ConfigurationDefaultValue", DefaultValueText]</span>
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.Small"
+                          Class="h-6 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                          OnClick="ResetAsync">
+                    <LucideIcon Name="rotate-ccw" class="h-3 w-3" />
+                    <span>@L["Reset"]</span>
+                </BbButton>
+            </div>
+        }
+    </div>
+
+    @if (ConfigurationSettingFormatter.IsSwitch(Setting))
+    {
+        <div class="flex justify-end pt-0.5">
+            <BbSwitch Checked="@(Setting.CurrentValue is true)"
+                      CheckedChanged="SaveSwitchAsync"
+                      AriaLabel="@L[Setting.DisplayName]" />
+        </div>
+    }
+    else if (ConfigurationSettingFormatter.HasOptions(Setting))
+    {
+        <BbSelect TValue="string"
+                  Value="@((string?)Setting.CurrentValue)"
+                  ValueChanged="SaveOptionAsync"
+                  Options="SelectOptions"
+                  AriaLabel="@L[Setting.DisplayName]"
+                  Class="w-full @@xl:w-64" />
+    }
+    else
+    {
+        <ConfigurationNumberEditor Setting="Setting" OnSave="OnSave" />
+    }
+</div>

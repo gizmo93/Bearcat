@@ -1,55 +1,93 @@
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
-using Bearcat.Domain.UseCases.ManageNotifications;
-using Bearcat.Domain.ValueObjects;
-using Bearcat.Website.Formatting;
+using Bearcat.Website.Pages.ManageApplicationConfigurations.Notifications;
+using Bearcat.Website.Pages.ManageApplicationConfigurations.Sections;
+using Bearcat.Website.Pages.ManageApplicationConfigurations.Settings;
 using Bearcat.Website.ScopedOperations;
-using BlazorBlueprint.Primitives;
+using BlazorBlueprint.Components;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageApplicationConfigurations;
 
-public partial class ApplicationConfigurationsPage(IScopedOperationRunner operationRunner)
+public partial class ApplicationConfigurationsPage(
+    IScopedOperationRunner operationRunner,
+    ToastService toastService,
+    NavigationManager navigationManager,
+    IJSRuntime jsRuntime
+) : ComponentBase, IAsyncDisposable
 {
-    private static readonly Dictionary<string, NotificationGroup> notificationGroupsByPropertyName =
-        NotificationDefinitions.All.ToDictionary(
-            definition => definition.Kind.ToString(),
-            definition => definition.Group
-        );
-
-    private readonly Dictionary<string, string?> editorValues = [];
     private IReadOnlyList<ApplicationConfigurationDto> configurations = [];
     private bool isLoading = true;
     private string? searchTerm;
+    private ConfigurationSettingFilter settingFilter = ConfigurationSettingFilter.All;
+    private ElementReference pageElement;
+    private IJSObjectReference? sectionSpyHandle;
+    private string? attachedSectionSpyAnchorIds;
+    private bool isFragmentScrollPending = true;
 
-    private IReadOnlyList<ApplicationConfigurationDto> FilteredConfigurations =>
+    private int TotalSettingCount =>
+        configurations.Sum(configuration => configuration.Properties.Count);
+
+    private int ChangedSettingCount =>
+        configurations.Sum(configuration =>
+            configuration.Properties.Count(setting => setting.IsOverridden)
+        );
+
+    private string EmptyStateText =>
+        settingFilter == ConfigurationSettingFilter.Changed && ChangedSettingCount == 0
+            ? L["NoChangedConfigurations"]
+            : L["NoConfigurationsFound"];
+
+    private IReadOnlyList<ConfigurationPageSection> VisibleSections =>
         configurations
-            .Where(configuration =>
-                configuration.Properties.Any(property => MatchesSearchTerm(configuration, property))
-            )
+            .OrderBy(configuration => ConfigurationSectionCatalog.GetPosition(configuration.Key))
+            .Select(configuration => new ConfigurationPageSection(
+                Configuration: configuration,
+                Appearance: ConfigurationSectionCatalog.GetAppearance(configuration.Key),
+                AnchorId: ConfigurationSectionCatalog.GetAnchorId(configuration.Key),
+                VisibleSettings: configuration
+                    .Properties.Where(setting => IsVisible(configuration, setting))
+                    .ToList()
+            ))
+            .Where(section => section.VisibleSettings.Count > 0)
             .ToList();
 
-    private IReadOnlyList<
-        IGrouping<NotificationGroup?, ApplicationConfigurationPropertyDto>
-    > GetPropertyGroups(ApplicationConfigurationDto configuration)
+    protected override async Task OnInitializedAsync()
     {
-        return configuration
-            .Properties.Where(property => MatchesSearchTerm(configuration, property))
-            .GroupBy(property => GetNotificationGroup(configuration, property))
-            .ToList();
+        await LoadAsync();
+        isLoading = false;
     }
 
-    private static NotificationGroup? GetNotificationGroup(
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        await AttachSectionSpyWhenSectionsChangedAsync();
+        await ScrollToRequestedSectionAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        configurations = await operationRunner.RunAsync(
+            (ApplicationConfigurationService service) => service.GetAllAsync(CancellationToken.None)
+        );
+    }
+
+    private bool IsVisible(
         ApplicationConfigurationDto configuration,
-        ApplicationConfigurationPropertyDto property
+        ApplicationConfigurationPropertyDto setting
     )
     {
-        return configuration.DisplayName == "NotificationSettings"
-            ? notificationGroupsByPropertyName[property.Name]
-            : null;
+        return (settingFilter == ConfigurationSettingFilter.All || setting.IsOverridden)
+            && MatchesSearchTerm(configuration, setting);
     }
 
     private bool MatchesSearchTerm(
         ApplicationConfigurationDto configuration,
-        ApplicationConfigurationPropertyDto property
+        ApplicationConfigurationPropertyDto setting
     )
     {
         var searchWords = (searchTerm ?? string.Empty).Split(
@@ -62,7 +100,7 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
             return true;
         }
 
-        var searchableText = string.Join(' ', GetSearchableTexts(configuration, property));
+        var searchableText = string.Join(' ', GetSearchableTexts(configuration, setting));
 
         return searchWords.All(word =>
             searchableText.Contains(word, StringComparison.OrdinalIgnoreCase)
@@ -71,15 +109,15 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
 
     private List<string> GetSearchableTexts(
         ApplicationConfigurationDto configuration,
-        ApplicationConfigurationPropertyDto property
+        ApplicationConfigurationPropertyDto setting
     )
     {
         List<string> searchableTexts =
         [
             configuration.DisplayName,
             L[configuration.DisplayName],
-            property.Name,
-            L[property.DisplayName],
+            setting.Name,
+            L[setting.DisplayName],
         ];
 
         if (!string.IsNullOrWhiteSpace(configuration.Description))
@@ -87,186 +125,117 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
             searchableTexts.Add(L[configuration.Description]);
         }
 
-        if (!string.IsNullOrWhiteSpace(property.Description))
+        if (!string.IsNullOrWhiteSpace(setting.Description))
         {
-            searchableTexts.Add(L[property.Description]);
+            searchableTexts.Add(L[setting.Description]);
         }
 
-        var notificationGroup = GetNotificationGroup(configuration, property);
-
-        if (notificationGroup is not null)
+        if (configuration.Key == ConfigurationSectionCatalog.NotificationsKey)
         {
-            searchableTexts.Add(L[$"NotificationGroup.{notificationGroup}"]);
+            searchableTexts.Add(
+                L[$"NotificationGroup.{NotificationSettingGroupLookup.GetGroup(setting)}"]
+            );
         }
 
         return searchableTexts;
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadAsync();
-    }
-
-    private async Task LoadAsync()
-    {
-        isLoading = true;
-        configurations = await operationRunner.RunAsync(
-            (ApplicationConfigurationService service) => service.GetAllAsync(CancellationToken.None)
-        );
-        editorValues.Clear();
-        isLoading = false;
-    }
-
-    private static bool GetBoolValue(ApplicationConfigurationPropertyDto property)
-    {
-        return property.CurrentValue is true;
-    }
-
-    private async Task SaveBoolAsync(ApplicationConfigurationPropertyDto property, bool value)
+    private async Task SaveSettingAsync(ConfigurationSettingSaveRequest request)
     {
         await operationRunner.RunAsync(
             (ApplicationConfigurationService service) =>
                 service.SaveOverrideAsync(
-                    configurationKey: property.ConfigurationKey,
-                    propertyName: property.Name,
-                    value: value,
+                    configurationKey: request.Setting.ConfigurationKey,
+                    propertyName: request.Setting.Name,
+                    value: request.Value,
                     cancellationToken: CancellationToken.None
                 )
         );
+        toastService.Success(L["ConfigurationSettingSaved", L[request.Setting.DisplayName]]);
         await LoadAsync();
     }
 
-    private string? GetEditorValue(ApplicationConfigurationPropertyDto property)
-    {
-        var key = GetEditorKey(property);
-
-        if (editorValues.TryGetValue(key, out var value))
-        {
-            return value;
-        }
-
-        value = property.CurrentValue?.ToString();
-        editorValues[key] = value;
-        return value;
-    }
-
-    private void SetEditorValue(ApplicationConfigurationPropertyDto property, string? value)
-    {
-        editorValues[GetEditorKey(property)] = value;
-    }
-
-    private async Task SaveEditorValueAsync(ApplicationConfigurationPropertyDto property)
-    {
-        var editorValue = GetEditorValue(property);
-        object? value = editorValue;
-
-        if (property.ValueType == typeof(int))
-        {
-            value = int.TryParse(editorValue, out var intValue) ? intValue : 0;
-        }
-        else if (property.ValueType == typeof(int?))
-        {
-            value = int.TryParse(editorValue, out var intValue) ? intValue : null;
-        }
-        else if (property.ValueType == typeof(decimal))
-        {
-            value = DecimalInputConverter.TryParse(editorValue, out var decimalValue)
-                ? decimalValue
-                : 0m;
-        }
-        else if (property.ValueType == typeof(decimal?))
-        {
-            value = DecimalInputConverter.TryParse(editorValue, out var decimalValue)
-                ? decimalValue
-                : null;
-        }
-
-        await operationRunner.RunAsync(
-            (ApplicationConfigurationService service) =>
-                service.SaveOverrideAsync(
-                    configurationKey: property.ConfigurationKey,
-                    propertyName: property.Name,
-                    value: value,
-                    cancellationToken: CancellationToken.None
-                )
-        );
-        await LoadAsync();
-    }
-
-    private async Task ResetOverrideAsync(ApplicationConfigurationPropertyDto property)
+    private async Task ResetSettingAsync(ApplicationConfigurationPropertyDto setting)
     {
         await operationRunner.RunAsync(
             (ApplicationConfigurationService service) =>
                 service.ResetOverrideAsync(
-                    configurationKey: property.ConfigurationKey,
-                    propertyName: property.Name,
+                    configurationKey: setting.ConfigurationKey,
+                    propertyName: setting.Name,
                     cancellationToken: CancellationToken.None
                 )
         );
+        toastService.Success(L["ConfigurationSettingReset", L[setting.DisplayName]]);
         await LoadAsync();
     }
 
-    private string FormatValue(ApplicationConfigurationPropertyDto property, object? value)
+    private async Task AttachSectionSpyWhenSectionsChangedAsync()
     {
-        if (property.ValueType == typeof(bool))
+        var anchorIds = VisibleSections.Select(section => section.AnchorId).ToList();
+        var joinedAnchorIds = string.Join(',', anchorIds);
+
+        if (joinedAnchorIds == attachedSectionSpyAnchorIds)
         {
-            return value is true ? L["Enabled"] : L["Disabled"];
+            return;
         }
 
-        var stringValue = value?.ToString();
+        attachedSectionSpyAnchorIds = joinedAnchorIds;
+        await DetachSectionSpyAsync();
 
-        if (string.IsNullOrWhiteSpace(stringValue))
+        try
         {
-            return "-";
+            sectionSpyHandle = await jsRuntime.InvokeAsync<IJSObjectReference>(
+                "bearcat.configurationSectionSpy.attach",
+                pageElement,
+                anchorIds
+            );
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    private async Task ScrollToRequestedSectionAsync()
+    {
+        if (!isFragmentScrollPending)
+        {
+            return;
         }
 
-        return HasSelectOptions(property) ? FormatOptionValue(property, stringValue) : stringValue;
+        isFragmentScrollPending = false;
+        var anchorId = new Uri(navigationManager.Uri).Fragment.TrimStart('#');
+
+        if (anchorId.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await jsRuntime.InvokeVoidAsync("bearcat.scrollElementIntoViewById", anchorId);
+        }
+        catch (JSDisconnectedException) { }
     }
 
-    private static bool HasSelectOptions(ApplicationConfigurationPropertyDto property)
+    private async Task DetachSectionSpyAsync()
     {
-        return property.ValueType == typeof(string) && property.Options.Count > 0;
+        if (sectionSpyHandle is null)
+        {
+            return;
+        }
+
+        var handle = sectionSpyHandle;
+        sectionSpyHandle = null;
+
+        try
+        {
+            await handle.InvokeVoidAsync("detach");
+            await handle.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
     }
 
-    private IReadOnlyList<SelectOption<string>> GetSelectOptions(
-        ApplicationConfigurationPropertyDto property
-    )
+    public async ValueTask DisposeAsync()
     {
-        return property
-            .Options.Select(value => new SelectOption<string>(
-                value,
-                FormatOptionValue(property, value)
-            ))
-            .ToList();
-    }
-
-    private string GetSelectClass(ApplicationConfigurationPropertyDto property)
-    {
-        var longestOptionLength = property
-            .Options.Select(option => FormatOptionValue(property, option).Length)
-            .DefaultIfEmpty(16)
-            .Max();
-        var width = Math.Clamp(longestOptionLength + 6, 16, 56) * 8;
-
-        return $"max-w-full w-[min(100%,{width}px)]";
-    }
-
-    private string FormatOptionValue(ApplicationConfigurationPropertyDto? property, string value)
-    {
-        var localizedValue = property is null ? L[value] : L[$"{property.DisplayName}.{value}"];
-
-        return localizedValue.ResourceNotFound ? value : localizedValue;
-    }
-
-    private static string? GetInputMode(ApplicationConfigurationPropertyDto property)
-    {
-        return property.ValueType == typeof(decimal) || property.ValueType == typeof(decimal?)
-            ? "decimal"
-            : null;
-    }
-
-    private static string GetEditorKey(ApplicationConfigurationPropertyDto property)
-    {
-        return $"{property.ConfigurationKey}.{property.Name}";
+        GC.SuppressFinalize(this);
+        await DetachSectionSpyAsync();
     }
 }

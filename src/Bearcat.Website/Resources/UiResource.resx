@@ -617,28 +617,28 @@
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid archive with compression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Convert releases to unmanaged automatically</value></data>
   <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a release to unmanaged after the retention period and sends a notification with the release folder path. Bearcat does not delete the folder. You can then delete the raw files yourself.</value></data>
-  <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>Convert to unmanaged after (days)</value></data>
+  <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>Convert to unmanaged after</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Days since the uploads of a release were posted, or since its first upload finished when it was never marked as posted.</value></data>
   <data name="AutoDeleteArchives" xml:space="preserve"><value>Delete local archives automatically</value></data>
   <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Deletes the local archive files of an archive config once its retention expired. Only runs when the archives can be restored from an online mirror or repackaged from an existing release folder.</value></data>
-  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Delete local archives after (days)</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Delete local archives after</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Days since the last upload of an archive config finished. Every reupload restarts this period.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initial uploads</value></data>
   <data name="InitialUploadDescription" xml:space="preserve"><value>Controls when the first upload is created for a newly created release.</value></data>
-  <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Initial upload cooldown (minutes)</value></data>
+  <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Initial upload cooldown</value></data>
   <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>Wait this many minutes after release creation before creating the first upload.</value></data>
   <data name="FolderAutomation" xml:space="preserve"><value>Folder automation</value></data>
   <data name="FolderAutomationDescription" xml:space="preserve"><value>Controls how watched folders are turned into releases automatically.</value></data>
-  <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
+  <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Folder stability</value></data>
   <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>A watched folder is only turned into a release once its total file count and size have stayed unchanged for at least this many minutes. This avoids creating releases while files are still being copied into the folder.</value></data>
-  <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size</value></data>
   <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Ignore watched folders smaller than this size. Set to 0 to disable the size check.</value></data>
   <data name="UploadConcurrency" xml:space="preserve"><value>Upload concurrency</value></data>
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Controls how many file uploads run in parallel across all hosters.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximum parallel uploads</value></data>
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>The global upper limit of file uploads running at the same time across all hosters.</value></data>
-  <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum upload speed (MB/s)</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum upload speed</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>The global upper limit of the upload speed in MB/s, shared by all running uploads across all hosters. Decimal values are allowed, for example 0.5. Leave empty for unlimited. Very low limits can make uploads to hosters with request time limits fail, for example hosters behind Cloudflare abort requests after about 100 seconds.</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximum parallel uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster default</value></data>
@@ -662,7 +662,6 @@
   <data name="ParallelUploads" xml:space="preserve"><value>Parallel uploads</value></data>
   <data name="ParallelUploadsViaApi" xml:space="preserve"><value>Via API</value></data>
   <data name="DefaultValueWithNumber" xml:space="preserve"><value>Default: {0}</value></data>
-  <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="Reupload" xml:space="preserve"><value>Reupload</value></data>
   <data name="ReuploadFollowsReleaseGroup" xml:space="preserve"><value>Release group defaults</value></data>
@@ -1196,9 +1195,9 @@
   <data name="MaxParallelHashOperationsDescription" xml:space="preserve"><value>Max amount of archive files hashed at the same time. Higher values speed up hashing on SSDs. On hard disks a low value avoids overhead.</value></data>
   <data name="MaxDownloadAttempts" xml:space="preserve"><value>Maximum download attempts</value></data>
   <data name="MaxDownloadAttemptsDescription" xml:space="preserve"><value>How often a single archive file is downloaded again before the restore of the archive fails.</value></data>
-  <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay (seconds)</value></data>
+  <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay</value></data>
   <data name="DownloadRetryDelaySecondsDescription" xml:space="preserve"><value>How long Bearcat waits before it downloads an archive file again after a failed attempt.</value></data>
-  <data name="DownloadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum download speed (MB/s)</value></data>
+  <data name="DownloadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum download speed</value></data>
   <data name="DownloadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>The global upper limit of the download speed in MB/s while restoring archives from mirrors, shared by all running downloads. Decimal values are allowed, for example 0.5. Leave empty for unlimited.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when local archives need to be restored for a reupload.</value></data>
@@ -1314,15 +1313,15 @@
   <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Ready for release creation</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remote downloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Controls how folders on remote sources are watched, queued and downloaded.</value></data>
-  <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Folder stability</value></data>
   <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>A remote folder is only queued for download once its file count and total size have stayed unchanged for at least this many minutes. This avoids downloading releases that are still being uploaded to the server.</value></data>
-  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size</value></data>
   <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remote folders smaller than this size are not queued. Set to 0 to disable the size check.</value></data>
   <data name="RemoteSourceDownloadMaxParallelFileDownloads" xml:space="preserve"><value>Maximum parallel file downloads</value></data>
   <data name="RemoteSourceDownloadMaxParallelFileDownloadsDescription" xml:space="preserve"><value>The upper limit of files downloaded at the same time across all remote sources. Each remote source is additionally limited by its maximum number of connections.</value></data>
   <data name="RemoteSourceDownloadMaxDownloadAttempts" xml:space="preserve"><value>Maximum download attempts</value></data>
   <data name="RemoteSourceDownloadMaxDownloadAttemptsDescription" xml:space="preserve"><value>How often a single file is downloaded again before the download of the whole folder fails.</value></data>
-  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay (seconds)</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay</value></data>
   <data name="RemoteSourceDownloadRetryDelaySecondsDescription" xml:space="preserve"><value>How long Bearcat waits before it downloads a file from a remote source again after a failed attempt.</value></data>
   <data name="Priority" xml:space="preserve"><value>Priority</value></data>
   <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Lower values run first. Only matters when the patterns of several automations on the same remote folder overlap.</value></data>
@@ -1618,4 +1617,26 @@
   <data name="ArchiveCreationPhases" xml:space="preserve"><value>Archive creation phases</value></data>
   <data name="ArchiveCreationPhasePack" xml:space="preserve"><value>Pack</value></data>
   <data name="ArchiveCreationPhaseMd5Hashes" xml:space="preserve"><value>MD5 hashes</value></data>
+  <data name="ConfigurationSettingsSummary" xml:space="preserve"><value>{0} settings · {1} changed</value></data>
+  <data name="ConfigurationFilter" xml:space="preserve"><value>Filter settings</value></data>
+  <data name="ConfigurationFilterChanged" xml:space="preserve"><value>Changed ({0})</value></data>
+  <data name="ConfigurationSections" xml:space="preserve"><value>Sections</value></data>
+  <data name="ConfigurationSectionChangedCount" xml:space="preserve"><value>{0} changed</value></data>
+  <data name="ConfigurationSettingChanged" xml:space="preserve"><value>Changed</value></data>
+  <data name="ConfigurationDefaultValue" xml:space="preserve"><value>Default: {0}</value></data>
+  <data name="ConfigurationSettingSaved" xml:space="preserve"><value>{0} saved</value></data>
+  <data name="ConfigurationSettingReset" xml:space="preserve"><value>{0} reset to default</value></data>
+  <data name="ConfigurationValueInvalid" xml:space="preserve"><value>Enter a valid number for {0}.</value></data>
+  <data name="Discard" xml:space="preserve"><value>Discard</value></data>
+  <data name="NoChangedConfigurations" xml:space="preserve"><value>No changed settings.</value></data>
+  <data name="NotificationGroupEnabledCount" xml:space="preserve"><value>{0} of {1} on</value></data>
+  <data name="ConfigurationCategory.Transfers" xml:space="preserve"><value>Transfers</value></data>
+  <data name="ConfigurationCategory.Automation" xml:space="preserve"><value>Automation</value></data>
+  <data name="ConfigurationCategory.Archives" xml:space="preserve"><value>Archives</value></data>
+  <data name="ConfigurationCategory.Notifications" xml:space="preserve"><value>Notifications</value></data>
+  <data name="ConfigurationUnit.Days" xml:space="preserve"><value>days</value></data>
+  <data name="ConfigurationUnit.Minutes" xml:space="preserve"><value>min</value></data>
+  <data name="ConfigurationUnit.Seconds" xml:space="preserve"><value>s</value></data>
+  <data name="ConfigurationUnit.Megabytes" xml:space="preserve"><value>MB</value></data>
+  <data name="ConfigurationUnit.MegabytesPerSecond" xml:space="preserve"><value>MB/s</value></data>
 </root>

@@ -15,11 +15,13 @@ public class DownloadConfiguration : IApplicationConfiguration
         "DownloadRetryDelaySeconds",
         "DownloadRetryDelaySecondsDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Seconds)]
     public int DownloadRetryDelaySeconds { get; set; } = 30;
 
     [ApplicationConfigurationProperty(
         "DownloadSpeedLimitMegabytesPerSecond",
         "DownloadSpeedLimitMegabytesPerSecondDescription"
     )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.MegabytesPerSecond)]
     public decimal? DownloadSpeedLimitMegabytesPerSecond { get; set; }
 }

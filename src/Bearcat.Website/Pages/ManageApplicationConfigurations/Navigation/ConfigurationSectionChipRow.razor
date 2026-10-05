@@ -1,0 +1,22 @@
+@using Bearcat.Website.Pages.ManageApplicationConfigurations.Sections
+
+<nav class="bearcat-configuration-chip-row flex min-w-0 flex-nowrap gap-2 overflow-x-auto py-0.5 xl:hidden"
+     aria-label="@L["ConfigurationSections"]">
+    @foreach (var section in Sections)
+    {
+        <a href="@GetHref(section)"
+           data-configuration-section-link="@section.AnchorId"
+           class="bearcat-configuration-section-chip inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border/70 px-3 py-1.5 text-sm"
+           @onclick="() => ScrollToSectionAsync(section)"
+           @onclick:preventDefault>
+            <LucideIcon Name="@section.Appearance.Icon" class="bearcat-configuration-section-icon h-3.5 w-3.5 shrink-0" />
+            <span>@L[section.Configuration.DisplayName]</span>
+            @if (section.ChangedSettingCount > 0)
+            {
+                <span class="rounded-full border border-border/70 bg-background px-1.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+                    @section.ChangedSettingCount
+                </span>
+            }
+        </a>
+    }
+</nav>

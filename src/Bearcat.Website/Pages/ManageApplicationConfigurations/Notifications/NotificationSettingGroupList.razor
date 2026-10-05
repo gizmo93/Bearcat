@@ -1,0 +1,19 @@
+<div class="flex flex-col gap-5">
+    @foreach (var group in Groups)
+    {
+        <div class="flex flex-col gap-2">
+            <div class="flex items-baseline justify-between gap-3">
+                <h3 class="text-sm font-semibold">@L[$"NotificationGroup.{group.Key}"]</h3>
+                <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
+                    @L["NotificationGroupEnabledCount", group.Count(setting => setting.CurrentValue is true), group.Count()]
+                </span>
+            </div>
+            <div class="grid gap-2 @@xl:grid-cols-2">
+                @foreach (var setting in group)
+                {
+                    <NotificationSettingTile @key="setting.Name" Setting="setting" OnSave="OnSave" OnReset="OnReset" />
+                }
+            </div>
+        </div>
+    }
+</div>

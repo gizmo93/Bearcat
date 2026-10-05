@@ -46,6 +46,7 @@ public class ApplicationConfigurationService(
             .ToList();
 
         return new ApplicationConfigurationDto(
+            Key: definition.Key,
             DisplayName: definition.DisplayName,
             Description: definition.Description,
             Properties: properties
@@ -83,7 +84,8 @@ public class ApplicationConfigurationService(
             DefaultValue: defaultValue,
             CurrentValue: currentValue,
             IsOverridden: isOverridden,
-            Options: property.Options
+            Options: property.Options,
+            Unit: property.Unit
         );
     }
 

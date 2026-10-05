@@ -117,7 +117,7 @@ the hoster throttles or rejects parallel downloads.
 
 ## Speed limits
 
-- **"Maximum download speed (MB/s)"** in the "Mirror downloads" section on the "Configurations"
+- **"Maximum download speed"** (MB/s) in the "Mirror downloads" section on the "Configurations"
   page caps the combined speed of all running mirror downloads.
 - **"Maximum mirror download speed (MB/s)"** in the hoster registration caps the combined speed of
   all mirror downloads from that hoster registration.
