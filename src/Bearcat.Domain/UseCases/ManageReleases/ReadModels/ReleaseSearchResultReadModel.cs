@@ -11,7 +11,7 @@ public record ReleaseSearchResultReadModel(
     int ReleaseGroupId,
     string ReleaseGroupName,
     string? ReleaseFolderPath,
-    DateTime CreatedAt,
+    DateTime? CreatedAt,
     DateTime? UploadsPostedAt,
     string? MetadataTitle,
     string? CoverUrl,

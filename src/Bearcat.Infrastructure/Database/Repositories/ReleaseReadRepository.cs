@@ -141,7 +141,7 @@ public class ReleaseReadRepository(
                 ReleaseGroupId: row.ReleaseGroupId,
                 ReleaseGroupName: row.ReleaseGroupName,
                 ReleaseFolderPath: row.ReleaseFolderPath,
-                CreatedAt: row.CreatedAt,
+                CreatedAt: row.CreatedAt == DateTime.MinValue ? null : row.CreatedAt,
                 UploadsPostedAt: row.UploadsPostedAt,
                 MetadataTitle: row.MetadataTitle,
                 CoverUrl: row.CoverUrl,

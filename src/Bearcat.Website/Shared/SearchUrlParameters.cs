@@ -16,7 +16,10 @@ public static class SearchUrlParameters
     public static TEnum? ParseEnum<TEnum>(string? value)
         where TEnum : struct, Enum
     {
-        return Enum.TryParse<TEnum>(value, ignoreCase: true, out var parsed) ? parsed : null;
+        return
+            Enum.TryParse<TEnum>(value, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+            ? parsed
+            : null;
     }
 
     public static int? NullWhenZero(int? id)

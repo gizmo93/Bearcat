@@ -536,7 +536,6 @@
   <data name="AssignedReleases" xml:space="preserve"><value>Zugewiesene Releases</value></data>
   <data name="AutomaticReuploads" xml:space="preserve"><value>Automatische Reuploads</value></data>
     <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatzuploads automatisch, wenn Links lange genug offline sind.</value></data>
-  <data name="ChangeReleaseGroup" xml:space="preserve"><value>Gruppe ändern</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Manuellen Reupload erstellen</value></data>
   <data name="CheckOnlineStateNow" xml:space="preserve"><value>Onlinestatus jetzt prüfen</value></data>
   <data name="ResumeUpload" xml:space="preserve"><value>Upload wiederaufnehmen</value></data>
@@ -587,7 +586,6 @@
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht gelöscht werden.</value></data>
   <data name="NewReleaseGroup" xml:space="preserve"><value>Neue Releasegruppe</value></data>
   <data name="NoReleaseGroupsFound" xml:space="preserve"><value>Keine Releasegruppen gefunden</value></data>
-  <data name="NoReleasesSelected" xml:space="preserve"><value>Keine Releases ausgewählt</value></data>
   <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Aktionen für Releasegruppen öffnen</value></data>
   <data name="ReleaseGroup" xml:space="preserve"><value>Releasegruppe</value></data>
   <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Releasegruppe für {0} Release(s) geändert.</value></data>
@@ -599,8 +597,6 @@
   <data name="ReleaseOverview" xml:space="preserve"><value>Releaseübersicht</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Gruppe auswählen</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Releasegruppe auswählen</value></data>
-  <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
-  <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann Releaseordner zum Löschen freigegeben und wann lokale Archivdateien gelöscht werden. Bearcat löscht den Releaseordner nie selbst.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archivrepackaging</value></data>
@@ -978,8 +974,6 @@
     </data>
   <data name="PrimaryLanguage" xml:space="preserve"><value>Primärsprache</value></data>
   <data name="NotSet" xml:space="preserve"><value>&lt;Nicht gesetzt&gt;</value></data>
-  <data name="SelectLanguage" xml:space="preserve"><value>Sprache auswählen</value></data>
-  <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Sprache ändern</value></data>
   <data name="PrimaryLanguageChangedForReleases" xml:space="preserve"><value>Primärsprache für {0} Release(s) geändert.</value></data>
   <data name="Unknown" xml:space="preserve"><value>Unbekannt</value></data>
   <data name="SearchLanguage" xml:space="preserve"><value>Sprache suchen...</value></data>
@@ -1645,4 +1639,19 @@
   <data name="ClearFilter" xml:space="preserve"><value>Filter entfernen</value></data>
   <data name="ResetAllFilters" xml:space="preserve"><value>Alle zurücksetzen</value></data>
   <data name="NoUploads" xml:space="preserve"><value>Keine Uploads</value></data>
+  <data name="SortOrder" xml:space="preserve"><value>Sortierung</value></data>
+  <data name="ReleaseSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Zuletzt hinzugefügt</value></data>
+  <data name="ReleaseSearchSortOrder.NameAscending" xml:space="preserve"><value>Name A bis Z</value></data>
+  <data name="ReleaseSearchSortOrder.UploadsPostedAtDescending" xml:space="preserve"><value>Zuletzt gepostet</value></data>
+  <data name="ReleaseSearchSortOrder.OfflineUploadConfigCountDescending" xml:space="preserve"><value>Meiste Offlinemirrors</value></data>
+  <data name="Mirrors" xml:space="preserve"><value>Mirrors</value></data>
+  <data name="Added" xml:space="preserve"><value>Hinzugefügt</value></data>
+  <data name="LanguageShort" xml:space="preserve"><value>Sprache</value></data>
+  <data name="ReadyToPost" xml:space="preserve"><value>Bereit zum Posten</value></data>
+  <data name="NoReleasesMatch" xml:space="preserve"><value>Keine passenden Releases</value></data>
+  <data name="NoReleasesMatchHint" xml:space="preserve"><value>Entferne einen Filter oder suche nach einem kürzeren Teil des Namens.</value></data>
+  <data name="SelectedCount" xml:space="preserve"><value>{0} ausgewählt</value></data>
+  <data name="SelectAllOnPage" xml:space="preserve"><value>Alle auf der Seite auswählen</value></data>
+  <data name="SelectRelease" xml:space="preserve"><value>{0} auswählen</value></data>
+  <data name="CopyReleaseName" xml:space="preserve"><value>Releasenamen kopieren</value></data>
 </root>

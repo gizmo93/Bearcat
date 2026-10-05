@@ -1,0 +1,69 @@
+@if (Releases is null)
+{
+    <div class="bearcat-config-list bearcat-release-result-list" aria-busy="true">
+        @for (var skeletonIndex = 0; skeletonIndex < SkeletonRowCount; skeletonIndex++)
+        {
+            <div class="bearcat-config-row bearcat-release-result-row @GridColumnsClass">
+                <BbSkeleton Width="16px" Height="16px" />
+                <div class="min-w-0 space-y-2">
+                    <BbSkeleton Height="14px" Class="w-3/5" />
+                    <BbSkeleton Height="10px" Class="w-2/5" />
+                </div>
+                <div class="bearcat-release-result-details">
+                    <BbSkeleton Width="64px" Height="12px" />
+                    <BbSkeleton Width="72px" Height="12px" />
+                    <BbSkeleton Width="20px" Height="12px" />
+                    <BbSkeleton Width="56px" Height="12px" />
+                </div>
+                <div></div>
+            </div>
+        }
+    </div>
+}
+else if (Releases.Count == 0)
+{
+    <div class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border/70 px-4 py-12 text-center">
+        <LucideIcon Name="inbox" class="h-6 w-6 text-muted-foreground" />
+        @if (HasActiveFilters)
+        {
+            <p class="text-sm font-medium">@L["NoReleasesMatch"]</p>
+            <p class="max-w-sm text-sm text-muted-foreground">@L["NoReleasesMatchHint"]</p>
+            <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Class="mt-2" OnClick="OnResetFilters">
+                @L["ResetFilters"]
+            </BbButton>
+        }
+        else
+        {
+            <p class="text-sm text-muted-foreground">@L["NoReleasesFound"]</p>
+        }
+    </div>
+}
+else
+{
+    <div class="@ListClass" aria-busy="@(IsLoading ? "true" : "false")">
+        <div class="bearcat-config-header bearcat-release-result-header @GridColumnsClass">
+            <div class="flex items-center">
+                <BbCheckbox Checked="AreAllVisibleReleasesSelected"
+                            Indeterminate="AreSomeVisibleReleasesSelected"
+                            AriaLabel="@L["SelectAllOnPage"]"
+                            CheckedChanged="@(_ => ToggleAllVisibleReleasesAsync())" />
+            </div>
+            <span>@L["Release"]</span>
+            <span>@L["Mirrors"]</span>
+            <span>@L["ReleaseContentType"]</span>
+            <span>@L["LanguageShort"]</span>
+            <span>@L["Added"]</span>
+            <span></span>
+        </div>
+        @foreach (var release in Releases)
+        {
+            <ReleaseSearchResultRow @key="release.ReleaseId"
+                                    Release="release"
+                                    SearchTerm="@SearchTerm"
+                                    IsSelected="Selection.IsSelected(release.ReleaseId)"
+                                    OnSelectionToggled="@(extendRange => ToggleReleaseAsync(release.ReleaseId, extendRange))"
+                                    OnEdit="@(() => OnEditRelease.InvokeAsync(release))"
+                                    OnDelete="@(() => OnDeleteRelease.InvokeAsync(release))" />
+        }
+    </div>
+}

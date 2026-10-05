@@ -89,6 +89,24 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
     }
 
     [Test]
+    public async Task SearchReleaseResultsAsync_ReleaseCreatedBeforeCreatedAtExisted_ReturnsNullCreatedAt()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.Legacy.2020-GRP");
+        release.CreatedAt = DateTime.MinValue;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.SearchReleaseResultsAsync(
+            new ReleaseSearchQuery(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Items.Single().CreatedAt.ShouldBeNull();
+    }
+
+    [Test]
     public async Task SearchReleaseResultsAsync_ReleaseWithoutMetadataAndClassification_ReturnsNullForTheirFields()
     {
         // Arrange

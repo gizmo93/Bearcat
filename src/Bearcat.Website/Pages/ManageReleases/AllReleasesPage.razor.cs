@@ -11,38 +11,33 @@ using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleases.Results;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
-using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
     DialogService dialogService,
-    ToastService toastService,
     IScopedOperationRunner operationRunner,
     NavigationManager navigationManager
 ) : IReleaseSearchUrlValues
 {
-    private const string NoBulkLanguageSelected = "__not_selected__";
-
-    private IReadOnlyList<ReleaseReadModel> releases = [];
+    private IReadOnlyList<ReleaseSearchResultReadModel>? releases;
     private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
     private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
-    private readonly HashSet<int> selectedReleaseIds = [];
+    private readonly ReleaseSelection selection = new();
     private ReleaseSearchQuery searchQuery = new();
     private ReleaseOnlineStateCounts? onlineStateCounts;
     private SearchUrlState<ReleaseSearchQuery>? loadedState;
     private int totalCount;
     private int pageIndex;
     private int pageSize = SearchUrlParameters.DefaultPageSize;
-    private int selectedBulkReleaseGroupId;
-    private string selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
     private bool isLoading;
 
     [SupplyParameterFromQuery(Name = "q")]
@@ -84,6 +79,9 @@ public partial class AllReleasesPage(
     [SupplyParameterFromQuery(Name = "upload")]
     public string? UploadId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string? SortOrder { get; set; }
+
     [SupplyParameterFromQuery(Name = "page")]
     public int? Page { get; set; }
 
@@ -97,33 +95,18 @@ public partial class AllReleasesPage(
         ];
 
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-    private string ReleasesTableKey => $"{pageIndex}-{pageSize}-{searchQuery.GetHashCode()}";
-    private bool AreAllVisibleReleasesSelected =>
-        releases.Count > 0 && releases.All(r => selectedReleaseIds.Contains(r.ReleaseId));
 
-    private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
-        [
-            new(0, L["SelectReleaseGroup"]),
-            .. releaseGroups.Select(group => new SelectOption<int>(
-                group.ReleaseGroupId,
-                group.Name
-            )),
-        ];
+    private IReadOnlyList<int> VisibleReleaseIds =>
+        releases?.Select(release => release.ReleaseId).ToList() ?? [];
 
-    private IReadOnlyList<SelectOption<string>> BulkLanguageOptions =>
-        [
-            new(NoBulkLanguageSelected, L["SelectLanguage"]),
-            new(string.Empty, L["NotSet"]),
-            .. CultureInfo
-                .GetCultures(CultureTypes.NeutralCultures)
-                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
-                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
-                .OrderBy(culture => culture.NativeName)
-                .Select(culture => new SelectOption<string>(
-                    culture.TwoLetterISOLanguageName,
-                    culture.NativeName
-                )),
-        ];
+    private bool HasActiveFilters => searchQuery != EmptySearchQuery;
+
+    private ReleaseSearchQuery EmptySearchQuery => new(SortOrder: searchQuery.SortOrder);
+
+    private string SectionClass =>
+        selection.Count > 0
+            ? "bearcat-releases-page space-y-4 pb-20"
+            : "bearcat-releases-page space-y-4";
 
     protected override async Task OnInitializedAsync()
     {
@@ -152,7 +135,7 @@ public partial class AllReleasesPage(
 
         if (loadedState is not null && loadedState.Query != state.Query)
         {
-            selectedReleaseIds.Clear();
+            selection.Clear();
         }
 
         searchQuery = state.Query;
@@ -166,7 +149,7 @@ public partial class AllReleasesPage(
         return ReleaseSearchUrl.Build(searchQuery, page, pageSize);
     }
 
-    private async Task DeleteReleaseAsync(ReleaseReadModel release)
+    private async Task DeleteReleaseAsync(ReleaseSearchResultReadModel release)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseTitle", release.Name],
@@ -228,7 +211,7 @@ public partial class AllReleasesPage(
         }
     }
 
-    private async Task ShowEditReleaseDialogAsync(ReleaseReadModel release)
+    private async Task ShowEditReleaseDialogAsync(ReleaseSearchResultReadModel release)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -271,7 +254,7 @@ public partial class AllReleasesPage(
         {
             var result = await operationRunner.RunAsync(
                 (IReleaseReadRepository repository) =>
-                    repository.SearchReleasesAsync(
+                    repository.SearchReleaseResultsAsync(
                         searchQuery with
                         {
                             PageIndex = pageIndex,
@@ -284,7 +267,7 @@ public partial class AllReleasesPage(
             totalCount = result.TotalCount;
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;
-            selectedReleaseIds.RemoveWhere(id => releases.All(r => r.ReleaseId != id));
+            selection.KeepOnly(VisibleReleaseIds);
 
             if (totalCount > 0 && pageIndex >= TotalPages)
             {
@@ -320,6 +303,16 @@ public partial class AllReleasesPage(
         return ApplySearchAsync(searchQuery with { OnlineState = onlineState });
     }
 
+    private Task ApplySortOrderAsync(ReleaseSearchSortOrder sortOrder)
+    {
+        return ApplySearchAsync(searchQuery with { SortOrder = sortOrder });
+    }
+
+    private Task ResetFiltersAsync()
+    {
+        return ApplySearchAsync(EmptySearchQuery);
+    }
+
     private async Task NavigateToSearchAsync(ReleaseSearchQuery query, bool replaceHistoryEntry)
     {
         var targetUri = navigationManager
@@ -333,76 +326,6 @@ public partial class AllReleasesPage(
         }
 
         navigationManager.NavigateTo(targetUri, replace: replaceHistoryEntry);
-    }
-
-    private void ToggleReleaseSelection(int releaseId, bool selected)
-    {
-        if (selected)
-        {
-            selectedReleaseIds.Add(releaseId);
-            return;
-        }
-
-        selectedReleaseIds.Remove(releaseId);
-    }
-
-    private void SelectAllVisibleReleases()
-    {
-        foreach (var release in releases)
-        {
-            selectedReleaseIds.Add(release.ReleaseId);
-        }
-    }
-
-    private void DeselectAllReleases()
-    {
-        selectedReleaseIds.Clear();
-        selectedBulkReleaseGroupId = 0;
-        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
-    }
-
-    private async Task ApplyBulkReleaseGroupAsync()
-    {
-        if (selectedReleaseIds.Count == 0 || selectedBulkReleaseGroupId == 0)
-        {
-            return;
-        }
-
-        var releaseIds = selectedReleaseIds.ToList();
-
-        await operationRunner.RunAsync(
-            (ReleaseService service) =>
-                service.UpdateReleaseGroupAsync(releaseIds, selectedBulkReleaseGroupId)
-        );
-
-        toastService.Success(L["ReleaseGroupChangedForReleases", releaseIds.Count]);
-        selectedReleaseIds.Clear();
-        selectedBulkReleaseGroupId = 0;
-        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
-        await RefreshReleasesAsync();
-    }
-
-    private async Task ApplyBulkPrimaryLanguageAsync()
-    {
-        if (
-            selectedReleaseIds.Count == 0
-            || selectedBulkPrimaryLanguageCode == NoBulkLanguageSelected
-        )
-        {
-            return;
-        }
-
-        var releaseIds = selectedReleaseIds.ToList();
-        await operationRunner.RunAsync(
-            (ReleaseService service) =>
-                service.UpdatePrimaryLanguageAsync(releaseIds, selectedBulkPrimaryLanguageCode)
-        );
-
-        toastService.Success(L["PrimaryLanguageChangedForReleases", releaseIds.Count]);
-        selectedReleaseIds.Clear();
-        selectedBulkReleaseGroupId = 0;
-        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
-        await RefreshReleasesAsync();
     }
 
     private void ChangePageSize(int selectedPageSize)

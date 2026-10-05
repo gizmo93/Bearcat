@@ -425,6 +425,32 @@ const saveShortcut = (() => {
     return { attach };
 })();
 
+const selectionEscapeKey = (() => {
+    const openOverlaySelector = "[role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox']";
+
+    function attach(dotNetReference) {
+        const onKeyDown = event => {
+            if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) {
+                return;
+            }
+
+            if (isEditableElement(event.target) || document.querySelector(openOverlaySelector)) {
+                return;
+            }
+
+            dotNetReference.invokeMethodAsync("ClearSelectionFromEscapeKeyAsync").catch(() => {});
+        };
+
+        document.addEventListener("keydown", onKeyDown, true);
+
+        return {
+            detach: () => document.removeEventListener("keydown", onKeyDown, true),
+        };
+    }
+
+    return { attach };
+})();
+
 const logView = (() => {
     const registry = new WeakMap();
     const bottomThreshold = 24;
@@ -584,6 +610,7 @@ window.bearcat = {
     updateScrollAwareHeader,
     lineNumberedTextarea,
     saveShortcut,
+    selectionEscapeKey,
     logView,
     releaseStickyHeader,
     configurationSectionSpy,

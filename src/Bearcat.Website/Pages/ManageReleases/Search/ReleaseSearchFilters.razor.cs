@@ -1,4 +1,3 @@
-using System.Globalization;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
@@ -48,18 +47,7 @@ public partial class ReleaseSearchFilters : ComponentBase
             .ToList();
 
     private IReadOnlyList<SelectOption<string>> PrimaryLanguageOptions =>
-        [
-            new(string.Empty, L["NotSet"]),
-            .. CultureInfo
-                .GetCultures(CultureTypes.NeutralCultures)
-                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
-                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
-                .OrderBy(culture => culture.NativeName)
-                .Select(culture => new SelectOption<string>(
-                    culture.TwoLetterISOLanguageName,
-                    culture.NativeName
-                )),
-        ];
+        PrimaryLanguageSelectOptions.Create(L["NotSet"]);
 
     private IReadOnlyList<SelectOption<int?>> ReleaseGroupOptions =>
         ReleaseGroups

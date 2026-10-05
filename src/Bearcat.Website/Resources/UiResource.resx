@@ -533,7 +533,6 @@
   <data name="AssignedReleases" xml:space="preserve"><value>Assigned releases</value></data>
   <data name="AutomaticReuploads" xml:space="preserve"><value>Automatic reuploads</value></data>
   <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Create replacement uploads automatically when checked offline files are old enough.</value></data>
-  <data name="ChangeReleaseGroup" xml:space="preserve"><value>Change group</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Create manual reupload</value></data>
   <data name="CheckOnlineStateNow" xml:space="preserve"><value>Check online state now</value></data>
   <data name="ResumeUpload" xml:space="preserve"><value>Resume upload</value></data>
@@ -584,7 +583,6 @@
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} can not be deleted in its current state.</value></data>
   <data name="NewReleaseGroup" xml:space="preserve"><value>New release group</value></data>
   <data name="NoReleaseGroupsFound" xml:space="preserve"><value>No release groups found</value></data>
-  <data name="NoReleasesSelected" xml:space="preserve"><value>No releases selected</value></data>
   <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Open release group actions</value></data>
   <data name="ReleaseGroup" xml:space="preserve"><value>Release group</value></data>
   <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Release group changed for {0} release(s).</value></data>
@@ -596,8 +594,6 @@
   <data name="ReleaseOverview" xml:space="preserve"><value>Release overview</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Select release group</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
-  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
-  <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} release(s) selected</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when release folders are released for deletion and when local archive files are deleted. Bearcat never deletes the release folder itself.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
@@ -975,8 +971,6 @@
     </data>
   <data name="PrimaryLanguage" xml:space="preserve"><value>Primary language</value></data>
   <data name="NotSet" xml:space="preserve"><value>&lt;Not set&gt;</value></data>
-  <data name="SelectLanguage" xml:space="preserve"><value>Select language</value></data>
-  <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Change language</value></data>
   <data name="PrimaryLanguageChangedForReleases" xml:space="preserve"><value>Primary language changed for {0} release(s).</value></data>
   <data name="Unknown" xml:space="preserve"><value>Unknown</value></data>
   <data name="SearchLanguage" xml:space="preserve"><value>Search language...</value></data>
@@ -1642,4 +1636,19 @@
   <data name="ClearFilter" xml:space="preserve"><value>Clear filter</value></data>
   <data name="ResetAllFilters" xml:space="preserve"><value>Reset all</value></data>
   <data name="NoUploads" xml:space="preserve"><value>No uploads</value></data>
+  <data name="SortOrder" xml:space="preserve"><value>Sort order</value></data>
+  <data name="ReleaseSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Recently added</value></data>
+  <data name="ReleaseSearchSortOrder.NameAscending" xml:space="preserve"><value>Name A to Z</value></data>
+  <data name="ReleaseSearchSortOrder.UploadsPostedAtDescending" xml:space="preserve"><value>Recently posted</value></data>
+  <data name="ReleaseSearchSortOrder.OfflineUploadConfigCountDescending" xml:space="preserve"><value>Most offline mirrors</value></data>
+  <data name="Mirrors" xml:space="preserve"><value>Mirrors</value></data>
+  <data name="Added" xml:space="preserve"><value>Added</value></data>
+  <data name="LanguageShort" xml:space="preserve"><value>Lang</value></data>
+  <data name="ReadyToPost" xml:space="preserve"><value>Ready to post</value></data>
+  <data name="NoReleasesMatch" xml:space="preserve"><value>No releases match</value></data>
+  <data name="NoReleasesMatchHint" xml:space="preserve"><value>Remove a filter or search for a shorter part of the name.</value></data>
+  <data name="SelectedCount" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="SelectAllOnPage" xml:space="preserve"><value>Select all on page</value></data>
+  <data name="SelectRelease" xml:space="preserve"><value>Select {0}</value></data>
+  <data name="CopyReleaseName" xml:space="preserve"><value>Copy release name</value></data>
 </root>
