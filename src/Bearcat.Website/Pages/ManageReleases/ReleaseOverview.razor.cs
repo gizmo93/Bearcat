@@ -238,8 +238,6 @@ public partial class ReleaseOverview(
     private static string JoinLines(IReadOnlyList<string> lines) =>
         string.Join(Environment.NewLine, lines);
 
-    private static string GetMonogram(string name) => name.Length <= 2 ? name : name[..2];
-
     private static bool IsHosterNameShown(ReleaseOverviewUploadReadModel upload) =>
         !string.Equals(
             upload.UploadConfigName,

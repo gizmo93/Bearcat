@@ -1,5 +1,6 @@
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Shared.ProgressSteps;
 
 namespace Bearcat.Website.Pages.ManageReleases.ProgressSteps;
 
@@ -48,11 +49,11 @@ public static class ReleaseProgressStepService
         return databaseNames.Count == 0
             ? new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Info,
-                State: ReleaseProgressStepState.Pending
+                State: ProgressStepState.Pending
             )
             : new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Info,
-                State: ReleaseProgressStepState.Done
+                State: ProgressStepState.Done
             )
             {
                 DatabaseNames = databaseNames,
@@ -88,7 +89,7 @@ public static class ReleaseProgressStepService
         {
             return new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Archived,
-                State: ReleaseProgressStepState.InProgress
+                State: ProgressStepState.InProgress
             );
         }
 
@@ -99,11 +100,11 @@ public static class ReleaseProgressStepService
         return finishedArchiveCount == 0
             ? new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Archived,
-                State: ReleaseProgressStepState.Pending
+                State: ProgressStepState.Pending
             )
             : new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Archived,
-                State: ReleaseProgressStepState.Done
+                State: ProgressStepState.Done
             )
             {
                 Count = finishedArchiveCount,
@@ -114,7 +115,7 @@ public static class ReleaseProgressStepService
     {
         return new ReleaseProgressStep(
             Kind: ReleaseProgressStepKind.Archived,
-            State: ReleaseProgressStepState.Attention
+            State: ProgressStepState.Attention
         )
         {
             ArchiveProblemState = problemState,
@@ -130,7 +131,7 @@ public static class ReleaseProgressStepService
         {
             return new ReleaseProgressStep(
                 ReleaseProgressStepKind.Uploaded,
-                ReleaseProgressStepState.Pending
+                ProgressStepState.Pending
             );
         }
 
@@ -142,15 +143,15 @@ public static class ReleaseProgressStepService
                     or UploadState.CancellationRequested
         );
 
-        var state = ReleaseProgressStepState.Done;
+        var state = ProgressStepState.Done;
 
         if (isAnyUploadRunning)
         {
-            state = ReleaseProgressStepState.InProgress;
+            state = ProgressStepState.InProgress;
         }
         else if (release.OnlineUploadConfigsCount < release.ActiveUploadConfigsCount)
         {
-            state = ReleaseProgressStepState.Attention;
+            state = ProgressStepState.Attention;
         }
 
         return new ReleaseProgressStep(Kind: ReleaseProgressStepKind.Uploaded, State: state)
@@ -173,7 +174,7 @@ public static class ReleaseProgressStepService
         {
             return new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.LinkContainers,
-                State: ReleaseProgressStepState.NotApplicable
+                State: ProgressStepState.NotApplicable
             );
         }
 
@@ -184,7 +185,7 @@ public static class ReleaseProgressStepService
         return failedContainerCount > 0
             ? new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.LinkContainers,
-                State: ReleaseProgressStepState.Attention
+                State: ProgressStepState.Attention
             )
             {
                 Count = failedContainerCount,
@@ -192,7 +193,7 @@ public static class ReleaseProgressStepService
             }
             : new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.LinkContainers,
-                State: ReleaseProgressStepState.Done
+                State: ProgressStepState.Done
             )
             {
                 Count = containers.Count,
@@ -208,14 +209,14 @@ public static class ReleaseProgressStepService
         return postedLocationCount > 0 || release.UploadsPostedAt is not null
             ? new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Posted,
-                State: ReleaseProgressStepState.Done
+                State: ProgressStepState.Done
             )
             {
                 Count = postedLocationCount,
             }
             : new ReleaseProgressStep(
                 Kind: ReleaseProgressStepKind.Posted,
-                State: ReleaseProgressStepState.Pending
+                State: ProgressStepState.Pending
             );
     }
 }

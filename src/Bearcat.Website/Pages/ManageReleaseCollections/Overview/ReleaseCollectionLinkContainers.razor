@@ -1,0 +1,70 @@
+<section class="space-y-3">
+    <div class="bearcat-overview-section-header">
+        <h2 class="bearcat-overview-section-heading">
+            <LucideIcon Name="link" class="h-4 w-4" />
+            @L["LinkContainers"]
+            <span class="bearcat-overview-count-pill">@ContainerCount</span>
+        </h2>
+
+        @if (containerUrlsByLinkCrypter.Count > 0)
+        {
+            <BbDropdownMenu>
+                <BbDropdownMenuTrigger>
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small">
+                        <LucideIcon Name="copy" class="h-4 w-4" />
+                        @L["CopyAllLinks"]
+                        <LucideIcon Name="chevron-down" class="h-4 w-4" />
+                    </BbButton>
+                </BbDropdownMenuTrigger>
+                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                    <BbDropdownMenuLabel>@L["LinkContainers"]</BbDropdownMenuLabel>
+                    @foreach (var containerUrls in containerUrlsByLinkCrypter)
+                    {
+                        var text = JoinLines(containerUrls.ContainerUrls);
+                        var hasUrls = containerUrls.ContainerUrls.Count > 0;
+                        <BbDropdownMenuItem Disabled="@(!hasUrls)"
+                                            data-bearcat-copy="@(hasUrls ? text : null)"
+                                            OnClick="@(() => CopyTextAsync(text))">
+                            <Icon>
+                                <LucideIcon Name="link" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@containerUrls.LinkCrypterRegistrationName (@containerUrls.ContainerUrls.Count)</ChildContent>
+                        </BbDropdownMenuItem>
+                    }
+                </BbDropdownMenuContent>
+            </BbDropdownMenu>
+        }
+    </div>
+
+    <div class="bearcat-overview-card">
+        @foreach (var uploadSlot in UploadSlotsWithLinkContainers)
+        {
+            <div class="bearcat-collection-link-container-row">
+                <div class="bearcat-overview-hoster-name-cell">
+                    <span class="bearcat-overview-monogram" aria-hidden="true">@MonogramText.GetFromName(uploadSlot.Name)</span>
+                    <p class="min-w-0 truncate text-sm font-semibold" title="@uploadSlot.Name">@uploadSlot.Name</p>
+                </div>
+
+                <div class="bearcat-collection-link-container-chips">
+                    @foreach (var container in uploadSlot.Containers)
+                    {
+                        <LinkContainerChip LinkCrypterRegistrationName="@container.LinkCrypterRegistrationName"
+                                           State="container.State"
+                                           ContainerUrl="@container.ContainerUrl"
+                                           Errors="container.Errors"
+                                           CoverageText="@GetCoverageText(container, uploadSlot)"
+                                           CoverageTitle="@GetCoverageTitle(container, uploadSlot)"
+                                           OnDeleteRequested="@(() => OnDeleteFailedContainerRequested.InvokeAsync(container))" />
+                    }
+                    @foreach (var linkCrypter in CollectionLinkContainerOverviewService.GetSharedLinkCryptersWithoutContainer(uploadSlot))
+                    {
+                        <span class="bearcat-overview-chip bearcat-overview-chip-pending">
+                            <span class="truncate">@linkCrypter.LinkCrypterRegistrationName</span>
+                            <span class="shrink-0">@L["ReleaseCollectionProgressContainersNotCreatedYet"]</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>

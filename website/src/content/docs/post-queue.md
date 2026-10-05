@@ -58,7 +58,7 @@ The workflow opens one release after each other for posting.
 Click **Start workflow** under single releases or collections to open the first release.
 The workflow bar shows your progress.
 
-In the release header, use [**Post to forum**](/Bearcat/posting-to-forums/) to prepare a draft,
+In the release or collection header, use [**Post to forum**](/Bearcat/posting-to-forums/) to prepare a draft,
 or [**Render forum post**](/Bearcat/forum-post-templates/#render-a-post) from its arrow menu to copy the text.
 Submit the post in the forum, then return to the workflow bar.
 

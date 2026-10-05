@@ -1,0 +1,135 @@
+<section class="space-y-3">
+    <div class="bearcat-overview-section-header">
+        <h2 class="bearcat-overview-section-heading">
+            <LucideIcon Name="images" class="h-4 w-4" />
+            @L["CollectionImageUploads"]
+            <span class="bearcat-overview-count-pill">@ImageUploads.Count</span>
+        </h2>
+
+        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["Add"]
+        </BbButton>
+    </div>
+
+    <div class="bearcat-overview-card">
+        @if (ImageUploads.Count == 0)
+        {
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoCollectionImageUploadsYet"]</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var imageUpload in ImageUploads)
+            {
+                var thumbnailUrl = CollectionImageUploadPreviewUrls.GetThumbnailUrl(imageUpload.ImageUrls);
+                var fullSizeUrl = CollectionImageUploadPreviewUrls.GetFullSizeUrl(imageUpload.ImageUrls);
+                var timestamp = imageUpload.UploadedAt ?? imageUpload.CreatedAt;
+
+                <div class="bearcat-overview-image-row bearcat-collection-image-row">
+                    <div>
+                        @if (thumbnailUrl is null)
+                        {
+                            <div class="bearcat-overview-image-thumbnail bearcat-overview-image-thumbnail-empty" aria-hidden="true">
+                                <LucideIcon Name="image" class="h-4 w-4" />
+                            </div>
+                        }
+                        else
+                        {
+                            <a class="block" href="@fullSizeUrl" target="_blank" rel="noreferrer noopener" title="@L["OpenCoverInNewTab"]">
+                                <img src="@thumbnailUrl" alt="@imageUpload.Name" loading="lazy" class="bearcat-overview-image-thumbnail" />
+                            </a>
+                        }
+                    </div>
+
+                    <div class="bearcat-collection-image-content-cell">
+                        <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                            <span class="truncate text-sm font-medium" title="@imageUpload.Name">@imageUpload.Name</span>
+                            @if (IsImageHosterNameShown(imageUpload))
+                            {
+                                <span class="truncate text-xs text-muted-foreground" title="@imageUpload.ImageHosterRegistrationName">
+                                    @imageUpload.ImageHosterRegistrationName
+                                </span>
+                            }
+                            @if (imageUpload.UploadState is null)
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline">@L["ImageUploadPending"]</BbBadge>
+                            }
+                            else if (imageUpload.UploadState is not UploadState.Completed)
+                            {
+                                <UploadStateBadge State="imageUpload.UploadState.Value" />
+                            }
+                            <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
+                        </div>
+
+                        @if (timestamp is not null)
+                        {
+                            <p class="text-xs text-muted-foreground" title="@FormatTimestamp(timestamp.Value)">
+                                @HumanizeTimestamp(timestamp.Value)
+                            </p>
+                        }
+
+                        @if (imageUpload.ImageUrls.Count == 0)
+                        {
+                            <p class="text-xs text-muted-foreground">@L["NoImageUploadUrlsFound"]</p>
+                        }
+                        else
+                        {
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach (var imageUrl in imageUpload.ImageUrls)
+                                {
+                                    <span class="bearcat-overview-chip" title="@imageUrl.Url">
+                                        <a href="@imageUrl.Url"
+                                           target="_blank"
+                                           rel="noreferrer noopener"
+                                           class="bearcat-overview-chip-label-link">
+                                            @imageUrl.ImageSize
+                                        </a>
+                                        <CopyButton Value="@imageUrl.Url"
+                                                    Label="@L["CopyLink"]"
+                                                    Variant="ButtonVariant.Ghost"
+                                                    Class="bearcat-overview-chip-copy" />
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="bearcat-collection-image-actions-cell">
+                        <CopyButton Value="@GetImageUrlsText(imageUpload)"
+                                    Label="@L["CopyImageUrls"]"
+                                    Variant="ButtonVariant.Ghost"
+                                    Disabled="@(imageUpload.ImageUrls.Count == 0)" />
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          AriaLabel="@L["OpenImageUploadConfigActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                <BbDropdownMenuItem OnClick="@(() => ShowEditDialogAsync(imageUpload))">
+                                    <Icon>
+                                        <LucideIcon Name="pencil" class="h-4 w-4" />
+                                    </Icon>
+                                    <ChildContent>@L["EditConfig"]</ChildContent>
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuSeparator />
+                                <BbDropdownMenuItem Class="text-destructive focus:text-destructive"
+                                                    OnClick="@(() => DeleteConfigAsync(imageUpload))">
+                                    <Icon>
+                                        <LucideIcon Name="trash-2" class="h-4 w-4" />
+                                    </Icon>
+                                    <ChildContent>@L["DeleteConfig"]</ChildContent>
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>

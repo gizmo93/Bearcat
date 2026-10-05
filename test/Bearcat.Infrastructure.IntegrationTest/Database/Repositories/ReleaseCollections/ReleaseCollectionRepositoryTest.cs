@@ -180,6 +180,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         result.ReleaseGroupName.ShouldBe("Series");
         result.PrimaryLanguageCode.ShouldBe("de");
         result.CreatedAt.ShouldBe(LastSecondOfDay.AddMilliseconds(10));
+        result.UploadsPostedAt.ShouldBeNull();
         result.Metadata.ShouldBeNull();
 
         result.Releases.Select(release => release.ReleaseId).ShouldBe([seed.E01Id, seed.E02Id]);
@@ -194,10 +195,17 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         e01.LatestUploads.ShouldBe(
             [
                 new ReleaseLatestUploadReadModel(
-                    seed.E01RapidgatorLatestUploadId,
-                    "E01 rapidgator"
+                    UploadId: seed.E01RapidgatorLatestUploadId,
+                    UploadConfigName: "E01 rapidgator",
+                    CreatedAt: LastSecondOfDay.AddSeconds(1),
+                    UploadedAt: null
                 ),
-                new ReleaseLatestUploadReadModel(seed.E01DdownloadLatestUploadId, "E01 ddownload"),
+                new ReleaseLatestUploadReadModel(
+                    UploadId: seed.E01DdownloadLatestUploadId,
+                    UploadConfigName: "E01 ddownload",
+                    CreatedAt: LastSecondOfDay.AddMinutes(-2),
+                    UploadedAt: LastSecondOfDay.AddMilliseconds(700)
+                ),
             ],
             ignoreOrder: true
         );
@@ -208,7 +216,12 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         e02.OnlineUploadConfigsCount.ShouldBe(1);
         e02.NotFullyOnlineSince.ShouldBe(seed.E02NotFullyOnlineSince);
         e02.LatestUploads.ShouldBe([
-            new ReleaseLatestUploadReadModel(seed.E02RapidgatorLatestUploadId, "E02 rapidgator"),
+            new ReleaseLatestUploadReadModel(
+                UploadId: seed.E02RapidgatorLatestUploadId,
+                UploadConfigName: "E02 rapidgator",
+                CreatedAt: LastSecondOfDay.AddSeconds(-20),
+                UploadedAt: LastSecondOfDay.AddMilliseconds(500)
+            ),
         ]);
     }
 
@@ -286,6 +299,24 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         keeplinksContainer.State.ShouldBe(LinkCrypterContainerState.Created);
         keeplinksContainer.SourceUploadCount.ShouldBe(0);
         keeplinksContainer.Errors.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetDetailAsync_UploadsPostedAtSet_ReturnsUploadsPostedAt()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
+        collection.UploadsPostedAt = LastSecondOfDay.AddMilliseconds(750);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetDetailAsync(collection.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.UploadsPostedAt.ShouldBe(LastSecondOfDay.AddMilliseconds(750));
     }
 
     [Test]

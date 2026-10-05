@@ -1,46 +1,30 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
-using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
-using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Website.Pages.ManageReleaseCollections;
+namespace Bearcat.Website.Pages.ManageReleaseCollections.Images;
 
-public partial class CollectionImageUploads(
+public partial class ReleaseCollectionImageUploads(
     IScopedOperationRunner operationRunner,
-    DialogService dialogService
+    DialogService dialogService,
+    TimeProvider timeProvider
 ) : ComponentBase
 {
     [Parameter]
     [EditorRequired]
     public int ReleaseCollectionId { get; set; }
 
-    private IReadOnlyList<CollectionImageUploadReadModel> imageUploads = [];
-    private bool isLoading;
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyList<CollectionImageUploadReadModel> ImageUploads { get; set; } = [];
 
-    protected override async Task OnInitializedAsync()
-    {
-        await RefreshAsync();
-    }
-
-    private async Task RefreshAsync()
-    {
-        isLoading = true;
-
-        try
-        {
-            imageUploads = await operationRunner.RunAsync(
-                (IReleaseCollectionReadRepository repository) =>
-                    repository.GetImageUploadsAsync(ReleaseCollectionId)
-            );
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
+    [Parameter]
+    public EventCallback OnImageUploadsChanged { get; set; }
 
     private async Task ShowAddDialogAsync()
     {
@@ -64,25 +48,25 @@ public partial class CollectionImageUploads(
 
         if (!dialog.Cancelled)
         {
-            await RefreshAsync();
+            await OnImageUploadsChanged.InvokeAsync();
         }
     }
 
-    private async Task ShowEditDialogAsync(CollectionImageUploadReadModel config)
+    private async Task ShowEditDialogAsync(CollectionImageUploadReadModel imageUpload)
     {
         var parameters = new Dictionary<string, object?>
         {
             [nameof(CreateOrEditCollectionImageUploadConfigDialog.ReleaseCollectionId)] =
                 ReleaseCollectionId,
             [nameof(CreateOrEditCollectionImageUploadConfigDialog.ImageUploadConfigId)] =
-                config.ImageUploadConfigId,
+                imageUpload.ImageUploadConfigId,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditCollectionImageUploadConfigDialog>(
             parameters,
             new DialogOpenOptions
             {
-                Title = L["EditNamedItem", config.Name],
+                Title = L["EditNamedItem", imageUpload.Name],
                 Description = L["CollectionImageUploadsDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
@@ -92,15 +76,15 @@ public partial class CollectionImageUploads(
 
         if (!dialog.Cancelled)
         {
-            await RefreshAsync();
+            await OnImageUploadsChanged.InvokeAsync();
         }
     }
 
-    private async Task DeleteConfigAsync(CollectionImageUploadReadModel config)
+    private async Task DeleteConfigAsync(CollectionImageUploadReadModel imageUpload)
     {
         var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", config.Name],
-            L["DeleteImageUploadConfigConfirmation", config.Name],
+            L["DeleteNamedItem", imageUpload.Name],
+            L["DeleteImageUploadConfigConfirmation", imageUpload.Name],
             new ConfirmDialogOptions
             {
                 ConfirmText = L["Delete"],
@@ -115,23 +99,25 @@ public partial class CollectionImageUploads(
         }
 
         await operationRunner.RunAsync(
-            (ImageUploadConfigService service) => service.DeleteAsync(config.ImageUploadConfigId)
+            (ImageUploadConfigService service) =>
+                service.DeleteAsync(imageUpload.ImageUploadConfigId)
         );
 
-        await RefreshAsync();
+        await OnImageUploadsChanged.InvokeAsync();
     }
 
-    private static string GetImageUrlsText(CollectionImageUploadReadModel config) =>
-        string.Join(Environment.NewLine, config.ImageUrls.Select(url => url.Url));
+    private static bool IsImageHosterNameShown(CollectionImageUploadReadModel imageUpload) =>
+        !string.Equals(
+            imageUpload.Name,
+            imageUpload.ImageHosterRegistrationName,
+            StringComparison.OrdinalIgnoreCase
+        );
 
-    private static BadgeVariant GetUploadVariant(UploadState state)
-    {
-        return state switch
-        {
-            UploadState.Completed => BadgeVariant.Default,
-            UploadState.Failed or UploadState.Canceled => BadgeVariant.Destructive,
-            UploadState.Uploading or UploadState.Pending => BadgeVariant.Secondary,
-            _ => BadgeVariant.Outline,
-        };
-    }
+    private static string GetImageUrlsText(CollectionImageUploadReadModel imageUpload) =>
+        string.Join(Environment.NewLine, imageUpload.ImageUrls.Select(imageUrl => imageUrl.Url));
+
+    private string HumanizeTimestamp(DateTime value) => timeProvider.Humanize(value);
+
+    private static string FormatTimestamp(DateTime value) =>
+        value.ToString("g", CultureInfo.CurrentCulture);
 }

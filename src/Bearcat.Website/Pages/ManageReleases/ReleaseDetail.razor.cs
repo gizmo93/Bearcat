@@ -17,6 +17,7 @@ using Bearcat.Website.Pages.ManageReleases.ProgressSteps;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
+using Bearcat.Website.Shared.ProgressSteps;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -85,7 +86,7 @@ public partial class ReleaseDetail(
     private bool IsPostingToForumPending =>
         release.OnlineUploadConfigsCount > 0
         && progressSteps.Single(step => step.Kind == ReleaseProgressStepKind.Posted).State
-            == ReleaseProgressStepState.Pending;
+            == ProgressStepState.Pending;
 
     private bool HasOfflineUploadConfigs =>
         release.OnlineUploadConfigsCount < release.ActiveUploadConfigsCount;

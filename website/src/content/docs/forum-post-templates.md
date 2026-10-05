@@ -84,8 +84,8 @@ Collection templates work the same way. They loop over the collection's releases
 
 ## Render a post
 
-Open a release or release collection and click **Render forum post**. On a release, it is in the
-arrow menu of **Post to forum**. Choose a template and click
+Open a release or release collection and click **Render forum post** in the arrow menu of
+**Post to forum**. Without an active forum distribution site, it is a separate button. Choose a template and click
 **Copy forum post**, then paste the result into your forum.
 
 ![Render a forum post](images/render-template.png)

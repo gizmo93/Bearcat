@@ -1,5 +1,6 @@
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.Shared.ProgressSteps;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases.ProgressSteps;
@@ -12,6 +13,18 @@ public partial class ReleaseProgressSteps : ComponentBase
 
     [Parameter]
     public EventCallback<ReleaseProgressStepKind> OnStepSelected { get; set; }
+
+    private IReadOnlyList<ProgressStepDisplay<ReleaseProgressStepKind>> StepDisplays =>
+        Steps
+            .Select(step => new ProgressStepDisplay<ReleaseProgressStepKind>(
+                Kind: step.Kind,
+                State: step.State,
+                Title: GetTitle(step.Kind),
+                ShortTitle: GetShortTitle(step.Kind),
+                Description: GetDescription(step),
+                IconName: GetIconName(step.Kind)
+            ))
+            .ToList();
 
     private string GetTitle(ReleaseProgressStepKind kind) =>
         kind switch
@@ -38,19 +51,6 @@ public partial class ReleaseProgressSteps : ComponentBase
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
 
-    private static string GetMarkerClass(ReleaseProgressStepState state) =>
-        state switch
-        {
-            ReleaseProgressStepState.Done => "bearcat-release-progress-step-marker-done",
-            ReleaseProgressStepState.InProgress =>
-                "bearcat-release-progress-step-marker-in-progress",
-            ReleaseProgressStepState.Attention => "bearcat-release-progress-step-marker-attention",
-            ReleaseProgressStepState.Pending => "bearcat-release-progress-step-marker-pending",
-            ReleaseProgressStepState.NotApplicable =>
-                "bearcat-release-progress-step-marker-not-applicable",
-            _ => throw new ArgumentOutOfRangeException(nameof(state), state, null),
-        };
-
     private string GetDescription(ReleaseProgressStep step) =>
         step.Kind switch
         {
@@ -63,41 +63,41 @@ public partial class ReleaseProgressSteps : ComponentBase
         };
 
     private string GetInfoDescription(ReleaseProgressStep step) =>
-        step.State is ReleaseProgressStepState.Done
+        step.State is ProgressStepState.Done
             ? string.Join(" · ", step.DatabaseNames)
             : L["ReleaseProgressNotResolvedYet"];
 
     private string GetArchivedDescription(ReleaseProgressStep step) =>
         step.State switch
         {
-            ReleaseProgressStepState.Done => step.Count == 1
+            ProgressStepState.Done => step.Count == 1
                 ? L["ReleaseProgressArchiveCountOne"]
                 : L["ReleaseProgressArchiveCount", step.Count],
-            ReleaseProgressStepState.InProgress => L["ReleaseProgressArchiving"],
-            ReleaseProgressStepState.Attention => L.Localize(step.ArchiveProblemState!.Value),
+            ProgressStepState.InProgress => L["ReleaseProgressArchiving"],
+            ProgressStepState.Attention => L.Localize(step.ArchiveProblemState!.Value),
             _ => L["NoArchivesYet"],
         };
 
     private string GetUploadedDescription(ReleaseProgressStep step) =>
         step.State switch
         {
-            ReleaseProgressStepState.Pending => L["ReleaseProgressNoUploadConfigs"],
-            ReleaseProgressStepState.InProgress => L.Localize(UploadState.Uploading),
+            ProgressStepState.Pending => L["ReleaseProgressNoUploadConfigs"],
+            ProgressStepState.InProgress => L.Localize(UploadState.Uploading),
             _ => L["ReleaseProgressOnlineCount", step.Count, step.TotalCount],
         };
 
     private string GetLinkContainersDescription(ReleaseProgressStep step) =>
         step.State switch
         {
-            ReleaseProgressStepState.Attention => L["ReleaseProgressContainersFailed", step.Count],
-            ReleaseProgressStepState.Done => L["ReleaseProgressContainersCreated", step.Count],
+            ProgressStepState.Attention => L["ReleaseProgressContainersFailed", step.Count],
+            ProgressStepState.Done => L["ReleaseProgressContainersCreated", step.Count],
             _ => L["ReleaseProgressNoContainers"],
         };
 
     private string GetPostedDescription(ReleaseProgressStep step) =>
         step.State switch
         {
-            ReleaseProgressStepState.Pending => L["ReleaseProgressNotPostedYet"],
+            ProgressStepState.Pending => L["ReleaseProgressNotPostedYet"],
             _ when step.Count == 0 => L["ReleaseProgressMarkedAsPosted"],
             _ when step.Count == 1 => L["ReleaseProgressForumCountOne"],
             _ => L["ReleaseProgressForumCount", step.Count],

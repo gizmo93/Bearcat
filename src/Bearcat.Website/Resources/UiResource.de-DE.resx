@@ -344,9 +344,9 @@
   <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Inhaltstyp aktualisiert</value></data>
   <data name="EditContentType" xml:space="preserve"><value>Inhaltstyp bearbeiten</value></data>
   <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Releasecollection.</value></data>
-  <data name="EditCollectionSettings" xml:space="preserve"><value>Collection Einstellungen bearbeiten</value></data>
+  <data name="EditCollectionSettings" xml:space="preserve"><value>Collectioneinstellungen bearbeiten</value></data>
   <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Release Collection.</value></data>
-  <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collection Einstellungen aktualisiert</value></data>
+  <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collectioneinstellungen aktualisiert</value></data>
   <data name="AnyReleaseContentType" xml:space="preserve"><value>Alle Inhaltstypen</value></data>
   <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Film</value></data>
   <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>Serienfolge</value></data>
@@ -860,7 +860,7 @@
   <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="SharedLinkCrypters" xml:space="preserve"><value>Container erstellen bei</value></data>
-  <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keiner</value></data>
+  <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keine Linkcrypter</value></data>
   <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Linkcrypter für Container bearbeiten</value></data>
   <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Verwalte die Linkcrypter und Einstellungen für die gemeinsamen Container dieser Uploadgruppe.</value></data>
   <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Änderungen werden auf alle Uploadkonfigurationen dieser Uploadgruppe der Collection angewendet.</value></data>
@@ -890,10 +890,7 @@
   <data name="MediaDatabaseRegistrationActivated" xml:space="preserve"><value>Metadatenquelle {0} aktiviert</value></data>
   <data name="MediaDatabaseRegistrationDeactivated" xml:space="preserve"><value>Metadatenquelle {0} deaktiviert</value></data>
   <data name="DeleteMediaDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Metadatenquelle {0} wirklich löschen?</value></data>
-  <data name="SeriesMetadata" xml:space="preserve"><value>Serieninformationen</value></data>
   <data name="RefreshMetadata" xml:space="preserve"><value>Metadaten abrufen</value></data>
-  <data name="NoSeriesMetadataYet" xml:space="preserve"><value>Noch keine Serienmetadaten abgerufen.</value></data>
-  <data name="NoSeriesDescription" xml:space="preserve"><value>Keine Beschreibung verfügbar.</value></data>
   <data name="SeriesMetadataResolved" xml:space="preserve"><value>Serienmetadaten abgerufen.</value></data>
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>Keine passende Serie gefunden.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update auf {0}</value></data>
@@ -1612,4 +1609,20 @@
   <data name="UploadHistoryContainerCountOne" xml:space="preserve"><value>1 Container</value></data>
   <data name="UploadHistoryContainerCount" xml:space="preserve"><value>{0} Container</value></data>
   <data name="ShowDetails" xml:space="preserve"><value>Details anzeigen</value></data>
+  <data name="ReleaseCollectionProgress" xml:space="preserve"><value>Collectionfortschritt</value></data>
+  <data name="ReleaseCollectionProgressContainersNotCreatedYet" xml:space="preserve"><value>Noch nicht erstellt</value></data>
+  <data name="ReleaseCollectionProgressImagesFailed" xml:space="preserve"><value>{0} fehlgeschlagen</value></data>
+  <data name="ReleaseCollectionProgressImagesUploaded" xml:space="preserve"><value>{0} hochgeladen</value></data>
+  <data name="ReleaseCollectionReleaseCountOne" xml:space="preserve"><value>1 Release</value></data>
+  <data name="ReleaseCollectionReleaseCount" xml:space="preserve"><value>{0} Releases</value></data>
+  <data name="ReleaseCollectionSection" xml:space="preserve"><value>Collectionbereich</value></data>
+  <data name="ReleaseCollectionKey" xml:space="preserve"><value>Collectionschlüssel</value></data>
+  <data name="CopyReleaseCollectionKey" xml:space="preserve"><value>Collectionschlüssel kopieren</value></data>
+  <data name="Overview" xml:space="preserve"><value>Übersicht</value></data>
+  <data name="ShowMore" xml:space="preserve"><value>Mehr anzeigen</value></data>
+  <data name="ShowLess" xml:space="preserve"><value>Weniger anzeigen</value></data>
+  <data name="OpenRelease" xml:space="preserve"><value>Release öffnen</value></data>
+  <data name="LinkContainerCoverageTitle" xml:space="preserve"><value>{0} von {1} Uploads enthalten</value></data>
+  <data name="CollectionUploadSlotReleaseCoverage" xml:space="preserve"><value>{0}/{1} Releases</value></data>
+  <data name="OpenCollectionUploadSlotActions" xml:space="preserve"><value>Uploadslotaktionen öffnen</value></data>
 </root>
