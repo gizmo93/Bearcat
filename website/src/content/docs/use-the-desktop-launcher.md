@@ -25,6 +25,19 @@ On Windows, the usual executable paths are `C:\Program Files\WinRAR\Rar.exe` and
 `C:\Program Files\7-Zip\7z.exe`. On macOS, select the extracted `rar` and `7zz` files in step 3.
 If you already installed the tools another way, use their executable paths.
 
+On macOS, you can also install [7-Zip via Homebrew](https://formulae.brew.sh/formula/sevenzip):
+
+```bash
+brew install sevenzip
+```
+
+In step 3, click **Browse...** next to **7z executable** and select `/opt/homebrew/bin/7zz`
+(the default Homebrew location on Apple Silicon).
+
+[RAR's Homebrew cask](https://formulae.brew.sh/cask/rar), previously installed with `brew install --cask rar`,
+is currently disabled. Use the official RAR download linked above. If you already installed RAR
+through Homebrew, click **Browse...** next to **RAR executable** and select `/opt/homebrew/bin/rar`.
+
 ## 2. Download and open Bearcat
 
 Download the Desktop package for your computer from [GitHub releases](https://github.com/gizmo93/Bearcat/releases):
