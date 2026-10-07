@@ -12,9 +12,24 @@ next:
 The Docker image includes the archive tools. The default setup uses **SQLite**, so it runs as
 one container and needs no database server.
 
-You need Docker with Docker Compose. On a supported x86_64 Synology NAS, use **Container Manager**.
-The image uses `linux/amd64`. For Windows or an Apple Silicon Mac, you can use the
+You need Docker with Docker Compose.
+The Bearcat Docker image is only available for the architecture `linux/amd64`. For Windows or an Apple Silicon Mac, you can use the
 [native Desktop app](/Bearcat/use-the-desktop-launcher/).
+
+## 0. Install Docker (skip if it's already installed)
+
+### Synology NAS
+Install **Container Manager** from the Synology Package Manager.
+
+### Windows, Linux Desktop
+Get [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io).
+
+### Linux (command line)
+If you are using a Linux server with only the command line, [you can just install the Docker Engine](https://docs.docker.com/engine/install/).
+
+### macOS
+Docker Desktop and Rancher Desktop can be used (links above in the "Windows, Linux Desktop" section).
+Personally I recommend [OrbStack](https://orbstack.dev) on macOS as it has the best performance overall and near native IO performance for bind mounts.
 
 ## 1. Get the Compose file
 
