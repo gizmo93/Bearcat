@@ -68,7 +68,7 @@ Running checks and extractions appear on the **Activity** page under **Folder au
 
 If the SFV check or extraction fails, the files stay in the folder, no release is created, and Bearcat
 sends a notification. The folder is listed under **Failed extractions** on the **Folder automations**
-page with the error message. Fix the cause, then click **Retry**; the folder is processed again on the
+page with the error message. Fix the cause, then click **Retry**. The folder is processed again on the
 next scan. Bearcat also retries automatically when the files in the folder change.
 
 ### Download releases from FTP or FTPS
