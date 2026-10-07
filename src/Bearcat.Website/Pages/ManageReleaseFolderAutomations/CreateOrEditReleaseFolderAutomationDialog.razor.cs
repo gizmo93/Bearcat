@@ -2,6 +2,7 @@ using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -47,6 +48,15 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                 )),
         ];
 
+    private ReleaseType? SelectedReleaseType =>
+        releaseTemplates
+            .FirstOrDefault(template => template.ReleaseTemplateId == FormModel.ReleaseTemplateId)
+            ?.ReleaseType;
+
+    private bool ExtractArchivesBeforeReleaseCreation =>
+        SelectedReleaseType is ReleaseType.Managed
+        && FormModel.ExtractArchivesBeforeReleaseCreation;
+
     protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(FormModel);
@@ -69,6 +79,7 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                         FormModel.FolderNamePattern,
                         FormModel.ReleaseTemplateId!.Value,
                         FormModel.PrimaryLanguageCode,
+                        ExtractArchivesBeforeReleaseCreation,
                         FormModel.IsEnabled
                     )
             );
@@ -82,6 +93,7 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                         FormModel.FolderNamePattern,
                         FormModel.ReleaseTemplateId!.Value,
                         FormModel.PrimaryLanguageCode,
+                        ExtractArchivesBeforeReleaseCreation,
                         FormModel.IsEnabled
                     )
             );

@@ -13,5 +13,10 @@ public interface IReleaseFolderAutomationWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseFolderObservation> GetObservationByIdAsync(
+        int releaseFolderObservationId,
+        CancellationToken cancellationToken = default
+    );
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

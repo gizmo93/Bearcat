@@ -15,6 +15,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extracti
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
@@ -98,6 +99,7 @@ public static class ServiceProviderConfig
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<LocalFolderScanService>();
+            services.AddScoped<ReleaseFolderVerificationAndExtractionService>();
             services.AddScoped<ReleaseFromFolderCreationService>();
             services.AddScoped<UnmanagedReleaseArchiveInitializationService>();
             services.AddScoped<ReleaseCollectionService>();

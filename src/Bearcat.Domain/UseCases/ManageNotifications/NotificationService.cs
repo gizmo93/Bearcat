@@ -118,6 +118,8 @@ public class NotificationService(
             NotificationKind.ReleaseAutoConvertedToUnmanaged =>
                 configuration.ReleaseAutoConvertedToUnmanaged,
             NotificationKind.ReleaseFolderMissing => configuration.ReleaseFolderMissing,
+            NotificationKind.ReleaseFolderExtractionFailed =>
+                configuration.ReleaseFolderExtractionFailed,
             NotificationKind.ArchiveCreationFailed => configuration.ArchiveCreationFailed,
             NotificationKind.ArchiveFilesMissing => configuration.ArchiveFilesMissing,
             NotificationKind.ArchiveRestoreFailed => configuration.ArchiveRestoreFailed,

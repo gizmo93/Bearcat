@@ -74,6 +74,8 @@ public partial class ReleaseFolderAutomationsPage(
                     FolderNamePattern = automation.FolderNamePattern,
                     PrimaryLanguageCode = automation.PrimaryLanguageCode ?? string.Empty,
                     ReleaseTemplateId = automation.ReleaseTemplateId,
+                    ExtractArchivesBeforeReleaseCreation =
+                        automation.ExtractArchivesBeforeReleaseCreation,
                     IsEnabled = automation.IsEnabled,
                     IsEdit = true,
                 },

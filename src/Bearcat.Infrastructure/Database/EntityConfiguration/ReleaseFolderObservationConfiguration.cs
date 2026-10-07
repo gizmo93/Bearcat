@@ -15,6 +15,11 @@ public class ReleaseFolderObservationConfiguration
         builder.Property(observation => observation.FileCount).IsRequired();
         builder.Property(observation => observation.TotalBytes).IsRequired();
         builder.Property(observation => observation.LastChangedAt).IsRequired();
+        builder
+            .Property(observation => observation.ExtractionErrorMessage)
+            .IsRequired(false)
+            .HasColumnType("text");
+        builder.Property(observation => observation.ExtractionFailedAt).IsRequired(false);
 
         builder.HasIndex(observation => observation.FolderPath).IsUnique();
     }

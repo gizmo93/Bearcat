@@ -10,6 +10,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         string? folderNamePattern,
         int releaseTemplateId,
         string? primaryLanguageCode,
+        bool extractArchivesBeforeReleaseCreation,
         bool isEnabled,
         CancellationToken cancellationToken = default
     )
@@ -24,6 +25,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             PrimaryLanguageCode = string.IsNullOrWhiteSpace(primaryLanguageCode)
                 ? null
                 : primaryLanguageCode.Trim().ToLowerInvariant(),
+            ExtractArchivesBeforeReleaseCreation = extractArchivesBeforeReleaseCreation,
             IsEnabled = isEnabled,
         };
 
@@ -39,6 +41,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         string? folderNamePattern,
         int releaseTemplateId,
         string? primaryLanguageCode,
+        bool extractArchivesBeforeReleaseCreation,
         bool isEnabled,
         CancellationToken cancellationToken = default
     )
@@ -56,6 +59,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         automation.PrimaryLanguageCode = string.IsNullOrWhiteSpace(primaryLanguageCode)
             ? null
             : primaryLanguageCode.Trim().ToLowerInvariant();
+        automation.ExtractArchivesBeforeReleaseCreation = extractArchivesBeforeReleaseCreation;
         automation.IsEnabled = isEnabled;
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -72,6 +76,21 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             cancellationToken
         );
         automation.IsEnabled = isEnabled;
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RetryExtractionAsync(
+        int releaseFolderObservationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var observation = await repository.GetObservationByIdAsync(
+            releaseFolderObservationId,
+            cancellationToken
+        );
+        observation.ExtractionErrorMessage = null;
+        observation.ExtractionFailedAt = null;
 
         await repository.SaveChangesAsync(cancellationToken);
     }

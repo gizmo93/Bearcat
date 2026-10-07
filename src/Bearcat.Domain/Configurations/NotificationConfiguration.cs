@@ -28,6 +28,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ReleaseFolderMissing { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ReleaseFolderExtractionFailed",
+        "NotificationKind.ReleaseFolderExtractionFailed.Description"
+    )]
+    public bool ReleaseFolderExtractionFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.ArchiveCreationFailed",
         "NotificationKind.ArchiveCreationFailed.Description"
     )]

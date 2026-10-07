@@ -30,4 +30,5 @@ public enum NotificationKind
     ReleaseCreatedFromRemoteDownload = 26,
     UnreadableSecretsDetected = 27,
     HosterCredentialsRejected = 28,
+    ReleaseFolderExtractionFailed = 29,
 }

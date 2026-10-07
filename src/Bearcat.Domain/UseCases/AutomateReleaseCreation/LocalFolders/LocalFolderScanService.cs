@@ -7,6 +7,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
@@ -19,6 +20,7 @@ public class LocalFolderScanService(
     IReleaseFolderUsageRepository releaseFolderUsageRepository,
     IFileSystemService fileSystemService,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
+    ReleaseFolderVerificationAndExtractionService verificationAndExtractionService,
     TimeProvider timeProvider,
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService
@@ -139,6 +141,8 @@ public class LocalFolderScanService(
                 observation.FileCount = fileCountAndSize.FileCount;
                 observation.TotalBytes = fileCountAndSize.TotalBytes;
                 observation.LastChangedAt = localNow;
+                observation.ExtractionErrorMessage = null;
+                observation.ExtractionFailedAt = null;
                 hasChanges = true;
                 continue;
             }
@@ -148,8 +152,27 @@ public class LocalFolderScanService(
                 continue;
             }
 
+            var isArchiveExtractionEffective = IsArchiveExtractionEffective(candidate.Automation);
+
+            if (isArchiveExtractionEffective && observation.ExtractionErrorMessage is not null)
+            {
+                continue;
+            }
+
             if (fileCountAndSize.TotalBytes < minimumBytes)
             {
+                continue;
+            }
+
+            if (
+                isArchiveExtractionEffective
+                && !await verificationAndExtractionService.TryVerifyAndExtractAsync(
+                    observation,
+                    cancellationToken
+                )
+            )
+            {
+                hasChanges = true;
                 continue;
             }
 
@@ -202,6 +225,12 @@ public class LocalFolderScanService(
             entity: release,
             selector: n => n.Release
         );
+    }
+
+    private static bool IsArchiveExtractionEffective(ReleaseFolderAutomation automation)
+    {
+        return automation.ExtractArchivesBeforeReleaseCreation
+            && automation.ReleaseTemplate.ReleaseType is ReleaseType.Managed;
     }
 
     private async Task<IReadOnlySet<ReleaseFolderCandidate>> GetCandidateFoldersAsync(

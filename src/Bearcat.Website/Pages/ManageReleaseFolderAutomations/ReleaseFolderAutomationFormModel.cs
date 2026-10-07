@@ -12,6 +12,8 @@ public class ReleaseFolderAutomationFormModel
 
     public string PrimaryLanguageCode { get; set; } = string.Empty;
 
+    public bool ExtractArchivesBeforeReleaseCreation { get; set; }
+
     public bool IsEnabled { get; set; } = true;
 
     public bool IsEdit { get; set; }

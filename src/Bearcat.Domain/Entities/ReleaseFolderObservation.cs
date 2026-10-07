@@ -11,4 +11,8 @@ public class ReleaseFolderObservation
     public long TotalBytes { get; set; }
 
     public DateTime LastChangedAt { get; set; }
+
+    public string? ExtractionErrorMessage { get; set; }
+
+    public DateTime? ExtractionFailedAt { get; set; }
 }

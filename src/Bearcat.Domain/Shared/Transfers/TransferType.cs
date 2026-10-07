@@ -10,4 +10,6 @@ public enum TransferType
     ArchiveCreation = 6,
     ArchiveHashing = 7,
     ArchiveHashChange = 8,
+    ReleaseFolderVerification = 9,
+    ReleaseFolderExtraction = 10,
 }

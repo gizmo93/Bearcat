@@ -36,6 +36,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             releaseTemplate.Id,
             "de",
             true,
+            true,
             CancellationToken.None
         );
 
@@ -48,6 +49,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         automation.FolderNamePattern.ShouldBeNull();
         automation.ReleaseTemplateId.ShouldBe(releaseTemplate.Id);
         automation.PrimaryLanguageCode.ShouldBe("de");
+        automation.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         automation.IsEnabled.ShouldBeTrue();
     }
 
@@ -66,6 +68,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             "*1080p*",
             secondTemplate.Id,
             "en",
+            true,
             false,
             CancellationToken.None
         );
@@ -77,6 +80,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         result.FolderNamePattern.ShouldBe("*1080p*");
         result.ReleaseTemplateId.ShouldBe(secondTemplate.Id);
         result.PrimaryLanguageCode.ShouldBe("en");
+        result.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         result.IsEnabled.ShouldBeFalse();
     }
 
@@ -94,6 +98,39 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         var result = await DbContext.ReleaseFolderAutomations.SingleAsync();
 
         result.IsEnabled.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task RetryExtractionAsync_ExtractionFailed_ClearsErrorAndKeepsMeasuredFolderState()
+    {
+        // Arrange
+        var failedAt = new DateTime(2026, 10, 7, 12, 0, 0, DateTimeKind.Unspecified);
+        var lastChangedAt = new DateTime(2026, 10, 7, 11, 0, 0, DateTimeKind.Unspecified);
+        var observation = new ReleaseFolderObservation
+        {
+            FolderPath = "/tmp/releases/Broken.Release",
+            FileCount = 3,
+            TotalBytes = 300,
+            LastChangedAt = lastChangedAt,
+            ExtractionErrorMessage =
+                "CRC failed. The files were kept in /tmp/releases/Broken.Release.",
+            ExtractionFailedAt = failedAt,
+        };
+        DbContext.ReleaseFolderObservations.Add(observation);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.RetryExtractionAsync(observation.Id, CancellationToken.None);
+
+        // Assert
+        var result = await CreateDbContext()
+            .ReleaseFolderObservations.SingleAsync(o => o.Id == observation.Id);
+
+        result.ExtractionErrorMessage.ShouldBeNull();
+        result.ExtractionFailedAt.ShouldBeNull();
+        result.FileCount.ShouldBe(3);
+        result.TotalBytes.ShouldBe(300);
+        result.LastChangedAt.ShouldBe(lastChangedAt);
     }
 
     [Test]
@@ -131,6 +168,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         highResolutionAutomation.BasePath = "/data/incoming";
         highResolutionAutomation.FolderNamePattern = "*1080p*";
         highResolutionAutomation.PrimaryLanguageCode = "de";
+        highResolutionAutomation.ExtractArchivesBeforeReleaseCreation = true;
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
@@ -148,6 +186,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
                 ReleaseType: ReleaseType.Managed,
                 ReleaseContentType: ReleaseContentType.Movie,
                 PrimaryLanguageCode: "de",
+                ExtractArchivesBeforeReleaseCreation: true,
                 IsEnabled: true
             ),
             new ReleaseFolderAutomationReadModel(
@@ -159,6 +198,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
                 ReleaseType: ReleaseType.Unmanaged,
                 ReleaseContentType: ReleaseContentType.TvShowEpisode,
                 PrimaryLanguageCode: null,
+                ExtractArchivesBeforeReleaseCreation: false,
                 IsEnabled: false
             ),
             new ReleaseFolderAutomationReadModel(
@@ -170,6 +210,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
                 ReleaseType: ReleaseType.Managed,
                 ReleaseContentType: ReleaseContentType.Movie,
                 PrimaryLanguageCode: null,
+                ExtractArchivesBeforeReleaseCreation: false,
                 IsEnabled: true
             ),
         ]);
