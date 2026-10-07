@@ -12,12 +12,12 @@ using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.Shared.UnmanagedReleases;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -869,12 +869,12 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
         var service = new RemoteDownloadVerificationAndExtractionService(
             new RemoteSourceDownloadRepository(dbContext),
             new SfvChecksumVerifier(progressTracker, NullLogger<SfvChecksumVerifier>.Instance),
-            new DownloadFolderArchiveExtractionService(
+            new FolderArchiveExtractionService(
                 Mock.Of<IArchiverFactory>(),
                 new FileSystemService(),
                 progressTracker,
                 new FolderSizeProgressReporter(),
-                NullLogger<DownloadFolderArchiveExtractionService>.Instance
+                NullLogger<FolderArchiveExtractionService>.Instance
             ),
             CreateNotificationService(dbContext),
             timeProvider,

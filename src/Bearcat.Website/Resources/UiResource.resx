@@ -1022,6 +1022,7 @@
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired and the release folder can be deleted.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release folder missing</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>The release folder required for processing was not found.</value></data>
+  <data name="NotificationKind.ReleaseFolderExtractionFailed" xml:space="preserve"><value>Folder automation extraction failed</value></data><data name="NotificationKind.ReleaseFolderExtractionFailed.Description" xml:space="preserve"><value>The SFV check or archive extraction of a folder found by folder automation failed. The files were kept and no release was created.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archive creation failed</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>An archive could not be created.</value></data>
   <data name="NotificationKind.ArchiveFilesMissing" xml:space="preserve"><value>Archive files missing</value></data><data name="NotificationKind.ArchiveFilesMissing.Description" xml:space="preserve"><value>Files required for an upload are missing.</value></data>
   <data name="NotificationKind.InitialUploadCreated" xml:space="preserve"><value>Initial upload created</value></data><data name="NotificationKind.InitialUploadCreated.Description" xml:space="preserve"><value>An initial upload was created automatically.</value></data>
@@ -1596,8 +1597,8 @@
   <data name="HideFiles" xml:space="preserve"><value>Hide files</value></data>
   <data name="RemoteDownloadPhases" xml:space="preserve"><value>Remote download phases</value></data>
   <data name="RemoteDownloadPhaseDownload" xml:space="preserve"><value>Download</value></data>
-  <data name="RemoteDownloadPhaseVerify" xml:space="preserve"><value>Verify</value></data>
-  <data name="RemoteDownloadPhaseExtract" xml:space="preserve"><value>Extract</value></data>
+  <data name="TransferPhaseVerify" xml:space="preserve"><value>Verify</value></data>
+  <data name="TransferPhaseExtract" xml:space="preserve"><value>Extract</value></data>
   <data name="ArchiveCreationPhases" xml:space="preserve"><value>Archive creation phases</value></data>
   <data name="ArchiveCreationPhasePack" xml:space="preserve"><value>Pack</value></data>
   <data name="ArchiveCreationPhaseMd5Hashes" xml:space="preserve"><value>MD5 hashes</value></data>
@@ -1665,4 +1666,12 @@
   <data name="KeyboardHintOpen" xml:space="preserve"><value>open</value></data>
   <data name="KeySpace" xml:space="preserve"><value>Space</value></data>
   <data name="KeyEnter" xml:space="preserve"><value>Enter</value></data>
+  <data name="ReleaseFolderExtractArchivesBeforeReleaseCreationHelp" xml:space="preserve"><value>Before the release is created, SFV files in the folder are verified and archives (RAR, 7z) are extracted. The archive files are deleted after a successful extraction. Only applies to managed templates.</value></data>
+  <data name="ExtractsArchives" xml:space="preserve"><value>Extracts archives</value></data>
+  <data name="FailedReleaseFolderExtractions" xml:space="preserve"><value>Failed extractions</value></data>
+  <data name="FailedReleaseFolderExtractionsIntro" xml:space="preserve"><value>The SFV check or archive extraction of these folders failed. The files were kept and no release was created. A folder is processed again automatically when its files change.</value></data>
+  <data name="FailedAt" xml:space="preserve"><value>Failed at</value></data>
+  <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Retry</value></data>
+  <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} will be processed again on the next folder scan.</value></data>
+  <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Folder automation phases</value></data>
 </root>

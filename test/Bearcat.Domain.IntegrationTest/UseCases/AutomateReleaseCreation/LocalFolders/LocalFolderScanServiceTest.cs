@@ -1,15 +1,23 @@
+using System.IO.Hashing;
 using System.Linq.Expressions;
+using System.Text;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.Shared.UnmanagedReleases;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -38,6 +46,8 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
 
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
+    private Mock<IArchiveExtractor> archiveExtractorMock = null!;
+    private RecordingTransferProgressTracker progressTracker = null!;
     private string tempRootPath = null!;
     private LocalFolderScanService service = null!;
     private int stabilityMinutes;
@@ -65,6 +75,13 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
+        archiveExtractorMock = CreateArchiveExtractorMock();
+        progressTracker = new RecordingTransferProgressTracker();
+        var archiverFactory = new Mock<IArchiverFactory>(MockBehavior.Strict);
+        archiverFactory
+            .Setup(factory => factory.GetArchiveExtractors())
+            .Returns([archiveExtractorMock.Object]);
+
         service = new LocalFolderScanService(
             repository: new ReleaseFolderAutomationRepository(DbContext, DbContext),
             releaseFolderUsageRepository: new ReleaseFolderUsageRepository(DbContext),
@@ -84,10 +101,68 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
                     CreateTimeProvider()
                 )
             ),
+            verificationAndExtractionService: new ReleaseFolderVerificationAndExtractionService(
+                sfvChecksumVerifier: new SfvChecksumVerifier(
+                    progressTracker,
+                    NullLogger<SfvChecksumVerifier>.Instance
+                ),
+                archiveExtractionService: new FolderArchiveExtractionService(
+                    archiverFactory.Object,
+                    new FileSystemService(),
+                    progressTracker,
+                    new FolderSizeProgressReporter(),
+                    NullLogger<FolderArchiveExtractionService>.Instance
+                ),
+                fileSystemService: new FileSystemService(),
+                notificationService: notificationService,
+                timeProvider: CreateTimeProvider(),
+                logger: NullLogger<ReleaseFolderVerificationAndExtractionService>.Instance
+            ),
             timeProvider: CreateTimeProvider(),
             configuration: CreateConfigurationProvider(),
             notificationService: notificationService
         );
+    }
+
+    private static Mock<IArchiveExtractor> CreateArchiveExtractorMock()
+    {
+        var archiveExtractor = new Mock<IArchiveExtractor>(MockBehavior.Strict);
+        archiveExtractor
+            .Setup(extractor => extractor.FindArchivesToExtract(It.IsAny<string>()))
+            .Returns(
+                (string folderPath) =>
+                    Directory
+                        .GetFiles(folderPath, "*.rar")
+                        .Select(filePath => new ArchiveToExtract(filePath, [filePath]))
+                        .ToList()
+            );
+        archiveExtractor
+            .Setup(extractor =>
+                extractor.ExtractAsync(
+                    It.IsAny<ArchiveToExtract>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    ArchiveToExtract _,
+                    string destinationFolderPath,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    Directory.CreateDirectory(destinationFolderPath);
+                    await File.WriteAllTextAsync(
+                        Path.Combine(destinationFolderPath, "movie.mkv"),
+                        "extracted movie",
+                        cancellationToken
+                    );
+
+                    return new ArchiveExtractionResult(true, []);
+                }
+            );
+
+        return archiveExtractor;
     }
 
     private IApplicationConfigurationProvider CreateConfigurationProvider()
@@ -685,6 +760,271 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
         (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
     }
 
+    [Test]
+    public async Task ProcessAsync_ExtractionDisabled_CreatesReleaseWithoutSfvCheckOrExtraction()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await WriteCorruptedArchiveWithSfvAsync(folder.FullName);
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+        (await DbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(folder.FullName);
+        File.Exists(Path.Combine(folder.FullName, "release.rar")).ShouldBeTrue();
+        File.Exists(Path.Combine(folder.FullName, "movie.mkv")).ShouldBeFalse();
+        VerifyNoArchiveWasExtracted();
+        progressTracker.PlannedFilesPerIdentifier.ShouldBeEmpty();
+        (await DbContext.Notifications.SingleAsync()).NotificationKind.ShouldBe(
+            NotificationKind.ReleaseAutomaticallyCreated
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionEnabledWithUnmanagedTemplate_CreatesReleaseWithoutExtraction()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var folder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.Release.Unmanaged")
+        );
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "archive.part1.rar"), "1");
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "archive.part2.rar"), "2");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*Unmanaged",
+            extractArchivesBeforeReleaseCreation: true
+        );
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+        var release = await DbContext.Releases.SingleAsync();
+        release.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        File.Exists(Path.Combine(folder.FullName, "archive.part1.rar")).ShouldBeTrue();
+        File.Exists(Path.Combine(folder.FullName, "archive.part2.rar")).ShouldBeTrue();
+        VerifyNoArchiveWasExtracted();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionEnabledWithManagedTemplate_ExtractsArchivesBeforeCreatingRelease()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "release.rar"), "volume");
+        await File.WriteAllTextAsync(
+            Path.Combine(folder.FullName, "release.sfv"),
+            CreateSfvLine("release.rar", "volume")
+        );
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "release.nfo"), "nfo");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+        await service.ProcessAsync(CancellationToken.None);
+        var observationId = (await DbContext.ReleaseFolderObservations.SingleAsync()).Id;
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+        (await DbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(folder.FullName);
+        Directory
+            .GetFiles(folder.FullName, "*", SearchOption.AllDirectories)
+            .Select(filePath => Path.GetFileName(filePath))
+            .ShouldBe(["movie.mkv", "release.nfo"], ignoreOrder: true);
+        progressTracker.StoppedIdentifiers.ShouldBe([
+            new TransferIdentifier(TransferType.ReleaseFolderVerification, observationId),
+            new TransferIdentifier(TransferType.ReleaseFolderExtraction, observationId),
+        ]);
+        progressTracker
+            .PlannedFilesPerIdentifier.Values.SelectMany(files => files)
+            .ShouldAllBe(file => file.SourceName == "Bearcat.Release.1080p");
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionFails_StoresErrorNotifiesAndContinuesWithOtherFolders()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var brokenFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Broken.Release.1080p")
+        );
+        await WriteCorruptedArchiveWithSfvAsync(brokenFolder.FullName);
+        var workingFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Working.Release.1080p")
+        );
+        await File.WriteAllTextAsync(Path.Combine(workingFolder.FullName, "movie.mkv"), "movie");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+        (await DbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(workingFolder.FullName);
+
+        DbContext.ChangeTracker.Clear();
+        var observation = await DbContext.ReleaseFolderObservations.SingleAsync();
+        observation.FolderPath.ShouldBe(brokenFolder.FullName);
+        observation.ExtractionErrorMessage!.ShouldContain("wrong CRC32 checksum: release.rar");
+        observation.ExtractionErrorMessage!.ShouldContain(
+            $"files were kept in {brokenFolder.FullName}"
+        );
+        observation.ExtractionFailedAt.ShouldNotBeNull();
+        observation.FileCount.ShouldBe(2);
+        File.Exists(Path.Combine(brokenFolder.FullName, "release.rar")).ShouldBeTrue();
+        Directory
+            .Exists(
+                Path.Combine(
+                    brokenFolder.FullName,
+                    FolderArchiveExtractionService.TemporaryExtractionFolderName
+                )
+            )
+            .ShouldBeFalse();
+
+        var failureNotification = await DbContext.Notifications.SingleAsync(notification =>
+            notification.NotificationKind == NotificationKind.ReleaseFolderExtractionFailed
+        );
+        failureNotification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
+        failureNotification.Message.ShouldContain("Broken.Release.1080p");
+        failureNotification.Message.ShouldContain($"files were kept in {brokenFolder.FullName}");
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionFailedAndFolderUnchanged_SkipsFolderOnLaterTicks()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Broken.Release.1080p"));
+        await WriteCorruptedArchiveWithSfvAsync(folder.FullName);
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+        await ProcessUntilStableAsync();
+
+        // Act
+        var firstLaterTick = await service.ProcessAsync(CancellationToken.None);
+        var secondLaterTick = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        firstLaterTick.ShouldBe(0);
+        secondLaterTick.ShouldBe(0);
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Notifications.CountAsync()).ShouldBe(1);
+        DbContext.ChangeTracker.Clear();
+        (
+            await DbContext.ReleaseFolderObservations.SingleAsync()
+        ).ExtractionErrorMessage.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionFailedAndExtractionDisabledAfterwards_CreatesReleaseWithoutExtraction()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Broken.Release.1080p"));
+        await WriteCorruptedArchiveWithSfvAsync(folder.FullName);
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+        await ProcessUntilStableAsync();
+        var automation = await DbContext.ReleaseFolderAutomations.SingleAsync();
+        automation.ExtractArchivesBeforeReleaseCreation = false;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+        (await DbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(folder.FullName);
+        File.Exists(Path.Combine(folder.FullName, "release.rar")).ShouldBeTrue();
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionFailedAndFolderChanged_ClearsErrorAndRetriesOnceStable()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Broken.Release.1080p"));
+        await WriteCorruptedArchiveWithSfvAsync(folder.FullName);
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+        await ProcessUntilStableAsync();
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "release.rar"), "volume");
+
+        // Act
+        var changedTick = await service.ProcessAsync(CancellationToken.None);
+        DbContext.ChangeTracker.Clear();
+        var observationAfterChange = await DbContext.ReleaseFolderObservations.SingleAsync();
+        var stableTick = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        changedTick.ShouldBe(0);
+        observationAfterChange.ExtractionErrorMessage.ShouldBeNull();
+        observationAfterChange.ExtractionFailedAt.ShouldBeNull();
+        stableTick.ShouldBe(1);
+        (await DbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(folder.FullName);
+        File.Exists(Path.Combine(folder.FullName, "movie.mkv")).ShouldBeTrue();
+        File.Exists(Path.Combine(folder.FullName, "release.rar")).ShouldBeFalse();
+    }
+
+    private void VerifyNoArchiveWasExtracted()
+    {
+        archiveExtractorMock.Verify(
+            extractor =>
+                extractor.ExtractAsync(
+                    It.IsAny<ArchiveToExtract>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    private static async Task WriteCorruptedArchiveWithSfvAsync(string folderPath)
+    {
+        await File.WriteAllTextAsync(Path.Combine(folderPath, "release.rar"), "corrupted");
+        await File.WriteAllTextAsync(
+            Path.Combine(folderPath, "release.sfv"),
+            CreateSfvLine("release.rar", "volume")
+        );
+    }
+
+    private static string CreateSfvLine(string relativeFilePath, string content)
+    {
+        return $"{relativeFilePath} {Crc32.HashToUInt32(Encoding.UTF8.GetBytes(content)):X8}";
+    }
+
     private async Task AddRemoteSourceDownloadAsync(
         string localFolderPath,
         RemoteSourceDownloadState state
@@ -784,7 +1124,8 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
         string basePath,
         string? folderNamePattern,
         bool isEnabled = true,
-        string? primaryLanguageCode = null
+        string? primaryLanguageCode = null,
+        bool extractArchivesBeforeReleaseCreation = false
     )
     {
         DbContext.ReleaseFolderAutomations.Add(
@@ -794,6 +1135,7 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
                 FolderNamePattern = folderNamePattern,
                 PrimaryLanguageCode = primaryLanguageCode,
                 ReleaseTemplateId = releaseTemplateId,
+                ExtractArchivesBeforeReleaseCreation = extractArchivesBeforeReleaseCreation,
                 IsEnabled = isEnabled,
             }
         );

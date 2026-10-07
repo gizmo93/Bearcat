@@ -11,5 +11,6 @@ public record ReleaseFolderAutomationReadModel(
     ReleaseType ReleaseType,
     ReleaseContentType ReleaseContentType,
     string? PrimaryLanguageCode,
+    bool ExtractArchivesBeforeReleaseCreation,
     bool IsEnabled
 );

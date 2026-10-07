@@ -36,6 +36,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ReleaseFolderMissing.Description"
         ),
         new(
+            Kind: NotificationKind.ReleaseFolderExtractionFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Releases,
+            DisplayName: "NotificationKind.ReleaseFolderExtractionFailed",
+            Description: "NotificationKind.ReleaseFolderExtractionFailed.Description"
+        ),
+        new(
             Kind: NotificationKind.ArchiveCreationFailed,
             Severity: NotificationSeverity.Error,
             Group: NotificationGroup.Archives,

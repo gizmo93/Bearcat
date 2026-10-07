@@ -14,5 +14,7 @@ public class ReleaseFolderAutomation
 
     public ReleaseTemplate ReleaseTemplate { get; set; } = null!;
 
+    public bool ExtractArchivesBeforeReleaseCreation { get; set; }
+
     public bool IsEnabled { get; set; }
 }

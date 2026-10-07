@@ -1,0 +1,20 @@
+@using Bearcat.Website.Pages.Home.Activity
+
+<section class="bearcat-activity-lane" aria-label="@L["ReleaseFolderAutomations"]">
+    <ActivityLaneHeading IconName="folder-cog" Label="@L["ReleaseFolderAutomations"]" Count="Snapshots.Count" />
+
+    @foreach (var snapshot in Snapshots)
+    {
+        RenderFragment files = @<TransferFileList Snapshot="snapshot" />;
+        RenderFragment phases = @<TransferPhaseSteps Phases="ReleaseFolderPhases"
+                                                     CurrentPhase="snapshot.Identifier.Type"
+                                                     AriaLabel="@L["ReleaseFolderExtractionPhases"]" />;
+        <ActivityCard @key="snapshot.Identifier.Id"
+                      IconName="folder-archive"
+                      IsActive="true"
+                      Title="@snapshot.SourceName"
+                      Snapshot="snapshot"
+                      Phases="phases"
+                      Files="files" />
+    }
+</section>

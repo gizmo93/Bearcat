@@ -2,6 +2,7 @@ using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 
@@ -9,10 +10,12 @@ namespace Bearcat.Website.Pages.ManageReleaseFolderAutomations;
 
 public partial class ReleaseFolderAutomationsPage(
     DialogService dialogService,
+    ToastService toastService,
     IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ReleaseFolderAutomationReadModel> automations = [];
+    private IReadOnlyList<FailedReleaseFolderExtractionReadModel> failedExtractions = [];
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -28,6 +31,10 @@ public partial class ReleaseFolderAutomationsPage(
         {
             automations = await operationRunner.RunAsync(
                 (IReleaseFolderAutomationReadRepository repository) => repository.GetAllAsync()
+            );
+            failedExtractions = await operationRunner.RunAsync(
+                (IReleaseFolderAutomationReadRepository repository) =>
+                    repository.GetFailedExtractionsAsync()
             );
         }
         finally
@@ -74,6 +81,8 @@ public partial class ReleaseFolderAutomationsPage(
                     FolderNamePattern = automation.FolderNamePattern,
                     PrimaryLanguageCode = automation.PrimaryLanguageCode ?? string.Empty,
                     ReleaseTemplateId = automation.ReleaseTemplateId,
+                    ExtractArchivesBeforeReleaseCreation =
+                        automation.ExtractArchivesBeforeReleaseCreation,
                     IsEnabled = automation.IsEnabled,
                     IsEdit = true,
                 },
@@ -104,6 +113,29 @@ public partial class ReleaseFolderAutomationsPage(
                 service.SetEnabledAsync(automation.ReleaseFolderAutomationId, !automation.IsEnabled)
         );
         await LoadAutomationsAsync();
+    }
+
+    private async Task RetryExtractionAsync(FailedReleaseFolderExtractionReadModel failedExtraction)
+    {
+        await operationRunner.RunAsync(
+            (ReleaseFolderAutomationService service) =>
+                service.RetryExtractionAsync(failedExtraction.ReleaseFolderObservationId)
+        );
+        toastService.Success(
+            L["ReleaseFolderExtractionRetryQueued", GetFolderName(failedExtraction.FolderPath)]
+        );
+        await LoadAutomationsAsync();
+    }
+
+    private static bool ShouldExtractArchives(ReleaseFolderAutomationReadModel automation)
+    {
+        return automation.ReleaseType is ReleaseType.Managed
+            && automation.ExtractArchivesBeforeReleaseCreation;
+    }
+
+    private static string GetFolderName(string folderPath)
+    {
+        return Path.GetFileName(Path.TrimEndingDirectorySeparator(folderPath));
     }
 
     private static string GetLanguageDisplayName(string languageCode)

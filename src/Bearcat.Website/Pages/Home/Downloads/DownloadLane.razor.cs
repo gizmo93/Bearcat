@@ -40,8 +40,8 @@ public partial class DownloadLane(
     private IReadOnlyList<TransferPhase> RemoteDownloadPhases =>
         [
             new(TransferType.RemoteDownload, L["RemoteDownloadPhaseDownload"]),
-            new(TransferType.RemoteDownloadVerification, L["RemoteDownloadPhaseVerify"]),
-            new(TransferType.RemoteDownloadExtraction, L["RemoteDownloadPhaseExtract"]),
+            new(TransferType.RemoteDownloadVerification, L["TransferPhaseVerify"]),
+            new(TransferType.RemoteDownloadExtraction, L["TransferPhaseExtract"]),
         ];
 
     private EventCallback GetRemoteDownloadCancelCallback(RemoteSourceDownloadReadModel download)

@@ -31,7 +31,27 @@ public class ReleaseFolderAutomationRepository(
                 a.ReleaseTemplate.ReleaseType,
                 a.ReleaseTemplate.ReleaseContentType,
                 a.PrimaryLanguageCode,
+                a.ExtractArchivesBeforeReleaseCreation,
                 a.IsEnabled
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<
+        IReadOnlyList<FailedReleaseFolderExtractionReadModel>
+    > GetFailedExtractionsAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbRead
+            .ReleaseFolderObservations.Where(observation =>
+                observation.ExtractionErrorMessage != null
+            )
+            .OrderByDescending(observation => observation.ExtractionFailedAt)
+            .ThenBy(observation => observation.Id)
+            .Select(observation => new FailedReleaseFolderExtractionReadModel(
+                observation.Id,
+                observation.FolderPath,
+                observation.ExtractionErrorMessage!,
+                observation.ExtractionFailedAt!.Value
             ))
             .ToListAsync(cancellationToken);
     }
@@ -63,6 +83,17 @@ public class ReleaseFolderAutomationRepository(
     {
         return await dbWrite.ReleaseFolderAutomations.FirstAsync(
             automation => automation.Id == releaseFolderAutomationId,
+            cancellationToken
+        );
+    }
+
+    public async Task<ReleaseFolderObservation> GetObservationByIdAsync(
+        int releaseFolderObservationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.ReleaseFolderObservations.FirstAsync(
+            observation => observation.Id == releaseFolderObservationId,
             cancellationToken
         );
     }

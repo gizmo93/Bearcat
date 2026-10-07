@@ -1443,6 +1443,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ExtractArchivesBeforeReleaseCreation")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FolderNamePattern")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -1469,6 +1472,12 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ExtractionErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ExtractionFailedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("FileCount")
                         .HasColumnType("INTEGER");

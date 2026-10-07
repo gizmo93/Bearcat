@@ -53,6 +53,24 @@ and waits for the configured [folder stability and minimum size](/Bearcat/advanc
 For each eligible folder, it creates a release from the template and looks up its metadata.
 Bearcat then creates archives and uploads them using the template's settings.
 
+### Extract archives before release creation
+
+For managed templates, turn on **Extract archives before release creation** in the folder automation
+if the folders contain RAR or 7z archives and you want Bearcat to pack the release itself. The option
+is off by default and does not apply to unmanaged templates.
+
+Before the release is created, Bearcat checks the folder against its `.sfv` files, if there are any,
+and extracts every RAR and 7z archive in the folder and its subfolders. After a successful extraction,
+it deletes the archive volumes and `.sfv` files that only list those volumes. The extraction rules are
+the same as for [remote downloads](/Bearcat/remote-downloads/#extract-archives-before-release-creation).
+
+Running checks and extractions appear on the **Activity** page under **Folder automations**.
+
+If the SFV check or extraction fails, the files stay in the folder, no release is created, and Bearcat
+sends a notification. The folder is listed under **Failed extractions** on the **Folder automations**
+page with the error message. Fix the cause, then click **Retry**. The folder is processed again on the
+next scan. Bearcat also retries automatically when the files in the folder change.
+
 ### Download releases from FTP or FTPS
 
 Use **Remote sources** and **Remote automations** to download new folders from a server and create

@@ -1025,6 +1025,7 @@
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist und der Releaseordner gelöscht werden kann.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Releaseordner fehlt</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>Der für die Verarbeitung benötigte Releaseordner wurde nicht gefunden.</value></data>
+  <data name="NotificationKind.ReleaseFolderExtractionFailed" xml:space="preserve"><value>Entpacken der Ordnerautomatisierung fehlgeschlagen</value></data><data name="NotificationKind.ReleaseFolderExtractionFailed.Description" xml:space="preserve"><value>Die SFV-Prüfung oder das Entpacken der Archive eines Ordners der Ordnerautomatisierung ist fehlgeschlagen. Die Dateien wurden behalten und es wurde kein Release erstellt.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archiverstellung fehlgeschlagen</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht erstellt werden.</value></data>
   <data name="NotificationKind.ArchiveFilesMissing" xml:space="preserve"><value>Archivdateien fehlen</value></data><data name="NotificationKind.ArchiveFilesMissing.Description" xml:space="preserve"><value>Für einen Upload benötigte Dateien fehlen.</value></data>
   <data name="NotificationKind.InitialUploadCreated" xml:space="preserve"><value>Initialer Upload erstellt</value></data><data name="NotificationKind.InitialUploadCreated.Description" xml:space="preserve"><value>Ein initialer Upload wurde automatisch erstellt.</value></data>
@@ -1599,8 +1600,8 @@
   <data name="HideFiles" xml:space="preserve"><value>Dateien ausblenden</value></data>
   <data name="RemoteDownloadPhases" xml:space="preserve"><value>Phasen des Remotedownloads</value></data>
   <data name="RemoteDownloadPhaseDownload" xml:space="preserve"><value>Download</value></data>
-  <data name="RemoteDownloadPhaseVerify" xml:space="preserve"><value>Prüfen</value></data>
-  <data name="RemoteDownloadPhaseExtract" xml:space="preserve"><value>Entpacken</value></data>
+  <data name="TransferPhaseVerify" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="TransferPhaseExtract" xml:space="preserve"><value>Entpacken</value></data>
   <data name="ArchiveCreationPhases" xml:space="preserve"><value>Phasen der Archiverstellung</value></data>
   <data name="ArchiveCreationPhasePack" xml:space="preserve"><value>Packen</value></data>
   <data name="ArchiveCreationPhaseMd5Hashes" xml:space="preserve"><value>MD5-Hashes</value></data>
@@ -1668,4 +1669,12 @@
   <data name="KeyboardHintOpen" xml:space="preserve"><value>öffnen</value></data>
   <data name="KeySpace" xml:space="preserve"><value>Leertaste</value></data>
   <data name="KeyEnter" xml:space="preserve"><value>Enter</value></data>
+  <data name="ReleaseFolderExtractArchivesBeforeReleaseCreationHelp" xml:space="preserve"><value>Vor der Releaseerstellung werden SFV-Dateien im Ordner geprüft und Archive (RAR, 7z) entpackt. Nach erfolgreichem Entpacken werden die Archivdateien gelöscht. Gilt nur für Vorlagen vom Typ Managed.</value></data>
+  <data name="ExtractsArchives" xml:space="preserve"><value>Entpackt Archive</value></data>
+  <data name="FailedReleaseFolderExtractions" xml:space="preserve"><value>Fehlgeschlagene Entpackvorgänge</value></data>
+  <data name="FailedReleaseFolderExtractionsIntro" xml:space="preserve"><value>Die SFV-Prüfung oder das Entpacken der Archive dieser Ordner ist fehlgeschlagen. Die Dateien wurden behalten und es wurde kein Release erstellt. Ein Ordner wird automatisch erneut verarbeitet, sobald sich seine Dateien ändern.</value></data>
+  <data name="FailedAt" xml:space="preserve"><value>Fehlgeschlagen am</value></data>
+  <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Erneut versuchen</value></data>
+  <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} wird beim nächsten Ordnerscan erneut verarbeitet.</value></data>
+  <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Phasen der Ordnerautomatisierung</value></data>
 </root>

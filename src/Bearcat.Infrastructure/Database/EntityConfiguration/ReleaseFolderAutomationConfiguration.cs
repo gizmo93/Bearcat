@@ -14,6 +14,7 @@ public class ReleaseFolderAutomationConfiguration
         builder.Property(a => a.FolderNamePattern).IsRequired(false).HasMaxLength(200);
         builder.Property(a => a.PrimaryLanguageCode).HasMaxLength(2).IsRequired(false);
         builder.Property(a => a.ReleaseTemplateId).IsRequired();
+        builder.Property(a => a.ExtractArchivesBeforeReleaseCreation).IsRequired();
         builder.Property(a => a.IsEnabled).IsRequired();
 
         builder
