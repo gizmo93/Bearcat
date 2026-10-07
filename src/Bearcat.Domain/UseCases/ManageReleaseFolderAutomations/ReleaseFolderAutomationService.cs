@@ -52,13 +52,17 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         );
 
         automation.BasePath = basePath.Trim();
+
         automation.FolderNamePattern = string.IsNullOrWhiteSpace(folderNamePattern)
             ? null
             : folderNamePattern.Trim();
+
         automation.ReleaseTemplateId = releaseTemplateId;
+
         automation.PrimaryLanguageCode = string.IsNullOrWhiteSpace(primaryLanguageCode)
             ? null
             : primaryLanguageCode.Trim().ToLowerInvariant();
+
         automation.ExtractArchivesBeforeReleaseCreation = extractArchivesBeforeReleaseCreation;
         automation.IsEnabled = isEnabled;
 
@@ -75,6 +79,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             releaseFolderAutomationId,
             cancellationToken
         );
+
         automation.IsEnabled = isEnabled;
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -89,6 +94,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             releaseFolderObservationId,
             cancellationToken
         );
+
         observation.ExtractionErrorMessage = null;
         observation.ExtractionFailedAt = null;
 
@@ -104,6 +110,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             releaseFolderAutomationId,
             cancellationToken
         );
+
         repository.Remove(automation);
 
         await repository.SaveChangesAsync(cancellationToken);
