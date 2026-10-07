@@ -95,9 +95,9 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="bool"
                                Header="@L["Status"]"
                                Property="@(automation => automation.IsEnabled)"
-                               Width="130px">
+                               Width="250px">
                 <CellTemplate Context="automation">
-                    <div class="flex flex-wrap gap-1">
+                    <div class="flex items-center gap-1.5 whitespace-nowrap">
                         <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
                             @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
                         </BbBadge>
