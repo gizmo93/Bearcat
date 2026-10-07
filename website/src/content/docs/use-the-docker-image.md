@@ -12,8 +12,10 @@ next:
 The Docker image includes the archive tools. The default setup uses **SQLite**, so it runs as
 one container and needs no database server.
 
-You need Docker with Docker Compose.
-The Bearcat Docker image is only available for the architecture `linux/amd64`. For Windows or an Apple Silicon Mac, you can use the
+You need Docker with Docker Comp    ose.
+The Bearcat Docker image is only available for the architecture `linux/amd64` (so no Raspberry Pi support unfortunately). 
+
+For Windows or an Apple Silicon Mac, you can use the
 [native Desktop app](/Bearcat/use-the-desktop-launcher/).
 
 ## 0. Install Docker (skip if it's already installed)
