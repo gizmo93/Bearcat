@@ -1,8 +1,9 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
+using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Repositories;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -12,7 +13,7 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Verifica
 public class RemoteDownloadVerificationAndExtractionService(
     IRemoteDownloadVerificationAndExtractionRepository repository,
     SfvChecksumVerifier sfvChecksumVerifier,
-    DownloadFolderArchiveExtractionService archiveExtractionService,
+    FolderArchiveExtractionService archiveExtractionService,
     INotificationService notificationService,
     TimeProvider timeProvider,
     ILogger<RemoteDownloadVerificationAndExtractionService> logger
@@ -107,7 +108,16 @@ public class RemoteDownloadVerificationAndExtractionService(
             download.LocalFolderPath
         );
 
-        return await sfvChecksumVerifier.VerifyAsync(download, sfvFilePaths, cancellationToken);
+        return await sfvChecksumVerifier.VerifyAsync(
+            folderPath: download.LocalFolderPath,
+            sfvFilePaths: sfvFilePaths,
+            transferIdentifier: new TransferIdentifier(
+                TransferType.RemoteDownloadVerification,
+                download.Id
+            ),
+            sourceName: download.SourceName,
+            cancellationToken: cancellationToken
+        );
     }
 
     private async Task ExtractArchivesAsync(
@@ -120,8 +130,13 @@ public class RemoteDownloadVerificationAndExtractionService(
         await repository.SaveChangesAsync(cancellationToken);
 
         var extractedArchives = await archiveExtractionService.ExtractAllArchivesAsync(
-            download: download,
+            folderPath: download.LocalFolderPath,
             sfvFiles: sfvFiles,
+            transferIdentifier: new TransferIdentifier(
+                TransferType.RemoteDownloadExtraction,
+                download.Id
+            ),
+            sourceName: download.SourceName,
             cancellationToken: cancellationToken
         );
 

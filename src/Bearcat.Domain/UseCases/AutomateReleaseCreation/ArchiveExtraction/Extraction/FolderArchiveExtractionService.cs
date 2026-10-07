@@ -2,44 +2,39 @@ using System.Globalization;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Transfers;
-using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
+namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
 
-public class DownloadFolderArchiveExtractionService(
+public class FolderArchiveExtractionService(
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
     ITransferProgressTracker progressTracker,
     FolderSizeProgressReporter folderSizeProgressReporter,
-    ILogger<DownloadFolderArchiveExtractionService> logger
+    ILogger<FolderArchiveExtractionService> logger
 )
 {
     public const string TemporaryExtractionFolderName = ".bearcat-extraction";
 
     public async Task<IReadOnlyList<ArchiveToExtract>> ExtractAllArchivesAsync(
-        RemoteSourceDownload download,
+        string folderPath,
         IReadOnlyList<SfvFile> sfvFiles,
+        TransferIdentifier transferIdentifier,
+        string sourceName,
         CancellationToken cancellationToken
     )
     {
-        var localFolderPath = download.LocalFolderPath;
-        var archives = FindArchivesInFolderAndSubfolders(localFolderPath);
+        var archives = FindArchivesInFolderAndSubfolders(folderPath);
 
         if (archives.Count == 0)
         {
             return [];
         }
 
-        VerifyEnoughFreeDiskSpace(localFolderPath, archives);
-
-        var transferIdentifier = new TransferIdentifier(
-            TransferType.RemoteDownloadExtraction,
-            download.Id
-        );
+        VerifyEnoughFreeDiskSpace(folderPath, archives);
 
         var plannedFiles = archives
             .Select(
@@ -47,10 +42,10 @@ public class DownloadFolderArchiveExtractionService(
                     new TransferFile(
                         FileId: index + 1,
                         FileName: Path.GetRelativePath(
-                            localFolderPath,
+                            folderPath,
                             archive.ArchiveToExtract.FirstVolumeFilePath
                         ),
-                        SourceName: download.SourceName,
+                        SourceName: sourceName,
                         SizeBytes: GetTotalVolumeSizeBytes(archive),
                         IsAlreadyTransferred: false
                     )
@@ -64,7 +59,7 @@ public class DownloadFolderArchiveExtractionService(
         try
         {
             extractedArchives = await ExtractIntoTemporaryFoldersAsync(
-                localFolderPath: localFolderPath,
+                folderPath: folderPath,
                 archivesWithPlannedFiles: archives.Zip(plannedFiles).ToList(),
                 transferIdentifier: transferIdentifier,
                 cancellationToken: cancellationToken
@@ -77,33 +72,33 @@ public class DownloadFolderArchiveExtractionService(
 
         var entriesToMove = GetEntriesToMove(extractedArchives);
 
-        VerifyNoTargetPathConflicts(localFolderPath, entriesToMove);
+        VerifyNoTargetPathConflicts(folderPath, entriesToMove);
         MoveEntries(entriesToMove);
         DeleteTemporaryExtractionFoldersOfArchiveFolders(extractedArchives);
 
         var deletedVolumeFilePaths = DeleteVolumes(archives);
-        DeleteSfvFilesCoveringOnlyDeletedVolumes(localFolderPath, sfvFiles, deletedVolumeFilePaths);
+        DeleteSfvFilesCoveringOnlyDeletedVolumes(folderPath, sfvFiles, deletedVolumeFilePaths);
 
         return archives.Select(archive => archive.ArchiveToExtract).ToList();
     }
 
-    public void DeleteTemporaryExtractionFolders(string localFolderPath)
+    public void DeleteTemporaryExtractionFolders(string folderPath)
     {
         fileSystemService.DeleteDirectoriesByNameRecursively(
-            localFolderPath,
+            folderPath,
             TemporaryExtractionFolderName
         );
     }
 
-    private List<ArchiveWithExtractor> FindArchivesInFolderAndSubfolders(string localFolderPath)
+    private List<ArchiveWithExtractor> FindArchivesInFolderAndSubfolders(string folderPath)
     {
         var extractors = archiverFactory.GetArchiveExtractors();
 
-        return GetFolderAndSubfolders(localFolderPath)
-            .SelectMany(folderPath =>
+        return GetFolderAndSubfolders(folderPath)
+            .SelectMany(folderOrSubfolderPath =>
                 extractors.SelectMany(extractor =>
                     extractor
-                        .FindArchivesToExtract(folderPath)
+                        .FindArchivesToExtract(folderOrSubfolderPath)
                         .Select(archive => new ArchiveWithExtractor(archive, extractor))
                 )
             )
@@ -130,18 +125,18 @@ public class DownloadFolderArchiveExtractionService(
     }
 
     private static void VerifyEnoughFreeDiskSpace(
-        string localFolderPath,
+        string folderPath,
         List<ArchiveWithExtractor> archives
     )
     {
         var requiredBytes = archives.Sum(GetTotalVolumeSizeBytes);
 
-        var availableBytes = new DriveInfo(localFolderPath).AvailableFreeSpace;
+        var availableBytes = new DriveInfo(folderPath).AvailableFreeSpace;
 
         if (requiredBytes > availableBytes)
         {
             throw new IOException(
-                $"Extracting the archives needs up to {requiredBytes.Bytes().Humanize(CultureInfo.InvariantCulture)} of free disk space, but only {availableBytes.Bytes().Humanize(CultureInfo.InvariantCulture)} are available for {localFolderPath}"
+                $"Extracting the archives needs up to {requiredBytes.Bytes().Humanize(CultureInfo.InvariantCulture)} of free disk space, but only {availableBytes.Bytes().Humanize(CultureInfo.InvariantCulture)} are available for {folderPath}"
             );
         }
     }
@@ -154,7 +149,7 @@ public class DownloadFolderArchiveExtractionService(
     }
 
     private async Task<List<ExtractedArchive>> ExtractIntoTemporaryFoldersAsync(
-        string localFolderPath,
+        string folderPath,
         List<(ArchiveWithExtractor Archive, TransferFile PlannedFile)> archivesWithPlannedFiles,
         TransferIdentifier transferIdentifier,
         CancellationToken cancellationToken
@@ -174,7 +169,7 @@ public class DownloadFolderArchiveExtractionService(
 
             extractedArchives.Add(
                 await ExtractIntoTemporaryFolderAsync(
-                    localFolderPath: localFolderPath,
+                    folderPath: folderPath,
                     archive: archive,
                     runningNumber: plannedFile.FileId,
                     progress: progress,
@@ -187,7 +182,7 @@ public class DownloadFolderArchiveExtractionService(
     }
 
     private async Task<ExtractedArchive> ExtractIntoTemporaryFolderAsync(
-        string localFolderPath,
+        string folderPath,
         ArchiveWithExtractor archive,
         int runningNumber,
         ITransferProgress progress,
@@ -232,14 +227,14 @@ public class DownloadFolderArchiveExtractionService(
         if (!result.IsSuccess)
         {
             throw new IOException(
-                $"Extracting '{Path.GetRelativePath(localFolderPath, firstVolumeFilePath)}' failed: {string.Join(" | ", result.ErrorMessages)}"
+                $"Extracting '{Path.GetRelativePath(folderPath, firstVolumeFilePath)}' failed: {string.Join(" | ", result.ErrorMessages)}"
             );
         }
 
         return new ExtractedArchive(
             ArchiveFolderPath: archiveFolderPath,
             ExtractedEntriesFolderPath: GetFolderContainingExtractedEntries(
-                localFolderPath,
+                folderPath,
                 firstVolumeFilePath,
                 temporaryFolderPath
             )
@@ -247,7 +242,7 @@ public class DownloadFolderArchiveExtractionService(
     }
 
     private string GetFolderContainingExtractedEntries(
-        string localFolderPath,
+        string folderPath,
         string firstVolumeFilePath,
         string temporaryFolderPath
     )
@@ -262,7 +257,7 @@ public class DownloadFolderArchiveExtractionService(
         logger.LogInformation(
             "Skipping the wrapper folder {WrapperFolderName} of {ArchiveFilePath} and moving its content instead",
             Path.GetFileName(entryPaths[0]),
-            Path.GetRelativePath(localFolderPath, firstVolumeFilePath)
+            Path.GetRelativePath(folderPath, firstVolumeFilePath)
         );
 
         return entryPaths[0];
@@ -287,20 +282,20 @@ public class DownloadFolderArchiveExtractionService(
     }
 
     private static void VerifyNoTargetPathConflicts(
-        string localFolderPath,
+        string folderPath,
         List<EntryToMove> entriesToMove
     )
     {
         var conflictingTargetPaths = entriesToMove
             .GroupBy(entry => entry.TargetPath, StringComparer.OrdinalIgnoreCase)
             .Where(group => group.Count() > 1 || Path.Exists(group.Key))
-            .Select(group => Path.GetRelativePath(localFolderPath, group.Key))
+            .Select(group => Path.GetRelativePath(folderPath, group.Key))
             .ToList();
 
         if (conflictingTargetPaths.Count > 0)
         {
             throw new IOException(
-                $"The extracted entries {string.Join(", ", conflictingTargetPaths)} already exist in the download folder or are contained in more than one archive, so nothing was moved"
+                $"The extracted entries {string.Join(", ", conflictingTargetPaths)} already exist in the folder or are contained in more than one archive, so nothing was moved"
             );
         }
     }
@@ -355,7 +350,7 @@ public class DownloadFolderArchiveExtractionService(
     }
 
     private void DeleteSfvFilesCoveringOnlyDeletedVolumes(
-        string localFolderPath,
+        string folderPath,
         IReadOnlyList<SfvFile> sfvFiles,
         HashSet<string> deletedVolumeFilePaths
     )
@@ -373,9 +368,9 @@ public class DownloadFolderArchiveExtractionService(
             File.Delete(sfvFilePath);
 
             logger.LogInformation(
-                "Deleted the SFV file {SfvFilePath} in {LocalFolderPath} because it only lists extracted archive volumes",
-                Path.GetRelativePath(localFolderPath, sfvFilePath),
-                localFolderPath
+                "Deleted the SFV file {SfvFilePath} in {FolderPath} because it only lists extracted archive volumes",
+                Path.GetRelativePath(folderPath, sfvFilePath),
+                folderPath
             );
         }
     }

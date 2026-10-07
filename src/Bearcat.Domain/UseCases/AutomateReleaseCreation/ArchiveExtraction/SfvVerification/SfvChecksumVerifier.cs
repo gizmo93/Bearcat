@@ -1,12 +1,11 @@
 using System.Globalization;
 using System.IO.Hashing;
 using Bearcat.Abstractions.Transfers;
-using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
+namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 
 public class SfvChecksumVerifier(
     ITransferProgressTracker progressTracker,
@@ -17,11 +16,11 @@ public class SfvChecksumVerifier(
     private const int MaxListedFilePaths = 10;
     private const int ReadBufferSizeBytes = 1024 * 1024;
 
-    public static IReadOnlyList<string> FindSfvFiles(string localFolderPath)
+    public static IReadOnlyList<string> FindSfvFiles(string folderPath)
     {
         return Directory
             .GetFiles(
-                path: localFolderPath,
+                path: folderPath,
                 searchPattern: "*.sfv",
                 enumerationOptions: new EnumerationOptions
                 {
@@ -35,8 +34,10 @@ public class SfvChecksumVerifier(
     }
 
     public async Task<IReadOnlyList<SfvFile>> VerifyAsync(
-        RemoteSourceDownload download,
+        string folderPath,
         IReadOnlyList<string> sfvFilePaths,
+        TransferIdentifier transferIdentifier,
+        string sourceName,
         CancellationToken cancellationToken
     )
     {
@@ -44,9 +45,7 @@ public class SfvChecksumVerifier(
 
         foreach (var sfvFilePath in sfvFilePaths)
         {
-            sfvFiles.Add(
-                await ParseSfvFileAsync(sfvFilePath, download.LocalFolderPath, cancellationToken)
-            );
+            sfvFiles.Add(await ParseSfvFileAsync(sfvFilePath, folderPath, cancellationToken));
         }
 
         var entriesToVerify = sfvFiles
@@ -54,18 +53,13 @@ public class SfvChecksumVerifier(
             .Select((entry, index) => new EntryToVerify(index + 1, entry))
             .ToList();
 
-        var transferIdentifier = new TransferIdentifier(
-            TransferType.RemoteDownloadVerification,
-            download.Id
-        );
-
         progressTracker.StartTracking(
             transferIdentifier,
             entriesToVerify
                 .Select(entryToVerify => new TransferFile(
                     FileId: entryToVerify.FileId,
                     FileName: entryToVerify.Entry.RelativeFilePath,
-                    SourceName: download.SourceName,
+                    SourceName: sourceName,
                     SizeBytes: GetFileSizeBytesOrNullWhenMissing(entryToVerify.Entry.FilePath),
                     IsAlreadyTransferred: false
                 ))
@@ -75,9 +69,9 @@ public class SfvChecksumVerifier(
         try
         {
             await VerifyEntriesAsync(
-                download: download,
                 entriesToVerify: entriesToVerify,
                 transferIdentifier: transferIdentifier,
+                sourceName: sourceName,
                 cancellationToken: cancellationToken
             );
         }
@@ -87,19 +81,19 @@ public class SfvChecksumVerifier(
         }
 
         logger.LogInformation(
-            "Verified the CRC32 checksums of {FileCount} files listed in {SfvFileCount} SFV files in {LocalFolderPath}",
+            "Verified the CRC32 checksums of {FileCount} files listed in {SfvFileCount} SFV files in {FolderPath}",
             entriesToVerify.Count,
             sfvFiles.Count,
-            download.LocalFolderPath
+            folderPath
         );
 
         return sfvFiles;
     }
 
     private async Task VerifyEntriesAsync(
-        RemoteSourceDownload download,
         List<EntryToVerify> entriesToVerify,
         TransferIdentifier transferIdentifier,
+        string sourceName,
         CancellationToken cancellationToken
     )
     {
@@ -119,7 +113,7 @@ public class SfvChecksumVerifier(
                 identifier: transferIdentifier,
                 fileId: fileId,
                 fileName: entry.RelativeFilePath,
-                sourceName: download.SourceName
+                sourceName: sourceName
             );
 
             if (
@@ -151,15 +145,15 @@ public class SfvChecksumVerifier(
 
     private static async Task<SfvFile> ParseSfvFileAsync(
         string sfvFilePath,
-        string localFolderPath,
+        string folderPath,
         CancellationToken cancellationToken
     )
     {
         var lines = await File.ReadAllLinesAsync(sfvFilePath, cancellationToken);
-        var sfvRelativeFilePath = GetRelativePath(localFolderPath, sfvFilePath);
+        var sfvRelativeFilePath = GetRelativePath(folderPath, sfvFilePath);
 
         var sfvRelativeFolderPath = GetRelativePath(
-            localFolderPath,
+            folderPath,
             Path.GetDirectoryName(sfvFilePath)!
         );
 
@@ -169,7 +163,7 @@ public class SfvChecksumVerifier(
             .Select(line =>
                 ParseSfvLine(
                     line: line,
-                    localFolderPath: localFolderPath,
+                    folderPath: folderPath,
                     sfvRelativeFilePath: sfvRelativeFilePath,
                     sfvRelativeFolderPath: sfvRelativeFolderPath
                 )
@@ -181,7 +175,7 @@ public class SfvChecksumVerifier(
 
     private static SfvEntry ParseSfvLine(
         string line,
-        string localFolderPath,
+        string folderPath,
         string sfvRelativeFilePath,
         string sfvRelativeFolderPath
     )
@@ -203,9 +197,9 @@ public class SfvChecksumVerifier(
             sfvRelativeFolderPath == "." ? fileName : $"{sfvRelativeFolderPath}/{fileName}";
 
         var filePath =
-            RemoteDownloadPaths.GetSafeLocalFilePath(localFolderPath, relativeFilePath)
+            RemoteDownloadPaths.GetSafeLocalFilePath(folderPath, relativeFilePath)
             ?? throw new InvalidDataException(
-                $"The SFV file '{sfvRelativeFilePath}' references the unsafe path '{fileName}' that is not inside the download folder"
+                $"The SFV file '{sfvRelativeFilePath}' references the unsafe path '{fileName}' that is not inside the folder"
             );
 
         return new SfvEntry(filePath, relativeFilePath, expectedCrc32);
@@ -224,10 +218,9 @@ public class SfvChecksumVerifier(
             );
     }
 
-    private static string GetRelativePath(string localFolderPath, string path)
+    private static string GetRelativePath(string folderPath, string path)
     {
-        return Path.GetRelativePath(localFolderPath, path)
-            .Replace(Path.DirectorySeparatorChar, '/');
+        return Path.GetRelativePath(folderPath, path).Replace(Path.DirectorySeparatorChar, '/');
     }
 
     private static async Task<uint> ComputeCrc32Async(

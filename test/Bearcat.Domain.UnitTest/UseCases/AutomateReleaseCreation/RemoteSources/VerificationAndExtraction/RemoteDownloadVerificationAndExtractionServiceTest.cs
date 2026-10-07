@@ -4,10 +4,12 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UnitTest.Shared;
+using Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
 using Bearcat.Domain.UnitTest.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -578,12 +580,12 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
         return new RemoteDownloadVerificationAndExtractionService(
             repository,
             new SfvChecksumVerifier(progressTracker, NullLogger<SfvChecksumVerifier>.Instance),
-            new DownloadFolderArchiveExtractionService(
+            new FolderArchiveExtractionService(
                 archiverFactory.Object,
                 fileSystemService.Object,
                 progressTracker,
                 new FolderSizeProgressReporter(),
-                NullLogger<DownloadFolderArchiveExtractionService>.Instance
+                NullLogger<FolderArchiveExtractionService>.Instance
             ),
             notificationService,
             timeProvider.Object,

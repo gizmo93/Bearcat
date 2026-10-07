@@ -4,9 +4,9 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -106,10 +106,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
     {
         // Arrange
         await WriteFileAsync(
-            Path.Combine(
-                DownloadFolderArchiveExtractionService.TemporaryExtractionFolderName,
-                "movie.mkv"
-            ),
+            Path.Combine(FolderArchiveExtractionService.TemporaryExtractionFolderName, "movie.mkv"),
             "partial"
         );
         await WriteFileAsync("movie.mkv", "movie");
@@ -126,7 +123,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
             .Exists(
                 Path.Combine(
                     localFolderPath,
-                    DownloadFolderArchiveExtractionService.TemporaryExtractionFolderName
+                    FolderArchiveExtractionService.TemporaryExtractionFolderName
                 )
             )
             .ShouldBeFalse();
@@ -165,12 +162,12 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
                 new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()),
                 NullLogger<SfvChecksumVerifier>.Instance
             ),
-            new DownloadFolderArchiveExtractionService(
+            new FolderArchiveExtractionService(
                 archiverFactory.Object,
                 new FileSystemService(),
                 new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()),
                 new FolderSizeProgressReporter(),
-                NullLogger<DownloadFolderArchiveExtractionService>.Instance
+                NullLogger<FolderArchiveExtractionService>.Instance
             ),
             new NotificationService(
                 new NotificationRepository(dbContext),

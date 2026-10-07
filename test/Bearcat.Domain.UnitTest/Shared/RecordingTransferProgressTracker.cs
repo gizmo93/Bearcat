@@ -2,7 +2,7 @@ using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Moq;
 
-namespace Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
+namespace Bearcat.Domain.UnitTest.Shared;
 
 public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
 {

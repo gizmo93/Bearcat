@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.Archiver;
 
-namespace Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
+namespace Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
 
 public sealed class FakeArchiveExtractor : IArchiveExtractor
 {
