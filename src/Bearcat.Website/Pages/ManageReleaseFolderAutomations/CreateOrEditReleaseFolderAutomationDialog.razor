@@ -40,6 +40,13 @@
                                  MatchTriggerWidth="true"
                                  Options="LanguageOptions" />
 
+            @if (SelectedReleaseType is ReleaseType.Managed)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.ExtractArchivesBeforeReleaseCreation"
+                                   Label="@L["ExtractArchivesBeforeReleaseCreation"]"
+                                   HelperText="@L["ReleaseFolderExtractArchivesBeforeReleaseCreationHelp"]" />
+            }
+
             <div class="flex items-center gap-2">
                 <BbCheckbox @bind-Checked="FormModel.IsEnabled"
                             Id="release-folder-automation-enabled"

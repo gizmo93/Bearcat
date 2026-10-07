@@ -97,9 +97,18 @@
                                Property="@(automation => automation.IsEnabled)"
                                Width="130px">
                 <CellTemplate Context="automation">
-                    <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
-                    </BbBadge>
+                    <div class="flex flex-wrap gap-1">
+                        <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
+                            @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
+                        </BbBadge>
+                        @if (IsArchiveExtractionEffective(automation))
+                        {
+                            <BbBadge Variant="BadgeVariant.Outline" Class="text-muted-foreground" title="@L["ExtractArchivesBeforeReleaseCreation"]">
+                                <BbBadgeIcon Name="file-archive" />
+                                @L["ExtractsArchives"]
+                            </BbBadge>
+                        }
+                    </div>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
@@ -137,4 +146,54 @@
             </div>
         </EmptyTemplate>
     </BbDataTable>
+
+    @if (failedExtractions.Count > 0)
+    {
+        <div class="space-y-3 pt-4">
+            <div class="space-y-1">
+                <h2 class="text-lg font-semibold tracking-tight">@L["FailedReleaseFolderExtractions"]</h2>
+                <p class="text-sm text-muted-foreground">@L["FailedReleaseFolderExtractionsIntro"]</p>
+            </div>
+
+            <div class="bearcat-config-list">
+                <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_minmax(0,0.3fr)_auto]">
+                    <span>@L["Folder"]</span>
+                    <span>@L["FailedAt"]</span>
+                    <span class="text-right">@L["Actions"]</span>
+                </div>
+                @foreach (var failedExtraction in failedExtractions)
+                {
+                    <div class="bearcat-config-item">
+                        <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_minmax(0,0.3fr)_auto]">
+                            <div class="min-w-0 space-y-1">
+                                <p class="text-sm font-semibold [overflow-wrap:anywhere]">@GetFolderName(failedExtraction.FolderPath)</p>
+                                <p class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground" title="@failedExtraction.FolderPath">
+                                    <LucideIcon Name="folder" class="h-3.5 w-3.5 shrink-0" />
+                                    <span class="truncate">@failedExtraction.FolderPath</span>
+                                </p>
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="bearcat-mobile-label">@L["FailedAt"]</p>
+                                <p class="text-sm tabular-nums">@failedExtraction.FailedAt.ToString("g")</p>
+                            </div>
+
+                            <div class="bearcat-config-actions">
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Size="ButtonSize.Small"
+                                          OnClick="@(() => RetryExtractionAsync(failedExtraction))">
+                                    <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+                                    @L["RetryReleaseFolderExtraction"]
+                                </BbButton>
+                            </div>
+                        </div>
+
+                        <p class="border-t border-border/70 px-4 py-2 text-xs whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">
+                            @failedExtraction.ErrorMessage
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </section>

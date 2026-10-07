@@ -1,5 +1,6 @@
 @using Bearcat.Website.Pages.Home.Archives
 @using Bearcat.Website.Pages.Home.Downloads
+@using Bearcat.Website.Pages.Home.ReleaseFolderExtractions
 @using Bearcat.Website.Pages.Home.Summary
 @using Bearcat.Website.Pages.Home.Uploads
 @implements IDisposable
@@ -62,6 +63,11 @@
                           RemoteDownloads="remoteDownloads"
                           RemoteDownloadProgress="remoteDownloadProgress"
                           OnRemoteDownloadCanceled="LoadDataAsync" />
+        }
+
+        @if (releaseFolderExtractionProgress.Count > 0)
+        {
+            <ReleaseFolderExtractionLane Snapshots="releaseFolderExtractionProgress" />
         }
 
         @if (archivesInCreationOrHashChange.Count > 0)

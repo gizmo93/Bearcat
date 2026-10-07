@@ -44,11 +44,14 @@ public sealed partial class RunningProcesses(
     private IReadOnlyDictionary<int, TransferProgressSnapshot> remoteDownloadProgress =
         new Dictionary<int, TransferProgressSnapshot>();
 
+    private IReadOnlyList<TransferProgressSnapshot> releaseFolderExtractionProgress = [];
+
     private bool SomethingIsRunning =>
         runningUploads.Count > 0
         || archivesInCreationOrHashChange.Count > 0
         || restoringArchives.Count > 0
-        || remoteDownloads.Count > 0;
+        || remoteDownloads.Count > 0
+        || releaseFolderExtractionProgress.Count > 0;
 
     private int QueuedUploadCount =>
         runningUploads.Count(upload => upload.UploadState is UploadState.Pending);
@@ -58,7 +61,8 @@ public sealed partial class RunningProcesses(
         - QueuedUploadCount
         + archivesInCreationOrHashChange.Count
         + restoringArchives.Count
-        + remoteDownloads.Count;
+        + remoteDownloads.Count
+        + releaseFolderExtractionProgress.Count;
 
     private double TotalUploadBytesPerSecond => SumBytesPerSecond(uploadProgress.Values.ToList());
 
@@ -191,6 +195,28 @@ public sealed partial class RunningProcesses(
         );
     }
 
+    private void LoadRunningReleaseFolderExtractions()
+    {
+        List<TransferType> types =
+        [
+            TransferType.ReleaseFolderVerification,
+            TransferType.ReleaseFolderExtraction,
+        ];
+
+        var releaseFolderObservationIds = types
+            .SelectMany(transferProgressTracker.GetTrackedIds)
+            .Distinct()
+            .Order()
+            .ToList();
+
+        releaseFolderExtractionProgress = GetProgressSnapshotsOfFirstTrackedType(
+            types,
+            releaseFolderObservationIds
+        )
+            .Values.OrderBy(snapshot => snapshot.Identifier.Id)
+            .ToList();
+    }
+
     private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshotsOfFirstTrackedType(
         IReadOnlyList<TransferType> types,
         IReadOnlyList<int> ids
@@ -267,6 +293,7 @@ public sealed partial class RunningProcesses(
             await LoadRunningUploadsAsync(cancellationToken);
             await LoadRunningArchivesAsync(cancellationToken);
             await LoadRemoteDownloadsAsync(cancellationToken);
+            LoadRunningReleaseFolderExtractions();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

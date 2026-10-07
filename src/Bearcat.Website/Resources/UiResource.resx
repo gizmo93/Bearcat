@@ -1597,8 +1597,8 @@
   <data name="HideFiles" xml:space="preserve"><value>Hide files</value></data>
   <data name="RemoteDownloadPhases" xml:space="preserve"><value>Remote download phases</value></data>
   <data name="RemoteDownloadPhaseDownload" xml:space="preserve"><value>Download</value></data>
-  <data name="RemoteDownloadPhaseVerify" xml:space="preserve"><value>Verify</value></data>
-  <data name="RemoteDownloadPhaseExtract" xml:space="preserve"><value>Extract</value></data>
+  <data name="TransferPhaseVerify" xml:space="preserve"><value>Verify</value></data>
+  <data name="TransferPhaseExtract" xml:space="preserve"><value>Extract</value></data>
   <data name="ArchiveCreationPhases" xml:space="preserve"><value>Archive creation phases</value></data>
   <data name="ArchiveCreationPhasePack" xml:space="preserve"><value>Pack</value></data>
   <data name="ArchiveCreationPhaseMd5Hashes" xml:space="preserve"><value>MD5 hashes</value></data>
@@ -1666,4 +1666,12 @@
   <data name="KeyboardHintOpen" xml:space="preserve"><value>open</value></data>
   <data name="KeySpace" xml:space="preserve"><value>Space</value></data>
   <data name="KeyEnter" xml:space="preserve"><value>Enter</value></data>
+  <data name="ReleaseFolderExtractArchivesBeforeReleaseCreationHelp" xml:space="preserve"><value>Before the release is created, SFV files in the folder are verified and archives (RAR, 7z) are extracted. The archive files are deleted after a successful extraction. Only applies to managed templates.</value></data>
+  <data name="ExtractsArchives" xml:space="preserve"><value>Extracts archives</value></data>
+  <data name="FailedReleaseFolderExtractions" xml:space="preserve"><value>Failed extractions</value></data>
+  <data name="FailedReleaseFolderExtractionsIntro" xml:space="preserve"><value>The SFV check or archive extraction of these folders failed. The files were kept and no release was created. A folder is processed again automatically when its files change.</value></data>
+  <data name="FailedAt" xml:space="preserve"><value>Failed at</value></data>
+  <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Retry</value></data>
+  <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} will be processed again on the next folder scan.</value></data>
+  <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Folder automation phases</value></data>
 </root>
