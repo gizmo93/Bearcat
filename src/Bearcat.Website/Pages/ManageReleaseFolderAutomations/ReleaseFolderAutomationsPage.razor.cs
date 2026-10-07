@@ -127,7 +127,7 @@ public partial class ReleaseFolderAutomationsPage(
         await LoadAutomationsAsync();
     }
 
-    private static bool IsArchiveExtractionEffective(ReleaseFolderAutomationReadModel automation)
+    private static bool ShouldExtractArchives(ReleaseFolderAutomationReadModel automation)
     {
         return automation.ReleaseType is ReleaseType.Managed
             && automation.ExtractArchivesBeforeReleaseCreation;

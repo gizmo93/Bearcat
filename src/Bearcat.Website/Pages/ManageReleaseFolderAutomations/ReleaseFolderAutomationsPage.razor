@@ -101,7 +101,7 @@
                         <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
                             @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
                         </BbBadge>
-                        @if (IsArchiveExtractionEffective(automation))
+                        @if (ShouldExtractArchives(automation))
                         {
                             <BbBadge Variant="BadgeVariant.Outline" Class="text-muted-foreground" title="@L["ExtractArchivesBeforeReleaseCreation"]">
                                 <BbBadgeIcon Name="file-archive" />

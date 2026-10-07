@@ -152,9 +152,9 @@ public class LocalFolderScanService(
                 continue;
             }
 
-            var isArchiveExtractionEffective = IsArchiveExtractionEffective(candidate.Automation);
+            var shouldExtractArchives = ShouldExtractArchives(candidate.Automation);
 
-            if (isArchiveExtractionEffective && observation.ExtractionErrorMessage is not null)
+            if (shouldExtractArchives && observation.ExtractionErrorMessage is not null)
             {
                 continue;
             }
@@ -165,7 +165,7 @@ public class LocalFolderScanService(
             }
 
             if (
-                isArchiveExtractionEffective
+                shouldExtractArchives
                 && !await verificationAndExtractionService.TryVerifyAndExtractAsync(
                     observation,
                     cancellationToken
@@ -227,10 +227,13 @@ public class LocalFolderScanService(
         );
     }
 
-    private static bool IsArchiveExtractionEffective(ReleaseFolderAutomation automation)
+    private static bool ShouldExtractArchives(ReleaseFolderAutomation automation)
     {
-        return automation.ExtractArchivesBeforeReleaseCreation
-            && automation.ReleaseTemplate.ReleaseType is ReleaseType.Managed;
+        return automation
+            is {
+                ExtractArchivesBeforeReleaseCreation: true,
+                ReleaseTemplate.ReleaseType: ReleaseType.Managed
+            };
     }
 
     private async Task<IReadOnlySet<ReleaseFolderCandidate>> GetCandidateFoldersAsync(
