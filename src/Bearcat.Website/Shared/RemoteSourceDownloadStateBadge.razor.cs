@@ -18,8 +18,9 @@ public partial class RemoteSourceDownloadStateBadge : ComponentBase
         {
             RemoteSourceDownloadState.Failed => BadgeVariant.Destructive,
             RemoteSourceDownloadState.ReleaseCreated => BadgeVariant.Default,
-            RemoteSourceDownloadState.Canceled or RemoteSourceDownloadState.Ignored =>
-                BadgeVariant.Outline,
+            RemoteSourceDownloadState.Canceled
+            or RemoteSourceDownloadState.Ignored
+            or RemoteSourceDownloadState.Duplicate => BadgeVariant.Outline,
             _ => BadgeVariant.Secondary,
         };
 }

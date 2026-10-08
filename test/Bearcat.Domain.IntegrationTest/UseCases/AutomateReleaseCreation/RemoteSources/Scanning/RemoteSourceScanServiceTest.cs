@@ -294,6 +294,153 @@ public class RemoteSourceScanServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_SameFolderOnTwoRegistrations_SecondRegistrationRecordsDuplicate()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        var firstServer = AddServer("first");
+        firstServer.SetFolder(IncomingPath, "Show.S01E01-GRP", 100);
+        var secondServer = AddServer("second");
+        secondServer.SetFolder(IncomingPath, "Show.S01E01-GRP", 100);
+        var firstRegistration = await AddRegistrationAsync("First FTP", "first");
+        var secondRegistration = await AddRegistrationAsync("Second FTP", "second");
+        await AddAutomationAsync(firstRegistration, template);
+        await AddAutomationAsync(secondRegistration, template);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var downloads = await GetDownloadsAsync();
+        downloads.Count.ShouldBe(2);
+
+        downloads
+            .Single(download => download.RemoteSourceRegistrationId == firstRegistration.Id)
+            .State.ShouldBe(RemoteSourceDownloadState.Observing);
+
+        var duplicate = downloads.Single(download =>
+            download.RemoteSourceRegistrationId == secondRegistration.Id
+        );
+        duplicate.State.ShouldBe(RemoteSourceDownloadState.Duplicate);
+        duplicate.FileCount.ShouldBe(0);
+        duplicate.TotalBytes.ShouldBe(0);
+        secondServer.RecursivelyListedPaths.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_SameFolderUnderTwoRemotePathsOfOneRegistration_ObservesOneAndRecordsOtherAsDuplicate()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Show.S01E01-GRP", 100);
+        server.SetFolder("/tv", "Show.S01E01-GRP", 100);
+        var registration = await AddRegistrationAsync("Main FTP", "main");
+        await AddAutomationAsync(registration, template);
+        await AddAutomationAsync(registration, template, a => a.RemotePath = "/tv");
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var downloads = await GetDownloadsAsync();
+        downloads.Count.ShouldBe(2);
+        downloads
+            .Single(download => download.RemoteFolderPath == "/incoming/Show.S01E01-GRP")
+            .State.ShouldBe(RemoteSourceDownloadState.Observing);
+        downloads
+            .Single(download => download.RemoteFolderPath == "/tv/Show.S01E01-GRP")
+            .State.ShouldBe(RemoteSourceDownloadState.Duplicate);
+        server.RecursivelyListedPaths.ShouldBe(["/incoming/Show.S01E01-GRP"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReleaseWithSameNameInDifferentCaseExists_RecordsDuplicate()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        await AddReleaseAsync(template, "show.s01e01-grp");
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Show.S01E01-GRP", 100);
+        var registration = await AddRegistrationAsync("Main FTP", "main");
+        await AddAutomationAsync(registration, template);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        (await GetDownloadsAsync())
+            .Single()
+            .State.ShouldBe(RemoteSourceDownloadState.Duplicate);
+        server.RecursivelyListedPaths.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_FailedDownloadWithSameNameOnOtherRegistration_RecordsDuplicate()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Show.S01E01-GRP", 100);
+        var otherRegistration = await AddRegistrationAsync("Other FTP", "other");
+        var otherAutomation = await AddAutomationAsync(
+            otherRegistration,
+            template,
+            a => a.IsEnabled = false
+        );
+        var failed = await AddDownloadAsync(
+            otherAutomation,
+            "Show.S01E01-GRP",
+            RemoteSourceDownloadState.Failed
+        );
+        var registration = await AddRegistrationAsync("Main FTP", "main");
+        await AddAutomationAsync(registration, template);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var downloads = await GetDownloadsAsync();
+        downloads.Count.ShouldBe(2);
+        downloads
+            .Single(download => download.Id == failed.Id)
+            .State.ShouldBe(RemoteSourceDownloadState.Failed);
+        downloads
+            .Single(download => download.RemoteSourceRegistrationId == registration.Id)
+            .State.ShouldBe(RemoteSourceDownloadState.Duplicate);
+    }
+
+    [Test]
+    public async Task ProcessAsync_DuplicateRecord_IsNotCheckedAgainOnLaterScans()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        await AddReleaseAsync(template, "Show.S01E01-GRP");
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Show.S01E01-GRP", 100);
+        var registration = await AddRegistrationAsync("Main FTP", "main");
+        await AddAutomationAsync(registration, template);
+        await ProcessAsync();
+        var duplicate = (await GetDownloadsAsync()).Single();
+
+        server.SetFolder(IncomingPath, "Show.S01E01-GRP", 100, 200);
+        timeProvider.Now = StartTime.AddMinutes(30);
+
+        // Act
+        var pendingCount = await ProcessAsync();
+
+        // Assert
+        pendingCount.ShouldBe(0);
+        var reloaded = (await GetDownloadsAsync()).Single();
+        reloaded.Id.ShouldBe(duplicate.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.Duplicate);
+        reloaded.FileCount.ShouldBe(0);
+        reloaded.TotalBytes.ShouldBe(0);
+        reloaded.LastChangedAt.ShouldBe(StartTime);
+        server.RecursivelyListedPaths.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task ProcessAsync_IgnoreExistingOnFirstScan_IgnoresCurrentFoldersAndObservesLaterOnes()
     {
         // Arrange
@@ -776,6 +923,23 @@ public class RemoteSourceScanServiceTest(DatabaseProvider databaseProvider)
         await dbContext.SaveChangesAsync();
 
         return template;
+    }
+
+    private async Task AddReleaseAsync(ReleaseTemplate template, string name)
+    {
+        var dbContext = CreateDbContext();
+        dbContext.Releases.Add(
+            new Release
+            {
+                Name = name,
+                CreatedAt = StartTime,
+                ReleaseType = ReleaseType.Managed,
+                ReleaseGroupId = template.ReleaseGroupId,
+                ArchiveConfigs = [],
+                UploadConfigs = [],
+            }
+        );
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task<RemoteSourceRegistration> AddRegistrationAsync(

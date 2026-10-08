@@ -32,6 +32,7 @@ public partial class RemoteSourceDownloadsPage(
         RemoteSourceDownloadState.Failed,
         RemoteSourceDownloadState.Canceled,
         RemoteSourceDownloadState.Ignored,
+        RemoteSourceDownloadState.Duplicate,
     ];
 
     private IReadOnlyList<RemoteSourceDownloadReadModel> downloads = [];
@@ -42,7 +43,7 @@ public partial class RemoteSourceDownloadsPage(
 
     private IReadOnlyList<SelectOption<RemoteSourceDownloadState?>> StateOptions =>
         [
-            new(null, L["AllStatesExceptIgnored"]),
+            new(null, L["AllStatesExceptIgnoredAndDuplicates"]),
             .. StatesInProcessingOrder.Select(state => new SelectOption<RemoteSourceDownloadState?>(
                 state,
                 L.Localize(state)
@@ -96,7 +97,13 @@ public partial class RemoteSourceDownloadsPage(
         return selectedState is { } state
             ? [state]
             : Enum.GetValues<RemoteSourceDownloadState>()
-                .Where(value => value is not RemoteSourceDownloadState.Ignored)
+                .Where(value =>
+                    value
+                        is not (
+                            RemoteSourceDownloadState.Ignored
+                            or RemoteSourceDownloadState.Duplicate
+                        )
+                )
                 .ToList();
     }
 

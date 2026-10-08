@@ -13,4 +13,5 @@ public enum RemoteSourceDownloadState
     Verifying = 9,
     Extracting = 10,
     ReadyForReleaseCreation = 11,
+    Duplicate = 12,
 }

@@ -1299,6 +1299,7 @@
   <data name="RemoteSourceDownloadState.Verifying" xml:space="preserve"><value>Wird geprüft</value></data>
   <data name="RemoteSourceDownloadState.Extracting" xml:space="preserve"><value>Wird entpackt</value></data>
   <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Bereit zur Releaseerstellung</value></data>
+  <data name="RemoteSourceDownloadState.Duplicate" xml:space="preserve"><value>Duplikat</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität</value></data>
@@ -1317,7 +1318,7 @@
   <data name="Folder" xml:space="preserve"><value>Ordner</value></data>
   <data name="Automation" xml:space="preserve"><value>Automatisierung</value></data>
   <data name="RemoteSourceDownloadsIntro" xml:space="preserve"><value>Auf Remotequellen gefundene Ordner und der Stand ihrer Downloads.</value></data>
-    <data name="AllStatesExceptIgnored" xml:space="preserve"><value>Alle Status ausser ignorierten</value></data>
+    <data name="AllStatesExceptIgnoredAndDuplicates" xml:space="preserve"><value>Alle Status ausser ignorierten und Duplikaten</value></data>
   <data name="NoRemoteSourceDownloadsFound" xml:space="preserve"><value>Keine Remotedownloads für diesen Filter gefunden.</value></data>
   <data name="Timeline" xml:space="preserve"><value>Zeitverlauf</value></data>
   <data name="FileCountValue" xml:space="preserve"><value>{0} Dateien</value></data>

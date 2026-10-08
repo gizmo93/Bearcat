@@ -1296,6 +1296,7 @@
   <data name="RemoteSourceDownloadState.Verifying" xml:space="preserve"><value>Verifying</value></data>
   <data name="RemoteSourceDownloadState.Extracting" xml:space="preserve"><value>Extracting</value></data>
   <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Ready for release creation</value></data>
+  <data name="RemoteSourceDownloadState.Duplicate" xml:space="preserve"><value>Duplicate</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remote downloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Controls how folders on remote sources are watched, queued and downloaded.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Folder stability</value></data>
@@ -1314,7 +1315,7 @@
   <data name="Folder" xml:space="preserve"><value>Folder</value></data>
   <data name="Automation" xml:space="preserve"><value>Automation</value></data>
   <data name="RemoteSourceDownloadsIntro" xml:space="preserve"><value>Folders found on remote sources and the state of their downloads.</value></data>
-  <data name="AllStatesExceptIgnored" xml:space="preserve"><value>All states except ignored</value></data>
+  <data name="AllStatesExceptIgnoredAndDuplicates" xml:space="preserve"><value>All states except ignored and duplicates</value></data>
   <data name="NoRemoteSourceDownloadsFound" xml:space="preserve"><value>No remote downloads found for this filter.</value></data>
   <data name="Timeline" xml:space="preserve"><value>Timeline</value></data>
   <data name="FileCountValue" xml:space="preserve"><value>{0} files</value></data>

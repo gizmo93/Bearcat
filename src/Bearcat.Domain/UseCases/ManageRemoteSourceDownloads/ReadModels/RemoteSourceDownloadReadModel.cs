@@ -27,7 +27,10 @@ public record RemoteSourceDownloadReadModel(
                 or RemoteSourceDownloadState.Downloading;
 
     public bool CanRestart =>
-        State is RemoteSourceDownloadState.Failed or RemoteSourceDownloadState.Canceled;
+        State
+            is RemoteSourceDownloadState.Failed
+                or RemoteSourceDownloadState.Canceled
+                or RemoteSourceDownloadState.Duplicate;
 
     public bool CanRetryWithoutDownloadingAgain =>
         State is RemoteSourceDownloadState.Failed && CompletedAt is not null;
@@ -37,5 +40,6 @@ public record RemoteSourceDownloadReadModel(
             is RemoteSourceDownloadState.Observing
                 or RemoteSourceDownloadState.Pending
                 or RemoteSourceDownloadState.Failed
-                or RemoteSourceDownloadState.Canceled;
+                or RemoteSourceDownloadState.Canceled
+                or RemoteSourceDownloadState.Duplicate;
 }

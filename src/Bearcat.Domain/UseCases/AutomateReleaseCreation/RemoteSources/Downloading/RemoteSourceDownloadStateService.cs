@@ -48,7 +48,11 @@ public class RemoteSourceDownloadStateService(
 
         if (
             download.State
-            is not (RemoteSourceDownloadState.Failed or RemoteSourceDownloadState.Canceled)
+            is not (
+                RemoteSourceDownloadState.Failed
+                or RemoteSourceDownloadState.Canceled
+                or RemoteSourceDownloadState.Duplicate
+            )
         )
         {
             throw CreateInvalidTransitionException(
@@ -102,6 +106,7 @@ public class RemoteSourceDownloadStateService(
                 or RemoteSourceDownloadState.Pending
                 or RemoteSourceDownloadState.Failed
                 or RemoteSourceDownloadState.Canceled
+                or RemoteSourceDownloadState.Duplicate
             )
         )
         {

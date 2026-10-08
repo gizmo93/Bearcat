@@ -32,6 +32,7 @@ public class RemoteSourceScanService(
         }
 
         var settings = ReadScanSettings();
+        var folderNamesRecordedInThisScan = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var pendingCount = 0;
 
         foreach (
@@ -45,6 +46,7 @@ public class RemoteSourceScanService(
                     registrationAutomations.ToList()
                 ),
                 settings: settings,
+                folderNamesRecordedInThisScan: folderNamesRecordedInThisScan,
                 cancellationToken: cancellationToken
             );
         }
@@ -55,6 +57,7 @@ public class RemoteSourceScanService(
     private async Task<int> ScanRegistrationAsync(
         IReadOnlyList<RemoteSourceAutomation> automations,
         ScanSettings settings,
+        HashSet<string> folderNamesRecordedInThisScan,
         CancellationToken cancellationToken
     )
     {
@@ -103,6 +106,7 @@ public class RemoteSourceScanService(
                     assignedFolders: foldersByAutomationId[automation.Id],
                     existingDownloadsByPath: existingDownloadsByPath,
                     settings: settings,
+                    folderNamesRecordedInThisScan: folderNamesRecordedInThisScan,
                     cancellationToken: cancellationToken
                 );
             }
@@ -201,6 +205,7 @@ public class RemoteSourceScanService(
         IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,
         ScanSettings settings,
+        HashSet<string> folderNamesRecordedInThisScan,
         CancellationToken cancellationToken
     )
     {
@@ -210,6 +215,9 @@ public class RemoteSourceScanService(
         );
 
         var localNow = timeProvider.GetLocalNow();
+        var folderNamesRecordedByThisAutomation = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase
+        );
         var pendingCount = 0;
 
         if (!automation.HasCompletedInitialScan && automation.IgnoreExistingOnFirstScan)
@@ -228,6 +236,8 @@ public class RemoteSourceScanService(
                 assignedFolders: assignedFolders,
                 existingDownloadsByPath: existingDownloadsByPath,
                 settings: settings,
+                folderNamesRecordedInThisScan: folderNamesRecordedInThisScan,
+                folderNamesRecordedByThisAutomation: folderNamesRecordedByThisAutomation,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
@@ -247,6 +257,8 @@ public class RemoteSourceScanService(
         }
 
         await repository.SaveChangesAsync(cancellationToken);
+
+        folderNamesRecordedInThisScan.UnionWith(folderNamesRecordedByThisAutomation);
 
         return pendingCount;
     }
@@ -281,10 +293,26 @@ public class RemoteSourceScanService(
         IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,
         ScanSettings settings,
+        IReadOnlySet<string> folderNamesRecordedInThisScan,
+        HashSet<string> folderNamesRecordedByThisAutomation,
         DateTime localNow,
         CancellationToken cancellationToken
     )
     {
+        var newFolderNames = assignedFolders
+            .Where(folder => !existingDownloadsByPath.ContainsKey(folder.FullPath))
+            .Select(folder => folder.Name)
+            .ToList();
+
+        var alreadyKnownFolderNames = new HashSet<string>(
+            await repository.GetExistingReleaseOrDownloadFolderNamesAsync(
+                newFolderNames,
+                cancellationToken
+            ),
+            StringComparer.OrdinalIgnoreCase
+        );
+        alreadyKnownFolderNames.UnionWith(folderNamesRecordedInThisScan);
+
         var pendingCount = 0;
 
         foreach (var folder in assignedFolders)
@@ -309,6 +337,14 @@ public class RemoteSourceScanService(
                 continue;
             }
 
+            if (!alreadyKnownFolderNames.Add(folder.Name))
+            {
+                MarkFolderAsDuplicate(automation, folder, localNow);
+                continue;
+            }
+
+            folderNamesRecordedByThisAutomation.Add(folder.Name);
+
             var fileCountAndSize = await GetFolderFileCountAndSizeAsync(
                 automation.RemoteSourceRegistration,
                 folder.FullPath,
@@ -326,6 +362,30 @@ public class RemoteSourceScanService(
         }
 
         return pendingCount;
+    }
+
+    private void MarkFolderAsDuplicate(
+        RemoteSourceAutomation automation,
+        RemoteFolderDto folder,
+        DateTime localNow
+    )
+    {
+        repository.Add(
+            CreateDownloadRecord(
+                automation: automation,
+                folder: folder,
+                state: RemoteSourceDownloadState.Duplicate,
+                fileCountAndSize: new FolderFileCountAndSize(0, 0),
+                localNow: localNow
+            )
+        );
+
+        logger.LogInformation(
+            "Remote folder {RemoteFolderPath} on {RemoteSourceName} was marked as duplicate because a download or release named {FolderName} already exists",
+            folder.FullPath,
+            automation.RemoteSourceRegistration.Name,
+            folder.Name
+        );
     }
 
     private async Task<bool> QueueDownloadIfFolderIsStableAsync(

@@ -80,6 +80,12 @@ If several automations match the same folder on the same source, the lowest **Pr
 For example, `10` wins over the default `100`. Each remote folder is downloaded only once per source.
 Changing priorities does not reassign folders Bearcat has already found.
 
+### Duplicate folders
+
+A new folder is makred as **Duplicate** and not downloaded if its name already exists as a download
+from any remote source or as a release. The first folder found keeps downloading, even if it later fails or is canceled. To download a duplicate anyway, use
+**Restart download** on **Remote downloads**.
+
 ## Follow the download
 
 Bearcat scans about every two minutes. By default, a folder must be at least `1` MB and its file
@@ -117,13 +123,13 @@ progress, speed, remaining time, the current phase (download, verify, extract) a
 Use the action menu in **Remote downloads**:
 
 - **Cancel** stops an observed, queued, or running download. Files from a running download are deleted.
-- **Restart download** queues a failed or canceled download again. It starts from scratch and removes
+- **Restart download** queues a failed, canceled, or duplicate download again. It starts from scratch and removes
   files left by the previous attempt.
 - **Retry without downloading again** is available when the download finished but a later step failed.
   Fix the reported cause, then use this action to keep the downloaded files. Bearcat runs SFV verification,
   extraction, and release creation again. If the archives were already extracted, it only creates the release.
-- **Ignore** skips a folder that has not started downloading, or a failed or canceled download.
-  Ignored folders are hidden by the default status filter and are not queued again.
+- **Ignore** skips a folder that has not started downloading, or a failed, canceled, or duplicate download.
+  Ignored and duplicate folders are hidden by the default status filter and are not queued again.
 
 If the local release subfolder already contains files before a download starts, Bearcat fails the
 download and leaves those files untouched. Move them elsewhere before restarting the download.

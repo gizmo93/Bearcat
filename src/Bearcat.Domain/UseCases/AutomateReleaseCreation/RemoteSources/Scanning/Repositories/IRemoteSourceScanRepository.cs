@@ -19,6 +19,11 @@ public interface IRemoteSourceScanRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlySet<string>> GetExistingReleaseOrDownloadFolderNamesAsync(
+        IReadOnlyList<string> folderNames,
+        CancellationToken cancellationToken = default
+    );
+
     void Add(RemoteSourceDownload download);
 
     void Remove(RemoteSourceDownload download);

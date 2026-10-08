@@ -167,6 +167,29 @@ public class RemoteSourceAutomationRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlySet<string>> GetExistingReleaseOrDownloadFolderNamesAsync(
+        IReadOnlyList<string> folderNames,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var lowercaseFolderNames = folderNames
+            .Select(folderName => folderName.ToLowerInvariant())
+            .Distinct()
+            .ToList();
+
+        var existingLowercaseFolderNames = await dbWrite
+            .RemoteSourceDownloads.Select(download => download.FolderName.ToLower())
+            .Where(folderName => lowercaseFolderNames.Contains(folderName))
+            .Union(
+                dbWrite
+                    .Releases.Select(release => release.Name.ToLower())
+                    .Where(releaseName => lowercaseFolderNames.Contains(releaseName))
+            )
+            .ToListAsync(cancellationToken);
+
+        return existingLowercaseFolderNames.ToHashSet(StringComparer.Ordinal);
+    }
+
     public void Add(RemoteSourceAutomation automation)
     {
         dbWrite.Add(automation);

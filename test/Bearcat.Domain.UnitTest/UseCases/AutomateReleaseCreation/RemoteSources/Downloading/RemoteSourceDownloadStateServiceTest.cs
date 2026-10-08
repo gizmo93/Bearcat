@@ -68,6 +68,51 @@ public class RemoteSourceDownloadStateServiceTest
         download.State.ShouldBe(RemoteSourceDownloadState.Failed);
     }
 
+    [Test]
+    public async Task RestartDownloadAsync_Duplicate_QueuesDownload()
+    {
+        // Arrange
+        var download = CreateDownload(RemoteSourceDownloadState.Duplicate, null, null);
+        var service = CreateService(download);
+
+        // Act
+        await service.RestartDownloadAsync(download.Id);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.Pending);
+        download.StartedAt.ShouldBeNull();
+        download.ErrorMessage.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task IgnoreDownloadAsync_Duplicate_IgnoresDownload()
+    {
+        // Arrange
+        var download = CreateDownload(RemoteSourceDownloadState.Duplicate, null, null);
+        var service = CreateService(download);
+
+        // Act
+        await service.IgnoreDownloadAsync(download.Id);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.Ignored);
+    }
+
+    [Test]
+    public async Task CancelDownloadAsync_Duplicate_Throws()
+    {
+        // Arrange
+        var download = CreateDownload(RemoteSourceDownloadState.Duplicate, null, null);
+        var service = CreateService(download);
+
+        // Act
+        var cancel = () => service.CancelDownloadAsync(download.Id);
+
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(cancel);
+        download.State.ShouldBe(RemoteSourceDownloadState.Duplicate);
+    }
+
     [TestCase(RemoteSourceDownloadState.Verifying)]
     [TestCase(RemoteSourceDownloadState.Extracting)]
     [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
