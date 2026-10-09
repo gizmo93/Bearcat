@@ -1132,6 +1132,87 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_RestoredArchiveFileHasOlderContent_SkipsHashOnlyKnownFromUploadedFile()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+
+        var restoredArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "restored"))
+            .FullName;
+
+        var archiveFilePath = Path.Combine(restoredArchiveFolder, "restored.part1.rar");
+        var restoredBytes = "archive-data"u8.ToArray();
+        await File.WriteAllBytesAsync(archiveFilePath, restoredBytes);
+        var restoredHash = Convert.ToHexString(MD5.HashData(restoredBytes));
+
+        var hashUploadedBeforeRestore = Convert.ToHexString(
+            MD5.HashData([.. restoredBytes, (byte)0])
+        );
+
+        var archiveFile = new ArchiveFile
+        {
+            FullFileName = archiveFilePath,
+            Md5Hash = restoredHash,
+            UploadedFiles = [],
+        };
+
+        var restoredArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = restoredArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [archiveFile],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+
+        var previousUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = restoredArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
+
+        previousUpload.UploadedFiles.Add(
+            new UploadedFile
+            {
+                Upload = previousUpload,
+                ArchiveFile = archiveFile,
+                HosterFileLink = "https://hoster.example/file",
+                Md5Hash = hashUploadedBeforeRestore,
+                OnlineState = OnlineState.Offline,
+                CreatedAt = DateTime.UtcNow.AddHours(-1),
+            }
+        );
+
+        DbContext.Archives.Add(restoredArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var changedArchiveBytes = await File.ReadAllBytesAsync(archiveFilePath);
+        var changedArchiveFile = await DbContext.ArchiveFiles.SingleAsync(f =>
+            f.FullFileName == archiveFilePath
+        );
+
+        changedArchiveBytes.Length.ShouldBe(restoredBytes.Length + 2);
+        changedArchiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(changedArchiveBytes)));
+        changedArchiveFile.Md5Hash.ShouldNotBe(hashUploadedBeforeRestore);
+    }
+
+    [Test]
     public async Task ProcessAsync_ArchiverFails_MarksArchiveAsCreationFailedAndCreatesNotification()
     {
         // Arrange

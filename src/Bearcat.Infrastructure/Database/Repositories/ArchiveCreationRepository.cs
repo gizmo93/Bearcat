@@ -87,12 +87,20 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
-            .Archives.Where(a => a.ArchiveConfigId == archiveConfigId)
-            .SelectMany(a => a.ArchiveFiles)
-            .Where(f => f.Md5Hash != null)
-            .Select(f => f.Md5Hash!)
-            .Distinct()
+        var archiveFileHashes = dbWrite
+            .ArchiveFiles.Where(f =>
+                f.Archive.ArchiveConfigId == archiveConfigId && f.Md5Hash != null
+            )
+            .Select(f => f.Md5Hash!);
+
+        var uploadedFileHashes = dbWrite
+            .UploadedFiles.Where(f =>
+                f.ArchiveFile.Archive.ArchiveConfigId == archiveConfigId && f.Md5Hash != null
+            )
+            .Select(f => f.Md5Hash!);
+
+        return await archiveFileHashes
+            .Union(uploadedFileHashes)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
