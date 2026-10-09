@@ -1,10 +1,10 @@
 ---
 title: "Automatic Uploads, Link Checks, and Reuploads"
-description: "Understand how Bearcat creates, uploads, checks, and refreshes release archives."
+description: "From the first upload to reuploads: archives, link containers, link checks, and cleanup."
 ---
 
 After you add an upload configuration, Bearcat prepares the archive, uploads it, and checks its links.
-Release groups can also enable automatic reuploads when files go offline.
+Enable automatic reuploads in the release group if you want Bearcat to replace files that go offline.
 
 <details>
 <summary>Show the full upload lifecycle diagram</summary>
@@ -83,15 +83,15 @@ flowchart TD
 
 ## 1. Release and upload configuration
 
-Creating a release does **not** upload anything yet. Add an **upload configuration** to connect:
+An upload needs an **upload configuration**. It connects:
 
 - the release
 - the hoster registration
 - the archive configuration
 - optional link crypter configurations
 
-Each upload configuration runs independently. To upload a release to two hosters, create one
-configuration for each. You can also use separate configurations for different archive sizes on the same hoster.
+Create an upload configuration for each hoster. Configurations run independently. You can also create
+several for the same hoster, for example with different part sizes.
 
 ## 2. The first upload
 
@@ -109,8 +109,8 @@ The **Archive creation** background task prepares an archive for each upload in 
 2. Restore missing local files from a configured [mirror hoster](/Bearcat/mirror-downloads/).
 3. If neither is possible, create a new archive from the release folder.
 
-Only [managed releases](/Bearcat/release-types/) can be repacked. Unmanaged releases need existing
-archive files or a mirror from which to restore them.
+Bearcat can only repack [managed releases](/Bearcat/release-types/). Unmanaged releases need local
+archive files or an available mirror.
 
 The archive configuration sets the archiver, output folder, filename prefix, password, and part size.
 It also has two packing options:
@@ -133,17 +133,16 @@ For reuploads, Bearcat may need to change the archive hashes or repack the files
 
 ### Cancel a running archive creation
 
-Running archive creations show up on the **Activity** page (the start page) under "Archives". Each
-card has a cancel button. It covers packing, creating the MD5 hashes, and changing the MD5 hashes of a
-reused archive.
+Cancel a running archive creation under **Activity > Archives**. This also works during
+MD5 calculation or hash changes to a reused archive.
 
 - **New archive:** Bearcat deletes the archive and its files.
 - **Reused archive:** the archive is kept. Files whose hash change did not finish get new hashes
   before the archive is assigned to the next upload.
 
 In both cases the uploads waiting for that archive become `Canceled`. Create a manual reupload when
-you want to try again. Stopping Bearcat does not cancel anything: an interrupted archive creation
-is finished or packed again on the next start.
+you want to try again. If you stop Bearcat, an interrupted archive creation
+continues or the archive is repacked on the next start.
 
 ## 4. Uploading to the hoster
 
@@ -159,37 +158,32 @@ under **Uploads** > **History**. **Overview** shows the latest upload for each u
 
 ## 5. Link crypter containers
 
-Once a hoster upload finishes successfully, Bearcat can wrap the links into link crypter containers.
+After a successful upload, Bearcat creates link crypter containers if configured.
 
-The **"Link crypter container creation"** background task processes uploads that are:
+The **Link crypter container creation** background task creates a container for each active link
+crypter configuration once the upload is `Completed` and `Online`. If creation fails, it shows the error
+on the container and creates an error notification.
 
-- `Completed`
-- `Online`
-- linked to uploaded hoster files
-- connected to at least one active link crypter configuration
-
-For the first successful upload of an upload configuration, Bearcat creates a container for each configured link crypter with that upload's hoster links. If container creation fails, Bearcat records the error on the container and creates an error notification.
-
-This runs per release. If you manage related releases together (a TV show season, for example), a release collection can bundle their links into one shared container instead of one per release. See [Release Collections](/Bearcat/release-collections/) for the details.
+A [release collection](/Bearcat/release-collections/) can gather links from several releases
+in a shared container, for example for a TV season.
 
 ## 6. Online checks
 
-The **"Upload state check"** background task regularly asks hosters whether the uploaded files are still there. A file gets re-checked when it has never been checked, or when its last check is older than 30 minutes.
+The **Upload state check** background task checks each uploaded file, then repeats the check
+at intervals of at least 30 minutes.
 
-Bearcat will then classify the upload using the following states:
+The upload then has one of these states:
 
 - **`Online`**: every checked file is online.
 - **`PartiallyOnline`**: at least one file is offline, but not all of them.
 - **`Offline`**: all uploaded files are offline.
 
-If the hoster check fails, Bearcat creates an error notification and keeps the previous online state.
-The notification is created once per hoster registration and lists how many uploads are affected.
-While it is unresolved, Bearcat does not create another one for the same hoster registration.
-If the hoster requires captcha verification, Bearcat marks the upload as requiring a captcha and
-notifies you to solve it.
-If the hoster rejects the credentials, Bearcat deactivates the hoster registration and creates one
-notification. This also applies to uploads. Fix the credentials, then activate
-the registration again.
+If a link check fails, the previous online state is kept. Bearcat creates one error notification per
+hoster registration with the number of affected uploads. It creates another notification for this registration only after you resolve the first.
+
+If the hoster requires a captcha, Bearcat marks the upload and notifies you. If it rejects the credentials,
+Bearcat disables the hoster registration and notifies you. Fix the credentials and activate it again.
+This also applies when the error occurs during an upload.
 
 ## 7. Automatic reuploads
 
@@ -199,11 +193,10 @@ Bearcat creates an automatic reupload when all of these conditions are met:
 - the latest relevant upload is `Offline` or `PartiallyOnline` (subject to the hoster's reupload trigger, see below)
 - every uploaded file has been checked at least once
 - the waiting time ("Hours until reupload") has passed since the upload went offline
-- there isn't already an online or *blocking* replacement upload for the same upload configuration
+- no other replacement upload blocks a reupload for the same upload configuration
 
 A replacement upload blocks another reupload if it is `Online` or has the state `Pending`,
-`Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`. This prevents duplicate
-replacements for the same upload configuration.
+`Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
 
 When a reupload is due, Bearcat creates a new upload record for the same upload configuration:
 
@@ -211,9 +204,8 @@ When a reupload is due, Bearcat creates a new upload record for the same upload 
 WaitingForArchive -> Pending -> Uploading -> Completed
 ```
 
-If it reuses the same archive as a previous upload, Bearcat keeps that upload's still-online links
-and uploads only the offline files. A newly packed archive must be uploaded in full because its
-parts cannot be combined with the old ones.
+When reusing an archive, Bearcat keeps the links still online and uploads only the missing files.
+A newly packed archive must be uploaded in full because its parts cannot be mixed with those from older archives.
 
 ### Per-hoster overrides
 
@@ -228,8 +220,8 @@ A hoster registration can override the release group's waiting time and trigger.
 - **Always reupload all files:** uploads every archive part, including those that are still online.
 
 For hosters that remove files one at a time, **Only when fully offline** avoids repeated reuploads
-while parts are still online. If files expire after a period without downloads, **Always reupload
-all files** gives them a new upload date together.
+while parts are still online. If a hoster deletes files after a period without downloads, **Always reupload
+all files** resets the upload date for all parts.
 
 ## 8. Manual reuploads
 
@@ -240,31 +232,30 @@ You can also trigger a reupload yourself with **Create manual reupload** in the 
 - `Canceled`
 - `Failed`
 
-The same blocking rules as for automatic reuploads apply: if another online or in-progress replacement already exists for the upload configuration, Bearcat won't create a second one.
+Manual reuploads follow the same [replacement upload rules](#7-automatic-reuploads).
 
-A manual reupload creates a new upload record and then follows the normal archive-and-upload lifecycle from there.
-
-## 9. What happens to link crypter containers on a reupload?
+## 9. Link crypter containers after a reupload
 
 Bearcat tries to update the existing container for the same upload configuration and link crypter
 configuration.
-If the update succeeds, the URL stays the same, so existing forum posts need no changes.
+If it succeeds, the URL stays the same and links in existing forum posts remain valid.
 
 If the provider cannot update containers or the update fails, Bearcat creates a new container.
-Its URL may differ from the old one.
+The container URL may change.
 
 ## 10. Cleanup after a successful upload
 
-Cleanup is optional and both of its rules are disabled by default. With auto cleanup off, Bearcat keeps your release folder and your local archive files.
+Auto cleanup is off by default. You can enable two rules, which the **Auto cleanup** background task
+applies after their configured retention periods:
 
-With it on, the **"Auto cleanup"** background task works on retention periods:
-
-- After the release folder period, a managed release is converted to unmanaged and you get a notification with the release folder path. Bearcat never deletes that folder itself.
-- After the archive period, the local archive files are deleted, but only when the archives can be restored from a mirror hoster or repacked from a release folder.
+- Convert managed releases to unmanaged: a notification includes the release folder path so you can delete it yourself.
+- Delete local archives: only if Bearcat can download them from a mirror hoster or repack them from the release folder.
 
 The archive period counts from the last upload of the archive configuration, so every reupload restarts it. Nothing is ever deleted from the hoster.
 
-Once the local archive is gone, a later reupload gets its files back from a [mirror hoster](/Bearcat/mirror-downloads/), and falls back to repacking for managed releases. See [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for the settings and the exact preconditions.
+If a later reupload needs a missing archive, Bearcat downloads it from a
+[mirror hoster](/Bearcat/mirror-downloads/) or repacks it for managed releases.
+See [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for details.
 
 ## Archive reuse and repackaging
 
@@ -282,28 +273,14 @@ If so, it waits until a later run.
 
 ### The nonce file and repackaging
 
-If **Create nonce file** is on, Bearcat writes a new random value to `__nonce.txt` in the
-release folder before packing. The changed content helps produce different archive hashes.
-Bearcat removes the nonce file from the release folder after packing, including when packing fails.
-After a crash, leftover temporary additions are cleaned up on the next start.
+**Create nonce file** adds a random `__nonce.txt` to newly packed archives. Bearcat removes it from
+the release folder after packing, even if packing fails. After a crash, it removes leftover temporary
+files on the next start.
 
-For RAR, the nonce and appended zero bytes ensure each part gets a new hash. Parts remain close to
-the configured size, with only a few extra bytes. This matters when a hoster limits file sizes.
+RAR uses appended zero bytes to give every part a new hash, with or without the nonce file.
+This works for reused and newly packed archives, so the part size normally stays at the configured
+value instead of growing by `1` MB. The appended bytes still count towards the hoster's file size limit.
 
-For 7-Zip, **Archive repackaging** controls how Bearcat produces different files:
-
-| Strategy | Packing settings | Trade-off |
-| --- | --- | --- |
-| **Change archive file size by 1 MB** (default) | No compression or solid mode; part size grows by `1` MB from the latest archive | Changes the parts without compression work |
-| **Nonce only, no compression** | Changes only `__nonce.txt`; no compression or solid mode | Low CPU use, but some parts may keep their old hash |
-| **Solid archive with compression** | Solid mode and compression | Higher CPU use; the nonce change affects the archive more reliably |
-
-The compression and solid-mode settings also apply to RAR, but the `1` MB size increase does not.
-RAR archives created before hash tracking was introduced are repacked once using the selected
-strategy. Later reuploads can use the appended-byte method.
-
-If **Create nonce file** is off, repacking unchanged files produces identical archives:
-
-- RAR keeps the selected strategy. Appended zero bytes still give each part a new hash.
-- 7-Zip always increases the part size by `1` MB from the latest archive, regardless of the
-  selected strategy.
+7-Zip relies on repacking with a changed nonce, compression, or a larger part size.
+See [Archive repackaging](/Bearcat/advanced-configuration/#archive-repackaging) for the strategies
+and the exception for older RAR archives with missing hashes.

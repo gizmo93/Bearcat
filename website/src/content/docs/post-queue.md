@@ -1,6 +1,6 @@
 ---
-title: "Track Uploads Waiting for Forum Posts"
-description: "Keep track of which finished uploads you still need to post to your forums."
+title: "Post Queue"
+description: "Post completed uploads and mark them as done."
 ---
 
 The post queue lists releases and collections with new uploads that you have not posted yet.
@@ -9,43 +9,38 @@ as posted after sharing them yourself.
 
 ## Where to find it
 
-The post queue lives behind the list icon in the top header, next to the notification bell. The
-icon shows a small badge with the number of releases and collections that are still open to post.
+Click the list icon next to the notification bell. Its badge shows how many releases and collections
+still need posting.
 
 ![post-queue-badge.png](images/post-queue-badge.png)
 
-When nothing is open, the badge disappears. Click the icon to open the post queue page.
+The badge disappears when all entries are done.
 
 ![post-queue-page.png](images/post-queue-page.png)
 
 ## When something enters the queue
 
 A release shows up in the queue once it has a finished upload that you have not marked as posted.
-Bearcat looks at the newest finished upload per upload configuration, so you always see the
-current state and not every old upload.
+Bearcat uses the latest completed upload per upload configuration. Older uploads are not listed separately.
 
-The queue is split into two parts:
+The queue has two sections:
 
-- **Single releases** lists releases whose uploads are not part of a collection.
-- **Collections** lists release collections whose upload slots have new uploads.
+- **Single releases**: releases uploaded outside a collection.
+- **Collections**: new uploads made through collection slots. A TV season appears as one entry.
 
-A release that you upload through a collection slot only shows up under **Collections**, not
-under **Single releases**. That way a TV season stays one entry for the whole collection instead
-of one entry per episode. See [Release Collections](/Bearcat/release-collections/) for how
-collections and their upload slots work.
+See [Release Collections](/Bearcat/release-collections/) for how collections and their upload slots work.
 
 ## Posting to a forum from the queue
 
-If you set up [posting rules](/Bearcat/automatic-forum-posting/) for a forum, every entry under
-**Single releases** also has an **Automatic posting** section. It shows per forum which rule matches the release
-and into which subforum that post would go.
-**Post** renders the template and submits the post for you, and **Post to all matched
-sites** works through every open forum at once. 
-A forum where automatic posting is active has an **Auto** badge.
+With [posting rules](/Bearcat/automatic-forum-posting/) configured, the **Automatic posting** section
+for single releases shows the matching rule and target subforum for each forum.
+
+Click **Post** to submit the post. **Post to all matched sites** handles all remaining forums.
+The **Auto** badge shows that Bearcat posts to this forum automatically.
 
 ![posting-from-post-queue.png](images/posting-from-post-queue.png)
 
-Once no matched forum is left open, the release is marked as posted and leaves the queue.
+Once all matching forums are handled, Bearcat marks the release as posted and removes it from the queue.
 
 ## Marking something as posted
 
@@ -53,10 +48,8 @@ When you have posted a release somewhere, click **Mark as posted** on its entry.
 
 ## The guided workflow
 
-The workflow opens one release after each other for posting.
-
-Click **Start workflow** under single releases or collections to open the first release.
-The workflow bar shows your progress.
+Click **Start workflow** under single releases or collections to work through the entries one at a time.
+Bearcat opens the first entry and shows your progress in the workflow bar.
 
 In the release or collection header, use [**Post to forum**](/Bearcat/posting-to-forums/) to prepare a draft,
 or [**Render forum post**](/Bearcat/forum-post-templates/#render-a-post) from its arrow menu to copy the text.
@@ -70,11 +63,10 @@ The workflow bar gives you three actions:
 - **Skip** moves on without marking the current release, so it stays in the queue.
 - **Leave workflow** ends the run and takes you back to the post queue page.
 
-When you reach the end of the list, Bearcat returns you to the post queue page. If you worked
-through everything, the queue is empty and shows "Nothing waiting to be posted."
+After the last entry, you return to the post queue. If all entries are done,
+it shows **Nothing waiting to be posted**.
 
-If you want to start in the middle, click **Open** on a specific entry. That starts the workflow
-at that release instead of the top of the list.
+Click **Open** on an entry to start the workflow there.
 
 ## Turning the post queue off
 

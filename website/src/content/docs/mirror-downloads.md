@@ -1,6 +1,6 @@
 ---
 title: "Use Hosters as Long-Term Storage"
-description: "Let Bearcat download archive files back from a hoster when a reupload needs them, instead of keeping every archive on local disk."
+description: "Delete local archives and download them from a mirror hoster when needed for reuploads."
 ---
 
 Enable a hoster as a mirror so Bearcat can restore archive files when a reupload needs them.
@@ -12,24 +12,26 @@ This works for both [managed and unmanaged releases](/Bearcat/release-types/).
 
 ## When Bearcat downloads from a mirror
 
-A mirror download happens when all of the following are true:
+Bearcat downloads an archive from a mirror when:
 
-- An upload is waiting for its archive, which is the normal state for a new reupload.
-- The newest archive of that archive configuration is deleted or has missing files.
-- A mirror hoster still has every needed file online.
+- an upload is waiting for its archive,
+- the latest archive in that configuration is missing or incomplete locally, and
+- all required files are online on a mirror hoster.
 
-Bearcat looks for archive files in this order:
+When archive reuse is possible, Bearcat looks for files in this order:
 
 1. Use the local archive files if they are still on disk.
 2. Download them from a mirror hoster.
 3. For managed releases only, repack them from the release folder.
 
-If an unmanaged release has no local archive files or available mirror, Bearcat keeps the upload
-waiting and asks you to provide the archive files. See
+For new hashes, 7-Zip needs repacking even when archive files are available.
+See [Archive reuse](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) for format differences.
+
+Without local archives or a mirror, an unmanaged upload waits until you provide the archive files. See
 [Unmanaged Releases](/Bearcat/release-types/#unmanaged-releases) for instructions.
 
-Bearcat only downloads the files it actually needs. If a previous upload to the same hoster still
-has some files online, those are carried over and only the missing ones are downloaded.
+Bearcat reuses files still online from a previous upload to the same hoster and downloads only
+the missing ones.
 
 ## Enable a hoster as a mirror
 
@@ -45,18 +47,17 @@ to follow the global **Hoster mirror downloads** setting. See [Proxy Servers](/B
 
 ### Mirror priority
 
-Enabling **Use for mirror downloads** shows the **Mirror priority** field. It defaults to `100`.
-Lower numbers are preferred: a mirror with priority `10` is chosen before one with priority `100`.
+**Mirror priority** appears when you enable mirror downloads. The default is `100`; lower numbers
+take priority, so `10` is chosen before `100`.
 
 Bearcat only considers active mirror registrations with all required files marked online.
 If several mirrors have the same priority, it chooses the one with the most recent file check.
 
-The hoster list shows the priority next to **Mirror downloads**, for example **Mirror downloads (100)**.
+The hoster list shows the priority next to **Mirror downloads**, for example **Mirror downloads (Prio: 100)**.
 
 ### Hosters that support mirror downloads
 
-Not every hoster allows file downloads using its API, so the **"Use for mirror downloads"**
-switch only shows up for the ones that do:
+**Use for mirror downloads** is available for these hosters:
 
 | Hoster | Premium account needed |
 | --- | --- |
@@ -89,37 +90,32 @@ upload to these hosters.
 
 ## Cancel a running download
 
-Running mirror downloads show up on the **Activity** page (the start page) under "Downloads", with
-progress, speed, remaining time and a per file breakdown. Each card has a cancel button.
+Follow or cancel mirror downloads under **Activity > Downloads**. It shows progress, speed,
+remaining time, and file details.
 
-Canceling discards the partial download and cancels the uploads that were waiting for that archive,
-so they do not start over on the next run. The archive goes back to the state it had before, and
-your files on the hoster are not touched. Create a manual reupload when you want to try again.
+Canceling deletes the incomplete downloads and cancels the waiting uploads so they do not restart
+on the next run. The archive state is reset; files on the hoster are kept. Create a manual reupload when you want to try again.
 
 ## Verification and failures
 
-Bearcat stores the MD5 hash of every file it uploads. After a mirror download it hashes the
-downloaded file again and compares it to the stored value. If a hash does not match, or a download
-fails for another reason, Bearcat discards the restore, keeps the archive in its old state, and
-creates an "Archive restore failed" notification.
+Bearcat checks each downloaded file against the MD5 hash stored during upload. If a hash does not
+match or a download fails, it discards the restore, keeps the archive in its previous state, and
+creates an **Archive restore failed** notification.
 
-A failed restore also fails the waiting uploads. Create a manual reupload once you fixed the cause.
+The waiting uploads also fail. Fix the cause, then create a manual reupload.
 
 ## Parallel downloads
 
-The "Mirror downloads" section on the "Configurations" page includes:
-
-- **"Max parallel downloads"** defaults to `2`. It limits how many archive files Bearcat downloads
-  at the same time while restoring an archive.
+Under **Configurations > Mirror downloads**, set **Max parallel downloads** to limit how many
+archive files are downloaded at once. Default: `2`.
 
 Raise it if your line is fast and your hoster account allows several connections. Lower it to `1` if
 the hoster throttles or rejects parallel downloads.
 
 ## Speed limits
 
-- **"Maximum download speed"** (MB/s) in the "Mirror downloads" section on the "Configurations"
-  page caps the combined speed of all running mirror downloads.
-- **"Maximum mirror download speed (MB/s)"** in the hoster registration caps the combined speed of
+- **Maximum download speed** (MB/s) under **Configurations > Mirror downloads** caps the combined speed of all running mirror downloads.
+- **Maximum mirror download speed (MB/s)** in the hoster registration caps the combined speed of
   all mirror downloads from that hoster registration.
 
 Both are empty by default, which means no limit. Decimal values such as `0.5` or `0,5` are allowed.
@@ -127,9 +123,8 @@ When both are set, the lower limit takes effect.
 
 ## Delete local archives yourself
 
-The release detail page has a **"Delete local archives"** action in the actions menu. It deletes the
-local archive files of the release and marks the archives as deleted, which is the manual way to
-free disk space.
+Choose **Delete local archives** in the release detail page's action menu to free disk space.
+It deletes the release's local archive files and marks the archives as deleted.
 
 ![delete-local-archives.png](images/delete-local-archives.png)
 
@@ -139,9 +134,7 @@ Bearcat only offers this when the release stays recoverable:
 - Every archive configuration has a fully online upload on a hoster that is enabled for mirror
   downloads, **or** the release is managed and still has its release folder for repacking.
 
-The action deletes the archive files one by one and removes the archive folder only if it is empty
-afterwards. That matters for unmanaged releases, where the archive folder is your folder and may
-hold other files.
+Bearcat deletes the archive files and removes the folder only if it is then empty. Other files are kept.
 
 ## Automatic cleanup
 

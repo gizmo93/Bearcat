@@ -1,15 +1,13 @@
 ---
-title: "Automatic FTP/FTPS Downloads and Archive Extraction"
-description: "Automatically download releases from FTP/FTPS servers, verify SFV checksums, and optionally extract RAR/7z archives before repackaging and uploading to hosters."
+title: "Download Releases from FTP/FTPS Automatically"
+description: "Watch FTP/FTPS folders, download releases, verify checksums, and extract archives if needed."
 ---
 
-Bearcat watches FTP and FTPS servers, including scene FTP servers, for new release folders and downloads
-matching folders automatically. It verifies SFV checksums when available and can extract RAR and 7z
-archives before creating releases from a template. For managed releases, Bearcat creates new archives
-and uploads them to the hosters configured in the selected template.
+Bearcat watches FTP and FTPS servers for new release folders, downloads them, and verifies any SFV
+checksums. A release template controls how the files are then packed and uploaded.
 
-Archive extraction is optional and off by default. Enable it for a managed template to repackage
-the extracted files, or use an unmanaged template to upload the downloaded archives as they are.
+With a managed template, Bearcat can extract RAR and 7z archives before repacking them. Extraction
+is off by default. Use an unmanaged template to upload the downloaded archives unchanged.
 
 ## Add a server
 
@@ -33,8 +31,7 @@ server has a trusted certificate.
 ## Watch a remote folder
 
 First, [create a release template](/Bearcat/release-templates-and-automations/#setting-up-release-templates).
-Use a **managed** template to let Bearcat pack the downloaded files, or an **unmanaged** template
-if the server already provides the archives you want to upload.
+Choose **managed** to pack the downloaded files or **unmanaged** to upload the provided archives.
 
 ![remote-automations-page.png](images/remote-automations-page.png)
 
@@ -49,9 +46,9 @@ if the server already provides the archives you want to upload.
 
 ![images/new-remote-automation.png](images/new-remote-automation.png)
 
-**Ignore existing folders** is on by default. It skips folders that are there during the first scan and
-only downloads folders that appear later. Turn it off **before saving** if you also want the existing releases.
-Folders already marked as ignored stay ignored when you change this setting.
+**Ignore existing folders** is on by default, so only folders added after the first scan are downloaded.
+Turn it off **before saving** to include existing releases. Changing it later does not affect folders
+already marked as ignored.
 
 The download folder must be writable by Bearcat. In Docker, choose a path inside a mounted volume
 so the downloads survive container replacement.
@@ -70,21 +67,21 @@ Downloaded locally:
   /data/releases/incoming/Movie.One.2026.1080p/
 ```
 
-Only direct subfolders of `/movies` are treated as releases. Each matching folder is downloaded
-with all its files and nested subfolders. You do not need a separate local folder automation.
+Bearcat looks for releases only in direct subfolders of `/movies`. Matching folders are downloaded
+with all their contents. You do not need a separate local folder automation.
 
 ### Overlapping automations
 
-Create another automation to use a different pattern, template, or download folder.
-If several automations match the same folder on the same source, the lowest **Priority** wins.
-For example, `10` wins over the default `100`. Each remote folder is downloaded only once per source.
+Create more automations for different patterns, templates, or download folders.
+If several match the same folder on a source, Bearcat uses the one with the lowest **Priority**.
+For example, `10` takes priority over the default `100`. Each remote folder is downloaded only once per source.
 Changing priorities does not reassign folders Bearcat has already found.
 
 ### Duplicate folders
 
-A new folder is makred as **Duplicate** and not downloaded if its name already exists as a download
-from any remote source or as a release. The first folder found keeps downloading, even if it later fails or is canceled. To download a duplicate anyway, use
-**Restart download** on **Remote downloads**.
+Bearcat marks a folder as **Duplicate** if a release or download from any remote source already
+has that name. It skips the duplicate even if the first download fails or is canceled. Use
+**Restart download** on **Remote downloads** to download it anyway.
 
 ## Follow the download
 
@@ -113,8 +110,8 @@ After every download, Bearcat looks for `.sfv` files in the release folder and i
 compares the CRC32 checksum of each listed file. If a listed file is missing or its checksum does not
 match, the download fails and the files stay on disk.
 
-Running downloads also appear on the **Activity** page (the start page) under **Downloads**, with
-progress, speed, remaining time, the current phase (download, verify, extract) and file details. The release detail page records which remote source it came from.
+You can also follow running downloads under **Activity > Downloads** on the start page. It shows
+progress, speed, remaining time, phase, and file details. The release detail page shows the remote source.
 
 ![running-remote-download.png](images/running-remote-download.png)
 
@@ -125,32 +122,31 @@ Use the action menu in **Remote downloads**:
 - **Cancel** stops an observed, queued, or running download. Files from a running download are deleted.
 - **Restart download** queues a failed, canceled, or duplicate download again. It starts from scratch and removes
   files left by the previous attempt.
-- **Retry without downloading again** is available when the download finished but a later step failed.
-  Fix the reported cause, then use this action to keep the downloaded files. Bearcat runs SFV verification,
-  extraction, and release creation again. If the archives were already extracted, it only creates the release.
+- **Retry without downloading again** uses the existing files to repeat verification, extraction,
+  and release creation. Fix the reported error first. If the archives are already extracted,
+  Bearcat only creates the release.
 - **Ignore** skips a folder that has not started downloading, or a failed, canceled, or duplicate download.
   Ignored and duplicate folders are hidden by the default status filter and are not queued again.
 
-If the local release subfolder already contains files before a download starts, Bearcat fails the
-download and leaves those files untouched. Move them elsewhere before restarting the download.
+If the local release folder is not empty before downloading, Bearcat stops with an error.
+Existing files are kept. Move them elsewhere before restarting the download.
 
 Disabling an automation stops it from scanning. Already queued downloads stay queued.
 To stop one of those, cancel it on **Remote downloads**.
 
 ## Extract archives before release creation
 
-For managed templates, turn on **Extract archives before release creation** in the automation if the
-server provides RAR or 7z archives and you want Bearcat to pack the release itself.
+With a managed template, turn on **Extract archives before release creation** in the automation
+to unpack RAR or 7z archives before Bearcat packs the release.
 
-After SFV verification, Bearcat extracts every RAR and 7z archive in the release folder and its subfolders.
-The extracted files are placed in the folder that contained the archive. After a successful extraction,
-Bearcat deletes the archive volumes and `.sfv` files that only list those volumes. The release is then
-created from the extracted files.
+After SFV verification, Bearcat extracts all RAR and 7z archives in the release folder and its
+subfolders, each into the folder that contains it. Once extraction succeeds, it deletes the archive
+volumes and `.sfv` files that only list those volumes, then creates the release from the extracted files.
 
-Extraction fails, and nothing is deleted, if:
+Bearcat stops extraction and keeps the archives if:
 
 - There is not enough free disk space for the extracted files.
-- An extracted file or folder has the same path as an existing one.
+- Extraction would overwrite an existing file or folder.
 - An archive is damaged or password protected.
 
 This option is off by default and does not apply to unmanaged templates.
@@ -169,6 +165,5 @@ Bearcat waits until:
 It then converts the release to [unmanaged](/Bearcat/release-types/#unmanaged-releases) and deletes
 the downloaded folder. Future reuploads use the existing archives or mirrors.
 
-Store archives outside the downloaded release folder if you want that folder removed automatically.
-If it contains archives, Bearcat keeps the folder and tells you in a notification.
-This option does not apply to unmanaged templates.
+Store archives outside the downloaded release folder. If it contains archives, Bearcat keeps
+the folder and notifies you. This option does not apply to unmanaged templates.

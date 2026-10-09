@@ -4,7 +4,7 @@ description: "Self-hosted upload manager for Rapidgator, DDownload, and other on
 template: splash
 hero:
   title: "Bearcat: Self-hosted upload manager"
-  tagline: "Automatically download releases from FTP/FTPS, extract archives, and upload to one-click hosters. Reupload files when links go offline."
+  tagline: "Bearcat packs your releases, uploads them, and handles reuploads."
   image:
     file: ../../assets/bearcat-archive-hero.png
     alt: "Bearcat holding a RAR archive"
@@ -19,12 +19,12 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 ## Get started
 
-Choose how you want to run Bearcat, then follow [Your first upload](/Bearcat/post-installation/).
+Choose an installation, then follow [Your first upload](/Bearcat/post-installation/).
 
 <CardGrid>
 	<LinkCard
 		title="Desktop app"
-		description="Start here for Windows or Apple Silicon Macs."
+		description="Run Bearcat on Windows or macOS with Apple Silicon."
 		href="/Bearcat/use-the-desktop-launcher/"
 	/>
 	<LinkCard
@@ -46,9 +46,8 @@ Choose how you want to run Bearcat, then follow [Your first upload](/Bearcat/pos
 
 ## What is Bearcat?
 
-Bearcat runs on your desktop, NAS, or server. You manage your releases in a web interface,
-and Bearcat creates archives, uploads them to your hosters, checks the links, and reuploads
-files that go offline.
+Bearcat runs on your desktop, NAS, or server. Use its web interface to manage releases,
+create archives, and upload them to your hosters. Bearcat checks the links and reuploads offline files.
 
 You can:
 
@@ -59,8 +58,8 @@ You can:
 - Look up release information and NFOs through xREL and SRRDB, movie or TV metadata through TMDB and TheTVDB and game metadata through Steam.
 - Read resolution, codecs, and audio and subtitle tracks from your video files with MediaInfo.
 - Upload cover images and use them alongside download links and NFOs in [BBCode templates](/Bearcat/forum-post-templates/).
-- [Prepare forum drafts](/Bearcat/posting-to-forums/) for review or [post automatically](/Bearcat/automatic-forum-posting/) using rules you configure.
-- Track releases you still need to post with the [post queue](/Bearcat/post-queue/).
+- [Prepare forum drafts](/Bearcat/posting-to-forums/) and submit them yourself, or use [posting rules to post automatically](/Bearcat/automatic-forum-posting/).
+- Find releases ready to post in the [post queue](/Bearcat/post-queue/).
 
 ![Bearcat web interface](images/gui.png)
 
@@ -68,18 +67,17 @@ You can:
 
 ### Can I use PostgreSQL?
 
-Yes. PostgreSQL is optional and needs a running PostgreSQL server. See the [PostgreSQL setup](/Bearcat/install-postgresql-for-desktop/) or the [Docker option](/Bearcat/use-the-docker-image/#database). Existing PostgreSQL installations can keep using it.
+Yes. New installations use SQLite, but you can [set up PostgreSQL](/Bearcat/install-postgresql-for-desktop/) or use the [Docker option](/Bearcat/use-the-docker-image/#database). Existing PostgreSQL installations keep their settings.
 
 ### Can I upload existing archives?
 
-Yes. Bearcat can upload archives you created yourself. These are called unmanaged releases.
-For managed releases, Bearcat creates the archives from your release files.
-See [release types](/Bearcat/release-types/) for how the two work.
+Yes. Use an unmanaged release for existing archives, or a managed release to let Bearcat create them.
+See [release types](/Bearcat/release-types/).
 
 ### Do I have to keep every archive on disk?
 
-No. If you enable a hoster as a mirror, Bearcat can download the archives again when a reupload
-needs them. You can delete local copies yourself or set a retention period for automatic cleanup.
+No. Enable a hoster as a mirror so Bearcat can download archives when needed for a reupload.
+Delete local copies yourself or set a retention period for automatic cleanup.
 
 The hoster must support downloads through its API, and some hosters require a premium account.
 See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and setup instructions.
@@ -131,9 +129,8 @@ See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and set
 
 ### Forums
 
-Generic XenForo plugin is available, that should work with most standard XenForo forums that do not use captchas during login.
-(Tested with data-load.me & myboerse.bz).
-Specific plugins for data-load.me & boerse.cx are also available.
+The XenForo plugin should work with most XenForo forums without a captcha at login
+(tested with data-load.me and myboerse.bz). There are also dedicated plugins for data-load.me and boerse.cx.
 
 ## Learn more
 
@@ -145,12 +142,12 @@ Specific plugins for data-load.me & boerse.cx are also available.
 	/>
 	<LinkCard
 		title="Release collections"
-		description="Use shared upload settings and container links for a TV season or other related releases."
+		description="Share upload settings and container links across related releases."
 		href="/Bearcat/release-collections/"
 	/>
 	<LinkCard
 		title="Release information and metadata"
-		description="Choose metadata sources and languages, look up NFOs, and correct missing or incorrect information."
+		description="Set up metadata sources, fetch NFOs, and correct release information."
 		href="/Bearcat/release-information-and-metadata/"
 	/>
 	<LinkCard
@@ -160,7 +157,7 @@ Specific plugins for data-load.me & boerse.cx are also available.
 	/>
 	<LinkCard
 		title="Advanced configuration"
-		description="Set upload limits, configure automatic cleanup, manage background tasks, and choose the database."
+		description="Configure upload limits, automatic cleanup, and background tasks."
 		href="/Bearcat/advanced-configuration/"
 	/>
 </CardGrid>

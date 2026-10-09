@@ -1,13 +1,13 @@
 ---
 title: "Resolve Keep2Share Captchas in Bearcat"
-description: "Resolve Keep2Share captcha challenges in Bearcat and reactivate your hoster account."
+description: "Solve a Keep2Share captcha and reactivate the hoster registration."
 ---
 
 ## "Unicorn" captcha challenges
 
 Keep2Share sometimes requires a captcha when it does not trust your IP address.
-Until you solve it, API calls fail. Bearcat notifies you and disables the hoster registration
-to avoid further requests that could get the IP address banned.
+Until you solve it, API calls fail. Bearcat disables the hoster registration and notifies you.
+This prevents further requests that could trigger an IP ban.
 
 ![Notification for a Keep2Share captcha challenge](images/keep2share-captcha-challenge.png)
 
@@ -15,12 +15,12 @@ to avoid further requests that could get the IP address banned.
 
    ![Captcha button on the hoster registration](images/keep2share-captcha-button.png)
 
-2. Click **Get challenge** in the dialog, then open the returned link.
+2. Click **Get challenge** in the dialog, then open the link shown.
 
    ![Get a captcha challenge](images/keep2share-captcha-empty-dialog.png)
    ![Link to the captcha challenge](images/keep2share-captcha-link.png)
 
-3. Solve the challenge and copy the token from the **Response** box.
+3. Solve the captcha and copy the token from the **Response** box.
 
    ![Response token after solving the captcha](images/keep2share-captcha-response.png)
 

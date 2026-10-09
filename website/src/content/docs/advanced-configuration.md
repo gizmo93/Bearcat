@@ -1,32 +1,20 @@
 ---
-title: "Configure Background Tasks and Upload Settings"
-description: "Tune background tasks, upload checks, and global Bearcat behavior."
+title: "Background Tasks and Advanced Settings"
+description: "Configure background tasks, cleanup rules, upload limits, the database, and the time zone."
 ---
 
-Bearcat does most work in background tasks.
-The web UI gives you two places to control that behavior:
-
-- "Background tasks" shows scheduled work, health and enable / disable switches.
-- "Configurations" contains global settings that affect background work.
+Bearcat packs, uploads, and checks files in the background. Manage tasks under **Background tasks**
+and their settings under **Configurations**.
 
 ## Background tasks
 
-Open "Background tasks" in the sidebar to see the current task list.
 Each task runs on its own schedule.
 
 ![background-tasks-page.png](images/background-tasks-page.png)
 
-The table columns mean:
-
-- "Name" is the task display name.
-- "Active" enables or disables future executions of that task.
-- "Status" shows "Never run", "Running", "Success" or "Error".
-- "Started" and "Finished" show the timestamps of the latest run.
-- "Duration" shows how long the latest finished run took.
-- "Last error" shows the latest error message if the task failed.
-
-Tasks are enabled by default. Disable one to pause future runs, for example during maintenance. Work already running continues.
-Use "Refresh" to reload the latest state.
+The table shows each task's status, start and finish times, duration, and last error.
+Use **Active** to enable or disable future runs. Running tasks are not canceled.
+All tasks are enabled by default.
 
 ### Available background tasks
 
@@ -39,40 +27,30 @@ Use "Refresh" to reload the latest state.
 | Remote download verification and extraction | Every 20 seconds | Checks completed downloads against their SFV files and extracts archives when the automation is set to do so. |
 | Remote download release creation | Every 20 seconds | Creates releases from completed downloads using their selected templates. |
 | Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
-| Release info resolution | Every 10 minutes | Resolves missing scene release information, NFO files, external IDs, and movie or TV metadata through the active NFO databases and metadata sources. |
+| Release info resolution | Every 10 minutes | Fills in missing scene information, NFOs, external IDs, and metadata from active sources. |
 | Archive creation & restore | Every 20 seconds | Provides archives for waiting uploads: reuses existing archives, restores missing files from a mirror, or creates new archives. |
 | Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. |
-| Archive upload | Every 20 seconds | Uploads pending archives to the configured hosters and records progress and results. |
+| Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
 | Upload state check | Every 20 seconds | Checks whether uploaded files are still online, creates initial upload records after the configured cooldown and schedules automatic reuploads when release group rules allow it. |
-| Link crypter container creation | Every 20 seconds | Creates missing link crypter containers for completed uploads that have link crypter configurations. |
+| Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
 
 ## Configurations
 
-Open "Configurations" in the sidebar to change global application behavior.
-Settings are grouped into sections. Use the section list on the left, or the chips below the title on small screens, to jump to a section.
-Search filters by name and description. The "Changed" filter shows only settings that differ from their default.
+Open **Configurations** in the sidebar to change global settings.
 
-Switches and selects save immediately.
-Number fields show a save and a discard button while you edit. Press Enter to save or Escape to discard.
+Switches and dropdowns save immediately. Number fields have save and discard buttons.
+You can also press Enter to save or Escape to discard.
 
-When you change a value, Bearcat stores it as an override.
-A changed setting shows a dot before its name and its default value.
-Click "Reset" to remove the override and return to the default.
-
-Configuration changes are stored in the database.
-They survive container restarts.
+Changed settings have a dot beside their name and show the default value.
+Click **Reset** to restore the default.
 
 ### Auto cleanup
 
-"Auto cleanup" frees disk space once a release has been online for a while.
-It has two independent rules, and both are disabled by default:
+**Auto cleanup** frees disk space. It has two independent rules, both disabled by default:
 
 - "Convert releases to unmanaged automatically" with "Convert to unmanaged after", default `14` days.
 - "Delete local archives automatically" with "Delete local archives after", default `30` days.
-
-You can enable either one on its own.
-The "Auto cleanup" background task runs the release folder rule first and the archive rule second, so a release gets converted to unmanaged before its archives are considered.
 
 ![auto-cleanup-config.png](images/auto-cleanup-config.png)
 
@@ -83,17 +61,16 @@ to delete downloaded raw files after uploading.
 #### Convert releases to unmanaged automatically
 
 This rule converts managed releases to unmanaged. Bearcat then reuploads existing archives instead of using the original release files to create new ones.
-The clock starts at the date the uploads were posted, or at the first finished upload when the release was never marked as posted.
-A release with neither is never converted.
+The retention period starts at the posting date, or the first completed upload if the release was
+never marked as posted. Without either date, the release stays managed.
 
 When the period has passed, Bearcat checks that:
 
 - No upload of the release is running.
 - Every archive configuration has a local archive, or an online mirror on a hoster that is enabled for [mirror downloads](/Bearcat/mirror-downloads/).
 
-If that is the case, Bearcat switches the release to unmanaged, forgets the release folder path, and creates a notification.
-The notification contains the release folder path, because after the conversion Bearcat no longer stores it.
-Delete the folder yourself if you want.
+Once both conditions are met, Bearcat converts the release to unmanaged and removes the stored release
+folder path. A notification includes this path so you can delete the folder yourself.
 
 If any archive is stored inside the release folder, the notification says so and asks you to delete only the release data and keep the archive files.
 
@@ -107,43 +84,42 @@ Bearcat only deletes when the archives stay recoverable:
 - A fully online upload exists on a hoster that is enabled for [mirror downloads](/Bearcat/mirror-downloads/), or
 - the release is managed and still has a release folder to repack from.
 
-It deletes the archive files one by one and removes the archive folder only when it is empty afterwards.
-After that the archive is marked as deleted in the database.
-
-Uploads on the hoster are never touched.
+Bearcat removes the archive folder if it is empty afterwards. Files on the hoster are kept.
 
 #### Exclude single releases
 
-Both rules skip releases with the "Exclude from auto cleanup" checkbox set.
-You find it in the release dialog, when creating a release and when editing one.
+Enable **Exclude from auto cleanup** when creating or editing a release to skip both rules.
 
 ![exclude-from-auto-cleanup.png](images/exclude-from-auto-cleanup.png)
 
-Use it to keep a release out of these retention rules. For remote downloads, also leave
+For remote downloads, also leave
 **Keep raw files** enabled in the automation to keep the downloaded folder.
 
 ### Archive repackaging
 
-"Repackaging strategy" controls how Bearcat changes newly generated archives for uploads and reuploads. The default is "Change archive file size by 1 MB".
+Hosters can recognise previously uploaded files by their MD5 hash. Bearcat changes the hashes
+before uploading an archive to the same hoster type again. How it does this depends on the format:
 
-Bearcat writes a random `__nonce.txt` file into the release folder before packing, unless
-**Create nonce file** is off in the archive configuration.
-The repackaging strategy decides how that nonce file should affect the generated archive files:
+- **RAR:** Bearcat keeps the hash history for each archive configuration, even after local archives
+  are deleted. It appends zero bytes to each reused or newly packed part until its hash is new.
+  The archive still extracts normally. The configured part size stays the same; the default
+  `1` MB increase is normally skipped. Compression and solid mode still follow the selected strategy.
+- **7-Zip:** Bearcat must repack the release to change the hashes. Choose a **Repackaging strategy**
+  under **Configurations**:
 
-| Value | UI label | Behavior |
-| --- | --- | --- |
-| `NonceOnly` | Nonce only, no compression | Packs without compression and without solid mode. Only `__nonce.txt` changes. This has the lowest CPU cost, but the lowest chance that every archive part gets a new MD5 hash. |
-| `SolidCompression` | Solid archive with compression | Packs with solid mode and compression. This is the safest option for making the nonce change affect all archive files, but it uses more CPU. |
-| `IncrementArchiveFileSize` | Change archive file size by 1 MB | Packs without compression and without solid mode, but increases the archive part size by `1` MB compared to the latest archive for the same archive configuration. This is the default. |
+| Strategy | Effect when packing 7-Zip archives |
+| --- | --- |
+| **Change archive file size by 1 MB** (default) | No compression or solid mode. Each new archive uses a part size `1` MB larger than the previous one in the same archive configuration. The first uses the configured size. |
+| **Nonce only, no compression** | Only the random `__nonce.txt` changes. Uses little CPU, but some parts may keep their old hash. |
+| **Solid archive with compression** | Compression in solid mode spreads the nonce change more reliably across the parts, but uses more CPU. |
 
-`IncrementArchiveFileSize` stores the archive part size that was actually used on each archive.
-When Bearcat creates the next archive for the same archive configuration, it reads the latest stored value and adds `1` MB.
-For the first archive, Bearcat uses the "Archive file size (MB)" from the archive configuration.
+**Create nonce file** is on by default in the archive configuration. If you turn it off,
+7-Zip always increases the part size by `1` MB, regardless of the strategy. RAR still gets new hashes
+from appended zero bytes.
 
-RAR and 7Zip both support all three strategies.
-
-With **Create nonce file** off, 7Zip archives always use the latest part size plus `1` MB,
-regardless of the strategy. RAR keeps the selected strategy.
+If the previous RAR archive has missing hashes, for example from before hash tracking was added,
+the selected strategy also controls the part size when repacking. With the default strategy,
+that archive uses the previous part size plus `1` MB.
 
 ### Folder automation
 
@@ -152,16 +128,15 @@ Bearcat creates a release from a watched folder once both conditions are met:
 - Its total file count and size stay unchanged for "Folder stability", default `5` minutes.
 - It reaches "Minimum folder size", default `1` MB.
 
-This helps avoid creating releases and reading media metadata while files are still being copied.
-Bearcat compares file count and size between scans because copied folders may retain their original modification dates.
+This helps avoid creating releases while files are still being copied.
 
 Increase the stability period for slow or interrupted copies. Set the minimum size to `0` to allow empty folders.
-These settings only affect automatic release creation. You can still create releases manually and extract metadata from the "Release info" panel.
+Manual release creation and metadata lookup under **Release info** are unaffected.
 
 ### Remote downloads
 
-For [FTP / FTPS downloads](/Bearcat/remote-downloads/), open **Configurations** and find
-**Remote downloads**. These settings are separate from local folder automation.
+Find settings for [FTP / FTPS downloads](/Bearcat/remote-downloads/) under **Configurations > Remote downloads**.
+They apply independently of local folder automation.
 
 | Setting | Default | Effect |
 | --- | --- | --- |
@@ -186,25 +161,22 @@ Changes only affect upload configurations without an upload. Existing uploads ar
 ### Upload concurrency
 
 "Maximum parallel uploads" defaults to `10`. It limits parallel file uploads across all hosters.
-Each hoster's own limit also applies, so a hoster cannot exceed either limit.
+Each hoster's own limit also applies.
 
 View and, where allowed, override individual limits on the "Hoster registrations" page. See [Parallel uploads per hoster](/Bearcat/account-settings/#parallel-uploads-per-hoster).
-
-Lower the global limit to reduce bandwidth and CPU usage. Raise it to transfer more files at once.
 
 "Maximum upload speed" (MB/s) is empty by default, which means no limit. It caps the combined upload
 speed of all running uploads across all hosters. Decimal values such as `0.5` or `0,5` are allowed.
 Each hoster registration can set its own limit as well. See
 [Upload speed limit per hoster](/Bearcat/account-settings/#upload-speed-limit-per-hoster).
 
-Very low limits can make uploads fail on hosters that abort long requests, for example hosters
-behind Cloudflare, which stop requests after about 100 seconds.
+Very low speed limits can cause uploads to time out.
 
 ## Database
 
 New Desktop, Windows service, and Docker installations use SQLite. Existing PostgreSQL setups keep using PostgreSQL.
 
-Bearcat stores its data in SQLite or PostgreSQL. These settings are not part of the "Configurations" page. They are read on startup from environment variables or a settings file:
+Database settings are read at startup from environment variables or a settings file:
 
 | Installation | Where to set them |
 | --- | --- |
@@ -218,7 +190,7 @@ Bearcat stores its data in SQLite or PostgreSQL. These settings are not part of 
 | `Database:SqliteFilePath` | `Database__SqliteFilePath` | Path to the SQLite database file. Not set: `bearcat.db` in the data directory. |
 | `Database:ConnectionString` | `Database__ConnectionString` | PostgreSQL connection string, for example `Host=localhost;Database=bearcat;Username=bearcat;Password=...`. Only used with `Postgres`. |
 
-The data directory is the first of:
+Bearcat checks these locations in order to find its data directory:
 
 1. Environment variable `BEARCAT_DATA_DIR`
 2. Setting `Bearcat:DataDirectory` (environment variable `Bearcat__DataDirectory`)
@@ -229,16 +201,16 @@ The Windows service uses `%ProgramData%\Bearcat` as its data directory.
 
 SQLite notes:
 
-- Bearcat runs SQLite in WAL mode. Keep the database file on local storage, not on a network share (NFS/SMB).
-- Back up `bearcat.key` from the data directory together with the database file. Stop Bearcat before copying the database file. Copying `bearcat.db` with its `-wal` and `-shm` files while Bearcat runs does not give a consistent backup. While Bearcat runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
+- Keep the SQLite database on local storage. Network shares (NFS/SMB) are unsuitable for its WAL mode.
+- Back up `bearcat.key` from the data directory together with the database file. Stop Bearcat before copying the database file. Copying the database while Bearcat runs may produce an inconsistent backup, even with the `-wal` and `-shm` files. Use `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
 
 Changing `Database:Provider` does not transfer existing data. A new database starts empty.
-The fallback to `Postgres` when the setting is absent keeps older configurations working.
+Without `Database:Provider`, Bearcat uses PostgreSQL so older configurations keep working.
 
 ## Time zone
 
-Bearcat shows times such as log entries and task runs in a local time zone. Time-based rules use it as well.
-Without a setting, Bearcat uses the time zone of the operating system.
+Bearcat uses the local time zone for displayed times and time-based rules.
+By default, it uses the operating system's time zone.
 
 | Installation | Default | How to change it |
 | --- | --- | --- |

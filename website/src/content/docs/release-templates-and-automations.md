@@ -3,29 +3,25 @@ title: "Release Templates and Folder Automations"
 description: "Reuse your upload settings and create releases from new folders automatically."
 ---
 
-Once your [first upload](/Bearcat/post-installation/) works, save its settings as a template. You can use that template yourself or let Bearcat apply it to new folders automatically.
+Save your [first upload](/Bearcat/post-installation/) settings as a template.
+Use it to create more releases manually or automatically from new folders.
 
 ## Setting up release templates
 
-A release template saves the release group, archive configurations, upload configurations, image
-upload configurations, and link crypter settings for reuse.
-
-Create one in either of these ways:
+A release template contains the release group and settings for archives, uploads, images, and link crypters.
 
 - Open **Release templates**, click **New release template**, and add the configurations.
 - Open a configured release and choose **Save as template** from its action menu.
 
 ![Release templates](images/release-templates-page.png)
 
-On the **Releases** page, choose **New from template** to use it. The new release normally takes its
-name from the folder. Archive configurations set to use the release name also use that new name.
+On **Releases**, choose **New from template**. The new release normally takes the folder name,
+as do archive configurations set to use the release name.
 
 Enable **Collection detection** in the template to group related releases, such as episodes of a TV
 season. See [Release Collections](/Bearcat/release-collections/).
 
 ## Setting up folder automations
-
-Folder automations apply a release template to new folders automatically.
 
 1. Create a release template, then open **Release folder automations** and click **New release folder automation**.
 2. Set **Release base path** to the folder Bearcat should scan. Only direct subfolders are checked.
@@ -37,7 +33,7 @@ Folder automations apply a release template to new folders automatically.
 
 ![Folder automations](images/folder-automations-page.png)
 
-For example, with this base folder:
+For this base folder:
 
 ```text
 /data/releases/incoming/
@@ -48,10 +44,9 @@ For example, with this base folder:
 
 The pattern `*1080p*` selects only `Movie.One.2026.1080p`. An empty pattern includes all three folders.
 
-The background task checks about every two minutes. It skips folders that already have a release
-and waits for the configured [folder stability and minimum size](/Bearcat/advanced-configuration/#folder-automation).
-For each eligible folder, it creates a release from the template and looks up its metadata.
-Bearcat then creates archives and uploads them using the template's settings.
+Bearcat scans about every two minutes and skips folders that already have a release. Once a folder
+meets the [stability and minimum size requirements](/Bearcat/advanced-configuration/#folder-automation),
+Bearcat creates the release, looks up its metadata, and packs and uploads it using the template.
 
 ### Extract archives before release creation
 
@@ -66,10 +61,9 @@ the same as for [remote downloads](/Bearcat/remote-downloads/#extract-archives-b
 
 Running checks and extractions appear on the **Activity** page under **Folder automations**.
 
-If the SFV check or extraction fails, the files stay in the folder, no release is created, and Bearcat
-sends a notification. The folder is listed under **Failed extractions** on the **Folder automations**
-page with the error message. Fix the cause, then click **Retry**. The folder is processed again on the
-next scan. Bearcat also retries automatically when the files in the folder change.
+If verification or extraction fails, Bearcat keeps the files and creates no release. Find the error
+under **Failed extractions** on **Folder automations**. Fix the cause, then click **Retry** to process
+the folder on the next scan. Bearcat also retries when the folder's files change.
 
 ### Download releases from FTP or FTPS
 

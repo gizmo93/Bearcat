@@ -3,8 +3,7 @@ title: "Your First Upload"
 description: "Add a hoster account, choose a folder, and upload your first release."
 ---
 
-You need a running Bearcat installation, a hoster account, and a folder with files to upload.
-A **release** is one set of files that you upload together.
+Start Bearcat and have your hoster account and files ready. The files you upload together form a **release**.
 
 Open Bearcat in your browser:
 
@@ -31,11 +30,10 @@ Leave upload limits and reupload settings at their defaults.
 
 ## 2. Create a release group
 
-A release group controls whether Bearcat automatically replaces offline uploads.
-
 Open **Release groups**, click **New release group**, and name it `My uploads`.
-Leave automatic reuploads disabled for now and save.
-Bearcat still uploads your files and checks their links.
+Keep automatic reuploads disabled for this first upload and save.
+
+The group controls whether Bearcat replaces offline uploads. Bearcat checks links even when reuploads are disabled.
 
 ## 3. Choose your files
 
@@ -55,35 +53,36 @@ If you already have archives to upload, use an [unmanaged release](/Bearcat/rele
 
 On the **Archives** tab, click **Add**:
 
-- Give the configuration a name, for example `Main archive`, and choose RAR or 7z.
-- Choose an output folder within a working directory where Bearcat can write the archives. Use a separate folder from the source files.
-- Set an archive file prefix, for example `My.First.Upload`, and a part size in MB that your hoster accepts. Bearcat adds the file extension.
-- Leave the password empty unless you want password-protected archives, then save.
+- Name the configuration `Main archive` and choose RAR or 7z.
+- Choose a writable output folder in a working directory, separate from your source files.
+- Set the file prefix to `My.First.Upload`. Bearcat adds the file extension.
+- Choose a part size in MB within your hoster’s file size limit.
+- Set a password if needed, then save.
 
 ## 5. Choose where to upload
 
-On the **Uploads** tab, open **Configuration** and click **Add**. Give it a name, select your hoster account
-and the `Main archive` configuration, then save. Leave **Links distributed to** empty for now.
+On **Uploads** > **Configuration**, click **Add**. Name the configuration, select your hoster account
+and `Main archive`, then save. Leave **Links distributed to** empty for now.
 
 ## 6. Wait for the upload and copy the links
 
-Bearcat starts the work automatically. By default, it waits until the release is at least five
-minutes old, then its background tasks create the archives and upload them.
+By default, Bearcat packs and uploads the files automatically once the release is five minutes old.
+You can change this waiting time in **Configurations**.
 
 Open **Uploads** and switch to **History** to follow progress. Once the upload finishes, copy the download links from **Overview**.
 
 ![Release uploads](images/release-uploads-tab.png)
 
-If the upload does not start or fails, check that **Try login** succeeds, both configurations are
-saved, and the archive output folder is writable. Check the notification bell for error details.
-See [Upload lifecycle](/Bearcat/upload-lifecycle/) for the individual stages.
+If the upload fails or does not start, check the notification bell for errors. Make sure **Try login**
+succeeds, both configurations are saved, and the archive output folder is writable.
+See [Upload lifecycle](/Bearcat/upload-lifecycle/) for the stages.
 
 ## After your first upload
 
-You can keep creating releases this way, or set up the features you need:
+For future uploads, you can:
 
 - [Save a template and watch folders](/Bearcat/release-templates-and-automations/) to reuse these settings.
 - [Enable reuploads or add link crypters](/Bearcat/account-settings/) to manage your upload links.
 - [Download from FTP or FTPS](/Bearcat/remote-downloads/) to fetch releases automatically.
 - [Add metadata and cover images](/Bearcat/release-information-and-metadata/) for your releases.
-- [Explore the release detail page](/Bearcat/release-detail-page/) to find its other settings and tabs.
+- [Explore the release detail page](/Bearcat/release-detail-page/) for more settings.

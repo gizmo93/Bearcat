@@ -3,11 +3,9 @@ title: "Additional Archive Contents"
 description: "Add your own files, folders, or text files when Bearcat packs a release."
 ---
 
-Add a file, folder, or text file to every archive created with a chosen archive configuration.
-For example, include a `Premium.txt` with your referral link.
+Include your own files, folders, or text files in archives, such as a `Premium.txt` with your referral link.
 
-This feature is available for [managed releases](/Bearcat/release-types/) only. Bearcat does
-not create archives for unmanaged releases.
+Available for [managed releases](/Bearcat/release-types/) only, since Bearcat does not pack unmanaged releases.
 
 ## Create an entry
 
@@ -16,8 +14,7 @@ You can also find the page with **Ctrl+K** or **Cmd+K**.
 
 ![additional-archive-content-page.png](images/additional-archive-content-page.png)
 
-Select **New additional archive content**, give it a unique name, and choose a type.
-Use a name that identifies the contents when you select the entry in an archive configuration.
+Click **New additional archive content**, give the entry a unique name, and choose a type.
 
 ### File or folder
 
@@ -25,10 +22,9 @@ Enter the full **Source path** to an existing file or folder on the machine runn
 Folders are copied with their contents and keep their folder name.
 
 Use **Browse** to select a path inside your working directories. Paths outside those directories
-can be entered manually. 
+can be entered manually.
 
-With Docker, use paths that exist inside the container. The path depends on how you
-set up your bind mounts when creating the Docker container.
+In Docker, enter the path inside the container. Make the file or folder available there through a bind mount.
 
 ### Text file
 
@@ -36,22 +32,21 @@ Enter a **Filename**, such as `Premium.txt`, and the **Text content**, then save
 
 - Use a filename without folders. `__nonce.txt` is reserved by Bearcat.
 - Text content must not be empty.
-- The editor uses a monospace font and line numbers. Spaces are preserved, including ASCII art.
+- Spaces are preserved, including ASCII art.
 - Bearcat writes the file as UTF-8 with Windows line endings (CRLF).
 
 ![additional-archive-content-enter-text-file.png](images/additional-archive-content-enter-text-file.png)
 
 ## Assign it to archives
 
-Creating an entry does not add it to any archives yet. Select it under **Additional archive
-contents** when editing an archive configuration:
+To include an entry in an archive, select it under **Additional archive contents** in the archive configuration:
 
 - **On a release template:** applies to new releases created from that template.
 - **On a release, under Archive configurations:** applies to that release only.
 
 You can select multiple entries and reuse an entry across templates and releases.
 
-Two selected entries cannot generate the same name in the release folder. For example,
+Each selected entry needs a different file or folder name. For example,
 `/extras/Premium.txt` conflicts with a text file named `premium.txt`. Bearcat ignores case
 when checking these names.
 
@@ -71,17 +66,13 @@ Rel.Name/
 If **Pack release folder as root folder** is off in the archive configuration, the release files
 and the contents are at the top level of the archive instead.
 
-Before packing, Bearcat checks the source paths and looks for duplicated file names. It then copies
-or writes the selected contents into the release folder and creates the archive.
-
-After packing, Bearcat removes these temporary additions, including its internal `__nonce.txt`
-if **Create nonce file** is on.
-Cleanup also runs if packing fails. After a crash, leftover additions are cleaned up on the
-next start. Your original release files are kept.
+Bearcat adds the contents to the release folder for packing, then removes them again. It also removes
+`__nonce.txt` if **Create nonce file** is on. This cleanup runs even if packing fails, or on the next
+start after a crash. Your original release files are kept.
 
 ## If packing fails
 
-Bearcat stops archive creation and reports an error with a notification when:
+Bearcat stops packing and creates an error notification for these problems:
 
 | Problem | What to check |
 | --- | --- |
@@ -91,8 +82,7 @@ Bearcat stops archive creation and reports an error with a notification when:
 
 ## Edit or delete an entry
 
-Changes to contents or assignments affect only archives created afterwards. Existing archives
-are reused unchanged, so editing an entry does not update an archive that has already been packed.
+Changes apply only to new archives.
 
 To delete an entry, first remove its assignments. If it is still in use, Bearcat lists the
 templates and releases that prevent deletion.

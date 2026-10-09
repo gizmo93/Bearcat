@@ -1,10 +1,10 @@
 ---
 title: "Forum Post Templates"
-description: "Write a forum post once and let Bearcat fill in release data, links and images."
+description: "Create forum posts with placeholders for release data, links, and images."
 ---
 
-A forum post template is a forum post with placeholders. Bearcat fills them with data from a
-release or release collection, for example the name, the NFO, download links and the cover image.
+Write your post with placeholders for the release name, NFO, links, and images. Bearcat fills them
+with data from a release or collection.
 
 You can copy the result by hand or let [posting rules](/Bearcat/automatic-forum-posting/) post it for you.
 
@@ -24,7 +24,8 @@ and a live preview on the right.
 
 - **Insert variables:** click a variable under **Available variables** to insert it at the cursor.
   Lists like `uploads` insert a complete loop. Use the search field to find a variable.
-![forum-post-templates-variables-box.png](images/forum-post-templates-variables-box.png)
+
+  ![Available variables](images/forum-post-templates-variables-box.png)
 
 - **Preview:** choose a release under **Preview with**. The preview updates while you type.
   **Output** shows the finished post, **Data** shows all values of that release.
@@ -35,7 +36,7 @@ actually has.
 
 ## Template syntax
 
-Templates use [Scriban](https://scriban.github.io/docs/language/). You need three things for most posts.
+Templates use [Scriban](https://scriban.github.io/docs/language/).
 
 Print a value:
 
@@ -43,7 +44,7 @@ Print a value:
 {{ release.name }}
 ```
 
-Repeat something for each entry of a list:
+Loop through a list:
 
 ```text
 {{~ for upload in uploads ~}}
@@ -51,10 +52,10 @@ Repeat something for each entry of a list:
 {{~ end ~}}
 ```
 
-The `~` removes the line of the `for` and `end` tags from the output. Without it, every loop
-adds empty lines to your post. Use plain `{{ }}` for values inside a line.
+Use `~` to remove the whitespace around `for` and `end` from the output.
+For values within a line, use `{{ }}` without `~`.
 
-Only show something if a value exists:
+Show a section only if a value exists:
 
 ```text
 {{~ if release.nfo ~}}
@@ -92,15 +93,14 @@ Open a release or release collection and click **Render forum post** in the arro
 
 ## Good to know
 
-- **Empty values:** missing values render as empty text. Render the post after the uploads and link
-  crypter containers are done, otherwise the links are missing.
+- **Empty values:** missing data leaves placeholders empty. Wait for uploads and link crypter containers
+  to finish before rendering, so the post includes all links.
 - **Image links:** use `{{ imagelinks.imgbb_cover.full }}` for an image upload configuration named
-  `ImgBB Cover`. The name is written in lowercase with `_` instead of spaces. If you are unsure,
-  use the original name: `{{ imagelinks["ImgBB Cover"].full }}`. The value is empty until the cover
-  is uploaded.
+  `ImgBB Cover`. Bearcat converts the name to lowercase and replaces spaces with `_`.
+  Alternatively, use the original name: `{{ imagelinks["ImgBB Cover"].full }}`. The link appears once the image is uploaded.
 - **Media data:** `release.main_video` and `release.media_files` come from the video files of managed
   releases. Bearcat reads them automatically for releases created from a release template. For other
   releases, click **Extract media data** on the release.
 - **Upload names:** name your upload configurations the way they should appear in the post, for
   example `Rapidgator`. Then you can use `{{ upload.name }}` directly.
-- **Several forums:** forums support slightly different BBCode. Use one template per forum if needed.
+- **Several forums:** BBCode support varies between forums. Use one template per forum if needed.

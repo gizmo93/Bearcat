@@ -3,7 +3,7 @@ title: "Send Upload Notifications to Telegram"
 description: "Send upload completions, errors, and other Bearcat notifications to a Telegram chat."
 ---
 
-Send Bearcat notifications to a Telegram chat, including upload completions and errors.
+Bearcat can send upload completions, errors, and other notifications to your Telegram chat.
 Each message identifies the release, upload or archive and links to its notification in Bearcat.
 
 ![telegram-forwarded-message.png](images/telegram-forwarded-message.png)
@@ -14,12 +14,11 @@ The link opens the notification details:
 
 ## Where to find it
 
-Open **Telegram notifications** from the sidebar, or go to `/telegram`. The page has three parts:
-the bot, the connected chat, and which notification types get forwarded.
+Open **Telegram notifications** in the sidebar or go to `/telegram`.
 
 ## Setting up the bot
 
-Bearcat talks to Telegram through a bot that you own. You only have to create it once.
+First, create your own Telegram bot:
 
 1. In Telegram, open a chat with [@BotFather](https://t.me/BotFather) and send `/newbot`.
    Follow the prompts to pick a name and a username. BotFather gives you a **bot token**.
@@ -38,16 +37,14 @@ the current bot. Entering a new token replaces the bot and disconnects the chat;
 
 ## Connecting a chat
 
-After the bot is saved, connect the chat that should receive the notifications.
-
 1. In the **Recipient** section, click **Connect Telegram**. Bearcat generates a one-time link.
 
    ![telegram-connect-chat.png](images/telegram-connect-chat.png)
 
 2. Click **Open Telegram** and press **Start** in the chat that opens. The link is valid for
    ten minutes.
-3. Back in Bearcat, click **Check connection**. Once the pairing went through, the chat shows up
-   as **Connected** and the chat receives a short confirmation message.
+3. Back in Bearcat, click **Check connection**. Once connected, the chat shows
+   **Connected** and receives a short confirmation message.
 
    ![telegram-chat-connected.png](images/telegram-chat-connected.png)
 
@@ -57,27 +54,25 @@ If you reload the page during setup, use **Check connection** or generate a new 
 
 ## Choosing which notifications get forwarded
 
-Under **Forwarded notification types** you decide whether **Info**, **Warning** and **Error**
-notifications are forwarded. Uncheck a type to stop forwarding it and click **Save**.
+Under **Forwarded notification types**, select **Info**, **Warning** and/or **Error**, then click **Save**.
+Uncheck a type to stop forwarding it.
 
-Only notifications created after you connect the chat are forwarded. Older notifications are not sent.
+Only notifications created after you connect the chat are forwarded.
 
 ## Delivery status
 
 The **Recipient** section shows the delivery status:
 
 - how many notifications are still waiting to be delivered,
-- how many were given up on after repeated failures,
+- how many could not be delivered after several attempts,
 - when the last notification was delivered,
 - the last error, if a delivery failed.
 
-Bearcat retries a failed delivery with an increasing delay. If it keeps failing (for example
-because the bot was blocked or the chat was deleted), Bearcat stops retrying that notification
-after several attempts. When all notifications have been delivered, the status box shows that
-there are no pending deliveries.
+Bearcat retries failed deliveries, waiting longer between attempts. After several failures, it gives
+up on that notification. This can happen if the bot is blocked or the chat is deleted.
 
 ## Disconnecting
 
 **Disconnect** removes the connected chat and discards any notifications that are still waiting
 to be delivered. Bearcat asks for confirmation first, because this cannot be undone. The bot
-itself stays configured, so you can pair a new chat right away.
+itself stays configured, so you can connect a new chat.

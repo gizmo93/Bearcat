@@ -5,7 +5,7 @@ description: "Set up HTTP or SOCKS5 proxies for hoster uploads, mirror downloads
 
 Bearcat can send HTTP and HTTPS requests through an **HTTP** or **SOCKS5** proxy.
 Choose a default per category, or select a different proxy for an individual account.
-Without a proxy configured, these requests use a direct connection.
+Without a proxy, Bearcat connects directly.
 
 ![example-upload-with-proxy.png](images/example-upload-with-proxy.png)
 
@@ -20,9 +20,7 @@ Without a proxy configured, these requests use a direct connection.
 4. Enter **Username** and **Password** if the proxy requires them.
 5. Click **Save**, then **Test connection**.
 
-The test checks whether Bearcat can reach the proxy and perform the proxy handshake.
-
-Adding a proxy does not enable it for any requests. Assign it below or in an account's settings.
+The test checks the proxy connection. Assign the proxy to a category or account to use it.
 
 ## Choose which requests use the proxy
 
@@ -32,15 +30,14 @@ Changes are saved immediately and do not require a restart.
 | Category | Requests |
 | --- | --- |
 | **Hoster uploads** | File uploads, link checks, logins, and other account requests. |
-| **Hoster mirror downloads** | Restoring archive files from hoster mirrors, including the hoster requests needed for the download. |
-| **Image hosters** | Cover image uploads and requests made by the image hoster integration. |
+| **Hoster mirror downloads** | Archive downloads from hoster mirrors and the hoster requests they require. |
+| **Image hosters** | Cover uploads and other image hoster requests. |
 | **Link crypters** | Creating and updating link containers. |
 | **NFO databases** | Fetching release information, NFO files, and covers. |
 | **Media databases** | Looking up movie, series, and game metadata. |
 
-Choose **Direct connection** to use no proxy for a category. To set the same default everywhere,
-use the selector beside **Apply to all categories**, then click the button.
-Account overrides still apply.
+Choose **Direct connection** to use no proxy. To set one default for every category, select it
+beside **Apply to all categories** and click the button. Account overrides still take priority.
 
 ![default-proxies-by-category.png](images/default-proxies-by-category.png)
 
@@ -67,9 +64,9 @@ In **Hoster registrations**, there are two separate fields:
 In **Image hoster registrations** and **Crypter registrations**, use the **Proxy** field.
 Save the registration after changing it.
 
-For example, to upload through a proxy but download archives directly, select your proxy under
-**Hoster uploads** and leave **Hoster mirror downloads** on **Direct connection**.
-Leave both fields in the hoster registration on **Category default**.
+To upload through a proxy and download archives directly, set **Hoster uploads** to your proxy
+and **Hoster mirror downloads** to **Direct connection**. Leave both hoster registration fields
+on **Category default**.
 
 ## Change or remove a proxy
 
@@ -77,8 +74,8 @@ Use **Edit** in the proxy's action menu to change its address or credentials.
 Leave the password field empty to keep the stored password, or enable **Remove stored password**
 to clear it.
 
-Before deleting a proxy, remove it from all category defaults and account overrides.
-Bearcat blocks deletion while it is still assigned and lists where it is used.
+Remove all category and account assignments before deleting a proxy.
+Bearcat shows any remaining assignments that prevent deletion.
 
 ## If a request fails
 

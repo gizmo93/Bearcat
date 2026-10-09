@@ -9,8 +9,8 @@ next:
   link: "/Bearcat/post-installation/"
 ---
 
-The Desktop app starts Bearcat on your computer and opens its web interface in your browser.
-New installations use **SQLite**, which needs no separate database installation.
+The Desktop app starts Bearcat and opens its web interface in your browser.
+New installations use **SQLite**, which needs no database server.
 
 ## 1. Install the archive tools
 
@@ -21,9 +21,9 @@ Bearcat needs both RAR and 7-Zip to start.
 | Windows | [WinRAR](https://www.rarlab.com/download.htm) and [7-Zip](https://www.7-zip.org/download.html). |
 | macOS | [RAR for macOS ARM](https://www.rarlab.com/download.htm) and the [7-Zip console version for macOS](https://www.7-zip.org/download.html). Extract both into folders you will keep. |
 
-On Windows, the usual executable paths are `C:\Program Files\WinRAR\Rar.exe` and
-`C:\Program Files\7-Zip\7z.exe`. On macOS, select the extracted `rar` and `7zz` files in step 3.
-If you already installed the tools another way, use their executable paths.
+In step 3, select the tools’ executable files. On Windows, these are usually
+`C:\Program Files\WinRAR\Rar.exe` and `C:\Program Files\7-Zip\7z.exe`.
+On macOS, select the extracted `rar` and `7zz` files.
 
 On macOS, you can also install [7-Zip via Homebrew](https://formulae.brew.sh/formula/sevenzip):
 
@@ -31,25 +31,24 @@ On macOS, you can also install [7-Zip via Homebrew](https://formulae.brew.sh/for
 brew install sevenzip
 ```
 
-In step 3, click **Browse...** next to **7z executable** and select `/opt/homebrew/bin/7zz`
-(the default Homebrew location on Apple Silicon).
+For Homebrew, select `/opt/homebrew/bin/7zz` under **7z executable** in step 3
+(the default path on Apple Silicon).
 
-[RAR's Homebrew cask](https://formulae.brew.sh/cask/rar), previously installed with `brew install --cask rar`,
-is currently disabled. Use the official RAR download linked above. If you already installed RAR
-through Homebrew, click **Browse...** next to **RAR executable** and select `/opt/homebrew/bin/rar`.
+[RAR's Homebrew cask](https://formulae.brew.sh/cask/rar) (`brew install --cask rar`) is disabled.
+Use the official download above. If RAR is already installed through Homebrew,
+select `/opt/homebrew/bin/rar` under **RAR executable**.
 
 ## 2. Download and open Bearcat
 
 Download the Desktop package for your computer from [GitHub releases](https://github.com/gizmo93/Bearcat/releases):
 
-- **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep the extracted files together.
+- **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep all extracted files in the same folder.
 - **macOS (Apple Silicon):** extract `Bearcat.Desktop-macos-arm64.zip`, move **Bearcat Desktop.app** to **Applications**, and open it.
 
 <details>
 <summary>macOS says the app is damaged or blocks it from opening</summary>
 
-The app is ad-hoc signed. If macOS blocks your GitHub download, move the app to `/Applications`,
-then open Terminal and run:
+If macOS blocks the app, move it to `/Applications` and run this in Terminal:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Bearcat Desktop.app"
@@ -70,8 +69,7 @@ Create a folder for your releases, for example `C:\Bearcat\releases` on Windows 
 | **RAR executable** | Click **Browse...** and select `Rar.exe` on Windows or `rar` on macOS. |
 | **7z executable** | Click **Browse...** and select `7z.exe` on Windows or `7zz` on macOS. |
 
-Keep **SQLite (recommended)** selected and leave **Database file** at its default.
-You can also leave **Bearcat Host**, **Web port**, and **API key** unchanged.
+Keep the defaults for **SQLite (recommended)**, **Database file**, **Bearcat Host**, **Web port**, and **API key**.
 
 ## 4. Start Bearcat
 
@@ -81,11 +79,9 @@ Click **Save**, then **Start Bearcat**. Once it is ready, click **Open Bearcat**
 **Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
 
 Closing the settings window keeps Bearcat running. Use **Stop** or **Quit** to stop it.
-For Windows installations that should run even when nobody is logged in, use the [Windows service](/Bearcat/use-the-windows-service/).
+To run Bearcat on Windows without logging in, use the [Windows service](/Bearcat/use-the-windows-service/).
 
 ## Other settings
-
-Change these only when you need them.
 
 ### Database type
 
@@ -99,10 +95,9 @@ macOS: ~/Library/Application Support/Bearcat/bearcat.db
 
 To use PostgreSQL, [set up a PostgreSQL server](/Bearcat/install-postgresql-for-desktop/), select
 **PostgreSQL**, and enter its host, port, database name, username, and password.
-Bearcat updates the database on startup and can create a PostgreSQL database if the user has permission.
+Bearcat updates the database on startup and creates it if the user has permission.
 
-Older installations keep their PostgreSQL settings. Changing the database type does not transfer
-existing data. A new database starts empty.
+Existing PostgreSQL settings are kept. Switching databases does not transfer data; the new database starts empty.
 
 ### Bearcat Host
 
@@ -119,22 +114,25 @@ Leave this empty unless you want to [control Bearcat through the REST API](/Bear
 
 ## Settings and backups
 
-The launcher saves its settings here:
+The Desktop app saves its settings here:
 
 ```text
 Windows: %APPDATA%\Bearcat\Desktop\settings.json
 macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
 ```
 
-This file includes the API key and PostgreSQL password if you configured them.
+It also contains any API key and PostgreSQL password you entered.
 
 Bearcat also creates `bearcat.key` in `%APPDATA%\Bearcat` on Windows or
-`~/Library/Application Support/Bearcat` on macOS. It uses this key to read your saved account credentials.
+`~/Library/Application Support/Bearcat` on macOS. It uses this key to decrypt your saved credentials.
 
-For a SQLite backup, stop Bearcat and copy both `bearcat.db` and `bearcat.key`.
-While Bearcat runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"` instead of copying `bearcat.db`.
-If you changed the database file location, copy it from there. With PostgreSQL, back up that database and `bearcat.key`.
-Keep both when moving to another computer. Without the key, Bearcat cannot read your saved account credentials.
+For a backup, keep the database and `bearcat.key` together. Without the key, Bearcat cannot decrypt
+your credentials after a restore or a move to another computer.
+
+- **SQLite:** stop Bearcat and copy `bearcat.db` from its configured location. While Bearcat runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"` instead of copying the database file.
+- **PostgreSQL:** back up the PostgreSQL database.
+
+Copy `bearcat.key` with either backup.
 
 ## If Bearcat does not start
 

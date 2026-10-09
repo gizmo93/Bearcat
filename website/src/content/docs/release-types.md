@@ -1,11 +1,10 @@
 ---
 title: "Managed Releases and Existing Archives"
-description: "Understand managed and unmanaged releases in Bearcat."
+description: "Let Bearcat pack your release files or upload existing archives."
 ---
 
-Bearcat supports two release types: managed releases and unmanaged releases.
-Both use the same upload, online check, notification, and reupload workflow.
-They differ in who creates the archive files.
+For managed releases, Bearcat packs your files. For unmanaged releases, you upload existing archives.
+Uploads, link checks, and reuploads work the same way for both.
 
 | Type | Source | Who creates archives? |
 | --- | --- | --- |
@@ -14,44 +13,39 @@ They differ in who creates the archive files.
 
 ## Managed Releases
 
-Managed releases are the default workflow.
-The release folder contains the raw files, and Bearcat creates archive files based on the archive configuration.
-You choose an archiver, archive folder, archive size, optional password, and the hosters where the release should be uploaded.
+The release folder contains your raw files. Set the archive tool, output folder, part size, and optional
+password in the archive configuration. Bearcat packs the files and uploads them to your chosen hosters.
 
-When an upload is needed, Bearcat creates or reuses a matching archive and uploads the archive files.
-If local archive files go missing, Bearcat can restore them from a [mirror hoster](/Bearcat/mirror-downloads/)
-or create a replacement archive from the raw release files.
+Bearcat reuses existing archives when possible. If they are missing locally, it downloads them from a
+[mirror hoster](/Bearcat/mirror-downloads/) or repacks them from the raw files. The [archive format](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) determines
+whether new hashes require repacking.
 
 ## Unmanaged Releases
 
-Unmanaged releases are for archives that already exist before Bearcat sees them.
-Unlike managed releases, an unmanaged release has **no release folder** for raw files.
-Instead, each archive configuration points directly at the folder that holds its archive files.
-Bearcat creates an archive configuration and assumes the archiver based on the file endings.
+An unmanaged release uses existing archives and has **no release folder** with raw files.
+Each archive configuration points to an archive folder. Bearcat detects the archive format from the file extensions.
 
-If archive files are missing, the upload returns to `WaitingForArchive`. Bearcat restores the files
-from an enabled [mirror hoster](/Bearcat/mirror-downloads/) if one still has them online. Otherwise,
-you must provide the files: unmanaged releases cannot be repacked without raw files.
+If archive files are missing, the upload returns to `WaitingForArchive`. Bearcat downloads them
+from an enabled [mirror hoster](/Bearcat/mirror-downloads/) that still has them online. Without a mirror,
+you must provide the archives yourself. An unmanaged release has no raw files to repack.
 
-Mirror restores continue automatically. If you provide the files yourself, use the unmanaged archive
-refresh action, or update the archive folder if you placed them elsewhere. Bearcat can then use them
-for pending reuploads.
+After a mirror download, the upload continues automatically. If you provide the files yourself,
+refresh the unmanaged archives from the actions menu. Change the archive folder if you put the files elsewhere.
 
 ![unmanaged-releases-refresh-folder.png](images/unmanaged-releases-refresh-folder.png)
 
 [Quality gates](/Bearcat/quality-gates/) only check the release infos (cover, description, NFO) of
-unmanaged releases. There is no release folder to look at, so the other checks are skipped.
+unmanaged releases. Release folder checks are skipped.
 
 ## Converting between types
 
-You can convert a release in either direction from the actions menu on the release detail page.
+Use the actions menu on the release detail page to convert between types.
 
-- **Convert to unmanaged** is available for a managed release once every archive configuration has a created archive.
-  Bearcat switches the release to unmanaged and forgets the raw release folder, but keeps the existing archives and uploads.
-  It does not delete the raw files, so you can remove them yourself afterwards to save disk space.
-- **Convert to managed** is available for an unmanaged release.
-  You assign a release folder that holds the raw files, and Bearcat switches the release to managed while keeping the existing archive configurations and uploads.
-  From then on Bearcat again can repack the release for reuploads.
+- **Convert to unmanaged** requires a created archive for every archive configuration.
+  Bearcat removes the stored release folder path. Archives and uploads are kept.
+  You can then delete the raw files yourself.
+- **Convert to managed** lets you choose a release folder with the raw files. Archive configurations and uploads are kept.
+  Bearcat can then repack the release.
 
 For releases downloaded from FTP or FTPS, you can also turn off **Keep raw files** in the remote
 automation. Bearcat then converts them to unmanaged and removes the downloaded folder after the

@@ -1,0 +1,165 @@
+---
+title: "Uploadmanager für One-Click-Hoster"
+description: "Uploadmanager für Rapidgator, DDownload und andere One-Click-Hoster, mit automatischen FTP/FTPS-Downloads, Entpacken von RAR/7z-Archiven, Linkprüfungen und Reuploads."
+template: splash
+hero:
+  title: "Bearcat: Uploadmanager für One-Click-Hoster"
+  tagline: "Bearcat packt deine Releases, lädt sie hoch und übernimmt die Reuploads."
+  image:
+    file: ../../../assets/bearcat-archive-hero.png
+    alt: "Bearcat hält ein RAR-Archiv"
+  actions:
+    - text: "Erste Schritte"
+      link: "/Bearcat/de/#erste-schritte"
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<span id="installing--running-bearcat" />
+
+## Erste Schritte
+
+Wähle eine Installation. Danach geht es mit [Dein erster Upload](/Bearcat/de/post-installation/) weiter.
+
+<CardGrid>
+	<LinkCard
+		title="Desktopanwendung"
+		description="Bearcat unter Windows oder macOS mit Apple Silicon starten."
+		href="/Bearcat/de/use-the-desktop-launcher/"
+	/>
+	<LinkCard
+		title="Windows-Dienst"
+		description="Bearcat im Hintergrund ausführen, auch wenn du nicht angemeldet bist."
+		href="/Bearcat/de/use-the-windows-service/"
+	/>
+	<LinkCard
+		title="Docker-Container"
+		description="Bearcat mit Docker unter Linux, auf einem NAS oder einem Server ausführen."
+		href="/Bearcat/de/use-the-docker-image/"
+	/>
+	<LinkCard
+		title="Dein erster Upload"
+		description="Nach der Installation: Hosterkonto hinzufügen, Dateien auswählen und hochladen."
+		href="/Bearcat/de/post-installation/"
+	/>
+</CardGrid>
+
+## Was ist Bearcat?
+
+Bearcat läuft auf deinem Desktop, NAS oder Server. Über die Weboberfläche verwaltest du Releases,
+erstellst Archive und lädst sie zu deinen Hostern hoch. Bearcat prüft die Links und lädt Dateien
+erneut hoch, wenn sie offline gehen.
+
+Du kannst:
+
+- [Releases automatisch von FTP/FTPS-Servern herunterladen](/Bearcat/de/remote-downloads/), SFV-Prüfsummen prüfen und optional RAR- oder 7z-Archive entpacken.
+- Releases in RAR- oder 7z-Archive packen oder bereits vorhandene Archive hochladen.
+- Zu Rapidgator, DDownload, Keep2Share und den anderen unten aufgeführten Hostern hochladen.
+- Lokalen Speicherplatz freigeben und [Archive von einem Mirrorhoster wiederherstellen](/Bearcat/de/mirror-downloads/), wenn ein Reupload sie benötigt.
+- Releaseinformationen und NFOs über xREL und SRRDB, Film- und Seriendaten über TMDB und TheTVDB und Spieldaten über Steam abrufen.
+- Auflösung, Codecs sowie Audio- und Untertitelspuren deiner Videodateien mit MediaInfo auslesen.
+- Coverbilder hochladen und zusammen mit Downloadlinks und NFOs in [BBCode-Templates](/Bearcat/de/forum-post-templates/) verwenden.
+- [Forenentwürfe vorbereiten](/Bearcat/de/posting-to-forums/) und selbst absenden oder mit [Postingregeln automatisch posten](/Bearcat/de/automatic-forum-posting/).
+- In der [Postwarteschlange](/Bearcat/de/post-queue/) Releases finden, die du posten kannst.
+
+![Weboberfläche von Bearcat](../images/gui.png)
+
+## Häufige Fragen
+
+### Kann ich PostgreSQL verwenden?
+
+Ja. Neue Installationen verwenden SQLite. Du kannst aber [PostgreSQL einrichten](/Bearcat/de/install-postgresql-for-desktop/) oder die [Docker-Variante](/Bearcat/de/use-the-docker-image/#datenbank) nutzen. Bestehende PostgreSQL-Installationen behalten ihre Einstellungen.
+
+### Kann ich vorhandene Archive hochladen?
+
+Ja. Verwende ein Unmanaged Release für vorhandene Archive oder ein Managed Release, damit Bearcat sie erstellt.
+Siehe [Releasetypen](/Bearcat/de/release-types/).
+
+### Muss ich jedes Archiv auf der Festplatte behalten?
+
+Nein. Aktiviere einen Hoster als Mirror, damit Bearcat Archive für einen Reupload herunterladen kann.
+Lösche lokale Kopien selbst oder lege eine Aufbewahrungsdauer für die automatische Bereinigung fest.
+
+Der Hoster muss Downloads über seine API unterstützen, und manche Hoster verlangen ein Premiumkonto.
+Unterstützte Hoster und die Einrichtung findest du unter [Mirrordownloads](/Bearcat/de/mirror-downloads/).
+
+<span id="which-hosters-and-linkcrypters-are-supported" />
+
+## Unterstützte Dienste
+
+### Filehoster
+
+- Rapidgator
+- DDownload
+- GoFile
+- [Keep2Share](/Bearcat/de/keep2share/)
+- Alfafile
+- NitroFlare
+- 1fichier
+- Uploady.io
+- Katfile
+- Krakenfiles
+- FileQ
+- UploadG.com
+- FileServe.com
+- Clicknupload.click
+- HxFile.co
+- file-upload.org
+- datavaults.co (maximale Dateigrösse: 100 MB)
+- Fast2Share.com
+- CloudFam.io
+- freedl.ink (minimale Dateigrösse: 1 MB)
+- mega4upload.net
+- turbobit.net (API-Schlüssel von cabinet.costaction.com)
+- hitfile.net (API-Schlüssel von cabinet.costaction.com)
+
+### Linkcrypter
+
+- Hide.cx
+- Keeplinks
+- tolink.to
+- [filecrypt.cc](/Bearcat/de/filecrypt/)
+
+### Bildhoster
+
+- ImgBB
+- pixhost.to (kein API-Schlüssel nötig)
+- pixelfox.cc
+- loepic.me
+- directupload.eu (kein API-Schlüssel nötig)
+
+### Foren
+
+Das XenForo-Plugin sollte mit den meisten XenForo-Foren ohne Captcha beim Login funktionieren
+(getestet mit data-load.me und myboerse.bz).
+Für data-load.me und boerse.cx gibt es zusätzlich eigene Plugins.
+
+## Mehr erfahren
+
+<CardGrid>
+	<LinkCard
+		title="Ablauf eines Uploads"
+		description="Wie Bearcat Archive erstellt, Uploadlinks prüft und Reuploads plant."
+		href="/Bearcat/de/upload-lifecycle/"
+	/>
+	<LinkCard
+		title="Releasecollections"
+		description="Uploadeinstellungen und Containerlinks für zusammengehörige Releases teilen."
+		href="/Bearcat/de/release-collections/"
+	/>
+	<LinkCard
+		title="Releaseinformationen und Metadaten"
+		description="Metadatenquellen einrichten, NFOs abrufen und Angaben korrigieren."
+		href="/Bearcat/de/release-information-and-metadata/"
+	/>
+	<LinkCard
+		title="Forenpostvorlagen"
+		description="Forenposts mit Releasedetails, Coverbildern, NFOs und Downloadlinks erstellen."
+		href="/Bearcat/de/forum-post-templates/"
+	/>
+	<LinkCard
+		title="Erweiterte Konfiguration"
+		description="Uploadlimits, automatisches Aufräumen und Hintergrundaufgaben einstellen."
+		href="/Bearcat/de/advanced-configuration/"
+	/>
+</CardGrid>

@@ -1,27 +1,29 @@
 ---
-title: "Orchestrate Bearcat from External Tools"
+title: "Control Bearcat from External Tools"
 description: "Create releases, control uploads and record forum posts through the REST API."
 ---
 
-The [REST API](/Bearcat/rest-api/) has a few command endpoints. All parameters and response fields are in the [API reference](/Bearcat/api/).
+Use the [REST API](/Bearcat/rest-api/) to create releases, control uploads, and record forum posts.
+See the [API reference](/Bearcat/api/) for parameters and response fields.
 
 ## Commands
 
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /api/v1/releases` | Create a release from a folder and a release template. |
-| `POST /api/v1/uploads/{uploadId}/reupload` | Create a new upload for an offline, partially online, canceled or failed upload. |
+| `POST /api/v1/uploads/{uploadId}/reupload` | Create a replacement upload when the old one is `Offline`, `PartiallyOnline`, `Canceled`, or `Failed`. |
 | `POST /api/v1/uploads/{uploadId}/cancel` | Cancel a pending or running upload. |
 | `POST /api/v1/uploads/{uploadId}/resume` | Queue a canceled upload again. |
 | `POST /api/v1/uploads/{uploadId}/check-state` | Check the online state on the hoster now. |
 | `POST /api/v1/releases/{releaseId}/posted-locations` | Save the URL where the release was posted. |
 | `POST /api/v1/releases/{releaseId}/mark-posted` | Remove the release from the [post queue](/Bearcat/post-queue/). |
 
-Configuration (hosters, templates, rules, credentials) and deleting data are not available through the API.
+The API cannot change hosters, templates, rules, or credentials, or delete data.
 
 ## API key
 
-`GET` endpoints need no authentication. `POST` endpoints need the header `X-Api-Key` with the value of the setting `Bearcat:ApiKey`. Without a configured key, all commands return `403`.
+Set `Bearcat:ApiKey` and send its value in the `X-Api-Key` header for every `POST` request.
+Without a configured key, commands return `403`. `GET` requests need no key.
 
 Generate a key:
 
@@ -76,7 +78,8 @@ Set the environment variable `Bearcat__ApiKey`, or create `appsettings.user.json
 
 ### Network
 
-The key only protects commands. Anyone who can reach Bearcat can read releases, uploads and download links. Run Bearcat in a trusted network.
+Run Bearcat in a trusted network. The key protects commands, but anyone who can reach Bearcat
+can read releases, uploads, and download links.
 
 The Desktop app and the Windows service listen on `127.0.0.1:17208` only, so the calling tool has to run on the same machine. Docker publishes port `8080`.
 
@@ -96,12 +99,13 @@ curl -X POST "$BEARCAT/api/v1/releases" \
   -d '{"folderPath": "/mnt/data/releases/Some.Release.2026.1080p", "releaseTemplateId": 3}'
 ```
 
-- `folderPath`: absolute path as Bearcat sees it. In Docker, this is the container path (`RELEASES_DIR` is mounted at `/mnt/data/releases`).
+- `folderPath`: absolute path on the Bearcat host. In Docker, use the container path under `/mnt/data/releases`, where `RELEASES_DIR` is mounted.
 - `releaseTemplateId`: the number at the end of the template's URL under **Release templates**.
 - `name`: optional, defaults to the folder name.
 - `primaryLanguageCode`: optional, two letters, for example `de`.
 
-Bearcat does not wait for the folder to become stable. Call this only when the folder is complete. Release info is resolved during the call, which can take a few seconds.
+Wait until all files are in the folder before calling this endpoint. Bearcat does not wait for files
+to finish copying. The request can take a few seconds while Bearcat fetches release information.
 
 Response: `201 Created` with the release.
 
@@ -115,9 +119,9 @@ Uploads of one release:
 curl "$BEARCAT/api/v1/uploads?releaseId=42"
 ```
 
-`uploadState` is one of `WaitingForArchive`, `Pending`, `Uploading`, `Completed`, `Failed`, `CancellationRequested`, `Canceled`.
+Possible `uploadState` values: `WaitingForArchive`, `Pending`, `Uploading`, `Completed`, `Failed`, `CancellationRequested`, `Canceled`.
 
-Uploads of all releases, finished after a given time (oldest first):
+To poll completed uploads, oldest first:
 
 ```bash
 curl -G "$BEARCAT/api/v1/uploads" \
@@ -125,7 +129,7 @@ curl -G "$BEARCAT/api/v1/uploads" \
   --data-urlencode "pageSize=100"
 ```
 
-Pass the `uploadedAt` of the last item as `uploadedAfter` in the next call. Use `--data-urlencode`, the timestamp can contain a `+`.
+Pass the `uploadedAt` of the last item as `uploadedAfter` in the next call. Use `--data-urlencode` to encode characters such as `+` in the timestamp.
 
 ### 3. Find releases to post
 
@@ -170,6 +174,6 @@ Response: `204 No Content`. The release returns to the post queue when a newer u
 | `401` | `X-Api-Key` is missing or wrong. |
 | `403` | No API key configured. |
 | `404` | Release or upload not found. |
-| `409` | The current state does not allow the command, for example the folder is already used or the upload is not canceled. |
+| `409` | The command is not allowed in the current state, for example the folder is already used or the upload is not canceled. |
 
-Errors are returned as problem details JSON with a `detail` message.
+Error responses use the Problem Details JSON format. The message is in `detail`.

@@ -9,21 +9,21 @@ Open **Releases** and click a release name. For a walkthrough, see [Your first u
 
 ## Header
 
-**Post to forum** opens the [forum posting dialog](/Bearcat/posting-to-forums/). It is highlighted
-while at least one hoster is online and the release is not posted yet. Without an active forum
-distribution site, only **Render forum post** is shown.
+**Post to forum** opens the [forum posting dialog](/Bearcat/posting-to-forums/). The button is highlighted
+when the release has at least one online hoster and has not been posted yet. Without an active forum
+distribution site, you see **Render forum post** instead.
 
-The `...` menu also converts between [release types](/Bearcat/release-types/#converting-between-types).
+Use the `...` menu to convert between [release types](/Bearcat/release-types/#converting-between-types).
 
-The steps below the header summarize the release state. Red means something needs attention. Click
-a step to open the matching tab.
+The status display below the header shows progress. Red marks a problem or an unfinished step.
+Click a step to open its tab.
 
 ## Overview
 
 ![overview.png](images/overview.png)
 
-**Copy all links** copies the container URLs of one link crypter for all hosters at once. See
-[Posted locations](/Bearcat/posting-to-forums/#posted-locations) for the list at the bottom.
+**Copy all links** copies one link crypter's container links for all hosters.
+[Posted locations](/Bearcat/posting-to-forums/#posted-locations) are listed at the bottom.
 
 ## Release info
 
@@ -44,7 +44,7 @@ A managed release needs at least one archive configuration. See
 
 ![upload-configurations-tab.png](images/upload-configurations-tab.png)
 
-**History** lists every upload run with its actions, for example a manual reupload.
+**History** lists all upload runs. Use the actions for a run to start a manual reupload, for example.
 
 ![release-uploads-tab.png](images/release-uploads-tab.png)
 ![upload-links-dialog.png](images/upload-links-dialog.png)
@@ -54,7 +54,6 @@ A managed release needs at least one archive configuration. See
 
 ![image-upload-config.png](images/image-upload-config.png)
 
-Image uploads need a cover URL, normally from a metadata source such as TMDB, with the xREL cover as
-a fallback.
+Image uploads need a cover URL, for example from TMDB or xREL.
 
 ![image-uploads.png](images/image-uploads.png)

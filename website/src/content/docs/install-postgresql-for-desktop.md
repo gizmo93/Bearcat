@@ -1,9 +1,10 @@
 ---
 title: "Set Up PostgreSQL for Bearcat"
-description: "Install PostgreSQL for the optional PostgreSQL database of the Desktop app or the Windows service."
+description: "Install PostgreSQL for the Desktop app or Windows service."
 ---
 
-Only needed if you choose **PostgreSQL** as the database in the [Desktop app](/Bearcat/use-the-desktop-launcher/) or the [Windows service](/Bearcat/use-the-windows-service/). The default SQLite database needs no database server.
+Follow this guide if you choose **PostgreSQL** in the [Desktop app](/Bearcat/use-the-desktop-launcher/)
+or [Windows service](/Bearcat/use-the-windows-service/). The default SQLite setup needs no database server.
 
 For Docker, `docker-compose.postgres.yml` starts PostgreSQL in its own container. See [Run Bearcat in Docker](/Bearcat/use-the-docker-image/#database).
 
@@ -11,7 +12,7 @@ Use PostgreSQL 18. Older PostgreSQL versions are currently untested.
 
 ## Recommended Settings
 
-The examples below use these values:
+Use these connection settings in Bearcat:
 
 ```text
 Host: localhost
@@ -21,19 +22,19 @@ Username: bearcat
 Password: choose-a-password
 ```
 
-You can use different values, but enter the same values in your Bearcat configuration.
+Choose your own password. If you change any other values, enter them in Bearcat too.
 
 ## PostgreSQL In Docker
 
-I recommend Docker for PostgreSQL on Windows. Bearcat itself can still run natively as the Desktop app or Windows service.
+On Windows, Docker is the recommended way to run PostgreSQL. Bearcat can still run as the Desktop app or Windows service.
 
-Create a persistent data directory on your host machine:
+Create a folder for the database:
 
 ```bash
 mkdir -p ~/Bearcat/postgres-data
 ```
 
-Choose a folder you can easily back up. This folder contains the PostgreSQL database files.
+This is the database folder. Include it in your backups.
 
 Start PostgreSQL 18:
 
@@ -77,11 +78,11 @@ To start it again later:
 docker start bearcat-postgres
 ```
 
-Do not delete the data directory unless you intentionally want to delete the Bearcat database. For backups, stop the container first so PostgreSQL has flushed all files cleanly.
+Stop the container before copying the data folder for a backup. Deleting this folder deletes the Bearcat database.
 
 ## Windows
 
-Use [PostgreSQL in Docker](#postgresql-in-docker) above, or follow these steps for a native installation. The native installer runs PostgreSQL as a Windows service.
+As an alternative to [Docker](#postgresql-in-docker), install PostgreSQL as a Windows service:
 
 ### Native installer
 
@@ -91,7 +92,7 @@ During installation:
 
 - Choose PostgreSQL 18.
 - Keep the default port `5432` unless it is already used.
-- The installer creates a superuser named `postgres` and asks you to set its password. You choose only the password here, not the user name.
+- Set a password for the `postgres` superuser created by the installer.
 - Stack Builder is optional and not required by Bearcat.
 
 Choose the account Bearcat should use:
@@ -107,9 +108,10 @@ Download Postgres.app from [postgresapp.com](https://postgresapp.com).
 
 Install and start Postgres.app, then create or start a PostgreSQL 18 server. Keep the default port `5432` unless it is already used.
 
-Open a terminal and use the `psql` command shipped with Postgres.app. If `psql` is not on your `PATH`, use the full path from the Postgres.app documentation or add the Postgres.app command line tools to your shell profile.
+Use Postgres.app’s `psql` command in a terminal. If your shell cannot find it, follow the
+Postgres.app instructions to add its command line tools to `PATH` or use the full path.
 
-To let Bearcat create the database on first start:
+Create an account with permission to create the database:
 
 ```bash
 psql postgres
@@ -131,13 +133,13 @@ CREATE USER bearcat WITH PASSWORD 'choose-a-password';
 CREATE DATABASE bearcat OWNER bearcat;
 ```
 
-Enter the same host, port, database, username, and password in your Bearcat configuration.
+Then enter the connection settings in Bearcat.
 
 ## Troubleshooting
 
 If Bearcat cannot connect:
 
 - Check that PostgreSQL is running.
-- Check that the port is `5432`, or update your Bearcat configuration to use the port you chose.
+- Check that the port in Bearcat matches the PostgreSQL port (default: `5432`).
 - Check that the username and password match.
 - If the database does not exist, either grant the user `CREATEDB` permission or create the database manually.
