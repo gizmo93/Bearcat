@@ -68,7 +68,7 @@ Ergänze in `docker-compose.yml` unter `services.bearcat.volumes` im Abschnitt `
 
 ```yaml
 - type: bind
-  source: ${RELEASES_DIR}
+  source: ${RELEASES_DIR:?Set RELEASES_DIR in .env to your release folder}
   target: /mnt/data/releases
   bind:
     create_host_path: false

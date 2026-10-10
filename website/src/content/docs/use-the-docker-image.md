@@ -67,7 +67,7 @@ of the `${RELEASES_DIR}` entry. Keep the data folder entry unchanged.
 
 ```yaml
 - type: bind
-  source: ${RELEASES_DIR}
+  source: ${RELEASES_DIR:?Set RELEASES_DIR in .env to your release folder}
   target: /mnt/data/releases
   bind:
     create_host_path: false

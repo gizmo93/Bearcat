@@ -19,7 +19,7 @@ services:
     volumes:
       - ${BEARCAT_DATA_DIR:-./bearcat-data}:/data
       - type: bind
-        source: ${RELEASES_DIR}
+        source: ${RELEASES_DIR:?Set RELEASES_DIR in .env to your release folder}
         target: /mnt/data/releases
         bind:
           create_host_path: false
