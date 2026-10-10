@@ -20,11 +20,12 @@ Unter Windows oder auf einem Mac mit Apple Silicon kannst du die
 ### Synology NAS
 Installiere **Container Manager** über das Paket-Zentrum.
 
-### Windows, Linux-Desktop
+### Windows
 Installiere [Docker Desktop](https://www.docker.com/products/docker-desktop/) oder [Rancher Desktop](https://rancherdesktop.io).
 
-### Linux (Kommandozeile)
-Auf einem Linux-Server ohne grafische Oberfläche [genügt die Docker Engine](https://docs.docker.com/engine/install/).
+### Linux
+Unter Linux empfehle ich [Docker Engine](https://docs.docker.com/engine/install/), auch auf Rechnern mit grafischer Oberfläche.
+Sie läuft direkt auf dem Host und vermeidet die zusätzliche Dateifreigabe zwischen Host und VM.
 
 ### macOS
 Du kannst Docker Desktop oder Rancher Desktop verwenden. Unter macOS empfehle ich
@@ -48,10 +49,31 @@ BEARCAT_DATA_DIR=./bearcat-data
 ```
 
 Ersetze `/srv/releases` durch deinen eigenen Pfad. Die übrigen Einstellungen kannst du unverändert lassen.
+Docker legt einen fehlenden Releaseordner nicht an. Existiert der Ordner nicht, startet der Container nicht.
 
 `BEARCAT_DATA_DIR` speichert die Datenbank und den Verschlüsselungsschlüssel, standardmässig in
 `bearcat-data` neben deiner Compose-Datei. Lege diesen Datenordner auf lokalen Speicher.
 Releasedateien können auf einer NFS- oder SMB-Freigabe liegen.
+
+Die folgenden Einstellungen gelten nur für Docker Engine direkt auf Linux. Mit Docker Desktop
+auf Windows, macOS oder Linux behältst du den normalen Bindmount aus der Compose-Datei.
+
+Mit Docker Engine kann `rslave` Mountänderungen innerhalb von `RELEASES_DIR` vom Host an den Container weitergeben.
+Der Hostmount muss dafür `shared` sein. Wird `RELEASES_DIR` selbst neu eingebunden, kann es nötig sein,
+den Container neu zu erstellen. Details unter
+[Bindpropagation in Docker](https://docs.docker.com/engine/storage/bind-mounts/#configure-bind-propagation).
+
+Ergänze in `docker-compose.yml` unter `services.bearcat.volumes` im Abschnitt `bind` des Eintrags für
+`${RELEASES_DIR}` die Zeile `propagation: rslave`. Lass den Eintrag für den Datenordner unverändert.
+
+```yaml
+- type: bind
+  source: ${RELEASES_DIR}
+  target: /mnt/data/releases
+  bind:
+    create_host_path: false
+    propagation: rslave
+```
 
 ## 3. Bearcat starten
 

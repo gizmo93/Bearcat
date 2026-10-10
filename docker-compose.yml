@@ -18,7 +18,11 @@ services:
       - LocalTimezone=${BEARCAT_TIMEZONE:-}
     volumes:
       - ${BEARCAT_DATA_DIR:-./bearcat-data}:/data
-      - ${RELEASES_DIR}:/mnt/data/releases
+      - type: bind
+        source: ${RELEASES_DIR}
+        target: /mnt/data/releases
+        bind:
+          create_host_path: false
     networks:
       - bearcat-network
     restart: unless-stopped

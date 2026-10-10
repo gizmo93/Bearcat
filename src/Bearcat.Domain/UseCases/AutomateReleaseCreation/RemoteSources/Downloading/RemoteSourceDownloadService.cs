@@ -75,6 +75,16 @@ public class RemoteSourceDownloadService(
             return;
         }
 
+        if (!folderService.TargetFolderExists(download))
+        {
+            await MarkAsFailedAndNotifyAsync(
+                download,
+                $"The target folder {RemoteDownloadFolderService.GetTargetFolderPath(download)} does not exist. Bearcat does not create it, so check that it exists or is mounted and restart the download",
+                stoppingToken
+            );
+            return;
+        }
+
         if (folderService.LocalFolderHasEntries(download))
         {
             await MarkAsFailedAndNotifyAsync(

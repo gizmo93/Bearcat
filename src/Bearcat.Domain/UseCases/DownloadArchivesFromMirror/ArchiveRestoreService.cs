@@ -188,6 +188,33 @@ public class ArchiveRestoreService(
             return;
         }
 
+        var archiveFilesBasePath = archive.ArchiveConfig.ArchiveFilesBasePath;
+
+        if (!fileSystemService.DirectoryExists(archiveFilesBasePath))
+        {
+            var errorMessage =
+                $"The archive folder {archiveFilesBasePath} does not exist. Bearcat does not create it, so check that it exists or is mounted.";
+
+            logger.LogWarning(
+                "Cannot restore archive {ArchiveId} because its archive folder {ArchiveFilesBasePath} does not exist",
+                archive.Id,
+                archiveFilesBasePath
+            );
+
+            notificationService.Create(
+                kind: NotificationKind.ArchiveRestoreFailed,
+                message: errorMessage,
+                entity: archive,
+                selector: n => n.Archive
+            );
+
+            FailWaitingUploads(waitingUploads, errorMessage);
+
+            await repository.SaveChangesAsync(cancellationToken);
+
+            return;
+        }
+
         await RestoreFromMirrorsAsync(
             archive: archive,
             neededArchiveFiles: neededArchiveFiles,

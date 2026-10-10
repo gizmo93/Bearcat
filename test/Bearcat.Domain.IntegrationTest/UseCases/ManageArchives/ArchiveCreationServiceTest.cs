@@ -1909,6 +1909,30 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_ArchiveFilesBasePathDoesNotExist_FailsUploadsWithoutCreatingIt()
+    {
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var upload = await AddUploadWaitingForArchiveAsync();
+        Directory.Delete(archiveFilesBasePath, recursive: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        result.UploadState.ShouldBe(UploadState.Failed);
+        (await DbContext.Archives.AnyAsync()).ShouldBeFalse();
+        Directory.Exists(archiveFilesBasePath).ShouldBeFalse();
+
+        var notification = await DbContext.Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.ArchiveCreationFailed);
+        notification.Message.ShouldContain($"Archive folder {archiveFilesBasePath} does not exist");
+    }
+
+    [Test]
     public async Task ProcessAsync_AdditionalFolderContainsReleaseFolder_FailsWithoutTouchingReleaseFolder()
     {
         // Arrange

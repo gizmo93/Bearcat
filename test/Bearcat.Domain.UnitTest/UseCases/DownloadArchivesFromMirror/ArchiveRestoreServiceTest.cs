@@ -46,6 +46,7 @@ public class ArchiveRestoreServiceTest
         fileSystemServiceMock
             .Setup(x => x.CreateTempDirectory(It.IsAny<string>()))
             .Returns(() => restoreFolderPath);
+        fileSystemServiceMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(true);
 
         restoreFailedMessages = [];
 
@@ -248,6 +249,28 @@ public class ArchiveRestoreServiceTest
         scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Failed);
         scenario.WaitingUpload.ErrorMessages.ShouldContain(message =>
             message.Contains("No online mirror")
+        );
+        VerifyRestoreFailedNotification(Times.Once());
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiveFolderDoesNotExist_FailsWithoutCreatingIt()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        fileSystemServiceMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(false);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        downloadHoster.DownloadedLinks.ShouldBeEmpty();
+        fileSystemServiceMock.Verify(x => x.CreateTempDirectory(It.IsAny<string>()), Times.Never);
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Failed);
+        scenario.WaitingUpload.ErrorMessages.ShouldContain(message =>
+            message.Contains("does not exist")
         );
         VerifyRestoreFailedNotification(Times.Once());
     }

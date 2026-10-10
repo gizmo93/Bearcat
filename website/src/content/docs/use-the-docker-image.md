@@ -20,11 +20,12 @@ For Windows or an Apple Silicon Mac, you can use the
 ### Synology NAS
 Install **Container Manager** from the Synology Package Manager.
 
-### Windows, Linux Desktop
+### Windows
 Get [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io).
 
-### Linux (command line)
-For a Linux server without a graphical interface, [install Docker Engine](https://docs.docker.com/engine/install/).
+### Linux
+On Linux, I recommend [Docker Engine](https://docs.docker.com/engine/install/), including on desktop systems.
+It runs directly on the host, avoiding the VM file sharing used by Docker Desktop.
 
 ### macOS
 You can use Docker Desktop or Rancher Desktop. On macOS, I recommend [OrbStack](https://orbstack.dev),
@@ -48,9 +49,30 @@ BEARCAT_DATA_DIR=./bearcat-data
 ```
 
 Replace `/srv/releases` with your own path. You can leave the other settings unchanged.
+Docker does not create a missing release folder. If the folder does not exist, the container does not start.
 
 `BEARCAT_DATA_DIR` stores the database and encryption key in `bearcat-data` next to your Compose
 file by default. Keep this data folder on local storage. Release files can be on an NFS or SMB share.
+
+The following settings apply only to Docker Engine running directly on Linux. With Docker Desktop
+on Windows, macOS, or Linux, keep the normal bind mount from the Compose file.
+
+With Docker Engine, `rslave` can pass mount changes within `RELEASES_DIR` from the host to the container.
+The host mount must be `shared`. If `RELEASES_DIR` itself is remounted, you may need to recreate
+the container. See
+[Docker's bind propagation documentation](https://docs.docker.com/engine/storage/bind-mounts/#configure-bind-propagation).
+
+In `docker-compose.yml`, under `services.bearcat.volumes`, add `propagation: rslave` to the `bind` section
+of the `${RELEASES_DIR}` entry. Keep the data folder entry unchanged.
+
+```yaml
+- type: bind
+  source: ${RELEASES_DIR}
+  target: /mnt/data/releases
+  bind:
+    create_host_path: false
+    propagation: rslave
+```
 
 ## 3. Start Bearcat
 

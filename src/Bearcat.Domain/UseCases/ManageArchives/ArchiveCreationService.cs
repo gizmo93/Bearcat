@@ -807,6 +807,28 @@ public class ArchiveCreationService(
             return;
         }
 
+        if (!fileSystemService.DirectoryExists(config.ArchiveFilesBasePath))
+        {
+            logger.LogError(
+                "Archive folder {ArchiveFilesBasePath} does not exist for ArchiveConfig {ArchiveConfigId}",
+                config.ArchiveFilesBasePath,
+                config.Id
+            );
+
+            foreach (var upload in uploads)
+            {
+                upload.UploadState = UploadState.Failed;
+                notificationService.Create(
+                    kind: NotificationKind.ArchiveCreationFailed,
+                    message: $"Archive folder {config.ArchiveFilesBasePath} does not exist. Bearcat does not create it, so check that it exists or is mounted.",
+                    entity: upload,
+                    selector: n => n.Upload
+                );
+            }
+            await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+            return;
+        }
+
         var archiver = archiverFactory.GetByName(config.ArchiverName);
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(
             config.ArchiveFilesBasePath

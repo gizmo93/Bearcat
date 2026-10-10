@@ -319,6 +319,39 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_TargetFolderDoesNotExist_FailsWithoutCreatingIt()
+    {
+        // Arrange
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, ReleaseName, 100);
+        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
+        var registration = await AddRegistrationAsync("main");
+        var automation = await AddAutomationAsync(registration, template);
+        var missingTargetPath = Path.Combine(targetPath, "not-mounted");
+        var download = await AddDownloadAsync(
+            automation,
+            ReleaseName,
+            localFolderPath: Path.Combine(missingTargetPath, ReleaseName)
+        );
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var reloaded = await ReloadDownloadAsync(download.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.Failed);
+        reloaded.ErrorMessage!.ShouldContain(
+            $"The target folder {missingTargetPath} does not exist"
+        );
+        reloaded.StartedAt.ShouldBeNull();
+        Directory.Exists(missingTargetPath).ShouldBeFalse();
+        server.OpenCount.ShouldBe(0);
+        (await CreateDbContext().Notifications.SingleAsync()).NotificationKind.ShouldBe(
+            NotificationKind.RemoteDownloadFailed
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_UserCancelsRunningDownload_CancelsAndDeletesFolderWithoutFailureNotification()
     {
         // Arrange

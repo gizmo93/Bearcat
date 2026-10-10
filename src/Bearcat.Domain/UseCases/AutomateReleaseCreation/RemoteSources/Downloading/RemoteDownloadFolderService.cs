@@ -9,6 +9,16 @@ public class RemoteDownloadFolderService(
     ILogger<RemoteDownloadFolderService> logger
 )
 {
+    public static string GetTargetFolderPath(RemoteSourceDownload download)
+    {
+        return Path.GetDirectoryName(download.LocalFolderPath)!;
+    }
+
+    public bool TargetFolderExists(RemoteSourceDownload download)
+    {
+        return fileSystemService.DirectoryExists(GetTargetFolderPath(download));
+    }
+
     public bool LocalFolderHasEntries(RemoteSourceDownload download)
     {
         return fileSystemService.DirectoryHasEntries(download.LocalFolderPath);
