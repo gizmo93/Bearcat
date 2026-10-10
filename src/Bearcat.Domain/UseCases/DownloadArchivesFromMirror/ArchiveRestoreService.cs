@@ -10,6 +10,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
+using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
@@ -109,9 +110,9 @@ public class ArchiveRestoreService(
             cancellationToken
         );
 
-        var neededArchiveFiles = MirrorSourceResolver.GetNeededArchiveFiles(
-            archive: archive,
-            waitingUploads: waitingUploads,
+        var neededArchiveFiles = ArchiveFilesToUpload.GetArchiveFilesToUpload(
+            archiveFiles: archive.ArchiveFiles,
+            uploads: waitingUploads,
             uploadsOfArchive: uploadsOfArchive
         );
 

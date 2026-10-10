@@ -87,7 +87,9 @@ public class MissingFileValidationService(
 
         notificationService.Create(
             kind: NotificationKind.ArchiveFilesMissing,
-            message: GetMissingFilesNotificationMessage(upload.UploadConfig.Release.ReleaseType),
+            message: ArchiveFilesMissingNotificationMessage.Get(
+                upload.UploadConfig.Release.ReleaseType
+            ),
             entity: upload,
             selector: n => n.Upload
         );
@@ -102,20 +104,5 @@ public class MissingFileValidationService(
         upload.UploadedFiles = [];
 
         await repository.SaveChangesAsync(cancellationToken);
-    }
-
-    private static string GetMissingFilesNotificationMessage(ReleaseType releaseType)
-    {
-        return releaseType switch
-        {
-            ReleaseType.Managed =>
-                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror or repackage the release.",
-            ReleaseType.Unmanaged =>
-                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror if available, otherwise refresh the unmanaged archive after providing the archive files.",
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(releaseType),
-                $"Unknown release type, {releaseType}"
-            ),
-        };
     }
 }

@@ -8,6 +8,8 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
+using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -156,6 +158,7 @@ public class ArchiveCreationService(
         {
             await ChangeArchiveFileHashesAsync(
                 archive: archive,
+                archiveFiles: archive.ArchiveFiles,
                 archiveConfig: archiveConfig,
                 knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
                 transferType: TransferType.ArchiveHashing,
@@ -255,19 +258,49 @@ public class ArchiveCreationService(
             return false;
         }
 
+        var archiveFilesToUpload = ArchiveFilesToUpload.GetArchiveFilesToUpload(
+            archiveFiles: assignableArchive.ArchiveFiles,
+            uploads: uploads,
+            uploadsOfArchive: assignableArchive.Uploads
+        );
+
         var archiveNeedsHashChange = await ArchiveNeedsHashChangeAsync(
             archiveConfig: archiveConfig,
             uploads: uploads,
             cancellationToken: cancellationToken
         );
-        var archiveHashesMustBeChanged =
-            archiveNeedsHashChange
-            || (
-                assignableArchive.ArchiveFiles.Any(f => f.Md5Hash is null)
-                && archiverFactory.GetByName(archiveConfig.ArchiverName).CanChangeHashInPlace
+
+        var archiveFilesToUploadNeedNewHashes =
+            archiveNeedsHashChange && archiveFilesToUpload.Count > 0;
+        var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
+
+        if (archiveFilesToUploadNeedNewHashes && !archiver.CanChangeHashInPlace)
+        {
+            logger.LogInformation(
+                "Archiver {ArchiverName} does not support changing hashes in place. Creating a new archive instead of reusing archive {ArchiveId}.",
+                archiver.Name,
+                assignableArchive.Id
             );
 
-        if (archiveHashesMustBeChanged)
+            return false;
+        }
+
+        var archiveFilesToChangeHash = archiver.CanChangeHashInPlace
+            ? assignableArchive
+                .ArchiveFiles.Where(archiveFile =>
+                    (
+                        archiveFilesToUploadNeedNewHashes
+                        && archiveFilesToUpload.Contains(archiveFile)
+                    ) || archiveFile.Md5Hash is null
+                )
+                .ToList()
+            : [];
+
+        var missingArchiveFiles = archiveFilesToUpload
+            .Where(archiveFile => !fileSystemService.FileExists(archiveFile.FullFileName))
+            .ToList();
+
+        if (missingArchiveFiles.Count > 0 || archiveFilesToChangeHash.Count > 0)
         {
             var archiveHasActiveUpload = await repository.HasActiveUploadAsync(
                 archiveId: assignableArchive.Id,
@@ -284,23 +317,26 @@ public class ArchiveCreationService(
 
                 return true;
             }
+        }
 
-            var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
+        if (missingArchiveFiles.Count > 0)
+        {
+            await MarkArchiveFilesMissingAsync(
+                archive: assignableArchive,
+                missingArchiveFiles: missingArchiveFiles,
+                waitingUploads: uploads,
+                cancellationToken: cancellationToken
+            );
 
-            if (!archiver.CanChangeHashInPlace)
-            {
-                logger.LogInformation(
-                    "Archiver {ArchiverName} does not support changing hashes in place. Creating a new archive instead of reusing archive {ArchiveId}.",
-                    archiver.Name,
-                    assignableArchive.Id
-                );
+            return true;
+        }
 
-                return false;
-            }
-
+        if (archiveFilesToChangeHash.Count > 0)
+        {
             var hashesWereChanged =
                 await ChangeExistingArchiveHashesOrCancelWaitingUploadsOnUserCancellationAsync(
                     archive: assignableArchive,
+                    archiveFiles: archiveFilesToChangeHash,
                     archiveConfig: archiveConfig,
                     waitingUploads: uploads,
                     cancellationToken: cancellationToken
@@ -317,13 +353,6 @@ public class ArchiveCreationService(
             upload.ArchiveId = assignableArchive.Id;
             upload.UploadState = UploadState.Pending;
 
-            if (upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles)
-            {
-                continue;
-            }
-
-            // Take the newest known state per archive file from previous uploads and copy it over
-            // if it is still online, so we only upload files that were offline (for PartiallyOnline uploads)
             CarryOverOnlineFiles(upload, assignableArchive);
         }
 
@@ -338,8 +367,39 @@ public class ArchiveCreationService(
         return true;
     }
 
+    private async Task MarkArchiveFilesMissingAsync(
+        Archive archive,
+        IReadOnlyList<ArchiveFile> missingArchiveFiles,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        logger.LogInformation(
+            "Archive files {FilePaths} needed by the waiting uploads are missing in existing archive {ArchiveId}. Marking the archive for restore before changing any hashes",
+            string.Join(", ", missingArchiveFiles.Select(archiveFile => archiveFile.FullFileName)),
+            archive.Id
+        );
+
+        archive.ArchiveState = ArchiveState.MissingFiles;
+
+        foreach (var upload in waitingUploads)
+        {
+            notificationService.Create(
+                kind: NotificationKind.ArchiveFilesMissing,
+                message: ArchiveFilesMissingNotificationMessage.Get(
+                    upload.UploadConfig.Release.ReleaseType
+                ),
+                entity: upload,
+                selector: n => n.Upload
+            );
+        }
+
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+    }
+
     private async Task<bool> ChangeExistingArchiveHashesOrCancelWaitingUploadsOnUserCancellationAsync(
         Archive archive,
+        IReadOnlyList<ArchiveFile> archiveFiles,
         ArchiveConfig archiveConfig,
         IReadOnlyList<Upload> waitingUploads,
         CancellationToken cancellationToken
@@ -359,6 +419,7 @@ public class ArchiveCreationService(
             {
                 await ChangeArchiveFileHashesAsync(
                     archive: archive,
+                    archiveFiles: archiveFiles,
                     archiveConfig: archiveConfig,
                     knownHashes: await LoadKnownHashesAsync(
                         archiveConfig.Id,
@@ -434,18 +495,10 @@ public class ArchiveCreationService(
 
     private void CarryOverOnlineFiles(Upload newUpload, Archive assignableArchive)
     {
-        var reusableOnlineFiles = assignableArchive
-            .Uploads.Where(u =>
-                u.Id != newUpload.Id && u.UploadConfigId == newUpload.UploadConfigId
-            )
-            .SelectMany(u => u.UploadedFiles)
-            .GroupBy(uf => uf.ArchiveFileId)
-            .Select(group => group.MaxBy(uf => uf.UploadId)!)
-            .Where(uf =>
-                uf.OnlineState == OnlineState.Online
-                && !string.IsNullOrWhiteSpace(uf.HosterFileLink)
-            )
-            .ToList();
+        var reusableOnlineFiles = ArchiveFilesToUpload.GetOnlineUploadedFilesToCarryOver(
+            upload: newUpload,
+            uploadsOfArchive: assignableArchive.Uploads
+        );
 
         if (reusableOnlineFiles.Count == 0)
         {
@@ -517,6 +570,7 @@ public class ArchiveCreationService(
 
     private async Task ChangeArchiveFileHashesAsync(
         Archive archive,
+        IReadOnlyList<ArchiveFile> archiveFiles,
         ArchiveConfig archiveConfig,
         HashSet<string> knownHashes,
         TransferType transferType,
@@ -525,6 +579,7 @@ public class ArchiveCreationService(
     {
         await HashArchiveFilesInParallelWithProgressAsync(
             archive: archive,
+            archiveFiles: archiveFiles,
             archiveConfig: archiveConfig,
             transferType: transferType,
             hashArchiveFileAsync: async (archiveFile, progress, fileCancellationToken) =>
@@ -571,7 +626,7 @@ public class ArchiveCreationService(
 
         logger.LogInformation(
             "Changed MD5 hash for {FileCount} archive files in archive {ArchiveId}",
-            archive.ArchiveFiles.Count,
+            archiveFiles.Count,
             archive.Id
         );
     }
@@ -584,6 +639,7 @@ public class ArchiveCreationService(
     {
         await HashArchiveFilesInParallelWithProgressAsync(
             archive: archive,
+            archiveFiles: archive.ArchiveFiles,
             archiveConfig: archiveConfig,
             transferType: TransferType.ArchiveHashing,
             hashArchiveFileAsync: async (archiveFile, progress, fileCancellationToken) =>
@@ -611,6 +667,7 @@ public class ArchiveCreationService(
 
     private async Task HashArchiveFilesInParallelWithProgressAsync(
         Archive archive,
+        IReadOnlyList<ArchiveFile> archiveFiles,
         ArchiveConfig archiveConfig,
         TransferType transferType,
         Func<ArchiveFile, ITransferProgress, CancellationToken, Task> hashArchiveFileAsync,
@@ -619,8 +676,8 @@ public class ArchiveCreationService(
     {
         var transferIdentifier = new TransferIdentifier(transferType, archive.Id);
 
-        var plannedFilesPerArchiveFile = archive
-            .ArchiveFiles.Select(
+        var plannedFilesPerArchiveFile = archiveFiles
+            .Select(
                 (archiveFile, index) =>
                     (
                         ArchiveFile: archiveFile,

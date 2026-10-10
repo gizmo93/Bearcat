@@ -6,57 +6,6 @@ namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 
 public class MirrorSourceResolver(IHosterFactory hosterFactory)
 {
-    public static IReadOnlyList<ArchiveFile> GetNeededArchiveFiles(
-        Archive archive,
-        IReadOnlyList<Upload> waitingUploads,
-        IReadOnlyList<Upload> uploadsOfArchive
-    )
-    {
-        var neededArchiveFileIds = new HashSet<int>();
-
-        foreach (var upload in waitingUploads)
-        {
-            if (upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles)
-            {
-                neededArchiveFileIds.UnionWith(archive.ArchiveFiles.Select(file => file.Id));
-                continue;
-            }
-
-            var carriedOverArchiveFileIds = GetCarriedOverArchiveFileIds(
-                newUpload: upload,
-                previousUploads: uploadsOfArchive
-            );
-
-            neededArchiveFileIds.UnionWith(
-                archive
-                    .ArchiveFiles.Where(file => !carriedOverArchiveFileIds.Contains(file.Id))
-                    .Select(file => file.Id)
-            );
-        }
-
-        return archive.ArchiveFiles.Where(file => neededArchiveFileIds.Contains(file.Id)).ToList();
-    }
-
-    private static HashSet<int> GetCarriedOverArchiveFileIds(
-        Upload newUpload,
-        IReadOnlyList<Upload> previousUploads
-    )
-    {
-        return previousUploads
-            .Where(upload =>
-                upload.Id != newUpload.Id && upload.UploadConfigId == newUpload.UploadConfigId
-            )
-            .SelectMany(upload => upload.UploadedFiles)
-            .GroupBy(uploadedFile => uploadedFile.ArchiveFileId)
-            .Select(group => group.MaxBy(uploadedFile => uploadedFile.UploadId)!)
-            .Where(uploadedFile =>
-                uploadedFile.OnlineState == OnlineState.Online
-                && !string.IsNullOrWhiteSpace(uploadedFile.HosterFileLink)
-            )
-            .Select(uploadedFile => uploadedFile.ArchiveFileId)
-            .ToHashSet();
-    }
-
     public MirrorSourcePlan ResolveSources(
         IReadOnlyList<Upload> uploadsOfArchive,
         IReadOnlyList<ArchiveFile> neededArchiveFiles

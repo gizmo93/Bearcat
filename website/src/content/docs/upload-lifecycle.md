@@ -28,7 +28,7 @@ flowchart TD
     WaitTick --> WFA
     QActive -- No --> QInPlace{Archiver supports in-place hash change?}
 
-    QInPlace -- "Yes (RAR)" --> Append[Append 0-bytes until each file's hash is new]
+    QInPlace -- "Yes (RAR)" --> Append[Append 0-bytes until each file to upload has a new hash]
     Append --> Assign
     QInPlace -- "No (e.g. 7-Zip)" --> QManaged
 
@@ -262,14 +262,18 @@ See [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for details.
 Hosters often recognise files by their MD5 hash. If an archive was previously uploaded to the same
 type of hoster, Bearcat needs new hashes before uploading it again.
 
-- **RAR:** Bearcat appends zero bytes until each file has a hash not yet used for this archive
-  configuration. The archive still extracts normally. Bearcat keeps the hash history even after
-  local files are deleted.
+Only files that are uploaded again need new hashes. Parts still online from the previous upload
+keep their hash.
+
+- **RAR:** Bearcat appends zero bytes until each file to upload has a hash not yet used for this
+  archive configuration. The archive still extracts normally. Bearcat keeps the hash history even
+  after local files are deleted.
 - **7-Zip:** split volumes cannot be changed this way without corrupting the archive, so Bearcat
-  creates a new archive instead.
+  creates a new archive instead. If all parts are still online, Bearcat reuses the archive.
 
 Before changing a reused archive, Bearcat checks whether another active upload is using it.
-If so, it waits until a later run.
+If so, it waits until a later run. If a file to upload is missing locally, Bearcat first restores
+it from a [mirror hoster](/Bearcat/mirror-downloads/) and changes the hashes afterwards.
 
 ### The nonce file and repackaging
 

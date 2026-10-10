@@ -103,10 +103,10 @@ Hoster können bereits hochgeladene Dateien am MD5-Hash erkennen. Bevor Bearcat 
 selben Hostertyp hochlädt, ändert es die Hashes. Das Verfahren hängt vom Format ab:
 
 - **RAR:** Bearcat speichert die Hashhistorie pro Archivkonfiguration, auch nach dem Löschen lokaler
-  Archive. Es hängt an jeden wiederverwendeten oder neu gepackten Archivteil Nullbytes an, bis dessen
-  Hash neu ist. Das Archiv lässt sich weiterhin normal entpacken. Die eingestellte Partgrösse bleibt
-  gleich; die standardmässige Erhöhung um `1` MB entfällt normalerweise. Kompression und Solidmodus
-  richten sich weiterhin nach der gewählten Strategie.
+  Archive. Es hängt an jeden neu gepackten Archivteil und an jeden wiederverwendeten Archivteil, der
+  erneut hochgeladen wird, Nullbytes an, bis dessen Hash neu ist. Das Archiv lässt sich weiterhin
+  normal entpacken. Die eingestellte Partgrösse bleibt gleich; die standardmässige Erhöhung um `1` MB
+  entfällt normalerweise. Kompression und Solidmodus richten sich weiterhin nach der gewählten Strategie.
 - **7-Zip:** Für neue Hashes muss Bearcat das Release neu packen. Wähle dafür unter
   **Konfigurationen** eine **Repackagingstrategie**:
 

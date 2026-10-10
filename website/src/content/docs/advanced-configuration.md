@@ -101,7 +101,8 @@ Hosters can recognise previously uploaded files by their MD5 hash. Bearcat chang
 before uploading an archive to the same hoster type again. How it does this depends on the format:
 
 - **RAR:** Bearcat keeps the hash history for each archive configuration, even after local archives
-  are deleted. It appends zero bytes to each reused or newly packed part until its hash is new.
+  are deleted. It appends zero bytes to each newly packed part and to each reused part that is
+  uploaded again until its hash is new.
   The archive still extracts normally. The configured part size stays the same; the default
   `1` MB increase is normally skipped. Compression and solid mode still follow the selected strategy.
 - **7-Zip:** Bearcat must repack the release to change the hashes. Choose a **Repackaging strategy**

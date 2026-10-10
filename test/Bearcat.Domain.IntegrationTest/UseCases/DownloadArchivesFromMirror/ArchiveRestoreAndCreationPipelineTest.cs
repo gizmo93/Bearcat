@@ -1,4 +1,6 @@
 ﻿using System.Linq.Expressions;
+using System.Security.Cryptography;
+using System.Text;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
@@ -130,6 +132,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
     {
         // Arrange
         var scenario = await AddDeletedArchiveScenarioAsync(mirrorDownloadsEnabled: true);
+        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
 
         // Act
         await restoreService.ProcessAsync(CancellationToken.None);
@@ -163,7 +166,19 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             .ShouldBe(["https://mirror.test/file-1", "https://mirror.test/file-2"]);
         waitingUpload.ArchiveId.ShouldBe(scenario.ArchiveId);
         waitingUpload.UploadState.ShouldBe(UploadState.Pending);
-        archiverFactoryMock.Verify(f => f.GetByName(It.IsAny<string>()), Times.Never);
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 
     [Test]
@@ -212,6 +227,68 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         waitingUpload.ArchiveId.ShouldBe(repackedArchive.Id);
         waitingUpload.UploadState.ShouldBe(UploadState.Pending);
         downloadHoster.DownloadedLinks.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_FileToUploadIsMissingLocally_RestoresArchiveBeforeChangingEachHashOnce()
+    {
+        // Arrange
+        var scenario = await AddCreatedArchiveWithMissingFileScenarioAsync();
+        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
+
+        // Act
+        await restoreService.ProcessAsync(CancellationToken.None);
+        await creationService.ProcessAsync(CancellationToken.None);
+        DbContext.ChangeTracker.Clear();
+        var archiveStateAfterFirstRun = (
+            await DbContext.Archives.SingleAsync(a => a.Id == scenario.ArchiveId)
+        ).ArchiveState;
+        DbContext.ChangeTracker.Clear();
+        await restoreService.ProcessAsync(CancellationToken.None);
+        await creationService.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == scenario.ArchiveId);
+        var waitingUpload = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == scenario.WaitingUploadId);
+        var archiveFilesByName = archive.ArchiveFiles.ToDictionary(f =>
+            Path.GetFileName(f.FullFileName)
+        );
+
+        archiveStateAfterFirstRun.ShouldBe(ArchiveState.MissingFiles);
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        (await DbContext.Archives.CountAsync()).ShouldBe(1);
+        waitingUpload.ArchiveId.ShouldBe(scenario.ArchiveId);
+        waitingUpload.UploadState.ShouldBe(UploadState.Pending);
+        waitingUpload
+            .UploadedFiles.ShouldHaveSingleItem()
+            .ArchiveFileId.ShouldBe(archiveFilesByName["archive.part1.rar"].Id);
+        downloadHoster
+            .DownloadedLinks.Order()
+            .ShouldBe(["https://mirror.test/file-2", "https://mirror.test/file-3"]);
+        archiveFilesByName["archive.part1.rar"].FullFileName.ShouldBe(scenario.CarriedOverFilePath);
+        (await File.ReadAllTextAsync(scenario.CarriedOverFilePath)).ShouldBe("carried-over");
+        (await File.ReadAllTextAsync(scenario.LocallyPresentFilePath)).ShouldBe("locally-present");
+
+        foreach (
+            var (fileName, link) in new[]
+            {
+                ("archive.part2.rar", "https://mirror.test/file-2"),
+                ("archive.part3.rar", "https://mirror.test/file-3"),
+            }
+        )
+        {
+            var archiveFile = archiveFilesByName[fileName];
+            var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);
+
+            archiveFile.FullFileName.ShouldStartWith(archive.ArchiveFolderPath);
+            fileBytes.ShouldBe([.. Encoding.UTF8.GetBytes(GetMirrorFileContent(link)), (byte)0]);
+            archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(fileBytes)));
+        }
     }
 
     private async Task<DeletedArchiveScenario> AddDeletedArchiveScenarioAsync(
@@ -340,6 +417,184 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         return new DeletedArchiveScenario(archive.Id, waitingUpload.Id);
     }
 
+    private async Task<CreatedArchiveWithMissingFileScenario> AddCreatedArchiveWithMissingFileScenarioAsync()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = releaseFolderPath,
+            ReleaseGroup = releaseGroup,
+        };
+        var archiveConfig = new ArchiveConfig
+        {
+            Release = release,
+            Name = "Main archive",
+            ArchiveFilesBasePath = archiveFilesBasePath,
+            ArchiverName = "zip",
+            ArchiveNamePrefix = "bearcat-release",
+            ArchivePassword = "secret",
+            ArchiveFileSizeMb = 512,
+        };
+        var mirrorUploadConfig = new UploadConfig
+        {
+            Release = release,
+            ArchiveConfig = archiveConfig,
+            HosterRegistration = new HosterRegistration
+            {
+                Name = "Mirror",
+                SerializedConfig = "{}",
+                HosterClassName = MirrorHosterClassName,
+                IsActive = true,
+                UseForMirrorDownloads = true,
+            },
+            Name = "Mirror upload",
+        };
+        var targetUploadConfig = new UploadConfig
+        {
+            Release = release,
+            ArchiveConfig = archiveConfig,
+            HosterRegistration = new HosterRegistration
+            {
+                Name = "Target",
+                SerializedConfig = "{}",
+                HosterClassName = TargetHosterClassName,
+                IsActive = true,
+            },
+            Name = "Target upload",
+        };
+
+        DbContext.UploadConfigs.AddRange(mirrorUploadConfig, targetUploadConfig);
+        await DbContext.SaveChangesAsync();
+
+        var localArchiveFolderPath = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "local"))
+            .FullName;
+        var carriedOverFilePath = Path.Combine(localArchiveFolderPath, "archive.part1.rar");
+        var locallyPresentFilePath = Path.Combine(localArchiveFolderPath, "archive.part2.rar");
+        await File.WriteAllTextAsync(carriedOverFilePath, "carried-over");
+        await File.WriteAllTextAsync(locallyPresentFilePath, "locally-present");
+
+        var carriedOverArchiveFile = new ArchiveFile
+        {
+            FullFileName = carriedOverFilePath,
+            Md5Hash = Convert.ToHexString(
+                MD5.HashData(await File.ReadAllBytesAsync(carriedOverFilePath))
+            ),
+        };
+        var locallyPresentArchiveFile = new ArchiveFile
+        {
+            FullFileName = locallyPresentFilePath,
+            Md5Hash = Convert.ToHexString(
+                MD5.HashData(await File.ReadAllBytesAsync(locallyPresentFilePath))
+            ),
+        };
+        var missingArchiveFile = new ArchiveFile
+        {
+            FullFileName = Path.Combine(localArchiveFolderPath, "archive.part3.rar"),
+            Md5Hash = "0123456789ABCDEF0123456789ABCDEF",
+        };
+        var archive = new Archive
+        {
+            ArchiveConfigId = archiveConfig.Id,
+            ArchiveFolderPath = localArchiveFolderPath,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow.AddHours(-3),
+            ArchiveFiles = [carriedOverArchiveFile, locallyPresentArchiveFile, missingArchiveFile],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var mirrorUpload = new Upload
+        {
+            UploadConfigId = mirrorUploadConfig.Id,
+            Archive = archive,
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            UploadedAt = DateTime.UtcNow.AddHours(-2),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                CreateUploadedFile(carriedOverArchiveFile, "https://mirror.test/file-1"),
+                CreateUploadedFile(locallyPresentArchiveFile, "https://mirror.test/file-2"),
+                CreateUploadedFile(missingArchiveFile, "https://mirror.test/file-3"),
+            ],
+        };
+        var previousTargetUpload = new Upload
+        {
+            UploadConfigId = targetUploadConfig.Id,
+            Archive = archive,
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            UploadedAt = DateTime.UtcNow.AddHours(-2),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.PartiallyOnline,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                CreateUploadedFile(carriedOverArchiveFile, "https://target.test/file-1"),
+                CreateUploadedFile(
+                    locallyPresentArchiveFile,
+                    "https://target.test/file-2",
+                    OnlineState.Offline
+                ),
+                CreateUploadedFile(
+                    missingArchiveFile,
+                    "https://target.test/file-3",
+                    OnlineState.Offline
+                ),
+            ],
+        };
+        var waitingUpload = new Upload
+        {
+            UploadConfigId = targetUploadConfig.Id,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.WaitingForArchive,
+            OnlineState = OnlineState.Unknown,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
+
+        DbContext.Archives.Add(archive);
+        DbContext.Uploads.AddRange(mirrorUpload, previousTargetUpload, waitingUpload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return new CreatedArchiveWithMissingFileScenario(
+            ArchiveId: archive.Id,
+            WaitingUploadId: waitingUpload.Id,
+            CarriedOverFilePath: carriedOverFilePath,
+            LocallyPresentFilePath: locallyPresentFilePath
+        );
+    }
+
+    private static UploadedFile CreateUploadedFile(
+        ArchiveFile archiveFile,
+        string hosterFileLink,
+        OnlineState onlineState = OnlineState.Online
+    )
+    {
+        return new UploadedFile
+        {
+            ArchiveFile = archiveFile,
+            HosterFileLink = hosterFileLink,
+            OnlineState = onlineState,
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            CheckedAt = DateTime.UtcNow.AddHours(-2),
+        };
+    }
+
+    private static string GetMirrorFileContent(string hosterFileLink)
+    {
+        return $"mirror-payload {hosterFileLink}";
+    }
+
     private static TimeProvider CreateTimeProvider()
     {
         var configuration = new ConfigurationBuilder()
@@ -350,6 +605,13 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
     }
 
     private sealed record DeletedArchiveScenario(int ArchiveId, int WaitingUploadId);
+
+    private sealed record CreatedArchiveWithMissingFileScenario(
+        int ArchiveId,
+        int WaitingUploadId,
+        string CarriedOverFilePath,
+        string LocallyPresentFilePath
+    );
 
     private sealed class DefaultConfigurationProvider : IApplicationConfigurationProvider
     {
@@ -409,7 +671,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         {
             IReadOnlyDictionary<string, long> sizes = fileUrls.ToDictionary(
                 fileUrl => fileUrl,
-                _ => (long)"mirror-payload".Length
+                fileUrl => (long)Encoding.UTF8.GetByteCount(GetMirrorFileContent(fileUrl))
             );
 
             return Task.FromResult(sizes);
@@ -428,7 +690,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 DownloadedLinks.Add(file.HosterFileLink);
             }
 
-            const string content = "mirror-payload";
+            var content = GetMirrorFileContent(file.HosterFileLink);
 
             progress.BeginFile(content.Length);
             await File.WriteAllTextAsync(targetFilePath, content, cancellationToken);

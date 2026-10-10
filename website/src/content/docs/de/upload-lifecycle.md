@@ -28,7 +28,7 @@ flowchart TD
     WaitTick --> WFA
     QActive -- Nein --> QInPlace{Archiver kann Hashes direkt ändern?}
 
-    QInPlace -- "Ja (RAR)" --> Append[Nullbytes anhängen, bis jede Datei einen neuen Hash hat]
+    QInPlace -- "Ja (RAR)" --> Append[Nullbytes anhängen, bis jede hochzuladende Datei einen neuen Hash hat]
     Append --> Assign
     QInPlace -- "Nein (z. B. 7-Zip)" --> QManaged
 
@@ -265,14 +265,18 @@ Details findest du unter [Automatisches Aufräumen](/Bearcat/de/advanced-configu
 Hoster erkennen Dateien oft an ihrem MD5-Hash. Wurde ein Archiv bereits zum gleichen Hostertyp hochgeladen,
 braucht Bearcat neue Hashes, bevor es erneut hochgeladen wird.
 
-- **RAR:** Bearcat hängt Nullbytes an, bis jede Datei einen Hash hat, der für diese Archivkonfiguration
-  noch nicht verwendet wurde. Das Archiv lässt sich weiterhin normal entpacken. Bearcat behält die Hashhistorie
-  auch nach dem Löschen der lokalen Dateien.
+Neue Hashes brauchen nur Dateien, die erneut hochgeladen werden. Parts, die vom vorherigen Upload noch
+online sind, behalten ihren Hash.
+
+- **RAR:** Bearcat hängt Nullbytes an, bis jede hochzuladende Datei einen Hash hat, der für diese
+  Archivkonfiguration noch nicht verwendet wurde. Das Archiv lässt sich weiterhin normal entpacken.
+  Bearcat behält die Hashhistorie auch nach dem Löschen der lokalen Dateien.
 - **7-Zip:** Die Parts lassen sich so nicht ändern, ohne das Archiv zu beschädigen. Bearcat
-  erstellt deshalb ein neues Archiv.
+  erstellt deshalb ein neues Archiv. Sind alle Parts noch online, verwendet Bearcat das Archiv wieder.
 
 Bevor Bearcat ein wiederverwendetes Archiv ändert, prüft es, ob ein anderer aktiver Upload es verwendet.
-Falls ja, wartet es auf einen späteren Durchlauf.
+Falls ja, wartet es auf einen späteren Durchlauf. Fehlt eine hochzuladende Datei lokal, stellt Bearcat
+sie zuerst von einem [Mirrorhoster](/Bearcat/de/mirror-downloads/) wieder her und ändert danach die Hashes.
 
 ### Die Noncedatei und Repackaging
 

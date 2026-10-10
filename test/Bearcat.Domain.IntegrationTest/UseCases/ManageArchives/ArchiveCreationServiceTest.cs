@@ -150,12 +150,15 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+        var archiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
         var existingArchive = new Archive
         {
             ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
-            ArchiveFolderPath = Directory
-                .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
-                .FullName,
+            ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
             CreatedAt = DateTime.UtcNow,
@@ -163,7 +166,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             [
                 new ArchiveFile
                 {
-                    FullFileName = "existing.part1.rar",
+                    FullFileName = archiveFilePath,
                     Md5Hash = PreviouslyComputedMd5Hash,
                 },
             ],
@@ -183,7 +186,19 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         result.ShouldNotBeNull();
         result.ArchiveId.ShouldBe(existingArchive.Id);
         result.UploadState.ShouldBe(UploadState.Pending);
-        archiverFactoryMock.Verify(f => f.GetByName(It.IsAny<string>()), Times.Never);
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 
     [Test]
@@ -350,7 +365,19 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         result.ArchiveId.ShouldBe(existingArchive.Id);
         result.UploadState.ShouldBe(UploadState.Pending);
         new FileInfo(archiveFilePath).Length.ShouldBe(originalLength);
-        archiverFactoryMock.Verify(f => f.GetByName(It.IsAny<string>()), Times.Never);
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 
     [Test]
@@ -568,7 +595,8 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         result.ArchiveId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
         new FileInfo(archiveFilePath).Length.ShouldBe(originalLength);
-        archiverFactoryMock.Verify(f => f.GetByName(It.IsAny<string>()), Times.Never);
+        (await DbContext.Archives.CountAsync()).ShouldBe(1);
+        progressTracker.PlannedFilesPerIdentifier.ShouldBeEmpty();
     }
 
     [Test]
@@ -2431,7 +2459,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_AssignableArchiveHasFileWithoutHash_ChangesHashesBeforeAssigningArchive()
+    public async Task ProcessAsync_AssignableArchiveHasFileWithoutHash_ChangesHashOfThatFileBeforeAssigningArchive()
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
@@ -2442,6 +2470,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var fileWithHashPath = Path.Combine(existingArchiveFolder, "existing.part2.rar");
         await File.WriteAllTextAsync(fileWithoutHashPath, "first");
         await File.WriteAllTextAsync(fileWithHashPath, "second");
+        var fileWithHashHash = ComputeMd5Hash(fileWithHashPath);
         var existingArchive = new Archive
         {
             ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
@@ -2452,11 +2481,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             ArchiveFiles =
             [
                 new ArchiveFile { FullFileName = fileWithoutHashPath },
-                new ArchiveFile
-                {
-                    FullFileName = fileWithHashPath,
-                    Md5Hash = ComputeMd5Hash(fileWithHashPath),
-                },
+                new ArchiveFile { FullFileName = fileWithHashPath, Md5Hash = fileWithHashHash },
             ],
             Uploads = [],
             ErrorMessages = [],
@@ -2474,14 +2499,16 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             .SingleAsync(a => a.Id == existingArchive.Id);
         var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
 
+        var filesByName = archive.ArchiveFiles.ToDictionary(f => f.FullFileName);
+        var changedFileBytes = await File.ReadAllBytesAsync(fileWithoutHashPath);
+
         result.ArchiveId.ShouldBe(existingArchive.Id);
         result.UploadState.ShouldBe(UploadState.Pending);
-        foreach (var archiveFile in archive.ArchiveFiles)
-        {
-            var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);
-            fileBytes[^1].ShouldBe((byte)0);
-            archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(fileBytes)));
-        }
+        changedFileBytes.ShouldBe([.. "first"u8.ToArray(), (byte)0]);
+        filesByName[fileWithoutHashPath]
+            .Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(changedFileBytes)));
+        (await File.ReadAllTextAsync(fileWithHashPath)).ShouldBe("second");
+        filesByName[fileWithHashPath].Md5Hash.ShouldBe(fileWithHashHash);
         progressTracker.PlannedFilesPerIdentifier.Keys.ShouldContain(
             new TransferIdentifier(TransferType.ArchiveHashChange, existingArchive.Id)
         );
@@ -2529,6 +2556,534 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         progressTracker.PlannedFilesPerIdentifier.Keys.ShouldNotContain(
             new TransferIdentifier(TransferType.ArchiveHashChange, existingArchive.Id)
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReuploadWithFilesStillOnline_ChangesHashesOnlyOfFilesToUpload()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var onlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            "online"
+        );
+        var offlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part2.rar"),
+            "offline"
+        );
+        var onlineFileHash = onlineArchiveFile.Md5Hash;
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [onlineArchiveFile, offlineArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (onlineArchiveFile, OnlineState.Online),
+            (offlineArchiveFile, OnlineState.Offline)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+        var archiveFilesById = await DbContext.ArchiveFiles.ToDictionaryAsync(f => f.Id);
+        var changedOfflineFileBytes = await File.ReadAllBytesAsync(offlineArchiveFile.FullFileName);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.ShouldHaveSingleItem().ArchiveFileId.ShouldBe(onlineArchiveFile.Id);
+        (await File.ReadAllTextAsync(onlineArchiveFile.FullFileName)).ShouldBe("online");
+        archiveFilesById[onlineArchiveFile.Id].Md5Hash.ShouldBe(onlineFileHash);
+        changedOfflineFileBytes.ShouldBe([.. "offline"u8.ToArray(), (byte)0]);
+        archiveFilesById[offlineArchiveFile.Id]
+            .Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(changedOfflineFileBytes)));
+        progressTracker
+            .PlannedFilesPerIdentifier[
+                new TransferIdentifier(TransferType.ArchiveHashChange, existingArchive.Id)
+            ]
+            .ShouldHaveSingleItem()
+            .FileName.ShouldBe("existing.part2.rar");
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReuploadToHosterThatAlwaysReuploadsAllFiles_ChangesHashesOfAllFiles()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles = true;
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var onlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            "online"
+        );
+        var offlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part2.rar"),
+            "offline"
+        );
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [onlineArchiveFile, offlineArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (onlineArchiveFile, OnlineState.Online),
+            (offlineArchiveFile, OnlineState.Offline)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+        var archiveFiles = await DbContext
+            .ArchiveFiles.Where(f => f.ArchiveId == existingArchive.Id)
+            .ToListAsync();
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.ShouldBeEmpty();
+        (await File.ReadAllBytesAsync(onlineArchiveFile.FullFileName)).ShouldBe([
+            .. "online"u8.ToArray(),
+            (byte)0,
+        ]);
+        (await File.ReadAllBytesAsync(offlineArchiveFile.FullFileName)).ShouldBe([
+            .. "offline"u8.ToArray(),
+            (byte)0,
+        ]);
+        foreach (var archiveFile in archiveFiles)
+        {
+            archiveFile.Md5Hash.ShouldBe(ComputeMd5Hash(archiveFile.FullFileName));
+        }
+    }
+
+    [Test]
+    public async Task ProcessAsync_HashChangeNeededButAllFilesStillOnline_AssignsArchiveWithoutChangingFiles()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var firstArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            "first"
+        );
+        var secondArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part2.rar"),
+            "second"
+        );
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [firstArchiveFile, secondArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (firstArchiveFile, OnlineState.Online),
+            (secondArchiveFile, OnlineState.Online)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.Count.ShouldBe(2);
+        (await File.ReadAllTextAsync(firstArchiveFile.FullFileName)).ShouldBe("first");
+        (await File.ReadAllTextAsync(secondArchiveFile.FullFileName)).ShouldBe("second");
+        progressTracker.PlannedFilesPerIdentifier.ShouldBeEmpty();
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_FileToUploadIsMissingOnDisk_MarksArchiveMissingFilesWithoutChangingHashes()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var onlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            "online"
+        );
+        var offlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part2.rar"),
+            "offline"
+        );
+        var missingArchiveFile = new ArchiveFile
+        {
+            FullFileName = Path.Combine(existingArchiveFolder, "existing.part3.rar"),
+            Md5Hash = PreviouslyComputedMd5Hash,
+        };
+        var onlineFileHash = onlineArchiveFile.Md5Hash;
+        var offlineFileHash = offlineArchiveFile.Md5Hash;
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [onlineArchiveFile, offlineArchiveFile, missingArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (onlineArchiveFile, OnlineState.Online),
+            (offlineArchiveFile, OnlineState.Offline),
+            (missingArchiveFile, OnlineState.Offline)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+        var notification = await DbContext.Notifications.SingleAsync(n => n.UploadId == upload.Id);
+        var archiveFilesById = archive.ArchiveFiles.ToDictionary(f => f.Id);
+
+        archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result.UploadedFiles.ShouldBeEmpty();
+        (await File.ReadAllTextAsync(onlineArchiveFile.FullFileName)).ShouldBe("online");
+        (await File.ReadAllTextAsync(offlineArchiveFile.FullFileName)).ShouldBe("offline");
+        archiveFilesById[onlineArchiveFile.Id].Md5Hash.ShouldBe(onlineFileHash);
+        archiveFilesById[offlineArchiveFile.Id].Md5Hash.ShouldBe(offlineFileHash);
+        archiveFilesById[missingArchiveFile.Id].Md5Hash.ShouldBe(PreviouslyComputedMd5Hash);
+        notification.NotificationKind.ShouldBe(NotificationKind.ArchiveFilesMissing);
+        notification.Message.ShouldBe(
+            "The archive assigned upload has missing files. Bearcat will restore them from an online mirror or repackage the release."
+        );
+        progressTracker.PlannedFilesPerIdentifier.ShouldBeEmpty();
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_FileToUploadIsMissingWhileArchiveIsActivelyUploading_KeepsArchiveUnchanged()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var missingArchiveFile = new ArchiveFile
+        {
+            FullFileName = Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            Md5Hash = PreviouslyComputedMd5Hash,
+        };
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [missingArchiveFile]
+        );
+        var activeUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Uploading
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(activeUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_CarriedOverFileIsMissingOnDisk_AssignsArchive()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var missingOnlineArchiveFile = new ArchiveFile
+        {
+            FullFileName = Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            Md5Hash = PreviouslyComputedMd5Hash,
+        };
+        var offlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part2.rar"),
+            "offline"
+        );
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [missingOnlineArchiveFile, offlineArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (missingOnlineArchiveFile, OnlineState.Online),
+            (offlineArchiveFile, OnlineState.Offline)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result
+            .UploadedFiles.ShouldHaveSingleItem()
+            .ArchiveFileId.ShouldBe(missingOnlineArchiveFile.Id);
+        (await File.ReadAllBytesAsync(offlineArchiveFile.FullFileName)).ShouldBe([
+            .. "offline"u8.ToArray(),
+            (byte)0,
+        ]);
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_CarriedOverFileHasNoHashAndNoHashChangeIsNeeded_ChangesOnlyHashOfThatFile()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var onlineArchiveFileWithoutHash = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            "online"
+        );
+        onlineArchiveFileWithoutHash.Md5Hash = null;
+        var offlineArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.part2.rar"),
+            "offline"
+        );
+        var offlineFileHash = offlineArchiveFile.Md5Hash;
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [onlineArchiveFileWithoutHash, offlineArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Failed,
+            (onlineArchiveFileWithoutHash, OnlineState.Online),
+            (offlineArchiveFile, OnlineState.Offline)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        var archiveFilesById = await DbContext.ArchiveFiles.ToDictionaryAsync(f => f.Id);
+        var changedOnlineFileBytes = await File.ReadAllBytesAsync(
+            onlineArchiveFileWithoutHash.FullFileName
+        );
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        changedOnlineFileBytes.ShouldBe([.. "online"u8.ToArray(), (byte)0]);
+        archiveFilesById[onlineArchiveFileWithoutHash.Id]
+            .Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(changedOnlineFileBytes)));
+        (await File.ReadAllTextAsync(offlineArchiveFile.FullFileName)).ShouldBe("offline");
+        archiveFilesById[offlineArchiveFile.Id].Md5Hash.ShouldBe(offlineFileHash);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiverCannotChangeHashInPlaceAndAllFilesStillOnline_ReusesExistingArchive()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig.ArchiverName = "7Zip";
+        archiverFactoryMock.Setup(f => f.GetByName("7Zip")).Returns(archiverMock.Object);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var firstArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.7z.001"),
+            "first"
+        );
+        var secondArchiveFile = await CreateArchiveFileWithHashAsync(
+            Path.Combine(existingArchiveFolder, "existing.7z.002"),
+            "second"
+        );
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [firstArchiveFile, secondArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (firstArchiveFile, OnlineState.Online),
+            (secondArchiveFile, OnlineState.Online)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        (await DbContext.Archives.CountAsync()).ShouldBe(1);
+        (await File.ReadAllTextAsync(firstArchiveFile.FullFileName)).ShouldBe("first");
+        (await File.ReadAllTextAsync(secondArchiveFile.FullFileName)).ShouldBe("second");
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    private string CreateExistingArchiveFolder()
+    {
+        return Directory.CreateDirectory(Path.Combine(archiveFilesBasePath, "existing")).FullName;
+    }
+
+    private static async Task<ArchiveFile> CreateArchiveFileWithHashAsync(
+        string filePath,
+        string content
+    )
+    {
+        await File.WriteAllTextAsync(filePath, content);
+
+        return new ArchiveFile { FullFileName = filePath, Md5Hash = ComputeMd5Hash(filePath) };
+    }
+
+    private static Archive CreateExistingArchive(
+        int archiveConfigId,
+        string archiveFolderPath,
+        List<ArchiveFile> archiveFiles
+    )
+    {
+        return new Archive
+        {
+            ArchiveConfigId = archiveConfigId,
+            ArchiveFolderPath = archiveFolderPath,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = archiveFiles,
+            Uploads = [],
+            ErrorMessages = [],
+        };
+    }
+
+    private static Upload CreatePreviousUpload(
+        int uploadConfigId,
+        Archive archive,
+        UploadState uploadState,
+        params (ArchiveFile ArchiveFile, OnlineState OnlineState)[] uploadedFiles
+    )
+    {
+        return new Upload
+        {
+            UploadConfigId = uploadConfigId,
+            Archive = archive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = uploadState,
+            OnlineState = OnlineState.PartiallyOnline,
+            ErrorMessages = [],
+            UploadedFiles = uploadedFiles
+                .Select(uploadedFile => new UploadedFile
+                {
+                    ArchiveFile = uploadedFile.ArchiveFile,
+                    HosterFileLink =
+                        $"https://hoster.example/{Path.GetFileName(uploadedFile.ArchiveFile.FullFileName)}",
+                    OnlineState = uploadedFile.OnlineState,
+                    CreatedAt = DateTime.UtcNow.AddHours(-1),
+                    CheckedAt = DateTime.UtcNow.AddHours(-1),
+                })
+                .ToList(),
+        };
     }
 
     private void SetupArchiverRequestingUserCancellationWhilePacking()
