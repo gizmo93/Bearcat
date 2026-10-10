@@ -41,7 +41,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 IsActive = false,
                 MinimumFreeSpaceGb = 0,
                 Priority = 2,
-                RetrieveArchivesBeforeReupload = true,
+                UseLocalWorkingCopyForReuploads = true,
             }
         );
         await AddArchiveAsync(nasFolder.Id);
@@ -61,7 +61,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 IsActive: true,
                 MinimumFreeSpaceGb: 25,
                 Priority: 1,
-                RetrieveArchivesBeforeReupload: false,
+                UseLocalWorkingCopyForReuploads: false,
                 StoredArchiveCount: 0
             ),
             new ArchiveStorageFolderReadModel(
@@ -71,7 +71,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 IsActive: false,
                 MinimumFreeSpaceGb: 0,
                 Priority: 2,
-                RetrieveArchivesBeforeReupload: true,
+                UseLocalWorkingCopyForReuploads: true,
                 StoredArchiveCount: 1
             ),
             new ArchiveStorageFolderReadModel(
@@ -81,7 +81,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 IsActive: true,
                 MinimumFreeSpaceGb: 25,
                 Priority: 2,
-                RetrieveArchivesBeforeReupload: false,
+                UseLocalWorkingCopyForReuploads: false,
                 StoredArchiveCount: 2
             ),
         ]);
@@ -264,6 +264,91 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
     }
 
     [Test]
+    public async Task GetAllAsync_ArchivesInSeveralStates_CountsOnlyCreatedArchives()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync(CreateStorageFolder("NAS", "/mnt/nas"));
+        await AddArchiveAsync(storageFolder.Id);
+        await AddArchiveAsync(storageFolder.Id, ArchiveState.MissingFiles);
+        await AddArchiveAsync(storageFolder.Id, ArchiveState.Deleted);
+
+        // Act
+        var result = await CreateRepository().GetAllAsync();
+
+        // Assert
+        result.Single().StoredArchiveCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetStoredArchiveCountAsync_ArchivesNotInCreatedState_CountsOnlyCreatedArchives()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync(CreateStorageFolder("NAS", "/mnt/nas"));
+        await AddArchiveAsync(storageFolder.Id);
+        await AddArchiveAsync(storageFolder.Id, ArchiveState.MissingFiles);
+        await AddArchiveAsync(storageFolder.Id, ArchiveState.Deleted);
+        await AddArchiveAsync(storageFolder.Id, ArchiveState.Restoring);
+
+        // Act
+        var result = await CreateRepository()
+            .GetStoredArchiveCountAsync(storageFolder.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetArchivesReferencingStorageFolderAsync_ArchivesInSeveralFolders_ReturnsArchivesOfRequestedFolderInAnyStateWithFilesOrderedById()
+    {
+        // Arrange
+        var nasFolder = await AddStorageFolderAsync(CreateStorageFolder("NAS", "/mnt/nas"));
+        var otherFolder = await AddStorageFolderAsync(
+            CreateStorageFolder("Second disk", "/mnt/disk2")
+        );
+        var createdArchive = await AddArchiveAsync(nasFolder.Id);
+        var deletedArchive = await AddArchiveAsync(nasFolder.Id, ArchiveState.Deleted);
+        await AddArchiveAsync(otherFolder.Id);
+        await AddArchiveAsync(archiveStorageFolderId: null);
+
+        // Act
+        var result = await CreateRepository()
+            .GetArchivesReferencingStorageFolderAsync(nasFolder.Id, CancellationToken.None);
+
+        // Assert
+        result.Select(archive => archive.Id).ShouldBe([createdArchive.Id, deletedArchive.Id]);
+        result.ShouldAllBe(archive => archive.ArchiveFiles.Count == 1);
+    }
+
+    [Test]
+    public async Task Remove_StorageFolderAfterClearingArchiveReferences_DeletesStorageFolderAndKeepsArchives()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync(CreateStorageFolder("NAS", "/mnt/nas"));
+        var archive = await AddArchiveAsync(storageFolder.Id, ArchiveState.Deleted);
+        var repository = CreateRepository();
+        foreach (
+            var referencingArchive in await repository.GetArchivesReferencingStorageFolderAsync(
+                storageFolder.Id,
+                CancellationToken.None
+            )
+        )
+        {
+            referencingArchive.ArchiveStorageFolderId = null;
+        }
+        repository.Remove(await repository.GetByIdAsync(storageFolder.Id, CancellationToken.None));
+
+        // Act
+        await repository.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        (await CreateRepository().GetAllAsync()).ShouldBeEmpty();
+        await using var readDbContext = Database.CreateDbContext();
+        (
+            await readDbContext.Archives.SingleAsync(entity => entity.Id == archive.Id)
+        ).ArchiveStorageFolderId.ShouldBeNull();
+    }
+
+    [Test]
     public async Task SaveChangesAsync_DuplicateName_ThrowsUniqueConstraintException()
     {
         // Arrange
@@ -317,7 +402,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
             IsActive = true,
             MinimumFreeSpaceGb = 25,
             Priority = priority,
-            RetrieveArchivesBeforeReupload = false,
+            UseLocalWorkingCopyForReuploads = false,
         };
     }
 
@@ -332,7 +417,10 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
         return storageFolder;
     }
 
-    private async Task<Archive> AddArchiveAsync(int? archiveStorageFolderId)
+    private async Task<Archive> AddArchiveAsync(
+        int? archiveStorageFolderId,
+        ArchiveState archiveState = ArchiveState.Created
+    )
     {
         var dbContext = CreateDbContext();
         var archive = new Archive
@@ -360,8 +448,17 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
             ArchiveFolderPath = "/mnt/nas/Bearcat.Release",
             ArchiveStorageFolderId = archiveStorageFolderId,
             CreatedAt = DateTime.UtcNow,
-            ArchiveState = ArchiveState.Created,
+            ArchiveState = archiveState,
             ArchiveFileSizeMb = 1024,
+            ArchiveFiles =
+            [
+                new ArchiveFile
+                {
+                    FullFileName = "/mnt/nas/Bearcat.Release/release.part1.rar",
+                    Md5Hash = "11111111111111111111111111111111",
+                    Md5HashInStorageFolder = "11111111111111111111111111111111",
+                },
+            ],
         };
         dbContext.Archives.Add(archive);
         await dbContext.SaveChangesAsync();

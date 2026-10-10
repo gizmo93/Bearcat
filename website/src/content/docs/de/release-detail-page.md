@@ -38,6 +38,10 @@ Siehe [Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-m
 Ein Managed Release braucht mindestens eine Archivkonfiguration. Die Packoptionen sind unter
 [Archiv erstellen](/Bearcat/de/upload-lifecycle/#3-archiv-erstellen) beschrieben.
 
+Archive in einem [Speicherordner](/Bearcat/de/archive-storage-folders/) zeigen den Namen des Speicherordners
+neben ihrem Status. Solange ein Reupload eine [lokale Arbeitskopie](/Bearcat/de/archive-storage-folders/#reuploads)
+verwendet, folgt dem Namen **lokale Arbeitskopie**.
+
 ## Uploads
 
 **Konfiguration** verbindet eine Archivkonfiguration mit einem Hosterkonto und optionalen Linkcryptern.

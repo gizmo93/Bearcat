@@ -5,5 +5,5 @@ public record ArchiveStorageFolderInput(
     string Path,
     int MinimumFreeSpaceGb,
     int Priority,
-    bool RetrieveArchivesBeforeReupload
+    bool UseLocalWorkingCopyForReuploads
 );

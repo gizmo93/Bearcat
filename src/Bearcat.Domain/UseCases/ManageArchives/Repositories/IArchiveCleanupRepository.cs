@@ -15,6 +15,12 @@ public interface IArchiveCleanupRepository
         CancellationToken cancellationToken
     );
 
+    Task<
+        IReadOnlyList<Archive>
+    > GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyList<ArchiveStorageFolder>> GetActiveArchiveStorageFoldersAsync(
         CancellationToken cancellationToken
     );

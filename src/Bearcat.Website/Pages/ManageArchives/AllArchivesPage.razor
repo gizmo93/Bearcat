@@ -73,6 +73,13 @@
                                     <LucideIcon Name="hard-drive" class="h-4 w-4 text-primary" />
                                     @L["Yes"]
                                 </span>
+                                @if (archive.ArchiveStorageFolderName is not null)
+                                {
+                                    <div class="mt-1">
+                                        <ArchiveStorageFolderBadge Name="@archive.ArchiveStorageFolderName"
+                                                                   HasLocalWorkingCopyFiles="archive.HasLocalWorkingCopyFiles" />
+                                    </div>
+                                }
                             }
                             else if (ArchiveOnDiskStates.NotOnDisk.Contains(archive.ArchiveState))
                             {

@@ -122,7 +122,7 @@
 
                 @if (IsUnmanaged)
                 {
-                    @if (unmanagedArchiveFolderPaths.Count == 0)
+                    @if (unmanagedArchiveFolders.Count == 0)
                     {
                         <div class="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground" title="@L["ArchiveFolder"]">
                             <LucideIcon Name="folder" class="h-3.5 w-3.5 shrink-0" />
@@ -131,15 +131,15 @@
                     }
                     else
                     {
-                        @foreach (var path in unmanagedArchiveFolderPaths)
+                        @foreach (var archiveFolder in unmanagedArchiveFolders)
                         {
-                            @FolderPathRow(path, L["ArchiveFolder"])
+                            @FolderPathRow(archiveFolder.ArchiveFolderPath, L["ArchiveFolder"], archiveFolder)
                         }
                     }
                 }
                 else
                 {
-                    @FolderPathRow(release.ReleaseFolderPath!, L["ReleaseFolder"])
+                    @FolderPathRow(release.ReleaseFolderPath!, L["ReleaseFolder"], unmanagedArchiveFolder: null)
                 }
 
                 @if (remoteDownloadOrigin is not null)
@@ -364,7 +364,7 @@
             <span class="bearcat-tab-count @(isDestructive ? "bearcat-tab-count-destructive" : null)">@count</span>
         </span>;
 
-    private RenderFragment FolderPathRow(string path, string folderLabel) =>
+    private RenderFragment FolderPathRow(string path, string folderLabel, UnmanagedArchiveFolderReadModel? unmanagedArchiveFolder) =>
         @<div class="flex min-w-0 items-center gap-1.5 text-muted-foreground">
             <span class="inline-flex shrink-0" title="@folderLabel">
                 <LucideIcon Name="folder" class="h-3.5 w-3.5" />
@@ -372,5 +372,10 @@
             </span>
             <code class="min-w-0 truncate font-mono text-xs" title="@path">@path</code>
             <CopyButton Value="@path" Label="@L["CopyFolderPath"]" />
+            @if (unmanagedArchiveFolder?.ArchiveStorageFolderName is not null)
+            {
+                <ArchiveStorageFolderBadge Name="@unmanagedArchiveFolder.ArchiveStorageFolderName"
+                                           HasLocalWorkingCopyFiles="unmanagedArchiveFolder.HasLocalWorkingCopyFiles" />
+            }
         </div>;
 }

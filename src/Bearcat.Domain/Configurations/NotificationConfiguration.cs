@@ -64,6 +64,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ArchiveMoveToStorageFolderFailed { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed",
+        "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description"
+    )]
+    public bool ArchiveCopyIntoLocalWorkingCopyFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.InitialUploadCreated",
         "NotificationKind.InitialUploadCreated.Description"
     )]

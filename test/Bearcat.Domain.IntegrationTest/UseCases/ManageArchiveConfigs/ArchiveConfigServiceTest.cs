@@ -675,6 +675,79 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         result.Message.ShouldBe("Archives can only be refreshed for unmanaged releases.");
     }
 
+    [Test]
+    public async Task SetArchiveFolderAsync_ArchiveRelocatedIntoStorageFolder_PersistsStorageFolderReference()
+    {
+        // Arrange
+        var currentFolderPath = CreateReleaseFolderWithFiles();
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            currentFolderPath,
+            "bearcat-release.rar"
+        );
+        var targetFolderPath = CreateReleaseFolderWithFiles("bearcat-release.rar");
+        var storageFolder = await AddArchiveStorageFolderAsync(targetFolderPath);
+
+        // Act
+        var changeResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            targetFolderPath,
+            confirmContentChange: false
+        );
+
+        // Assert
+        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.SingleAsync(a =>
+            a.ArchiveConfigId == archiveConfig.Id
+        );
+        archive.ArchiveFolderPath.ShouldBe(targetFolderPath);
+        archive.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+    }
+
+    [Test]
+    public async Task SetArchiveFolderAsync_ArchiveRelocatedOutOfStorageFolder_ClearsStorageFolderReference()
+    {
+        // Arrange
+        var currentFolderPath = CreateReleaseFolderWithFiles();
+        var storageFolder = await AddArchiveStorageFolderAsync(currentFolderPath);
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            currentFolderPath,
+            "bearcat-release.rar"
+        );
+        var archive = archiveConfig.Archives.Single();
+        archive.ArchiveStorageFolderId = storageFolder.Id;
+        await DbContext.SaveChangesAsync();
+        var targetFolderPath = CreateReleaseFolderWithFiles("bearcat-release.rar");
+
+        // Act
+        var changeResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            targetFolderPath,
+            confirmContentChange: false
+        );
+
+        // Assert
+        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync(a => a.Id == archive.Id);
+        result.ArchiveFolderPath.ShouldBe(targetFolderPath);
+        result.ArchiveStorageFolderId.ShouldBeNull();
+    }
+
+    private async Task<ArchiveStorageFolder> AddArchiveStorageFolderAsync(string path)
+    {
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = path,
+            IsActive = true,
+        };
+        DbContext.ArchiveStorageFolders.Add(storageFolder);
+        await DbContext.SaveChangesAsync();
+
+        return storageFolder;
+    }
+
     private async Task<List<AdditionalArchiveContent>> AddAdditionalArchiveContentsAsync()
     {
         List<AdditionalArchiveContent> additionalArchiveContents =

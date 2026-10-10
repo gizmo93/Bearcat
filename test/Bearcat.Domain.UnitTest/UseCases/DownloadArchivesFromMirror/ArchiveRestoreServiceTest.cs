@@ -108,6 +108,39 @@ public class ArchiveRestoreServiceTest
     }
 
     [Test]
+    public async Task ProcessAsync_ArchiveWithMissingFilesInStorageFolder_RestoresLocallyAndClearsStorageFolderAndStorageFolderHashes()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Id = 5,
+            Name = "NAS",
+            Path = "/gone",
+        };
+        scenario.Archive.ArchiveState = ArchiveState.MissingFiles;
+        scenario.Archive.ArchiveStorageFolderId = storageFolder.Id;
+        scenario.Archive.ArchiveStorageFolder = storageFolder;
+        foreach (var archiveFile in scenario.Archive.ArchiveFiles)
+        {
+            archiveFile.Md5HashInStorageFolder = "11111111111111111111111111111111";
+        }
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        scenario.Archive.ArchiveFolderPath.ShouldBe(restoreFolderPath);
+        scenario.Archive.ArchiveStorageFolderId.ShouldBeNull();
+        scenario.Archive.ArchiveStorageFolder.ShouldBeNull();
+        scenario.Archive.ArchiveFiles.ShouldAllBe(archiveFile =>
+            archiveFile.Md5HashInStorageFolder == null
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_RestoreFromMirrors_CallsHosterInsideMirrorDownloadProxyScope()
     {
         // Arrange

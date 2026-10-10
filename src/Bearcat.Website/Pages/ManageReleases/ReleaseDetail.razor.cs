@@ -57,7 +57,7 @@ public partial class ReleaseDetail(
     private const string PostedLocationsElementId = "release-posted-locations";
 
     private ReleaseReadModel release = null!;
-    private IReadOnlyList<string> unmanagedArchiveFolderPaths = [];
+    private IReadOnlyList<UnmanagedArchiveFolderReadModel> unmanagedArchiveFolders = [];
     private RemoteSourceDownloadReadModel? remoteDownloadOrigin;
     private ReleaseMetadataReadModel? releaseMetadata;
     private ReleaseInfoReadModel? releaseInfo;
@@ -144,7 +144,7 @@ public partial class ReleaseDetail(
         }
 
         release = releaseReadModel;
-        await LoadUnmanagedArchiveFolderPathsAsync();
+        await LoadUnmanagedArchiveFoldersAsync();
         await LoadReleaseMetadataAndReleaseInfoAsync();
         await LoadArchiveConfigsAsync();
         await LoadImageUploadConfigCountAsync();
@@ -281,13 +281,13 @@ public partial class ReleaseDetail(
         await LoadOverviewUploadsAndProgressStepsAsync();
     }
 
-    private async Task LoadUnmanagedArchiveFolderPathsAsync()
+    private async Task LoadUnmanagedArchiveFoldersAsync()
     {
-        unmanagedArchiveFolderPaths =
+        unmanagedArchiveFolders =
             release.ReleaseType is ReleaseType.Unmanaged
                 ? await operationRunner.RunAsync(
                     (IReleaseReadRepository repository) =>
-                        repository.GetUnmanagedArchiveFolderPathsAsync(release.ReleaseId)
+                        repository.GetUnmanagedArchiveFoldersAsync(release.ReleaseId)
                 )
                 : [];
     }
@@ -462,11 +462,16 @@ public partial class ReleaseDetail(
 
         if (!preview.CanDelete)
         {
-            toastService.Error(L["DeleteLocalArchivesNotReady"]);
+            toastService.Error(
+                preview.DeletableArchiveFolderPaths.Count == 0
+                && preview.ArchiveInStorageFolderCount > 0
+                    ? L["DeleteLocalArchivesOnlyArchivesInStorageFolders"]
+                    : L["DeleteLocalArchivesNotReady"]
+            );
             return;
         }
 
-        var confirmation = IsUnmanaged
+        var deletionConfirmation = IsUnmanaged
             ? L[
                 "DeleteLocalArchivesConfirmationMirror",
                 string.Join(", ", preview.MirrorHosterNames),
@@ -476,6 +481,11 @@ public partial class ReleaseDetail(
                 "DeleteLocalArchivesConfirmationManaged",
                 string.Join(Environment.NewLine, preview.DeletableArchiveFolderPaths)
             ];
+
+        var confirmation =
+            preview.ArchiveInStorageFolderCount > 0
+                ? $"{deletionConfirmation} {L["DeleteLocalArchivesKeepsArchivesInStorageFolders", preview.ArchiveInStorageFolderCount]}"
+                : deletionConfirmation.Value;
 
         var result = await dialogService.ConfirmAsync(
             L["DeleteLocalArchivesTitle", release.Name],
@@ -633,7 +643,7 @@ public partial class ReleaseDetail(
     private async Task ReloadReleaseAsync()
     {
         await ReloadProgressAsync();
-        await LoadUnmanagedArchiveFolderPathsAsync();
+        await LoadUnmanagedArchiveFoldersAsync();
     }
 
     public async ValueTask DisposeAsync()

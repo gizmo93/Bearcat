@@ -15,6 +15,12 @@ public class ReplaceAutoDeleteArchivesWithArchiveRetentionActionMigrationTest(
     private const string PreviousMigrationName = "AddArchiveStorageFolders";
     private const string MigrationName = "ReplaceAutoDeleteArchivesWithArchiveRetentionAction";
 
+    [TearDown]
+    public async Task MigrateToLatestMigrationAsync()
+    {
+        await DbContext.Database.MigrateAsync();
+    }
+
     [Test]
     public async Task Up_AutoDeleteArchivesEnabled_BecomesDeleteRetentionAction()
     {

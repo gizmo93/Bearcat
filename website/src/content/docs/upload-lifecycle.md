@@ -45,9 +45,13 @@ The release must also pass [quality checks](/Bearcat/quality-gates/) or be manua
 
 For each waiting upload, Bearcat prepares an archive:
 
-1. Reuse a finished archive for the same archive configuration, if possible.
+1. Reuse a finished archive for the same archive configuration, if possible. If the archive lies in a
+   [storage folder](/Bearcat/archive-storage-folders/#reuploads), the upload reads it there, or Bearcat
+   first copies the files to upload into a temporary local working copy, depending on the storage folder.
 2. Restore missing local files from a configured [mirror hoster](/Bearcat/mirror-downloads/).
 3. If neither is possible, create a new archive from the release folder.
+
+An unreachable storage folder or archive files missing there count as missing files.
 
 Bearcat can only repack [managed releases](/Bearcat/release-types/). Unmanaged releases need local
 archive files or an available mirror.
@@ -200,6 +204,8 @@ Only files that are uploaded again need new hashes. The other parts keep their h
 Before changing a reused archive, Bearcat checks whether another active upload is using it.
 If so, it waits until a later run. If a file to upload is missing locally, Bearcat first restores
 it from a [mirror hoster](/Bearcat/mirror-downloads/) and changes the hashes afterwards.
+For an archive in a storage folder with **Local working copy for reuploads** enabled, Bearcat
+changes the hashes of the local working copy. Otherwise it changes them in the storage folder.
 
 ### The nonce file and repackaging
 

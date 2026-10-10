@@ -217,7 +217,8 @@ public class UnmanagedReleaseArchiveInitializationServiceTest
             archiveConfig,
             targetFolderPath,
             CreatedAt.AddHours(1),
-            confirmContentChange: false
+            confirmContentChange: false,
+            archiveStorageFolders: []
         );
 
         // Assert
@@ -251,13 +252,15 @@ public class UnmanagedReleaseArchiveInitializationServiceTest
             archiveConfig,
             archiveFolderPath,
             CreatedAt.AddHours(1),
-            confirmContentChange: false
+            confirmContentChange: false,
+            archiveStorageFolders: []
         );
         var confirmedResult = initializationService.ApplyArchiveFolder(
             archiveConfig,
             archiveFolderPath,
             CreatedAt.AddHours(1),
-            confirmContentChange: true
+            confirmContentChange: true,
+            archiveStorageFolders: []
         );
 
         // Assert
@@ -294,7 +297,8 @@ public class UnmanagedReleaseArchiveInitializationServiceTest
                 archiveConfig,
                 targetFolderPath,
                 CreatedAt.AddHours(1),
-                confirmContentChange: true
+                confirmContentChange: true,
+                archiveStorageFolders: []
             )
         );
 
@@ -302,6 +306,184 @@ public class UnmanagedReleaseArchiveInitializationServiceTest
         exception.Message.ShouldBe(
             $"Archive folder path {targetFolderPath} does not contain archive files for archiver RAR."
         );
+    }
+
+    [Test]
+    public void ApplyArchiveFolder_ArchiveRelocatedIntoStorageFolder_AssignsStorageFolderAndStorageFolderHashes()
+    {
+        // Arrange
+        var currentFolderPath = CreateFolderWithFiles("current", "release.rar", "release.r00");
+        var archiveConfig = initializationService.CreateArchiveConfig(
+            CreateUnmanagedRelease(),
+            currentFolderPath,
+            CreatedAt
+        );
+        var storageFolder = CreateStorageFolder(7, Path.Combine(tempRootPath, "storage"));
+        var nestedStorageFolder = CreateStorageFolder(
+            8,
+            Path.Combine(tempRootPath, "storage", "nested")
+        );
+        var targetFolderPath = CreateFolderWithFiles(
+            Path.Combine("storage", "nested", "release"),
+            "release.rar",
+            "release.r00"
+        );
+        foreach (var archiveFile in archiveConfig.Archives.Single().ArchiveFiles)
+        {
+            archiveFile.Md5Hash = "11111111111111111111111111111111";
+        }
+
+        // Act
+        var result = initializationService.ApplyArchiveFolder(
+            archiveConfig,
+            targetFolderPath,
+            CreatedAt.AddHours(1),
+            confirmContentChange: false,
+            archiveStorageFolders: [storageFolder, nestedStorageFolder]
+        );
+
+        // Assert
+        result.ShouldBe(ArchiveFolderChangeResult.Relocated);
+        var archive = archiveConfig.Archives.Single();
+        archive.ArchiveStorageFolderId.ShouldBe(nestedStorageFolder.Id);
+        archive.ArchiveStorageFolder.ShouldBe(nestedStorageFolder);
+        archive.ArchiveFiles.ShouldAllBe(archiveFile =>
+            archiveFile.Md5HashInStorageFolder == "11111111111111111111111111111111"
+        );
+    }
+
+    [Test]
+    public void ApplyArchiveFolder_ArchiveRelocatedOutOfStorageFolder_ClearsStorageFolderAndStorageFolderHashes()
+    {
+        // Arrange
+        var storageFolder = CreateStorageFolder(7, Path.Combine(tempRootPath, "storage"));
+        var currentFolderPath = CreateFolderWithFiles(
+            Path.Combine("storage", "release"),
+            "release.rar",
+            "release.r00"
+        );
+        var archiveConfig = CreateArchiveConfigWithArchiveFiles(
+            currentFolderPath,
+            "release.r00",
+            "release.rar"
+        );
+        var archive = archiveConfig.Archives.Single();
+        archive.ArchiveStorageFolder = storageFolder;
+        archive.ArchiveStorageFolderId = storageFolder.Id;
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            archiveFile.Md5Hash = "11111111111111111111111111111111";
+            archiveFile.Md5HashInStorageFolder = "11111111111111111111111111111111";
+        }
+        var targetFolderPath = CreateFolderWithFiles("target", "release.rar", "release.r00");
+
+        // Act
+        var result = initializationService.ApplyArchiveFolder(
+            archiveConfig,
+            targetFolderPath,
+            CreatedAt.AddHours(1),
+            confirmContentChange: false,
+            archiveStorageFolders: [storageFolder]
+        );
+
+        // Assert
+        result.ShouldBe(ArchiveFolderChangeResult.Relocated);
+        archive.ArchiveFolderPath.ShouldBe(targetFolderPath);
+        archive.ArchiveStorageFolderId.ShouldBeNull();
+        archive.ArchiveStorageFolder.ShouldBeNull();
+        archive.ArchiveFiles.ShouldAllBe(archiveFile => archiveFile.Md5HashInStorageFolder == null);
+        archive.ArchiveFiles.ShouldAllBe(archiveFile =>
+            archiveFile.Md5Hash == "11111111111111111111111111111111"
+        );
+    }
+
+    [Test]
+    public void ApplyArchiveFolder_ArchiveWithLocalWorkingCopyFileRelocated_ResetsHashOfWorkingCopyFileToStorageFolderHash()
+    {
+        // Arrange
+        var storageFolder = CreateStorageFolder(7, Path.Combine(tempRootPath, "storage"));
+        var currentFolderPath = CreateFolderWithFiles(
+            Path.Combine("storage", "release"),
+            "release.rar",
+            "release.r00"
+        );
+        var archiveConfig = CreateArchiveConfigWithArchiveFiles(
+            currentFolderPath,
+            "release.r00",
+            "release.rar"
+        );
+        var archive = archiveConfig.Archives.Single();
+        archive.ArchiveStorageFolder = storageFolder;
+        archive.ArchiveStorageFolderId = storageFolder.Id;
+        var workingCopyFile = archive.ArchiveFiles[0];
+        workingCopyFile.FullFileName = Path.Combine(
+            tempRootPath,
+            "archives",
+            "release",
+            "release.r00"
+        );
+        workingCopyFile.Md5Hash = "22222222222222222222222222222222";
+        workingCopyFile.Md5HashInStorageFolder = "11111111111111111111111111111111";
+        var targetFolderPath = CreateFolderWithFiles(
+            Path.Combine("storage", "moved"),
+            "release.rar",
+            "release.r00"
+        );
+
+        // Act
+        var result = initializationService.ApplyArchiveFolder(
+            archiveConfig,
+            targetFolderPath,
+            CreatedAt.AddHours(1),
+            confirmContentChange: false,
+            archiveStorageFolders: [storageFolder]
+        );
+
+        // Assert
+        result.ShouldBe(ArchiveFolderChangeResult.Relocated);
+        workingCopyFile.FullFileName.ShouldBe(Path.Combine(targetFolderPath, "release.r00"));
+        workingCopyFile.Md5Hash.ShouldBe("11111111111111111111111111111111");
+        workingCopyFile.Md5HashInStorageFolder.ShouldBe("11111111111111111111111111111111");
+    }
+
+    [Test]
+    public void ApplyArchiveFolder_ReimportFromStorageFolder_AssignsStorageFolderToNewArchiveOnly()
+    {
+        // Arrange
+        var storageFolder = CreateStorageFolder(7, Path.Combine(tempRootPath, "storage"));
+        var currentFolderPath = CreateFolderWithFiles("current", "release.rar");
+        var archiveConfig = CreateArchiveConfigWithArchiveFiles(currentFolderPath, "release.rar");
+        var targetFolderPath = CreateFolderWithFiles(
+            Path.Combine("storage", "release"),
+            "other.rar"
+        );
+
+        // Act
+        var result = initializationService.ApplyArchiveFolder(
+            archiveConfig,
+            targetFolderPath,
+            CreatedAt.AddHours(1),
+            confirmContentChange: true,
+            archiveStorageFolders: [storageFolder]
+        );
+
+        // Assert
+        result.ShouldBe(ArchiveFolderChangeResult.Reimported);
+        archiveConfig.Archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
+        archiveConfig.Archives[0].ArchiveStorageFolderId.ShouldBeNull();
+        archiveConfig.Archives[1].ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+        archiveConfig.Archives[1].ArchiveStorageFolder.ShouldBe(storageFolder);
+    }
+
+    private static ArchiveStorageFolder CreateStorageFolder(int id, string path)
+    {
+        return new ArchiveStorageFolder
+        {
+            Id = id,
+            Name = $"Storage {id}",
+            Path = path,
+            IsActive = true,
+        };
     }
 
     private static Release CreateUnmanagedRelease()

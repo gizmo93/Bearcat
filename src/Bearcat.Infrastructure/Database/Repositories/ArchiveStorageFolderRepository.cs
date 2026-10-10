@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageArchiveStorageFolders.ReadModels;
 using Bearcat.Domain.UseCases.ManageArchiveStorageFolders.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -24,8 +25,11 @@ public class ArchiveStorageFolderRepository(
                 storageFolder.IsActive,
                 storageFolder.MinimumFreeSpaceGb,
                 storageFolder.Priority,
-                storageFolder.RetrieveArchivesBeforeReupload,
-                dbRead.Archives.Count(archive => archive.ArchiveStorageFolderId == storageFolder.Id)
+                storageFolder.UseLocalWorkingCopyForReuploads,
+                dbRead.Archives.Count(archive =>
+                    archive.ArchiveStorageFolderId == storageFolder.Id
+                    && archive.ArchiveState == ArchiveState.Created
+                )
             ))
             .ToListAsync(cancellationToken);
     }
@@ -73,9 +77,23 @@ public class ArchiveStorageFolderRepository(
     )
     {
         return await dbRead.Archives.CountAsync(
-            archive => archive.ArchiveStorageFolderId == archiveStorageFolderId,
+            archive =>
+                archive.ArchiveStorageFolderId == archiveStorageFolderId
+                && archive.ArchiveState == ArchiveState.Created,
             cancellationToken
         );
+    }
+
+    public async Task<IReadOnlyList<Archive>> GetArchivesReferencingStorageFolderAsync(
+        int archiveStorageFolderId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Include(archive => archive.ArchiveFiles)
+            .Where(archive => archive.ArchiveStorageFolderId == archiveStorageFolderId)
+            .OrderBy(archive => archive.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public void Add(ArchiveStorageFolder archiveStorageFolder)

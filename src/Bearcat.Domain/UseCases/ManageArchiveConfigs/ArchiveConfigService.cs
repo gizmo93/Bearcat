@@ -152,7 +152,10 @@ public class ArchiveConfigService(
             archiveConfig: archiveConfig,
             archiveFolderPath: archiveFolderPath,
             createdAt: timeProvider.GetLocalNow(),
-            confirmContentChange: confirmContentChange
+            confirmContentChange: confirmContentChange,
+            archiveStorageFolders: await writeRepository.GetArchiveStorageFoldersAsync(
+                cancellationToken
+            )
         );
 
         if (result is not ArchiveFolderChangeResult.ConfirmationRequired)

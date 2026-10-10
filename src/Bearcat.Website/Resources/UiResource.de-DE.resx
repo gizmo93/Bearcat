@@ -1172,6 +1172,8 @@
   <data name="NotificationKind.NoArchiveStorageFolderAvailable.Description" xml:space="preserve"><value>Ein Archiv konnte nicht verschoben werden, weil kein aktiver Speicherordner genug freien Speicherplatz hat. Das Archiv bleibt lokal.</value></data>
   <data name="NotificationKind.ArchiveMoveToStorageFolderFailed" xml:space="preserve"><value>Verschieben in Speicherordner fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Das Kopieren eines Archivs in einen Speicherordner ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und das Archiv bleibt lokal.</value></data>
+  <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed" xml:space="preserve"><value>Kopieren in lokale Arbeitskopie fehlgeschlagen</value></data>
+  <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description" xml:space="preserve"><value>Das Kopieren von Archivdateien aus einem Speicherordner in eine lokale Arbeitskopie vor einem Reupload ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und der Upload liest die Archivdateien aus dem Speicherordner.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release aus Remotedownload erstellt</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
@@ -1206,6 +1208,8 @@
   <data name="DeleteLocalArchivesConfirmationMirror" xml:space="preserve"><value>Die Hoster dienen als Langzeitspeicher dieses Releases. Bearcat lädt die Archive von diesen Mirrors, wenn ein Reupload nötig ist: {0}. Diese Archivordner werden jetzt geleert und gelöscht: {1}</value></data>
   <data name="DeleteLocalArchivesConfirmationManaged" xml:space="preserve"><value>Bearcat stellt die Archive bei einem Reupload von einem Onlinemirror wieder her oder packt sie aus dem Releaseordner neu. Diese Archivordner werden jetzt geleert und gelöscht: {0}</value></data>
   <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Lokale Archive können nur gelöscht werden, wenn keine Uploads laufen und jede Archivkonfiguration einen vollständig online stehenden Upload auf einem Hoster mit aktivierten Mirrordownloads hat (oder bei Managedreleases der Releaseordner noch existiert).</value></data>
+  <data name="DeleteLocalArchivesOnlyArchivesInStorageFolders" xml:space="preserve"><value>Dieses Release hat keine lokalen Archive. Archive in einem Speicherordner werden von dieser Aktion nicht gelöscht.</value></data>
+  <data name="DeleteLocalArchivesKeepsArchivesInStorageFolders" xml:space="preserve"><value>{0} Archive in Speicherordnern bleiben erhalten.</value></data>
   <data name="LocalArchivesDeleted" xml:space="preserve"><value>Lokale Archive von {0} gelöscht</value></data>
   <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packen</value></data>
   <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 MD5-Hashes erstellen</value></data>
@@ -1219,6 +1223,11 @@
   <data name="CancelArchiveStorageFolderMoveConfirmation" xml:space="preserve"><value>Verschieben von Archiv #{0} in den Speicherordner abbrechen? Die bisher kopierten Dateien werden gelöscht und das Archiv bleibt lokal.</value></data>
   <data name="ArchiveStorageFolderMoveCancellationRequested" xml:space="preserve"><value>Abbruch für das Verschieben von Archiv #{0} angefordert.</value></data>
   <data name="ArchiveStorageFolderMoveAlreadyFinished" xml:space="preserve"><value>Das Verschieben von Archiv #{0} ist bereits abgeschlossen.</value></data>
+  <data name="ArchiveLocalWorkingCopies" xml:space="preserve"><value>Kopieren in lokale Arbeitskopien</value></data>
+  <data name="CancelArchiveLocalWorkingCopy" xml:space="preserve"><value>Kopieren abbrechen</value></data>
+  <data name="CancelArchiveLocalWorkingCopyConfirmation" xml:space="preserve"><value>Kopieren von Archiv #{0} in eine lokale Arbeitskopie abbrechen? Die bisher kopierten Dateien werden gelöscht und der Upload liest die Archivdateien aus dem Speicherordner.</value></data>
+  <data name="ArchiveLocalWorkingCopyCancellationRequested" xml:space="preserve"><value>Abbruch für das Kopieren von Archiv #{0} angefordert.</value></data>
+  <data name="ArchiveLocalWorkingCopyAlreadyFinished" xml:space="preserve"><value>Das Kopieren von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
@@ -1693,6 +1702,9 @@
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} wird beim nächsten Ordnerscan erneut verarbeitet.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Phasen der Ordnerautomatisierung</value></data>
   <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archivspeicherordner</value></data>
+  <data name="ArchiveStorageFolder" xml:space="preserve"><value>Speicherordner</value></data>
+  <data name="LocalWorkingCopy" xml:space="preserve"><value>lokale Arbeitskopie</value></data>
+  <data name="ArchiveStorageFolderWithLocalWorkingCopy" xml:space="preserve"><value>Speicherordner. Die für den aktuellen Reupload benötigten Dateien werden aus einer temporären lokalen Arbeitskopie gelesen, die das automatische Aufräumen nach den Uploads löscht.</value></data>
   <data name="ArchiveStorageFoldersIntro" xml:space="preserve"><value>Ordner, in die Archive aus den Arbeitsverzeichnissen verschoben werden können. Bearcat behandelt jeden Ordner als normales Verzeichnis, unabhängig davon, was dahinter liegt.</value></data>
   <data name="NewArchiveStorageFolder" xml:space="preserve"><value>Neuer Speicherordner</value></data>
   <data name="NoArchiveStorageFoldersYet" xml:space="preserve"><value>Noch keine Speicherordner eingerichtet.</value></data>
@@ -1707,10 +1719,10 @@
   <data name="MinimumFreeSpaceGb" xml:space="preserve"><value>Freizuhaltender Speicherplatz (GB)</value></data>
   <data name="ArchiveStorageFolderMinimumFreeSpaceHelp" xml:space="preserve"><value>Speicherplatz, der in diesem Ordner nach dem Verschieben von Archiven frei bleiben muss.</value></data>
   <data name="ArchiveStorageFolderPriorityHelp" xml:space="preserve"><value>Niedrigere Werte werden bevorzugt. Mehrere Ordner können dieselbe Priorität haben.</value></data>
-  <data name="RetrieveArchivesBeforeReupload" xml:space="preserve"><value>Archive vor Reupload zurückkopieren</value></data>
-  <data name="RetrieveArchivesBeforeReuploadHelp" xml:space="preserve"><value>Kopiert die Archive vor einem Reupload auf die lokale Festplatte zurück. Wenn deaktiviert, liest ein Reupload die Archive direkt aus diesem Ordner.</value></data>
-  <data name="RetrieveArchivesBeforeReuploadEnabled" xml:space="preserve"><value>Zuerst zurückkopieren</value></data>
-  <data name="RetrieveArchivesBeforeReuploadDisabled" xml:space="preserve"><value>Direkt lesen</value></data>
+  <data name="UseLocalWorkingCopyForReuploads" xml:space="preserve"><value>Lokale Arbeitskopie für Reuploads</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsHelp" xml:space="preserve"><value>Kopiert die für einen Reupload benötigten Archivdateien in eine temporäre lokale Arbeitskopie. Der Speicherordner bleibt unverändert. Wenn deaktiviert, liest ein Reupload die Archive direkt aus diesem Ordner und ändert ihre Hashes dort.</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsEnabled" xml:space="preserve"><value>Lokale Arbeitskopie</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsDisabled" xml:space="preserve"><value>Direkt im Speicherordner</value></data>
   <data name="AvailableFreeSpace" xml:space="preserve"><value>Freier Speicherplatz</value></data>
   <data name="FreeSpaceUnavailable" xml:space="preserve"><value>Nicht verfügbar</value></data>
   <data name="MinimumFreeSpaceValue" xml:space="preserve"><value>{0} GB freihalten</value></data>

@@ -1,21 +1,21 @@
 @using Bearcat.Website.Pages.Home.Activity
 
-<section class="bearcat-activity-lane" aria-label="@L["ArchiveStorageFolderMoves"]">
-    <ActivityLaneHeading IconName="folder-input" Label="@L["ArchiveStorageFolderMoves"]" Count="Archives.Count" />
+<section class="bearcat-activity-lane" aria-label="@L[LaneTexts.LaneLabelKey]">
+    <ActivityLaneHeading IconName="@LaneTexts.IconName" Label="@L[LaneTexts.LaneLabelKey]" Count="Archives.Count" />
 
     @foreach (var archive in Archives)
     {
-        var snapshot = MoveProgress.GetValueOrDefault(archive.ArchiveId);
+        var snapshot = Progress.GetValueOrDefault(archive.ArchiveId);
         RenderFragment? files = snapshot is null ? null : @<TransferFileList Snapshot="snapshot" />;
         <ActivityCard @key="archive.ArchiveId"
-                      IconName="folder-input"
+                      IconName="@LaneTexts.IconName"
                       IsActive="@(snapshot is not null)"
                       Title="@archive.ReleaseName"
                       TitleHref="@($"/releases/{archive.ReleaseId}")"
                       Snapshot="snapshot"
                       Files="files"
-                      CancelLabel="@L["CancelArchiveStorageFolderMove"]"
-                      OnCancel="@(() => CancelArchiveStorageFolderMoveAsync(archive))">
+                      CancelLabel="@L[LaneTexts.CancelKey]"
+                      OnCancel="@(() => CancelArchiveStorageFolderTransferAsync(archive))">
             <Chips>
                 <ActivityChip IconName="sliders-horizontal" Text="@archive.ArchiveConfigName" />
                 @if (snapshot is not null && snapshot.SourceName.Length > 0)

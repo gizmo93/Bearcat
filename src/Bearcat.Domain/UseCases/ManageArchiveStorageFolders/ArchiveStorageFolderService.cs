@@ -122,6 +122,22 @@ public class ArchiveStorageFolderService(
             return new ArchiveStorageFolderDeleteResult(IsDeleted: false, storedArchiveCount);
         }
 
+        var archivesReferencingStorageFolder =
+            await writeRepository.GetArchivesReferencingStorageFolderAsync(
+                archiveStorageFolderId,
+                cancellationToken
+            );
+
+        foreach (var archive in archivesReferencingStorageFolder)
+        {
+            archive.ArchiveStorageFolderId = null;
+
+            foreach (var archiveFile in archive.ArchiveFiles)
+            {
+                archiveFile.Md5HashInStorageFolder = null;
+            }
+        }
+
         var storageFolder = await writeRepository.GetByIdAsync(
             archiveStorageFolderId,
             cancellationToken
@@ -154,8 +170,8 @@ public class ArchiveStorageFolderService(
         storageFolder.Path = normalizedInput.Path;
         storageFolder.MinimumFreeSpaceGb = normalizedInput.MinimumFreeSpaceGb;
         storageFolder.Priority = normalizedInput.Priority;
-        storageFolder.RetrieveArchivesBeforeReupload =
-            normalizedInput.RetrieveArchivesBeforeReupload;
+        storageFolder.UseLocalWorkingCopyForReuploads =
+            normalizedInput.UseLocalWorkingCopyForReuploads;
     }
 
     private async Task<List<ArchiveStorageFolderValidationError>> ValidateAsync(

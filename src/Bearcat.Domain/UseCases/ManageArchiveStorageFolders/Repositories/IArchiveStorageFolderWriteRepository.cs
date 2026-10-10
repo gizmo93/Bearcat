@@ -26,6 +26,11 @@ public interface IArchiveStorageFolderWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<Archive>> GetArchivesReferencingStorageFolderAsync(
+        int archiveStorageFolderId,
+        CancellationToken cancellationToken
+    );
+
     void Add(ArchiveStorageFolder archiveStorageFolder);
 
     void Remove(ArchiveStorageFolder archiveStorageFolder);

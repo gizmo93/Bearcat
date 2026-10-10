@@ -7,6 +7,6 @@ public record ArchiveStorageFolderReadModel(
     bool IsActive,
     int MinimumFreeSpaceGb,
     int Priority,
-    bool RetrieveArchivesBeforeReupload,
+    bool UseLocalWorkingCopyForReuploads,
     int StoredArchiveCount
 );

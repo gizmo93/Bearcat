@@ -14,7 +14,7 @@ public class ArchiveStorageFolderFormModel
 
     public int Priority { get; set; } = 1;
 
-    public bool RetrieveArchivesBeforeReupload { get; set; }
+    public bool UseLocalWorkingCopyForReuploads { get; set; }
 
     public ArchiveStorageFolderInput ToInput()
     {
@@ -23,7 +23,7 @@ public class ArchiveStorageFolderFormModel
             Path ?? string.Empty,
             MinimumFreeSpaceGb,
             Priority,
-            RetrieveArchivesBeforeReupload
+            UseLocalWorkingCopyForReuploads
         );
     }
 }

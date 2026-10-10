@@ -14,5 +14,5 @@ public class ArchiveStorageFolder
 
     public int Priority { get; set; }
 
-    public bool RetrieveArchivesBeforeReupload { get; set; }
+    public bool UseLocalWorkingCopyForReuploads { get; set; }
 }

@@ -290,6 +290,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("Md5HashInStorageFolder")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveId");
@@ -324,7 +328,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("RetrieveArchivesBeforeReupload")
+                    b.Property<bool>("UseLocalWorkingCopyForReuploads")
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");

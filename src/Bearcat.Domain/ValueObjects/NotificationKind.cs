@@ -33,4 +33,5 @@ public enum NotificationKind
     ReleaseFolderExtractionFailed = 29,
     NoArchiveStorageFolderAvailable = 30,
     ArchiveMoveToStorageFolderFailed = 31,
+    ArchiveCopyIntoLocalWorkingCopyFailed = 32,
 }

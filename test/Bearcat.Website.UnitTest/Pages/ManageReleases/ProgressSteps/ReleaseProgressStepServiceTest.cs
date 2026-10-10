@@ -421,7 +421,16 @@ public class ReleaseProgressStepServiceTest
     private static ArchiveConfigReadModel.ArchiveSummary CreateArchive(
         int archiveId,
         ArchiveState archiveState
-    ) => new(archiveId, new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc), archiveState, 3, []);
+    ) =>
+        new(
+            archiveId,
+            new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+            archiveState,
+            3,
+            [],
+            ArchiveStorageFolderName: null,
+            HasLocalWorkingCopyFiles: false
+        );
 
     private static ReleaseOverviewUploadReadModel CreateOverviewUpload(
         UploadState uploadState,

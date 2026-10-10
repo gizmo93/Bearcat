@@ -272,6 +272,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Md5HashInStorageFolder")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveId");
@@ -304,7 +308,7 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Priority")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("RetrieveArchivesBeforeReupload")
+                    b.Property<bool>("UseLocalWorkingCopyForReuploads")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

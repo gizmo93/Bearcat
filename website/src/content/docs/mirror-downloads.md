@@ -118,6 +118,8 @@ Bearcat only offers this when the release stays recoverable:
   downloads, **or** the release is managed and still has its release folder for repacking.
 
 Bearcat deletes the archive files and removes the folder only if it is then empty. Other files are kept.
+Archives in a [storage folder](/Bearcat/archive-storage-folders/) are not deleted. If all archives of
+the release are in storage folders, Bearcat has nothing to delete and says so.
 
 ## Automatic cleanup
 

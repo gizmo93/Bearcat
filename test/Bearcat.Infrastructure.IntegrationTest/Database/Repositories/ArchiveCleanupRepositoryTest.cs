@@ -141,6 +141,139 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldBe([unresolvedArchive.Id]);
     }
 
+    [Test]
+    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_MixedArchives_ReturnsCreatedArchivesInStorageFolderWithLocalWorkingCopyFilesOrderedById()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        var firstArchive = await AddArchiveAsync(
+            "First",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id,
+            archiveFileFolderPath: "/working-copies/First"
+        );
+        var secondArchive = await AddArchiveAsync(
+            "Second",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id,
+            archiveFileFolderPath: "/working-copies/Second"
+        );
+        await AddArchiveAsync(
+            "StoredWithoutWorkingCopy",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id
+        );
+        await AddArchiveAsync("Local", Cutoff, archiveFileFolderPath: "/working-copies/Local");
+        await AddArchiveAsync(
+            "Deleted",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id,
+            archiveState: ArchiveState.Deleted,
+            archiveFileFolderPath: "/working-copies/Deleted"
+        );
+
+        // Act
+        var result =
+            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result.Select(archive => archive.Id).ShouldBe([firstArchive.Id, secondArchive.Id]);
+        result.ShouldAllBe(archive => archive.ArchiveFiles.Count == 2);
+    }
+
+    [Test]
+    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_ArchiveWithLocalWorkingCopyFile_ReturnsArchive()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        var archive = await AddArchiveAsync(
+            "Stored",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id,
+            archiveFileFolderPath: "/working-copies/Stored"
+        );
+
+        // Act
+        var result =
+            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result.ShouldHaveSingleItem().Id.ShouldBe(archive.Id);
+    }
+
+    [Test]
+    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_ArchiveWithoutLocalWorkingCopyFiles_ReturnsNothing()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        await AddArchiveAsync("Stored", Cutoff, archiveStorageFolderId: storageFolder.Id);
+
+        // Act
+        var result =
+            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_FileInSiblingFolderWithSamePrefix_ReturnsArchive()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        var archive = await AddArchiveAsync(
+            "Rel",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id,
+            archiveFileFolderPath: "/archives/Rel.5"
+        );
+
+        // Act
+        var result =
+            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result.ShouldHaveSingleItem().Id.ShouldBe(archive.Id);
+    }
+
+    [TestCase(UploadState.WaitingForArchive, false)]
+    [TestCase(UploadState.Pending, false)]
+    [TestCase(UploadState.Uploading, false)]
+    [TestCase(UploadState.Completed, true)]
+    [TestCase(UploadState.Failed, true)]
+    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_UploadInState_ReturnsArchiveOnlyWithoutActiveUpload(
+        UploadState uploadState,
+        bool expectedToBeReturned
+    )
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        var archive = await AddArchiveAsync(
+            "Stored",
+            Cutoff,
+            archiveStorageFolderId: storageFolder.Id,
+            uploadState: uploadState,
+            archiveFileFolderPath: "/working-copies/Stored"
+        );
+
+        // Act
+        var result =
+            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result.Any(candidate => candidate.Id == archive.Id).ShouldBe(expectedToBeReturned);
+    }
+
     private async Task<ArchiveStorageFolder> AddStorageFolderAsync(string name, bool isActive)
     {
         var storageFolder = new ArchiveStorageFolder
@@ -182,9 +315,13 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         string name,
         DateTime uploadedAt,
         int? archiveStorageFolderId = null,
-        UploadState uploadState = UploadState.Completed
+        UploadState uploadState = UploadState.Completed,
+        ArchiveState archiveState = ArchiveState.Created,
+        string? archiveFileFolderPath = null
     )
     {
+        var archiveFolderPath = $"/archives/{name}";
+        var archiveFileFolder = archiveFileFolderPath ?? archiveFolderPath;
         var release = new Release
         {
             Name = name,
@@ -222,15 +359,15 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         var archive = new Archive
         {
             ArchiveConfig = archiveConfig,
-            ArchiveFolderPath = $"/archives/{name}",
+            ArchiveFolderPath = archiveFolderPath,
             ArchiveStorageFolderId = archiveStorageFolderId,
-            ArchiveState = ArchiveState.Created,
+            ArchiveState = archiveState,
             ArchiveFileSizeMb = 512,
             CreatedAt = Cutoff.AddDays(-30),
             ArchiveFiles =
             [
-                new ArchiveFile { FullFileName = $"/archives/{name}/{name}.part1.rar" },
-                new ArchiveFile { FullFileName = $"/archives/{name}/{name}.part2.rar" },
+                new ArchiveFile { FullFileName = $"{archiveFileFolder}/{name}.part1.rar" },
+                new ArchiveFile { FullFileName = $"{archiveFileFolder}/{name}.part2.rar" },
             ],
             Uploads =
             [

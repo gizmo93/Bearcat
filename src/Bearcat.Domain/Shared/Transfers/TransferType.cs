@@ -13,4 +13,5 @@ public enum TransferType
     ReleaseFolderVerification = 9,
     ReleaseFolderExtraction = 10,
     ArchiveMoveToStorageFolder = 11,
+    ArchiveCopyIntoLocalWorkingCopy = 12,
 }

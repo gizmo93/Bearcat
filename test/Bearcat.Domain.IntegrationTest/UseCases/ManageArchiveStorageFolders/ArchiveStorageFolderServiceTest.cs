@@ -66,7 +66,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
                 $"  {storageFolderPath}  ",
                 MinimumFreeSpaceGb: 50,
                 Priority: 2,
-                RetrieveArchivesBeforeReupload: true
+                UseLocalWorkingCopyForReuploads: true
             )
         );
 
@@ -79,7 +79,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         storageFolder.IsActive.ShouldBeTrue();
         storageFolder.MinimumFreeSpaceGb.ShouldBe(50);
         storageFolder.Priority.ShouldBe(2);
-        storageFolder.RetrieveArchivesBeforeReupload.ShouldBeTrue();
+        storageFolder.UseLocalWorkingCopyForReuploads.ShouldBeTrue();
     }
 
     [Test]
@@ -260,7 +260,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
                 "",
                 MinimumFreeSpaceGb: -5,
                 Priority: 0,
-                RetrieveArchivesBeforeReupload: false
+                UseLocalWorkingCopyForReuploads: false
             )
         );
 
@@ -287,7 +287,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
                 otherStorageFolderPath,
                 MinimumFreeSpaceGb: 20,
                 Priority: 5,
-                RetrieveArchivesBeforeReupload: true
+                UseLocalWorkingCopyForReuploads: true
             )
         );
 
@@ -299,7 +299,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         storageFolder.IsActive.ShouldBeFalse();
         storageFolder.MinimumFreeSpaceGb.ShouldBe(20);
         storageFolder.Priority.ShouldBe(5);
-        storageFolder.RetrieveArchivesBeforeReupload.ShouldBeTrue();
+        storageFolder.UseLocalWorkingCopyForReuploads.ShouldBeTrue();
     }
 
     [Test]
@@ -438,6 +438,83 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task UpdateAsync_ChangedPathWithOnlyArchivesNotInCreatedState_UpdatesPath()
+    {
+        // Arrange
+        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
+        await AddArchiveStoredInAsync(
+            created.ArchiveStorageFolderId!.Value,
+            ArchiveState.MissingFiles
+        );
+        await AddArchiveStoredInAsync(created.ArchiveStorageFolderId.Value, ArchiveState.Deleted);
+
+        // Act
+        var result = await service.UpdateAsync(
+            created.ArchiveStorageFolderId.Value,
+            CreateInput("NAS archive", otherStorageFolderPath)
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await LoadStorageFolderAsync()).Path.ShouldBe(otherStorageFolderPath);
+    }
+
+    [Test]
+    public async Task DeleteAsync_StorageFolderReferencedOnlyByArchivesNotInCreatedState_ClearsReferencesAndStorageFolderHashesAndDeletesStorageFolder()
+    {
+        // Arrange
+        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
+        var missingFilesArchive = await AddArchiveStoredInAsync(
+            created.ArchiveStorageFolderId!.Value,
+            ArchiveState.MissingFiles
+        );
+        var deletedArchive = await AddArchiveStoredInAsync(
+            created.ArchiveStorageFolderId.Value,
+            ArchiveState.Deleted
+        );
+
+        // Act
+        var result = await service.DeleteAsync(created.ArchiveStorageFolderId.Value);
+
+        // Assert
+        result.IsDeleted.ShouldBeTrue();
+        result.StoredArchiveCount.ShouldBe(0);
+        await using var readDbContext = Database.CreateDbContext();
+        (await readDbContext.ArchiveStorageFolders.AnyAsync()).ShouldBeFalse();
+        var archives = await readDbContext.Archives.OrderBy(archive => archive.Id).ToListAsync();
+        archives
+            .Select(archive => archive.Id)
+            .ShouldBe([missingFilesArchive.Id, deletedArchive.Id]);
+        archives.ShouldAllBe(archive => archive.ArchiveStorageFolderId == null);
+        (await readDbContext.ArchiveFiles.ToListAsync()).ShouldAllBe(archiveFile =>
+            archiveFile.Md5HashInStorageFolder == null
+        );
+    }
+
+    [Test]
+    public async Task DeleteAsync_StorageFolderWithCreatedAndNotCreatedArchives_KeepsStorageFolderAndReferences()
+    {
+        // Arrange
+        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
+        await AddArchiveStoredInAsync(created.ArchiveStorageFolderId!.Value);
+        await AddArchiveStoredInAsync(created.ArchiveStorageFolderId.Value, ArchiveState.Deleted);
+
+        // Act
+        var result = await service.DeleteAsync(created.ArchiveStorageFolderId.Value);
+
+        // Assert
+        result.IsDeleted.ShouldBeFalse();
+        result.StoredArchiveCount.ShouldBe(1);
+        await using var readDbContext = Database.CreateDbContext();
+        (await readDbContext.ArchiveStorageFolders.CountAsync()).ShouldBe(1);
+        (
+            await readDbContext.Archives.CountAsync(archive =>
+                archive.ArchiveStorageFolderId == created.ArchiveStorageFolderId.Value
+            )
+        ).ShouldBe(2);
+    }
+
+    [Test]
     public async Task GetAllWithAvailableFreeSpaceAsync_ExistingAndMissingPath_ReturnsFreeSpaceOnlyForExistingPath()
     {
         // Arrange
@@ -465,7 +542,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
             path,
             MinimumFreeSpaceGb: 10,
             Priority: 1,
-            RetrieveArchivesBeforeReupload: false
+            UseLocalWorkingCopyForReuploads: false
         );
     }
 
@@ -476,39 +553,56 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         return await readDbContext.ArchiveStorageFolders.SingleAsync();
     }
 
-    private async Task AddArchiveStoredInAsync(int archiveStorageFolderId)
+    private async Task<Archive> AddArchiveStoredInAsync(
+        int archiveStorageFolderId,
+        ArchiveState archiveState = ArchiveState.Created
+    )
     {
         await using var setupDbContext = Database.CreateDbContext();
-        setupDbContext.Archives.Add(
-            new Archive
+        var archive = new Archive
+        {
+            ArchiveConfig = new ArchiveConfig
             {
-                ArchiveConfig = new ArchiveConfig
+                Name = "RAR Forum A",
+                ArchiveFilesBasePath = "/tmp/archives",
+                ArchiverName = "rar",
+                ArchiveFileSizeMb = 1024,
+                Release = new Release
                 {
-                    Name = "RAR Forum A",
-                    ArchiveFilesBasePath = "/tmp/archives",
-                    ArchiverName = "rar",
-                    ArchiveFileSizeMb = 1024,
-                    Release = new Release
+                    Name = $"Bearcat.Release.{Guid.NewGuid():N}",
+                    CreatedAt = DateTime.UtcNow,
+                    ReleaseType = ReleaseType.Managed,
+                    ReleaseFolderPath = "/tmp/releases/Bearcat.Release",
+                    ReleaseGroup = new ReleaseGroup
                     {
-                        Name = $"Bearcat.Release.{Guid.NewGuid():N}",
-                        CreatedAt = DateTime.UtcNow,
-                        ReleaseType = ReleaseType.Managed,
-                        ReleaseFolderPath = "/tmp/releases/Bearcat.Release",
-                        ReleaseGroup = new ReleaseGroup
-                        {
-                            Name = $"Group {Guid.NewGuid():N}",
-                            EnableAutomaticReuploads = false,
-                            NumberOfHoursUntilReupload = 24,
-                        },
+                        Name = $"Group {Guid.NewGuid():N}",
+                        EnableAutomaticReuploads = false,
+                        NumberOfHoursUntilReupload = 24,
                     },
                 },
-                ArchiveFolderPath = Path.Combine(storageFolderPath, "Bearcat.Release"),
-                ArchiveStorageFolderId = archiveStorageFolderId,
-                CreatedAt = DateTime.UtcNow,
-                ArchiveState = ArchiveState.Created,
-                ArchiveFileSizeMb = 1024,
-            }
-        );
+            },
+            ArchiveFolderPath = Path.Combine(storageFolderPath, "Bearcat.Release"),
+            ArchiveStorageFolderId = archiveStorageFolderId,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveState = archiveState,
+            ArchiveFileSizeMb = 1024,
+            ArchiveFiles =
+            [
+                new ArchiveFile
+                {
+                    FullFileName = Path.Combine(
+                        storageFolderPath,
+                        "Bearcat.Release",
+                        "release.rar"
+                    ),
+                    Md5Hash = "11111111111111111111111111111111",
+                    Md5HashInStorageFolder = "11111111111111111111111111111111",
+                },
+            ],
+        };
+        setupDbContext.Archives.Add(archive);
         await setupDbContext.SaveChangesAsync();
+
+        return archive;
     }
 }

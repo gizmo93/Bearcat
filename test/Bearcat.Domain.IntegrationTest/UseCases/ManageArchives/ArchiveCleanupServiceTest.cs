@@ -26,6 +26,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
+    private const string ArchiveFileMd5Hash = "0123456789ABCDEF0123456789ABCDEF";
 
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
@@ -262,7 +263,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_MoveActionAndStorageFolderFits_MovesArchiveIntoStorageFolder()
+    public async Task ProcessAsync_MoveActionAndStorageFolderFits_MovesArchiveIntoStorageFolderAndStoresStorageFolderHashes()
     {
         // Arrange
         var storageFolder = await AddStorageFolderAsync();
@@ -289,6 +290,9 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
                 ignoreOrder: true
             );
         result.ArchiveFiles.ShouldAllBe(f => File.ReadAllText(f.FullFileName) == "archive-data");
+        result.ArchiveFiles.ShouldAllBe(f =>
+            f.Md5Hash == ArchiveFileMd5Hash && f.Md5HashInStorageFolder == ArchiveFileMd5Hash
+        );
         archive.ArchiveFiles.ShouldAllBe(f => !File.Exists(f.FullFileName));
         Directory.Exists(archive.ArchiveFolderPath).ShouldBeFalse();
         progressTrackerMock.Verify(
@@ -676,7 +680,9 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         {
             var filePath = Path.Combine(archiveFolderPath, fileName);
             await File.WriteAllTextAsync(filePath, "archive-data");
-            archiveFiles.Add(new ArchiveFile { FullFileName = filePath });
+            archiveFiles.Add(
+                new ArchiveFile { FullFileName = filePath, Md5Hash = ArchiveFileMd5Hash }
+            );
         }
 
         var archive = new Archive

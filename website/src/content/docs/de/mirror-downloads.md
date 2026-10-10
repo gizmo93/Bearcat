@@ -120,6 +120,8 @@ Bearcat bietet das nur an, wenn das Release wiederherstellbar bleibt:
   Mirrordownloads aktiviert ist, **oder** das Release ist managed und hat noch seinen Releaseordner zum Neupacken.
 
 Bearcat löscht die Archivdateien und entfernt den Ordner nur, wenn er danach leer ist. Andere Dateien bleiben erhalten.
+Archive in einem [Speicherordner](/Bearcat/de/archive-storage-folders/) löscht Bearcat nicht. Liegen alle
+Archive des Releases in Speicherordnern, gibt es nichts zu löschen und Bearcat meldet das.
 
 ## Automatisches Aufräumen
 

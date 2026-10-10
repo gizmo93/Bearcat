@@ -38,6 +38,10 @@ See [Release Information and Metadata](/Bearcat/release-information-and-metadata
 A managed release needs at least one archive configuration. See
 [Creating the archive](/Bearcat/upload-lifecycle/#3-creating-the-archive) for the packing options.
 
+Archives in a [storage folder](/Bearcat/archive-storage-folders/) show the storage folder name next to
+their state. While a reupload uses a [local working copy](/Bearcat/archive-storage-folders/#reuploads),
+the name is followed by **local working copy**.
+
 ## Uploads
 
 **Configuration** connects an archive configuration to a hoster account and optional link crypters.

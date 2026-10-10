@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,10 @@ public class ArchiveCleanupBackgroundTask(
         var releaseFolderRetirementService =
             serviceProvider.GetRequiredService<ReleaseFolderRetirementService>();
         await releaseFolderRetirementService.ProcessAsync(stoppingToken);
+
+        var archiveLocalWorkingCopyCleanupService =
+            serviceProvider.GetRequiredService<ArchiveLocalWorkingCopyCleanupService>();
+        await archiveLocalWorkingCopyCleanupService.DeleteLocalWorkingCopiesAsync(stoppingToken);
 
         var archiveCleanupService = serviceProvider.GetRequiredService<ArchiveCleanupService>();
         await archiveCleanupService.ProcessAsync(stoppingToken);

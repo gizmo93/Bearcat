@@ -45,9 +45,13 @@ Das Release muss auch die [Qualitätsprüfungen](/Bearcat/de/quality-gates/) bes
 
 Für jeden wartenden Upload stellt Bearcat ein Archiv bereit:
 
-1. Wenn möglich, ein fertiges Archiv derselben Archivkonfiguration wiederverwenden.
+1. Wenn möglich, ein fertiges Archiv derselben Archivkonfiguration wiederverwenden. Liegt das Archiv in einem
+   [Speicherordner](/Bearcat/de/archive-storage-folders/#reuploads), liest der Upload es dort, oder Bearcat
+   kopiert je nach Speicherordner zuerst die hochzuladenden Dateien in eine temporäre lokale Arbeitskopie.
 2. Fehlende lokale Dateien von einem konfigurierten [Mirrorhoster](/Bearcat/de/mirror-downloads/) wiederherstellen.
 3. Wenn beides nicht möglich ist, ein neues Archiv aus dem Releaseordner erstellen.
+
+Ein nicht erreichbarer Speicherordner oder dort fehlende Archivdateien zählen als fehlende Dateien.
 
 Neu packen kann Bearcat nur [Managed Releases](/Bearcat/de/release-types/).
 Unmanaged Releases brauchen lokale Archivdateien oder einen verfügbaren Mirror.
@@ -201,6 +205,8 @@ Neue Hashes brauchen nur Dateien, die erneut hochgeladen werden. Die übrigen Pa
 Bevor Bearcat ein wiederverwendetes Archiv ändert, prüft es, ob ein anderer aktiver Upload es verwendet.
 Falls ja, wartet es auf einen späteren Durchlauf. Fehlt eine hochzuladende Datei lokal, stellt Bearcat
 sie zuerst von einem [Mirrorhoster](/Bearcat/de/mirror-downloads/) wieder her und ändert danach die Hashes.
+Liegt das Archiv in einem Speicherordner mit aktiviertem **Lokale Arbeitskopie für Reuploads**, ändert
+Bearcat die Hashes der lokalen Arbeitskopie. Sonst ändert es sie im Speicherordner.
 
 ### Die Noncedatei und Repackaging
 

@@ -20,6 +20,12 @@ public class ArchiveReadRepository(IBearcatReadDbContext dbRead) : IArchiveReadR
             .Select(a => new ArchiveReadModel(
                 a.Id,
                 a.ArchiveFolderPath,
+                a.ArchiveStorageFolder != null ? a.ArchiveStorageFolder.Name : null,
+                a.ArchiveStorageFolderId != null
+                    && a.ArchiveFiles.Any(af =>
+                        af.FullFileName.Substring(0, a.ArchiveFolderPath.Length + 1)
+                        != a.ArchiveFolderPath + QueryPathSeparator.DirectorySeparator
+                    ),
                 a.CreatedAt,
                 a.ArchiveFiles.Select(af => new ArchiveReadModel.ArchiveFileReadModel(
                         af.Id,
@@ -55,6 +61,12 @@ public class ArchiveReadRepository(IBearcatReadDbContext dbRead) : IArchiveReadR
                 a.ArchiveConfig.ArchiverName,
                 a.ArchiveState,
                 a.ArchiveFolderPath,
+                a.ArchiveStorageFolder != null ? a.ArchiveStorageFolder.Name : null,
+                a.ArchiveStorageFolderId != null
+                    && a.ArchiveFiles.Any(af =>
+                        af.FullFileName.Substring(0, a.ArchiveFolderPath.Length + 1)
+                        != a.ArchiveFolderPath + QueryPathSeparator.DirectorySeparator
+                    ),
                 a.CreatedAt,
                 a.ArchiveFiles.Count,
                 a.Uploads.Count,

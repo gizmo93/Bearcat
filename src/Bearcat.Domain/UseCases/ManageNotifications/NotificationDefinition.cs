@@ -78,6 +78,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ArchiveMoveToStorageFolderFailed.Description"
         ),
         new(
+            Kind: NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Archives,
+            DisplayName: "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed",
+            Description: "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description"
+        ),
+        new(
             Kind: NotificationKind.InitialUploadCreated,
             Severity: NotificationSeverity.Info,
             Group: NotificationGroup.Uploads,

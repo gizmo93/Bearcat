@@ -16,7 +16,7 @@ public class ArchiveStorageFolderConfiguration : IEntityTypeConfiguration<Archiv
         builder.Property(storageFolder => storageFolder.MinimumFreeSpaceGb).IsRequired();
         builder.Property(storageFolder => storageFolder.Priority).IsRequired();
         builder
-            .Property(storageFolder => storageFolder.RetrieveArchivesBeforeReupload)
+            .Property(storageFolder => storageFolder.UseLocalWorkingCopyForReuploads)
             .IsRequired();
 
         builder.HasIndex(storageFolder => storageFolder.Name).IsUnique();

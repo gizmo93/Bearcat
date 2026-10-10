@@ -127,6 +127,8 @@ public class NotificationService(
                 configuration.NoArchiveStorageFolderAvailable,
             NotificationKind.ArchiveMoveToStorageFolderFailed =>
                 configuration.ArchiveMoveToStorageFolderFailed,
+            NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed =>
+                configuration.ArchiveCopyIntoLocalWorkingCopyFailed,
             NotificationKind.InitialUploadCreated => configuration.InitialUploadCreated,
             NotificationKind.UploadCompleted => configuration.UploadCompleted,
             NotificationKind.UploadFailed => configuration.UploadFailed,

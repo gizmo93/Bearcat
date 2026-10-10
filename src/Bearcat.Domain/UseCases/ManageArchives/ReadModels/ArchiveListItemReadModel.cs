@@ -11,6 +11,8 @@ public record ArchiveListItemReadModel(
     string ArchiverName,
     ArchiveState ArchiveState,
     string ArchiveFolderPath,
+    string? ArchiveStorageFolderName,
+    bool HasLocalWorkingCopyFiles,
     DateTime CreatedAt,
     int ArchiveFileCount,
     int UploadCount,

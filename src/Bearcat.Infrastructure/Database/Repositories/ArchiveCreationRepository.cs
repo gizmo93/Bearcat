@@ -34,6 +34,9 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
             .Archives.Include(a => a.ArchiveFiles)
             .Include(a => a.Uploads)
                 .ThenInclude(u => u.UploadedFiles)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.Release)
+            .Include(a => a.ArchiveStorageFolder)
             .Where(a =>
                 a.ArchiveConfigId == archiveConfigId && a.ArchiveState == ArchiveState.Created
             )

@@ -372,6 +372,13 @@ public class ArchiveRestoreService(
             }
 
             archive.ArchiveState = ArchiveState.Created;
+            archive.ArchiveStorageFolderId = null;
+            archive.ArchiveStorageFolder = null;
+
+            foreach (var archiveFile in archive.ArchiveFiles)
+            {
+                archiveFile.Md5HashInStorageFolder = null;
+            }
 
             await repository.SaveChangesAsync(cancellationToken);
 

@@ -29,7 +29,7 @@ All tasks are enabled by default.
 | Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
 | Release info resolution | Every 10 minutes | Fills in missing scene information, NFOs, external IDs, and metadata from active sources. |
 | Archive creation & restore | Every 20 seconds | Reuses, restores, or creates archives for waiting uploads. |
-| Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. |
+| Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/Bearcat/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
 | Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |

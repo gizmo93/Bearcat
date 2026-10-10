@@ -65,6 +65,30 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
         );
     }
 
+    public async Task<
+        IReadOnlyList<Archive>
+    > GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Include(a => a.ArchiveFiles)
+            .Where(a =>
+                a.ArchiveState == ArchiveState.Created
+                && a.ArchiveStorageFolderId != null
+                && a.ArchiveFiles.Any(af =>
+                    af.FullFileName.Substring(0, a.ArchiveFolderPath.Length + 1)
+                    != a.ArchiveFolderPath + QueryPathSeparator.DirectorySeparator
+                )
+                && !dbWrite.Uploads.Any(u =>
+                    u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId
+                    && WaitingPendingOrUploadingStates.Contains(u.UploadState)
+                )
+            )
+            .OrderBy(a => a.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ArchiveStorageFolder>> GetActiveArchiveStorageFoldersAsync(
         CancellationToken cancellationToken
     )

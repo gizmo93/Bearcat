@@ -43,9 +43,9 @@
                                          AllowNegative="false" />
             </div>
 
-            <BbFormFieldSwitch @bind-Checked="FormModel.RetrieveArchivesBeforeReupload"
-                               Label="@L["RetrieveArchivesBeforeReupload"]"
-                               HelperText="@L["RetrieveArchivesBeforeReuploadHelp"]" />
+            <BbFormFieldSwitch @bind-Checked="FormModel.UseLocalWorkingCopyForReuploads"
+                               Label="@L["UseLocalWorkingCopyForReuploads"]"
+                               HelperText="@L["UseLocalWorkingCopyForReuploadsHelp"]" />
         </div>
 
         <div class="flex justify-end gap-2">

@@ -39,7 +39,7 @@ public partial class ArchiveStorageFoldersPage(
             Path = storageFolder.Path,
             MinimumFreeSpaceGb = storageFolder.MinimumFreeSpaceGb,
             Priority = storageFolder.Priority,
-            RetrieveArchivesBeforeReupload = storageFolder.RetrieveArchivesBeforeReupload,
+            UseLocalWorkingCopyForReuploads = storageFolder.UseLocalWorkingCopyForReuploads,
         };
 
         await ShowDialogAsync(formModel, L["EditNamedItem", storageFolder.Name]);

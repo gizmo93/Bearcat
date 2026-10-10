@@ -360,6 +360,7 @@ public class ArchiveStorageFolderMoveService(
                 copiedArchive.TargetFolderPath,
                 Path.GetFileName(archiveFile.FullFileName)
             );
+            archiveFile.Md5HashInStorageFolder = archiveFile.Md5Hash;
         }
 
         archive.ArchiveFolderPath = copiedArchive.TargetFolderPath;
