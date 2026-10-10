@@ -1,4 +1,5 @@
 using System.Globalization;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;

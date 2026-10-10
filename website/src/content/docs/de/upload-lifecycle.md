@@ -252,6 +252,7 @@ Automatisches Aufräumen ist standardmässig deaktiviert. Du kannst zwei Regeln 
 die Hintergrundaufgabe **Auto cleanup** nach Ablauf der eingestellten Fristen anwendet:
 
 - Managed Releases in Unmanaged umwandeln: Du erhältst eine Benachrichtigung mit dem Pfad des Releaseordners und kannst ihn selbst löschen.
+  Optional löscht Bearcat den Releaseordner, wenn jede Archivkonfiguration ein vollständiges lokales Archiv hat.
 - Lokale Archive löschen: Nur wenn Bearcat sie von einem Mirrorhoster herunterladen oder aus dem Releaseordner neu packen kann.
 
 Die Archivfrist zählt ab dem letzten Upload der Archivkonfiguration, jeder Reupload startet sie also neu. Auf dem Hoster wird nie etwas gelöscht.

@@ -49,12 +49,13 @@ Click **Reset** to restore the default.
 
 **Auto cleanup** frees disk space. It has two independent rules, both disabled by default:
 
-- "Convert releases to unmanaged automatically" with "Convert to unmanaged after", default `14` days.
+- "Convert releases to unmanaged automatically" with "Convert to unmanaged after", default `14` days,
+  and optionally "Delete release folder on conversion".
 - "Delete local archives automatically" with "Delete local archives after", default `30` days.
 
 ![auto-cleanup-config.png](images/auto-cleanup-config.png)
 
-These rules do not delete your release folder. Delete it yourself once you no longer need it.
+Without "Delete release folder on conversion", these rules do not delete your release folder. Delete it yourself once you no longer need it.
 [Remote downloads](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) have a separate option
 to delete downloaded raw files after uploading.
 
@@ -73,6 +74,16 @@ Once both conditions are met, Bearcat converts the release to unmanaged and remo
 folder path. A notification includes this path so you can delete the folder yourself.
 
 If any archive is stored inside the release folder, the notification says so and asks you to delete only the release data and keep the archive files.
+
+With "Delete release folder on conversion" enabled, Bearcat deletes the release folder in the same run as the conversion.
+There is no separate period. The folder is only deleted when:
+
+- Every archive configuration has a local archive whose archive files all exist on disk. A mirror is enough for the conversion, but not for the deletion.
+- No archive is stored inside the release folder.
+- The folder is not a drive root, not a working directory and does not contain one.
+
+Otherwise Bearcat converts the release, keeps the folder and the notification says why.
+If the deletion fails, the release stays unmanaged and the notification asks you to delete the folder yourself.
 
 #### Delete local archives automatically
 

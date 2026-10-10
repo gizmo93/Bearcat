@@ -595,7 +595,7 @@
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Select release group</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
-  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when release folders are released for deletion and when local archive files are deleted. Bearcat never deletes the release folder itself.</value></data>
+  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when releases are converted to unmanaged, whether their release folders are deleted and when local archive files are deleted.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
   <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Controls how archive files are changed before reuploads.</value></data>
   <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging strategy</value></data>
@@ -604,9 +604,11 @@
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nonce only, no compression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid archive with compression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Convert releases to unmanaged automatically</value></data>
-  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a release to unmanaged after the retention period and sends a notification with the release folder path. Bearcat does not delete the folder. You can then delete the raw files yourself.</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a release to unmanaged after the retention period and sends a notification with the release folder path. Bearcat only deletes the folder when release folder deletion is enabled. Otherwise you can delete the raw files yourself.</value></data>
   <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>Convert to unmanaged after</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Days since the uploads of a release were posted, or since its first upload finished when it was never marked as posted.</value></data>
+  <data name="DeleteReleaseFolderOnConversion" xml:space="preserve"><value>Delete release folder on conversion</value></data>
+  <data name="DeleteReleaseFolderOnConversionDescription" xml:space="preserve"><value>Deletes the release folder when a release is converted to unmanaged automatically. Only has an effect when automatic conversion is enabled. The folder is only deleted when every archive config has a local archive with all archive files on disk, no archive is stored inside the folder and the folder is neither a drive root nor contains a working directory. Otherwise the folder is kept and the notification says why.</value></data>
   <data name="AutoDeleteArchives" xml:space="preserve"><value>Delete local archives automatically</value></data>
   <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Deletes the local archive files of an archive config once its retention expired. Only runs when the archives can be restored from an online mirror or repackaged from an existing release folder.</value></data>
   <data name="ArchiveRetentionDays" xml:space="preserve"><value>Delete local archives after</value></data>
@@ -1020,7 +1022,7 @@
   <data name="NotificationGroup.Security" xml:space="preserve"><value>Security</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
-  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired and the release folder can be deleted.</value></data>
+  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired. Its release folder was deleted or can be deleted.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release folder missing</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>The release folder required for processing was not found.</value></data>
   <data name="NotificationKind.ReleaseFolderExtractionFailed" xml:space="preserve"><value>Folder automation extraction failed</value></data><data name="NotificationKind.ReleaseFolderExtractionFailed.Description" xml:space="preserve"><value>The SFV check or archive extraction of a folder found by folder automation failed. The files were kept and no release was created.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archive creation failed</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>An archive could not be created.</value></data>

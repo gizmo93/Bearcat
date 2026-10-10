@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bearcat.Abstractions.DistributionSite;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;

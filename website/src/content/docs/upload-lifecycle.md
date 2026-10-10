@@ -249,6 +249,7 @@ Auto cleanup is off by default. You can enable two rules, which the **Auto clean
 applies after their configured retention periods:
 
 - Convert managed releases to unmanaged: a notification includes the release folder path so you can delete it yourself.
+  Optionally, Bearcat deletes the release folder when every archive configuration has a complete local archive.
 - Delete local archives: only if Bearcat can download them from a mirror hoster or repack them from the release folder.
 
 The archive period counts from the last upload of the archive configuration, so every reupload restarts it. Nothing is ever deleted from the hoster.

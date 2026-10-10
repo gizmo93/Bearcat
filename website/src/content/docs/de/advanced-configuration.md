@@ -50,12 +50,13 @@ Mit **Zurücksetzen** stellst du ihn wieder her.
 **Automatisches Aufräumen** gibt Speicherplatz frei. Es gibt zwei unabhängige Regeln,
 die standardmässig deaktiviert sind:
 
-- "Releases automatisch in Unmanaged umwandeln" mit "In Unmanaged umwandeln nach", Standard `14` Tage.
+- "Releases automatisch in Unmanaged umwandeln" mit "In Unmanaged umwandeln nach", Standard `14` Tage,
+  und optional "Releaseordner beim Umwandeln löschen".
 - "Lokale Archive automatisch löschen" mit "Lokale Archive löschen nach", Standard `30` Tage.
 
 ![auto-cleanup-config.png](../images/auto-cleanup-config.png)
 
-Diese Regeln löschen deinen Releaseordner nicht. Lösche ihn selbst, wenn du ihn nicht mehr brauchst.
+Ohne "Releaseordner beim Umwandeln löschen" löschen diese Regeln deinen Releaseordner nicht. Lösche ihn selbst, wenn du ihn nicht mehr brauchst.
 [Remotedownloads](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) haben eine eigene Option,
 um heruntergeladene Rohdateien nach dem Upload zu löschen.
 
@@ -74,6 +75,16 @@ Sind beide Bedingungen erfüllt, wandelt Bearcat das Release in Unmanaged um und
 Pfad zum Releaseordner. Du erhältst eine Benachrichtigung mit diesem Pfad und kannst den Ordner selbst löschen.
 
 Liegt ein Archiv im Releaseordner, weist die Benachrichtigung darauf hin und bittet dich, nur die Releasedaten zu löschen und die Archivdateien zu behalten.
+
+Ist "Releaseordner beim Umwandeln löschen" aktiviert, löscht Bearcat den Releaseordner im selben Durchlauf wie die Umwandlung.
+Es gibt keine eigene Frist. Der Ordner wird nur gelöscht, wenn:
+
+- Jede Archivkonfiguration ein lokales Archiv hat, dessen Archivdateien alle auf der Festplatte vorhanden sind. Ein Mirror reicht für die Umwandlung, aber nicht für das Löschen.
+- Kein Archiv im Releaseordner liegt.
+- Der Ordner kein Laufwerksstamm und kein Arbeitsverzeichnis ist und keines enthält.
+
+Sonst wandelt Bearcat das Release um, behält den Ordner und die Benachrichtigung nennt den Grund.
+Schlägt das Löschen fehl, bleibt das Release Unmanaged und die Benachrichtigung bittet dich, den Ordner selbst zu löschen.
 
 #### Lokale Archive automatisch löschen
 

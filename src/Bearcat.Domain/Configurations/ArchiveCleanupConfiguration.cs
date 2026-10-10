@@ -18,6 +18,12 @@ public class ArchiveCleanupConfiguration : IApplicationConfiguration
     [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Days)]
     public int ReleaseFolderRetentionDays { get; set; } = 14;
 
+    [ApplicationConfigurationProperty(
+        "DeleteReleaseFolderOnConversion",
+        "DeleteReleaseFolderOnConversionDescription"
+    )]
+    public bool DeleteReleaseFolderOnConversion { get; set; } = false;
+
     [ApplicationConfigurationProperty("AutoDeleteArchives", "AutoDeleteArchivesDescription")]
     public bool AutoDeleteArchives { get; set; } = false;
 

@@ -77,6 +77,7 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
             .ShouldBe([
                 "AutoConvertToUnmanaged",
                 "ReleaseFolderRetentionDays",
+                "DeleteReleaseFolderOnConversion",
                 "AutoDeleteArchives",
                 "ArchiveRetentionDays",
             ]);

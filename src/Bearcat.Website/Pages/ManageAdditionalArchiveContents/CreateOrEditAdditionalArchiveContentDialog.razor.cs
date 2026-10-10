@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Validation;
 using Bearcat.Domain.ValueObjects;
