@@ -287,7 +287,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         progressTracker.PlannedFilesPerIdentifier.Keys.ShouldBe([hashChangeIdentifier]);
         progressTracker
             .LastSnapshotPerIdentifier[hashChangeIdentifier]
-            .TransferredBytes.ShouldBe(13);
+            .TransferredBytes.ShouldBe(12);
         progressTracker.StoppedIdentifiers.ShouldContain(hashChangeIdentifier);
         progressTracker.GetTrackedIds(TransferType.ArchiveHashChange).ShouldBeEmpty();
     }
@@ -707,8 +707,8 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                 ignoreOrder: true
             );
         var snapshot = progressTracker.LastSnapshotPerIdentifier[identifier];
-        snapshot.TransferredBytes.ShouldBe(13);
-        snapshot.TotalBytes.ShouldBe(13);
+        snapshot.TransferredBytes.ShouldBe(11);
+        snapshot.TotalBytes.ShouldBe(11);
         progressTracker.StoppedIdentifiers.ShouldContain(identifier);
         progressTracker.PlannedFilesPerIdentifier.Keys.ShouldNotContain(
             new TransferIdentifier(TransferType.ArchiveHashChange, archive.Id)

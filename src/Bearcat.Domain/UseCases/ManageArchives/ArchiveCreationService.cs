@@ -542,24 +542,29 @@ public class ArchiveCreationService(
 
                 archiveFile.Md5Hash = null;
 
-                string hash;
-                bool hashIsNew;
-                do
-                {
-                    await AppendNullByteAsync(archiveFile.FullFileName, fileCancellationToken);
-                    hash = await ComputeMd5HashAsync(
-                        archiveFile.FullFileName,
-                        progress,
-                        fileCancellationToken
+                progress.BeginFile(new FileInfo(archiveFile.FullFileName).Length);
+
+                var nullByteSuffixHash =
+                    await Md5FileHash.ComputeHashWithShortestUnknownNullByteSuffixAsync(
+                        fullFileName: archiveFile.FullFileName,
+                        addHashIfUnknown: hash =>
+                        {
+                            lock (knownHashesLock)
+                            {
+                                return knownHashes.Add(hash);
+                            }
+                        },
+                        progress: progress,
+                        cancellationToken: fileCancellationToken
                     );
 
-                    lock (knownHashesLock)
-                    {
-                        hashIsNew = knownHashes.Add(hash);
-                    }
-                } while (!hashIsNew);
+                await AppendNullBytesAsync(
+                    fullFileName: archiveFile.FullFileName,
+                    nullByteCount: nullByteSuffixHash.NullByteCount,
+                    cancellationToken: fileCancellationToken
+                );
 
-                archiveFile.Md5Hash = hash;
+                archiveFile.Md5Hash = nullByteSuffixHash.Md5Hash;
             },
             cancellationToken: cancellationToken
         );
@@ -692,8 +697,9 @@ public class ArchiveCreationService(
         };
     }
 
-    private static async Task AppendNullByteAsync(
+    private static async Task AppendNullBytesAsync(
         string fullFileName,
+        int nullByteCount,
         CancellationToken cancellationToken
     )
     {
@@ -703,7 +709,7 @@ public class ArchiveCreationService(
             access: FileAccess.Write,
             share: FileShare.Read
         );
-        stream.WriteByte(0);
+        await stream.WriteAsync(new byte[nullByteCount], cancellationToken);
         await stream.FlushAsync(cancellationToken);
     }
 

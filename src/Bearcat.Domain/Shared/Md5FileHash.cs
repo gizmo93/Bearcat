@@ -23,8 +23,55 @@ public static class Md5FileHash
         CancellationToken cancellationToken
     )
     {
-        await using var stream = SequentialFileReader.OpenRead(fullFileName);
         using var incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
+        await AppendFileContentAsync(
+            incrementalHash: incrementalHash,
+            fullFileName: fullFileName,
+            progress: progress,
+            cancellationToken: cancellationToken
+        );
+
+        return Convert.ToHexString(incrementalHash.GetHashAndReset());
+    }
+
+    public static async Task<NullByteSuffixHash> ComputeHashWithShortestUnknownNullByteSuffixAsync(
+        string fullFileName,
+        Func<string, bool> addHashIfUnknown,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        using var incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
+
+        await AppendFileContentAsync(
+            incrementalHash: incrementalHash,
+            fullFileName: fullFileName,
+            progress: progress,
+            cancellationToken: cancellationToken
+        );
+
+        byte[] nullByte = [0];
+        var nullByteCount = 0;
+        string hash;
+
+        do
+        {
+            incrementalHash.AppendData(nullByte);
+            nullByteCount++;
+            hash = Convert.ToHexString(incrementalHash.GetCurrentHash());
+        } while (!addHashIfUnknown(hash));
+
+        return new NullByteSuffixHash(NullByteCount: nullByteCount, Md5Hash: hash);
+    }
+
+    private static async Task AppendFileContentAsync(
+        IncrementalHash incrementalHash,
+        string fullFileName,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var stream = SequentialFileReader.OpenRead(fullFileName);
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
 
         try
@@ -35,8 +82,6 @@ public static class Md5FileHash
                 incrementalHash.AppendData(buffer, 0, bytesRead);
                 progress.ReportBytesTransferred(bytesRead);
             }
-
-            return Convert.ToHexString(incrementalHash.GetHashAndReset());
         }
         finally
         {
