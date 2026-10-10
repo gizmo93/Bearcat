@@ -11,6 +11,7 @@ public class ArchiveConfiguration : IEntityTypeConfiguration<Archive>
         builder.HasKey(a => a.Id);
         builder.Property(a => a.ArchiveConfigId);
         builder.Property(a => a.ArchiveFolderPath).HasMaxLength(500).IsRequired();
+        builder.Property(a => a.ArchiveStorageFolderId).IsRequired(false);
         builder.Property(a => a.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(a => a.ErrorMessages);
         builder.Property(a => a.ReleaseFolderEntriesCopiedForPacking).IsRequired();
@@ -32,5 +33,13 @@ public class ArchiveConfiguration : IEntityTypeConfiguration<Archive>
             .HasPrincipalKey(a => a.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder
+            .HasOne(a => a.ArchiveStorageFolder)
+            .WithMany()
+            .HasForeignKey(a => a.ArchiveStorageFolderId)
+            .HasPrincipalKey(storageFolder => storageFolder.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bearcat-host",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/Bearcat.Host", "--launch-profile", "http"],
+      "port": 5097
+    }
+  ]
+}

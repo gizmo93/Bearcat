@@ -19,6 +19,23 @@ public class FileSystemService : IFileSystemService
             .ToList();
     }
 
+    public List<string> GetSelectableFoldersInPath(string path)
+    {
+        return Directory
+            .GetDirectories(
+                path: path,
+                searchPattern: "*",
+                enumerationOptions: new EnumerationOptions
+                {
+                    IgnoreInaccessible = true,
+                    ReturnSpecialDirectories = false,
+                    AttributesToSkip = FileAttributes.System,
+                }
+            )
+            .Where(folderPath => !Path.GetFileName(folderPath).StartsWith('.'))
+            .ToList();
+    }
+
     public List<string> GetFilesInPath(string path, bool recursive)
     {
         return Directory
@@ -83,6 +100,16 @@ public class FileSystemService : IFileSystemService
     public bool DirectoryHasEntries(string path)
     {
         return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
+    }
+
+    public long? GetAvailableFreeSpaceBytes(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return null;
+        }
+
+        return new DriveInfo(path).AvailableFreeSpace;
     }
 
     public void CopyFile(string sourceFilePath, string destinationFilePath)

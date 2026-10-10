@@ -1680,4 +1680,42 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Erneut versuchen</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} wird beim nächsten Ordnerscan erneut verarbeitet.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Phasen der Ordnerautomatisierung</value></data>
+  <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archivspeicherordner</value></data>
+  <data name="ArchiveStorageFoldersIntro" xml:space="preserve"><value>Ordner, in die Archive aus den Arbeitsverzeichnissen verschoben werden können. Bearcat behandelt jeden Ordner als normales Verzeichnis, unabhängig davon, was dahinter liegt.</value></data>
+  <data name="NewArchiveStorageFolder" xml:space="preserve"><value>Neuer Speicherordner</value></data>
+  <data name="NoArchiveStorageFoldersYet" xml:space="preserve"><value>Noch keine Speicherordner eingerichtet.</value></data>
+  <data name="ArchiveStorageFolderDialogDescription" xml:space="preserve"><value>Gib einen vorhandenen Ordner ausserhalb der Arbeitsverzeichnisse an. Bearcat legt diesen Ordner nie an.</value></data>
+  <data name="ArchiveStorageFolderNamePlaceholder" xml:space="preserve"><value>z. B. NAS</value></data>
+  <data name="ArchiveStorageFolderPath" xml:space="preserve"><value>Pfad</value></data>
+  <data name="ArchiveStorageFolderPathPlaceholder" xml:space="preserve"><value>z. B. /mnt/nas/archives</value></data>
+  <data name="ArchiveStorageFolderPathHelp" xml:space="preserve"><value>Absoluter Pfad eines vorhandenen Ordners. Er darf kein Arbeitsverzeichnis sein, nicht in einem liegen und keines enthalten.</value></data>
+  <data name="BrowseStorageFolders" xml:space="preserve"><value>Speicherordner durchsuchen</value></data>
+  <data name="SelectArchiveStorageFolder" xml:space="preserve"><value>Speicherordner auswählen</value></data>
+  <data name="SelectArchiveStorageFolderDescription" xml:space="preserve"><value>Wähle einen vorhandenen Ordner ausserhalb der Arbeitsverzeichnisse.</value></data>
+  <data name="MinimumFreeSpaceGb" xml:space="preserve"><value>Freizuhaltender Speicherplatz (GB)</value></data>
+  <data name="ArchiveStorageFolderMinimumFreeSpaceHelp" xml:space="preserve"><value>Speicherplatz, der in diesem Ordner nach dem Verschieben von Archiven frei bleiben muss.</value></data>
+  <data name="ArchiveStorageFolderPriorityHelp" xml:space="preserve"><value>Niedrigere Werte werden bevorzugt. Mehrere Ordner können dieselbe Priorität haben.</value></data>
+  <data name="RetrieveArchivesBeforeReupload" xml:space="preserve"><value>Archive vor Reupload zurückkopieren</value></data>
+  <data name="RetrieveArchivesBeforeReuploadHelp" xml:space="preserve"><value>Kopiert die Archive vor einem Reupload auf die lokale Festplatte zurück. Wenn deaktiviert, liest ein Reupload die Archive direkt aus diesem Ordner.</value></data>
+  <data name="RetrieveArchivesBeforeReuploadEnabled" xml:space="preserve"><value>Zuerst zurückkopieren</value></data>
+  <data name="RetrieveArchivesBeforeReuploadDisabled" xml:space="preserve"><value>Direkt lesen</value></data>
+  <data name="AvailableFreeSpace" xml:space="preserve"><value>Freier Speicherplatz</value></data>
+  <data name="FreeSpaceUnavailable" xml:space="preserve"><value>Nicht verfügbar</value></data>
+  <data name="MinimumFreeSpaceValue" xml:space="preserve"><value>{0} GB freihalten</value></data>
+  <data name="ArchiveStorageFolderActivated" xml:space="preserve"><value>Speicherordner {0} aktiviert</value></data>
+  <data name="ArchiveStorageFolderDeactivated" xml:space="preserve"><value>Speicherordner {0} deaktiviert</value></data>
+  <data name="DeleteArchiveStorageFolderConfirmation" xml:space="preserve"><value>Möchtest du den Speicherordner "{0}" wirklich löschen? Der Ordner und sein Inhalt auf der Festplatte bleiben erhalten.</value></data>
+  <data name="ArchiveStorageFolderDeleted" xml:space="preserve"><value>Speicherordner "{0}" gelöscht.</value></data>
+  <data name="ArchiveStorageFolderStillStoresArchives" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil dort noch {1} Archive gespeichert sind.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameRequired" xml:space="preserve"><value>Der Name ist erforderlich.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 100 Zeichen lang sein.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameAlreadyExists" xml:space="preserve"><value>Ein Speicherordner mit diesem Namen existiert bereits.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathRequired" xml:space="preserve"><value>Der Pfad ist erforderlich.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathTooLong" xml:space="preserve"><value>Der Pfad darf höchstens 500 Zeichen lang sein.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotAbsolute" xml:space="preserve"><value>Gib einen absoluten Pfad an.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotFound" xml:space="preserve"><value>Der Ordner existiert nicht. Bearcat legt keine Speicherordner an.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathAlreadyExists" xml:space="preserve"><value>Ein anderer Speicherordner verwendet diesen Pfad bereits.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>Der Pfad darf kein Arbeitsverzeichnis sein, nicht in einem liegen und keines enthalten.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>Der Pfad kann nicht geändert werden, solange Archive in diesem Ordner gespeichert sind.</value></data>
+  <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der freizuhaltende Speicherplatz darf nicht negativ sein.</value></data>
 </root>

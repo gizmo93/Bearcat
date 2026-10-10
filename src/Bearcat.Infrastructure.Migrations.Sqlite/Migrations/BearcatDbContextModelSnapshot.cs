@@ -135,6 +135,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("ArchiveState")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ArchiveStorageFolderId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
@@ -150,6 +153,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveConfigId");
+
+                    b.HasIndex("ArchiveStorageFolderId");
 
                     b.ToTable("Archives");
                 });
@@ -272,6 +277,45 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("ArchiveId");
 
                     b.ToTable("ArchiveFiles");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveStorageFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MinimumFreeSpaceGb")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RetrieveArchivesBeforeReupload")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Path")
+                        .IsUnique();
+
+                    b.ToTable("ArchiveStorageFolders");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.BackgroundTaskState", b =>
@@ -2337,7 +2381,14 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ArchiveStorageFolder", "ArchiveStorageFolder")
+                        .WithMany()
+                        .HasForeignKey("ArchiveStorageFolderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("ArchiveConfig");
+
+                    b.Navigation("ArchiveStorageFolder");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveConfig", b =>

@@ -1677,4 +1677,42 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Retry</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} will be processed again on the next folder scan.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Folder automation phases</value></data>
+  <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archive storage folders</value></data>
+  <data name="ArchiveStorageFoldersIntro" xml:space="preserve"><value>Folders that archives can be moved to from the working directories. Bearcat treats each folder as a plain directory, regardless of what is behind it.</value></data>
+  <data name="NewArchiveStorageFolder" xml:space="preserve"><value>New storage folder</value></data>
+  <data name="NoArchiveStorageFoldersYet" xml:space="preserve"><value>No storage folders configured yet.</value></data>
+  <data name="ArchiveStorageFolderDialogDescription" xml:space="preserve"><value>Enter an existing folder outside the working directories. Bearcat never creates this folder.</value></data>
+  <data name="ArchiveStorageFolderNamePlaceholder" xml:space="preserve"><value>e.g. NAS</value></data>
+  <data name="ArchiveStorageFolderPath" xml:space="preserve"><value>Path</value></data>
+  <data name="ArchiveStorageFolderPathPlaceholder" xml:space="preserve"><value>e.g. /mnt/nas/archives</value></data>
+  <data name="ArchiveStorageFolderPathHelp" xml:space="preserve"><value>Absolute path of an existing folder. It must not be a working directory, lie inside one or contain one.</value></data>
+  <data name="BrowseStorageFolders" xml:space="preserve"><value>Browse storage folders</value></data>
+  <data name="SelectArchiveStorageFolder" xml:space="preserve"><value>Select storage folder</value></data>
+  <data name="SelectArchiveStorageFolderDescription" xml:space="preserve"><value>Choose an existing folder outside the working directories.</value></data>
+  <data name="MinimumFreeSpaceGb" xml:space="preserve"><value>Minimum free space (GB)</value></data>
+  <data name="ArchiveStorageFolderMinimumFreeSpaceHelp" xml:space="preserve"><value>Space that must stay free in this folder after archives were moved there.</value></data>
+  <data name="ArchiveStorageFolderPriorityHelp" xml:space="preserve"><value>Lower values are preferred. Several folders can share a priority.</value></data>
+  <data name="RetrieveArchivesBeforeReupload" xml:space="preserve"><value>Copy archives back before reupload</value></data>
+  <data name="RetrieveArchivesBeforeReuploadHelp" xml:space="preserve"><value>Copies the archives back to local disk before a reupload. When disabled, a reupload reads the archives directly from this folder.</value></data>
+  <data name="RetrieveArchivesBeforeReuploadEnabled" xml:space="preserve"><value>Copy back first</value></data>
+  <data name="RetrieveArchivesBeforeReuploadDisabled" xml:space="preserve"><value>Read in place</value></data>
+  <data name="AvailableFreeSpace" xml:space="preserve"><value>Free space</value></data>
+  <data name="FreeSpaceUnavailable" xml:space="preserve"><value>Unavailable</value></data>
+  <data name="MinimumFreeSpaceValue" xml:space="preserve"><value>Keep {0} GB free</value></data>
+  <data name="ArchiveStorageFolderActivated" xml:space="preserve"><value>Storage folder {0} activated</value></data>
+  <data name="ArchiveStorageFolderDeactivated" xml:space="preserve"><value>Storage folder {0} deactivated</value></data>
+  <data name="DeleteArchiveStorageFolderConfirmation" xml:space="preserve"><value>Do you really want to delete the storage folder "{0}"? The folder and its contents on disk are kept.</value></data>
+  <data name="ArchiveStorageFolderDeleted" xml:space="preserve"><value>Storage folder "{0}" deleted.</value></data>
+  <data name="ArchiveStorageFolderStillStoresArchives" xml:space="preserve"><value>"{0}" cannot be deleted because {1} archives are still stored there.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 100 characters.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameAlreadyExists" xml:space="preserve"><value>A storage folder with this name already exists.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathRequired" xml:space="preserve"><value>Path is required.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathTooLong" xml:space="preserve"><value>Path must not be longer than 500 characters.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotAbsolute" xml:space="preserve"><value>Enter an absolute path.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotFound" xml:space="preserve"><value>The folder does not exist. Bearcat does not create storage folders.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathAlreadyExists" xml:space="preserve"><value>Another storage folder already uses this path.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>The path must not be a working directory, lie inside one or contain one.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>The path cannot be changed while archives are stored in this folder.</value></data>
+  <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
 </root>

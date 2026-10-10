@@ -16,10 +16,15 @@ public sealed class FakeFileSystemService : IFileSystemService
 
     public bool DirectoryHasEntries(string path) => throw new NotSupportedException();
 
+    public long? GetAvailableFreeSpaceBytes(string path) => throw new NotSupportedException();
+
     public FolderFileCountAndSize GetFolderFileCountAndSize(string path) =>
         new(Files.Count, TotalBytes);
 
     public List<string> GetFoldersInPath(string path) => throw new NotSupportedException();
+
+    public List<string> GetSelectableFoldersInPath(string path) =>
+        throw new NotSupportedException();
 
     public string CreateTempDirectory(string basePath) => throw new NotSupportedException();
 

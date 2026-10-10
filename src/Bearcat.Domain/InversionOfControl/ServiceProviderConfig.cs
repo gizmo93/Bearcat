@@ -30,6 +30,7 @@ using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchiveStorageFolders;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
@@ -114,6 +115,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ProxyCategoryDefaultService>();
             services.AddScoped<ProxySelectionValidator>();
             services.AddScoped<AdditionalArchiveContentService>();
+            services.AddScoped<ArchiveStorageFolderService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();
             services.AddScoped<ReleaseForumPostUploadBuilder>();

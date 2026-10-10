@@ -28,6 +28,7 @@ public interface IBearcatReadDbContext
     public DbSet<Archive> Archives { get; set; }
     public DbSet<ArchiveConfig> ArchiveConfigs { get; set; }
     public DbSet<AdditionalArchiveContent> AdditionalArchiveContents { get; set; }
+    public DbSet<ArchiveStorageFolder> ArchiveStorageFolders { get; set; }
     public DbSet<ArchiveFile> ArchiveFiles { get; set; }
     public DbSet<Upload> Uploads { get; set; }
     public DbSet<UploadConfig> UploadConfigs { get; set; }
