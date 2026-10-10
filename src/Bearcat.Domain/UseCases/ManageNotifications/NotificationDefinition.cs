@@ -210,6 +210,13 @@ public static class NotificationDefinitions
             DisplayName: "NotificationKind.UnreadableSecretsDetected",
             Description: "NotificationKind.UnreadableSecretsDetected.Description"
         ),
+        new(
+            Kind: NotificationKind.FolderNotConfirmed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Folders,
+            DisplayName: "NotificationKind.FolderNotConfirmed",
+            Description: "NotificationKind.FolderNotConfirmed.Description"
+        ),
     ];
 
     public static NotificationDefinition Get(NotificationKind kind)

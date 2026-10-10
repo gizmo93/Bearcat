@@ -101,6 +101,14 @@ docker compose up -d
 Docker erstellt den Container neu, wenn sich das Image geändert hat. Behalte die Datenordner auf
 deinem Host; sie enthalten die Datenbank und den Verschlüsselungsschlüssel.
 
+Nach dem Update auf eine Version mit Ordnerbestätigung bestätigst du dein Arbeitsverzeichnis einmal unter
+**System** > **Ordner**. Siehe [Ordnerbestätigung](/Bearcat/de/advanced-configuration/#ordnerbestätigung).
+
+Ist in deiner Compose-Datei noch `WorkingDirectories__0=/mnt/data` eingetragen, ändere den Wert auf
+`WorkingDirectories__0=/mnt/data/releases`. Verwende den eingebundenen Ordner als Arbeitsverzeichnis,
+damit die Markerdatei beim Ersetzen des Containers erhalten bleibt. Ergänze für jeden weiteren
+eingebundenen Ordner einen Eintrag (`WorkingDirectories__1`, `WorkingDirectories__2`, ...).
+
 ### Bestehende Docker-Installationen aktualisieren
 
 Behalte deine bestehenden Compose-Dateien, um PostgreSQL weiterzuverwenden. Ersetzt du sie durch

@@ -1,0 +1,65 @@
+@using Bearcat.Domain.Shared.FolderConfirmation
+
+<div class="space-y-4">
+    <div class="space-y-1">
+        <p class="text-sm font-medium">@L["FolderPath"]</p>
+        <p class="break-all font-mono text-sm">@ConfirmableFolder.Path</p>
+    </div>
+
+    @if (!ConfirmableFolder.Exists)
+    {
+        <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            @L["ConfirmFolderDoesNotExistWarning"]
+        </div>
+    }
+    else if (ConfirmableFolder.State is FolderConfirmationState.MarkerMissing)
+    {
+        <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            @L["ConfirmFolderMarkerMissingWarning"]
+        </div>
+    }
+
+    @if (ConfirmableFolder.Exists)
+    {
+        <div class="space-y-2">
+            <p class="text-sm font-medium">@L["FolderContents"]</p>
+            @if (topLevelEntries is null)
+            {
+                <p class="text-sm text-muted-foreground">@L["Loading"]</p>
+            }
+            else if (topLevelEntries.TotalEntryCount == 0)
+            {
+                <p class="text-sm text-muted-foreground">@L["FolderIsEmpty"]</p>
+            }
+            else
+            {
+                <ul class="max-h-64 space-y-1 overflow-y-auto rounded-md border border-border/70 p-2">
+                    @foreach (var entry in topLevelEntries.Entries)
+                    {
+                        <li class="flex min-w-0 items-center gap-2 text-sm">
+                            <LucideIcon Name="@(entry.IsFolder ? "folder" : "file")" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span class="truncate font-mono" title="@entry.Name">@entry.Name</span>
+                        </li>
+                    }
+                </ul>
+                @if (topLevelEntries.TotalEntryCount > topLevelEntries.Entries.Count)
+                {
+                    <p class="text-xs text-muted-foreground">
+                        @L["FolderContentsTruncated", topLevelEntries.Entries.Count, topLevelEntries.TotalEntryCount]
+                    </p>
+                }
+            }
+        </div>
+    }
+
+    <p class="text-sm text-muted-foreground">@L["ConfirmFolderExplanation"]</p>
+
+    <div class="flex justify-end gap-2">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Disabled="@(!ConfirmableFolder.Exists || isConfirming)" OnClick="ConfirmAsync">
+            @L["ConfirmFolder"]
+        </BbButton>
+    </div>
+</div>

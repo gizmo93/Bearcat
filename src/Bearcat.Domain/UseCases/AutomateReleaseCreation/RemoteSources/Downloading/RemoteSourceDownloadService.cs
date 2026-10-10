@@ -4,6 +4,7 @@ using Bearcat.Abstractions.RemoteSource.Dto;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
@@ -17,6 +18,7 @@ public class RemoteSourceDownloadService(
     IRemoteSourceDownloadRepository repository,
     RemoteSourceSessionProvider sessionProvider,
     RemoteDownloadFolderService folderService,
+    FolderWriteCheck folderWriteCheck,
     ITransferProgressTracker progressTracker,
     ITransferCancellationRegistry cancellationRegistry,
     INotificationService notificationService,
@@ -45,6 +47,16 @@ public class RemoteSourceDownloadService(
     {
         foreach (var download in await repository.GetInterruptedDownloadsAsync(cancellationToken))
         {
+            if (
+                !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    download.LocalFolderPath,
+                    cancellationToken
+                )
+            )
+            {
+                continue;
+            }
+
             logger.LogInformation(
                 "Discarding the interrupted remote download {DownloadId} in {LocalFolderPath} and queueing it again",
                 download.Id,
@@ -70,6 +82,16 @@ public class RemoteSourceDownloadService(
             || download.State is not RemoteSourceDownloadState.Pending
             || download.RemoteSourceRegistrationId is null
             || download.RemoteSourceRegistration is not { IsActive: true } registration
+        )
+        {
+            return;
+        }
+
+        if (
+            !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                download.LocalFolderPath,
+                stoppingToken
+            )
         )
         {
             return;

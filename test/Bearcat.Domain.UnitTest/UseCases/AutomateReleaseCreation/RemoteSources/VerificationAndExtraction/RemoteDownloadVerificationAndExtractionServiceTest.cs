@@ -3,6 +3,8 @@ using System.Text;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UnitTest.Shared;
 using Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
@@ -13,6 +15,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Verification
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -586,6 +589,18 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
                 progressTracker,
                 new FolderSizeProgressReporter(),
                 NullLogger<FolderArchiveExtractionService>.Instance
+            ),
+            new FolderWriteCheck(
+                new FolderConfirmationCheck(
+                    new ConfirmableFolderRootProvider(
+                        Options.Create(new WorkingDirectoriesConfig())
+                    ),
+                    Mock.Of<IConfirmedFolderRepository>(),
+                    fileSystemService.Object
+                ),
+                Mock.Of<IConfirmedFolderRepository>(),
+                notificationService,
+                NullLogger<FolderWriteCheck>.Instance
             ),
             notificationService,
             timeProvider.Object,

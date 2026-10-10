@@ -7,6 +7,9 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
@@ -42,6 +45,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     private long releaseFolderBytesWhilePacking;
     private int? userCanceledArchiveId;
     private ArchiveCreationService service = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
@@ -84,27 +88,35 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         progressTracker = new RecordingTransferProgressTracker();
         cancellationRegistry = new TransferCancellationRegistry();
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
         service = CreateService(new FileSystemService());
     }
 
     private ArchiveCreationService CreateService(IFileSystemService fileSystemService)
     {
+        var notificationService = new NotificationService(
+            repository: new NotificationRepository(DbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
+        );
+
         return new ArchiveCreationService(
             new ArchiveCreationRepository(DbContext),
             Mock.Of<ILogger<ArchiveCreationService>>(),
             archiverFactoryMock.Object,
             fileSystemService,
             CreateTimeProvider(),
-            new NotificationService(
-                repository: new NotificationRepository(DbContext),
-                timeProvider: CreateTimeProvider(),
-                configurationProvider: CreateNotificationConfigurationProvider()
-            ),
+            notificationService,
             configurationProviderMock.Object,
             new ReleaseFolderEntriesForPackingService(fileSystemService),
             progressTracker,
             cancellationRegistry,
-            new FolderSizeProgressReporter()
+            new FolderSizeProgressReporter(),
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                workingDirectoriesConfig
+            )
         );
     }
 
@@ -143,6 +155,140 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var result = await DbContext.Archives.AnyAsync();
 
         result.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_NewArchiveInNotConfirmedWorkingDirectory_KeepsUploadWaitingAndNotifiesOnce()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        var upload = await AddUploadWaitingForArchiveAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Archives.AnyAsync()).ShouldBeFalse();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result.ArchiveId.ShouldBeNull();
+        var notification = await DbContext.Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.FolderNotConfirmed);
+        notification.Message.ShouldBe(
+            FolderNotConfirmedNotificationMessage.Get(
+                new FolderConfirmationResult(FolderConfirmationState.NotConfirmed, tempRootPath)
+            )
+        );
+        Directory.GetDirectories(archiveFilesBasePath).ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_NewArchiveInConfirmedWorkingDirectory_CreatesArchive()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        await FolderConfirmationTestFactory.ConfirmFolderAsync(DbContext, tempRootPath);
+        await AddUploadWaitingForArchiveAsync();
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Archives.SingleAsync()).ArchiveState.ShouldBe(ArchiveState.Created);
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_CreatingArchiveInWorkingDirectoryWithMissingMarker_KeepsArchive()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        await FolderConfirmationTestFactory.ConfirmFolderAsync(DbContext, tempRootPath);
+        File.Delete(FolderConfirmationMarkerFile.GetFilePath(tempRootPath));
+        var archiveConfig = await AddArchiveConfigAsync();
+        var orphanedArchive = new Archive
+        {
+            ArchiveConfigId = archiveConfig.Id,
+            ArchiveFolderPath = Path.Combine(archiveFilesBasePath, "orphaned"),
+            ArchiveState = ArchiveState.Creating,
+            ArchiveFileSizeMb = archiveConfig.ArchiveFileSizeMb,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        DbContext.Archives.Add(orphanedArchive);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Archives.SingleAsync()).ArchiveState.ShouldBe(ArchiveState.Creating);
+        (await DbContext.Notifications.SingleAsync()).Message.ShouldBe(
+            FolderNotConfirmedNotificationMessage.Get(
+                new FolderConfirmationResult(FolderConfirmationState.MarkerMissing, tempRootPath)
+            )
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_FileToUploadIsMissingInNotConfirmedWorkingDirectory_KeepsArchiveUnchanged()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var existingArchiveFolder = CreateExistingArchiveFolder();
+        var missingArchiveFile = new ArchiveFile
+        {
+            FullFileName = Path.Combine(existingArchiveFolder, "existing.part1.rar"),
+            Md5Hash = PreviouslyComputedMd5Hash,
+        };
+        var existingArchive = CreateExistingArchive(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveFolderPath: existingArchiveFolder,
+            archiveFiles: [missingArchiveFile]
+        );
+        var previousUpload = CreatePreviousUpload(
+            uploadConfigId: upload.UploadConfigId,
+            archive: existingArchive,
+            uploadState: UploadState.Completed,
+            (missingArchiveFile, OnlineState.Offline)
+        );
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.SingleAsync(a => a.Id == existingArchive.Id);
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        (await DbContext.Notifications.SingleAsync()).NotificationKind.ShouldBe(
+            NotificationKind.FolderNotConfirmed
+        );
     }
 
     [Test]

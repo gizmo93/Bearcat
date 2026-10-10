@@ -387,6 +387,32 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.ToTable("CollectionUploadSlots");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ConfirmedFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ConfirmedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MarkerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Path")
+                        .IsUnique();
+
+                    b.ToTable("ConfirmedFolders");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.DistributionSiteRegistration", b =>
                 {
                     b.Property<int>("Id")

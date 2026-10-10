@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
@@ -21,7 +22,8 @@ public class ReleaseService(
     IReleaseFolderUsageRepository releaseFolderUsageRepository,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     MirrorCoverageEvaluator mirrorCoverageEvaluator,
-    LocalArchiveDeleter localArchiveDeleter
+    LocalArchiveDeleter localArchiveDeleter,
+    FolderConfirmationCheck folderConfirmationCheck
 )
 {
     public async Task<int> CreateAsync(
@@ -307,7 +309,22 @@ public class ReleaseService(
 
         foreach (var archive in deletableArchives)
         {
-            localArchiveDeleter.DeleteLocalArchive(archive);
+            var folderConfirmation = await folderConfirmationCheck.GetFolderConfirmationAsync(
+                archive.ArchiveFolderPath,
+                cancellationToken
+            );
+
+            if (!folderConfirmation.IsWriteAllowed)
+            {
+                throw new InvalidOperationException(
+                    $"The local archives cannot be deleted. {FolderNotConfirmedNotificationMessage.Get(folderConfirmation)}"
+                );
+            }
+        }
+
+        foreach (var archive in deletableArchives)
+        {
+            await localArchiveDeleter.DeleteLocalArchiveAsync(archive, cancellationToken);
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);

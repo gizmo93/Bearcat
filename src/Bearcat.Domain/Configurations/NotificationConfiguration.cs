@@ -176,4 +176,10 @@ public class NotificationConfiguration : IApplicationConfiguration
         "NotificationKind.UnreadableSecretsDetected.Description"
     )]
     public bool UnreadableSecretsDetected { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.FolderNotConfirmed",
+        "NotificationKind.FolderNotConfirmed.Description"
+    )]
+    public bool FolderNotConfirmed { get; set; } = true;
 }

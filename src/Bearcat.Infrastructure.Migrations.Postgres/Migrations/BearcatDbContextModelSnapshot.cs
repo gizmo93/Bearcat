@@ -411,6 +411,34 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.ToTable("CollectionUploadSlots");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ConfirmedFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ConfirmedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<Guid>("MarkerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Path")
+                        .IsUnique();
+
+                    b.ToTable("ConfirmedFolders");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.DistributionSiteRegistration", b =>
                 {
                     b.Property<int>("Id")

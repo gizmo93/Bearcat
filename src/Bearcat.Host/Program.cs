@@ -5,6 +5,7 @@ using Bearcat.Archivers.InversionOfControl;
 using Bearcat.BackgroundTasks.InversionOfControl;
 using Bearcat.DistributionSites.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Host;
 using Bearcat.Hosters.InversionOfControl;
@@ -35,7 +36,7 @@ if (OperatingSystem.IsWindows())
 var isDesktopMode = builder.Configuration.GetValue("Bearcat:DesktopMode", false);
 var isOpenApiSpecOnly = builder.Configuration.GetValue("Bearcat:OpenApiSpecOnly", false);
 
-builder.Services.AddBearcatBlueprintComponents(builder.Configuration);
+builder.Services.AddBearcatBlueprintComponents();
 builder.Services.Configure<HostOptions>(options =>
 {
     options.ServicesStartConcurrently = true;
@@ -88,6 +89,7 @@ if (!isOpenApiSpecOnly)
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDomain();
+builder.Services.Configure<WorkingDirectoriesConfig>(builder.Configuration);
 builder.Services.AddHosters();
 builder.Services.AddImageHosters();
 builder.Services.AddDistributionSites();

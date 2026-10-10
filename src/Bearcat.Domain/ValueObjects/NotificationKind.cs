@@ -31,4 +31,5 @@ public enum NotificationKind
     UnreadableSecretsDetected = 27,
     HosterCredentialsRejected = 28,
     ReleaseFolderExtractionFailed = 29,
+    FolderNotConfirmed = 30,
 }

@@ -7,6 +7,7 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -104,7 +105,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             uploadFilesRepository,
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
-            notificationService
+            notificationService,
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                new WorkingDirectoriesConfig()
+            )
         );
         var concurrencyService = new UploadConcurrencyService(
             uploadFilesRepository,
@@ -1585,7 +1591,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             repository,
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
-            notificationService
+            notificationService,
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                new WorkingDirectoriesConfig()
+            )
         );
         var concurrency = new UploadConcurrencyService(
             repository,
@@ -1637,14 +1648,20 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             DbContext,
             NoOpSecretProtector.Instance
         );
+        var notificationService = new NotificationService(
+            repository: new NotificationRepository(DbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
+        );
         var validationService = new MissingFileValidationService(
             uploadFilesRepository,
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
-            new NotificationService(
-                repository: new NotificationRepository(DbContext),
-                timeProvider: CreateTimeProvider(),
-                configurationProvider: CreateNotificationConfigurationProvider()
+            notificationService,
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                new WorkingDirectoriesConfig()
             )
         );
 

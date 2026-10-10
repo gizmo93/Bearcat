@@ -122,6 +122,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; } = null!;
 
+    public DbSet<ConfirmedFolder> ConfirmedFolders { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

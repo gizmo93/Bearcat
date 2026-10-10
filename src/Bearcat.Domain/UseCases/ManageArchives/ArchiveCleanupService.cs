@@ -2,6 +2,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class ArchiveCleanupService(
     IApplicationConfigurationProvider configuration,
     MirrorCoverageEvaluator mirrorCoverageEvaluator,
     LocalArchiveDeleter localArchiveDeleter,
+    FolderWriteCheck folderWriteCheck,
     TimeProvider timeProvider,
     ILogger<ArchiveCleanupService> logger
 )
@@ -51,7 +53,22 @@ public class ArchiveCleanupService(
 
             try
             {
-                localArchiveDeleter.DeleteLocalArchive(archive);
+                var folderConfirmation = await localArchiveDeleter.DeleteLocalArchiveAsync(
+                    archive,
+                    cancellationToken
+                );
+
+                if (!folderConfirmation.IsWriteAllowed)
+                {
+                    await folderWriteCheck.NotifyOnceAsync(
+                        archive.ArchiveFolderPath,
+                        folderConfirmation,
+                        cancellationToken
+                    );
+
+                    continue;
+                }
+
                 deletedArchiveCount++;
 
                 logger.LogInformation(

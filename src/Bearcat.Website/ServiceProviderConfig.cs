@@ -3,17 +3,13 @@ using Bearcat.Website.Pages.PostQueue;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website;
 
 public static class ServiceProviderConfig
 {
-    public static IServiceCollection AddBearcatBlueprintComponents(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    public static IServiceCollection AddBearcatBlueprintComponents(this IServiceCollection services)
     {
         services.AddBlazorBlueprintComponents();
         services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -26,7 +22,6 @@ public static class ServiceProviderConfig
             .AddControllers()
             .AddApplicationPart(typeof(ServiceProviderConfig).Assembly)
             .AddControllersAsServices();
-        services.Configure<WorkingDirectoriesConfig>(configuration);
         return services;
     }
 }

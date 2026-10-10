@@ -1,4 +1,6 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -23,11 +25,13 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
 
     private string tempRootPath = null!;
     private MissingFileValidationService service = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
     {
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
 
         var notificationService = new NotificationService(
             repository: new NotificationRepository(DbContext),
@@ -39,7 +43,12 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
             new UploadFilesRepository(DbContext, DbContext, NoOpSecretProtector.Instance),
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
-            notificationService
+            notificationService,
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                workingDirectoriesConfig
+            )
         );
     }
 
@@ -94,6 +103,82 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
             .Select(a => a.ArchiveState)
             .SingleAsync();
         archiveState.ShouldBe(ArchiveState.MissingFiles);
+    }
+
+    [Test]
+    public async Task GetUploadsWithMissingFilesAsync_FilesMissingInNotConfirmedWorkingDirectory_SkipsUploadWithoutStateChangeAndNotifiesOnce()
+    {
+        // Arrange
+        Directory.CreateDirectory(tempRootPath);
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        var missingArchiveFilePath = Path.Combine(tempRootPath, "missing", "archive.part1.rar");
+        var upload = await AddPendingUploadWithArchiveAsync(missingArchiveFilePath);
+
+        DbContext.ChangeTracker.Clear();
+
+        var trackedUpload = await LoadTrackedUploadAsync(upload.Id);
+
+        // Act
+        var firstUploadsToSkip = await service.GetUploadsWithMissingFilesAsync(
+            [trackedUpload],
+            CancellationToken.None
+        );
+        var secondUploadsToSkip = await service.GetUploadsWithMissingFilesAsync(
+            [trackedUpload],
+            CancellationToken.None
+        );
+
+        // Assert
+        firstUploadsToSkip.ShouldHaveSingleItem().Id.ShouldBe(upload.Id);
+        secondUploadsToSkip.ShouldHaveSingleItem().Id.ShouldBe(upload.Id);
+
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Archive)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldNotBeNull();
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.ShouldHaveSingleItem();
+        result.Archive!.ArchiveState.ShouldBe(ArchiveState.Created);
+        var notification = await DbContext.Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.FolderNotConfirmed);
+    }
+
+    [Test]
+    public async Task GetUploadsWithMissingFilesAsync_FilesMissingInConfirmedWorkingDirectory_ResetsUpload()
+    {
+        // Arrange
+        Directory.CreateDirectory(tempRootPath);
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        await FolderConfirmationTestFactory.ConfirmFolderAsync(DbContext, tempRootPath);
+        var missingArchiveFilePath = Path.Combine(tempRootPath, "missing", "archive.part1.rar");
+        var upload = await AddPendingUploadWithArchiveAsync(missingArchiveFilePath);
+
+        DbContext.ChangeTracker.Clear();
+
+        var trackedUpload = await LoadTrackedUploadAsync(upload.Id);
+
+        // Act
+        await service.GetUploadsWithMissingFilesAsync([trackedUpload], CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    private async Task<Upload> LoadTrackedUploadAsync(int uploadId)
+    {
+        return await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+            .Include(u => u.Archive)
+                .ThenInclude(a => a!.ArchiveFiles)
+            .SingleAsync(u => u.Id == uploadId);
     }
 
     [Test]

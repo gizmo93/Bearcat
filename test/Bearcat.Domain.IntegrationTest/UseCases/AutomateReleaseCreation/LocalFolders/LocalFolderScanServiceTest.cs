@@ -9,7 +9,9 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.Shared.UnmanagedReleases;
@@ -50,6 +52,7 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
     private RecordingTransferProgressTracker progressTracker = null!;
     private string tempRootPath = null!;
     private LocalFolderScanService service = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
     private int stabilityMinutes;
     private int minimumFolderSizeMegabytes;
 
@@ -66,6 +69,7 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
 
         Directory.CreateDirectory(tempRootPath);
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
 
         var notificationRepository = new NotificationRepository(DbContext);
 
@@ -117,6 +121,11 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
                 notificationService: notificationService,
                 timeProvider: CreateTimeProvider(),
                 logger: NullLogger<ReleaseFolderVerificationAndExtractionService>.Instance
+            ),
+            folderWriteCheck: FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                workingDirectoriesConfig
             ),
             timeProvider: CreateTimeProvider(),
             configuration: CreateConfigurationProvider(),
@@ -852,6 +861,68 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
             .PlannedFilesPerIdentifier.Values.SelectMany(files => files)
             .ShouldAllBe(file => file.SourceName == "Bearcat.Release.1080p");
         (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionInNotConfirmedWorkingDirectory_SkipsFolderAndNotifiesOnce()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "release.rar"), "volume");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Act
+        var firstResult = await service.ProcessAsync(CancellationToken.None);
+        var secondResult = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        firstResult.ShouldBe(0);
+        secondResult.ShouldBe(0);
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        File.Exists(Path.Combine(folder.FullName, "release.rar")).ShouldBeTrue();
+        DbContext.ChangeTracker.Clear();
+        (
+            await DbContext.ReleaseFolderObservations.SingleAsync()
+        ).ExtractionErrorMessage.ShouldBeNull();
+        (await FolderConfirmationTestFactory.GetFolderNotConfirmedNotificationsAsync(DbContext))
+            .ShouldHaveSingleItem()
+            .Message.ShouldContain(tempRootPath);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionInConfirmedWorkingDirectory_ExtractsArchives()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        await FolderConfirmationTestFactory.ConfirmFolderAsync(DbContext, tempRootPath);
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "release.rar"), "volume");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            extractArchivesBeforeReleaseCreation: true
+        );
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+        File.Exists(Path.Combine(folder.FullName, "release.rar")).ShouldBeFalse();
+        (
+            await FolderConfirmationTestFactory.GetFolderNotConfirmedNotificationsAsync(DbContext)
+        ).ShouldBeEmpty();
     }
 
     [Test]

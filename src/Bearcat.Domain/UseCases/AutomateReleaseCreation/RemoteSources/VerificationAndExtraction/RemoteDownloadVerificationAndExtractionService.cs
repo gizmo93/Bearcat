@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
@@ -14,6 +15,7 @@ public class RemoteDownloadVerificationAndExtractionService(
     IRemoteDownloadVerificationAndExtractionRepository repository,
     SfvChecksumVerifier sfvChecksumVerifier,
     FolderArchiveExtractionService archiveExtractionService,
+    FolderWriteCheck folderWriteCheck,
     INotificationService notificationService,
     TimeProvider timeProvider,
     ILogger<RemoteDownloadVerificationAndExtractionService> logger
@@ -39,6 +41,16 @@ public class RemoteDownloadVerificationAndExtractionService(
             )
         )
         {
+            if (
+                !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    download.LocalFolderPath,
+                    cancellationToken
+                )
+            )
+            {
+                continue;
+            }
+
             logger.LogInformation(
                 "Resetting the remote download {DownloadId} in {LocalFolderPath} that was interrupted in state {State}",
                 download.Id,
@@ -61,6 +73,16 @@ public class RemoteDownloadVerificationAndExtractionService(
         if (
             !await repository.TryRefreshAsync(download, cancellationToken)
             || download.State is not RemoteSourceDownloadState.Downloaded
+        )
+        {
+            return;
+        }
+
+        if (
+            !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                download.LocalFolderPath,
+                cancellationToken
+            )
         )
         {
             return;

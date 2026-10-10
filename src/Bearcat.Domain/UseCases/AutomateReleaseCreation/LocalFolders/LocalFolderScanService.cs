@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
@@ -21,6 +22,7 @@ public class LocalFolderScanService(
     IFileSystemService fileSystemService,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     ReleaseFolderVerificationAndExtractionService verificationAndExtractionService,
+    FolderWriteCheck folderWriteCheck,
     TimeProvider timeProvider,
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService
@@ -160,6 +162,17 @@ public class LocalFolderScanService(
             }
 
             if (fileCountAndSize.TotalBytes < minimumBytes)
+            {
+                continue;
+            }
+
+            if (
+                shouldExtractArchives
+                && !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    candidate.FolderPath,
+                    cancellationToken
+                )
+            )
             {
                 continue;
             }

@@ -1675,4 +1675,23 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Retry</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} will be processed again on the next folder scan.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Folder automation phases</value></data>
+  <data name="FoldersIntro" xml:space="preserve"><value>Working directories Bearcat writes into. A folder must be confirmed before Bearcat downloads, creates, restores or deletes files in it.</value></data>
+  <data name="NoConfirmableFolders" xml:space="preserve"><value>No working directories are configured.</value></data>
+  <data name="FolderDoesNotExist" xml:space="preserve"><value>The folder does not exist.</value></data>
+  <data name="FolderConfirmationState.OutsideConfirmableFolders" xml:space="preserve"><value>Not confirmable</value></data>
+  <data name="FolderConfirmationState.Confirmed" xml:space="preserve"><value>Confirmed</value></data>
+  <data name="FolderConfirmationState.NotConfirmed" xml:space="preserve"><value>Not confirmed</value></data>
+  <data name="FolderConfirmationState.MarkerMissing" xml:space="preserve"><value>Marker file missing</value></data>
+  <data name="ConfirmFolder" xml:space="preserve"><value>Confirm folder</value></data>
+  <data name="ConfirmFolderDialogDescription" xml:space="preserve"><value>Check that this is the right folder before Bearcat writes into it.</value></data>
+  <data name="FolderConfirmed" xml:space="preserve"><value>{0} was confirmed.</value></data>
+  <data name="ConfirmFolderDoesNotExistWarning" xml:space="preserve"><value>The folder does not exist. Bearcat never creates it. Create or mount it first.</value></data>
+  <data name="ConfirmFolderMarkerMissingWarning" xml:space="preserve"><value>This folder was confirmed before, but its marker file is missing. It is probably not mounted. Check the mount instead of confirming it again. Confirming an unmounted folder makes Bearcat write onto the local disk.</value></data>
+  <data name="FolderContents" xml:space="preserve"><value>Contents</value></data>
+  <data name="FolderIsEmpty" xml:space="preserve"><value>The folder is empty.</value></data>
+  <data name="FolderContentsTruncated" xml:space="preserve"><value>Showing {0} of {1} entries.</value></data>
+  <data name="ConfirmFolderExplanation" xml:space="preserve"><value>Confirming writes the marker file .bearcat-folder into this folder. Bearcat only writes into the folder while this marker file exists.</value></data>
+  <data name="NotificationGroup.Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="NotificationKind.FolderNotConfirmed" xml:space="preserve"><value>Folder not confirmed</value></data>
+  <data name="NotificationKind.FolderNotConfirmed.Description" xml:space="preserve"><value>Bearcat skipped downloads, archive creation, restores or deletions because a folder is not confirmed or its marker file is missing.</value></data>
 </root>

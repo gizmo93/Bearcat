@@ -5,6 +5,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
@@ -26,6 +27,7 @@ public class ArchiveRestoreService(
     ITransferCancellationRegistry cancellationRegistry,
     MirrorSourceResolver mirrorSourceResolver,
     MirrorDownloadCoordinator mirrorDownloadCoordinator,
+    FolderWriteCheck folderWriteCheck,
     ILogger<ArchiveRestoreService> logger
 )
 {
@@ -46,6 +48,16 @@ public class ArchiveRestoreService(
 
         foreach (var archive in interruptedArchives)
         {
+            if (
+                !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    archive.ArchiveFolderPath,
+                    cancellationToken
+                )
+            )
+            {
+                continue;
+            }
+
             logger.LogInformation(
                 "Discarding interrupted restore of archive {ArchiveId} at {ArchiveFolderPath}",
                 archive.Id,
@@ -219,6 +231,16 @@ public class ArchiveRestoreService(
         CancellationToken cancellationToken
     )
     {
+        if (
+            !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                archive.ArchiveConfig.ArchiveFilesBasePath,
+                cancellationToken
+            )
+        )
+        {
+            return;
+        }
+
         var previousArchiveState = archive.ArchiveState;
         var downloadSettings = ReadDownloadSettings();
         var hosters = await ResolveHostersAsync(plan, cancellationToken);

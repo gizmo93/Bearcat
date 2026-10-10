@@ -1,6 +1,7 @@
 using System.Text;
 using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 

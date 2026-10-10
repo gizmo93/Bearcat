@@ -12,7 +12,15 @@ Open Bearcat in your browser:
 
 If you changed the web port during installation, use that port instead.
 
-## 1. Add your hoster account
+## 1. Confirm your working directory
+
+Open **System** > **Folders** and click **Confirm folder** for your working directory.
+Check that the contents shown belong to the intended folder, then confirm.
+
+Until you confirm it, Bearcat pauses downloads, archive creation, restores, and deletions in that folder.
+See [Folder confirmation](/Bearcat/advanced-configuration/#folder-confirmation).
+
+## 2. Add your hoster account
 
 1. Open **Hoster registrations** and click **New hoster**.
 2. Choose your hoster and enter its username and password or API key.
@@ -28,14 +36,14 @@ Leave upload limits and reupload settings at their defaults.
 
 </details>
 
-## 2. Create a release group
+## 3. Create a release group
 
 Open **Release groups**, click **New release group**, and name it `My uploads`.
 Keep automatic reuploads disabled for this first upload and save.
 
 The group controls whether Bearcat replaces offline uploads. Bearcat checks links even when reuploads are disabled.
 
-## 3. Choose your files
+## 4. Choose your files
 
 Put the files for your first upload in a subfolder of your working directory, for example
 `releases/My.First.Upload/`.
@@ -49,7 +57,7 @@ Put the files for your first upload in a subfolder of your working directory, fo
 In Docker, your `RELEASES_DIR` folder appears as `/mnt/data/releases` in the folder picker.
 If you already have archives to upload, use an [unmanaged release](/Bearcat/release-types/#unmanaged-releases).
 
-## 4. Choose how to create the archives
+## 5. Choose how to create the archives
 
 On the **Archives** tab, click **Add**:
 
@@ -59,12 +67,12 @@ On the **Archives** tab, click **Add**:
 - Choose a part size in MB within your hoster’s file size limit.
 - Set a password if needed, then save.
 
-## 5. Choose where to upload
+## 6. Choose where to upload
 
 On **Uploads** > **Configuration**, click **Add**. Name the configuration, select your hoster account
 and `Main archive`, then save. Leave **Links distributed to** empty for now.
 
-## 6. Wait for the upload and copy the links
+## 7. Wait for the upload and copy the links
 
 By default, Bearcat packs and uploads the files automatically once the release is five minutes old.
 You can change this waiting time in **Configurations**.

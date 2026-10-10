@@ -9,6 +9,8 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
@@ -82,6 +84,11 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         );
 
         var transferProgressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
+        var folderWriteCheck = FolderConfirmationTestFactory.CreateWriteCheck(
+            DbContext,
+            notificationService,
+            new WorkingDirectoriesConfig()
+        );
 
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(DbContext),
@@ -100,6 +107,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
+            folderWriteCheck,
             NullLogger<ArchiveRestoreService>.Instance
         );
 
@@ -114,7 +122,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             new ReleaseFolderEntriesForPackingService(new FileSystemService()),
             transferProgressTracker,
             new TransferCancellationRegistry(),
-            new FolderSizeProgressReporter()
+            new FolderSizeProgressReporter(),
+            folderWriteCheck
         );
     }
 

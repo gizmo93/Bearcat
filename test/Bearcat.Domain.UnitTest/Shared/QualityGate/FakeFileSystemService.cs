@@ -25,6 +25,10 @@ public sealed class FakeFileSystemService : IFileSystemService
 
     public bool FileExists(string filePath) => throw new NotSupportedException();
 
+    public string? ReadFileTextIfExists(string filePath) => throw new NotSupportedException();
+
+    public void WriteFileText(string filePath, string content) => throw new NotSupportedException();
+
     public void CopyFile(string sourceFilePath, string destinationFilePath) =>
         throw new NotSupportedException();
 

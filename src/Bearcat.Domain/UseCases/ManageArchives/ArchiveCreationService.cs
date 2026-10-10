@@ -5,6 +5,7 @@ using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
@@ -27,7 +28,8 @@ public class ArchiveCreationService(
     ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService,
     ITransferProgressTracker progressTracker,
     ITransferCancellationRegistry cancellationRegistry,
-    FolderSizeProgressReporter folderSizeProgressReporter
+    FolderSizeProgressReporter folderSizeProgressReporter,
+    FolderWriteCheck folderWriteCheck
 )
 {
     private const string SynologyMetadataFolderName = "@eaDir";
@@ -46,6 +48,16 @@ public class ArchiveCreationService(
 
         foreach (var archive in interruptedArchives)
         {
+            if (
+                !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    [archive.ArchiveFolderPath, archive.ArchiveConfig.Release.ReleaseFolderPath],
+                    cancellationToken
+                )
+            )
+            {
+                continue;
+            }
+
             DeleteReleaseFolderEntriesCopiedForPacking(archive);
 
             if (AllArchiveFilesExistOnDisk(archive))
@@ -302,6 +314,16 @@ public class ArchiveCreationService(
 
         if (missingArchiveFiles.Count > 0 || archiveFilesToChangeHash.Count > 0)
         {
+            if (
+                !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    assignableArchive.ArchiveFolderPath,
+                    cancellationToken
+                )
+            )
+            {
+                return true;
+            }
+
             var archiveHasActiveUpload = await repository.HasActiveUploadAsync(
                 archiveId: assignableArchive.Id,
                 cancellationToken: cancellationToken
@@ -776,14 +798,24 @@ public class ArchiveCreationService(
         CancellationToken cancellationToken
     )
     {
+        var releaseFolderPath = config.Release.ReleaseFolderPath;
+
+        if (
+            !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                [releaseFolderPath, config.ArchiveFilesBasePath],
+                cancellationToken
+            )
+        )
+        {
+            return;
+        }
+
         logger.LogInformation(
             "Creating archive for ArchiveConfig {ArchiveConfigId} with {UploadCount} uploads and archiver {ArchiverClassName}",
             config.Id,
             uploads.Count,
             config.ArchiverName
         );
-
-        var releaseFolderPath = config.Release.ReleaseFolderPath;
 
         if (string.IsNullOrEmpty(releaseFolderPath) || !Directory.Exists(releaseFolderPath))
         {

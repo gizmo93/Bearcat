@@ -100,6 +100,14 @@ docker compose up -d
 Docker recreates the container if the image has changed. Keep the data folders on your host;
 they contain the database and encryption key.
 
+After updating to a version with folder confirmation, confirm your working directory once on
+**System** > **Folders**. See [Folder confirmation](/Bearcat/advanced-configuration/#folder-confirmation).
+
+If your Compose file still has `WorkingDirectories__0=/mnt/data`, change it to
+`WorkingDirectories__0=/mnt/data/releases`. Use the mounted folder as the working directory so
+the marker file survives container replacement. Add an entry for each additional mounted folder
+(`WorkingDirectories__1`, `WorkingDirectories__2`, ...).
+
 ### Upgrading existing Docker installs
 
 Keep your existing Compose files to continue using PostgreSQL. If you replace them with the current

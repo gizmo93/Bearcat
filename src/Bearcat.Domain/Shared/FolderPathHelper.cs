@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.UseCases.ManageReleases;
+namespace Bearcat.Domain.Shared;
 
 internal static class FolderPathHelper
 {

@@ -59,4 +59,5 @@ public interface IBearcatReadDbContext
     public DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
     public DbSet<ProxyServer> ProxyServers { get; set; }
     public DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
+    public DbSet<ConfirmedFolder> ConfirmedFolders { get; set; }
 }

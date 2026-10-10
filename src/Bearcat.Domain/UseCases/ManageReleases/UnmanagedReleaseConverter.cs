@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.ValueObjects;
 

@@ -8,7 +8,10 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.Shared.UnmanagedReleases;
@@ -64,6 +67,7 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
     private TransferProgressTracker progressTracker = null!;
     private string tempRootPath = null!;
     private string targetPath = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
@@ -83,6 +87,7 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         targetPath = Path.Combine(tempRootPath, "downloads");
         Directory.CreateDirectory(targetPath);
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
     }
 
     [TearDown]
@@ -444,6 +449,88 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
         reloaded.StartedAt.ShouldBeNull();
         server.OpenCount.ShouldBe(0);
         Directory.Exists(Path.Combine(targetPath, ReleaseName)).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_TargetInNotConfirmedWorkingDirectory_LeavesDownloadPendingAndNotifiesOnce()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, ReleaseName, 100);
+        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
+        var registration = await AddRegistrationAsync("main");
+        var automation = await AddAutomationAsync(registration, template);
+        var download = await AddDownloadAsync(automation, ReleaseName);
+
+        // Act
+        await ProcessAsync();
+        await ProcessAsync();
+
+        // Assert
+        var reloaded = await ReloadDownloadAsync(download.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.Pending);
+        reloaded.StartedAt.ShouldBeNull();
+        server.OpenCount.ShouldBe(0);
+        Directory.Exists(Path.Combine(targetPath, ReleaseName)).ShouldBeFalse();
+        (
+            await FolderConfirmationTestFactory.GetFolderNotConfirmedNotificationsAsync(
+                CreateDbContext()
+            )
+        ).ShouldHaveSingleItem();
+    }
+
+    [Test]
+    public async Task ProcessAsync_TargetInConfirmedWorkingDirectory_DownloadsAndCreatesRelease()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        await FolderConfirmationTestFactory.ConfirmFolderAsync(CreateDbContext(), tempRootPath);
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, ReleaseName, 100);
+        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
+        var registration = await AddRegistrationAsync("main");
+        var automation = await AddAutomationAsync(registration, template);
+        var download = await AddDownloadAsync(automation, ReleaseName);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        (await ReloadDownloadAsync(download.Id)).State.ShouldBe(
+            RemoteSourceDownloadState.ReleaseCreated
+        );
+        new FileInfo(Path.Combine(targetPath, ReleaseName, "file0.rar")).Length.ShouldBe(100);
+    }
+
+    [Test]
+    public async Task ProcessAsync_InterruptedDownloadInNotConfirmedWorkingDirectory_KeepsStateAndFiles()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, ReleaseName, 100);
+        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
+        var registration = await AddRegistrationAsync("main");
+        var automation = await AddAutomationAsync(registration, template);
+        var download = await AddDownloadAsync(
+            automation,
+            ReleaseName,
+            RemoteSourceDownloadState.Downloading,
+            startedAt: StartTime.AddHours(-1)
+        );
+        var staleFilePath = Path.Combine(targetPath, ReleaseName, "file0.rar.part");
+        Directory.CreateDirectory(Path.GetDirectoryName(staleFilePath)!);
+        await File.WriteAllTextAsync(staleFilePath, "partial");
+
+        // Act
+        await DownloadAsync();
+
+        // Assert
+        var reloaded = await ReloadDownloadAsync(download.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.Downloading);
+        reloaded.StartedAt.ShouldBe(StartTime.AddHours(-1));
+        File.Exists(staleFilePath).ShouldBeTrue();
     }
 
     [Test]
@@ -876,6 +963,7 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
                 new FolderSizeProgressReporter(),
                 NullLogger<FolderArchiveExtractionService>.Instance
             ),
+            CreateFolderWriteCheck(dbContext),
             CreateNotificationService(dbContext),
             timeProvider,
             NullLogger<RemoteDownloadVerificationAndExtractionService>.Instance
@@ -892,6 +980,7 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
             new RemoteSourceDownloadRepository(dbContext),
             CreateSessionProvider(),
             CreateFolderService(),
+            CreateFolderWriteCheck(dbContext),
             progressTracker,
             cancellationRegistry,
             CreateNotificationService(dbContext),
@@ -916,6 +1005,15 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
         );
 
         await releaseCreator.ProcessAsync(CancellationToken.None);
+    }
+
+    private FolderWriteCheck CreateFolderWriteCheck(BearcatDbContext dbContext)
+    {
+        return FolderConfirmationTestFactory.CreateWriteCheck(
+            dbContext,
+            CreateNotificationService(dbContext),
+            workingDirectoriesConfig
+        );
     }
 
     private NotificationService CreateNotificationService(BearcatDbContext dbContext)

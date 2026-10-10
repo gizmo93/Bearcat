@@ -1,0 +1,61 @@
+@page "/folders"
+@using Bearcat.Domain.Shared.FolderConfirmation
+@using Bearcat.Domain.UseCases.ManageConfirmedFolders.ReadModels
+
+<PageTitle>@L["Folders"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Folders"]</h1>
+            <p class="text-sm text-muted-foreground">@L["FoldersIntro"]</p>
+        </div>
+    </div>
+
+    @if (confirmableFolders.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoConfirmableFolders"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <span>@L["FolderPath"]</span>
+                <span>@L["State"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var confirmableFolder in confirmableFolders)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                        <div class="min-w-0">
+                            <p class="truncate font-mono text-sm" title="@confirmableFolder.Path">@confirmableFolder.Path</p>
+                            @if (!confirmableFolder.Exists)
+                            {
+                                <p class="text-xs text-destructive">@L["FolderDoesNotExist"]</p>
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["State"]</p>
+                            <BbBadge Variant="@GetBadgeVariant(confirmableFolder.State)">
+                                @L[$"FolderConfirmationState.{confirmableFolder.State}"]
+                            </BbBadge>
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      OnClick="@(() => ShowConfirmDialogAsync(confirmableFolder))">
+                                <LucideIcon Name="folder-check" class="h-4 w-4" />
+                                @L["ConfirmFolder"]
+                            </BbButton>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

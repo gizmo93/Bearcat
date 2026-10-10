@@ -3,6 +3,8 @@ using System.Text;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.Extraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.ArchiveExtraction.SfvVerification;
@@ -37,6 +39,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
 
     private string tempRootPath = null!;
     private string localFolderPath = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
@@ -45,6 +48,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
         localFolderPath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "downloads", ReleaseName))
             .FullName;
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
     }
 
     [TearDown]
@@ -96,6 +100,27 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
         var notification = await CreateDbContext().Notifications.SingleAsync();
         notification.NotificationKind.ShouldBe(NotificationKind.RemoteDownloadFailed);
         notification.Message.ShouldContain(ReleaseName);
+    }
+
+    [Test]
+    public async Task ProcessAsync_DownloadInNotConfirmedWorkingDirectory_KeepsStateAndNotifiesOnce()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [tempRootPath];
+        await WriteFileAsync("release.rar", "corrupted");
+        await WriteFileAsync("release.sfv", CreateSfvLine("release.rar", "volume"));
+        var download = await AddDownloadAsync(RemoteSourceDownloadState.Downloaded);
+
+        // Act
+        await ProcessAsync();
+        await ProcessAsync();
+
+        // Assert
+        var reloaded = await ReloadDownloadAsync(download.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.Downloaded);
+        reloaded.ErrorMessage.ShouldBeNull();
+        var notification = await CreateDbContext().Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.FolderNotConfirmed);
     }
 
     [TestCase(RemoteSourceDownloadState.Verifying)]
@@ -155,6 +180,11 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
         var timeProvider = new ControllableTimeProvider(StartTime);
         var archiverFactory = new Mock<IArchiverFactory>(MockBehavior.Strict);
         archiverFactory.Setup(factory => factory.GetArchiveExtractors()).Returns([]);
+        var notificationService = new NotificationService(
+            new NotificationRepository(dbContext),
+            timeProvider,
+            CreateNotificationConfigurationProvider()
+        );
 
         var service = new RemoteDownloadVerificationAndExtractionService(
             new RemoteSourceDownloadRepository(dbContext),
@@ -169,11 +199,12 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
                 new FolderSizeProgressReporter(),
                 NullLogger<FolderArchiveExtractionService>.Instance
             ),
-            new NotificationService(
-                new NotificationRepository(dbContext),
-                timeProvider,
-                CreateNotificationConfigurationProvider()
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                dbContext,
+                notificationService,
+                workingDirectoriesConfig
             ),
+            notificationService,
             timeProvider,
             NullLogger<RemoteDownloadVerificationAndExtractionService>.Instance
         );

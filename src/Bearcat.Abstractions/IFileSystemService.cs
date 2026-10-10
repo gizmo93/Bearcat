@@ -7,6 +7,8 @@ public interface IFileSystemService
     FolderFileCountAndSize GetFolderFileCountAndSize(string path);
     string CreateTempDirectory(string basePath);
     bool FileExists(string filePath);
+    string? ReadFileTextIfExists(string filePath);
+    void WriteFileText(string filePath, string content);
     bool DirectoryExists(string path);
     bool DirectoryHasEntries(string path);
     void CopyFile(string sourceFilePath, string destinationFilePath);

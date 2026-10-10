@@ -75,6 +75,16 @@ public class FileSystemService : IFileSystemService
         return File.Exists(filePath);
     }
 
+    public string? ReadFileTextIfExists(string filePath)
+    {
+        return File.Exists(filePath) ? File.ReadAllText(filePath) : null;
+    }
+
+    public void WriteFileText(string filePath, string content)
+    {
+        File.WriteAllText(filePath, content);
+    }
+
     public bool DirectoryExists(string path)
     {
         return Directory.Exists(path);

@@ -4,7 +4,9 @@ using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.UnmanagedReleases;
@@ -35,12 +37,14 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     private Mock<IHosterFactory> hosterFactoryMock = null!;
     private ReleaseService service = null!;
     private string tempRootPath = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
     {
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempRootPath);
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
         var timeProvider = CreateTimeProvider();
         hosterFactoryMock = new Mock<IHosterFactory>();
         var unmanagedReleaseArchiveInitializer = new UnmanagedReleaseArchiveInitializationService(
@@ -58,7 +62,11 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 timeProvider
             ),
             new MirrorCoverageEvaluator(hosterFactoryMock.Object),
-            new LocalArchiveDeleter(Mock.Of<IFileSystemService>())
+            new LocalArchiveDeleter(
+                Mock.Of<IFileSystemService>(),
+                FolderConfirmationTestFactory.CreateCheck(DbContext, workingDirectoriesConfig)
+            ),
+            FolderConfirmationTestFactory.CreateCheck(DbContext, workingDirectoriesConfig)
         );
     }
 
@@ -1087,6 +1095,34 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             .Select(archive => archive.ArchiveState)
             .ShouldBe([ArchiveState.Deleted, ArchiveState.Deleted]);
         (await DbContext.UploadedFiles.CountAsync()).ShouldBe(2);
+    }
+
+    [Test]
+    public async Task DeleteLocalArchivesAsync_ArchiveInNotConfirmedWorkingDirectory_ThrowsAndKeepsArchives()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = ["/archives"];
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.DeleteLocalArchivesAsync(release.Id, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("/archives");
+        DbContext.ChangeTracker.Clear();
+        var archives = await DbContext.Archives.OrderBy(archive => archive.Id).ToListAsync();
+        archives
+            .Select(archive => archive.ArchiveState)
+            .ShouldBe([ArchiveState.Created, ArchiveState.Deleted]);
     }
 
     private async Task<Release> AddUnmanagedReleaseWithMirrorUploadAsync(

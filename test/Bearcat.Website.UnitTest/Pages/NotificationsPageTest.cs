@@ -6,7 +6,6 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageNotifications;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
@@ -22,7 +21,7 @@ public class NotificationsPageTest
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddBearcatBlueprintComponents(new ConfigurationBuilder().Build());
+        services.AddBearcatBlueprintComponents();
         services.AddSingleton<IJSRuntime, UnusedJsRuntime>();
         services.AddSingleton<NavigationManager, TestNavigationManager>();
         services.AddSingleton<INotificationReadRepository, TestNotificationRepository>();

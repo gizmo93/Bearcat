@@ -12,7 +12,15 @@ Starte Bearcat und halte dein Hosterkonto und deine Dateien bereit. Die Dateien,
 
 Falls du den Webport geändert hast, verwende diesen Port.
 
-## 1. Hosterkonto hinzufügen
+## 1. Arbeitsverzeichnis bestätigen
+
+Öffne **System** > **Ordner** und klicke bei deinem Arbeitsverzeichnis auf **Ordner bestätigen**.
+Prüfe, ob der angezeigte Inhalt zum gewünschten Ordner gehört, und bestätige.
+
+Bis zur Bestätigung pausiert Bearcat Downloads, Archiverstellung, Wiederherstellungen und Löschungen in diesem Ordner.
+Siehe [Ordnerbestätigung](/Bearcat/de/advanced-configuration/#ordnerbestätigung).
+
+## 2. Hosterkonto hinzufügen
 
 1. Öffne **Hosterregistrierungen** und klicke auf **Neuer Hoster**.
 2. Wähle deinen Hoster und gib Benutzername und Passwort oder API-Schlüssel ein.
@@ -28,14 +36,14 @@ Lass Uploadlimits und Reuploadeinstellungen auf den Standardwerten.
 
 </details>
 
-## 2. Releasegruppe erstellen
+## 3. Releasegruppe erstellen
 
 Öffne **Releasegruppen**, klicke auf **Neue Releasegruppe** und nenne sie `My uploads`.
 Lass automatische Reuploads für diesen ersten Upload deaktiviert und speichere.
 
 Die Gruppe legt fest, ob Bearcat Uploads ersetzt, die offline gehen. Bearcat prüft die Links auch bei deaktivierten Reuploads.
 
-## 3. Dateien wählen
+## 4. Dateien wählen
 
 Lege die Dateien für deinen ersten Upload in einen Unterordner deines Arbeitsverzeichnisses, zum Beispiel
 `releases/My.First.Upload/`.
@@ -49,7 +57,7 @@ Lege die Dateien für deinen ersten Upload in einen Unterordner deines Arbeitsve
 In Docker erscheint dein Ordner `RELEASES_DIR` in der Ordnerauswahl als `/mnt/data/releases`.
 Hast du bereits fertige Archive zum Hochladen, verwende ein [Unmanaged Release](/Bearcat/de/release-types/#unmanaged-releases).
 
-## 4. Archiverstellung festlegen
+## 5. Archiverstellung festlegen
 
 Klicke im Tab **Archive** auf **Hinzufügen**:
 
@@ -59,12 +67,12 @@ Klicke im Tab **Archive** auf **Hinzufügen**:
 - Wähle eine Partgrösse in MB, die das Dateigrössenlimit deines Hosters einhält.
 - Setze bei Bedarf ein Passwort und speichere.
 
-## 5. Uploadziel festlegen
+## 6. Uploadziel festlegen
 
 Klicke unter **Uploads** > **Konfiguration** auf **Hinzufügen**. Gib der Konfiguration einen Namen,
 wähle dein Hosterkonto und `Main archive` und speichere. Lass **Links verteilt an** vorerst leer.
 
-## 6. Auf den Upload warten und Links kopieren
+## 7. Auf den Upload warten und Links kopieren
 
 Standardmässig packt Bearcat die Dateien und lädt sie automatisch hoch, sobald das Release fünf Minuten alt ist.
 Diese Wartezeit kannst du in den **Konfigurationen** ändern.

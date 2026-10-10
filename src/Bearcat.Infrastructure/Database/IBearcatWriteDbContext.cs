@@ -71,4 +71,5 @@ public interface IBearcatWriteDbContext
     DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
     DbSet<ProxyServer> ProxyServers { get; set; }
     DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
+    DbSet<ConfirmedFolder> ConfirmedFolders { get; set; }
 }

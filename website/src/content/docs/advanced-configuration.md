@@ -173,6 +173,31 @@ Each hoster registration can set its own limit as well. See
 
 Very low speed limits can cause uploads to time out.
 
+## Folder confirmation
+
+Bearcat only writes into a working directory after you confirm it on **System** > **Folders**.
+Paths outside working directories are not checked.
+
+Confirming creates `.bearcat-folder`. Keep this marker file in the working directory.
+If the directory does not exist, create it yourself first.
+
+If a mounted share is unavailable, an empty local folder may appear at the same path.
+The marker file prevents Bearcat from writing files there by mistake.
+
+| State | Meaning |
+| --- | --- |
+| Confirmed | Bearcat recognises the marker file and can write into the folder. |
+| Not confirmed | The folder has not been confirmed or its configured path changed. Confirm it. |
+| Marker file missing | The marker file is missing or no longer matches. Check that the share is mounted instead of simply confirming again. |
+
+Without a valid confirmation, Bearcat pauses the affected work and retries on the next run.
+It shows one **Folder not confirmed** notification per folder. Confirming resolves these notifications.
+
+Reading does not require confirmation. If archive files appear to be missing in an unconfirmed folder,
+Bearcat keeps the upload and archive unchanged.
+
+When updating to a version with folder confirmation for the first time, confirm every working directory once.
+
 ## Database
 
 New Desktop, Windows service, and Docker installations use SQLite. Existing PostgreSQL setups keep using PostgreSQL.

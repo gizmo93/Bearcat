@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.Shared.ForumPostRendering;
+﻿using Bearcat.Domain.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
@@ -16,6 +17,7 @@ using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
+using Bearcat.Domain.UseCases.ManageConfirmedFolders.Repositories;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
@@ -199,6 +201,8 @@ public static class ServiceProviderConfig
             >();
             services.AddScoped<ITelegramDeliveryRepository, TelegramDeliveryRepository>();
             services.AddScoped<IUnreadableSecretsRepository, UnreadableSecretsRepository>();
+            services.AddScoped<IConfirmedFolderRepository, ConfirmedFolderRepository>();
+            services.AddScoped<IConfirmedFolderWriteRepository, ConfirmedFolderRepository>();
             services.AddScoped<
                 IReleaseFolderAutomationReadRepository,
                 ReleaseFolderAutomationRepository

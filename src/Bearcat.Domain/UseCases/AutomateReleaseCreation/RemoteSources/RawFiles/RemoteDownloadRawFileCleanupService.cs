@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -12,6 +13,7 @@ public class RemoteDownloadRawFileCleanupService(
     IRemoteDownloadRawFileCleanupRepository repository,
     UnmanagedReleaseConverter unmanagedReleaseConverter,
     RemoteDownloadFolderService folderService,
+    FolderWriteCheck folderWriteCheck,
     INotificationService notificationService,
     ILogger<RemoteDownloadRawFileCleanupService> logger
 )
@@ -35,6 +37,16 @@ public class RemoteDownloadRawFileCleanupService(
                     release.Id
                 );
 
+                continue;
+            }
+
+            if (
+                !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                    download.LocalFolderPath,
+                    cancellationToken
+                )
+            )
+            {
                 continue;
             }
 

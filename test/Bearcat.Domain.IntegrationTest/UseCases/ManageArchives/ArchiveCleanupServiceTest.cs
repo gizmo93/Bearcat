@@ -3,8 +3,11 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -30,6 +33,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     private Mock<IApplicationConfigurationProvider> configurationMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
     private ArchiveCleanupService service = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
@@ -48,6 +52,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
             .Setup(f => f.GetByName(MirrorHosterClassName))
             .Returns(Mock.Of<IHosterWithDownload>());
 
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
         service = CreateService(new FileSystemService());
     }
 
@@ -86,6 +91,44 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         await ShouldBeDeletedAsync(archive);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiveInNotConfirmedWorkingDirectory_KeepsArchiveAndNotifiesOnce()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [archiveFilesBasePath];
+        var archive = await AddScenarioAsync();
+        SetupConfiguration();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        (await FolderConfirmationTestFactory.GetFolderNotConfirmedNotificationsAsync(DbContext))
+            .ShouldHaveSingleItem()
+            .Message.ShouldContain(archiveFilesBasePath);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiveInConfirmedWorkingDirectory_DeletesArchiveFiles()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [archiveFilesBasePath];
+        await FolderConfirmationTestFactory.ConfirmFolderAsync(DbContext, archiveFilesBasePath);
+        var archive = await AddScenarioAsync();
+        SetupConfiguration();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldBeDeletedAsync(archive);
+        (
+            await FolderConfirmationTestFactory.GetFolderNotConfirmedNotificationsAsync(DbContext)
+        ).ShouldBeEmpty();
     }
 
     [Test]
@@ -270,11 +313,25 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
 
     private ArchiveCleanupService CreateService(IFileSystemService fileSystemService)
     {
+        var notificationService = new NotificationService(
+            repository: new NotificationRepository(DbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
+        );
+
         return new ArchiveCleanupService(
             new ArchiveCleanupRepository(DbContext),
             configurationMock.Object,
             new MirrorCoverageEvaluator(hosterFactoryMock.Object),
-            new LocalArchiveDeleter(fileSystemService),
+            new LocalArchiveDeleter(
+                fileSystemService,
+                FolderConfirmationTestFactory.CreateCheck(DbContext, workingDirectoriesConfig)
+            ),
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                workingDirectoriesConfig
+            ),
             CreateTimeProvider(),
             Mock.Of<ILogger<ArchiveCleanupService>>()
         );

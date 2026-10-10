@@ -9,7 +9,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - WorkingDirectories__0=/mnt/data
+      - WorkingDirectories__0=/mnt/data/releases
       - Bearcat__DataDirectory=/data
       # The SQLite database file is stored in the data directory as bearcat.db.
       # Use docker-compose.postgres.yml to run Bearcat with PostgreSQL instead.

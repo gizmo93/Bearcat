@@ -29,7 +29,7 @@ public class ApplicationConfigurationsPageTest
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<IJSRuntime, UnusedJsRuntime>();
         services.AddSingleton<NavigationManager, UnusedNavigationManager>();
-        services.AddBearcatBlueprintComponents(configuration);
+        services.AddBearcatBlueprintComponents();
         services.AddApplicationConfiguration<InitialUploadConfiguration>();
         services.AddApplicationConfiguration<NotificationConfiguration>();
         services.AddSingleton<ApplicationConfigurationRegistry>();

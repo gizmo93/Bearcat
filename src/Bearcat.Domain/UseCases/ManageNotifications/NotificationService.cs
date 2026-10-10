@@ -151,6 +151,7 @@ public class NotificationService(
                 configuration.ReleaseCreatedFromRemoteDownload,
             NotificationKind.RemoteDownloadFailed => configuration.RemoteDownloadFailed,
             NotificationKind.UnreadableSecretsDetected => configuration.UnreadableSecretsDetected,
+            NotificationKind.FolderNotConfirmed => configuration.FolderNotConfirmed,
             _ => throw new ArgumentOutOfRangeException(
                 paramName: nameof(kind),
                 actualValue: kind,

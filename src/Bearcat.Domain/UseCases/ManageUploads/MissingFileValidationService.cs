@@ -1,6 +1,7 @@
 using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,8 @@ public class MissingFileValidationService(
     IUploadFilesRepository repository,
     IFileSystemService fileSystemService,
     ILogger<MissingFileValidationService> logger,
-    INotificationService notificationService
+    INotificationService notificationService,
+    FolderWriteCheck folderWriteCheck
 )
 {
     public async Task<List<Upload>> GetUploadsWithMissingFilesAsync(
@@ -66,6 +68,18 @@ public class MissingFileValidationService(
         if (nonExistingFiles.Count == 0)
         {
             return false;
+        }
+
+        if (
+            !await folderWriteCheck.IsWriteAllowedOtherwiseNotifyAsync(
+                nonExistingFiles
+                    .Select(archiveFile => Path.GetDirectoryName(archiveFile.FullFileName))
+                    .ToList(),
+                cancellationToken
+            )
+        )
+        {
+            return true;
         }
 
         await HandleMissingFilesAsync(upload, nonExistingFiles, cancellationToken);

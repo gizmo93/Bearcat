@@ -7,12 +7,14 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.FolderConfirmation;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
 
@@ -30,11 +32,13 @@ public class ArchiveRestoreServiceTest
     private TransferCancellationRegistry cancellationRegistry = null!;
     private List<string> restoreFailedMessages = null!;
     private string restoreFolderPath = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void SetUp()
     {
         repository = new FakeArchiveRestoreRepository();
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
         downloadHoster = new FakeDownloadHoster();
         secondaryDownloadHoster = new FakeDownloadHoster();
         transferProgressTracker = new RecordingTransferProgressTracker();
@@ -584,6 +588,62 @@ public class ArchiveRestoreServiceTest
         );
     }
 
+    [Test]
+    public async Task ProcessAsync_ArchiveFilesBasePathInNotConfirmedWorkingDirectory_KeepsStateAndNotifies()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = ["/archives"];
+        var scenario = CreateScenario();
+        var previousArchiveState = scenario.Archive.ArchiveState;
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(previousArchiveState);
+        scenario.Archive.ArchiveFolderPath.ShouldBe("/gone");
+        downloadHoster.DownloadedLinks.ShouldBeEmpty();
+        fileSystemServiceMock.Verify(x => x.CreateTempDirectory(It.IsAny<string>()), Times.Never);
+        notificationServiceMock.Verify(
+            x =>
+                x.CreateAsync(
+                    NotificationKind.FolderNotConfirmed,
+                    It.Is<string>(message => message.Contains("/archives")),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiveStuckInRestoringInNotConfirmedWorkingDirectory_KeepsArchiveAndFolder()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = ["/tmp"];
+        var interruptedArchive = new Archive
+        {
+            Id = 99,
+            ArchiveConfigId = 7,
+            ArchiveFolderPath = "/tmp/interrupted-restore",
+            ArchiveState = ArchiveState.Restoring,
+            ArchiveFiles = [],
+            Uploads = [],
+        };
+        repository.Archives.Add(interruptedArchive);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        interruptedArchive.ArchiveState.ShouldBe(ArchiveState.Restoring);
+        fileSystemServiceMock.Verify(
+            x => x.DeleteDirectoryIfExists(It.IsAny<string>()),
+            Times.Never
+        );
+    }
+
     private ArchiveRestoreService CreateService()
     {
         var configurationProviderMock = new Mock<IApplicationConfigurationProvider>();
@@ -617,6 +677,16 @@ public class ArchiveRestoreServiceTest
                     new TransferSpeedLimitService(configurationProviderMock.Object),
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
+            ),
+            new FolderWriteCheck(
+                new FolderConfirmationCheck(
+                    new ConfirmableFolderRootProvider(Options.Create(workingDirectoriesConfig)),
+                    Mock.Of<IConfirmedFolderRepository>(),
+                    fileSystemServiceMock.Object
+                ),
+                Mock.Of<IConfirmedFolderRepository>(),
+                notificationServiceMock.Object,
+                NullLogger<FolderWriteCheck>.Instance
             ),
             NullLogger<ArchiveRestoreService>.Instance
         );

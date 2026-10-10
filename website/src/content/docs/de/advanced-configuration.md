@@ -175,6 +175,31 @@ Jede Hosterregistrierung kann zusätzlich ein eigenes Limit setzen. Siehe
 
 Bei sehr niedrigen Geschwindigkeitslimits können Uploads wegen Zeitüberschreitungen scheitern.
 
+## Ordnerbestätigung
+
+Bearcat schreibt erst in ein Arbeitsverzeichnis, nachdem du es unter **System** > **Ordner** bestätigt hast.
+Pfade ausserhalb der Arbeitsverzeichnisse werden nicht geprüft.
+
+Beim Bestätigen erstellt Bearcat die Markerdatei `.bearcat-folder`. Lass sie im Arbeitsverzeichnis.
+Fehlt das Verzeichnis, lege es zuerst selbst an.
+
+Fehlt eine eingebundene Freigabe, kann am selben Pfad ein leerer lokaler Ordner erscheinen.
+Die Markerdatei verhindert, dass Bearcat dort versehentlich Dateien schreibt.
+
+| Zustand | Bedeutung |
+| --- | --- |
+| Bestätigt | Bearcat erkennt die Markerdatei und kann in den Ordner schreiben. |
+| Nicht bestätigt | Der Ordner wurde noch nicht bestätigt oder sein eingestellter Pfad hat sich geändert. Bestätige ihn. |
+| Markerdatei fehlt | Die Markerdatei fehlt oder passt nicht mehr. Prüfe, ob die Freigabe eingebunden ist, statt den Ordner einfach erneut zu bestätigen. |
+
+Ohne gültige Bestätigung pausiert Bearcat die betroffenen Arbeiten und versucht es beim nächsten Durchlauf erneut.
+Pro Ordner erscheint eine Benachrichtigung **Ordner nicht bestätigt**. Das Bestätigen erledigt diese Meldungen.
+
+Lesen braucht keine Bestätigung. Scheinen in einem unbestätigten Ordner Archivdateien zu fehlen,
+lässt Bearcat Upload und Archiv unverändert.
+
+Beim ersten Update auf eine Version mit Ordnerbestätigung musst du jedes Arbeitsverzeichnis einmal bestätigen.
+
 ## Datenbank
 
 Neue Installationen als Desktopanwendung, Windows-Dienst oder Docker verwenden SQLite. Bestehende PostgreSQL-Installationen verwenden weiterhin PostgreSQL.

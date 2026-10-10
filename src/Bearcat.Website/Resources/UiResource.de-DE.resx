@@ -1678,4 +1678,23 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Erneut versuchen</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} wird beim nächsten Ordnerscan erneut verarbeitet.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Phasen der Ordnerautomatisierung</value></data>
+  <data name="FoldersIntro" xml:space="preserve"><value>Arbeitsverzeichnisse, in die Bearcat schreibt. Ein Ordner muss bestätigt sein, bevor Bearcat darin Dateien herunterlädt, erstellt, wiederherstellt oder löscht.</value></data>
+  <data name="NoConfirmableFolders" xml:space="preserve"><value>Es sind keine Arbeitsverzeichnisse konfiguriert.</value></data>
+  <data name="FolderDoesNotExist" xml:space="preserve"><value>Der Ordner existiert nicht.</value></data>
+  <data name="FolderConfirmationState.OutsideConfirmableFolders" xml:space="preserve"><value>Nicht bestätigbar</value></data>
+  <data name="FolderConfirmationState.Confirmed" xml:space="preserve"><value>Bestätigt</value></data>
+  <data name="FolderConfirmationState.NotConfirmed" xml:space="preserve"><value>Nicht bestätigt</value></data>
+  <data name="FolderConfirmationState.MarkerMissing" xml:space="preserve"><value>Markerdatei fehlt</value></data>
+  <data name="ConfirmFolder" xml:space="preserve"><value>Ordner bestätigen</value></data>
+  <data name="ConfirmFolderDialogDescription" xml:space="preserve"><value>Prüfe, ob das der richtige Ordner ist, bevor Bearcat hineinschreibt.</value></data>
+  <data name="FolderConfirmed" xml:space="preserve"><value>{0} wurde bestätigt.</value></data>
+  <data name="ConfirmFolderDoesNotExistWarning" xml:space="preserve"><value>Der Ordner existiert nicht. Bearcat erstellt ihn nie. Erstelle oder mounte ihn zuerst.</value></data>
+  <data name="ConfirmFolderMarkerMissingWarning" xml:space="preserve"><value>Dieser Ordner wurde bereits bestätigt, aber seine Markerdatei fehlt. Er ist wahrscheinlich nicht gemountet. Prüfe den Mount, statt ihn erneut zu bestätigen. Wenn du einen nicht gemounteten Ordner bestätigst, schreibt Bearcat auf die lokale Festplatte.</value></data>
+  <data name="FolderContents" xml:space="preserve"><value>Inhalt</value></data>
+  <data name="FolderIsEmpty" xml:space="preserve"><value>Der Ordner ist leer.</value></data>
+  <data name="FolderContentsTruncated" xml:space="preserve"><value>{0} von {1} Einträgen werden angezeigt.</value></data>
+  <data name="ConfirmFolderExplanation" xml:space="preserve"><value>Beim Bestätigen schreibt Bearcat die Markerdatei .bearcat-folder in diesen Ordner. Bearcat schreibt nur in den Ordner, solange diese Markerdatei existiert.</value></data>
+  <data name="NotificationGroup.Folders" xml:space="preserve"><value>Ordner</value></data>
+  <data name="NotificationKind.FolderNotConfirmed" xml:space="preserve"><value>Ordner nicht bestätigt</value></data>
+  <data name="NotificationKind.FolderNotConfirmed.Description" xml:space="preserve"><value>Bearcat hat Downloads, Archiverstellung, Wiederherstellungen oder Löschungen übersprungen, weil ein Ordner nicht bestätigt ist oder seine Markerdatei fehlt.</value></data>
 </root>

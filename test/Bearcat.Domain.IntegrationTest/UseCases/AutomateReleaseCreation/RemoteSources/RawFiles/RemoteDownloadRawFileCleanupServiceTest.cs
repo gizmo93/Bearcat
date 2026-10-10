@@ -1,5 +1,7 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.FolderConfirmation;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles;
@@ -40,6 +42,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
     private string rawFolderPath = null!;
     private string archiveFilesBasePath = null!;
     private RemoteDownloadRawFileCleanupService service = null!;
+    private WorkingDirectoriesConfig workingDirectoriesConfig = null!;
 
     [SetUp]
     public void Setup()
@@ -57,6 +60,13 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             .Setup(f => f.GetByName(MirrorHosterClassName))
             .Returns(Mock.Of<IHosterWithDownload>());
 
+        workingDirectoriesConfig = new WorkingDirectoriesConfig();
+        var notificationService = new NotificationService(
+            repository: new NotificationRepository(DbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
+        );
+
         service = new RemoteDownloadRawFileCleanupService(
             new RemoteSourceDownloadRepository(DbContext),
             new UnmanagedReleaseConverter(new MirrorCoverageEvaluator(hosterFactoryMock.Object)),
@@ -64,11 +74,12 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
                 new FileSystemService(),
                 NullLogger<RemoteDownloadFolderService>.Instance
             ),
-            new NotificationService(
-                repository: new NotificationRepository(DbContext),
-                timeProvider: CreateTimeProvider(),
-                configurationProvider: CreateNotificationConfigurationProvider()
+            FolderConfirmationTestFactory.CreateWriteCheck(
+                DbContext,
+                notificationService,
+                workingDirectoriesConfig
             ),
+            notificationService,
             NullLogger<RemoteDownloadRawFileCleanupService>.Instance
         );
     }
@@ -107,6 +118,30 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
         notification.NotificationKind.ShouldBe(NotificationKind.ReleaseAutoConvertedToUnmanaged);
         notification.Message.ShouldContain(rawFolderPath);
         notification.Message.ShouldContain("were deleted");
+    }
+
+    [Test]
+    public async Task ProcessAsync_RawFolderInNotConfirmedWorkingDirectory_LeavesReleaseUntouchedAndNotifiesOnce()
+    {
+        // Arrange
+        workingDirectoriesConfig.WorkingDirectories = [targetPath];
+        var release = await AddScenarioAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var verificationContext = CreateDbContext();
+        var result = await verificationContext.Releases.SingleAsync(r => r.Id == release.Id);
+        result.ReleaseType.ShouldBe(ReleaseType.Managed);
+        Directory.Exists(rawFolderPath).ShouldBeTrue();
+        (
+            await FolderConfirmationTestFactory.GetFolderNotConfirmedNotificationsAsync(
+                verificationContext
+            )
+        ).ShouldHaveSingleItem();
+        (await verificationContext.Notifications.CountAsync()).ShouldBe(1);
     }
 
     [Test]
