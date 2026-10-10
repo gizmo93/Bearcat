@@ -1,4 +1,4 @@
-namespace Bearcat.Website;
+namespace Bearcat.Domain.Shared;
 
 public sealed class WorkingDirectoriesConfig
 {

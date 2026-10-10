@@ -30,6 +30,9 @@ using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderMoves;
+using Bearcat.Domain.UseCases.ManageArchiveStorageFolders;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
@@ -114,6 +117,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ProxyCategoryDefaultService>();
             services.AddScoped<ProxySelectionValidator>();
             services.AddScoped<AdditionalArchiveContentService>();
+            services.AddScoped<ArchiveStorageFolderService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();
             services.AddScoped<ReleaseForumPostUploadBuilder>();
@@ -144,6 +148,9 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ReleaseFolderEntriesForPackingService>();
             services.AddScoped<ArchiveCleanupService>();
+            services.AddScoped<ArchiveStorageFolderMoveService>();
+            services.AddScoped<ArchiveLocalWorkingCopyService>();
+            services.AddScoped<ArchiveLocalWorkingCopyCleanupService>();
             services.AddScoped<ReleaseFolderRetirementService>();
             services.AddScoped<UnmanagedReleaseConverter>();
             services.AddScoped<MirrorCoverageEvaluator>();

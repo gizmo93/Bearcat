@@ -15,6 +15,7 @@ using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
+using Bearcat.Domain.UseCases.ManageArchiveStorageFolders.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
@@ -180,6 +181,14 @@ public static class ServiceProviderConfig
             services.AddScoped<
                 IAdditionalArchiveContentWriteRepository,
                 AdditionalArchiveContentRepository
+            >();
+            services.AddScoped<
+                IArchiveStorageFolderReadRepository,
+                ArchiveStorageFolderRepository
+            >();
+            services.AddScoped<
+                IArchiveStorageFolderWriteRepository,
+                ArchiveStorageFolderRepository
             >();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IArchiveCleanupRepository, ArchiveCleanupRepository>();

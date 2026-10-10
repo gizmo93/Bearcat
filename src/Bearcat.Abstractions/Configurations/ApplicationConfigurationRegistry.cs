@@ -83,7 +83,7 @@ public class ApplicationConfigurationRegistry
                     Description: propertyAttribute?.Description,
                     PropertyType: p.PropertyType,
                     PropertyInfo: p,
-                    Options: optionsAttribute?.Values ?? [],
+                    Options: GetOptions(p.PropertyType, optionsAttribute),
                     Unit: unitAttribute?.Unit
                 );
             })
@@ -98,8 +98,26 @@ public class ApplicationConfigurationRegistry
         );
     }
 
+    private static IReadOnlyList<string> GetOptions(
+        Type propertyType,
+        ApplicationConfigurationOptionsAttribute? optionsAttribute
+    )
+    {
+        if (propertyType.IsEnum)
+        {
+            return Enum.GetNames(propertyType);
+        }
+
+        return optionsAttribute?.Values ?? [];
+    }
+
     private static bool IsSupportedType(Type type)
     {
+        if (type.IsEnum)
+        {
+            return true;
+        }
+
         var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
         return underlyingType == typeof(bool)

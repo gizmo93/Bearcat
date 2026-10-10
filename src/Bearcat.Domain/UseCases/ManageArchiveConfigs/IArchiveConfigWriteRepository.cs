@@ -12,4 +12,7 @@ public interface IArchiveConfigWriteRepository
         IReadOnlyList<int> additionalArchiveContentIds,
         CancellationToken cancellationToken = default
     );
+    Task<IReadOnlyList<ArchiveStorageFolder>> GetArchiveStorageFoldersAsync(
+        CancellationToken cancellationToken = default
+    );
 }

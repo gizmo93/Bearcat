@@ -1089,6 +1089,169 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         (await DbContext.UploadedFiles.CountAsync()).ShouldBe(2);
     }
 
+    [Test]
+    public async Task GetArchiveDeletionPreviewAsync_ReleaseWithArchiveInStorageFolder_ListsOnlyLocalArchivesAndCountsStorageFolderArchives()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        await AddArchiveInStorageFolderAsync(release.Id);
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        var preview = await service.GetArchiveDeletionPreviewAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        preview.CanDelete.ShouldBeTrue();
+        preview.DeletableArchiveFolderPaths.ShouldBe(["/archives/created"]);
+        preview.ArchiveInStorageFolderCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetArchiveDeletionPreviewAsync_OnlyArchiveIsInStorageFolder_CannotDelete()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        await MoveCreatedArchivesIntoStorageFolderAsync(release.Id);
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        var preview = await service.GetArchiveDeletionPreviewAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        preview.CanDelete.ShouldBeFalse();
+        preview.DeletableArchiveFolderPaths.ShouldBeEmpty();
+        preview.ArchiveInStorageFolderCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task DeleteLocalArchivesAsync_ReleaseWithArchiveInStorageFolder_KeepsArchiveInStorageFolder()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        var storageArchive = await AddArchiveInStorageFolderAsync(release.Id);
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        await service.DeleteLocalArchivesAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archives = await DbContext.Archives.OrderBy(archive => archive.Id).ToListAsync();
+        archives
+            .Select(archive => (archive.Id == storageArchive.Id, archive.ArchiveState))
+            .ShouldBe([
+                (false, ArchiveState.Deleted),
+                (false, ArchiveState.Deleted),
+                (true, ArchiveState.Created),
+            ]);
+    }
+
+    [Test]
+    public async Task DeleteLocalArchivesAsync_OnlyArchiveIsInStorageFolder_ThrowsAndKeepsArchive()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        await MoveCreatedArchivesIntoStorageFolderAsync(release.Id);
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.DeleteLocalArchivesAsync(release.Id, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("This release has no local archives that could be deleted.");
+        DbContext.ChangeTracker.Clear();
+        (
+            await DbContext.Archives.CountAsync(archive =>
+                archive.ArchiveState == ArchiveState.Created
+            )
+        ).ShouldBe(1);
+    }
+
+    private async Task<Archive> AddArchiveInStorageFolderAsync(int releaseId)
+    {
+        var archiveConfig = await DbContext.ArchiveConfigs.SingleAsync(config =>
+            config.ReleaseId == releaseId
+        );
+        var archive = new Archive
+        {
+            ArchiveConfigId = archiveConfig.Id,
+            ArchiveFolderPath = "/mnt/nas/stored",
+            ArchiveStorageFolder = new ArchiveStorageFolder
+            {
+                Name = "NAS",
+                Path = "/mnt/nas",
+                IsActive = true,
+            },
+            CreatedAt = DateTime.UtcNow,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 0,
+            ArchiveFiles = [new ArchiveFile { FullFileName = "/mnt/nas/stored/release.rar" }],
+            Uploads = [],
+            Notifications = [],
+        };
+        DbContext.Archives.Add(archive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return archive;
+    }
+
+    private async Task MoveCreatedArchivesIntoStorageFolderAsync(int releaseId)
+    {
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = "/mnt/nas",
+            IsActive = true,
+        };
+        var createdArchives = await DbContext
+            .Archives.Where(archive =>
+                archive.ArchiveConfig.ReleaseId == releaseId
+                && archive.ArchiveState == ArchiveState.Created
+            )
+            .ToListAsync();
+
+        foreach (var archive in createdArchives)
+        {
+            archive.ArchiveStorageFolder = storageFolder;
+        }
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+    }
+
     private async Task<Release> AddUnmanagedReleaseWithMirrorUploadAsync(
         int releaseGroupId,
         UploadState otherUploadState

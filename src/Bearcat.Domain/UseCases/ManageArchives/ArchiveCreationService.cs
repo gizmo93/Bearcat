@@ -9,6 +9,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,8 @@ public class ArchiveCreationService(
     ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService,
     ITransferProgressTracker progressTracker,
     ITransferCancellationRegistry cancellationRegistry,
-    FolderSizeProgressReporter folderSizeProgressReporter
+    FolderSizeProgressReporter folderSizeProgressReporter,
+    ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService
 )
 {
     private const string SynologyMetadataFolderName = "@eaDir";
@@ -176,6 +178,7 @@ public class ArchiveCreationService(
         var uploadsWithoutArchive = await repository.GetUploadsWithoutArchiveAsync(
             cancellationToken
         );
+
         var archivesToCreate = new Dictionary<ArchiveConfig, List<Upload>>();
         var uploadsByArchiveConfigId = new Dictionary<int, List<Upload>>();
         var archiveConfigsById = new Dictionary<int, ArchiveConfig>();
@@ -202,10 +205,11 @@ public class ArchiveCreationService(
             );
 
             var archiveConfig = archiveConfigsById[archiveConfigId];
+
             var existingArchiveWasHandled = await TryAssignExistingArchiveAsync(
-                archiveConfig,
-                uploads,
-                cancellationToken
+                archiveConfig: archiveConfig,
+                uploads: uploads,
+                cancellationToken: cancellationToken
             );
 
             if (existingArchiveWasHandled)
@@ -272,6 +276,7 @@ public class ArchiveCreationService(
 
         var archiveFilesToUploadNeedNewHashes =
             archiveNeedsHashChange && archiveFilesToUpload.Count > 0;
+
         var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
 
         if (archiveFilesToUploadNeedNewHashes && !archiver.CanChangeHashInPlace)
@@ -291,7 +296,15 @@ public class ArchiveCreationService(
                     (
                         archiveFilesToUploadNeedNewHashes
                         && archiveFilesToUpload.Contains(archiveFile)
-                    ) || archiveFile.Md5Hash is null
+                    )
+                    || (
+                        archiveFile.Md5Hash is null
+                        && !ArchiveLocalWorkingCopyService.ArchiveFileStaysUnchangedInStorageFolder(
+                            archive: assignableArchive,
+                            archiveFile: archiveFile,
+                            archiveFilesToUpload: archiveFilesToUpload
+                        )
+                    )
                 )
                 .ToList()
             : [];
@@ -300,7 +313,17 @@ public class ArchiveCreationService(
             .Where(archiveFile => !fileSystemService.FileExists(archiveFile.FullFileName))
             .ToList();
 
-        if (missingArchiveFiles.Count > 0 || archiveFilesToChangeHash.Count > 0)
+        var archiveFilesToCopyIntoLocalWorkingCopy =
+            ArchiveLocalWorkingCopyService.GetArchiveFilesToCopyIntoLocalWorkingCopy(
+                archive: assignableArchive,
+                archiveFilesToUpload: archiveFilesToUpload
+            );
+
+        if (
+            missingArchiveFiles.Count > 0
+            || archiveFilesToChangeHash.Count > 0
+            || archiveFilesToCopyIntoLocalWorkingCopy.Count > 0
+        )
         {
             var archiveHasActiveUpload = await repository.HasActiveUploadAsync(
                 archiveId: assignableArchive.Id,
@@ -329,6 +352,15 @@ public class ArchiveCreationService(
             );
 
             return true;
+        }
+
+        if (archiveFilesToCopyIntoLocalWorkingCopy.Count > 0)
+        {
+            await archiveLocalWorkingCopyService.CopyArchiveFilesIntoLocalWorkingCopyAsync(
+                archive: assignableArchive,
+                archiveFilesToCopy: archiveFilesToCopyIntoLocalWorkingCopy,
+                cancellationToken: cancellationToken
+            );
         }
 
         if (archiveFilesToChangeHash.Count > 0)
@@ -595,7 +627,15 @@ public class ArchiveCreationService(
                     return;
                 }
 
+                var archiveFileIsInStorageFolder =
+                    ArchiveLocalWorkingCopyFiles.IsFileInStorageFolder(archive, archiveFile);
+
                 archiveFile.Md5Hash = null;
+
+                if (archiveFileIsInStorageFolder)
+                {
+                    archiveFile.Md5HashInStorageFolder = null;
+                }
 
                 progress.BeginFile(new FileInfo(archiveFile.FullFileName).Length);
 
@@ -620,6 +660,11 @@ public class ArchiveCreationService(
                 );
 
                 archiveFile.Md5Hash = nullByteSuffixHash.Md5Hash;
+
+                if (archiveFileIsInStorageFolder)
+                {
+                    archiveFile.Md5HashInStorageFolder = nullByteSuffixHash.Md5Hash;
+                }
             },
             cancellationToken: cancellationToken
         );

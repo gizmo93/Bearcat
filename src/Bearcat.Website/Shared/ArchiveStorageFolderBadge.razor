@@ -1,0 +1,9 @@
+<BbBadge Variant="BadgeVariant.Outline" Class="max-w-full text-muted-foreground" title="@Title">
+    <BbBadgeIcon Name="hard-drive" />
+    <span class="sr-only">@L["ArchiveStorageFolder"]:</span>
+    <span class="truncate">@Name</span>
+    @if (HasLocalWorkingCopyFiles)
+    {
+        <span class="shrink-0">(@L["LocalWorkingCopy"])</span>
+    }
+</BbBadge>

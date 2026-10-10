@@ -24,7 +24,9 @@ public record ArchiveConfigReadModel(
         DateTime CreatedAt,
         ArchiveState ArchiveState,
         int ArchiveFileCount,
-        IReadOnlyList<string> ErrorMessages
+        IReadOnlyList<string> ErrorMessages,
+        string? ArchiveStorageFolderName,
+        bool HasLocalWorkingCopyFiles
     );
 
     public string? ArchiveNameWithExtension =>

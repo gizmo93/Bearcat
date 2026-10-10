@@ -12,27 +12,19 @@ Das funktioniert für [Managed und Unmanaged Releases](/Bearcat/de/release-types
 
 ## Wann Bearcat von einem Mirror herunterlädt
 
-Bearcat lädt ein Archiv von einem Mirror herunter, wenn:
+Braucht ein Upload ein vorhandenes Archiv, verwendet Bearcat zuerst die Dateien auf der Festplatte.
+Fehlende Dateien lädt es von aktiven Mirrorhostern herunter. Die benötigten Parts dürfen dabei auf
+mehrere Mirrors verteilt sein.
 
-- ein Upload auf sein Archiv wartet,
-- das neueste Archiv der Archivkonfiguration lokal fehlt oder unvollständig ist und
-- alle benötigten Dateien auf einem Mirrorhoster online sind.
+Bearcat übernimmt Links, die vom vorherigen Upload zum selben Hoster noch online sind.
+Es lädt nur die Dateien herunter, die für den Reupload fehlen.
 
-Wenn die Archivwiederverwendung möglich ist, sucht Bearcat Dateien in dieser Reihenfolge:
+Ist kein passender Mirror verfügbar, kann Bearcat [Managed Releases](/Bearcat/de/release-types/) aus
+dem Releaseordner neu packen. Bei Unmanaged Releases musst du die fehlenden Archivdateien selbst bereitstellen.
+Siehe [Unmanaged Releases](/Bearcat/de/release-types/#unmanaged-releases).
 
-1. Die lokalen Archivdateien, falls sie noch auf der Festplatte liegen.
-2. Download von einem Mirrorhoster.
-3. Nur bei Managed Releases: neu packen aus dem Releaseordner.
-
-Für neue Hashes muss Bearcat 7-Zip-Archive auch bei vorhandenen Dateien neu packen.
-Die Unterschiede zwischen den Formaten stehen unter [Archivwiederverwendung](/Bearcat/de/upload-lifecycle/#archivwiederverwendung-und-repackaging).
-
-Fehlen bei einem Unmanaged Release lokale Archive und Mirrors, wartet der Upload, bis du die
-Archivdateien bereitstellst. Die Anleitung findest du unter
-[Unmanaged Releases](/Bearcat/de/release-types/#unmanaged-releases).
-
-Bearcat übernimmt Dateien, die von einem früheren Upload zum selben Hoster noch online sind,
-und lädt nur die fehlenden herunter.
+7-Zip-Archive müssen für neue Hashes neu gepackt werden, auch wenn die Dateien vorhanden sind.
+Die Unterschiede stehen unter [Archivwiederverwendung](/Bearcat/de/upload-lifecycle/#archivwiederverwendung-und-repackaging).
 
 ## Hoster als Mirror aktivieren
 
@@ -48,13 +40,12 @@ um der globalen Einstellung **Mirrordownloads von Hostern** zu folgen. Siehe [Pr
 
 ### Mirrorpriorität
 
-**Mirrorpriorität** erscheint, wenn du Mirrordownloads aktivierst. Der Standard ist `100`; niedrigere
-Zahlen haben Vorrang. Ein Mirror mit `10` wird also vor einem mit `100` gewählt.
+**Mirrorpriorität** erscheint, wenn du Mirrordownloads aktivierst. Standard: `100`.
+Niedrigere Zahlen haben Vorrang, etwa `10` vor `100`.
 
-Bearcat berücksichtigt nur aktive Mirrorregistrierungen, bei denen alle benötigten Dateien als online markiert sind.
-Haben mehrere Mirrors dieselbe Priorität, wählt es den mit der jüngsten Dateiprüfung.
-
-Die Hosterliste zeigt die Priorität neben **Mirrordownloads**, zum Beispiel **Mirrordownloads (Prio: 100)**.
+Bearcat wählt den Mirror für jede Datei einzeln. Es berücksichtigt nur aktive Hosterregistrierungen,
+bei denen die Datei als online markiert ist. Bei gleicher Priorität gewinnt die jüngste Dateiprüfung.
+Schlägt ein Download trotz Wiederholungen fehl, versucht Bearcat den nächsten verfügbaren Mirror.
 
 ### Hoster mit Unterstützung für Mirrordownloads
 
@@ -77,17 +68,8 @@ Die Hosterliste zeigt die Priorität neben **Mirrordownloads**, zum Beispiel **M
 Bearcat zeigt neben dem Schalter einen Hinweis, wenn ein Premiumaccount nötig ist. Mit kostenlosen Accounts
 kannst du trotzdem zu diesen Hostern hochladen.
 
-<details>
-<summary>Warum manche Hoster einen Premiumaccount brauchen</summary>
-
-- **Alfafile:** kostenlose Accounts erlauben einen Download alle 120 Minuten und insgesamt nur 500 MB Traffic.
-- **Fast2Share:** kostenlose Accounts haben für jede Datei eine Wartezeit. Bearcat unterstützt das nicht,
-  daher schlagen Mirrordownloads mit einem kostenlosen Account fehl.
-- **Keep2Share:** kostenlose Downloads sind auf etwa 50 KB/s und eine Verbindung gleichzeitig begrenzt.
-- **mega4upload.net:** Downloads brauchen einen Premiumaccount und einen API-Schlüssel mit dem
-  Scope `download`. Bitte den Support von mega4upload, den Scope zu deinem Schlüssel hinzuzufügen.
-
-</details>
+Für **mega4upload.net** braucht dein API-Schlüssel zusätzlich den Scope `download`.
+Bitte den Support, ihn freizuschalten.
 
 ## Laufenden Download abbrechen
 
@@ -99,11 +81,12 @@ Sie starten beim nächsten Durchlauf nicht erneut. Der Archivstatus wird zurück
 
 ## Prüfung und Fehler
 
-Bearcat prüft jede heruntergeladene Datei gegen den beim Upload gespeicherten MD5-Hash. Stimmt
-ein Hash nicht oder schlägt ein Download fehl, verwirft es die Wiederherstellung, belässt das Archiv
-im bisherigen Zustand und erstellt die Benachrichtigung **Archivwiederherstellung fehlgeschlagen**.
+Bearcat vergleicht heruntergeladene Dateien mit dem beim Upload gespeicherten MD5-Hash, sofern er vorhanden ist.
+Bei einem abweichenden Hash oder Downloadfehler versucht es die Datei erneut oder nutzt einen anderen Mirror.
 
-Auch die wartenden Uploads schlagen fehl. Behebe die Ursache und erstelle danach einen manuellen Reupload.
+Kann Bearcat eine Datei auch danach nicht wiederherstellen, verwirft es den Download und meldet
+**Archivwiederherstellung fehlgeschlagen**. Das Archiv behält seinen bisherigen Status; die wartenden Uploads schlagen fehl.
+Behebe die Ursache und erstelle danach einen manuellen Reupload.
 
 ## Parallele Downloads
 
@@ -121,12 +104,12 @@ ihn auf `1`, wenn der Hoster parallele Downloads drosselt oder ablehnt.
   gemeinsame Geschwindigkeit aller Mirrordownloads dieser Hosterregistrierung.
 
 Leere Felder bedeuten kein Limit und sind der Standard. Kommazahlen wie `0.5` oder `0,5` sind erlaubt.
-Sind beide gesetzt, gilt das niedrigere Limit.
+Beide Limits gelten gleichzeitig.
 
 ## Lokale Archive selbst löschen
 
 Wähle **Lokale Archive löschen** im Aktionsmenü der Releasedetailseite, um Speicherplatz freizugeben.
-Die Aktion löscht die lokalen Archivdateien des Releases und markiert die Archive als gelöscht.
+Bearcat löscht die Archivdateien des Releases.
 
 ![delete-local-archives.png](../images/delete-local-archives.png)
 
@@ -137,9 +120,11 @@ Bearcat bietet das nur an, wenn das Release wiederherstellbar bleibt:
   Mirrordownloads aktiviert ist, **oder** das Release ist managed und hat noch seinen Releaseordner zum Neupacken.
 
 Bearcat löscht die Archivdateien und entfernt den Ordner nur, wenn er danach leer ist. Andere Dateien bleiben erhalten.
+Archive in einem [Speicherordner](/Bearcat/de/archive-storage-folders/) löscht Bearcat nicht. Liegen alle
+Archive des Releases in Speicherordnern, gibt es nichts zu löschen und Bearcat meldet das.
 
 ## Automatisches Aufräumen
 
-Das automatische Aufräumen kann lokale Archive nach einer konfigurierten Aufbewahrungsdauer löschen. Bearcat
-lädt sie von einem Mirror herunter, wenn ein späterer Upload sie braucht. Die zwei Regeln und ihre Einstellungen
-findest du unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#automatisches-aufräumen).
+Unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#lokale-archive-nach-aufbewahrung)
+kannst du **Lokale Archive nach Aufbewahrung** auf **Löschen** stellen.
+Bearcat entfernt sie nach der eingestellten Frist und stellt sie bei Bedarf für einen Reupload wieder her.

@@ -29,6 +29,7 @@ public interface IBearcatWriteDbContext
     DbSet<Archive> Archives { get; set; }
     DbSet<ArchiveConfig> ArchiveConfigs { get; set; }
     DbSet<AdditionalArchiveContent> AdditionalArchiveContents { get; set; }
+    DbSet<ArchiveStorageFolder> ArchiveStorageFolders { get; set; }
     DbSet<ArchiveFile> ArchiveFiles { get; set; }
     DbSet<Upload> Uploads { get; set; }
     DbSet<UploadConfig> UploadConfigs { get; set; }

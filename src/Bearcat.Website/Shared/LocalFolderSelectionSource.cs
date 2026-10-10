@@ -18,7 +18,7 @@ public sealed class LocalFolderSelectionSource(
             var (folderPaths, filePaths) = operationRunner.Run(
                 (IFileSystemService service) =>
                     (
-                        service.GetFoldersInPath(path),
+                        service.GetSelectableFoldersInPath(path),
                         includeFiles ? service.GetFilesInPath(path, recursive: false) : []
                     )
             );

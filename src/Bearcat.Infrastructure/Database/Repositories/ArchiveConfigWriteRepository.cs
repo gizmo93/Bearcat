@@ -48,4 +48,13 @@ public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite)
             .OrderBy(content => content.Name)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ArchiveStorageFolder>> GetArchiveStorageFoldersAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .ArchiveStorageFolders.OrderBy(storageFolder => storageFolder.Id)
+            .ToListAsync(cancellationToken);
+    }
 }

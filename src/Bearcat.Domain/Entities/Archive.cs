@@ -12,6 +12,10 @@ public class Archive
 
     public string ArchiveFolderPath { get; set; } = null!;
 
+    public int? ArchiveStorageFolderId { get; set; }
+
+    public ArchiveStorageFolder? ArchiveStorageFolder { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public ArchiveState ArchiveState { get; set; }

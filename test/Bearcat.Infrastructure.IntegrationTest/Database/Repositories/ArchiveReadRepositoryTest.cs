@@ -86,6 +86,141 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetByIdAsync_ArchiveInStorageFolder_ReturnsStorageFolderNameWithoutLocalWorkingCopy()
+    {
+        // Arrange
+        var archive = CreateArchive(
+            CreateArchiveConfig(),
+            "/mnt/nas/first",
+            new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc),
+            ["/mnt/nas/first/first.part1.rar"]
+        );
+        archive.ArchiveStorageFolder = CreateStorageFolder();
+        DbContext.Add(archive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByIdAsync(archive.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.ArchiveStorageFolderName.ShouldBe("NAS");
+        result.HasLocalWorkingCopyFiles.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetByIdAsync_ArchiveInStorageFolderWithFileInLocalWorkingCopy_ReturnsLocalWorkingCopy()
+    {
+        // Arrange
+        var archive = CreateArchive(
+            CreateArchiveConfig(),
+            "/mnt/nas/first",
+            new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc),
+            ["/tmp/archives/first/first.part1.rar", "/mnt/nas/first/first.part2.rar"]
+        );
+        archive.ArchiveStorageFolder = CreateStorageFolder();
+        DbContext.Add(archive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByIdAsync(archive.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HasLocalWorkingCopyFiles.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task GetByIdAsync_ArchiveInStorageFolderWithFileInSiblingFolderWithSamePrefix_ReturnsLocalWorkingCopy()
+    {
+        // Arrange
+        var archive = CreateArchive(
+            CreateArchiveConfig(),
+            "/mnt/nas/Rel",
+            new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc),
+            ["/mnt/nas/Rel.5/Rel.part1.rar"]
+        );
+        archive.ArchiveStorageFolder = CreateStorageFolder();
+        DbContext.Add(archive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByIdAsync(archive.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HasLocalWorkingCopyFiles.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task GetByIdAsync_LocalArchive_ReturnsNoStorageFolderName()
+    {
+        // Arrange
+        var archives = await AddArchivesAsync();
+
+        // Act
+        var result = await repository.GetByIdAsync(
+            archives.SecondArchive.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.ArchiveStorageFolderName.ShouldBeNull();
+        result.HasLocalWorkingCopyFiles.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SearchArchivesAsync_ArchivesInStorageFolder_ReturnsStorageFolderNameAndLocalWorkingCopy()
+    {
+        // Arrange
+        var archiveConfig = CreateArchiveConfig();
+        var workingCopyArchive = CreateArchive(
+            archiveConfig,
+            "/mnt/nas/third",
+            new DateTime(2026, 9, 30, 0, 0, 2, DateTimeKind.Utc),
+            ["/tmp/archives/third/third.part1.rar"]
+        );
+        workingCopyArchive.ArchiveStorageFolder = CreateStorageFolder();
+        var storageArchive = CreateArchive(
+            archiveConfig,
+            "/mnt/nas/first",
+            new DateTime(2026, 9, 30, 0, 0, 1, DateTimeKind.Utc),
+            ["/mnt/nas/first/first.part1.rar"]
+        );
+        storageArchive.ArchiveStorageFolder = workingCopyArchive.ArchiveStorageFolder;
+        var localArchive = CreateArchive(
+            archiveConfig,
+            "/tmp/archives/second",
+            new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc),
+            ["/tmp/other/second.part1.rar"]
+        );
+        DbContext.AddRange(workingCopyArchive, storageArchive, localArchive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchArchivesAsync(
+            new ArchiveSearchQuery(PageSize: 10),
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Items.Select(item =>
+                (item.ArchiveId, item.ArchiveStorageFolderName, item.HasLocalWorkingCopyFiles)
+            )
+            .ShouldBe([
+                (workingCopyArchive.Id, "NAS", true),
+                (storageArchive.Id, "NAS", false),
+                (localArchive.Id, null, false),
+            ]);
+    }
+
+    [Test]
     public async Task SearchArchivesAsync_NoFilter_ReturnsAllArchivesOrderedByCreatedAtAndIdDescending()
     {
         // Arrange
@@ -523,6 +658,16 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
             restoringArchive,
             createdArchiveWithPassedId
         );
+    }
+
+    private static ArchiveStorageFolder CreateStorageFolder()
+    {
+        return new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = "/mnt/nas",
+            IsActive = true,
+        };
     }
 
     private static ArchiveConfig CreateArchiveConfig()

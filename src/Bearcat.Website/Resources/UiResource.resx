@@ -595,7 +595,7 @@
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Select release group</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
-  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when release folders are released for deletion and when local archive files are deleted. Bearcat never deletes the release folder itself.</value></data>
+  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when releases are converted to unmanaged, whether their release folders are deleted and when local archive files are deleted.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
   <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Controls how archive files are changed before reuploads.</value></data>
   <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging strategy</value></data>
@@ -604,12 +604,17 @@
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nonce only, no compression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid archive with compression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Convert releases to unmanaged automatically</value></data>
-  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a release to unmanaged after the retention period and sends a notification with the release folder path. Bearcat does not delete the folder. You can then delete the raw files yourself.</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a release to unmanaged after the retention period and sends a notification with the release folder path. Bearcat only deletes the folder when release folder deletion is enabled. Otherwise you can delete the raw files yourself.</value></data>
   <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>Convert to unmanaged after</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Days since the uploads of a release were posted, or since its first upload finished when it was never marked as posted.</value></data>
-  <data name="AutoDeleteArchives" xml:space="preserve"><value>Delete local archives automatically</value></data>
-  <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Deletes the local archive files of an archive config once its retention expired. Only runs when the archives can be restored from an online mirror or repackaged from an existing release folder.</value></data>
-  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Delete local archives after</value></data>
+  <data name="DeleteReleaseFolderOnConversion" xml:space="preserve"><value>Delete release folder on conversion</value></data>
+  <data name="DeleteReleaseFolderOnConversionDescription" xml:space="preserve"><value>Deletes the release folder when a release is converted to unmanaged automatically. Only has an effect when automatic conversion is enabled. The folder is only deleted when every archive config has a local archive with all archive files on disk, no archive is stored inside the folder and the folder is neither a drive root nor contains a working directory. Otherwise the folder is kept and the notification says why.</value></data>
+  <data name="ArchiveRetentionAction" xml:space="preserve"><value>Local archives after retention</value></data>
+  <data name="ArchiveRetentionActionDescription" xml:space="preserve"><value>What happens to the local archives of an archive config once its retention expired. Delete only runs when the archives can be restored from an online mirror or repackaged from an existing release folder. Move to storage folder copies them into an active archive storage folder and removes the local copy. Archives in a storage folder are never deleted automatically.</value></data>
+  <data name="ArchiveRetentionAction.Off" xml:space="preserve"><value>Keep</value></data>
+  <data name="ArchiveRetentionAction.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ArchiveRetentionAction.MoveToStorageFolder" xml:space="preserve"><value>Move to storage folder</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Archive retention</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Days since the last upload of an archive config finished. Every reupload restarts this period.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initial uploads</value></data>
@@ -1020,7 +1025,7 @@
   <data name="NotificationGroup.Security" xml:space="preserve"><value>Security</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
-  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired and the release folder can be deleted.</value></data>
+  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired. Its release folder was deleted or can be deleted.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release folder missing</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>The release folder required for processing was not found.</value></data>
   <data name="NotificationKind.ReleaseFolderExtractionFailed" xml:space="preserve"><value>Folder automation extraction failed</value></data><data name="NotificationKind.ReleaseFolderExtractionFailed.Description" xml:space="preserve"><value>The SFV check or archive extraction of a folder found by folder automation failed. The files were kept and no release was created.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archive creation failed</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>An archive could not be created.</value></data>
@@ -1160,6 +1165,12 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Restoring</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archive restore failed</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>An archive could not be restored from an online mirror.</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable" xml:space="preserve"><value>No storage folder for archive</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable.Description" xml:space="preserve"><value>An archive could not be moved because no active storage folder has enough free space. The archive stays local.</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed" xml:space="preserve"><value>Moving archive to storage folder failed</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Copying an archive into a storage folder failed. The copied files were removed and the archive stays local.</value></data>
+  <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed" xml:space="preserve"><value>Copying archive into local working copy failed</value></data>
+  <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description" xml:space="preserve"><value>Copying archive files from a storage folder into a local working copy before a reupload failed. The copied files were removed and the upload reads the archive files from the storage folder.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release created from remote download</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>A release was created automatically from a folder that was downloaded from a remote source.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remote download failed</value></data>
@@ -1194,6 +1205,8 @@
   <data name="DeleteLocalArchivesConfirmationMirror" xml:space="preserve"><value>The hosters serve as the long-term storage of this release. Bearcat will download the archives from these mirrors when a reupload is needed: {0}. These archive folders will be emptied and deleted now: {1}</value></data>
   <data name="DeleteLocalArchivesConfirmationManaged" xml:space="preserve"><value>Bearcat will restore the archives from an online mirror when a reupload is needed, or repackage them from the release folder. These archive folders will be emptied and deleted now: {0}</value></data>
   <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Local archives can only be deleted when no uploads are running and every archive config has a fully online upload on a hoster that is enabled for mirror downloads (or the release folder still exists for managed releases).</value></data>
+  <data name="DeleteLocalArchivesOnlyArchivesInStorageFolders" xml:space="preserve"><value>This release has no local archives. Archives in a storage folder are not deleted by this action.</value></data>
+  <data name="DeleteLocalArchivesKeepsArchivesInStorageFolders" xml:space="preserve"><value>{0} archives in storage folders are kept.</value></data>
   <data name="LocalArchivesDeleted" xml:space="preserve"><value>Local archives of {0} deleted</value></data>
   <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packing</value></data>
   <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 Creating MD5 hashes</value></data>
@@ -1202,6 +1215,16 @@
   <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Cancel the creation of archive #{0}? A new archive is deleted, an existing archive is kept. The uploads waiting for this archive are canceled.</value></data>
   <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Cancellation requested for the creation of archive #{0}.</value></data>
   <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>The creation of archive #{0} already finished.</value></data>
+  <data name="ArchiveStorageFolderMoves" xml:space="preserve"><value>Moving to storage folders</value></data>
+  <data name="CancelArchiveStorageFolderMove" xml:space="preserve"><value>Cancel move</value></data>
+  <data name="CancelArchiveStorageFolderMoveConfirmation" xml:space="preserve"><value>Cancel moving archive #{0} to the storage folder? The files copied so far are deleted and the archive stays local.</value></data>
+  <data name="ArchiveStorageFolderMoveCancellationRequested" xml:space="preserve"><value>Cancellation requested for moving archive #{0}.</value></data>
+  <data name="ArchiveStorageFolderMoveAlreadyFinished" xml:space="preserve"><value>Moving archive #{0} already finished.</value></data>
+  <data name="ArchiveLocalWorkingCopies" xml:space="preserve"><value>Copying into local working copies</value></data>
+  <data name="CancelArchiveLocalWorkingCopy" xml:space="preserve"><value>Cancel copying</value></data>
+  <data name="CancelArchiveLocalWorkingCopyConfirmation" xml:space="preserve"><value>Cancel copying archive #{0} into a local working copy? The files copied so far are deleted and the upload reads the archive files from the storage folder.</value></data>
+  <data name="ArchiveLocalWorkingCopyCancellationRequested" xml:space="preserve"><value>Cancellation requested for copying archive #{0}.</value></data>
+  <data name="ArchiveLocalWorkingCopyAlreadyFinished" xml:space="preserve"><value>Copying archive #{0} already finished.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>
@@ -1675,4 +1698,45 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Retry</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} will be processed again on the next folder scan.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Folder automation phases</value></data>
+  <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archive storage folders</value></data>
+  <data name="ArchiveStorageFolder" xml:space="preserve"><value>Storage folder</value></data>
+  <data name="LocalWorkingCopy" xml:space="preserve"><value>local working copy</value></data>
+  <data name="ArchiveStorageFolderWithLocalWorkingCopy" xml:space="preserve"><value>Storage folder. The files needed for the current reupload are read from a temporary local working copy, which the auto cleanup deletes after the uploads.</value></data>
+  <data name="ArchiveStorageFoldersIntro" xml:space="preserve"><value>Folders that archives can be moved to from the working directories. Bearcat treats each folder as a plain directory, regardless of what is behind it.</value></data>
+  <data name="NewArchiveStorageFolder" xml:space="preserve"><value>New storage folder</value></data>
+  <data name="NoArchiveStorageFoldersYet" xml:space="preserve"><value>No storage folders configured yet.</value></data>
+  <data name="ArchiveStorageFolderDialogDescription" xml:space="preserve"><value>Enter an existing folder outside the working directories. Bearcat never creates this folder.</value></data>
+  <data name="ArchiveStorageFolderNamePlaceholder" xml:space="preserve"><value>e.g. NAS</value></data>
+  <data name="ArchiveStorageFolderPath" xml:space="preserve"><value>Path</value></data>
+  <data name="ArchiveStorageFolderPathPlaceholder" xml:space="preserve"><value>e.g. /mnt/nas/archives</value></data>
+  <data name="ArchiveStorageFolderPathHelp" xml:space="preserve"><value>Absolute path of an existing folder. It must not be a working directory, lie inside one or contain one.</value></data>
+  <data name="BrowseStorageFolders" xml:space="preserve"><value>Browse storage folders</value></data>
+  <data name="SelectArchiveStorageFolder" xml:space="preserve"><value>Select storage folder</value></data>
+  <data name="SelectArchiveStorageFolderDescription" xml:space="preserve"><value>Choose an existing folder outside the working directories.</value></data>
+  <data name="MinimumFreeSpaceGb" xml:space="preserve"><value>Minimum free space (GB)</value></data>
+  <data name="ArchiveStorageFolderMinimumFreeSpaceHelp" xml:space="preserve"><value>Space that must stay free in this folder after archives were moved there.</value></data>
+  <data name="ArchiveStorageFolderPriorityHelp" xml:space="preserve"><value>Lower values are preferred. Several folders can share a priority.</value></data>
+  <data name="UseLocalWorkingCopyForReuploads" xml:space="preserve"><value>Local working copy for reuploads</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsHelp" xml:space="preserve"><value>Copies the archive files needed for a reupload into a temporary local working copy. The storage folder is not changed. When disabled, a reupload reads the archives directly from this folder and changes their hashes there.</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsEnabled" xml:space="preserve"><value>Local working copy</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsDisabled" xml:space="preserve"><value>Directly in storage folder</value></data>
+  <data name="AvailableFreeSpace" xml:space="preserve"><value>Free space</value></data>
+  <data name="FreeSpaceUnavailable" xml:space="preserve"><value>Unavailable</value></data>
+  <data name="MinimumFreeSpaceValue" xml:space="preserve"><value>Keep {0} GB free</value></data>
+  <data name="ArchiveStorageFolderActivated" xml:space="preserve"><value>Storage folder {0} activated</value></data>
+  <data name="ArchiveStorageFolderDeactivated" xml:space="preserve"><value>Storage folder {0} deactivated</value></data>
+  <data name="DeleteArchiveStorageFolderConfirmation" xml:space="preserve"><value>Do you really want to delete the storage folder "{0}"? The folder and its contents on disk are kept.</value></data>
+  <data name="ArchiveStorageFolderDeleted" xml:space="preserve"><value>Storage folder "{0}" deleted.</value></data>
+  <data name="ArchiveStorageFolderStillStoresArchives" xml:space="preserve"><value>"{0}" cannot be deleted because {1} archives are still stored there.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 100 characters.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameAlreadyExists" xml:space="preserve"><value>A storage folder with this name already exists.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathRequired" xml:space="preserve"><value>Path is required.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathTooLong" xml:space="preserve"><value>Path must not be longer than 500 characters.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotAbsolute" xml:space="preserve"><value>Enter an absolute path.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotFound" xml:space="preserve"><value>The folder does not exist. Bearcat does not create storage folders.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathAlreadyExists" xml:space="preserve"><value>Another storage folder already uses this path.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>The path must not be a working directory, lie inside one or contain one.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>The path cannot be changed while archives are stored in this folder.</value></data>
+  <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
 </root>

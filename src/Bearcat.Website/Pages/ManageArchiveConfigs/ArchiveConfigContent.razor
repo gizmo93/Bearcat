@@ -70,9 +70,14 @@
                                        Sortable="true"
                                        Width="180px">
                         <CellTemplate Context="summary">
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <ArchiveStateBadge State="summary.ArchiveState" />
                                 <ErrorMessagesTooltip Messages="summary.ErrorMessages" />
+                                @if (summary.ArchiveStorageFolderName is not null)
+                                {
+                                    <ArchiveStorageFolderBadge Name="@summary.ArchiveStorageFolderName"
+                                                               HasLocalWorkingCopyFiles="summary.HasLocalWorkingCopyFiles" />
+                                }
                             </div>
                         </CellTemplate>
                     </BbDataTableColumn>

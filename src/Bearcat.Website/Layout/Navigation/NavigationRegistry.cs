@@ -55,6 +55,7 @@ public static class NavigationRegistry
                             "/additional-archive-contents",
                             "package-plus"
                         ),
+                        Entry("ArchiveStorageFolders", "/archive-storage-folders", "hard-drive"),
                     ]
                 ),
                 new NavigationSubmenu(

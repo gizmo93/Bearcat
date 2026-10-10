@@ -147,6 +147,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ArchiveState")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ArchiveStorageFolderId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
@@ -162,6 +165,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveConfigId");
+
+                    b.HasIndex("ArchiveStorageFolderId");
 
                     b.ToTable("Archives");
                 });
@@ -285,11 +290,56 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("Md5HashInStorageFolder")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveId");
 
                     b.ToTable("ArchiveFiles");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveStorageFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MinimumFreeSpaceGb")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("UseLocalWorkingCopyForReuploads")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Path")
+                        .IsUnique();
+
+                    b.ToTable("ArchiveStorageFolders");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.BackgroundTaskState", b =>
@@ -2449,7 +2499,14 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ArchiveStorageFolder", "ArchiveStorageFolder")
+                        .WithMany()
+                        .HasForeignKey("ArchiveStorageFolderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("ArchiveConfig");
+
+                    b.Navigation("ArchiveStorageFolder");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveConfig", b =>

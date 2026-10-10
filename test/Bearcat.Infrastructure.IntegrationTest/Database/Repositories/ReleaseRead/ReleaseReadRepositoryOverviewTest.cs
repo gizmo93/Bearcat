@@ -571,6 +571,12 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
             MidnightUtc.AddMilliseconds(100),
             ArchiveState.Deleted
         );
+        olderArchive.ArchiveStorageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = "/mnt/nas",
+            IsActive = true,
+        };
         foreach (var part in new[] { "01", "02", "03" })
         {
             DbContext.ArchiveFiles.Add(
@@ -657,6 +663,10 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
             ]);
         sevenZip.ArchiveSummaries[0].ErrorMessages.ShouldBe(["Not enough disk space"]);
         sevenZip.ArchiveSummaries[1].ErrorMessages.ShouldBeEmpty();
+        sevenZip.ArchiveSummaries[0].ArchiveStorageFolderName.ShouldBeNull();
+        sevenZip.ArchiveSummaries[1].ArchiveStorageFolderName.ShouldBe("NAS");
+        sevenZip.ArchiveSummaries[0].HasLocalWorkingCopyFiles.ShouldBeFalse();
+        sevenZip.ArchiveSummaries[1].HasLocalWorkingCopyFiles.ShouldBeTrue();
         sevenZip
             .AdditionalArchiveContents.Select(content => (content.Name, content.Type))
             .ShouldBe([

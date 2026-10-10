@@ -1,5 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Shared.UnmanagedReleases;
@@ -47,7 +49,8 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         ArchiveConfig archiveConfig,
         string archiveFolderPath,
         DateTime createdAt,
-        bool confirmContentChange
+        bool confirmContentChange,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders
     )
     {
         if (archiveConfig.Release.ReleaseType is not ReleaseType.Unmanaged)
@@ -60,10 +63,16 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         var archiveFiles = FindArchiveFilesOfArchiver(archiveConfig, archiveFolderPath);
         var currentArchive = GetCurrentArchive(archiveConfig);
 
+        var archiveStorageFolder = FindArchiveStorageFolderContainingPath(
+            archiveStorageFolders,
+            archiveFolderPath
+        );
+
         if (currentArchive is not null && ArchiveFileNamesMatch(currentArchive, archiveFiles))
         {
             archiveConfig.ArchiveFilesBasePath = archiveFolderPath;
             RepointArchive(currentArchive, archiveFolderPath);
+            AssignArchiveStorageFolder(currentArchive, archiveStorageFolder);
             return ArchiveFolderChangeResult.Relocated;
         }
 
@@ -83,9 +92,39 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
             archive.ArchiveState = ArchiveState.Deleted;
         }
 
-        archiveConfig.Archives.Add(BuildArchive(archiveFolderPath, archiveFiles, createdAt));
+        var reimportedArchive = BuildArchive(archiveFolderPath, archiveFiles, createdAt);
+        AssignArchiveStorageFolder(reimportedArchive, archiveStorageFolder);
+        archiveConfig.Archives.Add(reimportedArchive);
 
         return ArchiveFolderChangeResult.Reimported;
+    }
+
+    private static ArchiveStorageFolder? FindArchiveStorageFolderContainingPath(
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
+        string archiveFolderPath
+    )
+    {
+        return archiveStorageFolders
+            .Where(storageFolder =>
+                FolderPathHelper.IsSameOrSubPath(archiveFolderPath, storageFolder.Path)
+            )
+            .MaxBy(storageFolder => storageFolder.Path.Length);
+    }
+
+    private static void AssignArchiveStorageFolder(
+        Archive archive,
+        ArchiveStorageFolder? archiveStorageFolder
+    )
+    {
+        archive.ArchiveStorageFolder = archiveStorageFolder;
+        archive.ArchiveStorageFolderId = archiveStorageFolder?.Id;
+
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            archiveFile.Md5HashInStorageFolder = archiveStorageFolder is null
+                ? null
+                : archiveFile.Md5Hash;
+        }
     }
 
     private static Archive BuildArchive(
@@ -205,6 +244,11 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
 
     private static void RepointArchive(Archive archive, string archiveFolderPath)
     {
+        foreach (var archiveFile in ArchiveLocalWorkingCopyFiles.GetLocalWorkingCopyFiles(archive))
+        {
+            archiveFile.Md5Hash = archiveFile.Md5HashInStorageFolder;
+        }
+
         archive.ArchiveFolderPath = archiveFolderPath;
 
         foreach (var archiveFile in archive.ArchiveFiles)

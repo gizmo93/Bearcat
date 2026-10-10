@@ -64,6 +64,27 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ArchiveRestoreFailed.Description"
         ),
         new(
+            Kind: NotificationKind.NoArchiveStorageFolderAvailable,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Archives,
+            DisplayName: "NotificationKind.NoArchiveStorageFolderAvailable",
+            Description: "NotificationKind.NoArchiveStorageFolderAvailable.Description"
+        ),
+        new(
+            Kind: NotificationKind.ArchiveMoveToStorageFolderFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Archives,
+            DisplayName: "NotificationKind.ArchiveMoveToStorageFolderFailed",
+            Description: "NotificationKind.ArchiveMoveToStorageFolderFailed.Description"
+        ),
+        new(
+            Kind: NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Archives,
+            DisplayName: "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed",
+            Description: "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description"
+        ),
+        new(
             Kind: NotificationKind.InitialUploadCreated,
             Severity: NotificationSeverity.Info,
             Group: NotificationGroup.Uploads,

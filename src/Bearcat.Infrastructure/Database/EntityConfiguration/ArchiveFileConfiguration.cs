@@ -12,6 +12,7 @@ public class ArchiveFileConfiguration : IEntityTypeConfiguration<ArchiveFile>
         builder.Property(a => a.ArchiveId).IsRequired();
         builder.Property(a => a.FullFileName).IsRequired().HasMaxLength(1000);
         builder.Property(a => a.Md5Hash).HasMaxLength(32);
+        builder.Property(a => a.Md5HashInStorageFolder).HasMaxLength(32);
 
         builder
             .HasMany(a => a.UploadedFiles)

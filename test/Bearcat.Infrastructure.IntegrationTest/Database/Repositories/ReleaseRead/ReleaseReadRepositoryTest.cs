@@ -3,6 +3,7 @@ using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -1175,9 +1176,15 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     );
 
     [Test]
-    public async Task GetUnmanagedArchiveFolderPathsAsync_ReturnsDistinctCreatedArchiveFolders()
+    public async Task GetUnmanagedArchiveFoldersAsync_ReturnsDistinctCreatedArchiveFoldersWithStorageFolderNamesAndLocalWorkingCopies()
     {
         // Arrange
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = "/mnt/nas",
+            IsActive = true,
+        };
         var releaseGroup = new ReleaseGroup
         {
             Name = "Unmanaged paths group",
@@ -1185,6 +1192,22 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             NumberOfHoursUntilReupload = 24,
             Releases = [],
         };
+        var storageArchiveConfig = BuildUnmanagedArchiveConfig("/mnt/nas/w", ArchiveState.Created);
+        storageArchiveConfig.Archives[0].ArchiveStorageFolder = storageFolder;
+        storageArchiveConfig.Archives[0].ArchiveFiles =
+        [
+            new ArchiveFile { FullFileName = "/mnt/nas/w/w.part1.rar" },
+        ];
+        var workingCopyArchiveConfig = BuildUnmanagedArchiveConfig(
+            "/mnt/nas/v",
+            ArchiveState.Created
+        );
+        workingCopyArchiveConfig.Archives[0].ArchiveStorageFolder = storageFolder;
+        workingCopyArchiveConfig.Archives[0].ArchiveFiles =
+        [
+            new ArchiveFile { FullFileName = "/data/archives/v/v.part1.rar" },
+            new ArchiveFile { FullFileName = "/mnt/nas/v/v.part2.rar" },
+        ];
         var release = new Release
         {
             Name = "Bearcat.Unmanaged.Paths",
@@ -1199,6 +1222,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 BuildUnmanagedArchiveConfig("/data/archives/y", ArchiveState.Created),
                 BuildUnmanagedArchiveConfig("/data/archives/x", ArchiveState.Created),
                 BuildUnmanagedArchiveConfig("/data/archives/z", ArchiveState.Deleted),
+                storageArchiveConfig,
+                workingCopyArchiveConfig,
             ],
         };
         DbContext.Releases.Add(release);
@@ -1206,13 +1231,34 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetUnmanagedArchiveFolderPathsAsync(
+        var result = await repository.GetUnmanagedArchiveFoldersAsync(
             release.Id,
             CancellationToken.None
         );
 
         // Assert
-        result.OrderBy(path => path).ShouldBe(["/data/archives/x", "/data/archives/y"]);
+        result.ShouldBe([
+            new UnmanagedArchiveFolderReadModel(
+                "/data/archives/x",
+                ArchiveStorageFolderName: null,
+                HasLocalWorkingCopyFiles: false
+            ),
+            new UnmanagedArchiveFolderReadModel(
+                "/data/archives/y",
+                ArchiveStorageFolderName: null,
+                HasLocalWorkingCopyFiles: false
+            ),
+            new UnmanagedArchiveFolderReadModel(
+                "/mnt/nas/v",
+                "NAS",
+                HasLocalWorkingCopyFiles: true
+            ),
+            new UnmanagedArchiveFolderReadModel(
+                "/mnt/nas/w",
+                "NAS",
+                HasLocalWorkingCopyFiles: false
+            ),
+        ]);
     }
 
     private static ArchiveConfig BuildUnmanagedArchiveConfig(

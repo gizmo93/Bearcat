@@ -39,12 +39,17 @@ public partial class ConfigurationSettingRow : ComponentBase
 
     private async Task SaveOptionAsync(string? value)
     {
-        if (value == (string?)Setting.CurrentValue)
+        if (value == ConfigurationSettingFormatter.FormatOptionValue(Setting.CurrentValue))
         {
             return;
         }
 
-        await OnSave.InvokeAsync(new ConfigurationSettingSaveRequest(Setting, value));
+        await OnSave.InvokeAsync(
+            new ConfigurationSettingSaveRequest(
+                Setting,
+                ConfigurationSettingFormatter.ParseOptionValue(Setting, value)
+            )
+        );
     }
 
     private async Task ResetAsync()

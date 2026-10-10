@@ -598,7 +598,7 @@
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Gruppe auswählen</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Releasegruppe auswählen</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
-  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann Releaseordner zum Löschen freigegeben und wann lokale Archivdateien gelöscht werden. Bearcat löscht den Releaseordner nie selbst.</value></data>
+  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann Releases in Unmanaged umgewandelt werden, ob ihre Releaseordner gelöscht werden und wann lokale Archivdateien gelöscht werden.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archivrepackaging</value></data>
   <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Steuert, wie Archivdateien vor Reuploads verändert werden.</value></data>
   <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackagingstrategie</value></data>
@@ -607,12 +607,17 @@
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nur Nonce, keine Kompression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid Archive mit Kompression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Releases automatisch in Unmanaged umwandeln</value></data>
-  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein Release nach Ablauf der Aufbewahrungsfrist in Unmanaged um und meldet den Pfad des Releaseordners. Bearcat löscht den Ordner nicht. Die Rohdateien kannst du anschliessend selbst löschen.</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein Release nach Ablauf der Aufbewahrungsfrist in Unmanaged um und meldet den Pfad des Releaseordners. Bearcat löscht den Ordner nur, wenn das Löschen des Releaseordners aktiv ist. Sonst kannst du die Rohdateien selbst löschen.</value></data>
   <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>In Unmanaged umwandeln nach</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem Posten der Uploads eines Releases, oder seit dem ersten abgeschlossenen Upload, wenn es nie als gepostet markiert wurde.</value></data>
-  <data name="AutoDeleteArchives" xml:space="preserve"><value>Lokale Archive automatisch löschen</value></data>
-  <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Löscht die lokalen Archivdateien einer Archivkonfiguration nach Ablauf der Aufbewahrung. Passiert nur, wenn die Archive von einem Onlinemirror wiederhergestellt oder aus einem vorhandenen Releaseordner neu gepackt werden können.</value></data>
-  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Lokale Archive löschen nach</value></data>
+  <data name="DeleteReleaseFolderOnConversion" xml:space="preserve"><value>Releaseordner beim Umwandeln löschen</value></data>
+  <data name="DeleteReleaseFolderOnConversionDescription" xml:space="preserve"><value>Löscht den Releaseordner, wenn ein Release automatisch in Unmanaged umgewandelt wird. Wirkt nur, wenn die automatische Umwandlung aktiv ist. Der Ordner wird nur gelöscht, wenn jede Archivkonfiguration ein lokales Archiv mit allen Archivdateien auf der Festplatte hat, kein Archiv im Ordner liegt und der Ordner weder ein Laufwerksstamm ist noch ein Arbeitsverzeichnis enthält. Sonst bleibt der Ordner erhalten und die Benachrichtigung nennt den Grund.</value></data>
+  <data name="ArchiveRetentionAction" xml:space="preserve"><value>Lokale Archive nach Aufbewahrung</value></data>
+  <data name="ArchiveRetentionActionDescription" xml:space="preserve"><value>Was mit den lokalen Archiven einer Archivkonfiguration nach Ablauf der Aufbewahrung passiert. Löschen passiert nur, wenn die Archive von einem Onlinemirror wiederhergestellt oder aus einem vorhandenen Releaseordner neu gepackt werden können. In Speicherordner verschieben kopiert sie in einen aktiven Archivspeicherordner und entfernt die lokale Kopie. Archive in einem Speicherordner werden nie automatisch gelöscht.</value></data>
+  <data name="ArchiveRetentionAction.Off" xml:space="preserve"><value>Behalten</value></data>
+  <data name="ArchiveRetentionAction.Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="ArchiveRetentionAction.MoveToStorageFolder" xml:space="preserve"><value>In Speicherordner verschieben</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Aufbewahrung lokaler Archive</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem letzten abgeschlossenen Upload einer Archivkonfiguration. Jeder Reupload startet diese Frist neu.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initiale Uploads</value></data>
@@ -1023,7 +1028,7 @@
   <data name="NotificationGroup.Security" xml:space="preserve"><value>Sicherheit</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Bestehende Benachrichtigung</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
-  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist und der Releaseordner gelöscht werden kann.</value></data>
+  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist. Der Releaseordner wurde gelöscht oder kann gelöscht werden.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Releaseordner fehlt</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>Der für die Verarbeitung benötigte Releaseordner wurde nicht gefunden.</value></data>
   <data name="NotificationKind.ReleaseFolderExtractionFailed" xml:space="preserve"><value>Entpacken der Ordnerautomatisierung fehlgeschlagen</value></data><data name="NotificationKind.ReleaseFolderExtractionFailed.Description" xml:space="preserve"><value>Die SFV-Prüfung oder das Entpacken der Archive eines Ordners der Ordnerautomatisierung ist fehlgeschlagen. Die Dateien wurden behalten und es wurde kein Release erstellt.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archiverstellung fehlgeschlagen</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht erstellt werden.</value></data>
@@ -1163,6 +1168,12 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archivwiederherstellung fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable" xml:space="preserve"><value>Kein Speicherordner für Archiv</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable.Description" xml:space="preserve"><value>Ein Archiv konnte nicht verschoben werden, weil kein aktiver Speicherordner genug freien Speicherplatz hat. Das Archiv bleibt lokal.</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed" xml:space="preserve"><value>Verschieben in Speicherordner fehlgeschlagen</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Das Kopieren eines Archivs in einen Speicherordner ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und das Archiv bleibt lokal.</value></data>
+  <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed" xml:space="preserve"><value>Kopieren in lokale Arbeitskopie fehlgeschlagen</value></data>
+  <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description" xml:space="preserve"><value>Das Kopieren von Archivdateien aus einem Speicherordner in eine lokale Arbeitskopie vor einem Reupload ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und der Upload liest die Archivdateien aus dem Speicherordner.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release aus Remotedownload erstellt</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
@@ -1197,6 +1208,8 @@
   <data name="DeleteLocalArchivesConfirmationMirror" xml:space="preserve"><value>Die Hoster dienen als Langzeitspeicher dieses Releases. Bearcat lädt die Archive von diesen Mirrors, wenn ein Reupload nötig ist: {0}. Diese Archivordner werden jetzt geleert und gelöscht: {1}</value></data>
   <data name="DeleteLocalArchivesConfirmationManaged" xml:space="preserve"><value>Bearcat stellt die Archive bei einem Reupload von einem Onlinemirror wieder her oder packt sie aus dem Releaseordner neu. Diese Archivordner werden jetzt geleert und gelöscht: {0}</value></data>
   <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Lokale Archive können nur gelöscht werden, wenn keine Uploads laufen und jede Archivkonfiguration einen vollständig online stehenden Upload auf einem Hoster mit aktivierten Mirrordownloads hat (oder bei Managedreleases der Releaseordner noch existiert).</value></data>
+  <data name="DeleteLocalArchivesOnlyArchivesInStorageFolders" xml:space="preserve"><value>Dieses Release hat keine lokalen Archive. Archive in einem Speicherordner werden von dieser Aktion nicht gelöscht.</value></data>
+  <data name="DeleteLocalArchivesKeepsArchivesInStorageFolders" xml:space="preserve"><value>{0} Archive in Speicherordnern bleiben erhalten.</value></data>
   <data name="LocalArchivesDeleted" xml:space="preserve"><value>Lokale Archive von {0} gelöscht</value></data>
   <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packen</value></data>
   <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 MD5-Hashes erstellen</value></data>
@@ -1205,6 +1218,16 @@
   <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Erstellung von Archiv #{0} abbrechen? Ein neues Archiv wird gelöscht, ein bestehendes Archiv bleibt erhalten. Die auf dieses Archiv wartenden Uploads werden abgebrochen.</value></data>
   <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Abbruch für die Erstellung von Archiv #{0} angefragt.</value></data>
   <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>Die Erstellung von Archiv #{0} ist bereits abgeschlossen.</value></data>
+  <data name="ArchiveStorageFolderMoves" xml:space="preserve"><value>Verschieben in Speicherordner</value></data>
+  <data name="CancelArchiveStorageFolderMove" xml:space="preserve"><value>Verschieben abbrechen</value></data>
+  <data name="CancelArchiveStorageFolderMoveConfirmation" xml:space="preserve"><value>Verschieben von Archiv #{0} in den Speicherordner abbrechen? Die bisher kopierten Dateien werden gelöscht und das Archiv bleibt lokal.</value></data>
+  <data name="ArchiveStorageFolderMoveCancellationRequested" xml:space="preserve"><value>Abbruch für das Verschieben von Archiv #{0} angefordert.</value></data>
+  <data name="ArchiveStorageFolderMoveAlreadyFinished" xml:space="preserve"><value>Das Verschieben von Archiv #{0} ist bereits abgeschlossen.</value></data>
+  <data name="ArchiveLocalWorkingCopies" xml:space="preserve"><value>Kopieren in lokale Arbeitskopien</value></data>
+  <data name="CancelArchiveLocalWorkingCopy" xml:space="preserve"><value>Kopieren abbrechen</value></data>
+  <data name="CancelArchiveLocalWorkingCopyConfirmation" xml:space="preserve"><value>Kopieren von Archiv #{0} in eine lokale Arbeitskopie abbrechen? Die bisher kopierten Dateien werden gelöscht und der Upload liest die Archivdateien aus dem Speicherordner.</value></data>
+  <data name="ArchiveLocalWorkingCopyCancellationRequested" xml:space="preserve"><value>Abbruch für das Kopieren von Archiv #{0} angefordert.</value></data>
+  <data name="ArchiveLocalWorkingCopyAlreadyFinished" xml:space="preserve"><value>Das Kopieren von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
@@ -1678,4 +1701,45 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Erneut versuchen</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} wird beim nächsten Ordnerscan erneut verarbeitet.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Phasen der Ordnerautomatisierung</value></data>
+  <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archivspeicherordner</value></data>
+  <data name="ArchiveStorageFolder" xml:space="preserve"><value>Speicherordner</value></data>
+  <data name="LocalWorkingCopy" xml:space="preserve"><value>lokale Arbeitskopie</value></data>
+  <data name="ArchiveStorageFolderWithLocalWorkingCopy" xml:space="preserve"><value>Speicherordner. Die für den aktuellen Reupload benötigten Dateien werden aus einer temporären lokalen Arbeitskopie gelesen, die das automatische Aufräumen nach den Uploads löscht.</value></data>
+  <data name="ArchiveStorageFoldersIntro" xml:space="preserve"><value>Ordner, in die Archive aus den Arbeitsverzeichnissen verschoben werden können. Bearcat behandelt jeden Ordner als normales Verzeichnis, unabhängig davon, was dahinter liegt.</value></data>
+  <data name="NewArchiveStorageFolder" xml:space="preserve"><value>Neuer Speicherordner</value></data>
+  <data name="NoArchiveStorageFoldersYet" xml:space="preserve"><value>Noch keine Speicherordner eingerichtet.</value></data>
+  <data name="ArchiveStorageFolderDialogDescription" xml:space="preserve"><value>Gib einen vorhandenen Ordner ausserhalb der Arbeitsverzeichnisse an. Bearcat legt diesen Ordner nie an.</value></data>
+  <data name="ArchiveStorageFolderNamePlaceholder" xml:space="preserve"><value>z. B. NAS</value></data>
+  <data name="ArchiveStorageFolderPath" xml:space="preserve"><value>Pfad</value></data>
+  <data name="ArchiveStorageFolderPathPlaceholder" xml:space="preserve"><value>z. B. /mnt/nas/archives</value></data>
+  <data name="ArchiveStorageFolderPathHelp" xml:space="preserve"><value>Absoluter Pfad eines vorhandenen Ordners. Er darf kein Arbeitsverzeichnis sein, nicht in einem liegen und keines enthalten.</value></data>
+  <data name="BrowseStorageFolders" xml:space="preserve"><value>Speicherordner durchsuchen</value></data>
+  <data name="SelectArchiveStorageFolder" xml:space="preserve"><value>Speicherordner auswählen</value></data>
+  <data name="SelectArchiveStorageFolderDescription" xml:space="preserve"><value>Wähle einen vorhandenen Ordner ausserhalb der Arbeitsverzeichnisse.</value></data>
+  <data name="MinimumFreeSpaceGb" xml:space="preserve"><value>Freizuhaltender Speicherplatz (GB)</value></data>
+  <data name="ArchiveStorageFolderMinimumFreeSpaceHelp" xml:space="preserve"><value>Speicherplatz, der in diesem Ordner nach dem Verschieben von Archiven frei bleiben muss.</value></data>
+  <data name="ArchiveStorageFolderPriorityHelp" xml:space="preserve"><value>Niedrigere Werte werden bevorzugt. Mehrere Ordner können dieselbe Priorität haben.</value></data>
+  <data name="UseLocalWorkingCopyForReuploads" xml:space="preserve"><value>Lokale Arbeitskopie für Reuploads</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsHelp" xml:space="preserve"><value>Kopiert die für einen Reupload benötigten Archivdateien in eine temporäre lokale Arbeitskopie. Der Speicherordner bleibt unverändert. Wenn deaktiviert, liest ein Reupload die Archive direkt aus diesem Ordner und ändert ihre Hashes dort.</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsEnabled" xml:space="preserve"><value>Lokale Arbeitskopie</value></data>
+  <data name="UseLocalWorkingCopyForReuploadsDisabled" xml:space="preserve"><value>Direkt im Speicherordner</value></data>
+  <data name="AvailableFreeSpace" xml:space="preserve"><value>Freier Speicherplatz</value></data>
+  <data name="FreeSpaceUnavailable" xml:space="preserve"><value>Nicht verfügbar</value></data>
+  <data name="MinimumFreeSpaceValue" xml:space="preserve"><value>{0} GB freihalten</value></data>
+  <data name="ArchiveStorageFolderActivated" xml:space="preserve"><value>Speicherordner {0} aktiviert</value></data>
+  <data name="ArchiveStorageFolderDeactivated" xml:space="preserve"><value>Speicherordner {0} deaktiviert</value></data>
+  <data name="DeleteArchiveStorageFolderConfirmation" xml:space="preserve"><value>Möchtest du den Speicherordner "{0}" wirklich löschen? Der Ordner und sein Inhalt auf der Festplatte bleiben erhalten.</value></data>
+  <data name="ArchiveStorageFolderDeleted" xml:space="preserve"><value>Speicherordner "{0}" gelöscht.</value></data>
+  <data name="ArchiveStorageFolderStillStoresArchives" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil dort noch {1} Archive gespeichert sind.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameRequired" xml:space="preserve"><value>Der Name ist erforderlich.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 100 Zeichen lang sein.</value></data>
+  <data name="ArchiveStorageFolderValidationError.NameAlreadyExists" xml:space="preserve"><value>Ein Speicherordner mit diesem Namen existiert bereits.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathRequired" xml:space="preserve"><value>Der Pfad ist erforderlich.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathTooLong" xml:space="preserve"><value>Der Pfad darf höchstens 500 Zeichen lang sein.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotAbsolute" xml:space="preserve"><value>Gib einen absoluten Pfad an.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathNotFound" xml:space="preserve"><value>Der Ordner existiert nicht. Bearcat legt keine Speicherordner an.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathAlreadyExists" xml:space="preserve"><value>Ein anderer Speicherordner verwendet diesen Pfad bereits.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>Der Pfad darf kein Arbeitsverzeichnis sein, nicht in einem liegen und keines enthalten.</value></data>
+  <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>Der Pfad kann nicht geändert werden, solange Archive in diesem Ordner gespeichert sind.</value></data>
+  <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der freizuhaltende Speicherplatz darf nicht negativ sein.</value></data>
 </root>

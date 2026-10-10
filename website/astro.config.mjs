@@ -112,6 +112,7 @@ export default defineConfig({
 						{ label: 'Release collections', translations: { de: 'Releasecollections' }, slug: 'release-collections' },
 						{ label: 'Metadata and cover images', translations: { de: 'Metadaten und Coverbilder' }, slug: 'release-information-and-metadata' },
 						{ label: 'Additional archive contents', translations: { de: 'Zusätzliche Archivinhalte' }, slug: 'additional-archive-contents' },
+						{ label: 'Archive storage folders', translations: { de: 'Archivspeicherordner' }, slug: 'archive-storage-folders' },
 						{ label: 'Mirror downloads', translations: { de: 'Mirrordownloads' }, slug: 'mirror-downloads' },
 					],
 				},

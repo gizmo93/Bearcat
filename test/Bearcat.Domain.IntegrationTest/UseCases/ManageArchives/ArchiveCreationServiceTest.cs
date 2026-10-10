@@ -10,6 +10,7 @@ using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -95,16 +96,29 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             archiverFactoryMock.Object,
             fileSystemService,
             CreateTimeProvider(),
-            new NotificationService(
-                repository: new NotificationRepository(DbContext),
-                timeProvider: CreateTimeProvider(),
-                configurationProvider: CreateNotificationConfigurationProvider()
-            ),
+            CreateNotificationService(),
             configurationProviderMock.Object,
             new ReleaseFolderEntriesForPackingService(fileSystemService),
             progressTracker,
             cancellationRegistry,
-            new FolderSizeProgressReporter()
+            new FolderSizeProgressReporter(),
+            new ArchiveLocalWorkingCopyService(
+                new ArchiveCleanupRepository(DbContext),
+                fileSystemService,
+                CreateNotificationService(),
+                progressTracker,
+                cancellationRegistry,
+                Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
+            )
+        );
+    }
+
+    private NotificationService CreateNotificationService()
+    {
+        return new NotificationService(
+            repository: new NotificationRepository(DbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
     }
 

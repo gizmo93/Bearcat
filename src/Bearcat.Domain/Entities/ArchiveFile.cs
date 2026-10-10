@@ -12,5 +12,7 @@ public class ArchiveFile
 
     public string? Md5Hash { get; set; }
 
+    public string? Md5HashInStorageFolder { get; set; }
+
     public List<UploadedFile> UploadedFiles { get; set; } = null!;
 }

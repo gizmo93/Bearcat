@@ -13,6 +13,13 @@
             <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
                 <p class="text-xs text-muted-foreground">@L["FolderPath"]</p>
                 <p class="truncate text-sm font-medium">@Archive.ArchiveFolderPath</p>
+                @if (Archive.ArchiveStorageFolderName is not null)
+                {
+                    <div class="mt-1">
+                        <ArchiveStorageFolderBadge Name="@Archive.ArchiveStorageFolderName"
+                                                   HasLocalWorkingCopyFiles="Archive.HasLocalWorkingCopyFiles" />
+                    </div>
+                }
             </div>
         </div>
     </div>

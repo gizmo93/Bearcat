@@ -11,6 +11,17 @@ internal static class FolderPathHelper
         return Path.GetFileName(normalizedPath);
     }
 
+    public static bool IsFileSystemRoot(string folderPath)
+    {
+        var normalizedPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folderPath));
+
+        return string.Equals(
+            Path.GetPathRoot(normalizedPath),
+            normalizedPath,
+            StringComparison.Ordinal
+        );
+    }
+
     public static bool IsSameOrSubPath(string? childPath, string? parentPath)
     {
         if (string.IsNullOrEmpty(childPath) || string.IsNullOrEmpty(parentPath))

@@ -123,6 +123,89 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         );
     }
 
+    [Test]
+    public async Task GetPossibleAssignableArchiveAsync_LatestCreatedArchiveInStorageFolder_ReturnsArchiveWithStorageFolderAndRelease()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync("Main archive");
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = "/mnt/nas",
+            IsActive = true,
+            UseLocalWorkingCopyForReuploads = true,
+        };
+        DbContext.Archives.Add(
+            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Created, storageFolder: null)
+        );
+        DbContext.Archives.Add(
+            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Created, storageFolder)
+        );
+        DbContext.Archives.Add(
+            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Deleted, storageFolder: null)
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPossibleAssignableArchiveAsync(
+            uploadConfig.ArchiveConfigId,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+        result.ArchiveStorageFolder.ShouldNotBeNull();
+        result.ArchiveStorageFolder.Name.ShouldBe("NAS");
+        result.ArchiveStorageFolder.UseLocalWorkingCopyForReuploads.ShouldBeTrue();
+        result.ArchiveConfig.Release.Name.ShouldBe("Bearcat.Release.Main.archive-GRP");
+        result.ArchiveFiles.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetPossibleAssignableArchiveAsync_LatestCreatedArchiveIsLocal_ReturnsArchiveWithoutStorageFolder()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync("Main archive");
+        DbContext.Archives.Add(
+            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Created, storageFolder: null)
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPossibleAssignableArchiveAsync(
+            uploadConfig.ArchiveConfigId,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.ArchiveStorageFolderId.ShouldBeNull();
+        result.ArchiveStorageFolder.ShouldBeNull();
+    }
+
+    private static Archive CreateArchive(
+        int archiveConfigId,
+        ArchiveState archiveState,
+        ArchiveStorageFolder? storageFolder
+    )
+    {
+        return new Archive
+        {
+            ArchiveConfigId = archiveConfigId,
+            ArchiveFolderPath = "/tmp/archives",
+            ArchiveStorageFolder = storageFolder,
+            ArchiveState = archiveState,
+            ArchiveFileSizeMb = 100,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [new ArchiveFile { FullFileName = "/tmp/archives/release.part1.rar" }],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+    }
+
     private async Task<UploadConfig> AddUploadConfigAsync(string name)
     {
         var release = new Release

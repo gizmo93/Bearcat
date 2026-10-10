@@ -56,6 +56,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<AdditionalArchiveContent> AdditionalArchiveContents { get; set; } = null!;
 
+    public DbSet<ArchiveStorageFolder> ArchiveStorageFolders { get; set; } = null!;
+
     public DbSet<ArchiveFile> ArchiveFiles { get; set; } = null!;
 
     public DbSet<Upload> Uploads { get; set; } = null!;

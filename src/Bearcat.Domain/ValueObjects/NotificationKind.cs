@@ -31,4 +31,7 @@ public enum NotificationKind
     UnreadableSecretsDetected = 27,
     HosterCredentialsRejected = 28,
     ReleaseFolderExtractionFailed = 29,
+    NoArchiveStorageFolderAvailable = 30,
+    ArchiveMoveToStorageFolderFailed = 31,
+    ArchiveCopyIntoLocalWorkingCopyFailed = 32,
 }

@@ -4,7 +4,10 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderMoves;
+using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -23,12 +26,16 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
+    private const string ArchiveFileMd5Hash = "0123456789ABCDEF0123456789ABCDEF";
 
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
+    private string storageFolderPath = null!;
     private string tempRootPath = null!;
     private Mock<IApplicationConfigurationProvider> configurationMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
+    private Mock<ITransferProgressTracker> progressTrackerMock = null!;
+    private ITransferCancellationRegistry cancellationRegistry = null!;
     private ArchiveCleanupService service = null!;
 
     [SetUp]
@@ -41,12 +48,17 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         archiveFilesBasePath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "archives"))
             .FullName;
+        storageFolderPath = Directory
+            .CreateDirectory(Path.Combine(tempRootPath, "storage"))
+            .FullName;
 
         configurationMock = new Mock<IApplicationConfigurationProvider>(MockBehavior.Strict);
         hosterFactoryMock = new Mock<IHosterFactory>(MockBehavior.Strict);
         hosterFactoryMock
             .Setup(f => f.GetByName(MirrorHosterClassName))
             .Returns(Mock.Of<IHosterWithDownload>());
+        progressTrackerMock = new Mock<ITransferProgressTracker>();
+        cancellationRegistry = new TransferCancellationRegistry();
 
         service = CreateService(new FileSystemService());
     }
@@ -61,11 +73,12 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_AutoDeleteDisabled_KeepsArchive()
+    public async Task ProcessAsync_RetentionActionOff_KeepsArchive()
     {
         // Arrange
         var archive = await AddScenarioAsync();
-        SetupConfiguration(autoDeleteArchives: false);
+        await AddStorageFolderAsync();
+        SetupConfiguration(ArchiveRetentionAction.Off);
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
@@ -234,11 +247,327 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         fileSystemServiceMock.VerifyAll();
     }
 
-    private void SetupConfiguration(bool autoDeleteArchives = true, int archiveRetentionDays = 30)
+    [Test]
+    public async Task ProcessAsync_DeleteActionAndArchiveIsInStorageFolder_KeepsArchive()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync(archiveStorageFolderId: storageFolder.Id);
+        SetupConfiguration(ArchiveRetentionAction.Delete);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndStorageFolderFits_MovesArchiveIntoStorageFolderAndStoresStorageFolderHashes()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync();
+        var archiveFolderName = Path.GetFileName(archive.ArchiveFolderPath);
+        var expectedTargetFolderPath = Path.Join(storageFolderPath, archiveFolderName);
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var result = await LoadArchiveAsync(archive);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+        result.ArchiveFolderPath.ShouldBe(expectedTargetFolderPath);
+        result
+            .ArchiveFiles.Select(f => f.FullFileName)
+            .ShouldBe(
+                [
+                    Path.Join(expectedTargetFolderPath, "archive.part1.rar"),
+                    Path.Join(expectedTargetFolderPath, "archive.part2.rar"),
+                ],
+                ignoreOrder: true
+            );
+        result.ArchiveFiles.ShouldAllBe(f => File.ReadAllText(f.FullFileName) == "archive-data");
+        result.ArchiveFiles.ShouldAllBe(f =>
+            f.Md5Hash == ArchiveFileMd5Hash && f.Md5HashInStorageFolder == ArchiveFileMd5Hash
+        );
+        archive.ArchiveFiles.ShouldAllBe(f => !File.Exists(f.FullFileName));
+        Directory.Exists(archive.ArchiveFolderPath).ShouldBeFalse();
+        progressTrackerMock.Verify(
+            t =>
+                t.StartTracking(
+                    new TransferIdentifier(TransferType.ArchiveMoveToStorageFolder, archive.Id),
+                    It.Is<IReadOnlyList<TransferFile>>(files =>
+                        files.Count == 2 && files.All(file => file.SourceName == "NAS")
+                    )
+                ),
+            Times.Once
+        );
+        progressTrackerMock.Verify(
+            t =>
+                t.StopTracking(
+                    new TransferIdentifier(TransferType.ArchiveMoveToStorageFolder, archive.Id)
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndRetentionIsZero_MovesArchiveRightAfterLastUpload()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync(uploadedAt: DateTime.UtcNow.AddMinutes(-1));
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder, archiveRetentionDays: 0);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var result = await LoadArchiveAsync(archive);
+        result.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndTargetFolderExists_UsesFolderNameWithArchiveId()
+    {
+        // Arrange
+        await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync();
+        var archiveFolderName = Path.GetFileName(archive.ArchiveFolderPath);
+        var existingFilePath = Path.Join(storageFolderPath, archiveFolderName, "other.rar");
+        Directory.CreateDirectory(Path.Join(storageFolderPath, archiveFolderName));
+        await File.WriteAllTextAsync(existingFilePath, "other");
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var result = await LoadArchiveAsync(archive);
+        result.ArchiveFolderPath.ShouldBe(
+            Path.Join(storageFolderPath, $"{archiveFolderName}.{archive.Id}")
+        );
+        result.ArchiveFiles.ShouldAllBe(f => File.Exists(f.FullFileName));
+        File.Exists(existingFilePath).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndCopyFails_DeletesCopiedFilesAndKeepsArchiveLocal()
+    {
+        // Arrange
+        await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync();
+        var archiveFolderName = Path.GetFileName(archive.ArchiveFolderPath);
+        var targetFolderPath = Path.Join(storageFolderPath, $"{archiveFolderName}.{archive.Id}");
+        var blockingFilePath = Path.Join(targetFolderPath, "archive.part2.rar");
+        Directory.CreateDirectory(Path.Join(storageFolderPath, archiveFolderName));
+        Directory.CreateDirectory(targetFolderPath);
+        await File.WriteAllTextAsync(blockingFilePath, "foreign");
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        var result = await LoadArchiveAsync(archive);
+        result.ArchiveStorageFolderId.ShouldBeNull();
+        result.ArchiveFolderPath.ShouldBe(archive.ArchiveFolderPath);
+        File.Exists(Path.Join(targetFolderPath, "archive.part1.rar")).ShouldBeFalse();
+        (await File.ReadAllTextAsync(blockingFilePath)).ShouldBe("foreign");
+        var notification = await DbContext.Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.ArchiveMoveToStorageFolderFailed);
+        notification.ArchiveId.ShouldBe(archive.Id);
+        progressTrackerMock.Verify(
+            t =>
+                t.StopTracking(
+                    new TransferIdentifier(TransferType.ArchiveMoveToStorageFolder, archive.Id)
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndUserCancels_DeletesCopiedFilesWithoutNotification()
+    {
+        // Arrange
+        await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync();
+        var cancellationRegistryMock = new Mock<ITransferCancellationRegistry>();
+        cancellationRegistryMock
+            .Setup(r => r.Register(It.IsAny<TransferIdentifier>()))
+            .Returns(new CancellationToken(canceled: true));
+        cancellationRegistry = cancellationRegistryMock.Object;
+        service = CreateService(new FileSystemService());
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        Directory.EnumerateFileSystemEntries(storageFolderPath).ShouldBeEmpty();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
+        cancellationRegistryMock.Verify(
+            r =>
+                r.Unregister(
+                    new TransferIdentifier(TransferType.ArchiveMoveToStorageFolder, archive.Id)
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndUploadStartsDuringCopy_DeletesCopiedFilesWithoutNotification()
+    {
+        // Arrange
+        await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync();
+        var uploadConfigId = (
+            await DbContext.UploadConfigs.SingleAsync(c =>
+                c.ArchiveConfigId == archive.ArchiveConfigId
+            )
+        ).Id;
+        progressTrackerMock
+            .Setup(t => t.StopTracking(It.IsAny<TransferIdentifier>()))
+            .Callback(() =>
+            {
+                var dbContext = CreateDbContext();
+                dbContext.Uploads.Add(
+                    new Upload
+                    {
+                        UploadConfigId = uploadConfigId,
+                        CreatedAt = DateTime.UtcNow,
+                        UploadState = UploadState.Pending,
+                        OnlineState = OnlineState.Online,
+                        ErrorMessages = [],
+                        UploadedFiles = [],
+                    }
+                );
+                dbContext.SaveChanges();
+            });
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        (await LoadArchiveAsync(archive)).ArchiveStorageFolderId.ShouldBeNull();
+        Directory.EnumerateFileSystemEntries(storageFolderPath).ShouldBeEmpty();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndLocalFileChangesDuringCopy_DeletesCopiedFilesWithoutNotification()
+    {
+        // Arrange
+        await AddStorageFolderAsync();
+        var archive = await AddScenarioAsync();
+        var changedFilePath = archive.ArchiveFiles[0].FullFileName;
+        progressTrackerMock
+            .Setup(t => t.StopTracking(It.IsAny<TransferIdentifier>()))
+            .Callback(() => File.AppendAllText(changedFilePath, "\0\0"));
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        (await LoadArchiveAsync(archive)).ArchiveStorageFolderId.ShouldBeNull();
+        Directory.EnumerateFileSystemEntries(storageFolderPath).ShouldBeEmpty();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndNoStorageFolderFits_CreatesOneNotificationAcrossRuns()
+    {
+        // Arrange
+        await AddStorageFolderAsync(minimumFreeSpaceGb: 1_000_000);
+        var archive = await AddScenarioAsync();
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        var notification = await DbContext.Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.NoArchiveStorageFolderAvailable);
+        notification.ArchiveId.ShouldBe(archive.Id);
+        progressTrackerMock.Verify(
+            t =>
+                t.StartTracking(
+                    It.IsAny<TransferIdentifier>(),
+                    It.IsAny<IReadOnlyList<TransferFile>>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_MoveActionAndStorageFolderIsInactive_KeepsArchiveLocal()
+    {
+        // Arrange
+        await AddStorageFolderAsync(isActive: false);
+        var archive = await AddScenarioAsync();
+        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldStillBeCreatedAsync(archive);
+        (await LoadArchiveAsync(archive)).ArchiveStorageFolderId.ShouldBeNull();
+    }
+
+    private async Task<Archive> LoadArchiveAsync(Archive archive)
+    {
+        DbContext.ChangeTracker.Clear();
+
+        return await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == archive.Id);
+    }
+
+    private async Task<ArchiveStorageFolder> AddStorageFolderAsync(
+        int minimumFreeSpaceGb = 0,
+        bool isActive = true
+    )
+    {
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = storageFolderPath,
+            IsActive = isActive,
+            MinimumFreeSpaceGb = minimumFreeSpaceGb,
+            Priority = 1,
+        };
+
+        DbContext.ArchiveStorageFolders.Add(storageFolder);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return storageFolder;
+    }
+
+    private void SetupConfiguration(
+        ArchiveRetentionAction archiveRetentionAction = ArchiveRetentionAction.Delete,
+        int archiveRetentionDays = 30
+    )
     {
         configurationMock
-            .Setup(c => c.GetValue<ArchiveCleanupConfiguration>(a => a.AutoDeleteArchives))
-            .Returns(autoDeleteArchives);
+            .Setup(c =>
+                c.GetValue<ArchiveCleanupConfiguration, ArchiveRetentionAction>(a =>
+                    a.ArchiveRetentionAction
+                )
+            )
+            .Returns(archiveRetentionAction);
         configurationMock
             .Setup(c => c.GetValue<ArchiveCleanupConfiguration>(a => a.ArchiveRetentionDays))
             .Returns(archiveRetentionDays);
@@ -275,6 +604,18 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
             configurationMock.Object,
             new MirrorCoverageEvaluator(hosterFactoryMock.Object),
             new LocalArchiveDeleter(fileSystemService),
+            new ArchiveStorageFolderMoveService(
+                new ArchiveCleanupRepository(DbContext),
+                fileSystemService,
+                new NotificationService(
+                    repository: new NotificationRepository(DbContext),
+                    timeProvider: CreateTimeProvider(),
+                    configurationProvider: CreateNotificationConfigurationProvider()
+                ),
+                progressTrackerMock.Object,
+                cancellationRegistry,
+                Mock.Of<ILogger<ArchiveStorageFolderMoveService>>()
+            ),
             CreateTimeProvider(),
             Mock.Of<ILogger<ArchiveCleanupService>>()
         );
@@ -284,7 +625,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         ReleaseType releaseType = ReleaseType.Managed,
         DateTime? uploadedAt = null,
         bool mirrorDownloadsEnabled = false,
-        bool excludeFromAutoCleanup = false
+        bool excludeFromAutoCleanup = false,
+        int? archiveStorageFolderId = null
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -338,13 +680,16 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         {
             var filePath = Path.Combine(archiveFolderPath, fileName);
             await File.WriteAllTextAsync(filePath, "archive-data");
-            archiveFiles.Add(new ArchiveFile { FullFileName = filePath });
+            archiveFiles.Add(
+                new ArchiveFile { FullFileName = filePath, Md5Hash = ArchiveFileMd5Hash }
+            );
         }
 
         var archive = new Archive
         {
             ArchiveConfigId = archiveConfig.Id,
             ArchiveFolderPath = archiveFolderPath,
+            ArchiveStorageFolderId = archiveStorageFolderId,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
             CreatedAt = DateTime.UtcNow.AddDays(-90),

@@ -12,26 +12,18 @@ This works for both [managed and unmanaged releases](/Bearcat/release-types/).
 
 ## When Bearcat downloads from a mirror
 
-Bearcat downloads an archive from a mirror when:
+When an upload needs an existing archive, Bearcat first uses the files on disk.
+It downloads missing files from active mirror hosters. The required parts can come from several mirrors.
 
-- an upload is waiting for its archive,
-- the latest archive in that configuration is missing or incomplete locally, and
-- all required files are online on a mirror hoster.
+Bearcat keeps links still online from the previous upload to the same hoster.
+It only downloads files needed for the reupload.
 
-When archive reuse is possible, Bearcat looks for files in this order:
+If no suitable mirror is available, Bearcat can repack [managed releases](/Bearcat/release-types/)
+from the release folder. For unmanaged releases, you need to provide the missing archive files yourself.
+See [Unmanaged Releases](/Bearcat/release-types/#unmanaged-releases).
 
-1. Use the local archive files if they are still on disk.
-2. Download them from a mirror hoster.
-3. For managed releases only, repack them from the release folder.
-
-For new hashes, 7-Zip needs repacking even when archive files are available.
-See [Archive reuse](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) for format differences.
-
-Without local archives or a mirror, an unmanaged upload waits until you provide the archive files. See
-[Unmanaged Releases](/Bearcat/release-types/#unmanaged-releases) for instructions.
-
-Bearcat reuses files still online from a previous upload to the same hoster and downloads only
-the missing ones.
+7-Zip archives need repacking for new hashes even when the files are available.
+See [Archive reuse](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) for the format differences.
 
 ## Enable a hoster as a mirror
 
@@ -47,13 +39,12 @@ to follow the global **Hoster mirror downloads** setting. See [Proxy Servers](/B
 
 ### Mirror priority
 
-**Mirror priority** appears when you enable mirror downloads. The default is `100`; lower numbers
-take priority, so `10` is chosen before `100`.
+**Mirror priority** appears when you enable mirror downloads. Default: `100`.
+Lower numbers take priority, such as `10` before `100`.
 
-Bearcat only considers active mirror registrations with all required files marked online.
-If several mirrors have the same priority, it chooses the one with the most recent file check.
-
-The hoster list shows the priority next to **Mirror downloads**, for example **Mirror downloads (Prio: 100)**.
+Bearcat chooses a mirror for each file. Only active hoster registrations with that file marked online
+are considered. At the same priority, the most recent file check wins.
+If a download still fails after retries, Bearcat tries the next available mirror.
 
 ### Hosters that support mirror downloads
 
@@ -76,17 +67,8 @@ The hoster list shows the priority next to **Mirror downloads**, for example **M
 Bearcat shows a hint beside the switch when a premium account is needed. Free accounts can still
 upload to these hosters.
 
-<details>
-<summary>Why some hosters need a premium account</summary>
-
-- **Alfafile:** free accounts allow one download every 120 minutes and only 500 MB of total traffic.
-- **Fast2Share:** free accounts have a waiting period for each file. Bearcat does not support this,
-  so mirror downloads with a free account fail.
-- **Keep2Share:** free downloads are limited to roughly 50 KB/s and one connection at a time.
-- **mega4upload.net:** downloads need a premium account and an API key that has the
-  `download` scope. Ask mega4upload support to add the scope to your key.
-
-</details>
+For **mega4upload.net**, your API key also needs the `download` scope.
+Ask support to enable it.
 
 ## Cancel a running download
 
@@ -98,11 +80,12 @@ on the next run. The archive state is reset; files on the hoster are kept. Creat
 
 ## Verification and failures
 
-Bearcat checks each downloaded file against the MD5 hash stored during upload. If a hash does not
-match or a download fails, it discards the restore, keeps the archive in its previous state, and
-creates an **Archive restore failed** notification.
+Bearcat compares downloaded files with the MD5 hash recorded during upload, if available.
+A hash mismatch or download error causes a retry or a switch to another mirror.
 
-The waiting uploads also fail. Fix the cause, then create a manual reupload.
+If any file cannot be restored, Bearcat discards the download and reports **Archive restore failed**.
+The archive keeps its previous state; the waiting uploads fail.
+Fix the cause, then create a manual reupload.
 
 ## Parallel downloads
 
@@ -119,12 +102,12 @@ the hoster throttles or rejects parallel downloads.
   all mirror downloads from that hoster registration.
 
 Both are empty by default, which means no limit. Decimal values such as `0.5` or `0,5` are allowed.
-When both are set, the lower limit takes effect.
+Both limits apply at the same time.
 
 ## Delete local archives yourself
 
 Choose **Delete local archives** in the release detail page's action menu to free disk space.
-It deletes the release's local archive files and marks the archives as deleted.
+Bearcat deletes the release's archive files.
 
 ![delete-local-archives.png](images/delete-local-archives.png)
 
@@ -135,9 +118,11 @@ Bearcat only offers this when the release stays recoverable:
   downloads, **or** the release is managed and still has its release folder for repacking.
 
 Bearcat deletes the archive files and removes the folder only if it is then empty. Other files are kept.
+Archives in a [storage folder](/Bearcat/archive-storage-folders/) are not deleted. If all archives of
+the release are in storage folders, Bearcat has nothing to delete and says so.
 
 ## Automatic cleanup
 
-Auto cleanup can delete local archives after a configured retention period. Bearcat downloads them
-from a mirror when a later upload needs them. See
-[Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for the two rules and their settings.
+Under [Auto cleanup](/Bearcat/advanced-configuration/#local-archives-after-retention), set
+**Local archives after retention** to **Delete**. Bearcat removes them after the configured period
+and restores them when a reupload needs them.

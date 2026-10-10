@@ -37,7 +37,7 @@
     else if (ConfigurationSettingFormatter.HasOptions(Setting))
     {
         <BbSelect TValue="string"
-                  Value="@((string?)Setting.CurrentValue)"
+                  Value="@(ConfigurationSettingFormatter.FormatOptionValue(Setting.CurrentValue))"
                   ValueChanged="SaveOptionAsync"
                   Options="SelectOptions"
                   AriaLabel="@L[Setting.DisplayName]"

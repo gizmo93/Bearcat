@@ -1,9 +1,12 @@
 ﻿using Bearcat.Abstractions;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Infrastructure.FileSystem;
 
 public class FileSystemService : IFileSystemService
 {
+    private const int CopyBufferSizeBytes = 1024 * 1024;
+
     public List<string> GetFoldersInPath(string path)
     {
         return Directory
@@ -16,6 +19,23 @@ public class FileSystemService : IFileSystemService
                     ReturnSpecialDirectories = false,
                 }
             )
+            .ToList();
+    }
+
+    public List<string> GetSelectableFoldersInPath(string path)
+    {
+        return Directory
+            .GetDirectories(
+                path: path,
+                searchPattern: "*",
+                enumerationOptions: new EnumerationOptions
+                {
+                    IgnoreInaccessible = true,
+                    ReturnSpecialDirectories = false,
+                    AttributesToSkip = FileAttributes.System,
+                }
+            )
+            .Where(folderPath => !Path.GetFileName(folderPath).StartsWith('.'))
             .ToList();
     }
 
@@ -85,9 +105,82 @@ public class FileSystemService : IFileSystemService
         return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
     }
 
+    public long? GetAvailableFreeSpaceBytes(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return null;
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            return WindowsDiskFreeSpace.GetAvailableFreeSpaceBytes(path);
+        }
+
+        return new DriveInfo(path).AvailableFreeSpace;
+    }
+
+    public long GetFileSizeBytes(string filePath)
+    {
+        return new FileInfo(filePath).Length;
+    }
+
+    public void CreateDirectory(string path)
+    {
+        Directory.CreateDirectory(path);
+    }
+
     public void CopyFile(string sourceFilePath, string destinationFilePath)
     {
         File.Copy(sourceFilePath, destinationFilePath, overwrite: false);
+    }
+
+    public async Task CopyFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var sourceStream = new FileStream(
+            path: sourceFilePath,
+            mode: FileMode.Open,
+            access: FileAccess.Read,
+            share: FileShare.Read,
+            bufferSize: CopyBufferSizeBytes,
+            useAsync: true
+        );
+        await using var progressStream = new ProgressReportingStream(
+            inner: sourceStream,
+            progress: progress,
+            totalBytes: sourceStream.Length
+        );
+        var destinationStream = new FileStream(
+            path: destinationFilePath,
+            mode: FileMode.CreateNew,
+            access: FileAccess.Write,
+            share: FileShare.None,
+            bufferSize: CopyBufferSizeBytes,
+            useAsync: true
+        );
+
+        try
+        {
+            await using (destinationStream)
+            {
+                await progressStream.CopyToAsync(
+                    destinationStream,
+                    CopyBufferSizeBytes,
+                    cancellationToken
+                );
+                await destinationStream.FlushAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            File.Delete(destinationFilePath);
+            throw;
+        }
     }
 
     public void CopyDirectoryRecursively(

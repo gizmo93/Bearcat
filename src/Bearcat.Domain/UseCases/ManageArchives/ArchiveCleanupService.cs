@@ -3,6 +3,7 @@ using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderMoves;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -14,17 +15,19 @@ public class ArchiveCleanupService(
     IApplicationConfigurationProvider configuration,
     MirrorCoverageEvaluator mirrorCoverageEvaluator,
     LocalArchiveDeleter localArchiveDeleter,
+    ArchiveStorageFolderMoveService archiveStorageFolderMoveService,
     TimeProvider timeProvider,
     ILogger<ArchiveCleanupService> logger
 )
 {
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        var autoDeleteEnabled = configuration.GetValue<ArchiveCleanupConfiguration>(c =>
-            c.AutoDeleteArchives
-        );
+        var retentionAction = configuration.GetValue<
+            ArchiveCleanupConfiguration,
+            ArchiveRetentionAction
+        >(c => c.ArchiveRetentionAction);
 
-        if (!autoDeleteEnabled)
+        if (retentionAction is ArchiveRetentionAction.Off)
         {
             return;
         }
@@ -34,7 +37,32 @@ public class ArchiveCleanupService(
         );
         var cutoff = timeProvider.GetLocalNow().AddDays(-retentionDays);
 
-        var archives = await repository.GetDeletableArchivesAsync(cutoff, cancellationToken);
+        var archives = await repository.GetLocalArchivesPastRetentionAsync(
+            cutoff,
+            cancellationToken
+        );
+
+        await (
+            retentionAction switch
+            {
+                ArchiveRetentionAction.Delete => DeleteRecoverableArchivesAsync(
+                    archives,
+                    cancellationToken
+                ),
+                ArchiveRetentionAction.MoveToStorageFolder =>
+                    archiveStorageFolderMoveService.MoveArchivesAsync(archives, cancellationToken),
+                _ => throw new InvalidOperationException(
+                    $"Unknown archive retention action {retentionAction}"
+                ),
+            }
+        );
+    }
+
+    private async Task DeleteRecoverableArchivesAsync(
+        IReadOnlyList<Archive> archives,
+        CancellationToken cancellationToken
+    )
+    {
         var deletedArchiveCount = 0;
 
         foreach (var archive in archives)

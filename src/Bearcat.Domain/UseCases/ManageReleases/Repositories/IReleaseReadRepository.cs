@@ -30,7 +30,7 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<string>> GetUnmanagedArchiveFolderPathsAsync(
+    Task<IReadOnlyList<UnmanagedArchiveFolderReadModel>> GetUnmanagedArchiveFoldersAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );

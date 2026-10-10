@@ -1,17 +1,21 @@
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.FileSystem;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -47,18 +51,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
             .Setup(f => f.GetByName(MirrorHosterClassName))
             .Returns(Mock.Of<IHosterWithDownload>());
 
-        service = new ReleaseFolderRetirementService(
-            new ReleaseFolderRetirementRepository(DbContext),
-            configurationMock.Object,
-            new UnmanagedReleaseConverter(new MirrorCoverageEvaluator(hosterFactoryMock.Object)),
-            new NotificationService(
-                repository: new NotificationRepository(DbContext),
-                timeProvider: CreateTimeProvider(),
-                configurationProvider: CreateNotificationConfigurationProvider()
-            ),
-            CreateTimeProvider(),
-            NullLogger<ReleaseFolderRetirementService>.Instance
-        );
+        service = CreateService(new FileSystemService(), workingDirectories: [tempRootPath]);
     }
 
     [TearDown]
@@ -85,7 +78,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task ProcessAsync_ReleaseIsOverdue_ConvertsAndNotifiesWithReleaseFolderPath()
+    public async Task ProcessAsync_ReleaseIsOverdueAndDeletionIsDisabled_ConvertsAndKeepsReleaseFolder()
     {
         // Arrange
         var release = await AddScenarioAsync();
@@ -129,6 +122,212 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
         notification.Message.ShouldContain(releaseFolderPath);
         notification.Message.ShouldContain("delete only the release data there");
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndLocalArchivesExist_DeletesReleaseFolder()
+    {
+        // Arrange
+        var release = await AddScenarioAsync();
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        result.ReleaseFolderPath.ShouldBeNull();
+        notification.NotificationKind.ShouldBe(NotificationKind.ReleaseAutoConvertedToUnmanaged);
+        notification.Message.ShouldContain($"Its release folder {releaseFolderPath} was deleted");
+        Directory.Exists(releaseFolderPath).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndRetentionIsZero_DeletesReleaseFolderOnConversion()
+    {
+        // Arrange
+        var release = await AddScenarioAsync(
+            uploadedAt: DateTime.UtcNow.AddMinutes(-1),
+            uploadsPostedAt: DateTime.UtcNow.AddMinutes(-1)
+        );
+        SetupConfiguration(releaseFolderRetentionDays: 0, deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, _) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        Directory.Exists(releaseFolderPath).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndArchiveOnlyOnMirror_ConvertsAndKeepsReleaseFolder()
+    {
+        // Arrange
+        var release = await AddScenarioAsync(
+            archiveState: ArchiveState.Deleted,
+            mirrorDownloadsEnabled: true
+        );
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        notification.Message.ShouldContain(
+            $"The release folder {releaseFolderPath} was kept because not every archive config has a local archive with all archive files on disk"
+        );
+        Directory.Exists(releaseFolderPath).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndLocalArchiveFileIsMissing_ConvertsAndKeepsReleaseFolder()
+    {
+        // Arrange
+        var release = await AddScenarioAsync(
+            mirrorDownloadsEnabled: true,
+            archiveFileExistsOnDisk: false
+        );
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        notification.Message.ShouldContain("not every archive config has a local archive");
+        Directory.Exists(releaseFolderPath).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndArchivesLiveInsideReleaseFolder_KeepsReleaseFolder()
+    {
+        // Arrange
+        var release = await AddScenarioAsync(archiveInsideReleaseFolder: true);
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        notification.Message.ShouldContain(
+            $"The release folder {releaseFolderPath} was kept because the archives of this release are stored inside it"
+        );
+        Directory.Exists(releaseFolderPath).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndReleaseFolderIsWorkingDirectory_KeepsReleaseFolder()
+    {
+        // Arrange
+        service = CreateService(new FileSystemService(), workingDirectories: [releaseFolderPath]);
+        var release = await AddScenarioAsync();
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        notification.Message.ShouldContain(
+            $"The release folder {releaseFolderPath} was kept because it is a drive root or contains a working directory"
+        );
+        Directory.Exists(releaseFolderPath).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndReleaseFolderContainsWorkingDirectory_KeepsReleaseFolder()
+    {
+        // Arrange
+        var workingDirectory = Directory
+            .CreateDirectory(Path.Combine(releaseFolderPath, "working-directory"))
+            .FullName;
+        service = CreateService(new FileSystemService(), workingDirectories: [workingDirectory]);
+        var release = await AddScenarioAsync();
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        notification.Message.ShouldContain("contains a working directory");
+        Directory.Exists(workingDirectory).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletionEnabledAndReleaseFolderIsDriveRoot_KeepsReleaseFolder()
+    {
+        // Arrange
+        var fileSystemServiceMock = new Mock<IFileSystemService>(MockBehavior.Strict);
+        fileSystemServiceMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
+        service = CreateService(fileSystemServiceMock.Object, workingDirectories: [tempRootPath]);
+        var release = await AddScenarioAsync();
+        var driveRootPath = Path.GetPathRoot(releaseFolderPath)!;
+        await DbContext
+            .Releases.Where(r => r.Id == release.Id)
+            .ExecuteUpdateAsync(setters =>
+                setters.SetProperty(r => r.ReleaseFolderPath, driveRootPath)
+            );
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        notification.Message.ShouldContain(
+            $"The release folder {driveRootPath} was kept because it is a drive root"
+        );
+        fileSystemServiceMock.Verify(
+            f => f.DeleteDirectoryIfExists(It.IsAny<string>()),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_DeletingReleaseFolderFails_PersistsConversionAndNotifies()
+    {
+        // Arrange
+        var fileSystemServiceMock = new Mock<IFileSystemService>(MockBehavior.Strict);
+        fileSystemServiceMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
+        fileSystemServiceMock
+            .Setup(f => f.DeleteDirectoryIfExists(releaseFolderPath))
+            .Throws(new IOException("The folder is in use."));
+        service = CreateService(fileSystemServiceMock.Object, workingDirectories: [tempRootPath]);
+        var release = await AddScenarioAsync();
+        SetupConfiguration(deleteReleaseFolderOnConversion: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var (result, notification) = await GetReleaseAndNotificationAsync(release);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        result.ReleaseFolderPath.ShouldBeNull();
+        notification.Message.ShouldContain(
+            $"Its release folder {releaseFolderPath} could not be deleted, so delete it yourself"
+        );
+        Directory.Exists(releaseFolderPath).ShouldBeTrue();
     }
 
     [Test]
@@ -244,9 +443,33 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         await ShouldStillBeManagedAsync(release);
     }
 
+    private ReleaseFolderRetirementService CreateService(
+        IFileSystemService fileSystemService,
+        string[] workingDirectories
+    )
+    {
+        return new ReleaseFolderRetirementService(
+            new ReleaseFolderRetirementRepository(DbContext),
+            configurationMock.Object,
+            new UnmanagedReleaseConverter(new MirrorCoverageEvaluator(hosterFactoryMock.Object)),
+            fileSystemService,
+            Options.Create(
+                new WorkingDirectoriesConfig { WorkingDirectories = workingDirectories }
+            ),
+            new NotificationService(
+                repository: new NotificationRepository(DbContext),
+                timeProvider: CreateTimeProvider(),
+                configurationProvider: CreateNotificationConfigurationProvider()
+            ),
+            CreateTimeProvider(),
+            NullLogger<ReleaseFolderRetirementService>.Instance
+        );
+    }
+
     private void SetupConfiguration(
         bool autoConvertToUnmanaged = true,
-        int releaseFolderRetentionDays = 14
+        int releaseFolderRetentionDays = 14,
+        bool deleteReleaseFolderOnConversion = false
     )
     {
         configurationMock
@@ -255,6 +478,24 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         configurationMock
             .Setup(c => c.GetValue<ArchiveCleanupConfiguration>(a => a.ReleaseFolderRetentionDays))
             .Returns(releaseFolderRetentionDays);
+        configurationMock
+            .Setup(c =>
+                c.GetValue<ArchiveCleanupConfiguration>(a => a.DeleteReleaseFolderOnConversion)
+            )
+            .Returns(deleteReleaseFolderOnConversion);
+    }
+
+    private async Task<(Release Release, Notification Notification)> GetReleaseAndNotificationAsync(
+        Release release
+    )
+    {
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        var notification = await DbContext.Notifications.SingleAsync(n =>
+            n.ReleaseId == release.Id
+        );
+
+        return (result, notification);
     }
 
     private async Task ShouldStillBeManagedAsync(Release release)
@@ -275,6 +516,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         bool mirrorDownloadsEnabled = false,
         bool excludeFromAutoCleanup = false,
         bool archiveInsideReleaseFolder = false,
+        bool archiveFileExistsOnDisk = true,
         UploadState? additionalUploadState = null
     )
     {
@@ -330,6 +572,11 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         {
             FullFileName = Path.Combine(archiveFolderPath, "archive.part1.rar"),
         };
+        if (archiveFileExistsOnDisk)
+        {
+            await File.WriteAllTextAsync(archiveFile.FullFileName, "archive");
+        }
+
         var archive = new Archive
         {
             ArchiveConfigId = archiveConfig.Id,

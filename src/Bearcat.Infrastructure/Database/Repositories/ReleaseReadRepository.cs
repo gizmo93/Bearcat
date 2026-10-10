@@ -217,19 +217,38 @@ public class ReleaseReadRepository(
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyList<string>> GetUnmanagedArchiveFolderPathsAsync(
-        int releaseId,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<
+        IReadOnlyList<UnmanagedArchiveFolderReadModel>
+    > GetUnmanagedArchiveFoldersAsync(int releaseId, CancellationToken cancellationToken = default)
     {
-        return await dbRead
+        var archiveFolders = await dbRead
             .Releases.Where(release => release.Id == releaseId)
             .SelectMany(release => release.ArchiveConfigs)
             .SelectMany(config => config.Archives)
             .Where(archive => archive.ArchiveState == ArchiveState.Created)
-            .Select(archive => archive.ArchiveFolderPath)
+            .Select(archive => new
+            {
+                archive.ArchiveFolderPath,
+                ArchiveStorageFolderName = archive.ArchiveStorageFolder != null
+                    ? archive.ArchiveStorageFolder.Name
+                    : null,
+                HasLocalWorkingCopyFiles = archive.ArchiveStorageFolderId != null
+                    && archive.ArchiveFiles.Any(file =>
+                        file.FullFileName.Substring(0, archive.ArchiveFolderPath.Length + 1)
+                        != archive.ArchiveFolderPath + QueryPathSeparator.DirectorySeparator
+                    ),
+            })
             .Distinct()
+            .OrderBy(folder => folder.ArchiveFolderPath)
             .ToListAsync(cancellationToken);
+
+        return archiveFolders
+            .Select(folder => new UnmanagedArchiveFolderReadModel(
+                folder.ArchiveFolderPath,
+                folder.ArchiveStorageFolderName,
+                folder.HasLocalWorkingCopyFiles
+            ))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<ReleaseOverviewUploadReadModel>> GetReleaseOverviewAsync(
@@ -1106,7 +1125,13 @@ public class ReleaseReadRepository(
                         ar.CreatedAt,
                         ar.ArchiveState,
                         ar.ArchiveFiles.Count,
-                        ar.ErrorMessages
+                        ar.ErrorMessages,
+                        ar.ArchiveStorageFolder != null ? ar.ArchiveStorageFolder.Name : null,
+                        ar.ArchiveStorageFolderId != null
+                            && ar.ArchiveFiles.Any(af =>
+                                af.FullFileName.Substring(0, ar.ArchiveFolderPath.Length + 1)
+                                != ar.ArchiveFolderPath + QueryPathSeparator.DirectorySeparator
+                            )
                     ))
                     .ToList(),
                 a.AdditionalArchiveContents.OrderBy(content => content.Name)

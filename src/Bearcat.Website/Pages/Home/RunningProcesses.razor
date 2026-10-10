@@ -1,6 +1,8 @@
 @using Bearcat.Website.Pages.Home.Archives
 @using Bearcat.Website.Pages.Home.Downloads
 @using Bearcat.Website.Pages.Home.ReleaseFolderExtractions
+@using Bearcat.Domain.Shared.Transfers
+@using Bearcat.Website.Pages.Home.StorageFolderTransfers
 @using Bearcat.Website.Pages.Home.Summary
 @using Bearcat.Website.Pages.Home.Uploads
 @implements IDisposable
@@ -74,6 +76,20 @@
         {
             <ArchiveLane Archives="archivesInCreationOrHashChange"
                          ArchiveProgress="archiveCreationOrHashChangeProgress" />
+        }
+
+        @if (archivesCopiedIntoLocalWorkingCopy.Count > 0)
+        {
+            <ArchiveStorageFolderTransferLane TransferType="TransferType.ArchiveCopyIntoLocalWorkingCopy"
+                                              Archives="archivesCopiedIntoLocalWorkingCopy"
+                                              Progress="archiveLocalWorkingCopyProgress" />
+        }
+
+        @if (archivesMovingToStorageFolder.Count > 0)
+        {
+            <ArchiveStorageFolderTransferLane TransferType="TransferType.ArchiveMoveToStorageFolder"
+                                              Archives="archivesMovingToStorageFolder"
+                                              Progress="archiveStorageFolderMoveProgress" />
         }
     }
     else

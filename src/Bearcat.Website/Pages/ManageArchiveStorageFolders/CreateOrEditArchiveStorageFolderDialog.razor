@@ -1,0 +1,60 @@
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["ArchiveStorageFolderNamePlaceholder"]" />
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["ArchiveStorageFolderPath"]</label>
+                <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <BbInput @bind-Value="FormModel.Path"
+                             Placeholder="@L["ArchiveStorageFolderPathPlaceholder"]"
+                             class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="justify-center whitespace-nowrap"
+                              AriaLabel="@L["BrowseStorageFolders"]"
+                              OnClick="OpenPathDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+                <p class="text-xs text-muted-foreground">@L["ArchiveStorageFolderPathHelp"]</p>
+                <ValidationMessage For="() => FormModel.Path" class="text-sm text-destructive" />
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <BbFormFieldNumericInput TValue="int"
+                                         @bind-Value="FormModel.MinimumFreeSpaceGb"
+                                         Label="@L["MinimumFreeSpaceGb"]"
+                                         HelperText="@L["ArchiveStorageFolderMinimumFreeSpaceHelp"]"
+                                         Min="0"
+                                         Step="1"
+                                         AllowNegative="false" />
+
+                <BbFormFieldNumericInput TValue="int"
+                                         @bind-Value="FormModel.Priority"
+                                         Label="@L["Priority"]"
+                                         HelperText="@L["ArchiveStorageFolderPriorityHelp"]"
+                                         Min="0"
+                                         Step="1"
+                                         AllowNegative="false" />
+            </div>
+
+            <BbFormFieldSwitch @bind-Checked="FormModel.UseLocalWorkingCopyForReuploads"
+                               Label="@L["UseLocalWorkingCopyForReuploads"]"
+                               HelperText="@L["UseLocalWorkingCopyForReuploadsHelp"]" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="isSaving">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

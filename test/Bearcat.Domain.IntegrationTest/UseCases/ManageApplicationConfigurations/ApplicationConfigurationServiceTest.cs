@@ -77,7 +77,8 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
             .ShouldBe([
                 "AutoConvertToUnmanaged",
                 "ReleaseFolderRetentionDays",
-                "AutoDeleteArchives",
+                "DeleteReleaseFolderOnConversion",
+                "ArchiveRetentionAction",
                 "ArchiveRetentionDays",
             ]);
     }
@@ -152,6 +153,35 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
         result.Id.ShouldBe(configurationOverride.Id);
         result.SerializedValue.ShouldBe("true");
         result.UpdatedAt.ShouldBeGreaterThan(originalUpdatedAt);
+        overrideCacheMock.Verify();
+    }
+
+    [Test]
+    public async Task SaveOverrideAsync_EnumProperty_PersistsNumericValueAndReturnsEnumCurrentValue()
+    {
+        // Arrange
+        const string enumPropertyName = nameof(ArchiveCleanupConfiguration.ArchiveRetentionAction);
+        overrideCacheMock
+            .Setup(c => c.SetOverride(ConfigurationKey, enumPropertyName, "3"))
+            .Verifiable();
+
+        // Act
+        await service.SaveOverrideAsync(
+            ConfigurationKey,
+            enumPropertyName,
+            ArchiveRetentionAction.MoveToStorageFolder,
+            CancellationToken.None
+        );
+        var result = await service.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        var configurationOverride = await DbContext.ApplicationConfigurationOverrides.SingleAsync();
+        configurationOverride.SerializedValue.ShouldBe("3");
+        var property = result.Single().Properties.Single(p => p.Name == enumPropertyName);
+        property.ValueType.ShouldBe(typeof(ArchiveRetentionAction));
+        property.DefaultValue.ShouldBe(ArchiveRetentionAction.Off);
+        property.CurrentValue.ShouldBe(ArchiveRetentionAction.MoveToStorageFolder);
+        property.Options.ShouldBe(["Off", "Delete", "MoveToStorageFolder"]);
         overrideCacheMock.Verify();
     }
 

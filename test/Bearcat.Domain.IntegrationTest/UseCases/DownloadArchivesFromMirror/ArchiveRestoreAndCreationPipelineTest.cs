@@ -15,6 +15,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -114,7 +115,15 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             new ReleaseFolderEntriesForPackingService(new FileSystemService()),
             transferProgressTracker,
             new TransferCancellationRegistry(),
-            new FolderSizeProgressReporter()
+            new FolderSizeProgressReporter(),
+            new ArchiveLocalWorkingCopyService(
+                new ArchiveCleanupRepository(DbContext),
+                new FileSystemService(),
+                notificationService,
+                transferProgressTracker,
+                new TransferCancellationRegistry(),
+                NullLogger<ArchiveLocalWorkingCopyService>.Instance
+            )
         );
     }
 

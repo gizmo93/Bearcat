@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared;
 using Bearcat.Website.Layout;
 using Bearcat.Website.Pages.PostQueue;
 using Bearcat.Website.ScopedOperations;

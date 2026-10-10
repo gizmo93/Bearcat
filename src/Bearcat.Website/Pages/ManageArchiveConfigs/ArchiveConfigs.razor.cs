@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;

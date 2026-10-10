@@ -7,7 +7,14 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchiveCleanupRepository
 {
-    public async Task<IReadOnlyList<Archive>> GetDeletableArchivesAsync(
+    private static readonly UploadState[] WaitingPendingOrUploadingStates =
+    [
+        UploadState.WaitingForArchive,
+        UploadState.Pending,
+        UploadState.Uploading,
+    ];
+
+    public async Task<IReadOnlyList<Archive>> GetLocalArchivesPastRetentionAsync(
         DateTime cutoff,
         CancellationToken cancellationToken
     )
@@ -27,6 +34,7 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                         .ThenInclude(u => u.UploadedFiles)
             .Where(a =>
                 a.ArchiveState == ArchiveState.Created
+                && a.ArchiveStorageFolderId == null
                 && a.Uploads.Any()
                 && a.Uploads.All(u => u.UploadedAt != null)
                 && !a.ArchiveConfig.Release.ExcludeFromAutoCleanup
@@ -37,14 +45,73 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                     .Max(u => u.UploadedAt) <= cutoff
                 && !dbWrite.Uploads.Any(u =>
                     u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId
-                    && (
-                        u.UploadState == UploadState.WaitingForArchive
-                        || u.UploadState == UploadState.Pending
-                        || u.UploadState == UploadState.Uploading
-                    )
+                    && WaitingPendingOrUploadingStates.Contains(u.UploadState)
                 )
             )
             .OrderBy(a => a.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasWaitingPendingOrUploadingUploadAsync(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.Uploads.AnyAsync(
+            u =>
+                u.UploadConfig.ArchiveConfigId == archiveConfigId
+                && WaitingPendingOrUploadingStates.Contains(u.UploadState),
+            cancellationToken
+        );
+    }
+
+    public async Task<
+        IReadOnlyList<Archive>
+    > GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Include(a => a.ArchiveFiles)
+            .Where(a =>
+                a.ArchiveState == ArchiveState.Created
+                && a.ArchiveStorageFolderId != null
+                && a.ArchiveFiles.Any(af =>
+                    af.FullFileName.Substring(0, a.ArchiveFolderPath.Length + 1)
+                    != a.ArchiveFolderPath + QueryPathSeparator.DirectorySeparator
+                )
+                && !dbWrite.Uploads.Any(u =>
+                    u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId
+                    && WaitingPendingOrUploadingStates.Contains(u.UploadState)
+                )
+            )
+            .OrderBy(a => a.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ArchiveStorageFolder>> GetActiveArchiveStorageFoldersAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .ArchiveStorageFolders.Where(f => f.IsActive)
+            .OrderBy(f => f.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<int>> GetArchiveIdsWithUnresolvedNotificationAsync(
+        NotificationKind notificationKind,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Notifications.Where(n =>
+                n.NotificationKind == notificationKind
+                && n.ResolvedAt == null
+                && n.ArchiveId != null
+            )
+            .Select(n => n.ArchiveId!.Value)
+            .Distinct()
             .ToListAsync(cancellationToken);
     }
 

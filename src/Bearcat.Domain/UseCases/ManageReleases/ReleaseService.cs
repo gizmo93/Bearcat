@@ -268,7 +268,9 @@ public class ReleaseService(
         return new ArchiveDeletionPreview(
             CanDelete: canDelete,
             DeletableArchiveFolderPaths: deletableArchiveFolderPaths,
-            MirrorHosterNames: mirrorHosterNames
+            MirrorHosterNames: mirrorHosterNames,
+            ArchiveInStorageFolderCount: GetCreatedArchives(release)
+                .Count(archive => archive.ArchiveStorageFolderId is not null)
         );
     }
 
@@ -314,6 +316,13 @@ public class ReleaseService(
     }
 
     private static List<Archive> GetDeletableArchives(Release release)
+    {
+        return GetCreatedArchives(release)
+            .Where(archive => archive.ArchiveStorageFolderId is null)
+            .ToList();
+    }
+
+    private static List<Archive> GetCreatedArchives(Release release)
     {
         return release
             .ArchiveConfigs.SelectMany(config => config.Archives)

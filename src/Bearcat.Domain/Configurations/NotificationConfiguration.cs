@@ -52,6 +52,24 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ArchiveRestoreFailed { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.NoArchiveStorageFolderAvailable",
+        "NotificationKind.NoArchiveStorageFolderAvailable.Description"
+    )]
+    public bool NoArchiveStorageFolderAvailable { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.ArchiveMoveToStorageFolderFailed",
+        "NotificationKind.ArchiveMoveToStorageFolderFailed.Description"
+    )]
+    public bool ArchiveMoveToStorageFolderFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed",
+        "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description"
+    )]
+    public bool ArchiveCopyIntoLocalWorkingCopyFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.InitialUploadCreated",
         "NotificationKind.InitialUploadCreated.Description"
     )]
