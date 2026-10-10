@@ -36,6 +36,11 @@ public sealed partial class RunningProcesses(
 
     private IReadOnlyList<RunningArchiveReadModel> restoringArchives = [];
 
+    private IReadOnlyList<RunningArchiveReadModel> archivesMovingToStorageFolder = [];
+
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> archiveStorageFolderMoveProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
+
     private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
         new Dictionary<int, TransferProgressSnapshot>();
 
@@ -50,6 +55,7 @@ public sealed partial class RunningProcesses(
         runningUploads.Count > 0
         || archivesInCreationOrHashChange.Count > 0
         || restoringArchives.Count > 0
+        || archivesMovingToStorageFolder.Count > 0
         || remoteDownloads.Count > 0
         || releaseFolderExtractionProgress.Count > 0;
 
@@ -61,6 +67,7 @@ public sealed partial class RunningProcesses(
         - QueuedUploadCount
         + archivesInCreationOrHashChange.Count
         + restoringArchives.Count
+        + archivesMovingToStorageFolder.Count
         + remoteDownloads.Count
         + releaseFolderExtractionProgress.Count;
 
@@ -139,6 +146,9 @@ public sealed partial class RunningProcesses(
         var archiveIdsWithHashChange = transferProgressTracker.GetTrackedIds(
             TransferType.ArchiveHashChange
         );
+        var archiveIdsMovingToStorageFolder = transferProgressTracker.GetTrackedIds(
+            TransferType.ArchiveMoveToStorageFolder
+        );
 
         var archives = await operationRunner.RunAsync<
             IArchiveReadRepository,
@@ -146,7 +156,7 @@ public sealed partial class RunningProcesses(
         >(
             (repository, token) =>
                 repository.GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
-                    archiveIdsWithHashChange,
+                    [.. archiveIdsWithHashChange, .. archiveIdsMovingToStorageFolder],
                     token
                 ),
             cancellationToken
@@ -163,6 +173,13 @@ public sealed partial class RunningProcesses(
             .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
             .ToList();
 
+        archivesMovingToStorageFolder = archives
+            .Where(archive =>
+                archive.ArchiveState == ArchiveState.Created
+                && archiveIdsMovingToStorageFolder.Contains(archive.ArchiveId)
+            )
+            .ToList();
+
         archiveCreationOrHashChangeProgress = GetProgressSnapshotsOfFirstTrackedType(
             [
                 TransferType.ArchiveCreation,
@@ -175,6 +192,11 @@ public sealed partial class RunningProcesses(
         downloadProgress = GetProgressSnapshots(
             TransferType.MirrorDownload,
             restoringArchives.Select(archive => archive.ArchiveId).ToList()
+        );
+
+        archiveStorageFolderMoveProgress = GetProgressSnapshots(
+            TransferType.ArchiveMoveToStorageFolder,
+            archivesMovingToStorageFolder.Select(archive => archive.ArchiveId).ToList()
         );
     }
 

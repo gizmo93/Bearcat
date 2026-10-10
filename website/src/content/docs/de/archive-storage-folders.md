@@ -1,53 +1,66 @@
 ---
 title: "Archivspeicherordner"
-description: "Ordner ausserhalb der Arbeitsverzeichnisse registrieren, die Archive aufnehmen können."
+description: "Archive nach der Aufbewahrungsfrist auf einem NAS, einer weiteren Festplatte oder einer Netzwerkfreigabe speichern."
 ---
 
-Ein Speicherordner ist ein Ordner ausserhalb deiner Arbeitsverzeichnisse, der Archive aufnehmen kann,
-zum Beispiel auf einem NAS, einer zweiten Festplatte oder einer Netzwerkfreigabe. Bearcat behandelt ihn
-als normales Verzeichnis und prüft nicht, was dahinter liegt.
+Mit Speicherordnern lagerst du Archive aus deinen Arbeitsverzeichnissen aus, etwa auf ein NAS oder
+eine zweite Festplatte. Bearcat prüft, ob der Ordner erreichbar ist und genug Platz hat, aber nicht,
+ob dort das erwartete Laufwerk eingebunden ist.
 
 ## Einen Speicherordner hinzufügen
 
-Öffne in der Navigation **Konfiguration > Releaseeinstellungen > Archivspeicherordner**.
-Du findest die Seite auch mit **Ctrl+K** oder **Cmd+K**.
-
-Klicke auf **Neuer Speicherordner** und fülle die Felder aus:
+Öffne **Konfiguration > Releaseeinstellungen > Archivspeicherordner** und klicke auf **Neuer Speicherordner**.
 
 | Feld | Bedeutung |
 | --- | --- |
-| **Name** | Eindeutiger Name, höchstens 100 Zeichen. |
-| **Pfad** | Absoluter Pfad eines vorhandenen Ordners, höchstens 500 Zeichen. Muss eindeutig sein. |
-| **Freizuhaltender Speicherplatz (GB)** | Speicherplatz, der im Ordner nach dem Verschieben von Archiven frei bleiben muss. `0` oder mehr. |
-| **Priorität** | Niedrigere Werte werden bevorzugt. Mehrere Ordner können dieselbe Priorität haben. |
-| **Archive vor Reupload zurückkopieren** | An: Archive werden vor einem Reupload auf die lokale Festplatte zurückkopiert. Aus: Ein Reupload liest sie direkt aus dem Speicherordner. |
+| **Name** | Eindeutiger Name für den Speicherordner. |
+| **Pfad** | Absoluter Pfad eines vorhandenen Ordners. Jeder Pfad kann nur einmal registriert werden. |
+| **Freizuhaltender Speicherplatz (GB)** | So viel Platz muss nach dem Verschieben noch frei sein. Mit `0` gilt kein Mindestwert. |
+| **Priorität** | Niedrigere Werte haben Vorrang. |
+| **Archive vor Reupload zurückkopieren** | Kopiert Archive vor dem Reupload auf die lokale Festplatte. Wenn ausgeschaltet, liest der Reupload direkt aus dem Speicherordner. |
 
-Neue Speicherordner sind aktiv. Mit **Aktivieren** oder **Deaktivieren** im Zeilenmenü änderst du das.
+Neue Speicherordner sind aktiv. Über das Zeilenmenü kannst du sie **Aktivieren** oder **Deaktivieren**.
 
 ## Regeln für den Pfad
 
-- Der Pfad muss absolut sein und der Ordner muss bereits existieren. Bearcat legt nie einen Speicherordner an.
-- Der Pfad darf kein Arbeitsverzeichnis sein, nicht in einem liegen und keines enthalten.
-- Mit **Durchsuchen** wählst du einen beliebigen Ordner auf dem Rechner, auf dem Bearcat läuft.
-- In Docker gibst du den Pfad innerhalb des Containers an. Der Ordner muss dort über einen Bind Mount
-  erreichbar sein.
+Bearcat legt den Speicherordner nicht an. Er muss bereits existieren und darf sich nicht mit einem
+Arbeitsverzeichnis überschneiden: Er darf weder darin liegen noch eines enthalten.
+
+Mit **Durchsuchen** wählst du einen Ordner auf dem Rechner, auf dem Bearcat läuft.
+In Docker muss er über einen Bindmount erreichbar sein. Gib den Pfad innerhalb des Containers an.
 
 ## Übersicht
 
-Die Liste zeigt für jeden Speicherordner:
-
-- Name und Pfad
-- Priorität
-- aktuell freien Speicherplatz des Pfads, oder **Nicht verfügbar**, wenn der Ordner nicht gefunden wird
-- den eingestellten freizuhaltenden Speicherplatz
-- die Anzahl der dort gespeicherten Archive
-- ob Archive vor einem Reupload zurückkopiert werden
-- ob der Ordner aktiv ist
+Die Liste zeigt den freien Speicherplatz und den eingestellten Mindestwert, die Anzahl gespeicherter Archive,
+die Priorität und den Aktivierungsstatus. Ist der freie Speicherplatz nicht lesbar, steht dort **Nicht verfügbar**.
 
 ## Einen Speicherordner bearbeiten oder löschen
 
-Der Pfad kann nicht geändert werden, solange Archive im Ordner gespeichert sind. Alle anderen Felder
-kannst du jederzeit ändern.
+Solange Archive im Speicherordner liegen, kannst du seinen Pfad nicht ändern und ihn nicht löschen.
+Die übrigen Einstellungen bleiben bearbeitbar.
 
-Ein Speicherordner, der noch Archive enthält, kann nicht gelöscht werden. Beim Löschen entfernt Bearcat
-den Speicherordner nur aus seiner Konfiguration. Der Ordner und sein Inhalt auf der Festplatte bleiben erhalten.
+Das Löschen entfernt nur den Eintrag aus Bearcat. Der Ordner und sein Inhalt bleiben auf der Festplatte.
+
+## Archive verschieben
+
+Stelle unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#lokale-archive-nach-aufbewahrung)
+**Lokale Archive nach Aufbewahrung** auf **In Speicherordner verschieben**.
+Bearcat verschiebt die Archive dann nach Ablauf der Aufbewahrungsfrist.
+
+Bearcat wählt für jedes Archiv einen aktiven, erreichbaren Speicherordner mit genug Platz für alle
+Archivdateien und den freizuhaltenden Speicherplatz. Die niedrigste Priorität hat Vorrang.
+Bei gleicher Priorität gewinnt der Ordner mit dem meisten freien Platz.
+Ein Archiv bleibt immer zusammen in einem Unterordner.
+
+Bearcat kopiert die Dateien und prüft ihre Grösse. Erst danach verwendet es den neuen Speicherort
+und löscht die ursprünglichen Archivdateien. Den ursprünglichen Archivordner entfernt es nur, wenn er leer ist.
+
+Unter **Aktivität** siehst du Fortschritt und Ziel. Mit **Verschieben abbrechen** entfernst du die
+bisher kopierten Dateien; das Archiv bleibt am ursprünglichen Ort.
+
+Fehlt ein passender Speicherordner oder schlägt das Kopieren fehl, bleibt das Archiv am ursprünglichen Ort.
+Bearcat benachrichtigt dich und versucht es im nächsten Durchlauf erneut.
+Weitere Meldungen zum selben Fehler folgen erst, wenn du die Benachrichtigung erledigt hast.
+
+Archive in Speicherordnern werden nie automatisch gelöscht. Reuploads lesen sie direkt von dort,
+ausser **Archive vor Reupload zurückkopieren** ist aktiviert.

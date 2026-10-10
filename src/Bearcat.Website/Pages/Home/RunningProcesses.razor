@@ -1,6 +1,7 @@
 @using Bearcat.Website.Pages.Home.Archives
 @using Bearcat.Website.Pages.Home.Downloads
 @using Bearcat.Website.Pages.Home.ReleaseFolderExtractions
+@using Bearcat.Website.Pages.Home.StorageFolderMoves
 @using Bearcat.Website.Pages.Home.Summary
 @using Bearcat.Website.Pages.Home.Uploads
 @implements IDisposable
@@ -74,6 +75,12 @@
         {
             <ArchiveLane Archives="archivesInCreationOrHashChange"
                          ArchiveProgress="archiveCreationOrHashChangeProgress" />
+        }
+
+        @if (archivesMovingToStorageFolder.Count > 0)
+        {
+            <ArchiveStorageFolderMoveLane Archives="archivesMovingToStorageFolder"
+                                          MoveProgress="archiveStorageFolderMoveProgress" />
         }
     }
     else

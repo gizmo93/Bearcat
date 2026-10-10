@@ -1,52 +1,66 @@
 ---
 title: "Archive Storage Folders"
-description: "Register folders outside the working directories that can hold archives."
+description: "Store archives on a NAS, another disk, or a network share after their retention period."
 ---
 
-A storage folder is a folder outside your working directories that can hold archives, for example on a
-NAS, a second disk, or a network share. Bearcat treats it as a plain directory and does not check what
-is behind it.
+Storage folders let you move archives out of your working directories, for example to a NAS or
+another disk. Bearcat checks that the folder is accessible and has enough space, but not whether
+the expected drive is mounted there.
 
 ## Add a storage folder
 
-In the navigation, open **Configuration > Release settings > Archive storage folders**.
-You can also find the page with **Ctrl+K** or **Cmd+K**.
-
-Click **New storage folder** and fill in the fields:
+Open **Configuration > Release settings > Archive storage folders** and click **New storage folder**.
 
 | Field | Meaning |
 | --- | --- |
-| **Name** | Unique name, up to 100 characters. |
-| **Path** | Absolute path of an existing folder, up to 500 characters. Must be unique. |
-| **Minimum free space (GB)** | Space that must stay free in the folder after archives were moved there. `0` or more. |
-| **Priority** | Lower values are preferred. Several folders can share a priority. |
-| **Copy archives back before reupload** | On: archives are copied back to local disk before a reupload. Off: a reupload reads them directly from the storage folder. |
+| **Name** | Unique name for the storage folder. |
+| **Path** | Absolute path of an existing folder. Each path can only be registered once. |
+| **Minimum free space (GB)** | Space that must remain free after the move. Set `0` for no minimum. |
+| **Priority** | Lower values take priority. |
+| **Copy archives back before reupload** | Copy archives to local disk before reuploading. When off, read them directly from the storage folder. |
 
 New storage folders are active. Use **Enable** or **Disable** in the row menu to change that.
 
 ## Path rules
 
-- The path must be absolute and the folder must already exist. Bearcat never creates a storage folder.
-- The path must not be a working directory, lie inside one, or contain one.
-- Use **Browse** to pick any folder on the machine running Bearcat.
-- In Docker, enter the path inside the container. Make the folder available there through a bind mount.
+Bearcat does not create the storage folder. It must already exist and must not overlap a working
+directory: it cannot be inside one or contain one.
+
+Use **Browse** to choose a folder on the machine running Bearcat.
+In Docker, make it accessible through a bind mount and enter its path inside the container.
 
 ## Overview
 
-The list shows for each storage folder:
-
-- name and path
-- priority
-- current free space of the path, or **Unavailable** if the folder cannot be found
-- the configured minimum free space
-- the number of archives stored there
-- whether archives are copied back before a reupload
-- whether the folder is active
+The list shows free space and its required minimum, the number of stored archives, priority, and active status.
+If free space cannot be read, it shows **Unavailable**.
 
 ## Edit or delete a storage folder
 
-The path cannot be changed while archives are stored in the folder. All other fields can be changed
-at any time.
+While a storage folder holds archives, you cannot change its path or delete it.
+You can still change the other settings.
 
-A storage folder that still holds archives cannot be deleted. Deleting a storage folder only removes
-it from Bearcat. The folder and its contents on disk are kept.
+Deleting a storage folder only removes it from Bearcat. The folder and its contents stay on disk.
+
+## Moving archives
+
+Under [Auto cleanup](/Bearcat/advanced-configuration/#local-archives-after-retention), set
+**Local archives after retention** to **Move to storage folder**.
+Bearcat then moves archives once their retention period has passed.
+
+For each archive, Bearcat chooses an active, accessible folder with enough space for all archive
+files plus the required free space. The lowest priority takes precedence.
+At the same priority, the folder with the most free space wins.
+An archive always stays together in one subfolder.
+
+Bearcat copies the files and checks their sizes before using the new location and deleting the
+original archive files. It removes the original archive folder only if it is empty.
+
+Under **Activity**, you can follow progress and see the destination. **Cancel move** removes the
+files copied so far and keeps the archive at its original location.
+
+If no folder fits or copying fails, the archive stays at its original location.
+Bearcat notifies you and retries on the next run.
+Further notifications for the same error wait until you resolve the current one.
+
+Archives in storage folders are never deleted automatically. Reuploads read them directly from there,
+unless **Copy archives back before reupload** is enabled.

@@ -609,9 +609,12 @@
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Days since the uploads of a release were posted, or since its first upload finished when it was never marked as posted.</value></data>
   <data name="DeleteReleaseFolderOnConversion" xml:space="preserve"><value>Delete release folder on conversion</value></data>
   <data name="DeleteReleaseFolderOnConversionDescription" xml:space="preserve"><value>Deletes the release folder when a release is converted to unmanaged automatically. Only has an effect when automatic conversion is enabled. The folder is only deleted when every archive config has a local archive with all archive files on disk, no archive is stored inside the folder and the folder is neither a drive root nor contains a working directory. Otherwise the folder is kept and the notification says why.</value></data>
-  <data name="AutoDeleteArchives" xml:space="preserve"><value>Delete local archives automatically</value></data>
-  <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Deletes the local archive files of an archive config once its retention expired. Only runs when the archives can be restored from an online mirror or repackaged from an existing release folder.</value></data>
-  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Delete local archives after</value></data>
+  <data name="ArchiveRetentionAction" xml:space="preserve"><value>Local archives after retention</value></data>
+  <data name="ArchiveRetentionActionDescription" xml:space="preserve"><value>What happens to the local archives of an archive config once its retention expired. Delete only runs when the archives can be restored from an online mirror or repackaged from an existing release folder. Move to storage folder copies them into an active archive storage folder and removes the local copy. Archives in a storage folder are never deleted automatically.</value></data>
+  <data name="ArchiveRetentionAction.Off" xml:space="preserve"><value>Keep</value></data>
+  <data name="ArchiveRetentionAction.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ArchiveRetentionAction.MoveToStorageFolder" xml:space="preserve"><value>Move to storage folder</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Archive retention</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Days since the last upload of an archive config finished. Every reupload restarts this period.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initial uploads</value></data>
@@ -1162,6 +1165,10 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Restoring</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archive restore failed</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>An archive could not be restored from an online mirror.</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable" xml:space="preserve"><value>No storage folder for archive</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable.Description" xml:space="preserve"><value>An archive could not be moved because no active storage folder has enough free space. The archive stays local.</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed" xml:space="preserve"><value>Moving archive to storage folder failed</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Copying an archive into a storage folder failed. The copied files were removed and the archive stays local.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release created from remote download</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>A release was created automatically from a folder that was downloaded from a remote source.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remote download failed</value></data>
@@ -1204,6 +1211,11 @@
   <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Cancel the creation of archive #{0}? A new archive is deleted, an existing archive is kept. The uploads waiting for this archive are canceled.</value></data>
   <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Cancellation requested for the creation of archive #{0}.</value></data>
   <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>The creation of archive #{0} already finished.</value></data>
+  <data name="ArchiveStorageFolderMoves" xml:space="preserve"><value>Moving to storage folders</value></data>
+  <data name="CancelArchiveStorageFolderMove" xml:space="preserve"><value>Cancel move</value></data>
+  <data name="CancelArchiveStorageFolderMoveConfirmation" xml:space="preserve"><value>Cancel moving archive #{0} to the storage folder? The files copied so far are deleted and the archive stays local.</value></data>
+  <data name="ArchiveStorageFolderMoveCancellationRequested" xml:space="preserve"><value>Cancellation requested for moving archive #{0}.</value></data>
+  <data name="ArchiveStorageFolderMoveAlreadyFinished" xml:space="preserve"><value>Moving archive #{0} already finished.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>

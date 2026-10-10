@@ -612,9 +612,12 @@
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem Posten der Uploads eines Releases, oder seit dem ersten abgeschlossenen Upload, wenn es nie als gepostet markiert wurde.</value></data>
   <data name="DeleteReleaseFolderOnConversion" xml:space="preserve"><value>Releaseordner beim Umwandeln löschen</value></data>
   <data name="DeleteReleaseFolderOnConversionDescription" xml:space="preserve"><value>Löscht den Releaseordner, wenn ein Release automatisch in Unmanaged umgewandelt wird. Wirkt nur, wenn die automatische Umwandlung aktiv ist. Der Ordner wird nur gelöscht, wenn jede Archivkonfiguration ein lokales Archiv mit allen Archivdateien auf der Festplatte hat, kein Archiv im Ordner liegt und der Ordner weder ein Laufwerksstamm ist noch ein Arbeitsverzeichnis enthält. Sonst bleibt der Ordner erhalten und die Benachrichtigung nennt den Grund.</value></data>
-  <data name="AutoDeleteArchives" xml:space="preserve"><value>Lokale Archive automatisch löschen</value></data>
-  <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Löscht die lokalen Archivdateien einer Archivkonfiguration nach Ablauf der Aufbewahrung. Passiert nur, wenn die Archive von einem Onlinemirror wiederhergestellt oder aus einem vorhandenen Releaseordner neu gepackt werden können.</value></data>
-  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Lokale Archive löschen nach</value></data>
+  <data name="ArchiveRetentionAction" xml:space="preserve"><value>Lokale Archive nach Aufbewahrung</value></data>
+  <data name="ArchiveRetentionActionDescription" xml:space="preserve"><value>Was mit den lokalen Archiven einer Archivkonfiguration nach Ablauf der Aufbewahrung passiert. Löschen passiert nur, wenn die Archive von einem Onlinemirror wiederhergestellt oder aus einem vorhandenen Releaseordner neu gepackt werden können. In Speicherordner verschieben kopiert sie in einen aktiven Archivspeicherordner und entfernt die lokale Kopie. Archive in einem Speicherordner werden nie automatisch gelöscht.</value></data>
+  <data name="ArchiveRetentionAction.Off" xml:space="preserve"><value>Behalten</value></data>
+  <data name="ArchiveRetentionAction.Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="ArchiveRetentionAction.MoveToStorageFolder" xml:space="preserve"><value>In Speicherordner verschieben</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Aufbewahrung lokaler Archive</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem letzten abgeschlossenen Upload einer Archivkonfiguration. Jeder Reupload startet diese Frist neu.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initiale Uploads</value></data>
@@ -1165,6 +1168,10 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archivwiederherstellung fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable" xml:space="preserve"><value>Kein Speicherordner für Archiv</value></data>
+  <data name="NotificationKind.NoArchiveStorageFolderAvailable.Description" xml:space="preserve"><value>Ein Archiv konnte nicht verschoben werden, weil kein aktiver Speicherordner genug freien Speicherplatz hat. Das Archiv bleibt lokal.</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed" xml:space="preserve"><value>Verschieben in Speicherordner fehlgeschlagen</value></data>
+  <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Das Kopieren eines Archivs in einen Speicherordner ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und das Archiv bleibt lokal.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release aus Remotedownload erstellt</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
@@ -1207,6 +1214,11 @@
   <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Erstellung von Archiv #{0} abbrechen? Ein neues Archiv wird gelöscht, ein bestehendes Archiv bleibt erhalten. Die auf dieses Archiv wartenden Uploads werden abgebrochen.</value></data>
   <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Abbruch für die Erstellung von Archiv #{0} angefragt.</value></data>
   <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>Die Erstellung von Archiv #{0} ist bereits abgeschlossen.</value></data>
+  <data name="ArchiveStorageFolderMoves" xml:space="preserve"><value>Verschieben in Speicherordner</value></data>
+  <data name="CancelArchiveStorageFolderMove" xml:space="preserve"><value>Verschieben abbrechen</value></data>
+  <data name="CancelArchiveStorageFolderMoveConfirmation" xml:space="preserve"><value>Verschieben von Archiv #{0} in den Speicherordner abbrechen? Die bisher kopierten Dateien werden gelöscht und das Archiv bleibt lokal.</value></data>
+  <data name="ArchiveStorageFolderMoveCancellationRequested" xml:space="preserve"><value>Abbruch für das Verschieben von Archiv #{0} angefordert.</value></data>
+  <data name="ArchiveStorageFolderMoveAlreadyFinished" xml:space="preserve"><value>Das Verschieben von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>

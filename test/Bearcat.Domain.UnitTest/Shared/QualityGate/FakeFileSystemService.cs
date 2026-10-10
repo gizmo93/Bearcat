@@ -1,4 +1,5 @@
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Domain.UnitTest.Shared.QualityGate;
 
@@ -30,8 +31,19 @@ public sealed class FakeFileSystemService : IFileSystemService
 
     public bool FileExists(string filePath) => throw new NotSupportedException();
 
+    public long GetFileSizeBytes(string filePath) => throw new NotSupportedException();
+
+    public void CreateDirectory(string path) => throw new NotSupportedException();
+
     public void CopyFile(string sourceFilePath, string destinationFilePath) =>
         throw new NotSupportedException();
+
+    public Task CopyFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
 
     public void CopyDirectoryRecursively(
         string sourceDirectoryPath,

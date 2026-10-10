@@ -15,7 +15,26 @@ public static class ConfigurationSettingFormatter
 
     public static bool HasOptions(ApplicationConfigurationPropertyDto setting)
     {
-        return setting.ValueType == typeof(string) && setting.Options.Count > 0;
+        return (setting.ValueType == typeof(string) || setting.ValueType.IsEnum)
+            && setting.Options.Count > 0;
+    }
+
+    public static string? FormatOptionValue(object? value)
+    {
+        return value?.ToString();
+    }
+
+    public static object? ParseOptionValue(
+        ApplicationConfigurationPropertyDto setting,
+        string? option
+    )
+    {
+        if (option is null || !setting.ValueType.IsEnum)
+        {
+            return option;
+        }
+
+        return Enum.Parse(setting.ValueType, option);
     }
 
     public static string? FormatEditorText(object? value)
@@ -37,7 +56,10 @@ public static class ConfigurationSettingFormatter
         string option
     )
     {
-        var localizedOption = localizer[$"{setting.DisplayName}.{option}"];
+        var resourceKeyPrefix = setting.ValueType.IsEnum
+            ? setting.ValueType.Name
+            : setting.DisplayName;
+        var localizedOption = localizer[$"{resourceKeyPrefix}.{option}"];
 
         return localizedOption.ResourceNotFound ? option : localizedOption;
     }
@@ -63,7 +85,7 @@ public static class ConfigurationSettingFormatter
 
         if (HasOptions(setting))
         {
-            return FormatOptionLabel(localizer, setting, (string)value!);
+            return FormatOptionLabel(localizer, setting, FormatOptionValue(value)!);
         }
 
         var editorText = FormatEditorText(value);

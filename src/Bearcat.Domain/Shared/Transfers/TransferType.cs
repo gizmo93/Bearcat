@@ -12,4 +12,5 @@ public enum TransferType
     ArchiveHashChange = 8,
     ReleaseFolderVerification = 9,
     ReleaseFolderExtraction = 10,
+    ArchiveMoveToStorageFolder = 11,
 }

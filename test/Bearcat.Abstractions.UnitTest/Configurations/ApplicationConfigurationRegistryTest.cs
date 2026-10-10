@@ -48,6 +48,38 @@ public class ApplicationConfigurationRegistryTest
             .Unit.ShouldBeNull();
     }
 
+    [Test]
+    public void GetDefinition_EnumProperty_IsSupportedWithEnumNamesAsOptions()
+    {
+        // Arrange
+        var registry = new ApplicationConfigurationRegistry([
+            new ApplicationConfigurationRegistration(typeof(ConfigurationWithEnum)),
+        ]);
+
+        // Act
+        var definition = registry.GetDefinition<ConfigurationWithEnum>();
+
+        // Assert
+        var property = definition.Properties.ShouldHaveSingleItem();
+        property.Name.ShouldBe(nameof(ConfigurationWithEnum.Mode));
+        property.PropertyType.ShouldBe(typeof(ConfigurationMode));
+        property.Options.ShouldBe(["Slow", "Fast"]);
+    }
+
+    [ApplicationConfiguration("ConfigurationWithEnum", "ConfigurationWithEnum")]
+    public sealed class ConfigurationWithEnum : IApplicationConfiguration
+    {
+        public ConfigurationMode Mode { get; set; } = ConfigurationMode.Slow;
+
+        public ConfigurationMode? OptionalMode { get; set; }
+    }
+
+    public enum ConfigurationMode
+    {
+        Slow = 1,
+        Fast = 2,
+    }
+
     [ApplicationConfiguration("ConfigurationWithUnits", "ConfigurationWithUnits")]
     public sealed class ConfigurationWithUnits : IApplicationConfiguration
     {

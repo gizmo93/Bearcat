@@ -1,4 +1,6 @@
-﻿namespace Bearcat.Abstractions;
+﻿using Bearcat.Abstractions.Transfers;
+
+namespace Bearcat.Abstractions;
 
 public interface IFileSystemService
 {
@@ -11,7 +13,15 @@ public interface IFileSystemService
     bool DirectoryExists(string path);
     bool DirectoryHasEntries(string path);
     long? GetAvailableFreeSpaceBytes(string path);
+    long GetFileSizeBytes(string filePath);
+    void CreateDirectory(string path);
     void CopyFile(string sourceFilePath, string destinationFilePath);
+    Task CopyFileAsync(
+        string sourceFilePath,
+        string destinationFilePath,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    );
     void CopyDirectoryRecursively(string sourceDirectoryPath, string destinationDirectoryPath);
     void DeleteFileIfExists(string filePath);
     void DeleteDirectoryIfExists(string path);
