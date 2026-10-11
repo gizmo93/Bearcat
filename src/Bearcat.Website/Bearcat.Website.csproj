@@ -9,8 +9,6 @@
         <PackageReference Include="BlazorBlueprint.Components" />
         <PackageReference Include="BlazorBlueprint.Icons.Lucide" />
         <PackageReference Include="Humanizer" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
-        <PackageReference Include="Telegram.Bot" />
     </ItemGroup>
 
     <ItemGroup>

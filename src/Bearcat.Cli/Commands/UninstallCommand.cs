@@ -6,7 +6,7 @@ namespace Bearcat.Cli.Commands;
 
 public sealed class UninstallCommand : Command
 {
-    protected override int Execute(CommandContext context, CancellationToken cancellationToken)
+    public override int Execute(CommandContext context, CancellationToken cancellationToken)
     {
         if (!OperatingSystem.IsWindows())
         {
