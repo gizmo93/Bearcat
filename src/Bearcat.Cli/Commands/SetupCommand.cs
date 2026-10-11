@@ -9,7 +9,7 @@ public sealed class SetupCommand : AsyncCommand
 {
     private const string HostExecutableName = "Bearcat.Host.exe";
 
-    protected override async Task<int> ExecuteAsync(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         CancellationToken cancellationToken
     )
