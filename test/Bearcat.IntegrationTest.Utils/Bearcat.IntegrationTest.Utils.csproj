@@ -9,6 +9,7 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="NUnit" />
         <PackageReference Include="Respawn" />
+        <PackageReference Include="Testcontainers" />
         <PackageReference Include="Testcontainers.PostgreSql" />
     </ItemGroup>
 
