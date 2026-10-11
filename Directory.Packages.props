@@ -6,14 +6,14 @@
         <PackageVersion Include="EntityFrameworkCore.Exceptions.Common" Version="10.0.1" />
         <PackageVersion Include="EntityFrameworkCore.Exceptions.PostgreSQL" Version="10.0.1" />
         <PackageVersion Include="EntityFrameworkCore.Exceptions.Sqlite" Version="10.0.1" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
         <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
-        <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.11" />
+        <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.12" />
         <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
-        <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" />
+        <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
         <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
         <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.8" />
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
@@ -23,11 +23,11 @@
         />
         <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.2" />
         <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
-        <PackageVersion Include="System.IO.Hashing" Version="10.0.11" />
+        <PackageVersion Include="System.IO.Hashing" Version="10.0.12" />
         <PackageVersion Include="System.Threading.RateLimiting" Version="10.0.12" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.8" />
-        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
-        <PackageVersion Include="Scalar.AspNetCore" Version="2.17.5" />
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+        <PackageVersion Include="Scalar.AspNetCore" Version="2.17.14" />
         <PackageVersion Include="BlazorBlueprint.Components" Version="4.1.0" />
         <PackageVersion Include="Humanizer" Version="3.0.10" />
         <PackageVersion Include="FluentFTP" Version="55.0.0" />
@@ -41,22 +41,22 @@
         <PackageVersion Include="Refit.HttpClientFactory" Version="13.1.0" />
         <PackageVersion Include="NUnit" Version="4.6.1" />
         <PackageVersion Include="NUnit.Analyzers" Version="4.15.0" />
-        <PackageVersion Include="NUnit3TestAdapter" Version="6.3.0" />
+        <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
         <PackageVersion Include="coverlet.collector" Version="10.1.0" />
-        <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+        <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
         <PackageVersion Include="Respawn" Version="7.0.0" />
-        <PackageVersion Include="Scriban" Version="7.4.0" />
+        <PackageVersion Include="Scriban" Version="7.5.0" />
         <PackageVersion Include="Shane32.Analyzers" Version="2.0.2" />
         <PackageVersion Include="Shouldly" Version="4.3.0" />
         <PackageVersion Include="Spectre.Console" Version="0.57.2" />
-        <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
-        <PackageVersion Include="Testcontainers" Version="4.14.0" />
-        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
-        <PackageVersion Include="Telegram.Bot" Version="22.10.3" />
-        <PackageVersion Include="Avalonia" Version="12.1.1" />
-        <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
-        <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
-        <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+        <PackageVersion Include="Spectre.Console.Cli" Version="0.57.2" />
+        <PackageVersion Include="Testcontainers" Version="4.16.0" />
+        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
+        <PackageVersion Include="Telegram.Bot" Version="22.10.3.3" />
+        <PackageVersion Include="Avalonia" Version="12.1.4" />
+        <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+        <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+        <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.4" />
     </ItemGroup>
 </Project>

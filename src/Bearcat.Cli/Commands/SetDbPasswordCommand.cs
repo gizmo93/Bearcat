@@ -7,7 +7,7 @@ namespace Bearcat.Cli.Commands;
 
 public sealed class SetDbPasswordCommand : AsyncCommand
 {
-    protected override async Task<int> ExecuteAsync(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         CancellationToken cancellationToken
     )
