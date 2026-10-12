@@ -259,6 +259,7 @@ public class ReleaseReadRepositoryDownloadLinkSearchTest(DatabaseProvider databa
         AddReleaseWithUploadedFile("Bearcat.Other.2026-GRP", "https://other.example/files/x.rar");
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
+        await UpdatePostgresPlannerStatisticsAsync(ReadDbContext);
         await LimitSqliteVariableCountPerStatementAsync(ReadDbContext, maximumVariableCount: 1020);
 
         // Act

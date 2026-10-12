@@ -94,6 +94,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
 
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
+        await UpdatePostgresPlannerStatisticsAsync(DbContext);
         await LimitSqliteVariableCountPerStatementAsync(DbContext, maximumVariableCount: 1020);
 
         // Act

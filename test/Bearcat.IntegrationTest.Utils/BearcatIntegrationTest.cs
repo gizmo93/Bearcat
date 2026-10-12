@@ -51,6 +51,16 @@ public abstract class BearcatIntegrationTest(DatabaseProvider databaseProvider)
         return dbContext;
     }
 
+    protected async Task UpdatePostgresPlannerStatisticsAsync(BearcatDbContext dbContext)
+    {
+        if (DatabaseProvider is not DatabaseProvider.Postgres)
+        {
+            return;
+        }
+
+        await dbContext.Database.ExecuteSqlRawAsync("ANALYZE");
+    }
+
     protected async Task LimitSqliteVariableCountPerStatementAsync(
         BearcatDbContext dbContext,
         int maximumVariableCount

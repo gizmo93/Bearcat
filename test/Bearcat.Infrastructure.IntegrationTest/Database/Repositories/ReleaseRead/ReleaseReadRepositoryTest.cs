@@ -639,6 +639,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
 
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
+        await UpdatePostgresPlannerStatisticsAsync(ReadDbContext);
         await LimitSqliteVariableCountPerStatementAsync(ReadDbContext, maximumVariableCount: 1020);
 
         // Act
