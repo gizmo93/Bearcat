@@ -127,7 +127,7 @@ public static class ReleaseProgressStepService
         IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads
     )
     {
-        if (release.ActiveUploadConfigsCount == 0)
+        if (release.UploadConfigsCount == 0)
         {
             return new ReleaseProgressStep(
                 ReleaseProgressStepKind.Uploaded,
@@ -149,7 +149,7 @@ public static class ReleaseProgressStepService
         {
             state = ProgressStepState.InProgress;
         }
-        else if (release.OnlineUploadConfigsCount < release.ActiveUploadConfigsCount)
+        else if (release.OnlineUploadConfigsCount < release.UploadConfigsCount)
         {
             state = ProgressStepState.Attention;
         }
@@ -157,7 +157,7 @@ public static class ReleaseProgressStepService
         return new ReleaseProgressStep(Kind: ReleaseProgressStepKind.Uploaded, State: state)
         {
             Count = release.OnlineUploadConfigsCount,
-            TotalCount = release.ActiveUploadConfigsCount,
+            TotalCount = release.UploadConfigsCount,
         };
     }
 

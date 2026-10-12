@@ -63,20 +63,20 @@
                         </div>
 
                         <div class="bearcat-collection-release-online-cell" title="@GetNotFullyOnlineSinceTitle(release)">
-                            @if (release.ActiveUploadConfigsCount == 0)
+                            @if (release.UploadConfigsCount == 0)
                             {
                                 <span class="text-xs text-muted-foreground">@L["ReleaseProgressNoUploadConfigs"]</span>
                             }
                             else
                             {
                                 <div class="bearcat-overview-online-segments" aria-hidden="true">
-                                    @for (var index = 0; index < release.ActiveUploadConfigsCount; index++)
+                                    @for (var index = 0; index < release.UploadConfigsCount; index++)
                                     {
                                         <span class="bearcat-overview-online-segment @(index < release.OnlineUploadConfigsCount ? "bearcat-overview-online-segment-online" : "bearcat-overview-online-segment-offline")"></span>
                                     }
                                 </div>
                                 <span class="text-xs tabular-nums text-muted-foreground">
-                                    @release.OnlineUploadConfigsCount/@release.ActiveUploadConfigsCount
+                                    @release.OnlineUploadConfigsCount/@release.UploadConfigsCount
                                 </span>
                             }
                         </div>

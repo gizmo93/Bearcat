@@ -21,8 +21,29 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
         CancellationToken cancellationToken
     )
     {
-        var archiveIds = await dbWrite
-            .Archives.Where(a =>
+        var mirrorDownloadHosterRegistrationIds = await GetMirrorDownloadHosterRegistrationIdsAsync(
+            cancellationToken
+        );
+
+        return await dbWrite
+            .Archives.AsSplitQuery()
+            .Include(a => a.Uploads)
+            .Include(a => a.ArchiveFiles)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.Release)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.HosterRegistration)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u =>
+                            u.UploadedFiles.Where(f =>
+                                EF.Parameter(mirrorDownloadHosterRegistrationIds)
+                                    .Contains(f.Upload.UploadConfig.HosterRegistrationId)
+                            )
+                        )
+            .Where(a =>
                 a.Id > afterArchiveId
                 && a.ArchiveState == ArchiveState.Created
                 && a.ArchiveStorageFolderId == null
@@ -40,30 +61,7 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                 )
             )
             .OrderBy(a => a.Id)
-            .Select(a => a.Id)
             .Take(maximumArchiveCount)
-            .ToListAsync(cancellationToken);
-
-        if (archiveIds.Count == 0)
-        {
-            return [];
-        }
-
-        return await dbWrite
-            .Archives.AsSplitQuery()
-            .Include(a => a.Uploads)
-            .Include(a => a.ArchiveFiles)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.Release)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.HosterRegistration)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.UploadedFiles)
-            .Where(a => archiveIds.Contains(a.Id))
-            .OrderBy(a => a.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -138,5 +136,15 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
     public void ClearChangeTracker()
     {
         dbWrite.ChangeTracker.Clear();
+    }
+
+    private async Task<List<int>> GetMirrorDownloadHosterRegistrationIdsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .HosterRegistrations.Where(h => h.IsActive && h.UseForMirrorDownloads)
+            .Select(h => h.Id)
+            .ToListAsync(cancellationToken);
     }
 }

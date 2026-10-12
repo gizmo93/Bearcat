@@ -189,7 +189,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         e01.Name.ShouldBe("Hostage.S01E01");
         e01.ReleaseType.ShouldBe(ReleaseType.Managed);
         e01.CreatedAt.ShouldBe(LastSecondOfDay.AddDays(-1).AddMilliseconds(5));
-        e01.ActiveUploadConfigsCount.ShouldBe(2);
+        e01.UploadConfigsCount.ShouldBe(2);
         e01.OnlineUploadConfigsCount.ShouldBe(2);
         e01.NotFullyOnlineSince.ShouldBe(seed.E01EarliestNotFullyOnlineSince);
         e01.LatestUploads.ShouldBe(
@@ -212,7 +212,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
 
         var e02 = result.Releases[1];
         e02.Name.ShouldBe("Hostage.S01E02");
-        e02.ActiveUploadConfigsCount.ShouldBe(2);
+        e02.UploadConfigsCount.ShouldBe(2);
         e02.OnlineUploadConfigsCount.ShouldBe(1);
         e02.NotFullyOnlineSince.ShouldBe(seed.E02NotFullyOnlineSince);
         e02.LatestUploads.ShouldBe([

@@ -172,14 +172,16 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
     }
 
     [Test]
-    public async Task GetConversionCandidatesAsync_OverdueReleaseWithUploads_LoadsUploadsWithUploadedFilesAndHosterRegistration()
+    public async Task GetConversionCandidatesAsync_OverdueReleaseWithMirrorRegistration_LoadsUploadsWithUploadedFilesAndHosterRegistration()
     {
         // Arrange
         await AddReleaseAsync(
             "Overdue",
             ReleaseType.Managed,
             uploadsPostedAt: Cutoff.AddDays(-1),
-            uploads: [(Cutoff.AddDays(-2), UploadState.Completed)]
+            uploads: [(Cutoff.AddDays(-2), UploadState.Completed)],
+            hosterRegistrationIsActive: true,
+            hosterRegistrationUseForMirrorDownloads: true
         );
 
         // Act
@@ -197,6 +199,36 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
             .HosterFileLink.ShouldBe("https://hoster.test/overdue");
     }
 
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    [TestCase(false, false)]
+    public async Task GetConversionCandidatesAsync_HosterRegistrationNotUsableForMirrorDownloads_LoadsUploadsWithoutUploadedFiles(
+        bool hosterRegistrationIsActive,
+        bool hosterRegistrationUseForMirrorDownloads
+    )
+    {
+        // Arrange
+        await AddReleaseAsync(
+            "Overdue",
+            ReleaseType.Managed,
+            uploadsPostedAt: Cutoff.AddDays(-1),
+            uploads: [(Cutoff.AddDays(-2), UploadState.Completed)],
+            hosterRegistrationIsActive: hosterRegistrationIsActive,
+            hosterRegistrationUseForMirrorDownloads: hosterRegistrationUseForMirrorDownloads
+        );
+
+        // Act
+        var result = await GetConversionCandidatesAsync();
+
+        // Assert
+        result
+            .ShouldHaveSingleItem()
+            .ArchiveConfigs.ShouldHaveSingleItem()
+            .UploadConfigs.ShouldHaveSingleItem()
+            .Uploads.ShouldHaveSingleItem()
+            .UploadedFiles.ShouldBeEmpty();
+    }
+
     private async Task<IReadOnlyList<Release>> GetConversionCandidatesAsync()
     {
         return await repository.GetConversionCandidatesAsync(
@@ -211,7 +243,9 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         string name,
         ReleaseType releaseType,
         DateTime? uploadsPostedAt,
-        IReadOnlyList<(DateTime? UploadedAt, UploadState UploadState)>? uploads = null
+        IReadOnlyList<(DateTime? UploadedAt, UploadState UploadState)>? uploads = null,
+        bool hosterRegistrationIsActive = true,
+        bool hosterRegistrationUseForMirrorDownloads = false
     )
     {
         var release = new Release
@@ -273,7 +307,8 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
                     Name = $"{name} hoster",
                     SerializedConfig = "{}",
                     HosterClassName = "Hoster",
-                    IsActive = true,
+                    IsActive = hosterRegistrationIsActive,
+                    UseForMirrorDownloads = hosterRegistrationUseForMirrorDownloads,
                 },
                 Uploads = (uploads ?? [])
                     .Select(upload => new Upload

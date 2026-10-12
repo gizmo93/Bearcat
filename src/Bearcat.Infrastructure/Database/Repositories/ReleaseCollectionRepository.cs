@@ -332,7 +332,7 @@ public class ReleaseCollectionRepository(
                 release.Name,
                 release.ReleaseType,
                 release.CreatedAt,
-                ActiveUploadConfigsCount = release.UploadConfigs.Count,
+                UploadConfigsCount = release.UploadConfigs.Count,
                 OnlineUploadConfigsCount = release
                     .UploadConfigs.Where(uploadConfig =>
                         uploadConfig.Uploads.Any(upload => upload.OnlineState == OnlineState.Online)
@@ -404,7 +404,7 @@ public class ReleaseCollectionRepository(
                         Name: release.Name,
                         ReleaseType: release.ReleaseType,
                         CreatedAt: release.CreatedAt,
-                        ActiveUploadConfigsCount: release.ActiveUploadConfigsCount,
+                        UploadConfigsCount: release.UploadConfigsCount,
                         OnlineUploadConfigsCount: release.OnlineUploadConfigsCount,
                         NotFullyOnlineSince: notFullyOnlineSinceByReleaseId.GetValueOrDefault(
                             release.Id

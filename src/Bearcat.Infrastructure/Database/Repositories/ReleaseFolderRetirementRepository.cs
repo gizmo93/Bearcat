@@ -15,8 +15,28 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
         CancellationToken cancellationToken
     )
     {
-        var releaseIds = await dbWrite
-            .Releases.Where(r =>
+        var mirrorDownloadHosterRegistrationIds = await GetMirrorDownloadHosterRegistrationIdsAsync(
+            cancellationToken
+        );
+
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+                    .ThenInclude(a => a.ArchiveFiles)
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.HosterRegistration)
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u =>
+                            u.UploadedFiles.Where(f =>
+                                EF.Parameter(mirrorDownloadHosterRegistrationIds)
+                                    .Contains(f.Upload.UploadConfig.HosterRegistrationId)
+                            )
+                        )
+            .Where(r =>
                 r.Id > afterReleaseId
                 && r.ReleaseType == ReleaseType.Managed
                 && !r.ExcludeFromAutoCleanup
@@ -42,29 +62,7 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                 )
             )
             .OrderBy(r => r.Id)
-            .Select(r => r.Id)
             .Take(maximumReleaseCount)
-            .ToListAsync(cancellationToken);
-
-        if (releaseIds.Count == 0)
-        {
-            return [];
-        }
-
-        return await dbWrite
-            .Releases.AsSplitQuery()
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.Archives)
-                    .ThenInclude(a => a.ArchiveFiles)
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.HosterRegistration)
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.UploadedFiles)
-            .Where(r => releaseIds.Contains(r.Id))
-            .OrderBy(r => r.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -76,5 +74,15 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
     public void ClearChangeTracker()
     {
         dbWrite.ChangeTracker.Clear();
+    }
+
+    private async Task<List<int>> GetMirrorDownloadHosterRegistrationIdsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .HosterRegistrations.Where(h => h.IsActive && h.UseForMirrorDownloads)
+            .Select(h => h.Id)
+            .ToListAsync(cancellationToken);
     }
 }

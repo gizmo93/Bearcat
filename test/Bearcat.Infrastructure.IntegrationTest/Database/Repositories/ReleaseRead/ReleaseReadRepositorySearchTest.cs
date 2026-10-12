@@ -122,7 +122,7 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
         result.TotalCount.ShouldBe(4);
         var countsByName = result.Items.ToDictionary(
             item => item.Name,
-            item => (item.ActiveUploadConfigsCount, item.OnlineUploadConfigsCount)
+            item => (item.UploadConfigsCount, item.OnlineUploadConfigsCount)
         );
         countsByName["Bearcat.AllOnline.2026-GRP"].ShouldBe((2, 2));
         countsByName["Bearcat.NoUploadConfigs.2026-GRP"].ShouldBe((0, 0));

@@ -152,13 +152,15 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetLocalArchivesPastRetentionAsync_OverdueArchive_LoadsUploadsWithUploadedFilesOfArchiveConfig()
+    public async Task GetLocalArchivesPastRetentionAsync_OverdueArchiveWithMirrorRegistration_LoadsUploadsWithUploadedFilesOfArchiveConfig()
     {
         // Arrange
         var archive = await AddArchiveAsync(
             "Overdue",
             uploadedAt: Cutoff.AddDays(-1),
-            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            hosterRegistrationIsActive: true,
+            hosterRegistrationUseForMirrorDownloads: true
         );
 
         // Act
@@ -178,6 +180,39 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
             .Uploads.ShouldHaveSingleItem()
             .UploadedFiles.Select(file => file.HosterFileLink)
             .ShouldBe(["https://hoster.test/1", "https://hoster.test/2"], ignoreOrder: true);
+    }
+
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    [TestCase(false, false)]
+    public async Task GetLocalArchivesPastRetentionAsync_HosterRegistrationNotUsableForMirrorDownloads_LoadsUploadsWithoutUploadedFiles(
+        bool hosterRegistrationIsActive,
+        bool hosterRegistrationUseForMirrorDownloads
+    )
+    {
+        // Arrange
+        await AddArchiveAsync(
+            "Overdue",
+            uploadedAt: Cutoff.AddDays(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            hosterRegistrationIsActive: hosterRegistrationIsActive,
+            hosterRegistrationUseForMirrorDownloads: hosterRegistrationUseForMirrorDownloads
+        );
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .ShouldHaveSingleItem()
+            .ArchiveConfig.UploadConfigs.ShouldHaveSingleItem()
+            .Uploads.ShouldHaveSingleItem()
+            .UploadedFiles.ShouldBeEmpty();
     }
 
     [TestCase(UploadState.WaitingForArchive, true)]
@@ -438,7 +473,9 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         ArchiveState archiveState = ArchiveState.Created,
         string? archiveFileFolderPath = null,
         IReadOnlyList<string>? uploadedFileLinks = null,
-        bool hasFailedUploadWithoutUploadedAt = false
+        bool hasFailedUploadWithoutUploadedAt = false,
+        bool hosterRegistrationIsActive = true,
+        bool hosterRegistrationUseForMirrorDownloads = false
     )
     {
         var archiveFolderPath = $"/archives/{name}";
@@ -473,7 +510,8 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                 Name = $"{name} hoster",
                 SerializedConfig = "{}",
                 HosterClassName = "Hoster",
-                IsActive = true,
+                IsActive = hosterRegistrationIsActive,
+                UseForMirrorDownloads = hosterRegistrationUseForMirrorDownloads,
             },
             Name = "Default upload",
         };
