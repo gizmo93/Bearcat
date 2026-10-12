@@ -2481,6 +2481,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ArchiveFileId");
 
+                    b.HasIndex("HosterFileLink");
+
                     b.HasIndex("UploadId");
 
                     b.ToTable("UploadedFiles");

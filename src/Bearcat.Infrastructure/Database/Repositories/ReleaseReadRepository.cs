@@ -62,7 +62,7 @@ public class ReleaseReadRepository(
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
         var pageIndex = Math.Max(0, query.PageIndex);
 
-        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
+        var releasesQuery = await ApplyReleaseSearchAsync(query, cancellationToken);
         var totalCount = await releasesQuery.CountAsync(cancellationToken);
 
         var releases = await ApplyReleaseSortOrder(releasesQuery, query.SortOrder)
@@ -82,7 +82,7 @@ public class ReleaseReadRepository(
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
         var pageIndex = Math.Max(0, query.PageIndex);
 
-        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
+        var releasesQuery = await ApplyReleaseSearchAsync(query, cancellationToken);
         var totalCount = await releasesQuery.CountAsync(cancellationToken);
 
         var releaseRows = await ApplyReleaseSortOrder(releasesQuery, query.SortOrder)
@@ -166,7 +166,13 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query with { OnlineState = null });
+        var releasesQuery = await ApplyReleaseSearchAsync(
+            query with
+            {
+                OnlineState = null,
+            },
+            cancellationToken
+        );
 
         var countsByOnlineState = await releasesQuery
             .GroupBy(r => r.OnlineState)
@@ -1406,6 +1412,70 @@ public class ReleaseReadRepository(
         );
     }
 
+    private async Task<IQueryable<Release>> ApplyReleaseSearchAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken
+    )
+    {
+        var releases = ApplyReleaseSearch(dbRead.Releases, query);
+        var downloadLink = SearchTextPatterns.TrimOrNullWhenEmpty(query.DownloadLink);
+
+        if (downloadLink is null)
+        {
+            return releases;
+        }
+
+        var releaseIdsWithDownloadLink = await GetReleaseIdsWithDownloadLinkAsync(
+            downloadLink,
+            cancellationToken
+        );
+
+        return releases.Where(r => EF.Parameter(releaseIdsWithDownloadLink).Contains(r.Id));
+    }
+
+    private async Task<List<int>> GetReleaseIdsWithDownloadLinkAsync(
+        string downloadLink,
+        CancellationToken cancellationToken
+    )
+    {
+        if (IsFullHttpLink(downloadLink))
+        {
+            return await dbRead
+                .UploadedFiles.Where(file => file.HosterFileLink == downloadLink)
+                .Select(file => file.Upload.UploadConfig.ReleaseId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
+        var linkContainsText = CreateLinkContainsTextPredicate(downloadLink);
+
+        return await dbRead
+            .Releases.Where(r =>
+                r.UploadConfigs.Any(config =>
+                    config.Uploads.Any(upload =>
+                        upload.UploadedFiles.AsQueryable().Any(linkContainsText)
+                    )
+                )
+            )
+            .Select(r => r.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    private Expression<Func<UploadedFile, bool>> CreateLinkContainsTextPredicate(string text)
+    {
+        var pattern = SearchTextPatterns.ToContainsPattern(text);
+
+        return dbRead.Database.IsNpgsql()
+            ? file => EF.Functions.ILike(file.HosterFileLink, pattern)
+            : file => EF.Functions.Like(file.HosterFileLink, pattern);
+    }
+
+    private static bool IsFullHttpLink(string downloadLink)
+    {
+        return downloadLink.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || downloadLink.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static IQueryable<Release> ApplyReleaseSearch(
         IQueryable<Release> releases,
         ReleaseSearchQuery query
@@ -1497,23 +1567,6 @@ public class ReleaseReadRepository(
             releases = releases.Where(r =>
                 r.PostedLocations.Any(location =>
                     EF.Functions.Like(location.Url.ToLower(), pattern)
-                )
-            );
-        }
-
-        var downloadLink = SearchTextPatterns.TrimOrNullWhenEmpty(query.DownloadLink);
-
-        if (downloadLink is not null)
-        {
-            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(downloadLink);
-
-            releases = releases.Where(r =>
-                r.UploadConfigs.Any(u =>
-                    u.Uploads.Any(upload =>
-                        upload.UploadedFiles.Any(file =>
-                            EF.Functions.Like(file.HosterFileLink.ToLower(), pattern)
-                        )
-                    )
                 )
             );
         }

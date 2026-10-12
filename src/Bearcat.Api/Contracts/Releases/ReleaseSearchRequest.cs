@@ -32,7 +32,9 @@ public record ReleaseSearchRequest
     public string? PostedLocationUrl { get; init; }
 
     /// <summary>
-    /// Only return releases that have an uploaded file whose hoster link contains this value.
+    /// Only return releases that have an uploaded file with this hoster link.
+    /// A full link starting with "http://" or "https://" must match exactly.
+    /// Any other value matches every hoster link that contains it, ignoring case.
     /// </summary>
     public string? DownloadLink { get; init; }
 
