@@ -181,7 +181,6 @@ public static class ServiceProviderConfig
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<UnreadableSecretsDetectionService>();
             services.AddScoped<UnreadableSecretsNotificationService>();
-            services.AddScoped<QueryPlannerStatisticsUpdateService>();
             services.AddSingleton<TelegramConfigurationCache>();
             services.AddSingleton<PostQueueCountCache>();
             services.AddScoped<TelegramNotificationService>();
@@ -214,6 +213,11 @@ public static class ServiceProviderConfig
                 ApplicationConfigurationProvider
             >();
             services.AddScoped<ApplicationConfigurationService>();
+        }
+
+        public void AddSqliteDomainServices()
+        {
+            services.AddScoped<QueryPlannerStatisticsUpdateService>();
         }
     }
 }

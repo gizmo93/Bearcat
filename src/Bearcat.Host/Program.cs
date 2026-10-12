@@ -87,6 +87,7 @@ if (!isOpenApiSpecOnly)
 
     if (DatabaseConfiguration.GetProvider(builder.Configuration) == DatabaseProvider.Sqlite)
     {
+        builder.Services.AddSqliteDomainServices();
         builder.Services.AddSqliteBackgroundTasks();
     }
 }
