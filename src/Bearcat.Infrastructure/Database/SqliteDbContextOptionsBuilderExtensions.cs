@@ -1,3 +1,4 @@
+using Bearcat.Infrastructure.Database.MaterializedValues;
 using EntityFramework.Exceptions.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,9 @@ public static class SqliteDbContextOptionsBuilderExtensions
     private const string MigrationsAssemblyName = "Bearcat.Infrastructure.Migrations.Sqlite";
 
     private static readonly SqliteConnectionSetupInterceptor ConnectionSetupInterceptor = new();
+
+    private static readonly MaterializedValuesSaveChangesInterceptor MaterializedValuesInterceptor =
+        new();
 
     extension(DbContextOptionsBuilder builder)
     {
@@ -21,8 +25,8 @@ public static class SqliteDbContextOptionsBuilderExtensions
                             .MigrationsAssembly(MigrationsAssemblyName)
                             .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
                 )
-                .UseExceptionProcessor()
-                .AddInterceptors(ConnectionSetupInterceptor);
+                .AddInterceptors(ConnectionSetupInterceptor, MaterializedValuesInterceptor)
+                .UseExceptionProcessor();
         }
     }
 }

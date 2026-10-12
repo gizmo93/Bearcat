@@ -169,20 +169,7 @@ public class ReleaseReadRepository(
         var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query with { OnlineState = null });
 
         var countsByOnlineState = await releasesQuery
-            .Select(r => new
-            {
-                UploadConfigsCount = r.UploadConfigs.Count,
-                OnlineUploadConfigsCount = r.UploadConfigs.Count(uc =>
-                    uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
-                ),
-            })
-            .Select(r =>
-                r.UploadConfigsCount == 0 ? OnlineState.Unknown
-                : r.OnlineUploadConfigsCount == r.UploadConfigsCount ? OnlineState.Online
-                : r.OnlineUploadConfigsCount > 0 ? OnlineState.PartiallyOnline
-                : OnlineState.Offline
-            )
-            .GroupBy(onlineState => onlineState)
+            .GroupBy(r => r.OnlineState)
             .Select(group => new { OnlineState = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.OnlineState, group => group.Count, cancellationToken);
 
@@ -1441,7 +1428,7 @@ public class ReleaseReadRepository(
 
         if (query.OnlineState is not null)
         {
-            releases = ApplyOnlineStateFilter(releases, query.OnlineState.Value);
+            releases = releases.Where(r => r.OnlineState == query.OnlineState.Value);
         }
 
         if (query.ReleaseType is not null)
@@ -1593,37 +1580,6 @@ public class ReleaseReadRepository(
                 .ThenBy(r => r.Name)
                 .ThenBy(r => r.Id),
             _ => throw new ArgumentOutOfRangeException(nameof(sortOrder), sortOrder, null),
-        };
-    }
-
-    private static IQueryable<Release> ApplyOnlineStateFilter(
-        IQueryable<Release> releases,
-        OnlineState onlineState
-    )
-    {
-        return onlineState switch
-        {
-            OnlineState.Unknown => releases.Where(r => !r.UploadConfigs.Any()),
-            OnlineState.Online => releases.Where(r =>
-                r.UploadConfigs.Any()
-                && r.UploadConfigs.Count
-                    == r.UploadConfigs.Count(uc =>
-                        uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
-                    )
-            ),
-            OnlineState.PartiallyOnline => releases.Where(r =>
-                r.UploadConfigs.Any(uc => uc.Uploads.Any(u => u.OnlineState == OnlineState.Online))
-                && r.UploadConfigs.Any(uc =>
-                    uc.Uploads.All(u => u.OnlineState != OnlineState.Online)
-                )
-            ),
-            OnlineState.Offline => releases.Where(r =>
-                r.UploadConfigs.Any()
-                && !r.UploadConfigs.Any(uc =>
-                    uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
-                )
-            ),
-            _ => releases,
         };
     }
 }

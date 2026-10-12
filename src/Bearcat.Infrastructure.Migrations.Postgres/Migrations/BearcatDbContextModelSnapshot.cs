@@ -1285,6 +1285,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int>("OnlineState")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PrimaryLanguageCode")
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)");
@@ -1321,6 +1324,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp(4) without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OnlineState");
 
                     b.HasIndex("QualityGateState");
 
@@ -2210,6 +2215,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("NotFullyOnlineSince")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<DateTime?>("OldestUploadedFileCheckedAt")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
 

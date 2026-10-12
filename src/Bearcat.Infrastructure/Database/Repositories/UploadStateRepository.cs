@@ -46,9 +46,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     && newer.Id > u.Id
                     && newer.UploadState == UploadState.Completed
                 )
-                && u.UploadedFiles.Min(f => f.CheckedAt ?? DateTime.MinValue) < lastCheckThreshold
+                && u.OldestUploadedFileCheckedAt < lastCheckThreshold
             )
-            .OrderBy(u => u.UploadedFiles.Min(f => f.CheckedAt ?? DateTime.MinValue))
+            .OrderBy(u => u.OldestUploadedFileCheckedAt)
             .ThenBy(u => u.Id)
             .Select(u => u.Id)
             .Take(maximumUploadCount)

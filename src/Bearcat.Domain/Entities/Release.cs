@@ -26,6 +26,8 @@ public class Release
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 
+    public OnlineState OnlineState { get; private set; } = OnlineState.Unknown;
+
     public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
 
     public List<PostedLocation> PostedLocations { get; set; } = [];

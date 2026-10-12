@@ -1,6 +1,5 @@
-using Bearcat.Domain.UseCases.Dashboard.ReadModels;
+﻿using Bearcat.Domain.UseCases.Dashboard.ReadModels;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
-using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -56,45 +55,22 @@ public class DashboardReadRepository(IBearcatReadDbContext dbRead) : IDashboardR
         CancellationToken cancellationToken = default
     )
     {
-        var releases = await dbRead
-            .Releases.Select(release => new
-            {
-                ActiveUploadConfigsCount = release.UploadConfigs.Count,
-                OnlineUploadConfigsCount = release
-                    .UploadConfigs.Where(uploadConfig =>
-                        uploadConfig.Uploads.Any(upload => upload.OnlineState == OnlineState.Online)
-                    )
-                    .Distinct()
-                    .Count(),
-            })
+        var releaseCountPerOnlineState = await dbRead
+            .Releases.GroupBy(release => release.OnlineState)
+            .Select(group => new { OnlineState = group.Key, ReleaseCount = group.Count() })
+            .OrderBy(count => count.OnlineState)
             .ToListAsync(cancellationToken);
 
-        var counts = releases
-            .GroupBy(release =>
-                GetOnlineState(release.ActiveUploadConfigsCount, release.OnlineUploadConfigsCount)
-            )
-            .Select(group => new ReleaseOnlineStateCountReadModel(group.Key, group.Count()))
-            .OrderBy(count => count.OnlineState)
+        var counts = releaseCountPerOnlineState
+            .Select(count => new ReleaseOnlineStateCountReadModel(
+                count.OnlineState,
+                count.ReleaseCount
+            ))
             .ToList();
 
-        return new ReleaseOnlineStateSummaryReadModel(releases.Count, counts);
-    }
-
-    private static OnlineState GetOnlineState(
-        int activeUploadConfigsCount,
-        int onlineUploadConfigsCount
-    )
-    {
-        if (activeUploadConfigsCount == 0)
-        {
-            return OnlineState.Unknown;
-        }
-
-        if (activeUploadConfigsCount == onlineUploadConfigsCount)
-        {
-            return OnlineState.Online;
-        }
-
-        return onlineUploadConfigsCount > 0 ? OnlineState.PartiallyOnline : OnlineState.Offline;
+        return new ReleaseOnlineStateSummaryReadModel(
+            counts.Sum(count => count.ReleaseCount),
+            counts
+        );
     }
 }

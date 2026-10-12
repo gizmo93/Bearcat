@@ -113,6 +113,51 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_OnlineUploadWithoutUploadedFiles_ReturnsNoUpload()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync("Hoster", isActive: true);
+        await AddUploadAsync(await AddUploadConfigAsync(registration), fileCheckedAts: []);
+
+        // Act
+        var result = await GetLeastRecentlyCheckedUploadsToCheckAsync(registration.Id);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_SeveralUploadsWithNeverCheckedFiles_ReturnsTheOnesWithLowestIdsBeforeCheckedUploads()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync("Hoster", isActive: true);
+        await AddUploadAsync(
+            await AddUploadConfigAsync(registration),
+            fileCheckedAts: [LocalNow.AddHours(-5)]
+        );
+        var firstNeverCheckedUpload = await AddUploadAsync(
+            await AddUploadConfigAsync(registration),
+            fileCheckedAts: [LocalNow.AddHours(-1), null]
+        );
+        var secondNeverCheckedUpload = await AddUploadAsync(
+            await AddUploadConfigAsync(registration),
+            fileCheckedAts: [null]
+        );
+        await AddUploadAsync(await AddUploadConfigAsync(registration), fileCheckedAts: [null]);
+
+        // Act
+        var result = await GetLeastRecentlyCheckedUploadsToCheckAsync(
+            registration.Id,
+            maximumUploadCount: 2
+        );
+
+        // Assert
+        result
+            .Select(upload => upload.Id)
+            .ShouldBe([firstNeverCheckedUpload.Id, secondNeverCheckedUpload.Id]);
+    }
+
+    [Test]
     public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_OlderUploadSupersededByNewerCompletedUpload_ReturnsOnlyNewerUpload()
     {
         // Arrange

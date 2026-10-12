@@ -470,7 +470,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
                         UploadedFiles = [],
                     }
                 );
-                dbContext.SaveChanges();
+                dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             });
         SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
 

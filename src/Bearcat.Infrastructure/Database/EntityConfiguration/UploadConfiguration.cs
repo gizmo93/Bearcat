@@ -20,6 +20,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         builder.Property(u => u.FullyOfflineSince).IsRequired(false).HasPrecision(4);
         builder.Property(u => u.PremiumOnlyDownload).IsRequired();
         builder.Property(u => u.ErrorMessages);
+        builder.Property(u => u.OldestUploadedFileCheckedAt).IsRequired(false).HasPrecision(4);
 
         builder.HasIndex(u => new { u.UploadState, u.OnlineState });
         builder.HasIndex(u => new
