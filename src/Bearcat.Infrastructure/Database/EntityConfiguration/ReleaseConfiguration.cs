@@ -26,6 +26,8 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
 
         builder.HasIndex(r => r.ReleaseFolderPath);
         builder.HasIndex(r => r.QualityGateState);
+        builder.HasIndex(r => new { r.CreatedAt, r.Id }).IsDescending();
+        builder.HasIndex(r => new { r.Name, r.Id });
 
         builder
             .HasMany(r => r.ArchiveConfigs)

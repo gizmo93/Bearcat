@@ -15,7 +15,7 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
             modelBuilder.Entity("ArchiveConfigAdditionalArchiveContents", b =>
                 {
@@ -155,6 +155,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("ArchiveConfigId");
 
                     b.HasIndex("ArchiveStorageFolderId");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
 
                     b.ToTable("Archives");
                 });
@@ -1263,6 +1266,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("ReleaseGroupId");
 
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("Name", "Id");
+
                     b.ToTable("Releases");
                 });
 
@@ -2121,9 +2129,16 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("ArchiveId");
 
-                    b.HasIndex("UploadConfigId");
+                    b.HasIndex("UploadedAt");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("UploadConfigId", "OnlineState");
 
                     b.HasIndex("UploadState", "OnlineState");
+
+                    b.HasIndex("UploadConfigId", "UploadState", "UploadedAt");
 
                     b.ToTable("Uploads");
                 });

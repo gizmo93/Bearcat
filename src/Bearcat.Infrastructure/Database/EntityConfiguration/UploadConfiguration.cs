@@ -22,6 +22,15 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         builder.Property(u => u.ErrorMessages);
 
         builder.HasIndex(u => new { u.UploadState, u.OnlineState });
+        builder.HasIndex(u => new
+        {
+            u.UploadConfigId,
+            u.UploadState,
+            u.UploadedAt,
+        });
+        builder.HasIndex(u => new { u.UploadConfigId, u.OnlineState });
+        builder.HasIndex(u => new { u.CreatedAt, u.Id }).IsDescending();
+        builder.HasIndex(u => u.UploadedAt);
 
         builder
             .HasMany(u => u.UploadedFiles)

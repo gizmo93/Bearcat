@@ -34,6 +34,7 @@ All tasks are enabled by default.
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
+| SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. |
 
 ## Configurations
 
@@ -209,6 +210,7 @@ SQLite notes:
 - Keep the SQLite database on local storage. Network shares (NFS/SMB) are unsuitable for its WAL mode.
 - Back up the database together with `bearcat.key` from the data directory. Stop Bearcat before copying.
   For a backup while Bearcat is running, use `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
+- The **SQLite query planner statistics** task keeps query statistics up to date. PostgreSQL does this itself.
 
 Changing `Database:Provider` does not transfer existing data. A new database starts empty.
 Without `Database:Provider`, Bearcat uses PostgreSQL so older configurations keep working.

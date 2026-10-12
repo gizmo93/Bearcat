@@ -84,6 +84,11 @@ if (!isRunningInContainer)
 if (!isOpenApiSpecOnly)
 {
     builder.Services.AddApplication();
+
+    if (DatabaseConfiguration.GetProvider(builder.Configuration) == DatabaseProvider.Sqlite)
+    {
+        builder.Services.AddSqliteBackgroundTasks();
+    }
 }
 
 builder.Services.AddInfrastructure(builder.Configuration);

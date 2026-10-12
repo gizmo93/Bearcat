@@ -68,6 +68,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -179,6 +180,7 @@ public static class ServiceProviderConfig
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<UnreadableSecretsDetectionService>();
             services.AddScoped<UnreadableSecretsNotificationService>();
+            services.AddScoped<QueryPlannerStatisticsUpdateService>();
             services.AddSingleton<TelegramConfigurationCache>();
             services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
