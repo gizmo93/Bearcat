@@ -10,23 +10,15 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
 {
     public async Task<IReadOnlyList<Release>> GetConversionCandidatesAsync(
         DateTime cutoff,
+        int afterReleaseId,
+        int maximumReleaseCount,
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
-            .Releases.AsSplitQuery()
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.Archives)
-                    .ThenInclude(a => a.ArchiveFiles)
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.HosterRegistration)
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.UploadedFiles)
-            .Where(r =>
-                r.ReleaseType == ReleaseType.Managed
+        var releaseIds = await dbWrite
+            .Releases.Where(r =>
+                r.Id > afterReleaseId
+                && r.ReleaseType == ReleaseType.Managed
                 && !r.ExcludeFromAutoCleanup
                 && r.ReleaseFolderPath != null
                 && (
@@ -50,11 +42,39 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                 )
             )
             .OrderBy(r => r.Id)
+            .Select(r => r.Id)
+            .Take(maximumReleaseCount)
+            .ToListAsync(cancellationToken);
+
+        if (releaseIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+                    .ThenInclude(a => a.ArchiveFiles)
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.HosterRegistration)
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u => u.UploadedFiles)
+            .Where(r => releaseIds.Contains(r.Id))
+            .OrderBy(r => r.Id)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    public void ClearChangeTracker()
+    {
+        dbWrite.ChangeTracker.Clear();
     }
 }

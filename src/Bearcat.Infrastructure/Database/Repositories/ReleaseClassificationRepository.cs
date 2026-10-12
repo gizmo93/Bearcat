@@ -23,7 +23,7 @@ public class ReleaseClassificationRepository(IBearcatWriteDbContext dbWrite)
     public async Task<IReadOnlyList<Release>> GetReleasesNeedingClassificationAsync(
         int count,
         int parserVersion,
-        HashSet<int> excludedReleaseIds,
+        int afterReleaseId,
         CancellationToken cancellationToken = default
     )
     {
@@ -32,7 +32,7 @@ public class ReleaseClassificationRepository(IBearcatWriteDbContext dbWrite)
             .Include(release => release.Classification)
             .Include(release => release.ReleaseInfo)
             .Include(release => release.ReleaseNfo)
-            .Where(release => !excludedReleaseIds.Contains(release.Id))
+            .Where(release => release.Id > afterReleaseId)
             .Where(release =>
                 release.Classification == null
                 || release.Classification.ParserVersion < parserVersion

@@ -30,7 +30,9 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         });
         builder.HasIndex(u => new { u.UploadConfigId, u.OnlineState });
         builder.HasIndex(u => new { u.CreatedAt, u.Id }).IsDescending();
-        builder.HasIndex(u => u.UploadedAt);
+        builder
+            .HasIndex(u => u.UploadedAt)
+            .HasFilter($"\"{nameof(Upload.UploadedAt)}\" IS NOT NULL");
 
         builder
             .HasMany(u => u.UploadedFiles)

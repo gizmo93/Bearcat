@@ -25,19 +25,30 @@ public partial class ReleaseCollectionInfoResolutionService(
         CancellationToken cancellationToken = default
     )
     {
-        var seenCollectionIds = new HashSet<int>();
         var totalResolvedCount = 0;
         var hasCollectionsWithoutMetadata = true;
+        DateTime? afterCreatedAt = null;
+        var afterCollectionId = 0;
 
         while (hasCollectionsWithoutMetadata)
         {
-            var (foundCollections, resolvedCount) = await ResolveBatchAsync(
-                seenCollectionIds: seenCollectionIds,
+            var collections = await repository.GetCollectionsWithoutMetadataAsync(
+                count: MissingCollectionBatchSize,
+                lastCheckedThreshold: timeProvider.GetLocalNow() - lastCheckedThreshold,
+                afterCreatedAt: afterCreatedAt,
+                afterCollectionId: afterCollectionId,
                 cancellationToken: cancellationToken
             );
 
-            hasCollectionsWithoutMetadata = foundCollections;
-            totalResolvedCount += resolvedCount;
+            totalResolvedCount += await ResolveBatchAsync(collections, cancellationToken);
+
+            hasCollectionsWithoutMetadata = collections.Count > 0;
+
+            if (hasCollectionsWithoutMetadata)
+            {
+                afterCreatedAt = collections[^1].CreatedAt;
+                afterCollectionId = collections[^1].Id;
+            }
         }
 
         return totalResolvedCount;
@@ -72,27 +83,16 @@ public partial class ReleaseCollectionInfoResolutionService(
         return resolved;
     }
 
-    private async Task<(bool FoundCollections, int ResolvedCount)> ResolveBatchAsync(
-        HashSet<int> seenCollectionIds,
+    private async Task<int> ResolveBatchAsync(
+        IReadOnlyList<ReleaseCollection> collections,
         CancellationToken cancellationToken
     )
     {
-        var lastCheckedThresholdDate = timeProvider.GetLocalNow() - lastCheckedThreshold;
-
-        var collections = await repository.GetCollectionsWithoutMetadataAsync(
-            count: MissingCollectionBatchSize,
-            lastCheckedThreshold: lastCheckedThresholdDate,
-            excludedCollectionIds: seenCollectionIds,
-            cancellationToken: cancellationToken
-        );
-
         var resolvedCount = 0;
 
         foreach (var collection in collections)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            seenCollectionIds.Add(collection.Id);
 
             var resolved = await TryResolveAsync(
                 collection,
@@ -109,7 +109,7 @@ public partial class ReleaseCollectionInfoResolutionService(
             await SaveChangesSafelyAsync(collection, cancellationToken);
         }
 
-        return (FoundCollections: collections.Count > 0, ResolvedCount: resolvedCount);
+        return resolvedCount;
     }
 
     private async Task<bool> TryResolveAsync(

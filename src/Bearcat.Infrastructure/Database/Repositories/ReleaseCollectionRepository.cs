@@ -17,6 +17,8 @@ public class ReleaseCollectionRepository(
     IMediaMetadataDatabaseFactory metadataDatabaseFactory
 ) : IReleaseCollectionReadRepository, IReleaseCollectionWriteRepository
 {
+    private const int MaximumIdsPerQuery = 1000;
+
     private readonly Expression<Func<ReleaseCollection, bool>> isReadyForPostQueue = c =>
         c.Releases.Any(r =>
             r.UploadConfigs.Any(uc =>
@@ -451,47 +453,55 @@ public class ReleaseCollectionRepository(
             return [];
         }
 
-        var openCollectionIds = openCollections.Select(c => c.Id).ToList();
+        var latestSlotUploads = new List<PostQueueLatestSlotUpload>();
+        var slotContainers = new List<PostQueueSlotContainer>();
 
-        var latestSlotUploads = await dbRead
-            .Uploads.Where(u =>
-                u.UploadConfig.CollectionUploadSlotId != null
-                && openCollectionIds.Contains(
-                    u.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId
-                )
-            )
-            .GroupBy(u => u.UploadConfigId)
-            .Select(g =>
-                g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
-                    .ThenByDescending(u => u.Id)
-                    .Select(u => new
-                    {
-                        ReleaseCollectionId = u.UploadConfig
-                            .CollectionUploadSlot!
-                            .ReleaseCollectionId,
-                        SlotId = u.UploadConfig.CollectionUploadSlotId!.Value,
-                        SlotName = u.UploadConfig.CollectionUploadSlot!.Name,
-                        HosterRegistrationName = u.UploadConfig.HosterRegistration.Name,
-                        LinkCount = u.UploadedFiles.Count,
-                    })
-                    .First()
-            )
-            .ToListAsync(cancellationToken);
+        foreach (
+            var openCollectionIdChunk in openCollections.Select(c => c.Id).Chunk(MaximumIdsPerQuery)
+        )
+        {
+            latestSlotUploads.AddRange(
+                await dbRead
+                    .Uploads.Where(u =>
+                        u.UploadConfig.CollectionUploadSlotId != null
+                        && openCollectionIdChunk.Contains(
+                            u.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId
+                        )
+                    )
+                    .GroupBy(u => u.UploadConfigId)
+                    .Select(g =>
+                        g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                            .ThenByDescending(u => u.Id)
+                            .Select(u => new PostQueueLatestSlotUpload(
+                                u.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId,
+                                u.UploadConfig.CollectionUploadSlotId!.Value,
+                                u.UploadConfig.CollectionUploadSlot!.Name,
+                                u.UploadConfig.HosterRegistration.Name,
+                                u.UploadedFiles.Count
+                            ))
+                            .First()
+                    )
+                    .ToListAsync(cancellationToken)
+            );
 
-        var slotContainers = await dbRead
-            .LinkCrypterContainers.Where(c =>
-                c.Scope == LinkCrypterContainerScope.ReleaseCollection
-                && c.CollectionUploadSlotId != null
-                && openCollectionIds.Contains(c.CollectionUploadSlot!.ReleaseCollectionId)
-            )
-            .Select(c => new
-            {
-                ReleaseCollectionId = c.CollectionUploadSlot!.ReleaseCollectionId,
-                SlotId = c.CollectionUploadSlotId!.Value,
-                SlotName = c.CollectionUploadSlot!.Name,
-                LinkCrypterRegistrationName = c.LinkCrypterRegistration.Name,
-            })
-            .ToListAsync(cancellationToken);
+            slotContainers.AddRange(
+                await dbRead
+                    .LinkCrypterContainers.Where(c =>
+                        c.Scope == LinkCrypterContainerScope.ReleaseCollection
+                        && c.CollectionUploadSlotId != null
+                        && openCollectionIdChunk.Contains(
+                            c.CollectionUploadSlot!.ReleaseCollectionId
+                        )
+                    )
+                    .Select(c => new PostQueueSlotContainer(
+                        c.CollectionUploadSlot!.ReleaseCollectionId,
+                        c.CollectionUploadSlotId!.Value,
+                        c.CollectionUploadSlot!.Name,
+                        c.LinkCrypterRegistration.Name
+                    ))
+                    .ToListAsync(cancellationToken)
+            );
+        }
 
         var hostersBySlot = latestSlotUploads
             .GroupBy(u => new
@@ -895,4 +905,19 @@ public class ReleaseCollectionRepository(
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
+
+    private sealed record PostQueueLatestSlotUpload(
+        int ReleaseCollectionId,
+        int SlotId,
+        string SlotName,
+        string HosterRegistrationName,
+        int LinkCount
+    );
+
+    private sealed record PostQueueSlotContainer(
+        int ReleaseCollectionId,
+        int SlotId,
+        string SlotName,
+        string LinkCrypterRegistrationName
+    );
 }

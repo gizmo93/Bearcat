@@ -111,6 +111,8 @@ container, for example for a TV season.
 ## 6. Online checks
 
 Bearcat checks uploaded files regularly, at intervals of at least 30 minutes.
+Each run checks up to 100 uploads per hoster registration, starting with the uploads checked longest ago.
+With many uploads on one hoster registration, a full round can take longer than 30 minutes.
 
 | Online state | Meaning |
 | --- | --- |
@@ -138,6 +140,8 @@ Bearcat creates an automatic reupload when all of these conditions are met:
 
 A replacement upload blocks another reupload if it is `Online` or has the state `Pending`,
 `Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
+
+Each run creates up to 100 automatic reuploads. Further due reuploads follow in the next runs.
 
 When a reupload is due, Bearcat creates a new upload record for the same upload configuration:
 

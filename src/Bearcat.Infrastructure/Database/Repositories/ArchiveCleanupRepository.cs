@@ -16,24 +16,15 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
 
     public async Task<IReadOnlyList<Archive>> GetLocalArchivesPastRetentionAsync(
         DateTime cutoff,
+        int afterArchiveId,
+        int maximumArchiveCount,
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
-            .Archives.AsSplitQuery()
-            .Include(a => a.Uploads)
-            .Include(a => a.ArchiveFiles)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.Release)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.HosterRegistration)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.UploadedFiles)
-            .Where(a =>
-                a.ArchiveState == ArchiveState.Created
+        var archiveIds = await dbWrite
+            .Archives.Where(a =>
+                a.Id > afterArchiveId
+                && a.ArchiveState == ArchiveState.Created
                 && a.ArchiveStorageFolderId == null
                 && a.Uploads.Any()
                 && a.Uploads.All(u => u.UploadedAt != null)
@@ -48,6 +39,30 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                     && WaitingPendingOrUploadingStates.Contains(u.UploadState)
                 )
             )
+            .OrderBy(a => a.Id)
+            .Select(a => a.Id)
+            .Take(maximumArchiveCount)
+            .ToListAsync(cancellationToken);
+
+        if (archiveIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await dbWrite
+            .Archives.AsSplitQuery()
+            .Include(a => a.Uploads)
+            .Include(a => a.ArchiveFiles)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.Release)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.HosterRegistration)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u => u.UploadedFiles)
+            .Where(a => archiveIds.Contains(a.Id))
             .OrderBy(a => a.Id)
             .ToListAsync(cancellationToken);
     }
@@ -118,5 +133,10 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    public void ClearChangeTracker()
+    {
+        dbWrite.ChangeTracker.Clear();
     }
 }

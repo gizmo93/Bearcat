@@ -146,6 +146,30 @@ public class AutoForumPostingRunnerTest
     }
 
     [Test]
+    public async Task RunAsync_MoreQueuedReleasesThanOneBatch_PlansReleasesInBatchesOfFiveHundred()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = Enumerable
+                .Range(1, 1001)
+                .Select(id =>
+                    AutoPostTestFactory.Release(id: id, qualityGateState: QualityGateState.Failed)
+                )
+                .ToList(),
+            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
+        };
+        var runner = RunnerWith(repository, new FakeForumPostSubmitter());
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.PostedCount.ShouldBe(0);
+        repository.PlanningRoundCount.ShouldBe(3);
+    }
+
+    [Test]
     public async Task RunAsync_SuccessfulPost_PlansOnceUpFrontAndOnceAfterPosting()
     {
         // Arrange

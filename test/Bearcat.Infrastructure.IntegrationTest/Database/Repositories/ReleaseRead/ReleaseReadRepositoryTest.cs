@@ -492,6 +492,73 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetPostQueueAsync_MoreQueuedReleasesThanSqliteVariablesPerStatement_ReturnsAllQueuedReleases()
+    {
+        // Arrange
+        const int queuedReleaseCount = 1050;
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Queued releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Queued hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "ExampleHoster",
+            IsActive = true,
+        };
+
+        foreach (var releaseNumber in Enumerable.Range(1, queuedReleaseCount))
+        {
+            var release = new Release
+            {
+                Name = $"Bearcat.Queued.{releaseNumber:0000}.2026-GRP",
+                CreatedAt = DateTime.UtcNow,
+                ReleaseType = ReleaseType.Managed,
+                ReleaseFolderPath = $"/tmp/queued-{releaseNumber}",
+                ReleaseGroup = releaseGroup,
+            };
+            DbContext.Add(
+                new Upload
+                {
+                    UploadConfig = new UploadConfig
+                    {
+                        Release = release,
+                        ArchiveConfig = new ArchiveConfig
+                        {
+                            Release = release,
+                            Name = "Archive",
+                            ArchiveFilesBasePath = "/tmp/archives",
+                            ArchiverName = "RarArchiver",
+                            ArchiveFileSizeMb = 100,
+                        },
+                        HosterRegistration = hosterRegistration,
+                        Name = "Upload",
+                    },
+                    CreatedAt = DateTime.UtcNow.AddMinutes(-10),
+                    UploadedAt = DateTime.UtcNow.AddMinutes(-10),
+                    UploadState = UploadState.Completed,
+                    OnlineState = OnlineState.Online,
+                    UploadedFiles = [],
+                }
+            );
+        }
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        await LimitSqliteVariableCountPerStatementAsync(ReadDbContext, maximumVariableCount: 1020);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(queuedReleaseCount);
+        result.ShouldAllBe(item => item.ArchiveGroups.Count == 1);
+    }
+
+    [Test]
     public async Task GetPostQueueAsync_AllActiveConfigsLatestCompleted_ShowsRelease()
     {
         // Arrange

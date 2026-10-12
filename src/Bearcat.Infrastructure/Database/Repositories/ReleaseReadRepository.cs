@@ -429,7 +429,7 @@ public class ReleaseReadRepository(
         var latestUploads = await dbRead
             .Uploads.Where(u =>
                 u.UploadConfig.CollectionUploadSlotId == null
-                && openReleaseIds.Contains(u.UploadConfig.ReleaseId)
+                && EF.Parameter(openReleaseIds).Contains(u.UploadConfig.ReleaseId)
             )
             .GroupBy(u => u.UploadConfigId)
             .Select(g =>
@@ -453,7 +453,7 @@ public class ReleaseReadRepository(
             .LinkCrypterContainers.Where(c =>
                 c.Scope == LinkCrypterContainerScope.Release
                 && c.UploadId != null
-                && uploadIds.Contains(c.UploadId.Value)
+                && EF.Parameter(uploadIds).Contains(c.UploadId.Value)
             )
             .Select(c => new
             {

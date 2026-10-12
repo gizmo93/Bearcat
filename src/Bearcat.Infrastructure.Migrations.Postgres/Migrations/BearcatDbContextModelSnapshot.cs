@@ -2233,7 +2233,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ArchiveId");
 
-                    b.HasIndex("UploadedAt");
+                    b.HasIndex("UploadedAt")
+                        .HasFilter("\"UploadedAt\" IS NOT NULL");
 
                     b.HasIndex("CreatedAt", "Id")
                         .IsDescending();

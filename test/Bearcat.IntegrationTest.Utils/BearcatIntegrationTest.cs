@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Infrastructure.Database;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 
@@ -48,6 +49,25 @@ public abstract class BearcatIntegrationTest(DatabaseProvider databaseProvider)
         dbContexts.Add(dbContext);
 
         return dbContext;
+    }
+
+    protected async Task LimitSqliteVariableCountPerStatementAsync(
+        BearcatDbContext dbContext,
+        int maximumVariableCount
+    )
+    {
+        if (DatabaseProvider is not DatabaseProvider.Sqlite)
+        {
+            return;
+        }
+
+        await dbContext.Database.OpenConnectionAsync();
+        var connection = (SqliteConnection)dbContext.Database.GetDbConnection();
+        SQLitePCL.raw.sqlite3_limit(
+            connection.Handle,
+            SQLitePCL.raw.SQLITE_LIMIT_VARIABLE_NUMBER,
+            maximumVariableCount
+        );
     }
 
     protected static IApplicationConfigurationProvider CreateNotificationConfigurationProvider() =>

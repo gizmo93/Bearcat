@@ -7,7 +7,8 @@ public interface IReleaseCollectionInfoRepository
     Task<IReadOnlyList<ReleaseCollection>> GetCollectionsWithoutMetadataAsync(
         int count,
         DateTime lastCheckedThreshold,
-        HashSet<int> excludedCollectionIds,
+        DateTime? afterCreatedAt,
+        int afterCollectionId,
         CancellationToken cancellationToken = default
     );
 
