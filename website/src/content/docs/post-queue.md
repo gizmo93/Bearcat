@@ -14,9 +14,7 @@ still need posting.
 
 ![post-queue-badge.png](images/post-queue-badge.png)
 
-The badge disappears when all entries are done. Bearcat counts the entries at most every 15 seconds and
-shares the count between all open browser tabs. After **Mark as posted**, the badge shows the new count
-within 15 seconds.
+The badge disappears when all entries are done.
 
 ![post-queue-page.png](images/post-queue-page.png)
 
