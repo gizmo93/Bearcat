@@ -518,13 +518,25 @@ public class ReleaseReadRepository(
     }
 
     public async Task<
-        IReadOnlyList<ReleaseQualityIssueQueueItemReadModel>
-    > GetQualityIssuesQueueAsync(CancellationToken cancellationToken = default)
+        PagedResult<ReleaseQualityIssueQueueItemReadModel>
+    > GetQualityIssuesQueueAsync(
+        ReleaseQualityIssueQueueSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbRead
-            .Releases.Where(r => r.QualityGateState == QualityGateState.Failed)
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        var pageIndex = Math.Max(0, query.PageIndex);
+        var failedReleasesQuery = dbRead.Releases.Where(r =>
+            r.QualityGateState == QualityGateState.Failed
+        );
+
+        var totalCount = await failedReleasesQuery.CountAsync(cancellationToken);
+
+        var items = await failedReleasesQuery
             .OrderBy(r => r.Name)
             .ThenBy(r => r.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
             .Select(r => new ReleaseQualityIssueQueueItemReadModel(
                 r.Id,
                 r.Name,
@@ -533,6 +545,13 @@ public class ReleaseReadRepository(
                 r.QualityIssues.Select(issue => issue.Description).ToList()
             ))
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<ReleaseQualityIssueQueueItemReadModel>(
+            items,
+            totalCount,
+            pageIndex,
+            pageSize
+        );
     }
 
     public async Task<int> CountQualityIssuesQueueAsync(

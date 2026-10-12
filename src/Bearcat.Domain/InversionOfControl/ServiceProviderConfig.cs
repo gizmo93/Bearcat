@@ -7,6 +7,7 @@ using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.Shared.Transfers;
@@ -182,6 +183,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UnreadableSecretsNotificationService>();
             services.AddScoped<QueryPlannerStatisticsUpdateService>();
             services.AddSingleton<TelegramConfigurationCache>();
+            services.AddSingleton<PostQueueCountCache>();
             services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<HosterCredentialsRejectionService>();

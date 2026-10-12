@@ -46,7 +46,8 @@ public interface IReleaseReadRepository
 
     Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ReleaseQualityIssueQueueItemReadModel>> GetQualityIssuesQueueAsync(
+    Task<PagedResult<ReleaseQualityIssueQueueItemReadModel>> GetQualityIssuesQueueAsync(
+        ReleaseQualityIssueQueueSearchQuery query,
         CancellationToken cancellationToken = default
     );
 

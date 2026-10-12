@@ -121,12 +121,103 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetQualityIssuesQueueAsync(CancellationToken.None);
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(),
+            CancellationToken.None
+        );
         var count = await repository.CountQualityIssuesQueueAsync(CancellationToken.None);
 
         // Assert
-        result.Select(r => r.ReleaseId).ShouldBe([managedRelease.Id, unmanagedRelease.Id]);
+        result.Items.Select(r => r.ReleaseId).ShouldBe([managedRelease.Id, unmanagedRelease.Id]);
+        result.TotalCount.ShouldBe(2);
         count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetQualityIssuesQueueAsync_SecondPage_ReturnsReleasesOfSecondPageOrderedByNameAndTotalCountOfAllFailedReleases()
+    {
+        // Arrange
+        var failedReleaseIdsByName = new Dictionary<string, int>();
+
+        foreach (
+            var name in new[] { "Delta", "Alpha", "Foxtrot", "Charlie", "Echo", "Bravo", "Golf" }
+        )
+        {
+            var release = await AddReleaseAsync($"Bearcat.{name}.2026-GRP");
+            release.QualityGateState = QualityGateState.Failed;
+            release.QualityIssues.Add(
+                new ReleaseQualityIssue
+                {
+                    RuleType = QualityCheckRuleType.RequiredReleaseInfo,
+                    Description = $"{name} NFO is missing",
+                }
+            );
+            failedReleaseIdsByName[name] = release.Id;
+        }
+
+        var passedRelease = await AddReleaseAsync("Bearcat.Aaa.2026-GRP");
+        passedRelease.QualityGateState = QualityGateState.Passed;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(PageIndex: 1, PageSize: 5),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(7);
+        result.TotalPages.ShouldBe(2);
+        result.PageIndex.ShouldBe(1);
+        result.PageSize.ShouldBe(5);
+        result
+            .Items.Select(r => r.ReleaseId)
+            .ShouldBe([failedReleaseIdsByName["Foxtrot"], failedReleaseIdsByName["Golf"]]);
+        result.Items[0].ReleaseName.ShouldBe("Bearcat.Foxtrot.2026-GRP");
+        result.Items[0].ReleaseGroupName.ShouldBe("Bearcat.Foxtrot.2026-GRP group");
+        result.Items[0].Issues.ShouldBe(["Foxtrot NFO is missing"]);
+    }
+
+    [Test]
+    public async Task GetQualityIssuesQueueAsync_PageSizeOutOfRangeAndNegativePageIndex_ClampsPaging()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Alpha.2026-GRP");
+        release.QualityGateState = QualityGateState.Failed;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(PageIndex: -1, PageSize: 1000),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.PageIndex.ShouldBe(0);
+        result.PageSize.ShouldBe(100);
+        result.Items.Select(r => r.ReleaseId).ShouldBe([release.Id]);
+    }
+
+    [Test]
+    public async Task GetQualityIssuesQueueAsync_NoFailedRelease_ReturnsEmptyPage()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Passed.2026-GRP");
+        release.QualityGateState = QualityGateState.Passed;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Items.ShouldBeEmpty();
+        result.TotalCount.ShouldBe(0);
     }
 
     [Test]

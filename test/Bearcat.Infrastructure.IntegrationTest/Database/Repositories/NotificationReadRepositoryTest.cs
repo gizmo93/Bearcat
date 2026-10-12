@@ -90,7 +90,7 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetLatestUnresolvedAsync_CloseTimestamps_ReturnsNewestUnresolvedByCreatedAtThenId()
+    public async Task GetLatestUnresolvedAsync_CloseTimestamps_ReturnsNewestUnresolvedById()
     {
         // Arrange
         await using var dbContext = Database.CreateDbContext();
@@ -122,6 +122,73 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
         result.Select(notification => notification.Message).ShouldBe(["Third", "Second", "First"]);
         result[1].CreatedAt.ShouldBe(new DateTime(2026, 9, 4, 10, 0, 0, 500, DateTimeKind.Utc));
         result.ShouldAllBe(notification => notification.ResolvedAt == null);
+    }
+
+    [Test]
+    public async Task GetLatestUnresolvedAsync_LaterInsertedNotificationHasEarlierCreatedAt_ReturnsLaterInsertedNotificationFirst()
+    {
+        // Arrange
+        await using var dbContext = Database.CreateDbContext();
+        dbContext.Notifications.Add(
+            CreateNotification("Inserted first", new DateTime(2026, 10, 25, 2, 30, 0))
+        );
+        await dbContext.SaveChangesAsync();
+        dbContext.Notifications.Add(
+            CreateNotification("Inserted second", new DateTime(2026, 10, 25, 2, 10, 0))
+        );
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+        var repository = new NotificationReadRepository(dbContext);
+
+        // Act
+        var result = await repository.GetLatestUnresolvedAsync(5, CancellationToken.None);
+
+        // Assert
+        result
+            .Select(notification => notification.Message)
+            .ShouldBe(["Inserted second", "Inserted first"]);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task Search_LaterInsertedNotificationHasEarlierCreatedAt_ReturnsNotificationsByIdDescending(
+        bool includeResolved
+    )
+    {
+        // Arrange
+        await using var dbContext = Database.CreateDbContext();
+        dbContext.Notifications.Add(
+            CreateNotification("Inserted first", new DateTime(2026, 10, 25, 2, 30, 0))
+        );
+        await dbContext.SaveChangesAsync();
+        dbContext.Notifications.Add(
+            CreateNotification(
+                "Inserted second",
+                new DateTime(2026, 10, 25, 2, 10, 0),
+                resolvedAt: new DateTime(2026, 10, 25, 3, 0, 0)
+            )
+        );
+        await dbContext.SaveChangesAsync();
+        dbContext.Notifications.Add(
+            CreateNotification("Inserted third", new DateTime(2026, 10, 25, 2, 20, 0))
+        );
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+        var repository = new NotificationReadRepository(dbContext);
+
+        // Act
+        var result = await repository.SearchAsync(
+            new NotificationSearchQuery(PageSize: 10, IncludeResolved: includeResolved)
+        );
+
+        // Assert
+        result
+            .Items.Select(notification => notification.Message)
+            .ShouldBe(
+                includeResolved
+                    ? ["Inserted third", "Inserted second", "Inserted first"]
+                    : ["Inserted third", "Inserted first"]
+            );
     }
 
     [Test]

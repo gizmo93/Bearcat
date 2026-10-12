@@ -1,6 +1,7 @@
 using System.Globalization;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.ScopedOperations;
@@ -10,6 +11,7 @@ namespace Bearcat.Website.Shared;
 
 public partial class PostQueueIndicator(
     IScopedOperationRunner operationRunner,
+    PostQueueCountCache postQueueCountCache,
     NavigationManager navigationManager
 ) : ComponentBase, IAsyncDisposable
 {
@@ -34,20 +36,28 @@ public partial class PostQueueIndicator(
 
     private async Task RefreshCountAsync()
     {
-        await operationRunner.RunAsync(
+        enabled = operationRunner.Run(
+            (IApplicationConfigurationProvider configuration) =>
+                configuration.GetValue<PostQueueConfiguration>(c => c.Enabled)
+        );
+
+        openCount = enabled
+            ? await postQueueCountCache.GetOrCountOpenItemsAsync(
+                CountOpenItemsAsync,
+                pollingCancellation.Token
+            )
+            : 0;
+    }
+
+    private async Task<int> CountOpenItemsAsync(CancellationToken cancellationToken)
+    {
+        return await operationRunner.RunAsync(
             async (
-                IApplicationConfigurationProvider configuration,
                 IReleaseReadRepository releaseRepository,
                 IReleaseCollectionReadRepository collectionRepository
             ) =>
-            {
-                enabled = configuration.GetValue<PostQueueConfiguration>(c => c.Enabled);
-
-                openCount = enabled
-                    ? await releaseRepository.CountPostQueueAsync(pollingCancellation.Token)
-                        + await collectionRepository.CountPostQueueAsync(pollingCancellation.Token)
-                    : 0;
-            }
+                await releaseRepository.CountPostQueueAsync(cancellationToken)
+                + await collectionRepository.CountPostQueueAsync(cancellationToken)
         );
     }
 

@@ -14,7 +14,9 @@ und Collections noch gepostet werden müssen.
 
 ![post-queue-badge.png](../images/post-queue-badge.png)
 
-Sind alle Einträge erledigt, verschwindet das Badge.
+Sind alle Einträge erledigt, verschwindet das Badge. Bearcat zählt die Einträge höchstens alle 15 Sekunden
+und teilt das Ergebnis zwischen allen offenen Browsertabs. Nach **Als gepostet markieren** zeigt das Badge
+innerhalb von 15 Sekunden die neue Anzahl.
 
 ![post-queue-page.png](../images/post-queue-page.png)
 

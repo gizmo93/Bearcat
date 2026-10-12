@@ -14,21 +14,10 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
         CancellationToken cancellationToken = default
     )
     {
-        var configIdsWithUpload = await dbWrite
-            .ImageUploads.Select(upload => upload.ImageUploadConfigId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
-        var configIdsWithUploadSet = configIdsWithUpload.ToHashSet();
-
-        var configs = await dbWrite
-            .ImageUploadConfigs.Include(config => config.Release)
-                .ThenInclude(release => release!.Metadata)
-            .Include(config => config.ReleaseCollection)
-                .ThenInclude(collection => collection!.Metadata)
-            .Include(config => config.ImageHosterRegistration)
-            .Where(config =>
-                config.ImageHosterRegistration.IsActive
+        var configIdsWithoutUpload = await dbWrite
+            .ImageUploadConfigs.Where(config =>
+                !config.ImageUploads.Any()
+                && config.ImageHosterRegistration.IsActive
                 && (
                     (
                         config.Release != null
@@ -42,20 +31,25 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
                     )
                 )
             )
+            .OrderBy(config => config.Id)
+            .Select(config => config.Id)
             .ToListAsync(cancellationToken);
 
-        foreach (var config in configs.Where(config => !configIdsWithUploadSet.Contains(config.Id)))
+        if (configIdsWithoutUpload.Count == 0)
         {
-            config.ImageUploads.Add(
-                new ImageUpload
-                {
-                    CreatedAt = createdAt,
-                    UploadState = UploadState.Pending,
-                    ImageUrls = [],
-                    ErrorMessages = [],
-                }
-            );
+            return;
         }
+
+        dbWrite.ImageUploads.AddRange(
+            configIdsWithoutUpload.Select(configId => new ImageUpload
+            {
+                ImageUploadConfigId = configId,
+                CreatedAt = createdAt,
+                UploadState = UploadState.Pending,
+                ImageUrls = [],
+                ErrorMessages = [],
+            })
+        );
 
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
