@@ -299,7 +299,7 @@ public class TelegramNotificationServiceTest(DatabaseProvider databaseProvider)
             CancellationToken cancellationToken
         )
         {
-            var method = request.RequestUri!.Segments[^1];
+            var method = request.RequestUri!.Segments.Last();
             var json = method switch
             {
                 "getMe" =>

@@ -7,6 +7,8 @@ public interface IArchiveCleanupRepository
 {
     Task<IReadOnlyList<Archive>> GetLocalArchivesPastRetentionAsync(
         DateTime cutoff,
+        int afterArchiveId,
+        int maximumArchiveCount,
         CancellationToken cancellationToken
     );
 
@@ -31,4 +33,6 @@ public interface IArchiveCleanupRepository
     );
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
+    void ClearChangeTracker();
 }

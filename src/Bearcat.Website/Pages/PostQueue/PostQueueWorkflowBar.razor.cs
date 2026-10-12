@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Website.ScopedOperations;
@@ -8,6 +9,7 @@ namespace Bearcat.Website.Pages.PostQueue;
 public partial class PostQueueWorkflowBar(
     IScopedOperationRunner operationRunner,
     PostQueueWorkflowState workflowState,
+    PostQueueCountCache postQueueCountCache,
     NavigationManager navigationManager
 ) : ComponentBase
 {
@@ -72,6 +74,8 @@ public partial class PostQueueWorkflowBar(
                 );
                 break;
         }
+
+        postQueueCountCache.Invalidate();
     }
 
     private void NavigateNext(int? nextId)

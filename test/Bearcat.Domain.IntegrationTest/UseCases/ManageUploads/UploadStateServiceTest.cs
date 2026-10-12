@@ -1089,6 +1089,81 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_MoreDueUploadsThanOneRunChecks_ChecksOneHundredLeastRecentlyCheckedUploadsOfRegistration()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        var uploads = new List<Upload>();
+
+        foreach (var uploadNumber in Enumerable.Range(1, 101))
+        {
+            uploads.Add(
+                await AddCompletedUploadAsync(
+                    OnlineState.Online,
+                    checkedAt: localNow.AddHours(-uploadNumber),
+                    uploadedFileLinks: [$"https://hoster.test/{uploadNumber}"],
+                    hosterRegistration: hosterRegistration
+                )
+            );
+        }
+
+        IReadOnlyList<FileUrlToCheckDto> checkedFiles = [];
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(
+                (IHosterConfig _, IReadOnlyList<FileUrlToCheckDto> files, CancellationToken _) =>
+                    checkedFiles = files
+            )
+            .ReturnsAsync(
+                (IHosterConfig _, IReadOnlyList<FileUrlToCheckDto> files, CancellationToken _) =>
+                    new FileExistResult(true, [], files.ToDictionary(file => file.Url, _ => true))
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        checkedFiles.Count.ShouldBe(100);
+        checkedFiles.ShouldNotContain(file => file.Url == "https://hoster.test/1");
+        DbContext.ChangeTracker.Clear();
+        var mostRecentlyCheckedFile = await DbContext.UploadedFiles.SingleAsync(f =>
+            f.UploadId == uploads[0].Id
+        );
+        mostRecentlyCheckedFile.CheckedAt.ShouldBe(localNow.AddHours(-1));
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_MoreDueAutomaticReuploadsThanOneRunCreates_CreatesOneHundredReuploads()
+    {
+        // Arrange
+        foreach (var uploadNumber in Enumerable.Range(1, 101))
+        {
+            await AddCompletedUploadAsync(
+                OnlineState.Offline,
+                checkedAt: localNow.AddHours(-25),
+                uploadedFileLinks: [$"https://hoster.test/{uploadNumber}"],
+                enableAutomaticReuploads: true
+            );
+        }
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reuploadCount = await DbContext.Uploads.CountAsync(u =>
+            u.UploadState == UploadState.WaitingForArchive
+        );
+        reuploadCount.ShouldBe(100);
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_AutomaticReuploadIsDue_CreatesWaitingForArchiveUpload()
     {
         // Arrange

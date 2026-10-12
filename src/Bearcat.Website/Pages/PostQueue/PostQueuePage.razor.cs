@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -19,6 +20,7 @@ namespace Bearcat.Website.Pages.PostQueue;
 public partial class PostQueuePage(
     IScopedOperationRunner operationRunner,
     PostQueueWorkflowState workflowState,
+    PostQueueCountCache postQueueCountCache,
     NavigationManager navigationManager,
     ToastService toastService,
     TimeProvider timeProvider
@@ -51,6 +53,7 @@ public partial class PostQueuePage(
     private async Task LoadAsync()
     {
         isLoading = true;
+        postQueueCountCache.Invalidate();
 
         try
         {

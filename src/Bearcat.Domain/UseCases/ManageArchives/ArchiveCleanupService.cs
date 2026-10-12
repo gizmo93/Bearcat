@@ -20,6 +20,8 @@ public class ArchiveCleanupService(
     ILogger<ArchiveCleanupService> logger
 )
 {
+    private const int ArchiveBatchSize = 100;
+
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         var retentionAction = configuration.GetValue<
@@ -37,11 +39,35 @@ public class ArchiveCleanupService(
         );
         var cutoff = timeProvider.GetLocalNow().AddDays(-retentionDays);
 
-        var archives = await repository.GetLocalArchivesPastRetentionAsync(
-            cutoff,
-            cancellationToken
-        );
+        var afterArchiveId = 0;
+        var hasMoreArchives = true;
 
+        while (hasMoreArchives)
+        {
+            var archives = await repository.GetLocalArchivesPastRetentionAsync(
+                cutoff: cutoff,
+                afterArchiveId: afterArchiveId,
+                maximumArchiveCount: ArchiveBatchSize,
+                cancellationToken: cancellationToken
+            );
+
+            if (archives.Count > 0)
+            {
+                await ApplyRetentionActionAsync(retentionAction, archives, cancellationToken);
+                afterArchiveId = archives.Last().Id;
+                repository.ClearChangeTracker();
+            }
+
+            hasMoreArchives = archives.Count == ArchiveBatchSize;
+        }
+    }
+
+    private async Task ApplyRetentionActionAsync(
+        ArchiveRetentionAction retentionAction,
+        IReadOnlyList<Archive> archives,
+        CancellationToken cancellationToken
+    )
+    {
         await (
             retentionAction switch
             {

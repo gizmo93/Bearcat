@@ -30,6 +30,8 @@ public class UploadStateService(
     QualityGateEvaluator qualityGateEvaluator
 )
 {
+    private const int MaximumUploadsToCheckPerHosterRegistrationPerRun = 100;
+    private const int MaximumAutomaticReuploadsPerRun = 100;
     private static readonly TimeSpan FailedCheckNotificationThreshold = TimeSpan.FromHours(3);
 
     public TimeSpan LinkCheckTimeout { get; set; } = TimeSpan.FromMinutes(2);
@@ -251,15 +253,23 @@ public class UploadStateService(
         CancellationToken cancellationToken
     )
     {
-        var uploadsToCheck = await uploadStateRepository.GetUploadsToCheckAsync(
-            localNow,
+        var registrations = await uploadStateRepository.GetActiveHosterRegistrationsAsync(
             cancellationToken
         );
 
-        foreach (var uploadGroup in uploadsToCheck.GroupBy(u => u.UploadConfig.HosterRegistration))
+        foreach (var registration in registrations)
         {
-            var registration = uploadGroup.Key;
-            var uploads = uploadGroup.ToList();
+            var uploads = await uploadStateRepository.GetLeastRecentlyCheckedUploadsToCheckAsync(
+                hosterRegistrationId: registration.Id,
+                localNow: localNow,
+                maximumUploadCount: MaximumUploadsToCheckPerHosterRegistrationPerRun,
+                cancellationToken: cancellationToken
+            );
+
+            if (uploads.Count == 0)
+            {
+                continue;
+            }
 
             await UpdateOnlineStatusAsync(
                 registration: registration,
@@ -575,19 +585,15 @@ public class UploadStateService(
         CancellationToken cancellationToken
     )
     {
-        var uploads = (
-            await uploadStateRepository.GetUploadsEligibleForAutomaticReuploadAsync(
-                cancellationToken
-            )
-        )
-            .GroupBy(u => u.UploadConfigId)
-            .Select(g => g.MaxBy(u => u.Id))
-            .OfType<Upload>()
-            .ToList();
+        var uploads = await uploadStateRepository.GetUploadsDueForAutomaticReuploadAsync(
+            localNow: localNow,
+            maximumUploadCount: MaximumAutomaticReuploadsPerRun,
+            cancellationToken: cancellationToken
+        );
 
         var evaluatedReleaseIds = new HashSet<int>();
 
-        foreach (var upload in uploads.Where(u => IsAutomaticReuploadDue(u, localNow)))
+        foreach (var upload in uploads)
         {
             var release = upload.UploadConfig.Release;
 
@@ -646,38 +652,6 @@ public class UploadStateService(
         return release.QualityGateState
             is QualityGateState.Passed
                 or QualityGateState.ManuallyApproved;
-    }
-
-    private static bool IsAutomaticReuploadDue(Upload upload, DateTime localNow)
-    {
-        var releaseGroup = upload.UploadConfig.Release.ReleaseGroup;
-        var hosterRegistration = upload.UploadConfig.HosterRegistration;
-
-        if (!releaseGroup.EnableAutomaticReuploads || upload.UploadedFiles.Count == 0)
-        {
-            return false;
-        }
-
-        var trigger =
-            hosterRegistration.ReuploadTriggerOverride ?? ReuploadTrigger.PartiallyOrFullyOffline;
-
-        var offlineSince =
-            trigger is ReuploadTrigger.OnlyWhenFullyOffline
-                ? upload.FullyOfflineSince
-                : upload.NotFullyOnlineSince;
-
-        if (offlineSince is null)
-        {
-            return false;
-        }
-
-        var numberOfHoursUntilReupload =
-            hosterRegistration.NumberOfHoursUntilReuploadOverride
-            ?? releaseGroup.NumberOfHoursUntilReupload;
-
-        var threshold = localNow.AddHours(-numberOfHoursUntilReupload);
-
-        return offlineSince <= threshold;
     }
 
     private static bool HasBlockingReupload(Upload upload)

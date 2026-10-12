@@ -278,7 +278,7 @@ public partial class MainWindow : Window
 
         if (LogTextBox.Text.Length > 20000)
         {
-            LogTextBox.Text = LogTextBox.Text[^20000..];
+            LogTextBox.Text = LogTextBox.Text.Substring(LogTextBox.Text.Length - 20000);
         }
 
         LogTextBox.CaretIndex = LogTextBox.Text.Length;

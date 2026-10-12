@@ -103,6 +103,31 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
+    public async Task ProcessAsync_MoreOverdueReleasesThanOneBatchAndFirstBatchIsNotRecoverable_ConvertsRecoverableReleaseOfSecondBatch()
+    {
+        // Arrange
+        var unrecoverableReleases = new List<Release>();
+
+        foreach (var _ in Enumerable.Range(1, 100))
+        {
+            unrecoverableReleases.Add(await AddScenarioAsync(archiveState: ArchiveState.Deleted));
+        }
+
+        var recoverableRelease = await AddScenarioAsync();
+        SetupConfiguration();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == recoverableRelease.Id);
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        await ShouldStillBeManagedAsync(unrecoverableReleases[0]);
+        await ShouldStillBeManagedAsync(unrecoverableReleases.Last());
+    }
+
+    [Test]
     public async Task ProcessAsync_ArchivesLiveInsideReleaseFolder_NotifiesWithWarningMessage()
     {
         // Arrange

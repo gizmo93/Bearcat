@@ -121,12 +121,103 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetQualityIssuesQueueAsync(CancellationToken.None);
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(),
+            CancellationToken.None
+        );
         var count = await repository.CountQualityIssuesQueueAsync(CancellationToken.None);
 
         // Assert
-        result.Select(r => r.ReleaseId).ShouldBe([managedRelease.Id, unmanagedRelease.Id]);
+        result.Items.Select(r => r.ReleaseId).ShouldBe([managedRelease.Id, unmanagedRelease.Id]);
+        result.TotalCount.ShouldBe(2);
         count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetQualityIssuesQueueAsync_SecondPage_ReturnsReleasesOfSecondPageOrderedByNameAndTotalCountOfAllFailedReleases()
+    {
+        // Arrange
+        var failedReleaseIdsByName = new Dictionary<string, int>();
+
+        foreach (
+            var name in new[] { "Delta", "Alpha", "Foxtrot", "Charlie", "Echo", "Bravo", "Golf" }
+        )
+        {
+            var release = await AddReleaseAsync($"Bearcat.{name}.2026-GRP");
+            release.QualityGateState = QualityGateState.Failed;
+            release.QualityIssues.Add(
+                new ReleaseQualityIssue
+                {
+                    RuleType = QualityCheckRuleType.RequiredReleaseInfo,
+                    Description = $"{name} NFO is missing",
+                }
+            );
+            failedReleaseIdsByName[name] = release.Id;
+        }
+
+        var passedRelease = await AddReleaseAsync("Bearcat.Aaa.2026-GRP");
+        passedRelease.QualityGateState = QualityGateState.Passed;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(PageIndex: 1, PageSize: 5),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(7);
+        result.TotalPages.ShouldBe(2);
+        result.PageIndex.ShouldBe(1);
+        result.PageSize.ShouldBe(5);
+        result
+            .Items.Select(r => r.ReleaseId)
+            .ShouldBe([failedReleaseIdsByName["Foxtrot"], failedReleaseIdsByName["Golf"]]);
+        result.Items[0].ReleaseName.ShouldBe("Bearcat.Foxtrot.2026-GRP");
+        result.Items[0].ReleaseGroupName.ShouldBe("Bearcat.Foxtrot.2026-GRP group");
+        result.Items[0].Issues.ShouldBe(["Foxtrot NFO is missing"]);
+    }
+
+    [Test]
+    public async Task GetQualityIssuesQueueAsync_PageSizeOutOfRangeAndNegativePageIndex_ClampsPaging()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Alpha.2026-GRP");
+        release.QualityGateState = QualityGateState.Failed;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(PageIndex: -1, PageSize: 1000),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.PageIndex.ShouldBe(0);
+        result.PageSize.ShouldBe(100);
+        result.Items.Select(r => r.ReleaseId).ShouldBe([release.Id]);
+    }
+
+    [Test]
+    public async Task GetQualityIssuesQueueAsync_NoFailedRelease_ReturnsEmptyPage()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Passed.2026-GRP");
+        release.QualityGateState = QualityGateState.Passed;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(
+            new ReleaseQualityIssueQueueSearchQuery(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Items.ShouldBeEmpty();
+        result.TotalCount.ShouldBe(0);
     }
 
     [Test]
@@ -489,6 +580,74 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var hoster = archiveGroup.Hosters.ShouldHaveSingleItem();
         hoster.HosterRegistrationName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
         hoster.LinkCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_MoreQueuedReleasesThanSqliteVariablesPerStatement_ReturnsAllQueuedReleases()
+    {
+        // Arrange
+        const int queuedReleaseCount = 1050;
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Queued releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Queued hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "ExampleHoster",
+            IsActive = true,
+        };
+
+        foreach (var releaseNumber in Enumerable.Range(1, queuedReleaseCount))
+        {
+            var release = new Release
+            {
+                Name = $"Bearcat.Queued.{releaseNumber:0000}.2026-GRP",
+                CreatedAt = DateTime.UtcNow,
+                ReleaseType = ReleaseType.Managed,
+                ReleaseFolderPath = $"/tmp/queued-{releaseNumber}",
+                ReleaseGroup = releaseGroup,
+            };
+            DbContext.Add(
+                new Upload
+                {
+                    UploadConfig = new UploadConfig
+                    {
+                        Release = release,
+                        ArchiveConfig = new ArchiveConfig
+                        {
+                            Release = release,
+                            Name = "Archive",
+                            ArchiveFilesBasePath = "/tmp/archives",
+                            ArchiverName = "RarArchiver",
+                            ArchiveFileSizeMb = 100,
+                        },
+                        HosterRegistration = hosterRegistration,
+                        Name = "Upload",
+                    },
+                    CreatedAt = DateTime.UtcNow.AddMinutes(-10),
+                    UploadedAt = DateTime.UtcNow.AddMinutes(-10),
+                    UploadState = UploadState.Completed,
+                    OnlineState = OnlineState.Online,
+                    UploadedFiles = [],
+                }
+            );
+        }
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        await UpdatePostgresPlannerStatisticsAsync(ReadDbContext);
+        await LimitSqliteVariableCountPerStatementAsync(ReadDbContext, maximumVariableCount: 1020);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(queuedReleaseCount);
+        result.ShouldAllBe(item => item.ArchiveGroups.Count == 1);
     }
 
     [Test]

@@ -18,6 +18,8 @@ public class ArchiveConfiguration : IEntityTypeConfiguration<Archive>
         builder.Property(a => a.ArchiveState).IsRequired();
         builder.Property(a => a.ArchiveFileSizeMb).IsRequired();
 
+        builder.HasIndex(a => new { a.CreatedAt, a.Id }).IsDescending();
+
         builder
             .HasMany(a => a.ArchiveFiles)
             .WithOne(a => a.Archive)

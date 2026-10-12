@@ -195,11 +195,11 @@ public class ReleaseProgressStepServiceTest
     }
 
     [Test]
-    public void Calculate_NoActiveUploadConfigs_ReturnsPendingUploadedStep()
+    public void Calculate_NoUploadConfigs_ReturnsPendingUploadedStep()
     {
         // Act
         var step = GetStep(
-            Calculate(release: CreateRelease(activeUploadConfigsCount: 0)),
+            Calculate(release: CreateRelease(uploadConfigsCount: 0)),
             ReleaseProgressStepKind.Uploaded
         );
 
@@ -216,7 +216,7 @@ public class ReleaseProgressStepServiceTest
         // Act
         var step = GetStep(
             Calculate(
-                release: CreateRelease(activeUploadConfigsCount: 2, onlineUploadConfigsCount: 1),
+                release: CreateRelease(uploadConfigsCount: 2, onlineUploadConfigsCount: 1),
                 overviewUploads:
                 [
                     CreateOverviewUpload(UploadState.Completed),
@@ -236,7 +236,7 @@ public class ReleaseProgressStepServiceTest
         // Act
         var step = GetStep(
             Calculate(
-                release: CreateRelease(activeUploadConfigsCount: 7, onlineUploadConfigsCount: 6),
+                release: CreateRelease(uploadConfigsCount: 7, onlineUploadConfigsCount: 6),
                 overviewUploads:
                 [
                     CreateOverviewUpload(UploadState.Completed),
@@ -258,7 +258,7 @@ public class ReleaseProgressStepServiceTest
         // Act
         var step = GetStep(
             Calculate(
-                release: CreateRelease(activeUploadConfigsCount: 7, onlineUploadConfigsCount: 7),
+                release: CreateRelease(uploadConfigsCount: 7, onlineUploadConfigsCount: 7),
                 overviewUploads: [CreateOverviewUpload(UploadState.Completed)]
             ),
             ReleaseProgressStepKind.Uploaded
@@ -373,7 +373,7 @@ public class ReleaseProgressStepServiceTest
     ) => steps.Single(step => step.Kind == kind);
 
     private static ReleaseReadModel CreateRelease(
-        int activeUploadConfigsCount = 0,
+        int uploadConfigsCount = 0,
         int onlineUploadConfigsCount = 0,
         DateTime? uploadsPostedAt = null
     ) =>
@@ -386,7 +386,7 @@ public class ReleaseProgressStepServiceTest
             1,
             "Group",
             "/releases/Some.Release-GROUP",
-            activeUploadConfigsCount,
+            uploadConfigsCount,
             onlineUploadConfigsCount,
             false,
             uploadsPostedAt

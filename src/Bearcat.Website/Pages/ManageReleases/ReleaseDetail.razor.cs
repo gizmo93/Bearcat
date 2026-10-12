@@ -90,15 +90,15 @@ public partial class ReleaseDetail(
             == ProgressStepState.Pending;
 
     private bool HasOfflineUploadConfigs =>
-        release.OnlineUploadConfigsCount < release.ActiveUploadConfigsCount;
+        release.OnlineUploadConfigsCount < release.UploadConfigsCount;
 
     private string UploadConfigCountText =>
         HasOfflineUploadConfigs
             ? string.Create(
                 CultureInfo.CurrentCulture,
-                $"{release.OnlineUploadConfigsCount}/{release.ActiveUploadConfigsCount}"
+                $"{release.OnlineUploadConfigsCount}/{release.UploadConfigsCount}"
             )
-            : release.ActiveUploadConfigsCount.ToString(CultureInfo.CurrentCulture);
+            : release.UploadConfigsCount.ToString(CultureInfo.CurrentCulture);
 
     private string ArchiveConfigCountText =>
         archiveConfigCount.ToString(CultureInfo.CurrentCulture);

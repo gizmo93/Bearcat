@@ -5,8 +5,14 @@ namespace Bearcat.Domain.UseCases.ManageUploads.Repositories;
 
 public interface IUploadStateRepository
 {
-    Task<IReadOnlyList<Upload>> GetUploadsToCheckAsync(
+    Task<IReadOnlyList<HosterRegistration>> GetActiveHosterRegistrationsAsync(
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<Upload>> GetLeastRecentlyCheckedUploadsToCheckAsync(
+        int hosterRegistrationId,
         DateTime localNow,
+        int maximumUploadCount,
         CancellationToken cancellationToken
     );
 
@@ -15,7 +21,9 @@ public interface IUploadStateRepository
         CancellationToken cancellationToken
     );
 
-    Task<IReadOnlyList<Upload>> GetUploadsEligibleForAutomaticReuploadAsync(
+    Task<IReadOnlyList<Upload>> GetUploadsDueForAutomaticReuploadAsync(
+        DateTime localNow,
+        int maximumUploadCount,
         CancellationToken cancellationToken
     );
 

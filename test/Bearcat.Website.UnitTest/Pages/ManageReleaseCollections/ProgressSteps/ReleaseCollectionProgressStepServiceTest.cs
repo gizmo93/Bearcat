@@ -65,7 +65,7 @@ public class ReleaseCollectionProgressStepServiceTest
         var step = GetStep(
             Calculate(
                 releaseCollection: CreateReleaseCollection(
-                    releases: [CreateRelease(activeUploadConfigsCount: 0)]
+                    releases: [CreateRelease(uploadConfigsCount: 0)]
                 )
             ),
             ReleaseCollectionProgressStepKind.Releases
@@ -84,10 +84,10 @@ public class ReleaseCollectionProgressStepServiceTest
                 releaseCollection: CreateReleaseCollection(
                     releases:
                     [
-                        CreateRelease(activeUploadConfigsCount: 2, onlineUploadConfigsCount: 2),
-                        CreateRelease(activeUploadConfigsCount: 2, onlineUploadConfigsCount: 1),
-                        CreateRelease(activeUploadConfigsCount: 1, onlineUploadConfigsCount: 0),
-                        CreateRelease(activeUploadConfigsCount: 0),
+                        CreateRelease(uploadConfigsCount: 2, onlineUploadConfigsCount: 2),
+                        CreateRelease(uploadConfigsCount: 2, onlineUploadConfigsCount: 1),
+                        CreateRelease(uploadConfigsCount: 1, onlineUploadConfigsCount: 0),
+                        CreateRelease(uploadConfigsCount: 0),
                     ]
                 )
             ),
@@ -109,9 +109,9 @@ public class ReleaseCollectionProgressStepServiceTest
                 releaseCollection: CreateReleaseCollection(
                     releases:
                     [
-                        CreateRelease(activeUploadConfigsCount: 2, onlineUploadConfigsCount: 2),
-                        CreateRelease(activeUploadConfigsCount: 1, onlineUploadConfigsCount: 1),
-                        CreateRelease(activeUploadConfigsCount: 0),
+                        CreateRelease(uploadConfigsCount: 2, onlineUploadConfigsCount: 2),
+                        CreateRelease(uploadConfigsCount: 1, onlineUploadConfigsCount: 1),
+                        CreateRelease(uploadConfigsCount: 0),
                     ]
                 )
             ),
@@ -375,7 +375,7 @@ public class ReleaseCollectionProgressStepServiceTest
         new("TheTVDB", "Some Series", null, null, null);
 
     private static ReleaseCollectionReleaseReadModel CreateRelease(
-        int activeUploadConfigsCount = 0,
+        int uploadConfigsCount = 0,
         int onlineUploadConfigsCount = 0
     ) =>
         new(
@@ -383,7 +383,7 @@ public class ReleaseCollectionProgressStepServiceTest
             "Some.Series.S01E01-GROUP",
             ReleaseType.Managed,
             new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
-            activeUploadConfigsCount,
+            uploadConfigsCount,
             onlineUploadConfigsCount,
             null,
             []

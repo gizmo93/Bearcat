@@ -80,7 +80,8 @@ Das Badge zeigt die Anzahl betroffener Releases und verschwindet, wenn keine meh
 
 ![quality-gate-badge.png](../images/quality-gate-badge.png)
 
-Die Liste zeigt die betroffenen Releases, ihre fehlgeschlagenen Prüfungen und den letzten Prüfzeitpunkt. Für jeden Eintrag hast du drei Aktionen:
+Die Liste zeigt die betroffenen Releases, ihre fehlgeschlagenen Prüfungen und den letzten Prüfzeitpunkt. 
+Für jeden Eintrag hast du drei Aktionen:
 
 - **Öffnen** führt zum Release. Ergänze dort fehlende Angaben und klicke auf **Neu prüfen**
   oder warte auf die nächste Hintergrundprüfung.

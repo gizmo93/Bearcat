@@ -81,7 +81,8 @@ Its badge shows how many releases are affected and disappears when none remain.
 
 ![quality-gate-badge.png](images/quality-gate-badge.png)
 
-The list shows affected releases, their failed checks, and the last check time. Each entry has three actions:
+The list shows affected releases, their failed checks, and the last check time.
+Each entry has three actions:
 
 - **Open** takes you to the release. Add missing details, then click **Recheck** or wait for the next background check.
 - **Recheck** evaluates the release again immediately.

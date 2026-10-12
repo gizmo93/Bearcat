@@ -29,6 +29,8 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         // Act
         var result = await repository.GetLocalArchivesPastRetentionAsync(
             Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
             CancellationToken.None
         );
 
@@ -54,11 +56,163 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         // Act
         var result = await repository.GetLocalArchivesPastRetentionAsync(
             Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
             CancellationToken.None
         );
 
         // Assert
         result.ShouldBeEmpty();
+    }
+
+    [TestCase(-1, true)]
+    [TestCase(0, true)]
+    [TestCase(1, false)]
+    public async Task GetLocalArchivesPastRetentionAsync_LatestUploadRelativeToCutoff_ReturnsArchiveOnlyWhenUploadedAtOrBeforeCutoff(
+        int uploadedMinutesAfterCutoff,
+        bool expectedToBeReturned
+    )
+    {
+        // Arrange
+        await AddArchiveAsync("Archive", uploadedAt: Cutoff.AddMinutes(uploadedMinutesAfterCutoff));
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Count.ShouldBe(expectedToBeReturned ? 1 : 0);
+    }
+
+    [Test]
+    public async Task GetLocalArchivesPastRetentionAsync_ArchiveWithFailedUploadWithoutUploadedAt_IsExcluded()
+    {
+        // Arrange
+        await AddArchiveAsync(
+            "PartlyUploaded",
+            uploadedAt: Cutoff.AddDays(-1),
+            hasFailedUploadWithoutUploadedAt: true
+        );
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetLocalArchivesPastRetentionAsync_MoreArchivesThanMaximumCount_ReturnsArchivesWithLowestIdsAfterGivenArchiveId()
+    {
+        // Arrange
+        var firstArchive = await AddArchiveAsync("First", uploadedAt: Cutoff.AddDays(-1));
+        var secondArchive = await AddArchiveAsync("Second", uploadedAt: Cutoff.AddDays(-1));
+        var thirdArchive = await AddArchiveAsync("Third", uploadedAt: Cutoff.AddDays(-1));
+        await AddArchiveAsync("Fourth", uploadedAt: Cutoff.AddDays(-1));
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: firstArchive.Id,
+            maximumArchiveCount: 2,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Select(archive => archive.Id).ShouldBe([secondArchive.Id, thirdArchive.Id]);
+    }
+
+    [Test]
+    public async Task GetLocalArchivesPastRetentionAsync_MaximumCountReachedByCandidatesOnly_SkipsArchivesThatAreNoCandidates()
+    {
+        // Arrange
+        var firstArchive = await AddArchiveAsync("First", uploadedAt: Cutoff.AddDays(-1));
+        await AddArchiveAsync("Recent", uploadedAt: Cutoff.AddDays(1));
+        var thirdArchive = await AddArchiveAsync("Third", uploadedAt: Cutoff.AddDays(-1));
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 2,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Select(archive => archive.Id).ShouldBe([firstArchive.Id, thirdArchive.Id]);
+    }
+
+    [Test]
+    public async Task GetLocalArchivesPastRetentionAsync_OverdueArchiveWithMirrorRegistration_LoadsUploadsWithUploadedFilesOfArchiveConfig()
+    {
+        // Arrange
+        var archive = await AddArchiveAsync(
+            "Overdue",
+            uploadedAt: Cutoff.AddDays(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            hosterRegistrationIsActive: true,
+            hosterRegistrationUseForMirrorDownloads: true
+        );
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
+            CancellationToken.None
+        );
+
+        // Assert
+        var candidate = result.ShouldHaveSingleItem();
+        candidate.Id.ShouldBe(archive.Id);
+        var uploadConfig = candidate.ArchiveConfig.UploadConfigs.ShouldHaveSingleItem();
+        uploadConfig.HosterRegistration.Name.ShouldBe("Overdue hoster");
+        uploadConfig
+            .Uploads.ShouldHaveSingleItem()
+            .UploadedFiles.Select(file => file.HosterFileLink)
+            .ShouldBe(["https://hoster.test/1", "https://hoster.test/2"], ignoreOrder: true);
+    }
+
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    [TestCase(false, false)]
+    public async Task GetLocalArchivesPastRetentionAsync_HosterRegistrationNotUsableForMirrorDownloads_LoadsUploadsWithoutUploadedFiles(
+        bool hosterRegistrationIsActive,
+        bool hosterRegistrationUseForMirrorDownloads
+    )
+    {
+        // Arrange
+        await AddArchiveAsync(
+            "Overdue",
+            uploadedAt: Cutoff.AddDays(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            hosterRegistrationIsActive: hosterRegistrationIsActive,
+            hosterRegistrationUseForMirrorDownloads: hosterRegistrationUseForMirrorDownloads
+        );
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .ShouldHaveSingleItem()
+            .ArchiveConfig.UploadConfigs.ShouldHaveSingleItem()
+            .Uploads.ShouldHaveSingleItem()
+            .UploadedFiles.ShouldBeEmpty();
     }
 
     [TestCase(UploadState.WaitingForArchive, true)]
@@ -317,7 +471,11 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         int? archiveStorageFolderId = null,
         UploadState uploadState = UploadState.Completed,
         ArchiveState archiveState = ArchiveState.Created,
-        string? archiveFileFolderPath = null
+        string? archiveFileFolderPath = null,
+        IReadOnlyList<string>? uploadedFileLinks = null,
+        bool hasFailedUploadWithoutUploadedAt = false,
+        bool hosterRegistrationIsActive = true,
+        bool hosterRegistrationUseForMirrorDownloads = false
     )
     {
         var archiveFolderPath = $"/archives/{name}";
@@ -352,9 +510,15 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                 Name = $"{name} hoster",
                 SerializedConfig = "{}",
                 HosterClassName = "Hoster",
-                IsActive = true,
+                IsActive = hosterRegistrationIsActive,
+                UseForMirrorDownloads = hosterRegistrationUseForMirrorDownloads,
             },
             Name = "Default upload",
+        };
+        var archiveFiles = new List<ArchiveFile>
+        {
+            new() { FullFileName = $"{archiveFileFolder}/{name}.part1.rar" },
+            new() { FullFileName = $"{archiveFileFolder}/{name}.part2.rar" },
         };
         var archive = new Archive
         {
@@ -364,11 +528,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
             ArchiveState = archiveState,
             ArchiveFileSizeMb = 512,
             CreatedAt = Cutoff.AddDays(-30),
-            ArchiveFiles =
-            [
-                new ArchiveFile { FullFileName = $"{archiveFileFolder}/{name}.part1.rar" },
-                new ArchiveFile { FullFileName = $"{archiveFileFolder}/{name}.part2.rar" },
-            ],
+            ArchiveFiles = archiveFiles,
             Uploads =
             [
                 new Upload
@@ -379,11 +539,38 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                     UploadState = uploadState,
                     OnlineState = OnlineState.Online,
                     ErrorMessages = [],
-                    UploadedFiles = [],
+                    UploadedFiles = (uploadedFileLinks ?? [])
+                        .Select(
+                            (link, index) =>
+                                new UploadedFile
+                                {
+                                    ArchiveFile = archiveFiles[index],
+                                    HosterFileLink = link,
+                                    OnlineState = OnlineState.Online,
+                                    CreatedAt = uploadedAt,
+                                    ErrorMessages = [],
+                                }
+                        )
+                        .ToList(),
                 },
             ],
             ErrorMessages = [],
         };
+
+        if (hasFailedUploadWithoutUploadedAt)
+        {
+            archive.Uploads.Add(
+                new Upload
+                {
+                    UploadConfig = uploadConfig,
+                    CreatedAt = uploadedAt.AddHours(-1),
+                    UploadState = UploadState.Failed,
+                    OnlineState = OnlineState.Unknown,
+                    ErrorMessages = [],
+                    UploadedFiles = [],
+                }
+            );
+        }
 
         DbContext.Archives.Add(archive);
         await DbContext.SaveChangesAsync();

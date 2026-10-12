@@ -758,7 +758,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         foreach (var archiveFile in archive.ArchiveFiles)
         {
             var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);
-            fileBytes[^1].ShouldBe((byte)0);
+            fileBytes.Last().ShouldBe((byte)0);
             archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(fileBytes)));
         }
     }

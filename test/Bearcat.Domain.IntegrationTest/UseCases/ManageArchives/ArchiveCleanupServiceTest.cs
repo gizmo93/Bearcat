@@ -119,6 +119,29 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_MoreOverdueArchivesThanOneBatchAndFirstBatchIsNotRecoverable_DeletesRecoverableArchiveOfSecondBatch()
+    {
+        // Arrange
+        var unrecoverableArchives = new List<Archive>();
+
+        foreach (var _ in Enumerable.Range(1, 100))
+        {
+            unrecoverableArchives.Add(await AddScenarioAsync(releaseType: ReleaseType.Unmanaged));
+        }
+
+        var recoverableArchive = await AddScenarioAsync();
+        SetupConfiguration();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldBeDeletedAsync(recoverableArchive);
+        await ShouldStillBeCreatedAsync(unrecoverableArchives[0]);
+        await ShouldStillBeCreatedAsync(unrecoverableArchives.Last());
+    }
+
+    [Test]
     public async Task ProcessAsync_UnmanagedReleaseWithoutMirror_KeepsArchive()
     {
         // Arrange
@@ -447,7 +470,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
                         UploadedFiles = [],
                     }
                 );
-                dbContext.SaveChanges();
+                dbContext.SaveChangesAsync().GetAwaiter().GetResult();
             });
         SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
 

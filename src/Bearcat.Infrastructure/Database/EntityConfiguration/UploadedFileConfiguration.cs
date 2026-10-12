@@ -20,5 +20,6 @@ public class UploadedFileConfiguration : IEntityTypeConfiguration<UploadedFile>
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(u => u.CheckedAt).IsRequired(false).HasPrecision(4);
         builder.Property(u => u.ErrorMessages).IsRequired();
+        builder.HasIndex(u => u.HosterFileLink);
     }
 }

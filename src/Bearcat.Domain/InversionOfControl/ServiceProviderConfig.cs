@@ -7,6 +7,7 @@ using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.Shared.Transfers;
@@ -68,6 +69,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -180,6 +182,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UnreadableSecretsDetectionService>();
             services.AddScoped<UnreadableSecretsNotificationService>();
             services.AddSingleton<TelegramConfigurationCache>();
+            services.AddSingleton<PostQueueCountCache>();
             services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<HosterCredentialsRejectionService>();
@@ -210,6 +213,11 @@ public static class ServiceProviderConfig
                 ApplicationConfigurationProvider
             >();
             services.AddScoped<ApplicationConfigurationService>();
+        }
+
+        public void AddSqliteDomainServices()
+        {
+            services.AddScoped<QueryPlannerStatisticsUpdateService>();
         }
     }
 }

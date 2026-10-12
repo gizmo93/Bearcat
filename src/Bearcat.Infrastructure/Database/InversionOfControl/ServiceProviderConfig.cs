@@ -44,6 +44,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
+using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics.Repositories;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
 using Microsoft.EntityFrameworkCore;
@@ -105,6 +106,11 @@ public static class ServiceProviderConfig
                 builder => builder.UseBearcatSqlite(connectionString),
                 ServiceLifetime.Transient
             );
+
+            services.AddScoped<
+                IQueryPlannerStatisticsRepository,
+                SqliteQueryPlannerStatisticsRepository
+            >();
         }
 
         private void AddRepositories()

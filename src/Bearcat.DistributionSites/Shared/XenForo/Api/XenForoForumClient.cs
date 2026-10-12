@@ -734,7 +734,7 @@ public sealed partial class XenForoForumClient : IDisposable
             {
                 builder.Append(char.ToLowerInvariant(character));
             }
-            else if (builder.Length > 0 && builder[^1] != ' ')
+            else if (builder.Length > 0 && builder[builder.Length - 1] != ' ')
             {
                 builder.Append(' ');
             }

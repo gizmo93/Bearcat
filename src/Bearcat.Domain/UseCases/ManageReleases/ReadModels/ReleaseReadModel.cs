@@ -11,7 +11,7 @@ public record ReleaseReadModel(
     int ReleaseGroupId,
     string ReleaseGroupName,
     string? ReleaseFolderPath,
-    int ActiveUploadConfigsCount,
+    int UploadConfigsCount,
     int OnlineUploadConfigsCount,
     bool ExcludeFromAutoCleanup,
     DateTime? UploadsPostedAt
@@ -21,12 +21,12 @@ public record ReleaseReadModel(
     {
         get
         {
-            if (ActiveUploadConfigsCount == 0)
+            if (UploadConfigsCount == 0)
             {
                 return null;
             }
 
-            if (ActiveUploadConfigsCount == OnlineUploadConfigsCount)
+            if (UploadConfigsCount == OnlineUploadConfigsCount)
             {
                 return ValueObjects.OnlineState.Online;
             }

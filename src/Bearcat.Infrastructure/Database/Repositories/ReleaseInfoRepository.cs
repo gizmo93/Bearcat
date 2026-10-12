@@ -29,7 +29,8 @@ public class ReleaseInfoRepository(
     public async Task<IReadOnlyList<Release>> GetReleasesWithoutInfoAsync(
         int count,
         DateTime lastCheckedThreshold,
-        HashSet<int> excludedReleaseIds,
+        DateTime? afterCreatedAt,
+        int afterReleaseId,
         CancellationToken cancellationToken = default
     )
     {
@@ -73,7 +74,11 @@ public class ReleaseInfoRepository(
                     )
                 )
             )
-            .Where(release => !excludedReleaseIds.Contains(release.Id))
+            .Where(release =>
+                afterCreatedAt == null
+                || release.CreatedAt > afterCreatedAt
+                || (release.CreatedAt == afterCreatedAt && release.Id > afterReleaseId)
+            )
             .OrderBy(release => release.CreatedAt)
             .ThenBy(release => release.Id)
             .Take(count)

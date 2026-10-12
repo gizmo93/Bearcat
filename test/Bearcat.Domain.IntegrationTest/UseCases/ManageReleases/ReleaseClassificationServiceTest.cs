@@ -185,13 +185,13 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
         public Task<IReadOnlyList<Release>> GetReleasesNeedingClassificationAsync(
             int count,
             int parserVersion,
-            HashSet<int> excludedReleaseIds,
+            int afterReleaseId,
             CancellationToken cancellationToken = default
         ) =>
             repository.GetReleasesNeedingClassificationAsync(
                 count,
                 parserVersion,
-                excludedReleaseIds,
+                afterReleaseId,
                 cancellationToken
             );
 

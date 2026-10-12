@@ -25,8 +25,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
     {
         var notifications = await BaseQuery()
             .Where(n => n.ResolvedAt == null)
-            .OrderByDescending(n => n.CreatedAt)
-            .ThenByDescending(n => n.Id)
+            .OrderByDescending(n => n.Id)
             .Take(Math.Clamp(take, 1, 25))
             .Select(ToProjection())
             .ToListAsync(cancellationToken);
@@ -89,8 +88,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         var totalCount = await notificationsQuery.CountAsync(cancellationToken);
 
         var notifications = await notificationsQuery
-            .OrderByDescending(n => n.CreatedAt)
-            .ThenByDescending(n => n.Id)
+            .OrderByDescending(n => n.Id)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
             .Select(ToProjection())

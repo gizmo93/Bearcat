@@ -9,28 +9,28 @@ public class AutoForumPostingRunner(
     AutoForumPostingService postingService
 )
 {
+    private const int ReleaseBatchSize = 500;
+
     public async Task<AutoPostRunResult> RunAsync(CancellationToken cancellationToken = default)
     {
         var releaseIds = await repository.GetQueuedReleaseIdsAsync(cancellationToken);
-
-        if (releaseIds.Count == 0)
-        {
-            return new AutoPostRunResult(PostedCount: 0, UpdatedCount: 0, Failures: []);
-        }
-
-        var plans = await planService.GetPlansAsync(releaseIds, cancellationToken);
 
         var postedCount = 0;
         var updatedCount = 0;
         var failures = new List<AutoPostRunFailure>();
 
-        foreach (var plan in plans.Where(plan => !plan.IsBlocked))
+        foreach (var releaseIdBatch in releaseIds.Chunk(ReleaseBatchSize))
         {
-            var planResult = await ProcessPlanAsync(plan, cancellationToken);
+            var plans = await planService.GetPlansAsync(releaseIdBatch, cancellationToken);
 
-            postedCount += planResult.PostedCount;
-            updatedCount += planResult.UpdatedCount;
-            failures.AddRange(planResult.Failures);
+            foreach (var plan in plans.Where(plan => !plan.IsBlocked))
+            {
+                var planResult = await ProcessPlanAsync(plan, cancellationToken);
+
+                postedCount += planResult.PostedCount;
+                updatedCount += planResult.UpdatedCount;
+                failures.AddRange(planResult.Failures);
+            }
         }
 
         return new AutoPostRunResult(postedCount, updatedCount, failures);

@@ -62,7 +62,7 @@ public class ReleaseReadRepository(
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
         var pageIndex = Math.Max(0, query.PageIndex);
 
-        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
+        var releasesQuery = await ApplyReleaseSearchAsync(query, cancellationToken);
         var totalCount = await releasesQuery.CountAsync(cancellationToken);
 
         var releases = await ApplyReleaseSortOrder(releasesQuery, query.SortOrder)
@@ -82,7 +82,7 @@ public class ReleaseReadRepository(
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
         var pageIndex = Math.Max(0, query.PageIndex);
 
-        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
+        var releasesQuery = await ApplyReleaseSearchAsync(query, cancellationToken);
         var totalCount = await releasesQuery.CountAsync(cancellationToken);
 
         var releaseRows = await ApplyReleaseSortOrder(releasesQuery, query.SortOrder)
@@ -166,23 +166,16 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query with { OnlineState = null });
+        var releasesQuery = await ApplyReleaseSearchAsync(
+            query with
+            {
+                OnlineState = null,
+            },
+            cancellationToken
+        );
 
         var countsByOnlineState = await releasesQuery
-            .Select(r => new
-            {
-                UploadConfigsCount = r.UploadConfigs.Count,
-                OnlineUploadConfigsCount = r.UploadConfigs.Count(uc =>
-                    uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
-                ),
-            })
-            .Select(r =>
-                r.UploadConfigsCount == 0 ? OnlineState.Unknown
-                : r.OnlineUploadConfigsCount == r.UploadConfigsCount ? OnlineState.Online
-                : r.OnlineUploadConfigsCount > 0 ? OnlineState.PartiallyOnline
-                : OnlineState.Offline
-            )
-            .GroupBy(onlineState => onlineState)
+            .GroupBy(r => r.OnlineState)
             .Select(group => new { OnlineState = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.OnlineState, group => group.Count, cancellationToken);
 
@@ -429,7 +422,7 @@ public class ReleaseReadRepository(
         var latestUploads = await dbRead
             .Uploads.Where(u =>
                 u.UploadConfig.CollectionUploadSlotId == null
-                && openReleaseIds.Contains(u.UploadConfig.ReleaseId)
+                && EF.Parameter(openReleaseIds).Contains(u.UploadConfig.ReleaseId)
             )
             .GroupBy(u => u.UploadConfigId)
             .Select(g =>
@@ -453,7 +446,7 @@ public class ReleaseReadRepository(
             .LinkCrypterContainers.Where(c =>
                 c.Scope == LinkCrypterContainerScope.Release
                 && c.UploadId != null
-                && uploadIds.Contains(c.UploadId.Value)
+                && EF.Parameter(uploadIds).Contains(c.UploadId.Value)
             )
             .Select(c => new
             {
@@ -518,13 +511,25 @@ public class ReleaseReadRepository(
     }
 
     public async Task<
-        IReadOnlyList<ReleaseQualityIssueQueueItemReadModel>
-    > GetQualityIssuesQueueAsync(CancellationToken cancellationToken = default)
+        PagedResult<ReleaseQualityIssueQueueItemReadModel>
+    > GetQualityIssuesQueueAsync(
+        ReleaseQualityIssueQueueSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbRead
-            .Releases.Where(r => r.QualityGateState == QualityGateState.Failed)
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        var pageIndex = Math.Max(0, query.PageIndex);
+        var failedReleasesQuery = dbRead.Releases.Where(r =>
+            r.QualityGateState == QualityGateState.Failed
+        );
+
+        var totalCount = await failedReleasesQuery.CountAsync(cancellationToken);
+
+        var items = await failedReleasesQuery
             .OrderBy(r => r.Name)
             .ThenBy(r => r.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
             .Select(r => new ReleaseQualityIssueQueueItemReadModel(
                 r.Id,
                 r.Name,
@@ -533,6 +538,13 @@ public class ReleaseReadRepository(
                 r.QualityIssues.Select(issue => issue.Description).ToList()
             ))
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<ReleaseQualityIssueQueueItemReadModel>(
+            items,
+            totalCount,
+            pageIndex,
+            pageSize
+        );
     }
 
     public async Task<int> CountQualityIssuesQueueAsync(
@@ -1400,6 +1412,70 @@ public class ReleaseReadRepository(
         );
     }
 
+    private async Task<IQueryable<Release>> ApplyReleaseSearchAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken
+    )
+    {
+        var releases = ApplyReleaseSearch(dbRead.Releases, query);
+        var downloadLink = SearchTextPatterns.TrimOrNullWhenEmpty(query.DownloadLink);
+
+        if (downloadLink is null)
+        {
+            return releases;
+        }
+
+        var releaseIdsWithDownloadLink = await GetReleaseIdsWithDownloadLinkAsync(
+            downloadLink,
+            cancellationToken
+        );
+
+        return releases.Where(r => EF.Parameter(releaseIdsWithDownloadLink).Contains(r.Id));
+    }
+
+    private async Task<List<int>> GetReleaseIdsWithDownloadLinkAsync(
+        string downloadLink,
+        CancellationToken cancellationToken
+    )
+    {
+        if (IsFullHttpLink(downloadLink))
+        {
+            return await dbRead
+                .UploadedFiles.Where(file => file.HosterFileLink == downloadLink)
+                .Select(file => file.Upload.UploadConfig.ReleaseId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
+        var linkContainsText = CreateLinkContainsTextPredicate(downloadLink);
+
+        return await dbRead
+            .Releases.Where(r =>
+                r.UploadConfigs.Any(config =>
+                    config.Uploads.Any(upload =>
+                        upload.UploadedFiles.AsQueryable().Any(linkContainsText)
+                    )
+                )
+            )
+            .Select(r => r.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    private Expression<Func<UploadedFile, bool>> CreateLinkContainsTextPredicate(string text)
+    {
+        var pattern = SearchTextPatterns.ToContainsPattern(text);
+
+        return dbRead.Database.IsNpgsql()
+            ? file => EF.Functions.ILike(file.HosterFileLink, pattern)
+            : file => EF.Functions.Like(file.HosterFileLink, pattern);
+    }
+
+    private static bool IsFullHttpLink(string downloadLink)
+    {
+        return downloadLink.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || downloadLink.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static IQueryable<Release> ApplyReleaseSearch(
         IQueryable<Release> releases,
         ReleaseSearchQuery query
@@ -1422,7 +1498,7 @@ public class ReleaseReadRepository(
 
         if (query.OnlineState is not null)
         {
-            releases = ApplyOnlineStateFilter(releases, query.OnlineState.Value);
+            releases = releases.Where(r => r.OnlineState == query.OnlineState.Value);
         }
 
         if (query.ReleaseType is not null)
@@ -1495,23 +1571,6 @@ public class ReleaseReadRepository(
             );
         }
 
-        var downloadLink = SearchTextPatterns.TrimOrNullWhenEmpty(query.DownloadLink);
-
-        if (downloadLink is not null)
-        {
-            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(downloadLink);
-
-            releases = releases.Where(r =>
-                r.UploadConfigs.Any(u =>
-                    u.Uploads.Any(upload =>
-                        upload.UploadedFiles.Any(file =>
-                            EF.Functions.Like(file.HosterFileLink.ToLower(), pattern)
-                        )
-                    )
-                )
-            );
-        }
-
         var archiveFileName = SearchTextPatterns.TrimOrNullWhenEmpty(query.ArchiveFileName);
 
         if (archiveFileName is not null)
@@ -1574,37 +1633,6 @@ public class ReleaseReadRepository(
                 .ThenBy(r => r.Name)
                 .ThenBy(r => r.Id),
             _ => throw new ArgumentOutOfRangeException(nameof(sortOrder), sortOrder, null),
-        };
-    }
-
-    private static IQueryable<Release> ApplyOnlineStateFilter(
-        IQueryable<Release> releases,
-        OnlineState onlineState
-    )
-    {
-        return onlineState switch
-        {
-            OnlineState.Unknown => releases.Where(r => !r.UploadConfigs.Any()),
-            OnlineState.Online => releases.Where(r =>
-                r.UploadConfigs.Any()
-                && r.UploadConfigs.Count
-                    == r.UploadConfigs.Count(uc =>
-                        uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
-                    )
-            ),
-            OnlineState.PartiallyOnline => releases.Where(r =>
-                r.UploadConfigs.Any(uc => uc.Uploads.Any(u => u.OnlineState == OnlineState.Online))
-                && r.UploadConfigs.Any(uc =>
-                    uc.Uploads.All(u => u.OnlineState != OnlineState.Online)
-                )
-            ),
-            OnlineState.Offline => releases.Where(r =>
-                r.UploadConfigs.Any()
-                && !r.UploadConfigs.Any(uc =>
-                    uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
-                )
-            ),
-            _ => releases,
         };
     }
 }

@@ -7,8 +7,20 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStateRepository
 {
-    public async Task<IReadOnlyList<Upload>> GetUploadsToCheckAsync(
+    public async Task<IReadOnlyList<HosterRegistration>> GetActiveHosterRegistrationsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .HosterRegistrations.Where(r => r.IsActive)
+            .OrderBy(r => r.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Upload>> GetLeastRecentlyCheckedUploadsToCheckAsync(
+        int hosterRegistrationId,
         DateTime localNow,
+        int maximumUploadCount,
         CancellationToken cancellationToken
     )
     {
@@ -21,32 +33,42 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
 
         var lastCheckThreshold = localNow.AddMinutes(-30);
 
-        return await dbWrite
-            .Uploads.AsSplitQuery()
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.Release)
-                    .ThenInclude(r => r.ReleaseGroup)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
-            .Include(u => u.UploadedFiles)
-            .Where(u =>
-                (
+        var uploadIds = await dbWrite
+            .Uploads.Where(u =>
+                u.UploadConfig.HosterRegistrationId == hosterRegistrationId
+                && (
                     u.OnlineState == OnlineState.Online
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
                 && !uploadStatesToExclude.Contains(u.UploadState)
-                && u.UploadConfig.HosterRegistration.IsActive
-                && u.UploadedFiles.Any(f => f.CheckedAt == null || f.CheckedAt < lastCheckThreshold)
                 && !dbWrite.Uploads.Any(newer =>
                     newer.UploadConfigId == u.UploadConfigId
                     && newer.Id > u.Id
                     && newer.UploadState == UploadState.Completed
                 )
+                && u.OldestUploadedFileCheckedAt < lastCheckThreshold
             )
-            .ToListAsync(cancellationToken: cancellationToken);
+            .OrderBy(u => u.OldestUploadedFileCheckedAt)
+            .ThenBy(u => u.Id)
+            .Select(u => u.Id)
+            .Take(maximumUploadCount)
+            .ToListAsync(cancellationToken);
+
+        if (uploadIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await dbWrite
+            .Uploads.Include(u => u.UploadedFiles)
+            .Where(u => uploadIds.Contains(u.Id))
+            .OrderBy(u => u.Id)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Upload>> GetUploadsEligibleForAutomaticReuploadAsync(
+    public async Task<IReadOnlyList<Upload>> GetUploadsDueForAutomaticReuploadAsync(
+        DateTime localNow,
+        int maximumUploadCount,
         CancellationToken cancellationToken
     )
     {
@@ -58,6 +80,57 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             UploadState.Failed,
             UploadState.CancellationRequested,
         ];
+
+        var uploadIds = await dbWrite
+            .Uploads.Where(u =>
+                (
+                    u.OnlineState == OnlineState.Offline
+                    || u.OnlineState == OnlineState.PartiallyOnline
+                )
+                && u.UploadState == UploadState.Completed
+                && u.UploadConfig.HosterRegistration.IsActive
+                && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
+                && u.UploadConfig.Release.QualityGateState != QualityGateState.Failed
+                && u.UploadedFiles.Any()
+                && !u.UploadConfig.Uploads.Any(ru =>
+                    ru.OnlineState == OnlineState.Online
+                    || pendingStates.Contains(ru.UploadState)
+                    || (
+                        ru.Id > u.Id
+                        && (
+                            ru.UploadState == UploadState.Canceled
+                            || (
+                                ru.UploadState == UploadState.Completed
+                                && (
+                                    ru.OnlineState == OnlineState.Offline
+                                    || ru.OnlineState == OnlineState.PartiallyOnline
+                                )
+                            )
+                        )
+                    )
+                )
+                && (
+                    u.UploadConfig.HosterRegistration.ReuploadTriggerOverride
+                    == ReuploadTrigger.OnlyWhenFullyOffline
+                        ? u.FullyOfflineSince
+                        : u.NotFullyOnlineSince
+                )
+                    <= localNow.AddHours(
+                        -(
+                            u.UploadConfig.HosterRegistration.NumberOfHoursUntilReuploadOverride
+                            ?? u.UploadConfig.Release.ReleaseGroup.NumberOfHoursUntilReupload
+                        )
+                    )
+            )
+            .OrderBy(u => u.Id)
+            .Select(u => u.Id)
+            .Take(maximumUploadCount)
+            .ToListAsync(cancellationToken);
+
+        if (uploadIds.Count == 0)
+        {
+            return [];
+        }
 
         return await dbWrite
             .Uploads.AsSplitQuery()
@@ -84,21 +157,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
                     .ThenInclude(r => r.QualityIssues)
-            .Where(u =>
-                (
-                    u.OnlineState == OnlineState.Offline
-                    || u.OnlineState == OnlineState.PartiallyOnline
-                )
-                && u.UploadState == UploadState.Completed
-                && u.UploadConfig.HosterRegistration.IsActive
-                && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
-                && !u.UploadConfig.Uploads.Any(ru =>
-                    ru.OnlineState == OnlineState.Online
-                    || pendingStates.Contains(ru.UploadState)
-                    || (ru.Id > u.Id && ru.UploadState == UploadState.Canceled)
-                )
-            )
-            .ToListAsync(cancellationToken: cancellationToken);
+            .Where(u => uploadIds.Contains(u.Id))
+            .OrderBy(u => u.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Upload> GetUploadForReuploadAsync(

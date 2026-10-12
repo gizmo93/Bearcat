@@ -7,7 +7,7 @@ public record ReleaseCollectionReleaseReadModel(
     string Name,
     ReleaseType ReleaseType,
     DateTime CreatedAt,
-    int ActiveUploadConfigsCount,
+    int UploadConfigsCount,
     int OnlineUploadConfigsCount,
     DateTime? NotFullyOnlineSince,
     IReadOnlyList<ReleaseLatestUploadReadModel> LatestUploads
@@ -17,12 +17,12 @@ public record ReleaseCollectionReleaseReadModel(
     {
         get
         {
-            if (ActiveUploadConfigsCount == 0)
+            if (UploadConfigsCount == 0)
             {
                 return null;
             }
 
-            if (ActiveUploadConfigsCount == OnlineUploadConfigsCount)
+            if (UploadConfigsCount == OnlineUploadConfigsCount)
             {
                 return ValueObjects.OnlineState.Online;
             }

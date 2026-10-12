@@ -10,7 +10,8 @@ public class ReleaseCollectionInfoRepository(IBearcatWriteDbContext dbWrite)
     public async Task<IReadOnlyList<ReleaseCollection>> GetCollectionsWithoutMetadataAsync(
         int count,
         DateTime lastCheckedThreshold,
-        HashSet<int> excludedCollectionIds,
+        DateTime? afterCreatedAt,
+        int afterCollectionId,
         CancellationToken cancellationToken = default
     )
     {
@@ -20,7 +21,11 @@ public class ReleaseCollectionInfoRepository(IBearcatWriteDbContext dbWrite)
                 collection.MetadataCheckedAt == null
                 || collection.MetadataCheckedAt < lastCheckedThreshold
             )
-            .Where(collection => !excludedCollectionIds.Contains(collection.Id))
+            .Where(collection =>
+                afterCreatedAt == null
+                || collection.CreatedAt > afterCreatedAt
+                || (collection.CreatedAt == afterCreatedAt && collection.Id > afterCollectionId)
+            )
             .OrderBy(collection => collection.CreatedAt)
             .ThenBy(collection => collection.Id)
             .Take(count)

@@ -111,6 +111,8 @@ in einem gemeinsamen Container, etwa für eine TV-Staffel.
 ## 6. Onlineprüfungen
 
 Bearcat prüft die hochgeladenen Dateien regelmässig, frühestens alle 30 Minuten.
+Jeder Durchlauf prüft bis zu 100 Uploads pro Hosterregistrierung, zuerst die am längsten nicht geprüften.
+Bei vielen Uploads auf einer Hosterregistrierung kann eine vollständige Runde länger als 30 Minuten dauern.
 
 | Onlinestatus | Bedeutung |
 | --- | --- |
@@ -138,6 +140,8 @@ Bearcat erstellt einen automatischen Reupload, wenn alle diese Bedingungen erfü
 
 Ein Ersatzupload blockiert weitere Reuploads, solange er `Online` ist oder den Status `Pending`,
 `Uploading`, `WaitingForArchive`, `Failed` oder `CancellationRequested` hat.
+
+Jeder Durchlauf erstellt bis zu 100 automatische Reuploads. Weitere fällige Reuploads folgen in den nächsten Durchläufen.
 
 Ist ein Reupload fällig, erstellt Bearcat einen neuen Uploadeintrag für dieselbe Uploadkonfiguration:
 

@@ -56,7 +56,7 @@ public class LogStreamBroadcasterTest
         // Assert
         snapshot.Count.ShouldBe(LogStreamBroadcaster.BufferCapacity);
         snapshot[0].Message.ShouldBe("line-25");
-        snapshot[^1].Message.ShouldBe($"line-{publishedCount - 1}");
+        snapshot.Last().Message.ShouldBe($"line-{publishedCount - 1}");
         snapshot
             .Select(line => line.Message)
             .ShouldBe(
@@ -135,7 +135,7 @@ public class LogStreamBroadcasterTest
 
         received.Count.ShouldBe(LogStreamBroadcaster.SubscriberCapacity);
         received[0].ShouldBe("line-10");
-        received[^1].ShouldBe($"line-{publishedCount - 1}");
+        received.Last().ShouldBe($"line-{publishedCount - 1}");
     }
 
     [Test]

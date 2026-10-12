@@ -45,7 +45,7 @@ public static class ReleaseCollectionProgressStepService
     )
     {
         var releasesWithUploadConfigs = releases
-            .Where(release => release.ActiveUploadConfigsCount > 0)
+            .Where(release => release.UploadConfigsCount > 0)
             .ToList();
 
         if (releasesWithUploadConfigs.Count == 0)

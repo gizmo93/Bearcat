@@ -10,9 +10,15 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
 {
     public async Task<IReadOnlyList<Release>> GetConversionCandidatesAsync(
         DateTime cutoff,
+        int afterReleaseId,
+        int maximumReleaseCount,
         CancellationToken cancellationToken
     )
     {
+        var mirrorDownloadHosterRegistrationIds = await GetMirrorDownloadHosterRegistrationIdsAsync(
+            cancellationToken
+        );
+
         return await dbWrite
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
@@ -24,9 +30,15 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.UploadConfigs)
                     .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.UploadedFiles)
+                        .ThenInclude(u =>
+                            u.UploadedFiles.Where(f =>
+                                EF.Parameter(mirrorDownloadHosterRegistrationIds)
+                                    .Contains(f.Upload.UploadConfig.HosterRegistrationId)
+                            )
+                        )
             .Where(r =>
-                r.ReleaseType == ReleaseType.Managed
+                r.Id > afterReleaseId
+                && r.ReleaseType == ReleaseType.Managed
                 && !r.ExcludeFromAutoCleanup
                 && r.ReleaseFolderPath != null
                 && (
@@ -50,11 +62,27 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                 )
             )
             .OrderBy(r => r.Id)
+            .Take(maximumReleaseCount)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    public void ClearChangeTracker()
+    {
+        dbWrite.ChangeTracker.Clear();
+    }
+
+    private async Task<List<int>> GetMirrorDownloadHosterRegistrationIdsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .HosterRegistrations.Where(h => h.IsActive && h.UseForMirrorDownloads)
+            .Select(h => h.Id)
+            .ToListAsync(cancellationToken);
     }
 }

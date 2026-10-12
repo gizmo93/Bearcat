@@ -16,9 +16,15 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
 
     public async Task<IReadOnlyList<Archive>> GetLocalArchivesPastRetentionAsync(
         DateTime cutoff,
+        int afterArchiveId,
+        int maximumArchiveCount,
         CancellationToken cancellationToken
     )
     {
+        var mirrorDownloadHosterRegistrationIds = await GetMirrorDownloadHosterRegistrationIdsAsync(
+            cancellationToken
+        );
+
         return await dbWrite
             .Archives.AsSplitQuery()
             .Include(a => a.Uploads)
@@ -31,9 +37,15 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
             .Include(a => a.ArchiveConfig)
                 .ThenInclude(c => c.UploadConfigs)
                     .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.UploadedFiles)
+                        .ThenInclude(u =>
+                            u.UploadedFiles.Where(f =>
+                                EF.Parameter(mirrorDownloadHosterRegistrationIds)
+                                    .Contains(f.Upload.UploadConfig.HosterRegistrationId)
+                            )
+                        )
             .Where(a =>
-                a.ArchiveState == ArchiveState.Created
+                a.Id > afterArchiveId
+                && a.ArchiveState == ArchiveState.Created
                 && a.ArchiveStorageFolderId == null
                 && a.Uploads.Any()
                 && a.Uploads.All(u => u.UploadedAt != null)
@@ -49,6 +61,7 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                 )
             )
             .OrderBy(a => a.Id)
+            .Take(maximumArchiveCount)
             .ToListAsync(cancellationToken);
     }
 
@@ -118,5 +131,20 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    public void ClearChangeTracker()
+    {
+        dbWrite.ChangeTracker.Clear();
+    }
+
+    private async Task<List<int>> GetMirrorDownloadHosterRegistrationIdsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .HosterRegistrations.Where(h => h.IsActive && h.UseForMirrorDownloads)
+            .Select(h => h.Id)
+            .ToListAsync(cancellationToken);
     }
 }

@@ -6,7 +6,13 @@ public interface IQualityGateRepository
 {
     Task<Release?> GetForEvaluationAsync(int releaseId, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Release>> GetPendingReleasesAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<Release>> GetPendingReleasesAsync(
+        int afterReleaseId,
+        int maximumReleaseCount,
+        CancellationToken cancellationToken
+    );
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
+
+    void ClearChangeTracker();
 }

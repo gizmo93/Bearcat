@@ -17,20 +17,32 @@ public class QualityGateRepository(IBearcatWriteDbContext dbWrite) : IQualityGat
     }
 
     public async Task<IReadOnlyList<Release>> GetPendingReleasesAsync(
+        int afterReleaseId,
+        int maximumReleaseCount,
         CancellationToken cancellationToken
     )
     {
         return await BuildEvaluationQuery()
             .Where(r =>
-                r.QualityGateState == QualityGateState.Failed
-                || r.QualityGateState == QualityGateState.NotEvaluated
+                r.Id > afterReleaseId
+                && (
+                    r.QualityGateState == QualityGateState.Failed
+                    || r.QualityGateState == QualityGateState.NotEvaluated
+                )
             )
+            .OrderBy(r => r.Id)
+            .Take(maximumReleaseCount)
             .ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    public void ClearChangeTracker()
+    {
+        dbWrite.ChangeTracker.Clear();
     }
 
     private IQueryable<Release> BuildEvaluationQuery()

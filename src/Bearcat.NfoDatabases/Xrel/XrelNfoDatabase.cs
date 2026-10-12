@@ -183,7 +183,7 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
         }
 
         var urlParts = coverUrl.Split('.');
-        var fileExtension = urlParts[^1];
+        var fileExtension = urlParts.Last();
 
         return $"{string.Join('.', urlParts[..^1])}-full.{fileExtension}";
     }

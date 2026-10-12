@@ -22,6 +22,8 @@ public class ReleaseFolderRetirementService(
     ILogger<ReleaseFolderRetirementService> logger
 )
 {
+    private const int ReleaseBatchSize = 100;
+
     private const string ConversionReason =
         "The release was converted to unmanaged because its release folder retention expired.";
 
@@ -46,7 +48,50 @@ public class ReleaseFolderRetirementService(
 
         var cutoff = timeProvider.GetLocalNow().AddDays(-retentionDays);
 
-        var candidates = await repository.GetConversionCandidatesAsync(cutoff, cancellationToken);
+        var afterReleaseId = 0;
+        var convertedReleaseCount = 0;
+        var hasMoreCandidates = true;
+
+        while (hasMoreCandidates)
+        {
+            var candidates = await repository.GetConversionCandidatesAsync(
+                cutoff: cutoff,
+                afterReleaseId: afterReleaseId,
+                maximumReleaseCount: ReleaseBatchSize,
+                cancellationToken: cancellationToken
+            );
+
+            if (candidates.Count > 0)
+            {
+                convertedReleaseCount += await ConvertCandidatesAsync(
+                    candidates,
+                    deleteReleaseFolderOnConversion,
+                    cancellationToken
+                );
+                afterReleaseId = candidates.Last().Id;
+                repository.ClearChangeTracker();
+            }
+
+            hasMoreCandidates = candidates.Count == ReleaseBatchSize;
+        }
+
+        if (convertedReleaseCount == 0)
+        {
+            return;
+        }
+
+        logger.LogInformation(
+            "Converted {ReleaseCount} releases to unmanaged because their release folder retention expired",
+            convertedReleaseCount
+        );
+    }
+
+    private async Task<int> ConvertCandidatesAsync(
+        IReadOnlyList<Release> candidates,
+        bool deleteReleaseFolderOnConversion,
+        CancellationToken cancellationToken
+    )
+    {
         var releaseFoldersToDelete = new List<ReleaseFolderToDelete>();
         var convertedReleaseCount = 0;
 
@@ -91,19 +136,14 @@ public class ReleaseFolderRetirementService(
 
         if (convertedReleaseCount == 0)
         {
-            return;
+            return 0;
         }
 
         await repository.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation(
-            "Converted {ReleaseCount} releases to unmanaged because their release folder retention expired",
-            convertedReleaseCount
-        );
-
         if (releaseFoldersToDelete.Count == 0)
         {
-            return;
+            return convertedReleaseCount;
         }
 
         foreach (var releaseFolderToDelete in releaseFoldersToDelete)
@@ -112,6 +152,8 @@ public class ReleaseFolderRetirementService(
         }
 
         await repository.SaveChangesAsync(cancellationToken);
+
+        return convertedReleaseCount;
     }
 
     private string? GetKeptReleaseFolderMessage(

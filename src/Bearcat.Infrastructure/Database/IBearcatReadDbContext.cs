@@ -1,5 +1,6 @@
 ﻿using Bearcat.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Bearcat.Infrastructure.Database;
 
@@ -60,4 +61,5 @@ public interface IBearcatReadDbContext
     public DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
     public DbSet<ProxyServer> ProxyServers { get; set; }
     public DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
+    public DatabaseFacade Database { get; }
 }

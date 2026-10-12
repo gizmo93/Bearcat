@@ -23,9 +23,13 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.ReleaseCollectionId).IsRequired(false);
         builder.Property(r => r.QualityGateState).IsRequired();
         builder.Property(r => r.QualityGateEvaluatedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(r => r.OnlineState).IsRequired();
 
         builder.HasIndex(r => r.ReleaseFolderPath);
         builder.HasIndex(r => r.QualityGateState);
+        builder.HasIndex(r => r.OnlineState);
+        builder.HasIndex(r => new { r.CreatedAt, r.Id }).IsDescending();
+        builder.HasIndex(r => new { r.Name, r.Id });
 
         builder
             .HasMany(r => r.ArchiveConfigs)

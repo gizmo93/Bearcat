@@ -11,6 +11,8 @@ public class QualityGateService(
     TimeProvider timeProvider
 )
 {
+    private const int ReleaseBatchSize = 500;
+
     public async Task RefreshAsync(int releaseId, CancellationToken cancellationToken = default)
     {
         var release = await repository.GetForEvaluationAsync(releaseId, cancellationToken);
@@ -42,14 +44,31 @@ public class QualityGateService(
 
     public async Task ReevaluatePendingReleasesAsync(CancellationToken cancellationToken = default)
     {
-        var releases = await repository.GetPendingReleasesAsync(cancellationToken);
         var evaluatedAt = timeProvider.GetLocalNow();
+        var afterReleaseId = 0;
+        var hasMoreReleases = true;
 
-        foreach (var release in releases)
+        while (hasMoreReleases)
         {
-            evaluator.EvaluateAndApply(release, evaluatedAt);
-        }
+            var releases = await repository.GetPendingReleasesAsync(
+                afterReleaseId: afterReleaseId,
+                maximumReleaseCount: ReleaseBatchSize,
+                cancellationToken: cancellationToken
+            );
 
-        await repository.SaveChangesAsync(cancellationToken);
+            if (releases.Count > 0)
+            {
+                foreach (var release in releases)
+                {
+                    evaluator.EvaluateAndApply(release, evaluatedAt);
+                }
+
+                await repository.SaveChangesAsync(cancellationToken);
+                afterReleaseId = releases.Last().Id;
+                repository.ClearChangeTracker();
+            }
+
+            hasMoreReleases = releases.Count == ReleaseBatchSize;
+        }
     }
 }

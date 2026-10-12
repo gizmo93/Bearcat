@@ -76,6 +76,40 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetPostQueueAsync_MoreQueuedCollectionsThanSqliteVariablesPerStatement_ReturnsAllQueuedCollections()
+    {
+        // Arrange
+        const int queuedCollectionCount = 1050;
+
+        foreach (var collectionNumber in Enumerable.Range(1, queuedCollectionCount))
+        {
+            AddCollectionEntities(
+                $"Queued.Collection.{collectionNumber:0000}",
+                slotName: "1080p",
+                linkCount: 1,
+                useSlot: true,
+                withCollectionContainer: true
+            );
+        }
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        await UpdatePostgresPlannerStatisticsAsync(DbContext);
+        await LimitSqliteVariableCountPerStatementAsync(DbContext, maximumVariableCount: 1020);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(queuedCollectionCount);
+        result.ShouldAllBe(item =>
+            item.SlotGroups.Count == 1
+            && item.SlotGroups[0].Hosters.Count == 1
+            && item.SlotGroups[0].Containers.Count == 1
+        );
+    }
+
+    [Test]
     public async Task GetPostQueueAsync_SlotConfigWithLatestPendingUpload_HidesCollection()
     {
         // Arrange
@@ -671,6 +705,29 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         DateTime? uploadsPostedAt = null
     )
     {
+        var collection = AddCollectionEntities(
+            name,
+            slotName,
+            linkCount,
+            useSlot,
+            withCollectionContainer,
+            uploadsPostedAt
+        );
+
+        await DbContext.SaveChangesAsync();
+
+        return collection;
+    }
+
+    private ReleaseCollection AddCollectionEntities(
+        string name,
+        string slotName,
+        int linkCount,
+        bool useSlot,
+        bool withCollectionContainer = false,
+        DateTime? uploadsPostedAt = null
+    )
+    {
         var releaseGroup = new ReleaseGroup
         {
             Name = $"{name} group",
@@ -808,8 +865,6 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
 
             DbContext.AddRange(linkCrypterRegistration, container);
         }
-
-        await DbContext.SaveChangesAsync();
 
         return collection;
     }

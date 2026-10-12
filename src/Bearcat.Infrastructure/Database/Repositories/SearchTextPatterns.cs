@@ -7,6 +7,11 @@ public static class SearchTextPatterns
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    public static string ToContainsPattern(string value)
+    {
+        return $"%{value}%";
+    }
+
     public static string ToLowerCaseContainsPattern(string value)
     {
         return $"%{value.ToLowerInvariant()}%";

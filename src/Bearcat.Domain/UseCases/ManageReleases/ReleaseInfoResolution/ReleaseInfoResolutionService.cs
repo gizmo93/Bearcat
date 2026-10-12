@@ -29,19 +29,34 @@ public class ReleaseInfoResolutionService(
     {
         var hasReleasesWithoutInfos = true;
         var totalResolvedCount = 0;
-        var seenReleaseIds = new HashSet<int>();
+        DateTime? afterCreatedAt = null;
+        var afterReleaseId = 0;
 
         var registrations = await GetActiveNfoDatabaseRegistrationsAsync(cancellationToken);
 
         while (hasReleasesWithoutInfos)
         {
-            var (hadReleasesWithoutInfos, resolvedCount) = await ResolveBatchAsync(
-                registrations: registrations,
-                seenReleaseIds: seenReleaseIds,
+            var releases = await repository.GetReleasesWithoutInfoAsync(
+                count: MissingReleaseBatchSize,
+                lastCheckedThreshold: timeProvider.GetLocalNow() - lastCheckedThreshold,
+                afterCreatedAt: afterCreatedAt,
+                afterReleaseId: afterReleaseId,
                 cancellationToken: cancellationToken
             );
-            hasReleasesWithoutInfos = hadReleasesWithoutInfos;
-            totalResolvedCount += resolvedCount;
+
+            totalResolvedCount += await ResolveBatchAsync(
+                registrations: registrations,
+                releases: releases,
+                cancellationToken: cancellationToken
+            );
+
+            hasReleasesWithoutInfos = releases.Count > 0;
+
+            if (hasReleasesWithoutInfos)
+            {
+                afterCreatedAt = releases.Last().CreatedAt;
+                afterReleaseId = releases.Last().Id;
+            }
         }
 
         return totalResolvedCount;
@@ -194,28 +209,17 @@ public class ReleaseInfoResolutionService(
         return releaseInfoAttached || nfoAttached || metadataAttached;
     }
 
-    private async Task<(bool FoundReleasesWithoutInfo, int ResolvedCount)> ResolveBatchAsync(
+    private async Task<int> ResolveBatchAsync(
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations,
-        HashSet<int> seenReleaseIds,
+        IReadOnlyList<Release> releases,
         CancellationToken cancellationToken
     )
     {
-        var lastCheckedThresholdDate = timeProvider.GetLocalNow() - lastCheckedThreshold;
-
-        var releases = await repository.GetReleasesWithoutInfoAsync(
-            count: MissingReleaseBatchSize,
-            lastCheckedThreshold: lastCheckedThresholdDate,
-            excludedReleaseIds: seenReleaseIds,
-            cancellationToken: cancellationToken
-        );
-
         var resolvedCount = 0;
 
         foreach (var release in releases)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            seenReleaseIds.Add(release.Id);
 
             var resolved = await TryResolveAsync(
                 release: release,
@@ -246,7 +250,7 @@ public class ReleaseInfoResolutionService(
             }
         }
 
-        return (FoundReleasesWithoutInfo: releases.Count > 0, ResolvedCount: resolvedCount);
+        return resolvedCount;
     }
 
     private async Task<

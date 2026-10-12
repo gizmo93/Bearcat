@@ -31,7 +31,7 @@ public record ReleaseResponse(
             ReleaseGroupName: readModel.ReleaseGroupName,
             ReleaseFolderPath: readModel.ReleaseFolderPath,
             OnlineState: readModel.OnlineState,
-            ActiveUploadConfigsCount: readModel.ActiveUploadConfigsCount,
+            ActiveUploadConfigsCount: readModel.UploadConfigsCount,
             OnlineUploadConfigsCount: readModel.OnlineUploadConfigsCount,
             ExcludeFromAutoCleanup: readModel.ExcludeFromAutoCleanup,
             UploadsPostedAt: readModel.UploadsPostedAt

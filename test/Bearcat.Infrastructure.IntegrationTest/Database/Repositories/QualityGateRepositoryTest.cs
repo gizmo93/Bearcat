@@ -25,7 +25,7 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         var release = await AddReleaseAsync(QualityGateState.Failed);
 
         // Act
-        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+        var result = await GetPendingReleasesAsync();
 
         // Assert
         result.Select(r => r.Id).ShouldBe([release.Id]);
@@ -41,7 +41,7 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         );
 
         // Act
-        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+        var result = await GetPendingReleasesAsync();
 
         // Assert
         result.Select(r => r.Id).ShouldBe([release.Id]);
@@ -54,7 +54,7 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         var release = await AddReleaseAsync(QualityGateState.Failed, withProfile: false);
 
         // Act
-        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+        var result = await GetPendingReleasesAsync();
 
         // Assert
         result.Select(r => r.Id).ShouldBe([release.Id]);
@@ -67,7 +67,7 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         var release = await AddReleaseAsync(QualityGateState.NotEvaluated);
 
         // Act
-        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+        var result = await GetPendingReleasesAsync();
 
         // Assert
         result.Select(r => r.Id).ShouldBe([release.Id]);
@@ -83,7 +83,7 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         var release = await AddReleaseAsync(state, releaseType: ReleaseType.Unmanaged);
 
         // Act
-        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+        var result = await GetPendingReleasesAsync();
 
         // Assert
         result.Select(r => r.Id).ShouldBe([release.Id]);
@@ -99,10 +99,74 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         await AddReleaseAsync(state);
 
         // Act
-        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+        var result = await GetPendingReleasesAsync();
 
         // Assert
         result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPendingReleasesAsync_MorePendingReleasesThanMaximumCount_ReturnsLowestReleaseIdsInAscendingOrder()
+    {
+        // Arrange
+        var firstRelease = await AddReleaseAsync(QualityGateState.Failed);
+        await AddReleaseAsync(QualityGateState.Passed);
+        var secondRelease = await AddReleaseAsync(QualityGateState.NotEvaluated);
+        await AddReleaseAsync(QualityGateState.Failed);
+
+        // Act
+        var result = await GetPendingReleasesAsync(maximumReleaseCount: 2);
+
+        // Assert
+        result.Select(r => r.Id).ShouldBe([firstRelease.Id, secondRelease.Id]);
+    }
+
+    [Test]
+    public async Task GetPendingReleasesAsync_AfterReleaseIdIsSet_ReturnsOnlyReleasesWithHigherId()
+    {
+        // Arrange
+        var firstRelease = await AddReleaseAsync(QualityGateState.Failed);
+        var secondRelease = await AddReleaseAsync(QualityGateState.Failed);
+        var thirdRelease = await AddReleaseAsync(QualityGateState.NotEvaluated);
+
+        // Act
+        var result = await GetPendingReleasesAsync(afterReleaseId: firstRelease.Id);
+
+        // Assert
+        result.Select(r => r.Id).ShouldBe([secondRelease.Id, thirdRelease.Id]);
+    }
+
+    [Test]
+    public async Task GetPendingReleasesAsync_NoPendingReleaseAfterReleaseId_ReturnsEmptyList()
+    {
+        // Arrange
+        var release = await AddReleaseAsync(QualityGateState.Failed);
+
+        // Act
+        var result = await GetPendingReleasesAsync(afterReleaseId: release.Id);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPendingReleasesAsync_PendingReleaseWithDetails_LoadsAllIncludes()
+    {
+        // Arrange
+        await AddEvaluationReleaseAsync("Bearcat.Movie.2026-GRP", "Movie profile");
+
+        // Act
+        var result = await GetPendingReleasesAsync();
+
+        // Assert
+        var release = result.ShouldHaveSingleItem();
+        release.ReleaseGroup.QualityProfile.ShouldNotBeNull();
+        release.ReleaseGroup.QualityProfile.Rules.Count.ShouldBe(2);
+        release.ReleaseInfo.ShouldNotBeNull();
+        release.Metadata.ShouldNotBeNull();
+        release.ReleaseNfo.ShouldNotBeNull();
+        release.MediaFiles.Count.ShouldBe(2);
+        release.QualityIssues.Count.ShouldBe(2);
     }
 
     [Test]
@@ -157,6 +221,18 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBeNull();
+    }
+
+    private async Task<IReadOnlyList<Release>> GetPendingReleasesAsync(
+        int afterReleaseId = 0,
+        int maximumReleaseCount = 500
+    )
+    {
+        return await repository.GetPendingReleasesAsync(
+            afterReleaseId: afterReleaseId,
+            maximumReleaseCount: maximumReleaseCount,
+            cancellationToken: CancellationToken.None
+        );
     }
 
     private async Task<Release> AddEvaluationReleaseAsync(string name, string profileName)

@@ -15,7 +15,7 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
             modelBuilder.Entity("ArchiveConfigAdditionalArchiveContents", b =>
                 {
@@ -155,6 +155,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("ArchiveConfigId");
 
                     b.HasIndex("ArchiveStorageFolderId");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
 
                     b.ToTable("Archives");
                 });
@@ -1218,6 +1221,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OnlineState")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("PrimaryLanguageCode")
                         .HasMaxLength(2)
                         .HasColumnType("TEXT");
@@ -1255,6 +1261,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OnlineState");
+
                     b.HasIndex("QualityGateState");
 
                     b.HasIndex("ReleaseCollectionId");
@@ -1262,6 +1270,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("ReleaseFolderPath");
 
                     b.HasIndex("ReleaseGroupId");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("Name", "Id");
 
                     b.ToTable("Releases");
                 });
@@ -2101,6 +2114,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("OldestUploadedFileCheckedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("OnlineState")
                         .HasColumnType("INTEGER");
 
@@ -2121,9 +2138,17 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("ArchiveId");
 
-                    b.HasIndex("UploadConfigId");
+                    b.HasIndex("UploadedAt")
+                        .HasFilter("\"UploadedAt\" IS NOT NULL");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("UploadConfigId", "OnlineState");
 
                     b.HasIndex("UploadState", "OnlineState");
+
+                    b.HasIndex("UploadConfigId", "UploadState", "UploadedAt");
 
                     b.ToTable("Uploads");
                 });
@@ -2341,6 +2366,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveFileId");
+
+                    b.HasIndex("HosterFileLink");
 
                     b.HasIndex("UploadId");
 

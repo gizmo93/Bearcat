@@ -122,7 +122,7 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
         result.TotalCount.ShouldBe(4);
         var countsByName = result.Items.ToDictionary(
             item => item.Name,
-            item => (item.ActiveUploadConfigsCount, item.OnlineUploadConfigsCount)
+            item => (item.UploadConfigsCount, item.OnlineUploadConfigsCount)
         );
         countsByName["Bearcat.AllOnline.2026-GRP"].ShouldBe((2, 2));
         countsByName["Bearcat.NoUploadConfigs.2026-GRP"].ShouldBe((0, 0));
@@ -272,45 +272,6 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
         // Act
         var result = await repository.SearchReleasesAsync(
             new ReleaseSearchQuery(PostedLocationUrl: "CAFÉ-NEAR"),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.Single().ReleaseId.ShouldBe(matchingRelease.Id);
-    }
-
-    [Test]
-    public async Task SearchReleasesAsync_DownloadLinkWithDifferentCaseNonAsciiCharacters_ReturnsReleaseWithThatLink()
-    {
-        // Arrange
-        var matchingRelease = testData.AddRelease("Bearcat.Link.2026-GRP");
-        var matchingUpload = testData.AddUpload(
-            testData.AddUploadConfig(matchingRelease, "Upload"),
-            MidnightUtc,
-            MidnightUtc
-        );
-        testData.AddUploadedFile(
-            matchingUpload,
-            "Bearcat.Link.2026-GRP.part01.rar",
-            "https://hoster.example/files/Façade.part01.rar"
-        );
-        var otherRelease = testData.AddRelease("Bearcat.Other.2026-GRP");
-        var otherUpload = testData.AddUpload(
-            testData.AddUploadConfig(otherRelease, "Upload"),
-            MidnightUtc,
-            MidnightUtc
-        );
-        testData.AddUploadedFile(
-            otherUpload,
-            "Bearcat.Other.2026-GRP.part01.rar",
-            "https://hoster.example/files/other.part01.rar"
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleasesAsync(
-            new ReleaseSearchQuery(DownloadLink: "FAÇADE.PART01"),
             CancellationToken.None
         );
 

@@ -20,7 +20,7 @@ public class ReleaseClassificationService(
     )
     {
         var totalClassified = 0;
-        var seenReleaseIds = new HashSet<int>();
+        var afterReleaseId = 0;
         var hasPendingReleases = true;
 
         while (hasPendingReleases)
@@ -28,7 +28,7 @@ public class ReleaseClassificationService(
             var releases = await repository.GetReleasesNeedingClassificationAsync(
                 count: BatchSize,
                 parserVersion: ReleaseClassificationBuilder.CurrentParserVersion,
-                excludedReleaseIds: seenReleaseIds,
+                afterReleaseId: afterReleaseId,
                 cancellationToken: cancellationToken
             );
 
@@ -36,7 +36,7 @@ public class ReleaseClassificationService(
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                seenReleaseIds.Add(release.Id);
+                afterReleaseId = release.Id;
                 Classify(release);
                 totalClassified++;
             }
