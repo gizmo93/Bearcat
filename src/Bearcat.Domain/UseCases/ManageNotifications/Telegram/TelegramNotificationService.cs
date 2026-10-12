@@ -300,7 +300,7 @@ public sealed class TelegramNotificationService(
     )
     {
         var configuration = await GetConfigurationAsync(cancellationToken);
-        configuration.UpdateOffset = updates[^1].UpdateId + 1;
+        configuration.UpdateOffset = updates.Last().UpdateId + 1;
 
         foreach (var update in updates)
         {

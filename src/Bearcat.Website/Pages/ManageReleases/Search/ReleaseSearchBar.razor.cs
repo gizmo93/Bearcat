@@ -127,7 +127,7 @@ public sealed partial class ReleaseSearchBar : ComponentBase, IDisposable
                 isScopeListDismissed = true;
                 break;
             case "Backspace" when inputText.Length == 0 && Chips.Count > 0:
-                await RemoveChipAsync(Chips[^1].Scope);
+                await RemoveChipAsync(Chips.Last().Scope);
                 break;
         }
     }

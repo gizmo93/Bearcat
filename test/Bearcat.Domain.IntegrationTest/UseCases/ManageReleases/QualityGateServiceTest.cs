@@ -50,7 +50,7 @@ public class QualityGateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         await ShouldHaveStateAsync(passingRelease, QualityGateState.Passed, issueCount: 0);
         await ShouldHaveStateAsync(failingReleases[0], QualityGateState.Failed, issueCount: 1);
-        await ShouldHaveStateAsync(failingReleases[^1], QualityGateState.Failed, issueCount: 1);
+        await ShouldHaveStateAsync(failingReleases.Last(), QualityGateState.Failed, issueCount: 1);
     }
 
     [Test]
@@ -71,7 +71,7 @@ public class QualityGateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         await ShouldHaveStateAsync(failingRelease, QualityGateState.Failed, issueCount: 1);
         await ShouldHaveStateAsync(passingReleases[0], QualityGateState.Passed, issueCount: 0);
-        await ShouldHaveStateAsync(passingReleases[^1], QualityGateState.Passed, issueCount: 0);
+        await ShouldHaveStateAsync(passingReleases.Last(), QualityGateState.Passed, issueCount: 0);
     }
 
     [Test]

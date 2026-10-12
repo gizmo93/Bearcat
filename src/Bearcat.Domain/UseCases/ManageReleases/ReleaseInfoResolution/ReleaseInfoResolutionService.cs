@@ -54,8 +54,8 @@ public class ReleaseInfoResolutionService(
 
             if (hasReleasesWithoutInfos)
             {
-                afterCreatedAt = releases[^1].CreatedAt;
-                afterReleaseId = releases[^1].Id;
+                afterCreatedAt = releases.Last().CreatedAt;
+                afterReleaseId = releases.Last().Id;
             }
         }
 

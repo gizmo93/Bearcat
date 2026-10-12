@@ -33,7 +33,7 @@ public class HttpClientBuilderProxyExtensionsTest
         var handlers = CreateHandlerChain();
 
         // Assert
-        var webProxy = GetConfiguredWebProxy(handlers[^1]);
+        var webProxy = GetConfiguredWebProxy(handlers.Last());
         webProxy
             .GetProxy(new Uri("https://nfo.test"))
             .ShouldBe(new Uri("http://nfo-proxy.test:8080"));
@@ -54,7 +54,7 @@ public class HttpClientBuilderProxyExtensionsTest
         var handlers = CreateHandlerChain();
 
         // Assert
-        var socketsHttpHandler = handlers[^1].ShouldBeOfType<SocketsHttpHandler>();
+        var socketsHttpHandler = handlers.Last().ShouldBeOfType<SocketsHttpHandler>();
         socketsHttpHandler.AllowAutoRedirect.ShouldBeFalse();
         socketsHttpHandler.UseProxy.ShouldBeTrue();
         socketsHttpHandler.Proxy.ShouldBeOfType<CategoryProxySelectingWebProxy>();
@@ -75,7 +75,7 @@ public class HttpClientBuilderProxyExtensionsTest
         var handlers = CreateHandlerChain();
 
         // Assert
-        var httpClientHandler = handlers[^1].ShouldBeOfType<HttpClientHandler>();
+        var httpClientHandler = handlers.Last().ShouldBeOfType<HttpClientHandler>();
         httpClientHandler.AllowAutoRedirect.ShouldBeFalse();
         httpClientHandler.UseProxy.ShouldBeTrue();
         httpClientHandler.Proxy.ShouldBeOfType<CategoryProxySelectingWebProxy>();
@@ -144,7 +144,7 @@ public class HttpClientBuilderProxyExtensionsTest
             .CreateHandler(ClientName);
         var handlers = new List<HttpMessageHandler> { handler };
 
-        while (handlers[^1] is DelegatingHandler { InnerHandler: not null } delegatingHandler)
+        while (handlers.Last() is DelegatingHandler { InnerHandler: not null } delegatingHandler)
         {
             handlers.Add(delegatingHandler.InnerHandler);
         }

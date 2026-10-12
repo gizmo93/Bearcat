@@ -54,7 +54,7 @@ public class ArchiveCleanupService(
             if (archives.Count > 0)
             {
                 await ApplyRetentionActionAsync(retentionAction, archives, cancellationToken);
-                afterArchiveId = archives[^1].Id;
+                afterArchiveId = archives.Last().Id;
                 repository.ClearChangeTracker();
             }
 

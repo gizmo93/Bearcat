@@ -46,8 +46,8 @@ public partial class ReleaseCollectionInfoResolutionService(
 
             if (hasCollectionsWithoutMetadata)
             {
-                afterCreatedAt = collections[^1].CreatedAt;
-                afterCollectionId = collections[^1].Id;
+                afterCreatedAt = collections.Last().CreatedAt;
+                afterCollectionId = collections.Last().Id;
             }
         }
 

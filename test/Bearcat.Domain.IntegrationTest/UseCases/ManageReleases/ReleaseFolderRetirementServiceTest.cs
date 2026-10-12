@@ -124,7 +124,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         var result = await DbContext.Releases.SingleAsync(r => r.Id == recoverableRelease.Id);
         result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
         await ShouldStillBeManagedAsync(unrecoverableReleases[0]);
-        await ShouldStillBeManagedAsync(unrecoverableReleases[^1]);
+        await ShouldStillBeManagedAsync(unrecoverableReleases.Last());
     }
 
     [Test]

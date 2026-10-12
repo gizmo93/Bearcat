@@ -130,7 +130,7 @@ public sealed class RemoteSourceSessionPool(
 
             if (sessions.IdleSessions.Count > 0)
             {
-                newestSession = sessions.IdleSessions[^1].Session;
+                newestSession = sessions.IdleSessions.Last().Session;
                 sessions.IdleSessions.RemoveAt(sessions.IdleSessions.Count - 1);
             }
         }

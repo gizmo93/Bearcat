@@ -68,7 +68,7 @@ public class ReleaseFolderRetirementService(
                     deleteReleaseFolderOnConversion,
                     cancellationToken
                 );
-                afterReleaseId = candidates[^1].Id;
+                afterReleaseId = candidates.Last().Id;
                 repository.ClearChangeTracker();
             }
 

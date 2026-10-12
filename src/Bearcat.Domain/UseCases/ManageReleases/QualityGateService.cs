@@ -64,7 +64,7 @@ public class QualityGateService(
                 }
 
                 await repository.SaveChangesAsync(cancellationToken);
-                afterReleaseId = releases[^1].Id;
+                afterReleaseId = releases.Last().Id;
                 repository.ClearChangeTracker();
             }
 

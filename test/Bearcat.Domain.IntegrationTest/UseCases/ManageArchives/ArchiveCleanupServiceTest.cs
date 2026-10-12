@@ -138,7 +138,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         // Assert
         await ShouldBeDeletedAsync(recoverableArchive);
         await ShouldStillBeCreatedAsync(unrecoverableArchives[0]);
-        await ShouldStillBeCreatedAsync(unrecoverableArchives[^1]);
+        await ShouldStillBeCreatedAsync(unrecoverableArchives.Last());
     }
 
     [Test]

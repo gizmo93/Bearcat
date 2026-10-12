@@ -99,7 +99,7 @@ public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
             {
                 builder.Append(char.ToLowerInvariant(character));
             }
-            else if (builder.Length > 0 && builder[^1] != '_')
+            else if (builder.Length > 0 && builder[builder.Length - 1] != '_')
             {
                 builder.Append('_');
             }
