@@ -688,6 +688,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             new Upload
             {
                 UploadConfig = uploadConfig,
+                HosterRegistration = uploadConfig.HosterRegistration,
                 CreatedAt = createdAt ?? uploadedAt ?? DateTime.UtcNow,
                 UploadedAt = uploadedAt,
                 UploadState = uploadState,

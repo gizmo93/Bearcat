@@ -296,23 +296,25 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         };
 
         var archiveFile = archiveConfig.Archives[0].ArchiveFiles[0];
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = $"{name} hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "Hoster",
+            IsActive = hosterRegistrationIsActive,
+            UseForMirrorDownloads = hosterRegistrationUseForMirrorDownloads,
+        };
         archiveConfig.UploadConfigs =
         [
             new UploadConfig
             {
                 Release = release,
                 Name = "Default upload",
-                HosterRegistration = new HosterRegistration
-                {
-                    Name = $"{name} hoster",
-                    SerializedConfig = "{}",
-                    HosterClassName = "Hoster",
-                    IsActive = hosterRegistrationIsActive,
-                    UseForMirrorDownloads = hosterRegistrationUseForMirrorDownloads,
-                },
+                HosterRegistration = hosterRegistration,
                 Uploads = (uploads ?? [])
                     .Select(upload => new Upload
                     {
+                        HosterRegistration = hosterRegistration,
                         CreatedAt = Cutoff.AddDays(-10),
                         UploadedAt = upload.UploadedAt,
                         UploadState = upload.UploadState,

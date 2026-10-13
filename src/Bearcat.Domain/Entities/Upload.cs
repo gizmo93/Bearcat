@@ -10,6 +10,10 @@ public class Upload
 
     public UploadConfig UploadConfig { get; set; } = null!;
 
+    public int HosterRegistrationId { get; set; }
+
+    public HosterRegistration HosterRegistration { get; set; } = null!;
+
     public int? ArchiveId { get; set; }
 
     public Archive? Archive { get; set; }

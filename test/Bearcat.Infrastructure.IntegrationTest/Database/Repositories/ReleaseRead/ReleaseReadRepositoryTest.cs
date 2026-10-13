@@ -628,6 +628,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                         HosterRegistration = hosterRegistration,
                         Name = "Upload",
                     },
+                    HosterRegistration = hosterRegistration,
                     CreatedAt = DateTime.UtcNow.AddMinutes(-10),
                     UploadedAt = DateTime.UtcNow.AddMinutes(-10),
                     UploadState = UploadState.Completed,
@@ -1252,6 +1253,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = spec.HasUploadedAt ? createdAt : null,
             UploadState = spec.State,
@@ -1534,6 +1536,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,

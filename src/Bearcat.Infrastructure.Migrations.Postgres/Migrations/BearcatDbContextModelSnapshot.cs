@@ -2214,6 +2214,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<string>("HosterFolderId")
                         .HasColumnType("text");
 
+                    b.Property<int>("HosterRegistrationId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("NotFullyOnlineSince")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
@@ -2251,6 +2254,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasIndex("UploadConfigId", "OnlineState");
 
                     b.HasIndex("UploadState", "OnlineState");
+
+                    b.HasIndex("HosterRegistrationId", "OnlineState", "OldestUploadedFileCheckedAt");
 
                     b.HasIndex("UploadConfigId", "UploadState", "UploadedAt");
 
@@ -3110,6 +3115,12 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasForeignKey("ArchiveId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
+                        .WithMany("Uploads")
+                        .HasForeignKey("HosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Bearcat.Domain.Entities.UploadConfig", "UploadConfig")
                         .WithMany("Uploads")
                         .HasForeignKey("UploadConfigId")
@@ -3117,6 +3128,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired();
 
                     b.Navigation("Archive");
+
+                    b.Navigation("HosterRegistration");
 
                     b.Navigation("UploadConfig");
                 });
@@ -3280,6 +3293,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("Notifications");
 
                     b.Navigation("UploadConfigs");
+
+                    b.Navigation("Uploads");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>

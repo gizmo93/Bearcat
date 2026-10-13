@@ -240,6 +240,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -294,6 +295,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -358,6 +360,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = otherUploadConfig.Id,
+            HosterRegistrationId = otherUploadConfig.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -407,6 +410,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var secondUpload = new Upload
         {
             UploadConfigId = secondUploadConfig.Id,
+            HosterRegistrationId = secondUploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
@@ -432,6 +436,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousFirstHosterUpload = new Upload
         {
             UploadConfigId = firstUpload.UploadConfigId,
+            HosterRegistrationId = firstUpload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -442,6 +447,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousSecondHosterUpload = new Upload
         {
             UploadConfigId = secondUploadConfig.Id,
+            HosterRegistrationId = secondUploadConfig.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -508,6 +514,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -579,6 +586,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-2),
@@ -589,6 +597,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var activeUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadState = UploadState.Uploading,
@@ -1147,6 +1156,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -1214,6 +1224,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = restoredArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -1318,6 +1329,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var secondUpload = new Upload
         {
             UploadConfigId = firstUpload.UploadConfigId,
+            HosterRegistrationId = firstUpload.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
@@ -1402,6 +1414,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -1487,6 +1500,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var olderUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-2),
@@ -1514,6 +1528,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var newestUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -1588,6 +1603,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = otherUploadConfig.Id,
+            HosterRegistrationId = otherUploadConfig.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -2344,6 +2360,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -2446,6 +2463,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             Archive = existingArchive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -2618,6 +2636,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (onlineArchiveFile, OnlineState.Online),
@@ -2676,6 +2695,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (onlineArchiveFile, OnlineState.Online),
@@ -2735,6 +2755,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (firstArchiveFile, OnlineState.Online),
@@ -2802,6 +2823,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (onlineArchiveFile, OnlineState.Online),
@@ -2873,6 +2895,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var activeUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Uploading
         );
@@ -2916,6 +2939,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (missingOnlineArchiveFile, OnlineState.Online),
@@ -2971,6 +2995,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Failed,
             (onlineArchiveFileWithoutHash, OnlineState.Online),
@@ -3024,6 +3049,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
+            hosterRegistrationId: upload.HosterRegistrationId,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (firstArchiveFile, OnlineState.Online),
@@ -3096,6 +3122,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
     private static Upload CreatePreviousUpload(
         int uploadConfigId,
+        int hosterRegistrationId,
         Archive archive,
         UploadState uploadState,
         params (ArchiveFile ArchiveFile, OnlineState OnlineState)[] uploadedFiles
@@ -3104,6 +3131,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         return new Upload
         {
             UploadConfigId = uploadConfigId,
+            HosterRegistrationId = hosterRegistrationId,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
@@ -3395,6 +3423,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,

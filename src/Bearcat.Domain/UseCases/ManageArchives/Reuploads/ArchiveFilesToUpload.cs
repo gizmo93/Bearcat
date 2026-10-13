@@ -10,7 +10,7 @@ public static class ArchiveFilesToUpload
         IReadOnlyList<Upload> uploadsOfArchive
     )
     {
-        if (upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles)
+        if (upload.HosterRegistration.AlwaysReuploadAllFiles)
         {
             return [];
         }
@@ -19,6 +19,7 @@ public static class ArchiveFilesToUpload
             .Where(previousUpload =>
                 previousUpload.Id != upload.Id
                 && previousUpload.UploadConfigId == upload.UploadConfigId
+                && previousUpload.HosterRegistrationId == upload.HosterRegistrationId
             )
             .SelectMany(previousUpload => previousUpload.UploadedFiles)
             .GroupBy(uploadedFile => uploadedFile.ArchiveFileId)

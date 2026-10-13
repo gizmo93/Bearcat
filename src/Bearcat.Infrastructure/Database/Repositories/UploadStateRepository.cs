@@ -35,7 +35,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
 
         var uploadIds = await dbWrite
             .Uploads.Where(u =>
-                u.UploadConfig.HosterRegistrationId == hosterRegistrationId
+                u.HosterRegistrationId == hosterRegistrationId
                 && (
                     u.OnlineState == OnlineState.Online
                     || u.OnlineState == OnlineState.PartiallyOnline
@@ -88,7 +88,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
                 && u.UploadState == UploadState.Completed
-                && u.UploadConfig.HosterRegistration.IsActive
+                && u.HosterRegistration.IsActive
                 && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
                 && u.UploadConfig.Release.QualityGateState != QualityGateState.Failed
                 && u.UploadedFiles.Any()
@@ -110,14 +110,14 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     )
                 )
                 && (
-                    u.UploadConfig.HosterRegistration.ReuploadTriggerOverride
+                    u.HosterRegistration.ReuploadTriggerOverride
                     == ReuploadTrigger.OnlyWhenFullyOffline
                         ? u.FullyOfflineSince
                         : u.NotFullyOnlineSince
                 )
                     <= localNow.AddHours(
                         -(
-                            u.UploadConfig.HosterRegistration.NumberOfHoursUntilReuploadOverride
+                            u.HosterRegistration.NumberOfHoursUntilReuploadOverride
                             ?? u.UploadConfig.Release.ReleaseGroup.NumberOfHoursUntilReupload
                         )
                     )
@@ -135,8 +135,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         return await dbWrite
             .Uploads.AsSplitQuery()
             .Include(u => u.UploadedFiles)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.HosterRegistration)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
                     .ThenInclude(r => r.ReleaseGroup)
@@ -180,8 +179,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     {
         return await dbWrite
             .Uploads.AsSplitQuery()
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.HosterRegistration)
             .Include(u => u.UploadedFiles)
             .FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
     }

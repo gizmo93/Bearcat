@@ -98,7 +98,8 @@ public class HosterConfigurationRepository(
     )
     {
         return await dbRead.Uploads.CountAsync(
-            upload => upload.UploadConfig.HosterRegistrationId == id,
+            upload =>
+                upload.HosterRegistrationId == id || upload.UploadConfig.HosterRegistrationId == id,
             cancellationToken
         );
     }

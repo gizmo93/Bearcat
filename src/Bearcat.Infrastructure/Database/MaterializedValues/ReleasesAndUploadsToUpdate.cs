@@ -100,6 +100,16 @@ public sealed class ReleasesAndUploadsToUpdate
                     .Distinct()
                     .ToListAsync(cancellationToken)
             );
+
+            releaseIds.UnionWith(
+                await context
+                    .Uploads.Where(upload =>
+                        deletedHosterRegistrationIds.Contains(upload.HosterRegistrationId)
+                    )
+                    .Select(upload => upload.UploadConfig.ReleaseId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken)
+            );
         }
 
         if (deletedArchiveConfigIds.Count > 0)

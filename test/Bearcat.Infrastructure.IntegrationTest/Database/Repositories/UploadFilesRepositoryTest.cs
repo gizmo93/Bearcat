@@ -80,6 +80,48 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetPendingUploadsAsync_HosterRegistrationOfUploadActiveButOfUploadConfigInactive_ReturnsUploadWithHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var upload = await AddUploadAsync(
+            UploadState.Pending,
+            hosterRegistrationOfUploadConfigIsActive: false,
+            hosterRegistrationOfUpload: CreateHosterRegistration("Holding hoster", isActive: true)
+        );
+
+        // Act
+        var result = await repository.GetPendingUploadsAsync(
+            new HashSet<int>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        var pendingUpload = result.ShouldHaveSingleItem();
+        pendingUpload.Id.ShouldBe(upload.Id);
+        pendingUpload.HosterRegistration.Name.ShouldBe("Holding hoster");
+    }
+
+    [Test]
+    public async Task GetPendingUploadsAsync_HosterRegistrationOfUploadInactiveButOfUploadConfigActive_ReturnsEmpty()
+    {
+        // Arrange
+        await AddUploadAsync(
+            UploadState.Pending,
+            hosterRegistrationOfUploadConfigIsActive: true,
+            hosterRegistrationOfUpload: CreateHosterRegistration("Holding hoster", isActive: false)
+        );
+
+        // Act
+        var result = await repository.GetPendingUploadsAsync(
+            new HashSet<int>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task GetHosterRegistrationByIdAsync_SeveralRegistrations_ReturnsRequestedRegistration()
     {
         // Arrange
@@ -116,7 +158,11 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         result.UploadProxySelection.ShouldBe(ProxySelection.NoProxy);
     }
 
-    private async Task<Upload> AddUploadAsync(UploadState uploadState)
+    private async Task<Upload> AddUploadAsync(
+        UploadState uploadState,
+        bool hosterRegistrationOfUploadConfigIsActive = true,
+        HosterRegistration? hosterRegistrationOfUpload = null
+    )
     {
         var release = new Release
         {
@@ -139,21 +185,23 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
             ArchiverName = "RarArchiver",
             ArchiveFileSizeMb = 100,
         };
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "TestHoster",
+            IsActive = hosterRegistrationOfUploadConfigIsActive,
+        };
         var upload = new Upload
         {
             UploadConfig = new UploadConfig
             {
                 Release = release,
                 ArchiveConfig = archiveConfig,
-                HosterRegistration = new HosterRegistration
-                {
-                    Name = "Hoster",
-                    SerializedConfig = "{}",
-                    HosterClassName = "TestHoster",
-                    IsActive = true,
-                },
+                HosterRegistration = hosterRegistration,
                 Name = "Default upload",
             },
+            HosterRegistration = hosterRegistrationOfUpload ?? hosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadState = uploadState,
             OnlineState = OnlineState.Unknown,
@@ -166,5 +214,16 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
 
         return upload;
+    }
+
+    private static HosterRegistration CreateHosterRegistration(string name, bool isActive)
+    {
+        return new HosterRegistration
+        {
+            Name = name,
+            SerializedConfig = "{}",
+            HosterClassName = "TestHoster",
+            IsActive = isActive,
+        };
     }
 }

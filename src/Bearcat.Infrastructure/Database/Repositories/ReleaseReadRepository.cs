@@ -432,7 +432,7 @@ public class ReleaseReadRepository(
                     {
                         u.UploadConfig.ReleaseId,
                         ArchiveConfigName = u.UploadConfig.ArchiveConfig.Name,
-                        HosterRegistrationName = u.UploadConfig.HosterRegistration.Name,
+                        HosterRegistrationName = u.HosterRegistration.Name,
                         UploadId = u.Id,
                         LinkCount = u.UploadedFiles.Count,
                     })
@@ -1191,7 +1191,7 @@ public class ReleaseReadRepository(
             .Select(u => new ReleaseUploadReadModel(
                 u.Id,
                 u.UploadConfig.Name,
-                u.UploadConfig.HosterRegistration.Name,
+                u.HosterRegistration.Name,
                 u.CreatedAt,
                 u.UploadedAt,
                 u.UploadState,
@@ -1217,7 +1217,7 @@ public class ReleaseReadRepository(
                             || reuploadBlockingStates.Contains(ru.UploadState)
                         )
                     ),
-                u.UploadConfig.HosterRegistration.HasUnreadableSecrets,
+                u.HosterRegistration.HasUnreadableSecrets,
                 u.ErrorMessages
             ))
             .ToListAsync(cancellationToken: cancellationToken);

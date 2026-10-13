@@ -295,7 +295,10 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         FailCopyOf(SecondFileName);
         await service.ProcessAsync(CancellationToken.None);
         await CompleteUploadAsync(scenario.WaitingUploadId);
-        var secondUploadId = await AddWaitingUploadAsync(scenario.UploadConfigId);
+        var secondUploadId = await AddWaitingUploadAsync(
+            scenario.UploadConfigId,
+            scenario.HosterRegistrationId
+        );
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
@@ -401,7 +404,10 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         await CompleteUploadAsync(scenario.WaitingUploadId);
         var firstWorkingCopyLength = new FileInfo(workingCopyFilePath).Length;
         var originalStorageBytes = await ReadStorageFilesAsync(scenario);
-        var secondUploadId = await AddWaitingUploadAsync(scenario.UploadConfigId);
+        var secondUploadId = await AddWaitingUploadAsync(
+            scenario.UploadConfigId,
+            scenario.HosterRegistrationId
+        );
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
@@ -530,11 +536,12 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         DbContext.ChangeTracker.Clear();
     }
 
-    private async Task<int> AddWaitingUploadAsync(int uploadConfigId)
+    private async Task<int> AddWaitingUploadAsync(int uploadConfigId, int hosterRegistrationId)
     {
         var upload = new Upload
         {
             UploadConfigId = uploadConfigId,
+            HosterRegistrationId = hosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
@@ -633,6 +640,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         var previousUpload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddDays(-30),
             UploadedAt = DateTime.UtcNow.AddDays(-30),
@@ -653,6 +661,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         var waitingUpload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
@@ -667,6 +676,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
             ArchiveId: archive.Id,
             StorageFolderId: storageFolder.Id,
             UploadConfigId: uploadConfig.Id,
+            HosterRegistrationId: uploadConfig.HosterRegistrationId,
             WaitingUploadId: waitingUpload.Id,
             StorageArchiveFolderPath: storageArchiveFolderPath,
             StorageFilePaths: storageFilePaths,
@@ -687,6 +697,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         int ArchiveId,
         int StorageFolderId,
         int UploadConfigId,
+        int HosterRegistrationId,
         int WaitingUploadId,
         string StorageArchiveFolderPath,
         List<string> StorageFilePaths,

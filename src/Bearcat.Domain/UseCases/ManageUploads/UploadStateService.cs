@@ -155,7 +155,7 @@ public class UploadStateService(
             return false;
         }
 
-        var registration = upload.UploadConfig.HosterRegistration;
+        var registration = upload.HosterRegistration;
 
         logger.LogInformation(
             "Checking online status on demand for Upload {UploadId} on hoster registration {HosterRegistration}",
@@ -617,6 +617,7 @@ public class UploadStateService(
         var newUpload = new Upload
         {
             UploadConfig = upload.UploadConfig,
+            HosterRegistrationId = upload.UploadConfig.HosterRegistrationId,
             CreatedAt = timeProvider.GetLocalNow(),
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
@@ -717,6 +718,7 @@ public class UploadStateService(
                 var upload = new Upload
                 {
                     UploadConfig = uploadConfig,
+                    HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     CreatedAt = timeProvider.GetLocalNow(),
                     UploadState = UploadState.WaitingForArchive,
                     OnlineState = OnlineState.Unknown,

@@ -186,6 +186,93 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         result.ArchiveStorageFolder.ShouldBeNull();
     }
 
+    [Test]
+    public async Task HasCompletedUploadForHosterAsync_CompletedUploadOnHosterRegistrationOfOtherHosterClassThanItsUploadConfig_UsesHosterClassOfUpload()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync("Main archive");
+        var hosterRegistrationOfUpload = await AddHosterRegistrationAsync("OtherHoster");
+        await AddUploadAsync(uploadConfig, hosterRegistrationOfUpload, UploadState.Completed);
+
+        // Act
+        var resultForHosterClassOfUpload = await repository.HasCompletedUploadForHosterAsync(
+            uploadConfig.ArchiveConfigId,
+            "OtherHoster",
+            CancellationToken.None
+        );
+        var resultForHosterClassOfUploadConfig = await repository.HasCompletedUploadForHosterAsync(
+            uploadConfig.ArchiveConfigId,
+            "TestHoster",
+            CancellationToken.None
+        );
+
+        // Assert
+        resultForHosterClassOfUpload.ShouldBeTrue();
+        resultForHosterClassOfUploadConfig.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetUploadsWithoutArchiveAsync_WaitingUploadOnOtherHosterRegistrationThanItsUploadConfig_LoadsHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync("Main archive");
+        var hosterRegistrationOfUpload = await AddHosterRegistrationAsync("OtherHoster");
+        var upload = await AddUploadAsync(
+            uploadConfig,
+            hosterRegistrationOfUpload,
+            UploadState.WaitingForArchive
+        );
+
+        // Act
+        var result = await repository.GetUploadsWithoutArchiveAsync(CancellationToken.None);
+
+        // Assert
+        var waitingUpload = result.ShouldHaveSingleItem();
+        waitingUpload.Id.ShouldBe(upload.Id);
+        waitingUpload.HosterRegistration.HosterClassName.ShouldBe("OtherHoster");
+    }
+
+    private async Task<HosterRegistration> AddHosterRegistrationAsync(string hosterClassName)
+    {
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = $"Hoster {hosterClassName}",
+            SerializedConfig = "{}",
+            HosterClassName = hosterClassName,
+            IsActive = true,
+        };
+
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return hosterRegistration;
+    }
+
+    private async Task<Upload> AddUploadAsync(
+        UploadConfig uploadConfig,
+        HosterRegistration hosterRegistration,
+        UploadState uploadState
+    )
+    {
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = hosterRegistration.Id,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = uploadState,
+            OnlineState = OnlineState.Unknown,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
+
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return upload;
+    }
+
     private static Archive CreateArchive(
         int archiveConfigId,
         ArchiveState archiveState,
@@ -278,6 +365,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
             var upload = new Upload
             {
                 UploadConfigId = uploadConfig.Id,
+                HosterRegistrationId = uploadConfig.HosterRegistrationId,
                 Archive = archive,
                 CreatedAt = DateTime.UtcNow,
                 UploadState = UploadState.Completed,

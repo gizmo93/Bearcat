@@ -47,6 +47,8 @@ public class HosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntit
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 
+    public List<Upload> Uploads { get; set; } = null!;
+
     public List<Notification> Notifications { get; set; } = null!;
 
     public string GetEncryptedSecrets() => SerializedConfig;

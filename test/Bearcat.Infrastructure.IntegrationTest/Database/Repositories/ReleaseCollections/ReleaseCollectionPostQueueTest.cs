@@ -624,6 +624,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = spec.HasUploadedAt ? createdAt : null,
             UploadState = spec.State,
@@ -807,6 +808,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddMinutes(-5),
             UploadedAt = DateTime.UtcNow,

@@ -905,6 +905,7 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         return new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = SearchStart,
             UploadState = UploadState.Completed,

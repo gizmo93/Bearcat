@@ -112,7 +112,7 @@ public class AutoForumPostingRepository(
             .Uploads.Where(upload =>
                 releaseIds.Contains(upload.UploadConfig.ReleaseId)
                 && upload.UploadConfig.CollectionUploadSlotId == null
-                && upload.UploadConfig.HosterRegistration.IsActive
+                && upload.HosterRegistration.IsActive
                 && upload.UploadState == UploadState.Completed
                 && upload.UploadedAt != null
             )

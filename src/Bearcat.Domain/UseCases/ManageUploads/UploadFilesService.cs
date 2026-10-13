@@ -71,10 +71,7 @@ public class UploadFilesService(
         var hosters = hosterFactory.GetHostersByName().ToDictionary();
 
         await concurrencyService.EnsureHosterSemaphoresAsync(
-            pendingUploads
-                .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
-                .Distinct()
-                .ToList(),
+            pendingUploads.Select(u => u.HosterRegistration.HosterClassName).Distinct().ToList(),
             hostersByName: hosters,
             cancellationToken: cancellationToken
         );
@@ -136,7 +133,7 @@ public class UploadFilesService(
 
                 await concurrencyService.EnsureHosterSemaphoresAsync(
                     newPendingUploads
-                        .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
+                        .Select(u => u.HosterRegistration.HosterClassName)
                         .Distinct()
                         .ToList(),
                     hostersByName: hosters,
@@ -206,17 +203,17 @@ public class UploadFilesService(
                 continue;
             }
 
-            var hosterClassName = upload.UploadConfig.HosterRegistration.HosterClassName;
+            var hosterClassName = upload.HosterRegistration.HosterClassName;
 
             if (
-                !upload.UploadConfig.HosterRegistration.IsActive
+                !upload.HosterRegistration.IsActive
                 || !concurrencyService.HasHosterSemaphore(hosterClassName)
             )
             {
                 logger.LogInformation(
                     "Skipping pending upload {UploadId} because its hoster registration {HosterRegistration} is inactive or its parallel upload limit could not be determined",
                     upload.Id,
-                    upload.UploadConfig.HosterRegistration.Name
+                    upload.HosterRegistration.Name
                 );
 
                 continue;
@@ -226,7 +223,7 @@ public class UploadFilesService(
 
             var hoster = hosters[hosterClassName];
             var hosterConfig = hoster.DeserializeHosterConfig(
-                hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
+                hosterConfigsByRegistrationId[upload.HosterRegistrationId]
             );
 
             UploadExecutionContext context;
@@ -291,7 +288,7 @@ public class UploadFilesService(
     )
     {
         using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
-            upload.UploadConfig.HosterRegistration
+            upload.HosterRegistration
         );
 
         var processedArchiveFileIds = upload
@@ -314,7 +311,7 @@ public class UploadFilesService(
             .Archive.ArchiveFiles.Select(archiveFile => new TransferFile(
                 FileId: archiveFile.Id,
                 FileName: Path.GetFileName(archiveFile.FullFileName),
-                SourceName: upload.UploadConfig.HosterRegistration.Name,
+                SourceName: upload.HosterRegistration.Name,
                 SizeBytes: GetFileSizeInBytes(archiveFile.FullFileName),
                 IsAlreadyTransferred: successfullyUploadedArchiveFileIds.Contains(archiveFile.Id)
             ))

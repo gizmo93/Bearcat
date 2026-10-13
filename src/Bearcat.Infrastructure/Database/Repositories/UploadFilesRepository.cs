@@ -20,8 +20,7 @@ public class UploadFilesRepository(
         return await dbWrite
             .Uploads.AsSplitQuery()
             .Include(u => u.UploadedFiles)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.HosterRegistration)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
             .Include(u => u.Archive)
@@ -29,7 +28,7 @@ public class UploadFilesRepository(
             .Where(u =>
                 !uploadIdsToExclude.Contains(u.Id)
                 && u.UploadState == UploadState.Pending
-                && u.UploadConfig.HosterRegistration.IsActive
+                && u.HosterRegistration.IsActive
             )
             .ToListAsync(cancellationToken);
     }

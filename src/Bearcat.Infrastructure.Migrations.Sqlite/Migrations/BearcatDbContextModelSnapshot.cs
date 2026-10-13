@@ -2110,6 +2110,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<string>("HosterFolderId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("HosterRegistrationId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("NotFullyOnlineSince")
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
@@ -2147,6 +2150,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("UploadConfigId", "OnlineState");
 
                     b.HasIndex("UploadState", "OnlineState");
+
+                    b.HasIndex("HosterRegistrationId", "OnlineState", "OldestUploadedFileCheckedAt");
 
                     b.HasIndex("UploadConfigId", "UploadState", "UploadedAt");
 
@@ -2996,6 +3001,12 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasForeignKey("ArchiveId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
+                        .WithMany("Uploads")
+                        .HasForeignKey("HosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Bearcat.Domain.Entities.UploadConfig", "UploadConfig")
                         .WithMany("Uploads")
                         .HasForeignKey("UploadConfigId")
@@ -3003,6 +3014,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("Archive");
+
+                    b.Navigation("HosterRegistration");
 
                     b.Navigation("UploadConfig");
                 });
@@ -3166,6 +3179,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("Notifications");
 
                     b.Navigation("UploadConfigs");
+
+                    b.Navigation("Uploads");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>

@@ -145,7 +145,7 @@ public class ArchiveRestoreServiceTest
     {
         // Arrange
         var scenario = CreateScenario();
-        var mirrorRegistration = scenario.DonorUpload.UploadConfig.HosterRegistration;
+        var mirrorRegistration = scenario.DonorUpload.HosterRegistration;
         mirrorRegistration.MirrorDownloadProxySelection = ProxySelection.NoProxy;
         mirrorRegistration.UploadProxySelection = ProxySelection.SpecificProxyServer;
         mirrorRegistration.UploadProxyServerId = 9;
@@ -173,7 +173,7 @@ public class ArchiveRestoreServiceTest
         // Arrange
         var scenario = CreateScenario();
         scenario.DonorUpload.UploadedFiles.RemoveAll(file => file.ArchiveFileId == 3);
-        var primaryRegistration = scenario.DonorUpload.UploadConfig.HosterRegistration;
+        var primaryRegistration = scenario.DonorUpload.HosterRegistration;
         primaryRegistration.MirrorDownloadProxySelection = ProxySelection.SpecificProxyServer;
         primaryRegistration.MirrorDownloadProxyServerId = 7;
         primaryRegistration.UploadProxySelection = ProxySelection.NoProxy;
@@ -254,7 +254,7 @@ public class ArchiveRestoreServiceTest
     {
         // Arrange
         var scenario = CreateScenario();
-        scenario.WaitingUpload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles = true;
+        scenario.WaitingUpload.HosterRegistration.AlwaysReuploadAllFiles = true;
         var service = CreateService();
 
         // Act
@@ -270,7 +270,7 @@ public class ArchiveRestoreServiceTest
     {
         // Arrange
         var scenario = CreateScenario();
-        scenario.DonorUpload.UploadConfig.HosterRegistration.UseForMirrorDownloads = false;
+        scenario.DonorUpload.HosterRegistration.UseForMirrorDownloads = false;
         var service = CreateService();
 
         // Act
@@ -778,6 +778,8 @@ public class ArchiveRestoreServiceTest
             ArchiveId = archive.Id,
             UploadConfigId = mirrorUploadConfig.Id,
             UploadConfig = mirrorUploadConfig,
+            HosterRegistrationId = mirrorUploadConfig.HosterRegistrationId,
+            HosterRegistration = mirrorUploadConfig.HosterRegistration,
             UploadState = UploadState.Completed,
             UploadedFiles =
             [
@@ -793,6 +795,8 @@ public class ArchiveRestoreServiceTest
             ArchiveId = archive.Id,
             UploadConfigId = targetUploadConfig.Id,
             UploadConfig = targetUploadConfig,
+            HosterRegistrationId = targetUploadConfig.HosterRegistrationId,
+            HosterRegistration = targetUploadConfig.HosterRegistration,
             UploadState = UploadState.Completed,
             UploadedFiles = [CreateUploadedFile(32, 1, "https://target.test/file-1")],
         };
@@ -803,6 +807,8 @@ public class ArchiveRestoreServiceTest
             ArchiveId = null,
             UploadConfigId = targetUploadConfig.Id,
             UploadConfig = targetUploadConfig,
+            HosterRegistrationId = targetUploadConfig.HosterRegistrationId,
+            HosterRegistration = targetUploadConfig.HosterRegistration,
             UploadState = UploadState.WaitingForArchive,
             UploadedFiles = [],
         };
@@ -848,6 +854,8 @@ public class ArchiveRestoreServiceTest
             ArchiveId = scenario.Archive.Id,
             UploadConfigId = uploadConfig.Id,
             UploadConfig = uploadConfig,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
+            HosterRegistration = uploadConfig.HosterRegistration,
             UploadState = UploadState.Completed,
             UploadedFiles = archiveFileIds
                 .Select(archiveFileId =>

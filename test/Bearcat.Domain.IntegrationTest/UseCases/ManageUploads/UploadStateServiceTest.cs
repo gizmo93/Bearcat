@@ -246,6 +246,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         var newerUpload = new Upload
         {
             UploadConfigId = supersededUpload.UploadConfigId,
+            HosterRegistrationId = supersededUpload.HosterRegistrationId,
             Archive = newerArchive,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = localNow.AddHours(-1),
@@ -1073,7 +1074,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         service = CreateService(initialUploadCooldownMinutes: 1);
-        await AddUploadConfigAsync(
+        var uploadConfig = await AddUploadConfigAsync(
             enableAutomaticReuploads: false,
             releaseCreatedAt: localNow.AddMinutes(-2)
         );
@@ -1086,6 +1087,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
 
         upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         upload.OnlineState.ShouldBe(OnlineState.Unknown);
+        upload.HosterRegistrationId.ShouldBe(uploadConfig.HosterRegistrationId);
     }
 
     [Test]
@@ -1335,6 +1337,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         var canceledReupload = new Upload
         {
             UploadConfigId = upload.UploadConfigId,
+            HosterRegistrationId = upload.HosterRegistrationId,
             CreatedAt = localNow.AddHours(-24),
             UploadedAt = null,
             UploadState = UploadState.Canceled,
@@ -1376,6 +1379,33 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
         reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         reupload.OnlineState.ShouldBe(OnlineState.Unknown);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_CreatesReuploadOnHosterRegistrationOfUploadConfig()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        var hosterRegistrationOfUploadConfig = upload.HosterRegistrationId;
+        var previousHosterRegistration = CreateHosterRegistration();
+        DbContext.HosterRegistrations.Add(previousHosterRegistration);
+        await DbContext.SaveChangesAsync();
+        upload.HosterRegistrationId = previousHosterRegistration.Id;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
+
+        reupload.HosterRegistrationId.ShouldBe(hosterRegistrationOfUploadConfig);
     }
 
     [Test]
@@ -1463,6 +1493,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
             new Upload
             {
                 UploadConfigId = upload.UploadConfigId,
+                HosterRegistrationId = upload.HosterRegistrationId,
                 CreatedAt = DateTime.UtcNow,
                 UploadState = UploadState.Pending,
                 OnlineState = OnlineState.Unknown,
@@ -1496,6 +1527,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
             new Upload
             {
                 UploadConfigId = upload.UploadConfigId,
+                HosterRegistrationId = upload.HosterRegistrationId,
                 CreatedAt = DateTime.UtcNow,
                 UploadState = UploadState.Completed,
                 OnlineState = OnlineState.Online,
@@ -1711,6 +1743,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.Canceled,
             OnlineState = OnlineState.Unknown,
@@ -2254,6 +2287,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             Archive = archive,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = localNow.AddHours(-2),

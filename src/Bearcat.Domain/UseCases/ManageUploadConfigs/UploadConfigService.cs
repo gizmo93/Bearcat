@@ -40,6 +40,20 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
     {
         var uploadConfig = await writeRepository.GetByIdAsync(uploadConfigId, cancellationToken);
 
+        if (uploadConfig.HosterRegistrationId != hosterRegistrationId)
+        {
+            var uploadsNotStartedOnHoster =
+                await writeRepository.GetWaitingOrPendingUploadsWithoutUploadedFilesAsync(
+                    uploadConfigId,
+                    cancellationToken
+                );
+
+            foreach (var upload in uploadsNotStartedOnHoster)
+            {
+                upload.HosterRegistrationId = hosterRegistrationId;
+            }
+        }
+
         uploadConfig.Name = name;
         uploadConfig.HosterRegistrationId = hosterRegistrationId;
         uploadConfig.ArchiveConfigId = archiveConfigId;

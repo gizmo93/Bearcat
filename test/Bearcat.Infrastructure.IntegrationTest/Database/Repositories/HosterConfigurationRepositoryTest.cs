@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Moq;
 using Shouldly;
@@ -132,6 +133,38 @@ public class HosterConfigurationRepositoryTest(DatabaseProvider databaseProvider
         readModel.AlwaysReuploadAllFiles.ShouldBeTrue();
         readModel.UseForMirrorDownloads.ShouldBeTrue();
         readModel.MirrorPriority.ShouldBe(7);
+    }
+
+    [Test]
+    public async Task GetUploadCountAsync_UploadsOnRegistrationAndUploadsOfUploadConfigsOfRegistration_CountsBoth()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var alphaRegistration = testData.AddHosterRegistration("Alpha");
+        var betaRegistration = testData.AddHosterRegistration("Beta");
+        var gammaRegistration = testData.AddHosterRegistration("Gamma");
+        var release = testData.AddRelease("Release");
+        var alphaUploadConfig = testData.AddUploadConfig(release, alphaRegistration);
+        var betaUploadConfig = testData.AddUploadConfig(release, betaRegistration);
+        var gammaUploadConfig = testData.AddUploadConfig(release, gammaRegistration);
+        testData.AddUpload(alphaUploadConfig, OnlineState.Online);
+        testData.AddUpload(alphaUploadConfig, OnlineState.Online).HosterRegistration =
+            betaRegistration;
+        testData.AddUpload(betaUploadConfig, OnlineState.Online);
+        testData.AddUpload(betaUploadConfig, OnlineState.Online).HosterRegistration =
+            alphaRegistration;
+        testData.AddUpload(gammaUploadConfig, OnlineState.Online);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadCountAsync(
+            alphaRegistration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(3);
     }
 
     private static HosterRegistration CreateRegistration(

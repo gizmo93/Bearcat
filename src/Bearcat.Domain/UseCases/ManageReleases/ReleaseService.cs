@@ -260,7 +260,7 @@ public class ReleaseService(
             .ToList();
 
         var mirrorHosterNames = mirrorUploads
-            .Values.Select(upload => upload.UploadConfig.HosterRegistration.Name)
+            .Values.Select(upload => upload.HosterRegistration.Name)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();

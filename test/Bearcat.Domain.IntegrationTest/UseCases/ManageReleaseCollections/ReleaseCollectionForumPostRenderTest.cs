@@ -334,6 +334,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow.AddMinutes(-5),
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,

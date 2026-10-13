@@ -130,6 +130,44 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task SearchUploadsAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_FiltersByHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var upload = await AddUploadOnOtherHosterRegistrationThanItsUploadConfigAsync();
+
+        // Act
+        var resultOfHosterRegistrationOfUpload = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(HosterRegistrationId: upload.HosterRegistrationId),
+            CancellationToken.None
+        );
+        var resultOfHosterRegistrationOfUploadConfig = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(HosterRegistrationId: upload.UploadConfig.HosterRegistrationId),
+            CancellationToken.None
+        );
+
+        // Assert
+        resultOfHosterRegistrationOfUpload
+            .Items.Select(item => item.UploadId)
+            .ShouldBe([upload.Id]);
+        resultOfHosterRegistrationOfUploadConfig.Items.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetUploadAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_ProjectsHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var upload = await AddUploadOnOtherHosterRegistrationThanItsUploadConfigAsync();
+
+        // Act
+        var result = await repository.GetUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HosterRegistrationId.ShouldBe(upload.HosterRegistrationId);
+        result.HosterRegistrationName.ShouldBe("Holding hoster");
+    }
+
+    [Test]
     public async Task SearchUploadsAsync_ReleaseFilter_ReturnsUploadsOfRelease()
     {
         // Arrange
@@ -671,6 +709,27 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         );
     }
 
+    private async Task<Upload> AddUploadOnOtherHosterRegistrationThanItsUploadConfigAsync()
+    {
+        var release = CreateRelease("Bearcat.Moved.2026-GRP");
+        var uploadConfig = CreateUploadConfig(
+            release,
+            CreateArchiveConfig(release),
+            CreateHosterRegistration("Configured hoster"),
+            "Moved upload"
+        );
+        var hosterRegistrationOfUpload = CreateHosterRegistration("Holding hoster");
+
+        return await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight,
+            uploadedAt: null,
+            uploadState: UploadState.Pending,
+            onlineState: OnlineState.Unknown,
+            configure: upload => upload.HosterRegistration = hosterRegistrationOfUpload
+        );
+    }
+
     private async Task<Upload> AddUploadAsync(
         UploadConfig uploadConfig,
         DateTime createdAt,
@@ -683,6 +742,7 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = uploadedAt,
             UploadState = uploadState,

@@ -824,6 +824,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = uploadedAt,
             UploadState = UploadState.Completed,

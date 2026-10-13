@@ -80,6 +80,82 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task UpdateAsync_HosterRegistrationChanged_MovesOnlyUploadsNotStartedOnHosterToNewHosterRegistration()
+    {
+        // Arrange
+        var firstSeed = await AddUploadConfigDependenciesAsync();
+        var uploadConfig = await AddUploadConfigAsync(firstSeed);
+        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
+        var archive = await AddArchiveAsync(firstSeed.ArchiveConfigId);
+        var waitingUpload = await AddUploadAsync(uploadConfig, UploadState.WaitingForArchive);
+        var pendingUpload = await AddUploadAsync(uploadConfig, UploadState.Pending);
+        var pendingUploadWithUploadedFile = await AddUploadAsync(
+            uploadConfig,
+            UploadState.Pending,
+            archive.Id
+        );
+        var failedUpload = await AddUploadAsync(uploadConfig, UploadState.Failed, archive.Id);
+        var completedUpload = await AddUploadAsync(uploadConfig, UploadState.Completed, archive.Id);
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.UpdateAsync(
+            uploadConfig.Id,
+            uploadConfig.Name,
+            secondSeed.HosterRegistrationId,
+            firstSeed.ArchiveConfigId,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var hosterRegistrationIdsByUploadId = await DbContext
+            .Uploads.Select(upload => new { upload.Id, upload.HosterRegistrationId })
+            .ToDictionaryAsync(upload => upload.Id, upload => upload.HosterRegistrationId);
+        hosterRegistrationIdsByUploadId.ShouldBe(
+            new Dictionary<int, int>
+            {
+                [waitingUpload.Id] = secondSeed.HosterRegistrationId,
+                [pendingUpload.Id] = secondSeed.HosterRegistrationId,
+                [pendingUploadWithUploadedFile.Id] = firstSeed.HosterRegistrationId,
+                [failedUpload.Id] = firstSeed.HosterRegistrationId,
+                [completedUpload.Id] = firstSeed.HosterRegistrationId,
+            },
+            ignoreOrder: true
+        );
+    }
+
+    [Test]
+    public async Task UpdateAsync_HosterRegistrationChanged_KeepsHosterRegistrationOfUploadsOfOtherUploadConfigs()
+    {
+        // Arrange
+        var firstSeed = await AddUploadConfigDependenciesAsync();
+        var uploadConfig = await AddUploadConfigAsync(firstSeed);
+        var otherUploadConfig = await AddUploadConfigAsync(firstSeed, "Other upload");
+        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
+        var otherWaitingUpload = await AddUploadAsync(
+            otherUploadConfig,
+            UploadState.WaitingForArchive
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.UpdateAsync(
+            uploadConfig.Id,
+            uploadConfig.Name,
+            secondSeed.HosterRegistrationId,
+            firstSeed.ArchiveConfigId,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == otherWaitingUpload.Id);
+
+        result.HosterRegistrationId.ShouldBe(firstSeed.HosterRegistrationId);
+    }
+
+    [Test]
     public async Task DeleteAsync_UploadConfigExists_RemovesUploadConfig()
     {
         // Arrange
@@ -122,8 +198,8 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         var uploadConfig = await AddUploadConfigAsync(seed);
         var archive = await AddArchiveAsync(seed.ArchiveConfigId);
 
-        await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [10, 12, 8]);
-        await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [4, 6, null]);
+        await AddUploadWithFilesAsync(uploadConfig, archive.Id, [10, 12, 8]);
+        await AddUploadWithFilesAsync(uploadConfig, archive.Id, [4, 6, null]);
 
         var readRepository = new UploadConfigReadRepository(DbContext);
 
@@ -147,7 +223,7 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         var uploadConfig = await AddUploadConfigAsync(seed);
         var archive = await AddArchiveAsync(seed.ArchiveConfigId);
 
-        await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [null, null]);
+        await AddUploadWithFilesAsync(uploadConfig, archive.Id, [null, null]);
 
         var readRepository = new UploadConfigReadRepository(DbContext);
 
@@ -176,9 +252,9 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
         var archive = await AddArchiveAsync(seed.ArchiveConfigId);
 
-        await AddUploadWithFilesAsync(firstUploadConfig.Id, archive.Id, [100, 200]);
-        await AddUploadWithFilesAsync(secondUploadConfig.Id, archive.Id, [7, 9, null]);
-        await AddUploadWithFilesAsync(secondUploadConfig.Id, archive.Id, [3]);
+        await AddUploadWithFilesAsync(firstUploadConfig, archive.Id, [100, 200]);
+        await AddUploadWithFilesAsync(secondUploadConfig, archive.Id, [7, 9, null]);
+        await AddUploadWithFilesAsync(secondUploadConfig, archive.Id, [3]);
         DbContext.ChangeTracker.Clear();
 
         var readRepository = new UploadConfigReadRepository(DbContext);
@@ -259,15 +335,56 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         return archive;
     }
 
+    private async Task<Upload> AddUploadAsync(
+        UploadConfig uploadConfig,
+        UploadState uploadState,
+        int? archiveIdOfUploadedFile = null
+    )
+    {
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
+            ArchiveId = archiveIdOfUploadedFile,
+            UploadState = uploadState,
+            OnlineState = OnlineState.Unknown,
+            CreatedAt = DateTime.UtcNow,
+            UploadedFiles = [],
+        };
+
+        if (archiveIdOfUploadedFile is not null)
+        {
+            upload.UploadedFiles.Add(
+                new UploadedFile
+                {
+                    ArchiveFile = new ArchiveFile
+                    {
+                        ArchiveId = archiveIdOfUploadedFile.Value,
+                        FullFileName = "archive.part1.rar",
+                    },
+                    HosterFileLink = $"https://hoster.test/file/{Guid.NewGuid()}",
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
+        }
+
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
+
+        return upload;
+    }
+
     private async Task AddUploadWithFilesAsync(
-        int uploadConfigId,
+        UploadConfig uploadConfig,
         int archiveId,
         IReadOnlyList<int?> downloadCounts
     )
     {
         var upload = new Upload
         {
-            UploadConfigId = uploadConfigId,
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             ArchiveId = archiveId,
             UploadState = UploadState.Completed,
             OnlineState = OnlineState.Online,

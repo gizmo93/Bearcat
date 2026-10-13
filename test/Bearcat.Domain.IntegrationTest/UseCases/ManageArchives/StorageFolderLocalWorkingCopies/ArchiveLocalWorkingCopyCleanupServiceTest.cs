@@ -289,6 +289,7 @@ public class ArchiveLocalWorkingCopyCleanupServiceTest(DatabaseProvider database
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddDays(-1),
             UploadState = uploadState,

@@ -534,6 +534,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                 new Upload
                 {
                     UploadConfig = uploadConfig,
+                    HosterRegistration = uploadConfig.HosterRegistration,
                     CreatedAt = uploadedAt.AddHours(-1),
                     UploadedAt = uploadedAt,
                     UploadState = uploadState,
@@ -563,6 +564,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                 new Upload
                 {
                     UploadConfig = uploadConfig,
+                    HosterRegistration = uploadConfig.HosterRegistration,
                     CreatedAt = uploadedAt.AddHours(-1),
                     UploadState = UploadState.Failed,
                     OnlineState = OnlineState.Unknown,

@@ -568,7 +568,7 @@ public class ArchiveCreationService(
     {
         foreach (
             var hosterClassName in uploads
-                .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
+                .Select(u => u.HosterRegistration.HosterClassName)
                 .Distinct(StringComparer.Ordinal)
         )
         {

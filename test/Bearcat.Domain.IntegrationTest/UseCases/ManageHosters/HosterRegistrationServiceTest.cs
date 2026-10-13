@@ -1037,6 +1037,7 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
                 .Range(0, uploadCount)
                 .Select(_ => new Upload
                 {
+                    HosterRegistration = hosterRegistration,
                     CreatedAt = DateTime.UtcNow,
                     UploadState = UploadState.Completed,
                     OnlineState = OnlineState.Online,

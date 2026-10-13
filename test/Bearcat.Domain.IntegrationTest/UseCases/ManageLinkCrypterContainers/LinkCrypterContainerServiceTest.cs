@@ -993,6 +993,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var firstUpload = new Upload
         {
             UploadConfig = firstUploadConfig,
+            HosterRegistration = firstUploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1003,6 +1004,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var secondUpload = new Upload
         {
             UploadConfig = secondUploadConfig,
+            HosterRegistration = secondUploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1027,6 +1029,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1057,6 +1060,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
             UploadState = UploadState.Completed,
@@ -1082,6 +1086,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var newUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1117,6 +1122,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var oldestUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow.AddHours(-4),
             UploadedAt = DateTime.UtcNow.AddHours(-3),
             UploadState = UploadState.Completed,
@@ -1140,6 +1146,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var recentUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
             UploadState = UploadState.Completed,
@@ -1163,6 +1170,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var newUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1196,6 +1204,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var previousUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
             UploadState = UploadState.Completed,
@@ -1219,6 +1228,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var newUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1273,6 +1283,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var createdUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow.AddHours(-4),
             UploadedAt = DateTime.UtcNow.AddHours(-3),
             UploadState = UploadState.Completed,
@@ -1296,6 +1307,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var failedUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-1),
             UploadState = UploadState.Completed,
@@ -1319,6 +1331,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var newUpload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1402,6 +1415,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var firstUpload = new Upload
         {
             UploadConfig = firstUploadConfig,
+            HosterRegistration = firstUploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
@@ -1416,6 +1430,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         var secondUpload = new Upload
         {
             UploadConfig = secondUploadConfig,
+            HosterRegistration = secondUploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,

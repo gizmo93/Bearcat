@@ -25,7 +25,7 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
 
     public void MarkRequired(Upload upload, string message)
     {
-        var registration = upload.UploadConfig.HosterRegistration;
+        var registration = upload.HosterRegistration;
 
         if (!TryMarkRequired(registration))
         {

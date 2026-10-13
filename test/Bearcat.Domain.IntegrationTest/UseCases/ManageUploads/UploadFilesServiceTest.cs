@@ -839,6 +839,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.Pending,
             OnlineState = OnlineState.Unknown,
@@ -1690,6 +1691,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             Archive = archive,
             CreatedAt = DateTime.UtcNow,
             UploadState = uploadState,

@@ -95,6 +95,60 @@ public class ArchiveFilesToUploadTest
     }
 
     [Test]
+    public void GetOnlineUploadedFilesToCarryOver_PreviousUploadOfSameUploadConfigOnOtherHosterRegistration_ReturnsEmpty()
+    {
+        // Arrange
+        var otherHosterRegistration = CreateUploadConfig(id: 23).HosterRegistration;
+        var waitingUpload = CreateUpload(id: 40, uploadConfig: firstUploadConfig);
+        var previousUpload = CreateUpload(
+            id: 31,
+            uploadConfig: firstUploadConfig,
+            CreateUploadedFile(uploadId: 31, archiveFileId: 1, OnlineState.Online)
+        );
+        previousUpload.HosterRegistrationId = otherHosterRegistration.Id;
+        previousUpload.HosterRegistration = otherHosterRegistration;
+
+        // Act
+        var result = ArchiveFilesToUpload.GetOnlineUploadedFilesToCarryOver(
+            upload: waitingUpload,
+            uploadsOfArchive: [previousUpload]
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void GetOnlineUploadedFilesToCarryOver_PreviousUploadsOfSameUploadConfigOnSeveralHosterRegistrations_ReturnsOnlyFilesOfSameHosterRegistration()
+    {
+        // Arrange
+        var otherHosterRegistration = CreateUploadConfig(id: 23).HosterRegistration;
+        var waitingUpload = CreateUpload(id: 40, uploadConfig: firstUploadConfig);
+        var uploadOnOtherHosterRegistration = CreateUpload(
+            id: 32,
+            uploadConfig: firstUploadConfig,
+            CreateUploadedFile(uploadId: 32, archiveFileId: 1, OnlineState.Online),
+            CreateUploadedFile(uploadId: 32, archiveFileId: 2, OnlineState.Online)
+        );
+        uploadOnOtherHosterRegistration.HosterRegistrationId = otherHosterRegistration.Id;
+        uploadOnOtherHosterRegistration.HosterRegistration = otherHosterRegistration;
+        var uploadOnSameHosterRegistration = CreateUpload(
+            id: 31,
+            uploadConfig: firstUploadConfig,
+            CreateUploadedFile(uploadId: 31, archiveFileId: 1, OnlineState.Online)
+        );
+
+        // Act
+        var result = ArchiveFilesToUpload.GetOnlineUploadedFilesToCarryOver(
+            upload: waitingUpload,
+            uploadsOfArchive: [uploadOnSameHosterRegistration, uploadOnOtherHosterRegistration]
+        );
+
+        // Assert
+        result.Select(uploadedFile => uploadedFile.UploadId).ShouldBe([31]);
+    }
+
+    [Test]
     public void GetOnlineUploadedFilesToCarryOver_UploadItselfIsPartOfArchiveUploads_IgnoresItsOwnFiles()
     {
         // Arrange
@@ -263,6 +317,8 @@ public class ArchiveFilesToUploadTest
             Id = id,
             UploadConfigId = uploadConfig.Id,
             UploadConfig = uploadConfig,
+            HosterRegistrationId = uploadConfig.HosterRegistration.Id,
+            HosterRegistration = uploadConfig.HosterRegistration,
             UploadedFiles = uploadedFiles.ToList(),
         };
     }

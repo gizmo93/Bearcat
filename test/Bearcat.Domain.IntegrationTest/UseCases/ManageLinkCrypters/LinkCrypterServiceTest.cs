@@ -265,6 +265,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
             OnlineState = OnlineState.Online,

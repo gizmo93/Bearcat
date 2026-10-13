@@ -10,6 +10,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
     {
         builder.HasKey(u => u.Id);
         builder.Property(u => u.UploadConfigId).IsRequired();
+        builder.Property(u => u.HosterRegistrationId).IsRequired();
         builder.Property(u => u.ArchiveId).IsRequired(false);
         builder.Property(u => u.HosterFolderId).IsRequired(false);
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);
@@ -30,10 +31,24 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
             u.UploadedAt,
         });
         builder.HasIndex(u => new { u.UploadConfigId, u.OnlineState });
+        builder.HasIndex(u => new
+        {
+            u.HosterRegistrationId,
+            u.OnlineState,
+            u.OldestUploadedFileCheckedAt,
+        });
         builder.HasIndex(u => new { u.CreatedAt, u.Id }).IsDescending();
         builder
             .HasIndex(u => u.UploadedAt)
             .HasFilter($"\"{nameof(Upload.UploadedAt)}\" IS NOT NULL");
+
+        builder
+            .HasOne(u => u.HosterRegistration)
+            .WithMany(h => h.Uploads)
+            .HasForeignKey(u => u.HosterRegistrationId)
+            .HasPrincipalKey(h => h.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder
             .HasMany(u => u.UploadedFiles)

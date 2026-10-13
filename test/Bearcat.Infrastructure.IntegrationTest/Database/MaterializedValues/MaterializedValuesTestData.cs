@@ -84,6 +84,7 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = LocalNow,
             UploadedAt = LocalNow,

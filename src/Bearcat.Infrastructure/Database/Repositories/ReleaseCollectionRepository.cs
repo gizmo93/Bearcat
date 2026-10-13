@@ -476,7 +476,7 @@ public class ReleaseCollectionRepository(
                                 u.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId,
                                 u.UploadConfig.CollectionUploadSlotId!.Value,
                                 u.UploadConfig.CollectionUploadSlot!.Name,
-                                u.UploadConfig.HosterRegistration.Name,
+                                u.HosterRegistration.Name,
                                 u.UploadedFiles.Count
                             ))
                             .First()

@@ -205,6 +205,7 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
         notification.Upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.Failed,
             OnlineState = OnlineState.Unknown,
