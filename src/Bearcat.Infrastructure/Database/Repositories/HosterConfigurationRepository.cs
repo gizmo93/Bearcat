@@ -63,6 +63,7 @@ public class HosterConfigurationRepository(
                     h.HasUnreadableSecrets,
                     h.RequiresCaptchaVerification,
                     hoster is IHosterWithCaptchaVerification,
+                    hoster is IHosterWithStorageQuota,
                     hoster.SupportsPremiumOnlyDownloads,
                     hoster is IHosterWithFileSizeLimit fileSizeLimit
                         ? fileSizeLimit.MaxFileSizeMb

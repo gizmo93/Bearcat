@@ -182,6 +182,17 @@
                                   OnClick="@(() => TryLoginAsync(hoster))">
                             @L["TryLogin"]
                         </BbButton>
+                        @if (hoster.SupportsStorageQuota)
+                        {
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.IconSmall"
+                                      Disabled="@hoster.HasUnreadableSecrets"
+                                      AriaLabel="@L["CheckStorage"]"
+                                      title="@L["CheckStorage"]"
+                                      OnClick="@(() => CheckStorageAsync(hoster))">
+                                <LucideIcon Name="hard-drive" class="h-4 w-4" />
+                            </BbButton>
+                        }
                         @if (hoster is { SupportsCaptchaVerification: true, RequiresCaptchaVerification: true })
                         {
                             <BbButton Class="bearcat-captcha-action-button"

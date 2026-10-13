@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
@@ -161,6 +162,42 @@ public partial class AllHostersPage(
 
         toastService.Error(L["LoginFailed", hoster.Name, result.ErrorMessage ?? string.Empty]);
         await LoadHostersAsync();
+    }
+
+    private async Task CheckStorageAsync(HosterRegistrationReadModel hoster)
+    {
+        var result = await operationRunner.RunAsync(
+            (HosterRegistrationService service) => service.GetStorageQuotaAsync(hoster.Id)
+        );
+
+        if (!result.IsSuccess)
+        {
+            toastService.Error(
+                L["StorageQuotaCheckFailed", hoster.Name, result.ErrorMessage ?? string.Empty]
+            );
+            return;
+        }
+
+        toastService.Success(FormatStorageQuota(hoster.Name, result.StorageQuota!));
+    }
+
+    private string FormatStorageQuota(string registrationName, HosterStorageQuota storageQuota)
+    {
+        if (storageQuota.IsUnlimited)
+        {
+            return L["StorageQuotaUnlimited", registrationName];
+        }
+
+        var freeSpace = TransferFormatting.FormatBytes(storageQuota.FreeBytes);
+
+        return storageQuota.TotalBytes is { } totalBytes
+            ? L[
+                "StorageQuotaFreeOfTotal",
+                registrationName,
+                freeSpace,
+                TransferFormatting.FormatBytes(totalBytes)
+            ]
+            : L["StorageQuotaFree", registrationName, freeSpace];
     }
 
     private async Task ShowCaptchaDialogAsync(HosterRegistrationReadModel hoster)

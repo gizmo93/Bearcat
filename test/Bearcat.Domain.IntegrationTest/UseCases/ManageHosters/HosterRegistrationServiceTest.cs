@@ -24,6 +24,7 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
     private const string HosterClassName = "TestHoster";
     private const string CaptchaHosterClassName = "CaptchaHoster";
     private const string DownloadHosterClassName = "DownloadHoster";
+    private const string StorageQuotaHosterClassName = "StorageQuotaHoster";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
     private Mock<IHoster> hosterMock = null!;
@@ -562,6 +563,88 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task GetStorageQuotaAsync_StorageQuotaHoster_ReturnsQuotaFromHoster()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: true,
+            hosterClassName: StorageQuotaHosterClassName
+        );
+        var storageQuotaHosterMock = SetupStorageQuotaHoster();
+        var storageQuota = HosterStorageQuota.Limited(freeBytes: 1000, totalBytes: 5000);
+        storageQuotaHosterMock
+            .Setup(h => h.GetStorageQuotaAsync(hosterConfigMock.Object, CancellationToken.None))
+            .ReturnsAsync(storageQuota);
+
+        // Act
+        var result = await service.GetStorageQuotaAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            new StorageQuotaCheckResult(
+                IsSuccess: true,
+                StorageQuota: storageQuota,
+                ErrorMessage: null
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetStorageQuotaAsync_HosterThrows_ReturnsErrorMessage()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: true,
+            hosterClassName: StorageQuotaHosterClassName
+        );
+        var storageQuotaHosterMock = SetupStorageQuotaHoster();
+        storageQuotaHosterMock
+            .Setup(h => h.GetStorageQuotaAsync(hosterConfigMock.Object, CancellationToken.None))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid key"));
+
+        // Act
+        var result = await service.GetStorageQuotaAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            new StorageQuotaCheckResult(
+                IsSuccess: false,
+                StorageQuota: null,
+                ErrorMessage: "Invalid key"
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetStorageQuotaAsync_HosterWithoutStorageQuotaSupport_Throws()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(isActive: true);
+        hosterMock.SetupGet(h => h.Name).Returns("TestHoster");
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.GetStorageQuotaAsync(registration.Id, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Hoster TestHoster does not support storage quota checks.");
+    }
+
+    private Mock<IHosterWithStorageQuota> SetupStorageQuotaHoster()
+    {
+        var storageQuotaHosterMock = new Mock<IHosterWithStorageQuota>(MockBehavior.Strict);
+        hosterFactoryMock
+            .Setup(f => f.GetByName(StorageQuotaHosterClassName))
+            .Returns(storageQuotaHosterMock.Object);
+        storageQuotaHosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
+            .Returns(hosterConfigMock.Object);
+
+        return storageQuotaHosterMock;
     }
 
     private void SetupCaptchaHoster()

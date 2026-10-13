@@ -1739,4 +1739,9 @@
   <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>The path must not be a working directory, lie inside one or contain one.</value></data>
   <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>The path cannot be changed while archives are stored in this folder.</value></data>
   <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
+  <data name="CheckStorage" xml:space="preserve"><value>Check storage</value></data>
+  <data name="StorageQuotaUnlimited" xml:space="preserve"><value>Registration {0}: unlimited storage</value></data>
+  <data name="StorageQuotaFreeOfTotal" xml:space="preserve"><value>Registration {0}: {1} free of {2}</value></data>
+  <data name="StorageQuotaFree" xml:space="preserve"><value>Registration {0}: {1} free</value></data>
+  <data name="StorageQuotaCheckFailed" xml:space="preserve"><value>Storage check for registration {0} failed: {1}</value></data>
 </root>

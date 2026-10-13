@@ -449,6 +449,29 @@ public class ApiClient(
         }
     }
 
+    public async Task<InfoResponse.User> GetUserInfoAsync(
+        RapidgatorConfig config,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.GetUserInfoAsync(token, cancellationToken);
+        var content = response.Content;
+
+        if (content?.Status != (int)HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                content?.Details
+                    ?? $"Rapidgator user info request failed with HTTP status {response.StatusCode}",
+                inner: response.Error,
+                statusCode: response.StatusCode
+            );
+        }
+
+        return content.Response.User;
+    }
+
     public async Task<LoginResponse.ResponseObject> LoginAsync(
         RapidgatorConfig config,
         CancellationToken cancellationToken

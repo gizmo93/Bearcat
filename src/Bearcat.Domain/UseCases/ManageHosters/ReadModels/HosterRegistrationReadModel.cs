@@ -10,6 +10,7 @@ public record HosterRegistrationReadModel(
     bool HasUnreadableSecrets,
     bool RequiresCaptchaVerification,
     bool SupportsCaptchaVerification,
+    bool SupportsStorageQuota,
     bool SupportsPremiumOnlyDownloads,
     int? MaxFileSizeMb,
     bool HasFixedParallelUploadLimit,

@@ -18,7 +18,8 @@ namespace Bearcat.Hosters.Rapidgator;
 
 public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logger)
     : IHosterWithFolders,
-        IHosterWithDownload
+        IHosterWithDownload,
+        IHosterWithStorageQuota
 {
     public string Name => "Rapidgator";
 
@@ -206,6 +207,22 @@ public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logg
         {
             return new TryLoginResult(IsSuccess: false, ErrorMessage: e.Message);
         }
+    }
+
+    public async Task<HosterStorageQuota> GetStorageQuotaAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var user = await apiClient.GetUserInfoAsync(
+            config: hosterConfig.As<RapidgatorConfig>(),
+            cancellationToken: cancellationToken
+        );
+
+        return HosterStorageQuota.Limited(
+            freeBytes: user.Storage.Left,
+            totalBytes: user.Storage.Total
+        );
     }
 
     public async Task<string> CreateFolderAsync(

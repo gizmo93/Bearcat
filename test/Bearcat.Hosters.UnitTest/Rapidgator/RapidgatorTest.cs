@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
@@ -713,6 +714,34 @@ public class RapidgatorTest
         File.WriteAllText(filePath, content);
         temporaryFiles.Add(filePath);
         return filePath;
+    }
+
+    [Test]
+    public async Task GetStorageQuotaAsync_UserInfoCarriesStorage_ReturnsLimitedQuota()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+
+        apiClientMock
+            .Setup(x => x.GetUserInfoAsync(config, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new InfoResponse.User
+                {
+                    Storage = new InfoResponse.Storage
+                    {
+                        Total = 4398046511104,
+                        Left = 4398035213138,
+                    },
+                }
+            );
+
+        // Act
+        var result = await service.GetStorageQuotaAsync(config, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            HosterStorageQuota.Limited(freeBytes: 4398035213138, totalBytes: 4398046511104)
+        );
     }
 
     private static LoginResponse.ResponseObject CreateLoginResponse(

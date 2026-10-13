@@ -14,6 +14,11 @@ public interface IRapidgatorApiClient
         CancellationToken cancellationToken
     );
 
+    Task<InfoResponse.User> GetUserInfoAsync(
+        RapidgatorConfig config,
+        CancellationToken cancellationToken
+    );
+
     Task<UploadFileResponse> RequestUploadFileAsync(
         string name,
         long size,
