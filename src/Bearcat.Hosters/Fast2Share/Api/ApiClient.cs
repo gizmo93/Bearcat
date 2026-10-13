@@ -257,6 +257,30 @@ public class ApiClient(
         );
     }
 
+    public async Task<UserResponse> GetUserAsync(
+        Fast2ShareConfig config,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.GetUserAsync(
+            GetAuthorizationHeader(config.ApiKey),
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode || response.Content is null)
+        {
+            ThrowIfApiKeyRejected(response);
+
+            throw new HttpRequestException(
+                $"Fast2Share user request failed with status code {response.StatusCode}: {GetErrorMessage(response)}",
+                inner: response.Error,
+                statusCode: response.StatusCode
+            );
+        }
+
+        return response.Content;
+    }
+
     public async Task DownloadFileAsync(
         Fast2ShareConfig config,
         string fileUrl,

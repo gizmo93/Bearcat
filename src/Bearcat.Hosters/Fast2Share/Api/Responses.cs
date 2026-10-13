@@ -52,13 +52,21 @@ public record MoveFileResponse(
 public record UserResponse(
     [property: JsonPropertyName("id")] long Id,
     [property: JsonPropertyName("email")] string? Email,
-    [property: JsonPropertyName("plan")] UserPlanResponse? Plan
+    [property: JsonPropertyName("display_name")] string? DisplayName,
+    [property: JsonPropertyName("plan")] UserPlanResponse? Plan,
+    [property: JsonPropertyName("usage")] UserUsageResponse Usage
 );
 
 public record UserPlanResponse(
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("max_file_size")] long? MaxFileSize,
     [property: JsonPropertyName("storage_quota")] long? StorageQuota
+);
+
+public record UserUsageResponse(
+    [property: JsonPropertyName("used_bytes")] long? UsedBytes,
+    [property: JsonPropertyName("file_count")] int? FileCount,
+    [property: JsonPropertyName("remaining_bytes")] long RemainingBytes
 );
 
 public record ErrorResponse([property: JsonPropertyName("error")] string? Error);
