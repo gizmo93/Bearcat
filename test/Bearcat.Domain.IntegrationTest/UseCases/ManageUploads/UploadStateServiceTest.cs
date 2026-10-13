@@ -1052,6 +1052,41 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_HosterAccountPoolUploadConfigWithActiveMember_CreatesInitialUploadWithoutHosterRegistration()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads: false);
+        await MoveUploadConfigToHosterAccountPoolAsync(uploadConfig, memberIsActive: true);
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync();
+
+        result.UploadConfigId.ShouldBe(uploadConfig.Id);
+        result.HosterRegistrationId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterAccountPoolUploadConfigWithoutActiveMember_DoesNotCreateInitialUpload()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads: false);
+        await MoveUploadConfigToHosterAccountPoolAsync(uploadConfig, memberIsActive: false);
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploadExists = await DbContext.Uploads.AnyAsync();
+
+        uploadExists.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_UploadConfigWithinInitialUploadCooldown_DoesNotCreateUpload()
     {
         // Arrange
@@ -1406,6 +1441,33 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
 
         reupload.HosterRegistrationId.ShouldBe(hosterRegistrationOfUploadConfig);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_UploadOfHosterAccountPoolUploadConfig_CreatesReuploadWithoutHosterRegistration()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync(u =>
+            u.Id == upload.UploadConfigId
+        );
+        await MoveUploadConfigToHosterAccountPoolAsync(uploadConfig, memberIsActive: true);
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
+        var previousUpload = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        reupload.HosterRegistrationId.ShouldBeNull();
+        previousUpload.HosterRegistrationId.ShouldNotBeNull();
     }
 
     [Test]
@@ -2385,6 +2447,26 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         return uploadConfig;
+    }
+
+    private async Task MoveUploadConfigToHosterAccountPoolAsync(
+        UploadConfig uploadConfig,
+        bool memberIsActive
+    )
+    {
+        var memberRegistration = await DbContext.HosterRegistrations.SingleAsync(registration =>
+            registration.Id == uploadConfig.HosterRegistrationId
+        );
+        memberRegistration.IsActive = memberIsActive;
+        uploadConfig.HosterRegistrationId = null;
+        uploadConfig.HosterRegistration = null;
+        uploadConfig.HosterAccountPool = new HosterAccountPool
+        {
+            Name = "Pool",
+            HosterClassName = HosterClassName,
+            Members = [new HosterAccountPoolMember { HosterRegistration = memberRegistration }],
+        };
+        await DbContext.SaveChangesAsync();
     }
 
     private static HosterRegistration CreateHosterRegistration() =>

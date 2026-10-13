@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
@@ -18,22 +19,24 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class ReleaseReadRepository(
     IBearcatReadDbContext dbRead,
     IArchiverFactory archiverFactory,
-    ILinkCrypterFactory linkCrypterFactory
+    ILinkCrypterFactory linkCrypterFactory,
+    IHosterFactory hosterFactory
 ) : IReleaseReadRepository, IReleaseForumPostUploadRepository, IForumPostImageLinkRepository
 {
     internal static readonly Expression<Func<Release, bool>> IsReadyForPostQueue = r =>
-        r.UploadConfigs.Any(uc =>
-            uc.CollectionUploadSlotId == null
-            && uc.HosterRegistration.IsActive
-            && uc.Uploads.Any(u =>
-                u.UploadState == UploadState.Completed
-                && u.UploadedAt != null
-                && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
+        r.UploadConfigs.AsQueryable()
+            .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+            .Any(uc =>
+                uc.CollectionUploadSlotId == null
+                && uc.Uploads.Any(u =>
+                    u.UploadState == UploadState.Completed
+                    && u.UploadedAt != null
+                    && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
+                )
             )
-        )
-        && r.UploadConfigs.Where(uc =>
-                uc.CollectionUploadSlotId == null && uc.HosterRegistration.IsActive
-            )
+        && r.UploadConfigs.AsQueryable()
+            .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+            .Where(uc => uc.CollectionUploadSlotId == null)
             .All(uc =>
                 uc.Uploads.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
                     .ThenByDescending(u => u.Id)
@@ -112,12 +115,20 @@ public class ReleaseReadRepository(
                     ? null
                     : (ReleaseSource?)r.Classification.Source,
                 UploadConfigs = r
-                    .UploadConfigs.OrderBy(uc => uc.HosterRegistration.Name)
+                    .UploadConfigs.Select(uc => new
+                    {
+                        uc.Id,
+                        UploadTargetName = uc.HosterRegistrationId != null
+                            ? uc.HosterRegistration!.Name
+                            : uc.HosterAccountPool!.Name,
+                        IsOnline = uc.Uploads.Any(u => u.OnlineState == OnlineState.Online),
+                    })
+                    .OrderBy(uc => uc.UploadTargetName)
                     .ThenBy(uc => uc.Id)
                     .Select(uc => new ReleaseSearchResultUploadConfigReadModel(
                         uc.Id,
-                        uc.HosterRegistration.Name,
-                        uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                        uc.UploadTargetName,
+                        uc.IsOnline
                     ))
                     .ToList(),
             })
@@ -257,7 +268,9 @@ public class ReleaseReadRepository(
             {
                 UploadConfigId = c.Id,
                 UploadConfigName = c.Name,
-                HosterRegistrationName = c.HosterRegistration.Name,
+                UploadTargetName = c.HosterRegistrationId != null
+                    ? c.HosterRegistration!.Name
+                    : c.HosterAccountPool!.Name,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -378,7 +391,7 @@ public class ReleaseReadRepository(
                 return new ReleaseOverviewUploadReadModel(
                     config.UploadConfigId,
                     config.UploadConfigName,
-                    config.HosterRegistrationName,
+                    config.UploadTargetName,
                     upload?.UploadId,
                     upload?.CreatedAt,
                     upload?.UploadedAt,
@@ -432,7 +445,9 @@ public class ReleaseReadRepository(
                     {
                         u.UploadConfig.ReleaseId,
                         ArchiveConfigName = u.UploadConfig.ArchiveConfig.Name,
-                        HosterRegistrationName = u.HosterRegistration.Name,
+                        HosterAccountOrPoolName = u.HosterRegistrationId != null
+                            ? u.HosterRegistration!.Name
+                            : u.UploadConfig.HosterAccountPool!.Name,
                         UploadId = u.Id,
                         LinkCount = u.UploadedFiles.Count,
                     })
@@ -466,10 +481,10 @@ public class ReleaseReadRepository(
                         .Select(archiveGroup => new ReleasePostQueueArchiveGroupReadModel(
                             ArchiveConfigName: archiveGroup.Key,
                             Hosters: archiveGroup
-                                .GroupBy(u => u.HosterRegistrationName)
+                                .GroupBy(u => u.HosterAccountOrPoolName)
                                 .OrderBy(hosterGroup => hosterGroup.Key)
                                 .Select(hosterGroup => new PostQueueHosterReadModel(
-                                    HosterRegistrationName: hosterGroup.Key,
+                                    HosterAccountOrPoolName: hosterGroup.Key,
                                     LinkCount: hosterGroup.Sum(u => u.LinkCount)
                                 ))
                                 .ToList()
@@ -570,7 +585,12 @@ public class ReleaseReadRepository(
             {
                 UploadConfigId = c.Id,
                 UploadConfigName = c.Name,
-                HosterName = c.HosterRegistration.Name,
+                HosterRegistrationName = c.HosterRegistrationId != null
+                    ? c.HosterRegistration!.Name
+                    : null,
+                HosterAccountPoolHosterClassName = c.HosterAccountPoolId != null
+                    ? c.HosterAccountPool!.HosterClassName
+                    : null,
                 ArchiverName = c.ArchiveConfig.ArchiverName,
                 ArchivePassword = c.ArchiveConfig.ArchivePassword,
                 LinkCrypters = c
@@ -727,7 +747,8 @@ public class ReleaseReadRepository(
 
                 return new ReleaseForumPostUploadReadModel(
                     UploadConfigName: config.UploadConfigName,
-                    HosterName: config.HosterName,
+                    HosterName: config.HosterRegistrationName
+                        ?? hosterFactory.GetByName(config.HosterAccountPoolHosterClassName!).Name,
                     ArchiveFormat: archiverNamesByClassName.GetValueOrDefault(
                         config.ArchiverName,
                         config.ArchiverName
@@ -1191,7 +1212,10 @@ public class ReleaseReadRepository(
             .Select(u => new ReleaseUploadReadModel(
                 u.Id,
                 u.UploadConfig.Name,
-                u.HosterRegistration.Name,
+                u.HosterRegistrationId != null ? u.HosterRegistration!.Name : null,
+                u.UploadConfig.HosterAccountPoolId != null
+                    ? u.UploadConfig.HosterAccountPool!.Name
+                    : null,
                 u.CreatedAt,
                 u.UploadedAt,
                 u.UploadState,
@@ -1217,7 +1241,7 @@ public class ReleaseReadRepository(
                             || reuploadBlockingStates.Contains(ru.UploadState)
                         )
                     ),
-                u.HosterRegistration.HasUnreadableSecrets,
+                u.HosterRegistrationId != null && u.HosterRegistration!.HasUnreadableSecrets,
                 u.ErrorMessages
             ))
             .ToListAsync(cancellationToken: cancellationToken);
@@ -1523,7 +1547,15 @@ public class ReleaseReadRepository(
         if (query.HosterRegistrationId is not null)
         {
             releases = releases.Where(r =>
-                r.UploadConfigs.Any(u => u.HosterRegistrationId == query.HosterRegistrationId.Value)
+                r.UploadConfigs.Any(u =>
+                    u.HosterRegistrationId == query.HosterRegistrationId.Value
+                    || (
+                        u.HosterAccountPoolId != null
+                        && u.HosterAccountPool!.Members.Any(member =>
+                            member.HosterRegistrationId == query.HosterRegistrationId.Value
+                        )
+                    )
+                )
             );
         }
 

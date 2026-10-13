@@ -34,8 +34,8 @@ public class MirrorCoverageEvaluator(IHosterFactory hosterFactory)
         return archiveConfig
             .UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads)
             .Where(upload =>
-                IsMirrorCapable(upload)
-                && upload.UploadedFiles.Count > 0
+                upload.UploadedFiles.Count > 0
+                && IsMirrorCapable(upload)
                 && upload.UploadedFiles.All(file =>
                     file.OnlineState == OnlineState.Online
                     && !string.IsNullOrWhiteSpace(file.HosterFileLink)
@@ -46,7 +46,7 @@ public class MirrorCoverageEvaluator(IHosterFactory hosterFactory)
 
     public bool IsMirrorCapable(Upload upload)
     {
-        var registration = upload.HosterRegistration;
+        var registration = upload.HosterRegistration!;
 
         return registration.IsActive
             && registration.UseForMirrorDownloads

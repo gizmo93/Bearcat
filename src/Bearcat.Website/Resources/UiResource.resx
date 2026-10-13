@@ -192,7 +192,6 @@
   <data name="HosterRegistration" xml:space="preserve"><value>Hoster registration</value></data>
   <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hoster registration {0} activated</value></data>
   <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hoster registration {0} deactivated</value></data>
-  <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hoster registration is required.</value></data>
   <data name="HideFileColumn" xml:space="preserve"><value>Hide file</value></data>
   <data name="HosterRegistrations" xml:space="preserve"><value>Hoster registrations</value></data>
   <data name="HosterTarget" xml:space="preserve"><value>Hoster target</value></data>
@@ -420,7 +419,6 @@
   <data name="SelectCrypter" xml:space="preserve"><value>Select a crypter</value></data>
   <data name="SelectFolderRequired" xml:space="preserve"><value>You must select a folder</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Select a hoster</value></data>
-  <data name="SelectHosterRegistration" xml:space="preserve"><value>Select a hoster registration</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>You must select a hoster</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Select an image hoster</value></data>
   <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Select an image hoster registration</value></data>
@@ -690,10 +688,9 @@
   <data name="SaveAsTemplate" xml:space="preserve"><value>Save as template</value></data>
   <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Create a release template from this release's current archive, upload, and link crypter configuration.</value></data>
   <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>You must select an archive configuration.</value></data>
-  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>You must select a hoster registration.</value></data>
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Select release template</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>You must select a release template.</value></data>
-  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leave empty to use the hoster registration name.</value></data>
+  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leave empty to use the name of the account or account pool.</value></data>
     <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Choose the hoster and archive settings for releases created from this template.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Use hoster name</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Use release name as archive name</value></data>
@@ -1039,6 +1036,8 @@
   <data name="NotificationKind.UploadMarkedOffline" xml:space="preserve"><value>Upload marked offline</value></data><data name="NotificationKind.UploadMarkedOffline.Description" xml:space="preserve"><value>An upload was manually marked as offline.</value></data>
   <data name="NotificationKind.HosterStatusCheckFailed" xml:space="preserve"><value>Hoster status check failed</value></data><data name="NotificationKind.HosterStatusCheckFailed.Description" xml:space="preserve"><value>File availability could not be checked.</value></data>
   <data name="NotificationKind.AutomaticReuploadCreated" xml:space="preserve"><value>Automatic reupload created</value></data><data name="NotificationKind.AutomaticReuploadCreated.Description" xml:space="preserve"><value>A reupload was created automatically.</value></data>
+  <data name="NotificationKind.HosterAccountPoolFull" xml:space="preserve"><value>Account pool full</value></data>
+  <data name="NotificationKind.HosterAccountPoolFull.Description" xml:space="preserve"><value>An upload could not start because no account of its account pool has enough free storage. The upload stays pending and starts once an account has enough space.</value></data>
   <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA verification required</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>A hoster requires CAPTCHA verification.</value></data>
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Credentials rejected by hoster</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>A hoster rejected the credentials of a hoster registration. Bearcat deactivates the registration until you fix the credentials and activate it again.</value></data>
@@ -1768,4 +1767,10 @@
   <data name="HosterAccountPoolValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 200 characters.</value></data>
   <data name="HosterAccountPoolValidationError.NameAlreadyExists" xml:space="preserve"><value>An account pool with this name already exists.</value></data>
   <data name="HosterAccountPoolValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
+  <data name="SelectUploadTarget" xml:space="preserve"><value>Select an account or account pool</value></data>
+  <data name="UploadTargetRequired" xml:space="preserve"><value>You must select an account or account pool.</value></data>
+  <data name="UploadTargetHosterAccounts" xml:space="preserve"><value>Accounts</value></data>
+  <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (no active account)</value></data>
+  <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (account not assigned yet)</value></data>
+  <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" cannot be deleted because {1} upload configurations and {2} upload configuration templates still use it.</value></data>
 </root>

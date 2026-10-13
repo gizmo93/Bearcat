@@ -54,9 +54,9 @@
                         <div class="bearcat-upload-history-body">
                             <div class="bearcat-upload-history-title">
                                 <span class="bearcat-upload-history-config-name">@upload.UploadConfigName</span>
-                                @if (IsHosterNameShown(upload))
+                                @if (IsHosterAccountNameShown(upload))
                                 {
-                                    <span class="text-muted-foreground">@upload.HosterRegistrationName</span>
+                                    <span class="text-muted-foreground">@GetHosterAccountName(upload)</span>
                                 }
                                 <span class="tabular-nums text-muted-foreground">#@upload.UploadId</span>
                                 <OnlineStateBadge Value="@upload.OnlineState"

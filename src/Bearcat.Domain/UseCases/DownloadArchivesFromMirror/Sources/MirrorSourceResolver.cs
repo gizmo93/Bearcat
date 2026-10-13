@@ -17,9 +17,10 @@ public class MirrorSourceResolver(IHosterFactory hosterFactory)
 
         foreach (var upload in uploadsOfArchive)
         {
-            var registration = upload.HosterRegistration;
-
-            if (!registration.IsActive || !registration.UseForMirrorDownloads)
+            if (
+                upload.HosterRegistration
+                is not { IsActive: true, UseForMirrorDownloads: true } registration
+            )
             {
                 continue;
             }

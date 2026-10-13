@@ -14,9 +14,13 @@ public class UploadConfigTemplate
 
     public ArchiveConfigTemplate ArchiveConfigTemplate { get; set; } = null!;
 
-    public int HosterRegistrationId { get; set; }
+    public int? HosterRegistrationId { get; set; }
 
-    public HosterRegistration HosterRegistration { get; set; } = null!;
+    public HosterRegistration? HosterRegistration { get; set; }
+
+    public int? HosterAccountPoolId { get; set; }
+
+    public HosterAccountPool? HosterAccountPool { get; set; }
 
     public string? Name { get; set; }
 
@@ -34,4 +38,7 @@ public class UploadConfigTemplate
     public string? CollectionUploadSlotExpectedArchivePassword { get; set; }
 
     public List<UploadConfigLinkCrypterTemplate> LinkCrypterTemplates { get; set; } = [];
+
+    public string GetUploadTargetName() =>
+        HosterAccountPoolId is null ? HosterRegistration!.Name : HosterAccountPool!.Name;
 }

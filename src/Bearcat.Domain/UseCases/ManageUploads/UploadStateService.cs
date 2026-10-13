@@ -155,7 +155,7 @@ public class UploadStateService(
             return false;
         }
 
-        var registration = upload.HosterRegistration;
+        var registration = upload.HosterRegistration!;
 
         logger.LogInformation(
             "Checking online status on demand for Upload {UploadId} on hoster registration {HosterRegistration}",
@@ -617,7 +617,7 @@ public class UploadStateService(
         var newUpload = new Upload
         {
             UploadConfig = upload.UploadConfig,
-            HosterRegistrationId = upload.UploadConfig.HosterRegistrationId,
+            HosterRegistrationId = DetermineHosterRegistrationIdForReupload(upload),
             CreatedAt = timeProvider.GetLocalNow(),
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
@@ -634,6 +634,28 @@ public class UploadStateService(
 
         uploadStateRepository.Add(newUpload);
         return newUpload;
+    }
+
+    private static int? DetermineHosterRegistrationIdForReupload(Upload previousUpload)
+    {
+        var uploadConfig = previousUpload.UploadConfig;
+
+        if (uploadConfig.HosterAccountPoolId is null)
+        {
+            return uploadConfig.HosterRegistrationId;
+        }
+
+        var previousRegistration = previousUpload.HosterRegistration;
+
+        var previousRegistrationIsStillUsable =
+            previousRegistration is not null
+            && previousRegistration.IsActive
+            && !previousRegistration.HasUnreadableSecrets
+            && uploadConfig.HosterAccountPool!.Members.Any(member =>
+                member.HosterRegistrationId == previousRegistration.Id
+            );
+
+        return previousRegistrationIsStillUsable ? previousRegistration!.Id : null;
     }
 
     private bool EvaluateAndCheckQualityGate(

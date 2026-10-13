@@ -34,7 +34,7 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                         .ThenInclude(u =>
                             u.UploadedFiles.Where(f =>
                                 EF.Parameter(mirrorDownloadHosterRegistrationIds)
-                                    .Contains(f.Upload.HosterRegistrationId)
+                                    .Contains(f.Upload.HosterRegistrationId!.Value)
                             )
                         )
             .Where(r =>

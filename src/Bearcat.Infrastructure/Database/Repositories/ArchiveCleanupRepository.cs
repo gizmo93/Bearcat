@@ -41,7 +41,7 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                         .ThenInclude(u =>
                             u.UploadedFiles.Where(f =>
                                 EF.Parameter(mirrorDownloadHosterRegistrationIds)
-                                    .Contains(f.Upload.HosterRegistrationId)
+                                    .Contains(f.Upload.HosterRegistrationId!.Value)
                             )
                         )
             .Where(a =>

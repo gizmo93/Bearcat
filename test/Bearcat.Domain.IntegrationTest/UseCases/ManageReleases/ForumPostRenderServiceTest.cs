@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
@@ -26,7 +27,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         var releaseReadRepository = new ReleaseReadRepository(
             ReadDbContext,
             Mock.Of<IArchiverFactory>(factory => factory.GetArchivers() == new List<ArchiverDto>()),
-            Mock.Of<ILinkCrypterFactory>()
+            Mock.Of<ILinkCrypterFactory>(),
+            Mock.Of<IHosterFactory>()
         );
         var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
         var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);

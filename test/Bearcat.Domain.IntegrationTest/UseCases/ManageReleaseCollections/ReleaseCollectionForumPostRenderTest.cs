@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
@@ -28,7 +29,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 factory.GetArchivers()
                 == new List<ArchiverDto> { new("RAR", "RarArchiver", ".rar") }
             ),
-            Mock.Of<ILinkCrypterFactory>()
+            Mock.Of<ILinkCrypterFactory>(),
+            Mock.Of<IHosterFactory>()
         );
         var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
         var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);

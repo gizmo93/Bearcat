@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
@@ -40,7 +41,8 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         repository = new ReleaseReadRepository(
             ReadDbContext,
             archiverFactory.Object,
-            linkCrypterFactory.Object
+            linkCrypterFactory.Object,
+            Mock.Of<IHosterFactory>()
         );
     }
 
@@ -711,7 +713,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         var archiveGroup = item.ArchiveGroups.ShouldHaveSingleItem();
         archiveGroup.ArchiveConfigName.ShouldBe("Archive");
         archiveGroup
-            .Hosters.Select(hoster => (hoster.HosterRegistrationName, hoster.LinkCount))
+            .Hosters.Select(hoster => (hoster.HosterAccountOrPoolName, hoster.LinkCount))
             .ShouldBe([("Hoster A", 2), ("Hoster B", 1)]);
         item.Containers.Select(container =>
                 (container.LinkCrypterRegistrationName, container.Count)

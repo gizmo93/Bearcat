@@ -21,7 +21,7 @@ else
                 @foreach (var uploadConfig in UploadConfigs)
                 {
                     <li class="flex items-center justify-between gap-4">
-                        <span class="truncate">@uploadConfig.HosterRegistrationName</span>
+                        <span class="truncate">@uploadConfig.UploadTargetName</span>
                         <span class="@(uploadConfig.IsOnline ? string.Empty : "font-medium")">@L.Localize(uploadConfig.IsOnline ? OnlineState.Online : OnlineState.Offline)</span>
                     </li>
                 }

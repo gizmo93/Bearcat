@@ -142,6 +142,7 @@ public class NotificationService(
             NotificationKind.CaptchaVerificationRequired =>
                 configuration.CaptchaVerificationRequired,
             NotificationKind.HosterCredentialsRejected => configuration.HosterCredentialsRejected,
+            NotificationKind.HosterAccountPoolFull => configuration.HosterAccountPoolFull,
             NotificationKind.LinkCrypterContainerCreationFailed =>
                 configuration.LinkCrypterContainerCreationFailed,
             NotificationKind.LinkCrypterContainerUpdateFailed =>

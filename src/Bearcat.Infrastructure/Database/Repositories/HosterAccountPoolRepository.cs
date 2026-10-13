@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools.Deletion;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -108,6 +109,20 @@ public class HosterAccountPoolRepository(
             );
     }
 
+    public async Task<HosterAccountPoolUsage> GetUsageAsync(
+        int hosterAccountPoolId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead
+            .HosterAccountPools.Where(pool => pool.Id == hosterAccountPoolId)
+            .Select(pool => new HosterAccountPoolUsage(
+                pool.UploadConfigs.Count,
+                pool.UploadConfigTemplates.Count
+            ))
+            .FirstAsync(cancellationToken);
+    }
+
     public void Add(HosterAccountPool hosterAccountPool)
     {
         dbWrite.Add(hosterAccountPool);
@@ -147,11 +162,15 @@ public class HosterAccountPoolRepository(
 
     private HosterAccountPoolReadModel ToReadModel(HosterAccountPoolProjection pool)
     {
+        var hoster = hosterFactory.GetByName(pool.HosterClassName);
+
         return new HosterAccountPoolReadModel(
             pool.Id,
             pool.Name,
             pool.HosterClassName,
-            hosterFactory.GetByName(pool.HosterClassName).Name,
+            hoster.Name,
+            hoster.SupportsPremiumOnlyDownloads,
+            hoster is IHosterWithFileSizeLimit fileSizeLimit ? fileSizeLimit.MaxFileSizeMb : null,
             pool.MinimumFreeSpaceBytes,
             pool.MembersInPriorityOrder
         );

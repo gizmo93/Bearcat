@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
@@ -27,7 +28,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         repository = new ReleaseReadRepository(
             ReadDbContext,
             Mock.Of<IArchiverFactory>(),
-            Mock.Of<ILinkCrypterFactory>()
+            Mock.Of<ILinkCrypterFactory>(),
+            Mock.Of<IHosterFactory>()
         );
     }
 
@@ -578,7 +580,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         archiveGroup.ArchiveConfigName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
 
         var hoster = archiveGroup.Hosters.ShouldHaveSingleItem();
-        hoster.HosterRegistrationName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
+        hoster.HosterAccountOrPoolName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
         hoster.LinkCount.ShouldBe(1);
     }
 

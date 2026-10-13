@@ -69,6 +69,7 @@ using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
@@ -168,6 +169,8 @@ public static class ServiceProviderConfig
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();
             services.AddSingleton<TransferSpeedLimitService>();
             services.AddScoped<UploadFilesService>();
+            services.AddScoped<HosterAccountPoolAccountSelectionService>();
+            services.AddSingleton<HosterStorageAvailabilityCache>();
             services.AddScoped<UploadFinalizationService>();
             services.AddScoped<FileUploadExecutionService>();
             services.AddScoped<MissingFileValidationService>();

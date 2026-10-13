@@ -27,7 +27,7 @@ public class HosterCredentialsRejectionService(INotificationService notification
 
     public void DeactivateAndNotify(Upload upload, string message)
     {
-        var registration = upload.HosterRegistration;
+        var registration = upload.HosterRegistration!;
 
         if (!TryDeactivate(registration))
         {

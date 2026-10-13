@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools.Deletion;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.Dto;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.Repositories;
@@ -110,17 +111,26 @@ public class HosterAccountPoolService(
         return HosterAccountPoolSaveResult.Saved(hosterAccountPoolId);
     }
 
-    public async Task DeleteAsync(
+    public async Task<HosterAccountPoolDeleteResult> DeleteAsync(
         int hosterAccountPoolId,
         CancellationToken cancellationToken = default
     )
     {
+        var usage = await writeRepository.GetUsageAsync(hosterAccountPoolId, cancellationToken);
+
+        if (usage.IsInUse)
+        {
+            return new HosterAccountPoolDeleteResult(IsDeleted: false, usage);
+        }
+
         var hosterAccountPool = await writeRepository.GetByIdAsync(
             hosterAccountPoolId,
             cancellationToken
         );
         writeRepository.Remove(hosterAccountPool);
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return new HosterAccountPoolDeleteResult(IsDeleted: true, usage);
     }
 
     private static HosterAccountPoolInput Normalize(HosterAccountPoolInput input)

@@ -17,6 +17,9 @@ public record ReleaseSearchRequest
 
     public OnlineState? OnlineState { get; init; }
 
+    /// <summary>
+    /// Only releases with an upload config that targets this hoster account, or an account pool that contains it.
+    /// </summary>
     public int? HosterRegistrationId { get; init; }
 
     public string? ArchiverName { get; init; }

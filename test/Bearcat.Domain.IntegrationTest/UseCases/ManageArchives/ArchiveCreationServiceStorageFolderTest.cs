@@ -676,7 +676,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
             ArchiveId: archive.Id,
             StorageFolderId: storageFolder.Id,
             UploadConfigId: uploadConfig.Id,
-            HosterRegistrationId: uploadConfig.HosterRegistrationId,
+            HosterRegistrationId: uploadConfig.HosterRegistrationId!.Value,
             WaitingUploadId: waitingUpload.Id,
             StorageArchiveFolderPath: storageArchiveFolderPath,
             StorageFilePaths: storageFilePaths,

@@ -3,6 +3,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -150,7 +151,7 @@ public class ReleaseCollectionService(
     public async Task<int> CreateUploadSlotAsync(
         int releaseCollectionId,
         string name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         string archiveConfigName,
         bool premiumOnlyDownload,
         bool isRequired,
@@ -195,7 +196,8 @@ public class ReleaseCollectionService(
                 {
                     ReleaseId = target.ReleaseId,
                     ArchiveConfigId = target.ArchiveConfigId,
-                    HosterRegistrationId = hosterRegistrationId,
+                    HosterRegistrationId = uploadTarget.HosterRegistrationId,
+                    HosterAccountPoolId = uploadTarget.HosterAccountPoolId,
                     Name = cleanedName,
                     PremiumOnlyDownload = premiumOnlyDownload,
                     LinkCrypters = [],
@@ -365,6 +367,7 @@ public class ReleaseCollectionService(
                     ReleaseId = releaseId,
                     ArchiveConfigId = target.ArchiveConfigId,
                     HosterRegistrationId = referenceUploadConfig.HosterRegistrationId,
+                    HosterAccountPoolId = referenceUploadConfig.HosterAccountPoolId,
                     Name = referenceUploadConfig.Name,
                     PremiumOnlyDownload = referenceUploadConfig.PremiumOnlyDownload,
                     LinkCrypters = [],

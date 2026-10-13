@@ -15,12 +15,9 @@
                               Placeholder="@L["UseHosterNamePlaceholder"]"
                               HelperText="@L["UploadConfigTemplateNameHelp"]" />
 
-            <BbFormFieldSelect TValue="int?"
-                               @bind-Value="FormModel.HosterRegistrationId"
-                               @bind-Value:after="OnHosterRegistrationChanged"
-                               Label="@L["HosterRegistration"]"
-                               Placeholder="@L["SelectHosterRegistration"]"
-                               Options="HosterOptions" />
+            <UploadTargetSelect Choices="uploadTargetChoices"
+                                @bind-Value="FormModel.UploadTarget"
+                                @bind-Value:after="OnUploadTargetChanged" />
 
             @if (CanUsePremiumOnlyDownload)
             {

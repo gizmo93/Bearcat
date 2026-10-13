@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -283,7 +284,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         var slotId = await service.CreateUploadSlotAsync(
             releaseCollectionId: seed.CollectionId,
             name: "  Rapidgator  ",
-            hosterRegistrationId: hosterRegistration.Id,
+            uploadTarget: UploadTarget.ForHosterRegistration(hosterRegistration.Id),
             archiveConfigName: "Main",
             premiumOnlyDownload: false,
             isRequired: true,
@@ -328,7 +329,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         var slotId = await service.CreateUploadSlotAsync(
             seed.CollectionId,
             "Rapidgator",
-            hosterRegistration.Id,
+            UploadTarget.ForHosterRegistration(hosterRegistration.Id),
             "Main",
             premiumOnlyDownload: false,
             isRequired: true,
@@ -364,7 +365,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             service.CreateUploadSlotAsync(
                 seed.CollectionId,
                 "   ",
-                hosterRegistration.Id,
+                UploadTarget.ForHosterRegistration(hosterRegistration.Id),
                 "Main",
                 false,
                 true,
@@ -402,7 +403,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             service.CreateUploadSlotAsync(
                 seed.CollectionId,
                 "Rapidgator",
-                hosterRegistration.Id,
+                UploadTarget.ForHosterRegistration(hosterRegistration.Id),
                 "Main",
                 false,
                 true,
@@ -432,7 +433,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             service.CreateUploadSlotAsync(
                 seed.CollectionId,
                 "Rapidgator",
-                hosterRegistration.Id,
+                UploadTarget.ForHosterRegistration(hosterRegistration.Id),
                 "WrongArchiveName",
                 false,
                 true,

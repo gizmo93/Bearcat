@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
@@ -27,7 +28,8 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
         repository = new ReleaseReadRepository(
             ReadDbContext,
             Mock.Of<IArchiverFactory>(),
-            Mock.Of<ILinkCrypterFactory>()
+            Mock.Of<ILinkCrypterFactory>(),
+            Mock.Of<IHosterFactory>()
         );
     }
 

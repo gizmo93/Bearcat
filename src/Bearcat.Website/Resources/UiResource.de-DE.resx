@@ -192,7 +192,6 @@
   <data name="HosterRegistration" xml:space="preserve"><value>Hosterregistrierung</value></data>
   <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hosterregistrierung {0} aktiviert</value></data>
   <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hosterregistrierung {0} deaktiviert</value></data>
-  <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hosterregistrierung ist erforderlich.</value></data>
   <data name="HideFileColumn" xml:space="preserve"><value>Datei ausblenden</value></data>
   <data name="HosterRegistrations" xml:space="preserve"><value>Hosterregistrierungen</value></data>
   <data name="HosterTarget" xml:space="preserve"><value>Hosterziel</value></data>
@@ -423,7 +422,6 @@
   <data name="SelectCrypter" xml:space="preserve"><value>Crypter auswählen</value></data>
   <data name="SelectFolderRequired" xml:space="preserve"><value>Du musst einen Ordner auswählen</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>
-  <data name="SelectHosterRegistration" xml:space="preserve"><value>Hosterregistrierung auswählen</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>Du musst einen Hoster auswählen</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Bildhoster auswählen</value></data>
   <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Bildhosterregistrierung auswählen</value></data>
@@ -693,10 +691,9 @@
   <data name="SaveAsTemplate" xml:space="preserve"><value>Als Template speichern</value></data>
   <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Erstellt ein Releasetemplate aus der aktuellen Archiv-, Upload- und Linkcrypterkonfiguration dieses Releases.</value></data>
   <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>Du musst eine Archivkonfiguration auswählen.</value></data>
-  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>Du musst eine Hosterregistrierung auswählen.</value></data>
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Releasetemplate auswählen</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Releasetemplate auswählen.</value></data>
-  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen der Hosterregistrierung zu verwenden.</value></data>
+  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen des Accounts oder Accountpools zu verwenden.</value></data>
     <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Wähle den Hoster und die Archiveinstellungen für Releases aus dieser Vorlage.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hosternamen verwenden</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Releasename als Archivname verwenden</value></data>
@@ -1042,6 +1039,8 @@
   <data name="NotificationKind.UploadMarkedOffline" xml:space="preserve"><value>Upload als offline markiert</value></data><data name="NotificationKind.UploadMarkedOffline.Description" xml:space="preserve"><value>Ein Upload wurde manuell als offline markiert.</value></data>
   <data name="NotificationKind.HosterStatusCheckFailed" xml:space="preserve"><value>Hosterstatusprüfung fehlgeschlagen</value></data><data name="NotificationKind.HosterStatusCheckFailed.Description" xml:space="preserve"><value>Die Verfügbarkeit der Dateien konnte nicht geprüft werden.</value></data>
   <data name="NotificationKind.AutomaticReuploadCreated" xml:space="preserve"><value>Automatischer Reupload erstellt</value></data><data name="NotificationKind.AutomaticReuploadCreated.Description" xml:space="preserve"><value>Ein Reupload wurde automatisch erstellt.</value></data>
+  <data name="NotificationKind.HosterAccountPoolFull" xml:space="preserve"><value>Accountpool voll</value></data>
+  <data name="NotificationKind.HosterAccountPoolFull.Description" xml:space="preserve"><value>Ein Upload konnte nicht starten, weil kein Account seines Accountpools genug freien Speicherplatz hat. Der Upload bleibt ausstehend und startet, sobald ein Account genug Platz hat.</value></data>
   <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA-Verifizierung erforderlich</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>Ein Hoster erfordert eine CAPTCHA-Verifizierung.</value></data>
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Zugangsdaten vom Hoster abgelehnt</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>Ein Hoster hat die Zugangsdaten einer Hosterregistrierung abgelehnt. Bearcat deaktiviert die Registrierung, bis du die Zugangsdaten korrigierst und sie wieder aktivierst.</value></data>
@@ -1771,4 +1770,10 @@
   <data name="HosterAccountPoolValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 200 Zeichen lang sein.</value></data>
   <data name="HosterAccountPoolValidationError.NameAlreadyExists" xml:space="preserve"><value>Es gibt bereits einen Accountpool mit diesem Namen.</value></data>
   <data name="HosterAccountPoolValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der Mindestspeicherplatz darf nicht negativ sein.</value></data>
+  <data name="SelectUploadTarget" xml:space="preserve"><value>Account oder Accountpool auswählen</value></data>
+  <data name="UploadTargetRequired" xml:space="preserve"><value>Du musst einen Account oder Accountpool auswählen.</value></data>
+  <data name="UploadTargetHosterAccounts" xml:space="preserve"><value>Accounts</value></data>
+  <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (kein aktiver Account)</value></data>
+  <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (Account noch nicht zugewiesen)</value></data>
+  <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil noch {1} Uploadkonfigurationen und {2} Uploadkonfigurationsvorlagen ihn verwenden.</value></data>
 </root>

@@ -11,4 +11,8 @@ public class HosterAccountPool
     public long MinimumFreeSpaceBytes { get; set; }
 
     public List<HosterAccountPoolMember> Members { get; set; } = [];
+
+    public List<UploadConfig> UploadConfigs { get; set; } = null!;
+
+    public List<UploadConfigTemplate> UploadConfigTemplates { get; set; } = null!;
 }

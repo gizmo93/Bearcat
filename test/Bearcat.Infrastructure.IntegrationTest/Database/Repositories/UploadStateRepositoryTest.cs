@@ -2,6 +2,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Shouldly;
 
@@ -524,7 +525,7 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         var dueUpload = result.ShouldHaveSingleItem();
         dueUpload.Id.ShouldBe(upload.Id);
-        dueUpload.HosterRegistration.Name.ShouldBe("Holding");
+        dueUpload.HosterRegistration!.Name.ShouldBe("Holding");
     }
 
     [Test]
@@ -550,7 +551,7 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldNotBeNull();
-        result.HosterRegistration.Name.ShouldBe("Holding");
+        result.HosterRegistration!.Name.ShouldBe("Holding");
         result.UploadedFiles.ShouldHaveSingleItem();
     }
 
@@ -570,10 +571,55 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         var upload = result.ShouldHaveSingleItem();
         upload.UploadedFiles.ShouldHaveSingleItem();
-        upload.HosterRegistration.Name.ShouldBe("Hoster");
+        upload.HosterRegistration!.Name.ShouldBe("Hoster");
         upload.UploadConfig.Release.ReleaseGroup.Name.ShouldBe("Release group");
         upload.UploadConfig.Release.MediaFiles.ShouldBeEmpty();
         upload.UploadConfig.Release.QualityIssues.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetUploadConfigsWithoutUploadsAsync_HosterRegistrationAndHosterAccountPoolConfigs_ReturnsConfigsWithActiveHosterRegistrationOrPoolMember()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var release = testData.AddRelease("Release");
+        var activeRegistration = testData.AddHosterRegistration("Active");
+        var inactiveRegistration = testData.AddHosterRegistration("Inactive", isActive: false);
+        var activeRegistrationConfig = testData.AddUploadConfig(release, activeRegistration);
+        testData.AddUploadConfig(release, inactiveRegistration);
+        var poolWithActiveMemberConfig = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool(
+                "WithActiveMember",
+                inactiveRegistration,
+                activeRegistration
+            )
+        );
+        testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool("WithoutActiveMember", inactiveRegistration)
+        );
+        var poolConfigWithUpload = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool("WithUpload", activeRegistration)
+        );
+        testData.AddUnassignedUpload(poolConfigWithUpload, UploadState.WaitingForArchive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadConfigsWithoutUploadsAsync(
+            MaterializedValuesTestData.LocalNow,
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(uploadConfig => uploadConfig.Id)
+            .ShouldBe(
+                [activeRegistrationConfig.Id, poolWithActiveMemberConfig.Id],
+                ignoreOrder: true
+            );
     }
 
     private async Task<IReadOnlyList<Upload>> GetLeastRecentlyCheckedUploadsToCheckAsync(

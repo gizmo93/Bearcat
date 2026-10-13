@@ -3,8 +3,10 @@
 public record UploadConfigReadModel(
     int UploadConfigId,
     string Name,
-    string HosterRegistrationName,
-    int HosterRegistrationId,
+    int? HosterRegistrationId,
+    string? HosterRegistrationName,
+    int? HosterAccountPoolId,
+    string? HosterAccountPoolName,
     int ArchiveConfigId,
     string ArchiveConfigName,
     string ReleaseName,

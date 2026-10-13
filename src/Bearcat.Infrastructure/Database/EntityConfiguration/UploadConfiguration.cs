@@ -10,7 +10,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
     {
         builder.HasKey(u => u.Id);
         builder.Property(u => u.UploadConfigId).IsRequired();
-        builder.Property(u => u.HosterRegistrationId).IsRequired();
+        builder.Property(u => u.HosterRegistrationId).IsRequired(false);
         builder.Property(u => u.ArchiveId).IsRequired(false);
         builder.Property(u => u.HosterFolderId).IsRequired(false);
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);
@@ -47,7 +47,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
             .WithMany(h => h.Uploads)
             .HasForeignKey(u => u.HosterRegistrationId)
             .HasPrincipalKey(h => h.Id)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder

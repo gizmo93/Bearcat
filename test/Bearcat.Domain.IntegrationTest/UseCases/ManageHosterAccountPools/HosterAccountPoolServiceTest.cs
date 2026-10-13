@@ -1,9 +1,11 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools.Deletion;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.Dto;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.Validation;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
@@ -303,13 +305,69 @@ public class HosterAccountPoolServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Act
-        await service.DeleteAsync(created.HosterAccountPoolId!.Value, CancellationToken.None);
+        var result = await service.DeleteAsync(
+            created.HosterAccountPoolId!.Value,
+            CancellationToken.None
+        );
 
         // Assert
         var dbContext = CreateDbContext();
+        result.IsDeleted.ShouldBeTrue();
         (await dbContext.HosterAccountPools.AnyAsync()).ShouldBeFalse();
         (await dbContext.HosterAccountPoolMembers.AnyAsync()).ShouldBeFalse();
         (await dbContext.HosterRegistrations.AnyAsync()).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task DeleteAsync_PoolUsedByUploadConfig_KeepsPoolAndReturnsUsage()
+    {
+        // Arrange
+        var registration = await AddRegistrationAsync("First account", StorageQuotaHosterClassName);
+        var created = await service.CreateAsync(
+            StorageQuotaHosterClassName,
+            new HosterAccountPoolInput("Main pool", 0, [registration.Id]),
+            CancellationToken.None
+        );
+        var release = new Release
+        {
+            Name = "Bearcat.Release",
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = "Group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+        };
+        DbContext.UploadConfigs.Add(
+            new UploadConfig
+            {
+                Release = release,
+                ArchiveConfig = new ArchiveConfig
+                {
+                    Release = release,
+                    Name = "Main archive",
+                    ArchiveFilesBasePath = "/archives",
+                    ArchiverName = "rar",
+                    ArchiveFileSizeMb = 512,
+                },
+                HosterAccountPoolId = created.HosterAccountPoolId,
+                Name = "Pool upload",
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(
+            created.HosterAccountPoolId!.Value,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsDeleted.ShouldBeFalse();
+        result.Usage.ShouldBe(new HosterAccountPoolUsage(1, 0));
+        (await CreateDbContext().HosterAccountPools.AnyAsync()).ShouldBeTrue();
     }
 
     [Test]

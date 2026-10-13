@@ -47,7 +47,7 @@ public class AddUploadHosterRegistrationIdMigrationTest(DatabaseProvider databas
             .Uploads.Select(upload => new { upload.Id, upload.HosterRegistrationId })
             .ToDictionaryAsync(upload => upload.Id, upload => upload.HosterRegistrationId);
         hosterRegistrationIdsByUploadId.ShouldBe(
-            new Dictionary<int, int>
+            new Dictionary<int, int?>
             {
                 [firstAlphaUpload.Id] = alphaHosterRegistration.Id,
                 [secondAlphaUpload.Id] = alphaHosterRegistration.Id,

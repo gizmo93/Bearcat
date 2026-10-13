@@ -12,6 +12,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -57,6 +58,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 
         hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
         hosterMock = new Mock<IHoster>(MockBehavior.Strict);
+        hosterMock.As<IHosterWithStorageQuota>();
         hosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
         hosterMock
             .Setup(h => h.DeserializeHosterConfig(SerializedHosterConfig))
@@ -113,6 +115,16 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             Mock.Of<ILogger<UploadConcurrencyService>>()
         );
 
+        var hosterAccountPoolAccountSelectionService = new HosterAccountPoolAccountSelectionService(
+            uploadFilesRepository,
+            hosterFactoryMock.Object,
+            CreateTimeProvider(),
+            notificationService,
+            credentialsRejectionService,
+            new HosterStorageAvailabilityCache(),
+            Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
+        );
+
         service = new UploadFilesService(
             uploadFilesRepository,
             hosterFactoryMock.Object,
@@ -124,6 +136,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             fileUploadExecutionService,
             concurrencyService,
             credentialsRejectionService,
+            hosterAccountPoolAccountSelectionService,
             progressTracker
         )
         {
@@ -529,7 +542,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var archiveFilePath = CreateArchiveFile("archive.part1.rar");
         var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
-        upload.UploadConfig.HosterRegistration.UploadProxySelection = ProxySelection.NoProxy;
+        upload.UploadConfig.HosterRegistration!.UploadProxySelection = ProxySelection.NoProxy;
         upload.UploadConfig.HosterRegistration.MirrorDownloadProxySelection =
             ProxySelection.SpecificProxyServer;
         upload.UploadConfig.HosterRegistration.MirrorDownloadProxyServerId =
@@ -676,6 +689,61 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         result.UploadState.ShouldBe(UploadState.Pending);
         result.UploadedFiles.ShouldBeEmpty();
         hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
+    }
+
+    [Test]
+    public async Task ProcessAsync_PendingUploadOfHosterAccountPoolWithoutAssignedHosterRegistration_AssignsAccountWithEnoughFreeStorageAndUploads()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        var memberRegistration = upload.UploadConfig.HosterRegistration!;
+        upload.UploadConfig.HosterRegistration = null;
+        upload.UploadConfig.HosterRegistrationId = null;
+        upload.UploadConfig.HosterAccountPool = new HosterAccountPool
+        {
+            Name = "Pool",
+            HosterClassName = HosterClassName,
+            Members = [new HosterAccountPoolMember { HosterRegistration = memberRegistration }],
+        };
+        upload.HosterRegistration = null;
+        upload.HosterRegistrationId = null;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
+        hosterMock
+            .As<IHosterWithStorageQuota>()
+            .Setup(h =>
+                h.GetStorageQuotaAsync(hosterConfigMock.Object, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(HosterStorageQuota.Limited(freeBytes: 1_000_000, totalBytes: null));
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
+                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.UploadState.ShouldBe(UploadState.Completed);
+        result.HosterRegistrationId.ShouldBe(memberRegistration.Id);
+        result
+            .UploadedFiles.Single()
+            .HosterFileLink.ShouldBe("https://hoster.test/archive.part1.rar");
     }
 
     [Test]
@@ -1606,6 +1674,15 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             fileUploadExecution,
             concurrency,
             credentialsRejectionService,
+            new HosterAccountPoolAccountSelectionService(
+                repository,
+                hosterFactoryMock.Object,
+                CreateTimeProvider(),
+                notificationService,
+                credentialsRejectionService,
+                new HosterStorageAvailabilityCache(),
+                Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
+            ),
             progressTracker
         )
         {
@@ -1726,7 +1803,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     private async Task<int> UseSpecificUploadProxyServerAsync(Upload upload)
     {
         var proxyServerId = await AddProxyServerAsync();
-        upload.UploadConfig.HosterRegistration.UploadProxySelection =
+        upload.UploadConfig.HosterRegistration!.UploadProxySelection =
             ProxySelection.SpecificProxyServer;
         upload.UploadConfig.HosterRegistration.UploadProxyServerId = proxyServerId;
         upload.UploadConfig.HosterRegistration.MirrorDownloadProxySelection =
@@ -1957,6 +2034,15 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 
         public Task<HosterRegistration> GetHosterRegistrationByIdAsync(
             int hosterRegistrationId,
+            CancellationToken cancellationToken
+        )
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<bool> HasUnresolvedNotificationForUploadAsync(
+            int uploadId,
+            NotificationKind kind,
             CancellationToken cancellationToken
         )
         {

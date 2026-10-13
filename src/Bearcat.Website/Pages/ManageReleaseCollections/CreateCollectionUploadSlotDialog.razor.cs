@@ -1,12 +1,11 @@
 using System.Text;
-using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
-using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared.UploadTargets;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -28,7 +27,7 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
 
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
+    private UploadTargetChoices uploadTargetChoices = null!;
     private IReadOnlyList<CollectionArchiveConfigOptionReadModel> archiveConfigOptions = [];
     private bool isInitialized;
 
@@ -40,27 +39,13 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
             ))
             .ToList();
 
-    private IReadOnlyList<SelectOption<int?>> HosterRegistrationOptions =>
-        hosterRegistrations
-            .Where(hoster => hoster.IsActive || hoster.Id == FormModel.HosterRegistrationId)
-            .OrderBy(hoster => hoster.Name)
-            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name))
-            .ToList();
-
     private IReadOnlyList<SelectOption<string>> ArchiveConfigOptions =>
         archiveConfigOptions
             .Select(config => new SelectOption<string>(config.Name, config.Name))
             .ToList();
 
-    private HosterRegistrationReadModel? SelectedHosterRegistration =>
-        FormModel.HosterRegistrationId is null
-            ? null
-            : hosterRegistrations.FirstOrDefault(hoster =>
-                hoster.Id == FormModel.HosterRegistrationId
-            );
-
     private bool CanUsePremiumOnlyDownload =>
-        SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
+        uploadTargetChoices.SupportsPremiumOnlyDownloads(FormModel.UploadTarget);
 
     private CollectionArchiveConfigOptionReadModel? SelectedArchiveConfig =>
         string.IsNullOrWhiteSpace(FormModel.ArchiveConfigName)
@@ -71,9 +56,7 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
 
     protected override async Task OnInitializedAsync()
     {
-        hosterRegistrations = await operationRunner.RunAsync(
-            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
-        );
+        uploadTargetChoices = await UploadTargetChoices.LoadAsync(operationRunner);
         archiveConfigOptions = await operationRunner.RunAsync(
             (IReleaseCollectionReadRepository repository) =>
                 repository.GetArchiveConfigOptionsAsync(FormModel.ReleaseCollectionId)
@@ -92,7 +75,7 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
                 service.CreateUploadSlotAsync(
                     FormModel.ReleaseCollectionId,
                     FormModel.Name,
-                    FormModel.HosterRegistrationId!.Value,
+                    FormModel.UploadTarget!,
                     FormModel.ArchiveConfigName!,
                     CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
                     FormModel.IsRequired,
@@ -114,12 +97,9 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
             return;
         }
 
-        if (FormModel.HosterRegistrationId is null)
+        if (FormModel.UploadTarget is null)
         {
-            messageStore.Add(
-                () => FormModel.HosterRegistrationId!,
-                L["HosterRegistrationRequired"]
-            );
+            messageStore.Add(() => FormModel.UploadTarget!, L["UploadTargetRequired"]);
         }
 
         if (string.IsNullOrWhiteSpace(FormModel.ArchiveConfigName))
@@ -128,7 +108,7 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
         }
 
         if (
-            SelectedHosterRegistration?.MaxFileSizeMb is { } maxFileSizeMb
+            uploadTargetChoices.GetMaxFileSizeMb(FormModel.UploadTarget) is { } maxFileSizeMb
             && SelectedArchiveConfig is { } archiveConfig
             && archiveConfig.ArchiveFileSizeMb > maxFileSizeMb
         )
@@ -166,7 +146,7 @@ public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner ope
         }
     }
 
-    private void OnHosterRegistrationChanged()
+    private void OnUploadTargetChanged()
     {
         if (!CanUsePremiumOnlyDownload)
         {

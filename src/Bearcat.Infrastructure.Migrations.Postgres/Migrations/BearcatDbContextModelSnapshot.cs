@@ -2272,7 +2272,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<string>("HosterFolderId")
                         .HasColumnType("text");
 
-                    b.Property<int>("HosterRegistrationId")
+                    b.Property<int?>("HosterRegistrationId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("NotFullyOnlineSince")
@@ -2334,7 +2334,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int?>("CollectionUploadSlotId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("HosterRegistrationId")
+                    b.Property<int?>("HosterAccountPoolId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("HosterRegistrationId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
@@ -2354,11 +2357,16 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("CollectionUploadSlotId");
 
+                    b.HasIndex("HosterAccountPoolId");
+
                     b.HasIndex("HosterRegistrationId");
 
                     b.HasIndex("ReleaseId");
 
-                    b.ToTable("UploadConfigs");
+                    b.ToTable("UploadConfigs", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadConfig_UploadTarget", "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadConfigLinkCrypter", b =>
@@ -2468,7 +2476,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("CollectionUploadSlotPasswordPolicy")
                         .HasColumnType("integer");
 
-                    b.Property<int>("HosterRegistrationId")
+                    b.Property<int?>("HosterAccountPoolId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("HosterRegistrationId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
@@ -2485,11 +2496,16 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ArchiveConfigTemplateId");
 
+                    b.HasIndex("HosterAccountPoolId");
+
                     b.HasIndex("HosterRegistrationId");
 
                     b.HasIndex("ReleaseTemplateId");
 
-                    b.ToTable("UploadConfigTemplates");
+                    b.ToTable("UploadConfigTemplates", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadConfigTemplate_UploadTarget", "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadedFile", b =>
@@ -3195,8 +3211,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
                         .WithMany("Uploads")
                         .HasForeignKey("HosterRegistrationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.UploadConfig", "UploadConfig")
                         .WithMany("Uploads")
@@ -3224,11 +3239,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasForeignKey("CollectionUploadSlotId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
+                        .WithMany("UploadConfigs")
+                        .HasForeignKey("HosterAccountPoolId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
                         .WithMany("UploadConfigs")
                         .HasForeignKey("HosterRegistrationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.Release", "Release")
                         .WithMany("UploadConfigs")
@@ -3239,6 +3258,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("ArchiveConfig");
 
                     b.Navigation("CollectionUploadSlot");
+
+                    b.Navigation("HosterAccountPool");
 
                     b.Navigation("HosterRegistration");
 
@@ -3291,11 +3312,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
+                        .WithMany("UploadConfigTemplates")
+                        .HasForeignKey("HosterAccountPoolId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
                         .WithMany()
                         .HasForeignKey("HosterRegistrationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
                         .WithMany("UploadConfigTemplates")
@@ -3304,6 +3329,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired();
 
                     b.Navigation("ArchiveConfigTemplate");
+
+                    b.Navigation("HosterAccountPool");
 
                     b.Navigation("HosterRegistration");
 
@@ -3368,6 +3395,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPool", b =>
                 {
                     b.Navigation("Members");
+
+                    b.Navigation("UploadConfigTemplates");
+
+                    b.Navigation("UploadConfigs");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>

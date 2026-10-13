@@ -130,9 +130,22 @@ public partial class HosterAccountPoolsPage(
             return;
         }
 
-        await operationRunner.RunAsync(
+        var result = await operationRunner.RunAsync(
             (HosterAccountPoolService service) => service.DeleteAsync(pool.Id)
         );
+
+        if (!result.IsDeleted)
+        {
+            toastService.Error(
+                L[
+                    "HosterAccountPoolStillInUse",
+                    pool.Name,
+                    result.Usage.UploadConfigCount,
+                    result.Usage.UploadConfigTemplateCount
+                ]
+            );
+            return;
+        }
 
         storageQuotaResultsByPoolId.Remove(pool.Id);
         toastService.Success(L["HosterAccountPoolDeleted", pool.Name]);

@@ -98,7 +98,7 @@ public class ArchiveFilesToUploadTest
     public void GetOnlineUploadedFilesToCarryOver_PreviousUploadOfSameUploadConfigOnOtherHosterRegistration_ReturnsEmpty()
     {
         // Arrange
-        var otherHosterRegistration = CreateUploadConfig(id: 23).HosterRegistration;
+        var otherHosterRegistration = CreateUploadConfig(id: 23).HosterRegistration!;
         var waitingUpload = CreateUpload(id: 40, uploadConfig: firstUploadConfig);
         var previousUpload = CreateUpload(
             id: 31,
@@ -122,7 +122,7 @@ public class ArchiveFilesToUploadTest
     public void GetOnlineUploadedFilesToCarryOver_PreviousUploadsOfSameUploadConfigOnSeveralHosterRegistrations_ReturnsOnlyFilesOfSameHosterRegistration()
     {
         // Arrange
-        var otherHosterRegistration = CreateUploadConfig(id: 23).HosterRegistration;
+        var otherHosterRegistration = CreateUploadConfig(id: 23).HosterRegistration!;
         var waitingUpload = CreateUpload(id: 40, uploadConfig: firstUploadConfig);
         var uploadOnOtherHosterRegistration = CreateUpload(
             id: 32,
@@ -172,7 +172,7 @@ public class ArchiveFilesToUploadTest
     public void GetOnlineUploadedFilesToCarryOver_HosterAlwaysReuploadsAllFiles_ReturnsEmpty()
     {
         // Arrange
-        firstUploadConfig.HosterRegistration.AlwaysReuploadAllFiles = true;
+        firstUploadConfig.HosterRegistration!.AlwaysReuploadAllFiles = true;
         var waitingUpload = CreateUpload(id: 40, uploadConfig: firstUploadConfig);
         var previousUpload = CreateUpload(
             id: 31,
@@ -270,7 +270,7 @@ public class ArchiveFilesToUploadTest
     public void GetArchiveFilesToUpload_HosterAlwaysReuploadsAllFiles_ReturnsEveryArchiveFile()
     {
         // Arrange
-        firstUploadConfig.HosterRegistration.AlwaysReuploadAllFiles = true;
+        firstUploadConfig.HosterRegistration!.AlwaysReuploadAllFiles = true;
         var waitingUpload = CreateUpload(id: 40, uploadConfig: firstUploadConfig);
         var previousUpload = CreateUpload(
             id: 31,
@@ -317,7 +317,7 @@ public class ArchiveFilesToUploadTest
             Id = id,
             UploadConfigId = uploadConfig.Id,
             UploadConfig = uploadConfig,
-            HosterRegistrationId = uploadConfig.HosterRegistration.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistration!.Id,
             HosterRegistration = uploadConfig.HosterRegistration,
             UploadedFiles = uploadedFiles.ToList(),
         };

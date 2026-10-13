@@ -108,7 +108,12 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                 u.UploadConfig.ReleaseId,
                 ReleaseName = u.UploadConfig.Release.Name,
                 UploadConfigName = u.UploadConfig.Name,
-                HosterRegistrationName = u.HosterRegistration.Name,
+                HosterRegistrationName = u.HosterRegistrationId != null
+                    ? u.HosterRegistration!.Name
+                    : null,
+                HosterAccountPoolName = u.UploadConfig.HosterAccountPoolId != null
+                    ? u.UploadConfig.HosterAccountPool!.Name
+                    : null,
                 u.UploadState,
                 ArchiveFiles = dbRead
                     .ArchiveFiles.Where(af => af.ArchiveId == u.ArchiveId)
@@ -132,6 +137,7 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                 upload.ReleaseName,
                 upload.UploadConfigName,
                 upload.HosterRegistrationName,
+                upload.HosterAccountPoolName,
                 upload.UploadState,
                 upload
                     .ArchiveFiles.OrderBy(
@@ -175,7 +181,11 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             u.UploadConfigId,
             u.UploadConfig.Name,
             u.HosterRegistrationId,
-            u.HosterRegistration.Name,
+            u.HosterRegistrationId != null ? u.HosterRegistration!.Name : null,
+            u.UploadConfig.HosterAccountPoolId,
+            u.UploadConfig.HosterAccountPoolId != null
+                ? u.UploadConfig.HosterAccountPool!.Name
+                : null,
             u.CreatedAt,
             u.UploadedAt,
             u.UploadState,

@@ -175,7 +175,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         var candidate = result.ShouldHaveSingleItem();
         candidate.Id.ShouldBe(archive.Id);
         var uploadConfig = candidate.ArchiveConfig.UploadConfigs.ShouldHaveSingleItem();
-        uploadConfig.HosterRegistration.Name.ShouldBe("Overdue hoster");
+        uploadConfig.HosterRegistration!.Name.ShouldBe("Overdue hoster");
         uploadConfig
             .Uploads.ShouldHaveSingleItem()
             .UploadedFiles.Select(file => file.HosterFileLink)

@@ -145,7 +145,7 @@ public class ArchiveRestoreServiceTest
     {
         // Arrange
         var scenario = CreateScenario();
-        var mirrorRegistration = scenario.DonorUpload.HosterRegistration;
+        var mirrorRegistration = scenario.DonorUpload.HosterRegistration!;
         mirrorRegistration.MirrorDownloadProxySelection = ProxySelection.NoProxy;
         mirrorRegistration.UploadProxySelection = ProxySelection.SpecificProxyServer;
         mirrorRegistration.UploadProxyServerId = 9;
@@ -173,7 +173,7 @@ public class ArchiveRestoreServiceTest
         // Arrange
         var scenario = CreateScenario();
         scenario.DonorUpload.UploadedFiles.RemoveAll(file => file.ArchiveFileId == 3);
-        var primaryRegistration = scenario.DonorUpload.HosterRegistration;
+        var primaryRegistration = scenario.DonorUpload.HosterRegistration!;
         primaryRegistration.MirrorDownloadProxySelection = ProxySelection.SpecificProxyServer;
         primaryRegistration.MirrorDownloadProxyServerId = 7;
         primaryRegistration.UploadProxySelection = ProxySelection.NoProxy;
@@ -254,7 +254,7 @@ public class ArchiveRestoreServiceTest
     {
         // Arrange
         var scenario = CreateScenario();
-        scenario.WaitingUpload.HosterRegistration.AlwaysReuploadAllFiles = true;
+        scenario.WaitingUpload.HosterRegistration!.AlwaysReuploadAllFiles = true;
         var service = CreateService();
 
         // Act
@@ -270,7 +270,7 @@ public class ArchiveRestoreServiceTest
     {
         // Arrange
         var scenario = CreateScenario();
-        scenario.DonorUpload.HosterRegistration.UseForMirrorDownloads = false;
+        scenario.DonorUpload.HosterRegistration!.UseForMirrorDownloads = false;
         var service = CreateService();
 
         // Act

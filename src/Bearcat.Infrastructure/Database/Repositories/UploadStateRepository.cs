@@ -88,7 +88,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
                 && u.UploadState == UploadState.Completed
-                && u.HosterRegistration.IsActive
+                && (u.UploadConfig.HosterAccountPoolId != null || u.HosterRegistration!.IsActive)
                 && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
                 && u.UploadConfig.Release.QualityGateState != QualityGateState.Failed
                 && u.UploadedFiles.Any()
@@ -110,14 +110,14 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     )
                 )
                 && (
-                    u.HosterRegistration.ReuploadTriggerOverride
+                    u.HosterRegistration!.ReuploadTriggerOverride
                     == ReuploadTrigger.OnlyWhenFullyOffline
                         ? u.FullyOfflineSince
                         : u.NotFullyOnlineSince
                 )
                     <= localNow.AddHours(
                         -(
-                            u.HosterRegistration.NumberOfHoursUntilReuploadOverride
+                            u.HosterRegistration!.NumberOfHoursUntilReuploadOverride
                             ?? u.UploadConfig.Release.ReleaseGroup.NumberOfHoursUntilReupload
                         )
                     )
@@ -136,6 +136,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Uploads.AsSplitQuery()
             .Include(u => u.UploadedFiles)
             .Include(u => u.HosterRegistration)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.HosterAccountPool!)
+                    .ThenInclude(pool => pool.Members)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
                     .ThenInclude(r => r.ReleaseGroup)
@@ -167,8 +170,13 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     )
     {
         return await dbWrite
-            .Uploads.Include(u => u.UploadConfig)
+            .Uploads.AsSplitQuery()
+            .Include(u => u.HosterRegistration)
+            .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Uploads)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.HosterAccountPool!)
+                    .ThenInclude(pool => pool.Members)
             .FirstAsync(u => u.Id == uploadId, cancellationToken);
     }
 
@@ -225,11 +233,8 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                 .ThenInclude(r => r.MediaFiles)
             .Include(u => u.Release)
                 .ThenInclude(r => r.QualityIssues)
-            .Where(u =>
-                !u.Uploads.Any()
-                && u.HosterRegistration.IsActive
-                && u.Release.CreatedAt <= releaseCreatedBefore
-            )
+            .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+            .Where(u => !u.Uploads.Any() && u.Release.CreatedAt <= releaseCreatedBefore)
             .ToListAsync(cancellationToken);
     }
 

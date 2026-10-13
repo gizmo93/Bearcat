@@ -59,6 +59,8 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.HosterRegistration)
             .Include(t => t.UploadConfigTemplates)
+                .ThenInclude(u => u.HosterAccountPool)
+            .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
             .Include(t => t.ImageUploadConfigTemplates)
                 .ThenInclude(i => i.ImageHosterRegistration)

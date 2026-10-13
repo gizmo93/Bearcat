@@ -124,6 +124,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool AutomaticReuploadCreated { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.HosterAccountPoolFull",
+        "NotificationKind.HosterAccountPoolFull.Description"
+    )]
+    public bool HosterAccountPoolFull { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.CaptchaVerificationRequired",
         "NotificationKind.CaptchaVerificationRequired.Description"
     )]

@@ -15,6 +15,12 @@ public static class LocalizationExtensions
     public static string Localize(this IStringLocalizer<UiResource> localizer, OnlineState state) =>
         localizer[$"OnlineState.{state}"];
 
+    public static string FormatUploadHosterAccount(
+        this IStringLocalizer<UiResource> localizer,
+        string? hosterRegistrationName,
+        string? hosterAccountPoolName
+    ) => hosterRegistrationName ?? localizer["HosterAccountNotAssignedYet", hosterAccountPoolName!];
+
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
         DuplicatedEntryName entryName

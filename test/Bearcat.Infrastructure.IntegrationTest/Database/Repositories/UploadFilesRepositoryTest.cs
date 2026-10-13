@@ -3,6 +3,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -98,7 +99,7 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         var pendingUpload = result.ShouldHaveSingleItem();
         pendingUpload.Id.ShouldBe(upload.Id);
-        pendingUpload.HosterRegistration.Name.ShouldBe("Holding hoster");
+        pendingUpload.HosterRegistration!.Name.ShouldBe("Holding hoster");
     }
 
     [Test]
@@ -148,7 +149,7 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Id.ShouldBe(otherRegistration.Id);
-        result.Id.ShouldNotBe(upload.UploadConfig.HosterRegistrationId);
+        result.Id.ShouldNotBe(upload.UploadConfig.HosterRegistrationId!.Value);
         result.Name.ShouldBe("Other hoster");
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"other\"}");
         result.HosterClassName.ShouldBe("OtherHoster");
@@ -156,6 +157,42 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         result.MaxParallelUploadsOverride.ShouldBe(4);
         result.UploadSpeedLimitMegabytesPerSecond.ShouldBe(12.345m);
         result.UploadProxySelection.ShouldBe(ProxySelection.NoProxy);
+    }
+
+    [Test]
+    public async Task GetPendingUploadsAsync_UnassignedUploadOfHosterAccountPool_ReturnsUploadWithPoolMembersAndTheirHosterRegistrations()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var firstMember = testData.AddHosterRegistration("First");
+        var secondMember = testData.AddHosterRegistration("Second", isActive: false);
+        var uploadConfig = testData.AddHosterAccountPoolUploadConfig(
+            testData.AddRelease("Release"),
+            testData.AddHosterAccountPool("Pool", firstMember, secondMember)
+        );
+        var upload = testData.AddUnassignedUpload(uploadConfig, UploadState.Pending);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPendingUploadsAsync(
+            new HashSet<int>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        var pendingUpload = result.ShouldHaveSingleItem();
+        pendingUpload.Id.ShouldBe(upload.Id);
+        pendingUpload.HosterRegistration.ShouldBeNull();
+        pendingUpload
+            .UploadConfig.HosterAccountPool!.Members.Select(member =>
+                (
+                    member.Priority,
+                    member.HosterRegistration.Name,
+                    member.HosterRegistration.IsActive
+                )
+            )
+            .ShouldBe([(1, "First", true), (2, "Second", false)], ignoreOrder: true);
     }
 
     private async Task<Upload> AddUploadAsync(

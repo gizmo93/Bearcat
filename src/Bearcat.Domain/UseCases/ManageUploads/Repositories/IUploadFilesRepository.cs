@@ -1,4 +1,5 @@
 ﻿using Bearcat.Domain.Entities;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageUploads.Repositories;
 
@@ -28,6 +29,12 @@ public interface IUploadFilesRepository
 
     Task<HosterRegistration> GetHosterRegistrationByIdAsync(
         int hosterRegistrationId,
+        CancellationToken cancellationToken
+    );
+
+    Task<bool> HasUnresolvedNotificationForUploadAsync(
+        int uploadId,
+        NotificationKind kind,
         CancellationToken cancellationToken
     );
 }

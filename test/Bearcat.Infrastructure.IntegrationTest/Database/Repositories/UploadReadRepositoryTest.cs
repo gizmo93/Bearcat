@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Shouldly;
 
@@ -478,6 +479,60 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         );
         pendingUpload.UploadState.ShouldBe(UploadState.Pending);
         pendingUpload.ArchiveFiles.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetUploadAsync_UnassignedUploadOfHosterAccountPool_ReturnsPoolWithoutHosterRegistration()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var hosterAccountPool = testData.AddHosterAccountPool(
+            "Pool",
+            testData.AddHosterRegistration("Member")
+        );
+        var upload = testData.AddUnassignedUpload(
+            testData.AddHosterAccountPoolUploadConfig(
+                testData.AddRelease("Release"),
+                hosterAccountPool
+            ),
+            UploadState.WaitingForArchive
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HosterRegistrationId.ShouldBeNull();
+        result.HosterRegistrationName.ShouldBeNull();
+        result.HosterAccountPoolId.ShouldBe(hosterAccountPool.Id);
+        result.HosterAccountPoolName.ShouldBe("Pool");
+    }
+
+    [Test]
+    public async Task GetRunningUploadsAsync_UnassignedPendingUploadOfHosterAccountPool_ReturnsPoolNameWithoutHosterRegistration()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        testData.AddUnassignedUpload(
+            testData.AddHosterAccountPoolUploadConfig(
+                testData.AddRelease("Release"),
+                testData.AddHosterAccountPool("Pool", testData.AddHosterRegistration("Member"))
+            ),
+            UploadState.Pending
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        var upload = result.ShouldHaveSingleItem();
+        upload.HosterRegistrationName.ShouldBeNull();
+        upload.HosterAccountPoolName.ShouldBe("Pool");
     }
 
     private async Task<RunningUploads> AddRunningUploadsAsync()

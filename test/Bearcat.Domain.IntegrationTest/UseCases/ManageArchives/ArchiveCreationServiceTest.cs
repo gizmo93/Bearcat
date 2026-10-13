@@ -2636,7 +2636,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (onlineArchiveFile, OnlineState.Online),
@@ -2678,7 +2678,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles = true;
+        upload.UploadConfig.HosterRegistration!.AlwaysReuploadAllFiles = true;
         var existingArchiveFolder = CreateExistingArchiveFolder();
         var onlineArchiveFile = await CreateArchiveFileWithHashAsync(
             Path.Combine(existingArchiveFolder, "existing.part1.rar"),
@@ -2695,7 +2695,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (onlineArchiveFile, OnlineState.Online),
@@ -2755,7 +2755,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (firstArchiveFile, OnlineState.Online),
@@ -2823,7 +2823,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (onlineArchiveFile, OnlineState.Online),
@@ -2895,7 +2895,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var activeUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Uploading
         );
@@ -2939,7 +2939,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (missingOnlineArchiveFile, OnlineState.Online),
@@ -2995,7 +2995,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Failed,
             (onlineArchiveFileWithoutHash, OnlineState.Online),
@@ -3049,7 +3049,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var previousUpload = CreatePreviousUpload(
             uploadConfigId: upload.UploadConfigId,
-            hosterRegistrationId: upload.HosterRegistrationId,
+            hosterRegistrationId: upload.HosterRegistrationId!.Value,
             archive: existingArchive,
             uploadState: UploadState.Completed,
             (firstArchiveFile, OnlineState.Online),

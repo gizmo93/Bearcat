@@ -1,12 +1,11 @@
 using System.Text;
-using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
-using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared.UploadTargets;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -29,7 +28,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
+    private UploadTargetChoices uploadTargetChoices = null!;
     private IReadOnlyList<ArchiveConfigTemplateReadModel> archiveConfigTemplates = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
@@ -37,13 +36,6 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
     private bool isEdit;
     private bool isUnmanagedReleaseTemplate;
     private bool usesReleaseCollections;
-
-    private IReadOnlyList<SelectOption<int?>> HosterOptions =>
-        hosterRegistrations
-            .Where(hoster => hoster.IsActive || hoster.Id == FormModel.HosterRegistrationId)
-            .OrderBy(hoster => hoster.Name)
-            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name))
-            .ToList();
 
     private IReadOnlyList<SelectOption<int?>> ArchiveConfigOptions =>
         archiveConfigTemplates
@@ -59,15 +51,8 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
             ))
             .ToList();
 
-    private HosterRegistrationReadModel? SelectedHosterRegistration =>
-        FormModel.HosterRegistrationId is null
-            ? null
-            : hosterRegistrations.FirstOrDefault(hoster =>
-                hoster.Id == FormModel.HosterRegistrationId
-            );
-
     private bool CanUsePremiumOnlyDownload =>
-        SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
+        uploadTargetChoices.SupportsPremiumOnlyDownloads(FormModel.UploadTarget);
 
     private ArchiveConfigTemplateReadModel? SelectedArchiveConfigTemplate =>
         FormModel.ArchiveConfigTemplateId is null
@@ -85,9 +70,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
         editContext.OnValidationRequested += HandleValidationRequested;
         isEdit = UploadConfigTemplateId is not null;
 
-        hosterRegistrations = await operationRunner.RunAsync(
-            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
-        );
+        uploadTargetChoices = await UploadTargetChoices.LoadAsync(operationRunner);
         var detail = await operationRunner.RunAsync(
             (IReleaseTemplateReadRepository repository) =>
                 repository.GetDetailAsync(ReleaseTemplateId)
@@ -133,7 +116,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
                 await service.UpdateUploadConfigTemplateAsync(
                     UploadConfigTemplateId!.Value,
                     FormModel.Name,
-                    FormModel.HosterRegistrationId!.Value,
+                    FormModel.UploadTarget!,
                     FormModel.ArchiveConfigTemplateId!.Value,
                     CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
                     FormModel.CollectionUploadSlotKey,
@@ -148,7 +131,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
             await service.CreateUploadConfigTemplateAsync(
                 ReleaseTemplateId,
                 FormModel.Name,
-                FormModel.HosterRegistrationId!.Value,
+                FormModel.UploadTarget!,
                 FormModel.ArchiveConfigTemplateId!.Value,
                 CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
                 FormModel.CollectionUploadSlotKey,
@@ -162,7 +145,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
 
-    private void OnHosterRegistrationChanged()
+    private void OnUploadTargetChanged()
     {
         ResetPremiumOnlyDownloadIfUnsupported();
 
@@ -184,12 +167,9 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
     {
         messageStore.Clear();
 
-        if (FormModel.HosterRegistrationId is null)
+        if (FormModel.UploadTarget is null)
         {
-            messageStore.Add(
-                () => FormModel.HosterRegistrationId!,
-                L["SelectHosterRegistrationRequired"]
-            );
+            messageStore.Add(() => FormModel.UploadTarget!, L["UploadTargetRequired"]);
         }
 
         if (!isUnmanagedReleaseTemplate && FormModel.ArchiveConfigTemplateId is null)
@@ -201,7 +181,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
         }
 
         if (
-            SelectedHosterRegistration?.MaxFileSizeMb is { } maxFileSizeMb
+            uploadTargetChoices.GetMaxFileSizeMb(FormModel.UploadTarget) is { } maxFileSizeMb
             && SelectedArchiveConfigTemplate is { } archiveConfigTemplate
             && archiveConfigTemplate.ArchiveFileSizeMb > maxFileSizeMb
         )
@@ -287,7 +267,9 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
             return FormModel.Name.Trim();
         }
 
-        return SelectedHosterRegistration?.Name ?? string.Empty;
+        return FormModel.UploadTarget is null
+            ? string.Empty
+            : uploadTargetChoices.GetName(FormModel.UploadTarget);
     }
 
     private static string CreateStableKey(string? value)

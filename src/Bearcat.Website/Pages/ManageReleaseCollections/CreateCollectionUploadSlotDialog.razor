@@ -15,12 +15,9 @@
                               Placeholder="@L["CollectionUploadSlotNamePlaceholder"]" />
 
             <div class="grid gap-4 md:grid-cols-2">
-                <BbFormFieldSelect TValue="int?"
-                                   @bind-Value="FormModel.HosterRegistrationId"
-                                   @bind-Value:after="OnHosterRegistrationChanged"
-                                   Label="@L["HosterRegistration"]"
-                                   Placeholder="@L["SelectHosterRegistration"]"
-                                   Options="HosterRegistrationOptions" />
+                <UploadTargetSelect Choices="uploadTargetChoices"
+                                    @bind-Value="FormModel.UploadTarget"
+                                    @bind-Value:after="OnUploadTargetChanged" />
 
                 <BbFormFieldSelect TValue="string"
                                    @bind-Value="FormModel.ArchiveConfigName"

@@ -10,9 +10,9 @@ public class Upload
 
     public UploadConfig UploadConfig { get; set; } = null!;
 
-    public int HosterRegistrationId { get; set; }
+    public int? HosterRegistrationId { get; set; }
 
-    public HosterRegistration HosterRegistration { get; set; } = null!;
+    public HosterRegistration? HosterRegistration { get; set; }
 
     public int? ArchiveId { get; set; }
 
@@ -43,4 +43,9 @@ public class Upload
     public List<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
 
     public List<Notification> Notifications { get; set; } = null!;
+
+    public string GetHosterClassName() =>
+        HosterRegistrationId is null
+            ? UploadConfig.GetHosterClassName()
+            : HosterRegistration!.HosterClassName;
 }

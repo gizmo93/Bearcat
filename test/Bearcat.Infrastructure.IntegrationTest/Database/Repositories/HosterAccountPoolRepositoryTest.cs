@@ -1,8 +1,10 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools.Deletion;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.ReadModels;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -340,6 +342,105 @@ public class HosterAccountPoolRepositoryTest(DatabaseProvider databaseProvider)
         repository.Add(
             CreatePool("Rapidgator pool", RapidgatorClassName, (registration, 1), (registration, 2))
         );
+
+        // Act
+        var result = await Should.ThrowAsync<DbUpdateException>(() =>
+            repository.SaveChangesAsync(CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task GetAllAsync_HosterWithPremiumOnlyDownloadsAndFileSizeLimit_ReturnsHosterCapabilities()
+    {
+        // Arrange
+        DbContext.HosterAccountPools.AddRange(
+            CreatePool("Rapidgator pool", RapidgatorClassName),
+            CreatePool("Alfafile pool", AlfafileClassName)
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        var hosterWithFileSizeLimitMock = new Mock<IHosterWithFileSizeLimit>();
+        hosterWithFileSizeLimitMock.Setup(hoster => hoster.Name).Returns("Rapidgator hoster");
+        hosterWithFileSizeLimitMock
+            .Setup(hoster => hoster.SupportsPremiumOnlyDownloads)
+            .Returns(true);
+        hosterWithFileSizeLimitMock.Setup(hoster => hoster.MaxFileSizeMb).Returns(5000);
+        var hosterFactoryMock = new Mock<IHosterFactory>(MockBehavior.Strict);
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName(RapidgatorClassName))
+            .Returns(hosterWithFileSizeLimitMock.Object);
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName(AlfafileClassName))
+            .Returns(CreateHoster("Alfafile hoster"));
+        var repository = new HosterAccountPoolRepository(
+            ReadDbContext,
+            CreateDbContext(),
+            hosterFactoryMock.Object
+        );
+
+        // Act
+        var result = await repository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result
+            .Select(pool => (pool.Name, pool.SupportsPremiumOnlyDownloads, pool.MaxFileSizeMb))
+            .ShouldBe([("Alfafile pool", false, (int?)null), ("Rapidgator pool", true, 5000)]);
+    }
+
+    [Test]
+    public async Task GetUsageAsync_PoolUsedByUploadConfigsAndUploadConfigTemplates_ReturnsCountsOfThisPool()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var usedPool = testData.AddHosterAccountPool("Used");
+        var otherPool = testData.AddHosterAccountPool("Other");
+        var release = testData.AddRelease("Release");
+        testData.AddHosterAccountPoolUploadConfig(release, usedPool);
+        testData.AddHosterAccountPoolUploadConfig(release, usedPool);
+        testData.AddHosterAccountPoolUploadConfig(release, otherPool);
+        testData.AddHosterAccountPoolUploadConfigTemplate(usedPool);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await CreateRepository().GetUsageAsync(usedPool.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(new HosterAccountPoolUsage(2, 1));
+        result.IsInUse.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task GetUsageAsync_UnusedPool_ReturnsNoUsage()
+    {
+        // Arrange
+        var pool = CreatePool("Rapidgator pool", RapidgatorClassName);
+        DbContext.HosterAccountPools.Add(pool);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await CreateRepository().GetUsageAsync(pool.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(new HosterAccountPoolUsage(0, 0));
+        result.IsInUse.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_RemovedPoolIsUsedByUploadConfig_ThrowsDbUpdateException()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var pool = testData.AddHosterAccountPool("Used");
+        testData.AddHosterAccountPoolUploadConfig(testData.AddRelease("Release"), pool);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        var repository = CreateRepository();
+        repository.Remove(await repository.GetByIdAsync(pool.Id, CancellationToken.None));
 
         // Act
         var result = await Should.ThrowAsync<DbUpdateException>(() =>

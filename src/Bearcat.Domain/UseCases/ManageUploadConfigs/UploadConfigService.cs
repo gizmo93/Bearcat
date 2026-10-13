@@ -1,4 +1,5 @@
 ﻿using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigs;
@@ -8,7 +9,7 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
     public async Task<int> CreateAsync(
         int releaseId,
         string name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         int archiveConfigId,
         bool premiumOnlyDownload,
         CancellationToken cancellationToken = default
@@ -18,7 +19,8 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         {
             ReleaseId = releaseId,
             Name = name,
-            HosterRegistrationId = hosterRegistrationId,
+            HosterRegistrationId = uploadTarget.HosterRegistrationId,
+            HosterAccountPoolId = uploadTarget.HosterAccountPoolId,
             ArchiveConfigId = archiveConfigId,
             PremiumOnlyDownload = premiumOnlyDownload,
         };
@@ -32,7 +34,7 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
     public async Task UpdateAsync(
         int uploadConfigId,
         string name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         int archiveConfigId,
         bool premiumOnlyDownload,
         CancellationToken cancellationToken = default
@@ -40,7 +42,10 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
     {
         var uploadConfig = await writeRepository.GetByIdAsync(uploadConfigId, cancellationToken);
 
-        if (uploadConfig.HosterRegistrationId != hosterRegistrationId)
+        if (
+            uploadConfig.HosterRegistrationId != uploadTarget.HosterRegistrationId
+            || uploadConfig.HosterAccountPoolId != uploadTarget.HosterAccountPoolId
+        )
         {
             var uploadsNotStartedOnHoster =
                 await writeRepository.GetWaitingOrPendingUploadsWithoutUploadedFilesAsync(
@@ -50,12 +55,13 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
 
             foreach (var upload in uploadsNotStartedOnHoster)
             {
-                upload.HosterRegistrationId = hosterRegistrationId;
+                upload.HosterRegistrationId = uploadTarget.HosterRegistrationId;
             }
         }
 
         uploadConfig.Name = name;
-        uploadConfig.HosterRegistrationId = hosterRegistrationId;
+        uploadConfig.HosterRegistrationId = uploadTarget.HosterRegistrationId;
+        uploadConfig.HosterAccountPoolId = uploadTarget.HosterAccountPoolId;
         uploadConfig.ArchiveConfigId = archiveConfigId;
         uploadConfig.PremiumOnlyDownload = premiumOnlyDownload;
 

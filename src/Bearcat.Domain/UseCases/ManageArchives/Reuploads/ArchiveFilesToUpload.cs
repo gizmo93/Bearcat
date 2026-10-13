@@ -10,7 +10,10 @@ public static class ArchiveFilesToUpload
         IReadOnlyList<Upload> uploadsOfArchive
     )
     {
-        if (upload.HosterRegistration.AlwaysReuploadAllFiles)
+        if (
+            upload.HosterRegistrationId is null
+            || upload.HosterRegistration!.AlwaysReuploadAllFiles
+        )
         {
             return [];
         }

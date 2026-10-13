@@ -192,7 +192,7 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
             .ShouldHaveSingleItem()
             .ArchiveConfigs.ShouldHaveSingleItem()
             .UploadConfigs.ShouldHaveSingleItem();
-        uploadConfig.HosterRegistration.Name.ShouldBe("Overdue hoster");
+        uploadConfig.HosterRegistration!.Name.ShouldBe("Overdue hoster");
         uploadConfig
             .Uploads.ShouldHaveSingleItem()
             .UploadedFiles.ShouldHaveSingleItem()

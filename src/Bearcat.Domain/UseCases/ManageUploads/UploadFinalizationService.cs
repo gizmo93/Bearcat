@@ -50,7 +50,7 @@ public class UploadFinalizationService(
         logger.LogInformation(
             "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
             context.UploadId,
-            context.Upload.HosterRegistration.HosterClassName,
+            context.Upload.HosterRegistration!.HosterClassName,
             context.Upload.UploadState
         );
 
@@ -72,7 +72,7 @@ public class UploadFinalizationService(
         logger.LogInformation(
             "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
             context.UploadId,
-            context.Upload.HosterRegistration.HosterClassName,
+            context.Upload.HosterRegistration!.HosterClassName,
             context.Upload.UploadState
         );
 
@@ -94,7 +94,7 @@ public class UploadFinalizationService(
         logger.LogInformation(
             "Canceled upload for Upload {UploadId} to hoster {Hoster}",
             context.UploadId,
-            context.Upload.HosterRegistration.HosterClassName
+            context.Upload.HosterRegistration!.HosterClassName
         );
 
         context.Dispose();

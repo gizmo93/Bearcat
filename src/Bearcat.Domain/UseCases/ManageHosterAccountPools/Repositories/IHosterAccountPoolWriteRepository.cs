@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools.Deletion;
 
 namespace Bearcat.Domain.UseCases.ManageHosterAccountPools.Repositories;
 
@@ -17,6 +18,11 @@ public interface IHosterAccountPoolWriteRepository
 
     Task<Dictionary<int, string>> GetHosterClassNamesByHosterRegistrationIdAsync(
         IReadOnlyList<int> hosterRegistrationIds,
+        CancellationToken cancellationToken
+    );
+
+    Task<HosterAccountPoolUsage> GetUsageAsync(
+        int hosterAccountPoolId,
         CancellationToken cancellationToken
     );
 
