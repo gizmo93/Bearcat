@@ -1,0 +1,117 @@
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["HosterAccountPoolNamePlaceholder"]" />
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <BbFormFieldSelect TValue="string"
+                                   Value="FormModel.HosterClassName"
+                                   ValueChanged="ChangeHosterClassAsync"
+                                   Label="@L["Hoster"]"
+                                   HelperText="@L["HosterAccountPoolHosterHelp"]"
+                                   Placeholder="@L["SelectHoster"]"
+                                   Disabled="IsEdit"
+                                   Options="HosterClassOptions" />
+
+                <BbFormFieldNumericInput TValue="int"
+                                         @bind-Value="FormModel.MinimumFreeSpaceGb"
+                                         Label="@L["MinimumFreeSpaceGb"]"
+                                         HelperText="@L["HosterAccountPoolMinimumFreeSpaceHelp"]"
+                                         Min="0"
+                                         Step="1"
+                                         AllowNegative="false" />
+            </div>
+        </div>
+
+        @if (FormModel.HosterClassName is not null)
+        {
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-sm font-medium">@L["HosterAccountPoolMembers"]</label>
+                    <p class="text-xs text-muted-foreground">@L["HosterAccountPoolMembersHelp"]</p>
+                </div>
+
+                @if (FormModel.MembersInPriorityOrder.Count == 0)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-6 text-sm text-muted-foreground">
+                        @L["NoHosterAccountPoolMembersYet"]
+                    </div>
+                }
+                else
+                {
+                    <BbSortable Items="FormModel.MembersInPriorityOrder"
+                                Handle=".drag-handle"
+                                Class="gap-0 divide-y divide-border/70 overflow-hidden rounded-lg border border-border/70"
+                                OnUpdate="MoveMember"
+                                AriaLabel="@L["HosterAccountPoolMembers"]"
+                                Context="member">
+                        <ItemTemplate>
+                            <div class="flex items-center gap-2 px-3 py-2">
+                                <span class="drag-handle cursor-grab text-muted-foreground"
+                                      title="@L["DragToReorder"]"
+                                      aria-label="@L["DragToReorder"]">
+                                    <LucideIcon Name="grip-vertical" class="h-4 w-4" />
+                                </span>
+                                <span class="w-6 text-sm font-semibold tabular-nums text-muted-foreground">
+                                    @(FormModel.MembersInPriorityOrder.IndexOf(member) + 1)
+                                </span>
+                                <span class="min-w-0 flex-1 truncate text-sm" title="@member.Name">@member.Name</span>
+                                @if (!member.IsActive)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["Inactive"]</BbBadge>
+                                }
+                                @if (member.HasUnreadableSecrets)
+                                {
+                                    <UnreadableSecretsBadge />
+                                }
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          AriaLabel="@L["Remove"]"
+                                          title="@L["Remove"]"
+                                          OnClick="@(() => RemoveMember(member))">
+                                    <LucideIcon Name="x" class="h-4 w-4" />
+                                </BbButton>
+                            </div>
+                        </ItemTemplate>
+                    </BbSortable>
+                }
+
+                @if (AvailableCandidates.Count > 0)
+                {
+                    <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                        <BbSelect TValue="int?"
+                                  @bind-Value="candidateToAddId"
+                                  Options="CandidateOptions"
+                                  Placeholder="@L["SelectAccountToAdd"]"
+                                  AriaLabel="@L["SelectAccountToAdd"]"
+                                  Class="w-full" />
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Class="justify-center whitespace-nowrap"
+                                  Disabled="candidateToAddId is null"
+                                  OnClick="AddMember">
+                            <LucideIcon Name="plus" class="h-4 w-4" />
+                            @L["AddAccount"]
+                        </BbButton>
+                    </div>
+                }
+                else if (candidates.Count > 0)
+                {
+                    <p class="text-xs text-muted-foreground">@L["AllAccountsAlreadyInPool"]</p>
+                }
+            </div>
+        }
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="@(isSaving || FormModel.HosterClassName is null)">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

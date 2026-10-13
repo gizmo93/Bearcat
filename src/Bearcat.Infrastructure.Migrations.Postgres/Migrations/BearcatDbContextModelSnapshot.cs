@@ -611,6 +611,64 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.ToTable("ForumPostingRules");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPool", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("HosterClassName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long>("MinimumFreeSpaceBytes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("HosterAccountPools");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPoolMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("HosterAccountPoolId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HosterRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HosterRegistrationId");
+
+                    b.HasIndex("HosterAccountPoolId", "HosterRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("HosterAccountPoolMembers");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -2623,6 +2681,25 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("ForumPostTemplate");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPoolMember", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
+                        .WithMany("Members")
+                        .HasForeignKey("HosterAccountPoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
+                        .WithMany("HosterAccountPoolMemberships")
+                        .HasForeignKey("HosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HosterAccountPool");
+
+                    b.Navigation("HosterRegistration");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ProxyServer", null)
@@ -3288,8 +3365,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("PostingRules");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPool", b =>
+                {
+                    b.Navigation("Members");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
+                    b.Navigation("HosterAccountPoolMemberships");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("UploadConfigs");

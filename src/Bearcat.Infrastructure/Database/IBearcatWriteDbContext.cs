@@ -72,4 +72,6 @@ public interface IBearcatWriteDbContext
     DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
     DbSet<ProxyServer> ProxyServers { get; set; }
     DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
+    DbSet<HosterAccountPool> HosterAccountPools { get; set; }
+    DbSet<HosterAccountPoolMember> HosterAccountPoolMembers { get; set; }
 }

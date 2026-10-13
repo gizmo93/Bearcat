@@ -20,6 +20,7 @@ using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
@@ -172,6 +173,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IQualityProfileWriteRepository, QualityProfileRepository>();
             services.AddScoped<IProxyServerReadRepository, ProxyServerRepository>();
             services.AddScoped<IProxyServerWriteRepository, ProxyServerRepository>();
+            services.AddScoped<IHosterAccountPoolReadRepository, HosterAccountPoolRepository>();
+            services.AddScoped<IHosterAccountPoolWriteRepository, HosterAccountPoolRepository>();
             services.AddScoped<
                 IProxyCategoryDefaultReadRepository,
                 ProxyCategoryDefaultRepository

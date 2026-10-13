@@ -1,0 +1,135 @@
+@page "/hoster-account-pools"
+@using Bearcat.Website.Formatting
+
+<PageTitle>@L["HosterAccountPools"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["HosterAccountPools"]</h1>
+            <p class="text-sm text-muted-foreground">@L["HosterAccountPoolsIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewHosterAccountPool"]
+        </BbButton>
+    </div>
+
+    @if (pools.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoHosterAccountPoolsYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="@($"bearcat-config-header {PoolGridClass}")">
+                <span>@L["Name"]</span>
+                <span>@L["Hoster"]</span>
+                <span>@L["HosterAccountPoolMembers"]</span>
+                <span>@L["MinimumFreeSpace"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var pool in pools)
+            {
+                var storageQuotaResults = storageQuotaResultsByPoolId.GetValueOrDefault(pool.Id);
+                var isCheckingStorage = checkingStoragePoolIds.Contains(pool.Id);
+
+                <div class="bearcat-config-item">
+                    <div class="@($"bearcat-config-row {PoolGridClass}")">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold" title="@pool.Name">@pool.Name</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Hoster"]</p>
+                            <BbBadge Variant="BadgeVariant.Outline">@pool.HosterName</BbBadge>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["HosterAccountPoolMembers"]</p>
+                            @if (pool.MembersInPriorityOrder.Count == 0)
+                            {
+                                <span class="text-sm text-muted-foreground">@L["NoHosterAccountPoolMembersYet"]</span>
+                            }
+                            else
+                            {
+                                <ol class="space-y-1">
+                                    @foreach (var member in pool.MembersInPriorityOrder)
+                                    {
+                                        var storageQuotaResult = storageQuotaResults?.GetValueOrDefault(member.HosterRegistrationId);
+
+                                        <li class="flex min-w-0 items-baseline gap-2">
+                                            <span class="w-4 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">@member.Priority</span>
+                                            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                                                <span class="@($"min-w-0 truncate text-sm {(member.IsActive ? string.Empty : "text-muted-foreground")}")" title="@member.Name">@member.Name</span>
+                                                @if (!member.IsActive)
+                                                {
+                                                    <BbBadge Variant="BadgeVariant.Outline">@L["Inactive"]</BbBadge>
+                                                }
+                                                @if (member.HasUnreadableSecrets)
+                                                {
+                                                    <UnreadableSecretsBadge />
+                                                }
+                                                @if (storageQuotaResult is not null)
+                                                {
+                                                    @if (storageQuotaResult.IsSuccess)
+                                                    {
+                                                        <span class="whitespace-nowrap text-xs tabular-nums text-muted-foreground">@L.Localize(storageQuotaResult.StorageQuota!)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="whitespace-nowrap text-xs text-destructive" title="@storageQuotaResult.ErrorMessage">@L["StorageQuotaCheckFailedShort"]</span>
+                                                    }
+                                                }
+                                            </div>
+                                        </li>
+                                    }
+                                </ol>
+                            }
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["MinimumFreeSpace"]</p>
+                            <span class="whitespace-nowrap text-sm tabular-nums">@TransferFormatting.FormatBytes(pool.MinimumFreeSpaceBytes)</span>
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      Disabled="@(isCheckingStorage || pool.MembersInPriorityOrder.Count == 0)"
+                                      OnClick="@(() => CheckStorageAsync(pool))">
+                                @if (isCheckingStorage)
+                                {
+                                    <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                                }
+                                else
+                                {
+                                    <LucideIcon Name="hard-drive" class="h-4 w-4" />
+                                }
+                                @L["CheckStorage"]
+                            </BbButton>
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["Actions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(pool))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(pool))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

@@ -1740,8 +1740,32 @@
   <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>The path cannot be changed while archives are stored in this folder.</value></data>
   <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
   <data name="CheckStorage" xml:space="preserve"><value>Check storage</value></data>
-  <data name="StorageQuotaUnlimited" xml:space="preserve"><value>Registration {0}: unlimited storage</value></data>
-  <data name="StorageQuotaFreeOfTotal" xml:space="preserve"><value>Registration {0}: {1} free of {2}</value></data>
-  <data name="StorageQuotaFree" xml:space="preserve"><value>Registration {0}: {1} free</value></data>
   <data name="StorageQuotaCheckFailed" xml:space="preserve"><value>Storage check for registration {0} failed: {1}</value></data>
+  <data name="StorageQuotaOfRegistration" xml:space="preserve"><value>Registration {0}: {1}</value></data>
+  <data name="StorageQuotaUnlimitedValue" xml:space="preserve"><value>unlimited storage</value></data>
+  <data name="StorageQuotaFreeOfTotalValue" xml:space="preserve"><value>{0} free of {1}</value></data>
+  <data name="StorageQuotaFreeValue" xml:space="preserve"><value>{0} free</value></data>
+  <data name="StorageQuotaCheckFailedShort" xml:space="preserve"><value>Check failed</value></data>
+  <data name="HosterAccountPools" xml:space="preserve"><value>Account pools</value></data>
+  <data name="HosterAccountPoolsIntro" xml:space="preserve"><value>Uploads go to the first account in the list with enough free storage.</value></data>
+  <data name="NewHosterAccountPool" xml:space="preserve"><value>New pool</value></data>
+  <data name="NoHosterAccountPoolsYet" xml:space="preserve"><value>No account pools yet.</value></data>
+  <data name="HosterAccountPoolDialogDescription" xml:space="preserve"><value>Choose the hoster, the accounts and their order.</value></data>
+  <data name="HosterAccountPoolNamePlaceholder" xml:space="preserve"><value>e.g. Main accounts</value></data>
+  <data name="HosterAccountPoolHosterHelp" xml:space="preserve"><value>Only hosters that report their free storage are listed. The hoster cannot be changed later.</value></data>
+  <data name="HosterAccountPoolMinimumFreeSpaceHelp" xml:space="preserve"><value>Space that must stay free on each account after an upload.</value></data>
+  <data name="HosterAccountPoolMembers" xml:space="preserve"><value>Accounts</value></data>
+  <data name="HosterAccountPoolMembersHelp" xml:space="preserve"><value>Drag the accounts into order. The first account is used first.</value></data>
+  <data name="NoHosterAccountPoolMembersYet" xml:space="preserve"><value>No accounts in this pool yet.</value></data>
+  <data name="SelectAccountToAdd" xml:space="preserve"><value>Select an account</value></data>
+  <data name="AddAccount" xml:space="preserve"><value>Add account</value></data>
+  <data name="AllAccountsAlreadyInPool" xml:space="preserve"><value>All accounts of this hoster are already in the pool.</value></data>
+  <data name="InactiveAccountOption" xml:space="preserve"><value>{0} (inactive)</value></data>
+  <data name="MinimumFreeSpace" xml:space="preserve"><value>Minimum free space</value></data>
+  <data name="DeleteHosterAccountPoolConfirmation" xml:space="preserve"><value>Delete the account pool "{0}"? The accounts themselves are kept.</value></data>
+  <data name="HosterAccountPoolDeleted" xml:space="preserve"><value>Account pool {0} deleted.</value></data>
+  <data name="HosterAccountPoolValidationError.NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="HosterAccountPoolValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 200 characters.</value></data>
+  <data name="HosterAccountPoolValidationError.NameAlreadyExists" xml:space="preserve"><value>An account pool with this name already exists.</value></data>
+  <data name="HosterAccountPoolValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
 </root>

@@ -39,6 +39,7 @@ using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
+using Bearcat.Domain.UseCases.ManageHosterAccountPools;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
@@ -116,6 +117,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<QualityProfileService>();
             services.AddScoped<ProxyServerService>();
+            services.AddScoped<HosterAccountPoolService>();
             services.AddScoped<ProxyCategoryDefaultService>();
             services.AddScoped<ProxySelectionValidator>();
             services.AddScoped<AdditionalArchiveContentService>();

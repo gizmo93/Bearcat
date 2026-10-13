@@ -1743,8 +1743,32 @@
   <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>Der Pfad kann nicht geändert werden, solange Archive in diesem Ordner gespeichert sind.</value></data>
   <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der freizuhaltende Speicherplatz darf nicht negativ sein.</value></data>
   <data name="CheckStorage" xml:space="preserve"><value>Speicherplatz prüfen</value></data>
-  <data name="StorageQuotaUnlimited" xml:space="preserve"><value>Registrierung {0}: unbegrenzter Speicherplatz</value></data>
-  <data name="StorageQuotaFreeOfTotal" xml:space="preserve"><value>Registrierung {0}: {1} von {2} frei</value></data>
-  <data name="StorageQuotaFree" xml:space="preserve"><value>Registrierung {0}: {1} frei</value></data>
   <data name="StorageQuotaCheckFailed" xml:space="preserve"><value>Speicherplatzprüfung für Registrierung {0} fehlgeschlagen: {1}</value></data>
+  <data name="StorageQuotaOfRegistration" xml:space="preserve"><value>Registrierung {0}: {1}</value></data>
+  <data name="StorageQuotaUnlimitedValue" xml:space="preserve"><value>unbegrenzter Speicherplatz</value></data>
+  <data name="StorageQuotaFreeOfTotalValue" xml:space="preserve"><value>{0} von {1} frei</value></data>
+  <data name="StorageQuotaFreeValue" xml:space="preserve"><value>{0} frei</value></data>
+  <data name="StorageQuotaCheckFailedShort" xml:space="preserve"><value>Prüfung fehlgeschlagen</value></data>
+  <data name="HosterAccountPools" xml:space="preserve"><value>Accountpools</value></data>
+  <data name="HosterAccountPoolsIntro" xml:space="preserve"><value>Uploads gehen an den ersten Account der Liste mit genug freiem Speicherplatz.</value></data>
+  <data name="NewHosterAccountPool" xml:space="preserve"><value>Neuer Pool</value></data>
+  <data name="NoHosterAccountPoolsYet" xml:space="preserve"><value>Noch keine Accountpools.</value></data>
+  <data name="HosterAccountPoolDialogDescription" xml:space="preserve"><value>Wähle den Hoster, die Accounts und ihre Reihenfolge.</value></data>
+  <data name="HosterAccountPoolNamePlaceholder" xml:space="preserve"><value>z. B. Hauptaccounts</value></data>
+  <data name="HosterAccountPoolHosterHelp" xml:space="preserve"><value>Es werden nur Hoster angezeigt, die ihren freien Speicherplatz melden. Der Hoster lässt sich später nicht ändern.</value></data>
+  <data name="HosterAccountPoolMinimumFreeSpaceHelp" xml:space="preserve"><value>Speicherplatz, der nach einem Upload auf jedem Account frei bleiben muss.</value></data>
+  <data name="HosterAccountPoolMembers" xml:space="preserve"><value>Accounts</value></data>
+  <data name="HosterAccountPoolMembersHelp" xml:space="preserve"><value>Ziehe die Accounts in die gewünschte Reihenfolge. Der erste Account wird zuerst verwendet.</value></data>
+  <data name="NoHosterAccountPoolMembersYet" xml:space="preserve"><value>Noch keine Accounts in diesem Pool.</value></data>
+  <data name="SelectAccountToAdd" xml:space="preserve"><value>Account auswählen</value></data>
+  <data name="AddAccount" xml:space="preserve"><value>Account hinzufügen</value></data>
+  <data name="AllAccountsAlreadyInPool" xml:space="preserve"><value>Alle Accounts dieses Hosters sind bereits im Pool.</value></data>
+  <data name="InactiveAccountOption" xml:space="preserve"><value>{0} (inaktiv)</value></data>
+  <data name="MinimumFreeSpace" xml:space="preserve"><value>Mindestspeicherplatz</value></data>
+  <data name="DeleteHosterAccountPoolConfirmation" xml:space="preserve"><value>Accountpool "{0}" löschen? Die Accounts selbst bleiben erhalten.</value></data>
+  <data name="HosterAccountPoolDeleted" xml:space="preserve"><value>Accountpool {0} gelöscht.</value></data>
+  <data name="HosterAccountPoolValidationError.NameRequired" xml:space="preserve"><value>Der Name ist erforderlich.</value></data>
+  <data name="HosterAccountPoolValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 200 Zeichen lang sein.</value></data>
+  <data name="HosterAccountPoolValidationError.NameAlreadyExists" xml:space="preserve"><value>Es gibt bereits einen Accountpool mit diesem Namen.</value></data>
+  <data name="HosterAccountPoolValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der Mindestspeicherplatz darf nicht negativ sein.</value></data>
 </root>

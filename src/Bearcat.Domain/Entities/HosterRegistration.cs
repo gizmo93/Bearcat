@@ -51,6 +51,8 @@ public class HosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntit
 
     public List<Notification> Notifications { get; set; } = null!;
 
+    public List<HosterAccountPoolMember> HosterAccountPoolMemberships { get; set; } = null!;
+
     public string GetEncryptedSecrets() => SerializedConfig;
 
     public string GetRegistrationTypeName() => "Hoster";

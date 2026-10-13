@@ -92,11 +92,14 @@ public static class NavigationRegistry
             "Registrations",
             NavigationSectionHeadingKind.Collapsible,
             [
-                EntryWithTooltip(
-                    "HosterRegistrations",
+                new NavigationSubmenu(
+                    "hosters",
                     "Hosters",
-                    "/hoster-registrations",
-                    "key-round"
+                    "key-round",
+                    [
+                        Entry("HosterRegistrations", "/hoster-registrations", "key-round"),
+                        Entry("HosterAccountPools", "/hoster-account-pools", "group"),
+                    ]
                 ),
                 Entry("RemoteSources", "/remote-sources", "server"),
                 EntryWithTooltip(

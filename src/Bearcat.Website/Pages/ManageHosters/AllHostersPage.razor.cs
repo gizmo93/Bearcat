@@ -1,8 +1,8 @@
-using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Website.Formatting;
+using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -178,26 +178,9 @@ public partial class AllHostersPage(
             return;
         }
 
-        toastService.Success(FormatStorageQuota(hoster.Name, result.StorageQuota!));
-    }
-
-    private string FormatStorageQuota(string registrationName, HosterStorageQuota storageQuota)
-    {
-        if (storageQuota.IsUnlimited)
-        {
-            return L["StorageQuotaUnlimited", registrationName];
-        }
-
-        var freeSpace = TransferFormatting.FormatBytes(storageQuota.FreeBytes);
-
-        return storageQuota.TotalBytes is { } totalBytes
-            ? L[
-                "StorageQuotaFreeOfTotal",
-                registrationName,
-                freeSpace,
-                TransferFormatting.FormatBytes(totalBytes)
-            ]
-            : L["StorageQuotaFree", registrationName, freeSpace];
+        toastService.Success(
+            L["StorageQuotaOfRegistration", hoster.Name, L.Localize(result.StorageQuota!)]
+        );
     }
 
     private async Task ShowCaptchaDialogAsync(HosterRegistrationReadModel hoster)

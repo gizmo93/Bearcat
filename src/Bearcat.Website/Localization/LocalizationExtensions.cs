@@ -1,9 +1,11 @@
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Microsoft.Extensions.Localization;
 
 namespace Bearcat.Website.Localization;
@@ -158,4 +160,25 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ProxyCategory proxyCategory
     ) => localizer[$"ProxyCategory.{proxyCategory}.Description"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        HosterStorageQuota storageQuota
+    )
+    {
+        if (storageQuota.IsUnlimited)
+        {
+            return localizer["StorageQuotaUnlimitedValue"];
+        }
+
+        var freeSpace = TransferFormatting.FormatBytes(storageQuota.FreeBytes);
+
+        return storageQuota.TotalBytes is { } totalBytes
+            ? localizer[
+                "StorageQuotaFreeOfTotalValue",
+                freeSpace,
+                TransferFormatting.FormatBytes(totalBytes)
+            ]
+            : localizer["StorageQuotaFreeValue", freeSpace];
+    }
 }

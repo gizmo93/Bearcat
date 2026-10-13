@@ -1445,6 +1445,8 @@ a {
 
 .bearcat-page-action {
     align-self: flex-start;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .bearcat-mobile-cell-label {
