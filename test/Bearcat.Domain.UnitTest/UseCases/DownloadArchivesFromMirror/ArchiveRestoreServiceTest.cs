@@ -13,9 +13,11 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UnitTest.UseCases.DownloadArchivesFromMirror;
 
@@ -658,6 +660,10 @@ public class ArchiveRestoreServiceTest
         var secretProtectorMock = new Mock<ISecretProtector>();
         secretProtectorMock.Setup(x => x.Unprotect(It.IsAny<string>())).Returns("{}");
 
+        var mirrorFileSizeService = new MirrorFileSizeService(
+            NullLogger<MirrorFileSizeService>.Instance
+        );
+
         return new ArchiveRestoreService(
             repository,
             hosterFactoryMock.Object,
@@ -672,9 +678,12 @@ public class ArchiveRestoreServiceTest
                 new ArchiveFileDownloader(
                     transferProgressTracker,
                     new TransferSpeedLimitService(configurationProviderMock.Object),
+                    mirrorFileSizeService,
+                    new TimeProvider(new ConfigurationBuilder().Build()),
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
+            mirrorFileSizeService,
             new UploadCancellationService(notificationServiceMock.Object),
             NullLogger<ArchiveRestoreService>.Instance
         );

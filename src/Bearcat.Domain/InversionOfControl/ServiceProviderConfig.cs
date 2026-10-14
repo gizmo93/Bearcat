@@ -191,6 +191,7 @@ public static class ServiceProviderConfig
             services.AddScoped<MirrorSourceResolver>();
             services.AddScoped<MirrorDownloadCoordinator>();
             services.AddScoped<ArchiveFileDownloader>();
+            services.AddScoped<MirrorFileSizeService>();
             services.AddSingleton<ITransferProgressTracker, TransferProgressTracker>();
             services.AddSingleton<FolderSizeProgressReporter>();
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();

@@ -92,6 +92,10 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
 
         var transferProgressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
 
+        var mirrorFileSizeService = new MirrorFileSizeService(
+            NullLogger<MirrorFileSizeService>.Instance
+        );
+
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(DbContext),
             hosterFactoryMock.Object,
@@ -106,9 +110,12 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 new ArchiveFileDownloader(
                     transferProgressTracker,
                     new TransferSpeedLimitService(new DefaultConfigurationProvider()),
+                    mirrorFileSizeService,
+                    CreateTimeProvider(),
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
+            mirrorFileSizeService,
             new UploadCancellationService(notificationService),
             NullLogger<ArchiveRestoreService>.Instance
         );
