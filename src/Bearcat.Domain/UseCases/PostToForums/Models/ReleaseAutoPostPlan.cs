@@ -30,4 +30,11 @@ public sealed record ReleaseAutoPostPlan(
                 site.AutomaticPostingEnabled && site.ResolvedForumPostTemplateId is not null
             )
             .ToList();
+
+    public AutoPostSiteEntry? FindSite(int distributionSiteRegistrationId)
+    {
+        return Sites.FirstOrDefault(site =>
+            site.DistributionSiteRegistrationId == distributionSiteRegistrationId
+        );
+    }
 }

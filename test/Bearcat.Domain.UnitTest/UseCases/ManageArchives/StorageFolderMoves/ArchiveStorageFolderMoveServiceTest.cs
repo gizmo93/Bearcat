@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderMoves;
 using Bearcat.Domain.ValueObjects;
@@ -42,7 +43,11 @@ public class ArchiveStorageFolderMoveServiceTest
             repositoryMock.Object,
             fileSystemServiceMock.Object,
             Mock.Of<INotificationService>(),
-            progressTrackerMock.Object,
+            new ArchiveFileCopyService(
+                fileSystemServiceMock.Object,
+                progressTrackerMock.Object,
+                Mock.Of<ILogger<ArchiveFileCopyService>>()
+            ),
             new TransferCancellationRegistry(),
             Mock.Of<ILogger<ArchiveStorageFolderMoveService>>()
         );

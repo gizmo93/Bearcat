@@ -9,6 +9,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
@@ -136,7 +137,11 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     new ArchiveCleanupRepository(DbContext),
                     fileSystemService,
                     CreateNotificationService(),
-                    progressTracker,
+                    new ArchiveFileCopyService(
+                        fileSystemService,
+                        progressTracker,
+                        Mock.Of<ILogger<ArchiveFileCopyService>>()
+                    ),
                     cancellationRegistry,
                     Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
                 ),

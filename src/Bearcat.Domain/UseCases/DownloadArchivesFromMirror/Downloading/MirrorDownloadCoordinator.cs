@@ -15,8 +15,6 @@ public class MirrorDownloadCoordinator(
         CancellationToken cancellationToken
     )
     {
-        using var semaphore = new SemaphoreSlim(downloadSettings.MaxParallelDownloads);
-
         var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, archiveId);
 
         transferProgressTracker.StartTracking(
@@ -34,18 +32,28 @@ public class MirrorDownloadCoordinator(
 
         try
         {
-            var downloadTasks = downloads.Select(download =>
-                archiveFileDownloader.DownloadAndVerifyAsync(
-                    archiveId: archiveId,
-                    download: download,
-                    hosters: hosters,
-                    semaphore: semaphore,
-                    downloadSettings: downloadSettings,
-                    cancellationToken: cancellationToken
-                )
+            var results = new FileDownloadResult[downloads.Count];
+
+            await Parallel.ForEachAsync(
+                source: Enumerable.Range(0, downloads.Count),
+                parallelOptions: new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = downloadSettings.MaxParallelDownloads,
+                    CancellationToken = cancellationToken,
+                },
+                body: async (downloadIndex, downloadCancellationToken) =>
+                {
+                    results[downloadIndex] = await archiveFileDownloader.DownloadAndVerifyAsync(
+                        archiveId: archiveId,
+                        download: downloads[downloadIndex],
+                        hosters: hosters,
+                        downloadSettings: downloadSettings,
+                        cancellationToken: downloadCancellationToken
+                    );
+                }
             );
 
-            return await Task.WhenAll(downloadTasks);
+            return results;
         }
         finally
         {

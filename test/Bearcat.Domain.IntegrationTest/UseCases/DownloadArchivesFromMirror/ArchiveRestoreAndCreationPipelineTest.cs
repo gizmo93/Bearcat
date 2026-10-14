@@ -16,6 +16,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
@@ -91,6 +92,10 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
 
         var transferProgressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
 
+        var mirrorFileSizeService = new MirrorFileSizeService(
+            NullLogger<MirrorFileSizeService>.Instance
+        );
+
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(DbContext),
             hosterFactoryMock.Object,
@@ -105,9 +110,12 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 new ArchiveFileDownloader(
                     transferProgressTracker,
                     new TransferSpeedLimitService(new DefaultConfigurationProvider()),
+                    mirrorFileSizeService,
+                    CreateTimeProvider(),
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
+            mirrorFileSizeService,
             new UploadCancellationService(notificationService),
             NullLogger<ArchiveRestoreService>.Instance
         );
@@ -122,7 +130,11 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 new ArchiveCleanupRepository(DbContext),
                 new FileSystemService(),
                 notificationService,
-                transferProgressTracker,
+                new ArchiveFileCopyService(
+                    new FileSystemService(),
+                    transferProgressTracker,
+                    NullLogger<ArchiveFileCopyService>.Instance
+                ),
                 new TransferCancellationRegistry(),
                 NullLogger<ArchiveLocalWorkingCopyService>.Instance
             )

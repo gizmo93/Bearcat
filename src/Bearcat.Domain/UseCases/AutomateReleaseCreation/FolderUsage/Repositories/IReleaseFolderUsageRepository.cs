@@ -16,4 +16,9 @@ public interface IReleaseFolderUsageRepository
         IReadOnlyList<string> localFolderPaths,
         CancellationToken cancellationToken = default
     );
+
+    Task<HashSet<string>> GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
+        IReadOnlyList<string> folderPaths,
+        CancellationToken cancellationToken = default
+    );
 }

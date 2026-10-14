@@ -12,12 +12,7 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite
-            .Releases.Where(release =>
-                release.ReleaseFolderPath != null
-                && releaseFolderPaths.Contains(release.ReleaseFolderPath)
-            )
-            .Select(release => release.ReleaseFolderPath!)
+        return await QueryExistingReleaseFolderPaths(releaseFolderPaths)
             .ToHashSetAsync(cancellationToken);
     }
 
@@ -26,11 +21,7 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite
-            .Releases.Where(release => release.ReleaseType == ReleaseType.Unmanaged)
-            .SelectMany(release => release.ArchiveConfigs)
-            .Select(archiveConfig => archiveConfig.ArchiveFilesBasePath)
-            .Where(archiveFolderPath => archiveFolderPaths.Contains(archiveFolderPath))
+        return await QueryExistingArchiveFolderPathsOfUnmanagedReleases(archiveFolderPaths)
             .ToHashSetAsync(cancellationToken);
     }
 
@@ -39,11 +30,54 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite
-            .RemoteSourceDownloads.Where(download =>
-                localFolderPaths.Contains(download.LocalFolderPath)
-            )
-            .Select(download => download.LocalFolderPath)
+        return await QueryRemoteDownloadFolderPaths(localFolderPaths)
             .ToHashSetAsync(cancellationToken);
+    }
+
+    public async Task<HashSet<string>> GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
+        IReadOnlyList<string> folderPaths,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await QueryExistingReleaseFolderPaths(folderPaths)
+            .Union(QueryExistingArchiveFolderPathsOfUnmanagedReleases(folderPaths))
+            .Union(QueryRemoteDownloadFolderPaths(folderPaths))
+            .ToHashSetAsync(cancellationToken);
+    }
+
+    private IQueryable<string> QueryExistingReleaseFolderPaths(
+        IReadOnlyList<string> releaseFolderPaths
+    )
+    {
+        return dbWrite
+            .Releases.Where(release =>
+                release.ReleaseFolderPath != null
+                && EF.Parameter(releaseFolderPaths).Contains(release.ReleaseFolderPath)
+            )
+            .Select(release => release.ReleaseFolderPath!);
+    }
+
+    private IQueryable<string> QueryExistingArchiveFolderPathsOfUnmanagedReleases(
+        IReadOnlyList<string> archiveFolderPaths
+    )
+    {
+        return dbWrite
+            .Releases.Where(release => release.ReleaseType == ReleaseType.Unmanaged)
+            .SelectMany(release => release.ArchiveConfigs)
+            .Select(archiveConfig => archiveConfig.ArchiveFilesBasePath)
+            .Where(archiveFolderPath =>
+                EF.Parameter(archiveFolderPaths).Contains(archiveFolderPath)
+            );
+    }
+
+    private IQueryable<string> QueryRemoteDownloadFolderPaths(
+        IReadOnlyList<string> localFolderPaths
+    )
+    {
+        return dbWrite
+            .RemoteSourceDownloads.Where(download =>
+                EF.Parameter(localFolderPaths).Contains(download.LocalFolderPath)
+            )
+            .Select(download => download.LocalFolderPath);
     }
 }

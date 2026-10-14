@@ -157,7 +157,7 @@
                                     </BbButton>
                                     <BbButton Variant="ButtonVariant.Ghost"
                                               Disabled="settings.HasUnreadableSecrets"
-                                              OnClick="BeginPairingAsync"
+                                              OnClick="CreatePairingLinkAsync"
                                               Loading="isStartingPairing">
                                         @L["TelegramResendLink"]
                                     </BbButton>
@@ -166,7 +166,7 @@
                             else
                             {
                                 <BbButton Disabled="settings.HasUnreadableSecrets"
-                                          OnClick="BeginPairingAsync"
+                                          OnClick="CreatePairingLinkAsync"
                                           Loading="isStartingPairing">
                                     <LucideIcon Name="send" class="h-4 w-4" />
                                     @L["ConnectTelegram"]
@@ -198,7 +198,7 @@
                             </div>
                         </div>
 
-                        <BbButton OnClick="SaveLevelsAsync" Loading="isSavingLevels">@L["Save"]</BbButton>
+                        <BbButton OnClick="SaveForwardedNotificationSeveritiesAsync" Loading="isSavingForwardedNotificationSeverities">@L["Save"]</BbButton>
                     </div>
                 </BbCardContent>
             </BbCard>

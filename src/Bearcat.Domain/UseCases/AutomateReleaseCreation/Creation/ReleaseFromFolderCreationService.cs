@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -56,7 +57,8 @@ public class ReleaseFromFolderCreationService(
     )
     {
         var releaseType = releaseTemplate.ReleaseType;
-        var releaseName = CleanOptional(name) ?? FolderPathHelper.GetFolderName(releaseFolderPath);
+        var releaseName =
+            name.TrimOrNullWhenWhitespace() ?? FolderPathHelper.GetFolderName(releaseFolderPath);
         var isUnmanaged = releaseType is ReleaseType.Unmanaged;
 
         var release = new Release
@@ -122,7 +124,7 @@ public class ReleaseFromFolderCreationService(
         {
             var uploadConfig = new UploadConfig
             {
-                Name = CleanOptional(template.Name) ?? template.GetUploadTargetName(),
+                Name = template.Name.TrimOrNullWhenWhitespace() ?? template.GetUploadTargetName(),
                 HosterRegistrationId = template.HosterRegistrationId,
                 HosterAccountPoolId = template.HosterAccountPoolId,
                 PremiumOnlyDownload = template.PremiumOnlyDownload,
@@ -136,7 +138,7 @@ public class ReleaseFromFolderCreationService(
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
                         ContainerScope = linkCrypter.ContainerScope,
-                        Password = CleanOptional(linkCrypter.Password),
+                        Password = linkCrypter.Password.TrimOrNullWhenWhitespace(),
                         EnableCaptcha = linkCrypter.EnableCaptcha,
                         EnableContainerDownload = linkCrypter.EnableContainerDownload,
                         EnableClickAndLoad = linkCrypter.EnableClickAndLoad,
@@ -152,17 +154,14 @@ public class ReleaseFromFolderCreationService(
         release.ImageUploadConfigs = releaseTemplate
             .ImageUploadConfigTemplates.Select(template => new ImageUploadConfig
             {
-                Name = CleanOptional(template.Name) ?? template.ImageHosterRegistration.Name,
+                Name =
+                    template.Name.TrimOrNullWhenWhitespace()
+                    ?? template.ImageHosterRegistration.Name,
                 ImageHosterRegistrationId = template.ImageHosterRegistrationId,
                 ImageUploads = [],
             })
             .ToList();
 
         return new ReleaseFromTemplateData(release, uploadConfigMatches);
-    }
-
-    private static string? CleanOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

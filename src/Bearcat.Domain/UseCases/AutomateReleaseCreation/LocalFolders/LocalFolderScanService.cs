@@ -36,163 +36,44 @@ public class LocalFolderScanService(
             return 0;
         }
 
+        var settings = ReadScanSettings();
         var candidates = await GetCandidateFoldersAsync(automations, cancellationToken);
-
-        var candidatePaths = candidates
-            .Select(candidate => candidate.FolderPath)
-            .Distinct()
-            .ToList();
-
-        var existingFolderPaths = new HashSet<string>();
-
-        if (candidatePaths.Count > 0)
-        {
-            existingFolderPaths.UnionWith(
-                await releaseFolderUsageRepository.GetExistingReleaseFolderPathsAsync(
-                    candidatePaths,
-                    cancellationToken
-                )
-            );
-            existingFolderPaths.UnionWith(
-                await releaseFolderUsageRepository.GetExistingArchiveFolderPathsAsync(
-                    candidatePaths,
-                    cancellationToken
-                )
-            );
-            existingFolderPaths.UnionWith(
-                await releaseFolderUsageRepository.GetRemoteDownloadFolderPathsAsync(
-                    candidatePaths,
-                    cancellationToken
-                )
-            );
-        }
+        var candidatesWithoutUsedFolder = await GetCandidatesWhoseFolderIsNotUsedYetAsync(
+            candidates,
+            cancellationToken
+        );
 
         var observations = await repository.GetFolderObservationsAsync(cancellationToken);
         var observationsByPath = observations.ToDictionary(observation => observation.FolderPath);
 
-        var pendingCandidates = candidates
-            .Where(candidate => !existingFolderPaths.Contains(candidate.FolderPath))
-            .ToList();
-
-        var pendingPaths = pendingCandidates.Select(candidate => candidate.FolderPath).ToHashSet();
-
         var localNow = timeProvider.GetLocalNow();
-
-        var stabilityWindow = TimeSpan.FromMinutes(
-            Math.Max(
-                0,
-                configuration.GetValue<FolderAutomationConfiguration>(c => c.StabilityMinutes)
-            )
-        );
-
-        var minimumBytes =
-            (long)
-                Math.Max(
-                    0,
-                    configuration.GetValue<FolderAutomationConfiguration>(c =>
-                        c.MinimumFolderSizeMegabytes
-                    )
-                )
-            * 1024
-            * 1024;
-
-        var processedPaths = new HashSet<string>();
         var createdCount = 0;
         var hasChanges = false;
 
-        foreach (var candidate in pendingCandidates)
+        foreach (var candidate in candidatesWithoutUsedFolder)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!processedPaths.Add(candidate.FolderPath))
-            {
-                continue;
-            }
-
-            var fileCountAndSize = fileSystemService.GetFolderFileCountAndSize(
-                candidate.FolderPath
+            var result = await ProcessCandidateFolderAsync(
+                candidate: candidate,
+                observation: observationsByPath.GetValueOrDefault(candidate.FolderPath),
+                settings: settings,
+                localNow: localNow,
+                cancellationToken: cancellationToken
             );
 
-            if (!observationsByPath.TryGetValue(candidate.FolderPath, out var observation))
+            if (result is CandidateFolderProcessingResult.ReleaseCreated)
             {
-                repository.AddFolderObservation(
-                    new ReleaseFolderObservation
-                    {
-                        FolderPath = candidate.FolderPath,
-                        FileCount = fileCountAndSize.FileCount,
-                        TotalBytes = fileCountAndSize.TotalBytes,
-                        LastChangedAt = localNow,
-                    }
-                );
-                hasChanges = true;
-                continue;
+                createdCount++;
             }
 
-            var stability = FolderStabilityCheck.GetStability(
-                observed: new FolderFileCountAndSize(observation.FileCount, observation.TotalBytes),
-                current: fileCountAndSize,
-                lastChangedAt: observation.LastChangedAt,
-                now: localNow,
-                stabilityWindow: stabilityWindow
-            );
-
-            if (stability is FolderStability.Changed)
-            {
-                observation.FileCount = fileCountAndSize.FileCount;
-                observation.TotalBytes = fileCountAndSize.TotalBytes;
-                observation.LastChangedAt = localNow;
-                observation.ExtractionErrorMessage = null;
-                observation.ExtractionFailedAt = null;
-                hasChanges = true;
-                continue;
-            }
-
-            if (stability is FolderStability.NotYetStable)
-            {
-                continue;
-            }
-
-            var shouldExtractArchives = ShouldExtractArchives(candidate.Automation);
-
-            if (shouldExtractArchives && observation.ExtractionErrorMessage is not null)
-            {
-                continue;
-            }
-
-            if (fileCountAndSize.TotalBytes < minimumBytes)
-            {
-                continue;
-            }
-
-            if (
-                shouldExtractArchives
-                && !await verificationAndExtractionService.TryVerifyAndExtractAsync(
-                    observation,
-                    cancellationToken
-                )
-            )
-            {
-                hasChanges = true;
-                continue;
-            }
-
-            await CreateReleaseAsync(candidate, localNow, cancellationToken);
-
-            repository.RemoveFolderObservation(observation);
-
-            createdCount++;
-            hasChanges = true;
+            hasChanges |= result is not CandidateFolderProcessingResult.NothingChanged;
         }
 
-        var orphanedObservations = observations.Where(observation =>
-            !pendingPaths.Contains(observation.FolderPath)
+        hasChanges |= RemoveObservationsOfFoldersThatAreNoLongerCandidates(
+            observations,
+            candidatesWithoutUsedFolder
         );
-
-        foreach (var observation in orphanedObservations)
-        {
-            repository.RemoveFolderObservation(observation);
-            hasChanges = true;
-        }
 
         if (hasChanges)
         {
@@ -200,6 +81,165 @@ public class LocalFolderScanService(
         }
 
         return createdCount;
+    }
+
+    private LocalFolderScanSettings ReadScanSettings()
+    {
+        var stabilityMinutes = configuration.GetValue<FolderAutomationConfiguration>(c =>
+            c.StabilityMinutes
+        );
+
+        var minimumFolderSizeMegabytes = configuration.GetValue<FolderAutomationConfiguration>(c =>
+            c.MinimumFolderSizeMegabytes
+        );
+
+        return new LocalFolderScanSettings(
+            StabilityWindow: TimeSpan.FromMinutes(Math.Max(0, stabilityMinutes)),
+            MinimumBytes: (long)Math.Max(0, minimumFolderSizeMegabytes) * 1024 * 1024
+        );
+    }
+
+    private async Task<List<ReleaseFolderCandidate>> GetCandidatesWhoseFolderIsNotUsedYetAsync(
+        IReadOnlySet<ReleaseFolderCandidate> candidates,
+        CancellationToken cancellationToken
+    )
+    {
+        if (candidates.Count == 0)
+        {
+            return [];
+        }
+
+        var candidateFolderPaths = candidates
+            .Select(candidate => candidate.FolderPath)
+            .Distinct()
+            .ToList();
+
+        var usedFolderPaths =
+            await releaseFolderUsageRepository.GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
+                candidateFolderPaths,
+                cancellationToken
+            );
+
+        return candidates
+            .Where(candidate => !usedFolderPaths.Contains(candidate.FolderPath))
+            .DistinctBy(candidate => candidate.FolderPath)
+            .ToList();
+    }
+
+    private async Task<CandidateFolderProcessingResult> ProcessCandidateFolderAsync(
+        ReleaseFolderCandidate candidate,
+        ReleaseFolderObservation? observation,
+        LocalFolderScanSettings settings,
+        DateTime localNow,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileCountAndSize = fileSystemService.GetFolderFileCountAndSize(candidate.FolderPath);
+
+        if (observation is null)
+        {
+            AddFolderObservation(candidate.FolderPath, fileCountAndSize, localNow);
+            return CandidateFolderProcessingResult.ObservationChanged;
+        }
+
+        var stability = FolderStabilityCheck.GetStability(
+            observed: new FolderFileCountAndSize(observation.FileCount, observation.TotalBytes),
+            current: fileCountAndSize,
+            lastChangedAt: observation.LastChangedAt,
+            now: localNow,
+            stabilityWindow: settings.StabilityWindow
+        );
+
+        if (stability is FolderStability.Changed)
+        {
+            ResetFolderObservationAfterFolderChanged(observation, fileCountAndSize, localNow);
+            return CandidateFolderProcessingResult.ObservationChanged;
+        }
+
+        if (stability is FolderStability.NotYetStable)
+        {
+            return CandidateFolderProcessingResult.NothingChanged;
+        }
+
+        var shouldExtractArchives = ShouldExtractArchives(candidate.Automation);
+
+        if (shouldExtractArchives && observation.ExtractionErrorMessage is not null)
+        {
+            return CandidateFolderProcessingResult.NothingChanged;
+        }
+
+        if (fileCountAndSize.TotalBytes < settings.MinimumBytes)
+        {
+            return CandidateFolderProcessingResult.NothingChanged;
+        }
+
+        if (
+            shouldExtractArchives
+            && !await verificationAndExtractionService.TryVerifyAndExtractAsync(
+                observation,
+                cancellationToken
+            )
+        )
+        {
+            return CandidateFolderProcessingResult.ObservationChanged;
+        }
+
+        await CreateReleaseAsync(candidate, localNow, cancellationToken);
+
+        repository.RemoveFolderObservation(observation);
+
+        return CandidateFolderProcessingResult.ReleaseCreated;
+    }
+
+    private void AddFolderObservation(
+        string folderPath,
+        FolderFileCountAndSize fileCountAndSize,
+        DateTime localNow
+    )
+    {
+        repository.AddFolderObservation(
+            new ReleaseFolderObservation
+            {
+                FolderPath = folderPath,
+                FileCount = fileCountAndSize.FileCount,
+                TotalBytes = fileCountAndSize.TotalBytes,
+                LastChangedAt = localNow,
+            }
+        );
+    }
+
+    private static void ResetFolderObservationAfterFolderChanged(
+        ReleaseFolderObservation observation,
+        FolderFileCountAndSize fileCountAndSize,
+        DateTime localNow
+    )
+    {
+        observation.FileCount = fileCountAndSize.FileCount;
+        observation.TotalBytes = fileCountAndSize.TotalBytes;
+        observation.LastChangedAt = localNow;
+        observation.ExtractionErrorMessage = null;
+        observation.ExtractionFailedAt = null;
+    }
+
+    private bool RemoveObservationsOfFoldersThatAreNoLongerCandidates(
+        IReadOnlyList<ReleaseFolderObservation> observations,
+        List<ReleaseFolderCandidate> candidatesWithoutUsedFolder
+    )
+    {
+        var candidateFolderPaths = candidatesWithoutUsedFolder
+            .Select(candidate => candidate.FolderPath)
+            .ToHashSet();
+
+        var observationsOfFoldersThatAreNoLongerCandidates = observations
+            .Where(observation => !candidateFolderPaths.Contains(observation.FolderPath))
+            .ToList();
+
+        foreach (var observation in observationsOfFoldersThatAreNoLongerCandidates)
+        {
+            repository.RemoveFolderObservation(observation);
+        }
+
+        return observationsOfFoldersThatAreNoLongerCandidates.Count > 0;
     }
 
     private async Task CreateReleaseAsync(
@@ -293,4 +333,13 @@ public class LocalFolderScanService(
         ReleaseFolderAutomation Automation,
         string FolderPath
     );
+
+    private sealed record LocalFolderScanSettings(TimeSpan StabilityWindow, long MinimumBytes);
+
+    private enum CandidateFolderProcessingResult
+    {
+        NothingChanged = 1,
+        ObservationChanged = 2,
+        ReleaseCreated = 3,
+    }
 }

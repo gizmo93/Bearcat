@@ -1,4 +1,6 @@
 using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.UseCases.PostToForums.PostCreation;
+using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
 
 namespace Bearcat.Domain.UseCases.PostToForums;
@@ -6,7 +8,8 @@ namespace Bearcat.Domain.UseCases.PostToForums;
 public class AutoForumPostingRunner(
     IAutoForumPostingRepository repository,
     AutoForumPostingPlanService planService,
-    AutoForumPostingService postingService
+    AutoForumPostCreationService postCreationService,
+    AutoForumPostUpdateService postUpdateService
 )
 {
     private const int ReleaseBatchSize = 500;
@@ -49,7 +52,7 @@ public class AutoForumPostingRunner(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var result = await PostAsync(plan, site, cancellationToken);
+            var result = await CreatePostForSiteAsync(plan, site, cancellationToken);
 
             if (result.Status == AutoPostExecutionStatus.Posted)
             {
@@ -65,7 +68,7 @@ public class AutoForumPostingRunner(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var result = await UpdateAsync(plan, site, cancellationToken);
+            var result = await UpdatePostOfSiteAsync(plan, site, cancellationToken);
 
             if (result.Status == AutoPostUpdateStatus.Updated)
             {
@@ -95,7 +98,7 @@ public class AutoForumPostingRunner(
         );
     }
 
-    private async Task<AutoPostExecutionResult> PostAsync(
+    private async Task<AutoPostExecutionResult> CreatePostForSiteAsync(
         ReleaseAutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken
@@ -103,9 +106,9 @@ public class AutoForumPostingRunner(
     {
         try
         {
-            return await postingService.PostAsync(
+            return await postCreationService.CreatePostForPlannedSiteAsync(
                 plan: plan,
-                entry: site,
+                site: site,
                 cancellationToken: cancellationToken
             );
         }
@@ -119,7 +122,7 @@ public class AutoForumPostingRunner(
         }
     }
 
-    private async Task<AutoPostUpdateResult> UpdateAsync(
+    private async Task<AutoPostUpdateResult> UpdatePostOfSiteAsync(
         ReleaseAutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken
@@ -127,9 +130,9 @@ public class AutoForumPostingRunner(
     {
         try
         {
-            return await postingService.UpdateAsync(
+            return await postUpdateService.UpdatePostOfPlannedSiteAsync(
                 plan: plan,
-                entry: site,
+                site: site,
                 cancellationToken: cancellationToken
             );
         }

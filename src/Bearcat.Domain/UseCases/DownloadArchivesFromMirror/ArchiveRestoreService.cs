@@ -5,7 +5,6 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
@@ -27,6 +26,7 @@ public class ArchiveRestoreService(
     ITransferCancellationRegistry cancellationRegistry,
     MirrorSourceResolver mirrorSourceResolver,
     MirrorDownloadCoordinator mirrorDownloadCoordinator,
+    MirrorFileSizeService mirrorFileSizeService,
     UploadCancellationService uploadCancellationService,
     ILogger<ArchiveRestoreService> logger
 )
@@ -536,16 +536,11 @@ public class ArchiveRestoreService(
 
         foreach (var group in firstSourcesPerRegistrationId)
         {
-            var resolved = hosters[group.Key];
-
-            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
-                resolved.Registration
-            );
-
-            var sizes = await GetFileSizesAsync(
-                hoster: resolved.Hoster,
-                hosterConfig: resolved.Config,
-                fileUrls: group.Select(source => source.UploadedFile.HosterFileLink).ToList(),
+            var sizes = await mirrorFileSizeService.GetFileSizesOrEmptyAsync(
+                resolvedMirrorHoster: hosters[group.Key],
+                hosterFileLinks: group
+                    .Select(source => source.UploadedFile.HosterFileLink)
+                    .ToList(),
                 cancellationToken: cancellationToken
             );
 
@@ -556,30 +551,6 @@ public class ArchiveRestoreService(
         }
 
         return sizePerFileUrl;
-    }
-
-    private async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
-        IHosterWithDownload hoster,
-        IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
-        CancellationToken cancellationToken
-    )
-    {
-        try
-        {
-            return await hoster.GetFileSizesAsync(fileUrls, hosterConfig, cancellationToken);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            logger.LogWarning(
-                ex,
-                "Could not determine the size of {FileCount} mirror files on hoster {HosterName}, the download progress stays indeterminate",
-                fileUrls.Count,
-                hoster.Name
-            );
-
-            return new Dictionary<string, long>();
-        }
     }
 
     private DownloadSettings ReadDownloadSettings()
