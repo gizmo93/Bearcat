@@ -1,11 +1,11 @@
 ---
 title: "Accountpools"
-description: "Uploads anhand des freien Speicherplatzes auf mehrere Accounts eines Hosters verteilen."
+description: "Uploads auf mehrere Accounts eines Hosters mit genug freiem Speicherplatz verteilen."
 ---
 
-Ein Accountpool fasst mehrere Accounts desselben Hosters zusammen. Eine Uploadkonfiguration oder ein
-Releasetemplate kann statt eines einzelnen Accounts einen Pool als **Uploadziel** verwenden. Bearcat
-wählt den Account, wenn der Upload startet.
+Ein Accountpool fasst mehrere Accounts desselben Hosters zusammen. Wähle in einer Uploadkonfiguration
+oder einem Releasetemplate den Pool als **Uploadziel**. Bearcat wählt beim Uploadstart einen Account
+mit genug freiem Speicherplatz.
 
 ## Unterstützte Hoster
 
@@ -20,40 +20,40 @@ Pools funktionieren nur mit Hostern, die den freien Speicherplatz eines Accounts
 ## Pool anlegen
 
 Öffne **Hoster** > **Accountpools** und klicke auf **Neuer Pool**. Wähle den Hoster, füge die Accounts
-hinzu und ziehe sie in die gewünschte Reihenfolge. Der erste Account wird zuerst verwendet. Der Hoster
-lässt sich später nicht ändern.
+hinzu und ziehe sie in die gewünschte Reihenfolge. Bearcat prüft die Accounts von oben nach unten.
+Den Hoster kannst du später nicht mehr ändern.
 
-**Mindestspeicherplatz** ist der Speicherplatz, der nach einem Upload auf jedem Account frei bleiben muss.
+Mit **Mindestspeicherplatz** legst du fest, wie viel Speicherplatz nach einem Upload auf jedem Account
+frei bleiben muss.
 
 ## Accountauswahl
 
-Wenn ein Poolupload startet, prüft Bearcat die Accounts in der Reihenfolge des Pools und weist den
-ersten passenden zu:
+Beim Uploadstart geht Bearcat die Accounts der Reihe nach durch und wählt den ersten mit genug Platz.
+Dabei gelten diese Regeln:
 
-- Inaktive Accounts, Accounts mit unlesbaren Zugangsdaten und Accounts, die auf eine
-  CAPTCHA-Verifizierung warten, werden übersprungen.
-- Ein Account passt, wenn sein freier Speicherplatz abzüglich der Dateien, die gerade noch auf ihn
-  hochgeladen werden, und abzüglich des Mindestspeicherplatzes mindestens so gross ist wie der Upload.
-- Accounts mit unbegrenztem Speicherplatz passen immer.
+- Bearcat überspringt inaktive Accounts und Accounts mit unlesbaren Zugangsdaten oder einem
+  ausstehenden Captcha.
+- Vom freien Speicherplatz zieht Bearcat den Platz für die übrigen Dateien laufender Uploads und den
+  Mindestspeicherplatz ab. Der Rest muss für den neuen Upload reichen.
+- Accounts mit unbegrenztem Speicherplatz haben immer genug Platz.
 - Lehnt der Hoster die Zugangsdaten ab, deaktiviert Bearcat den Account und versucht den nächsten.
 - Lässt sich der freie Speicherplatz nicht abfragen, überspringt Bearcat den Account für 5 Minuten.
 
-Bearcat speichert den freien Speicherplatz jedes Accounts 5 Minuten lang zwischen.
+Bearcat speichert das Ergebnis der Speicherplatzabfrage für 5 Minuten.
 
 ## Pool voll
 
-Passt kein Account, bleibt der Upload ausstehend und Bearcat erstellt einmal pro Upload eine
-Benachrichtigung **Accountpool voll**. Bearcat prüft den Pool bei jedem Uploaddurchlauf erneut und
-startet den Upload, sobald ein Account genug Platz hat, etwa nachdem du einen Account hinzugefügt oder
-Speicherplatz freigegeben hast.
+Hat kein Account genug Platz, wartet der Upload. Bearcat meldet einmal pro Upload **Accountpool voll**.
+
+Bearcat prüft den Pool bei jedem Uploaddurchlauf erneut. Sobald ein Account genug Platz hat, startet
+der Upload automatisch. Du kannst dafür einen Account hinzufügen oder Speicherplatz freigeben.
 
 ## Reuploads
 
-Ein Reupload bleibt auf dem Account des vorherigen Uploads, wenn dieser Account noch aktiv und Teil des
-Pools ist. Den freien Speicherplatz prüft Bearcat in diesem Fall nicht. Sonst bekommt der Reupload beim
-Start einen Account aus dem Pool.
+Ein Reupload verwendet den bisherigen Account, solange er aktiv und im Pool ist. Bearcat prüft dabei
+den freien Speicherplatz nicht. Andernfalls wählt Bearcat beim Start einen anderen Account aus dem Pool.
 
 ## Parallele Uploads
 
-Das Limit für parallele Uploads gilt pro Hoster, nicht pro Account. Alle Accounts eines Pools teilen es
-sich. Siehe [Parallele Uploads pro Hoster](/Bearcat/de/account-settings/#parallele-uploads-pro-hoster).
+Das Limit für parallele Uploads gilt gemeinsam für alle Accounts desselben Hosters.
+Siehe [Parallele Uploads pro Hoster](/Bearcat/de/account-settings/#parallele-uploads-pro-hoster).
