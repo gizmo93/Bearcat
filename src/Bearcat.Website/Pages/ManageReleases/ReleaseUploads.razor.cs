@@ -5,6 +5,8 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.Localization;
@@ -170,7 +172,8 @@ public partial class ReleaseUploads(
     private async Task CheckOnlineStateNowAsync(ReleaseUploadReadModel upload)
     {
         var checkedNow = await operationRunner.RunAsync(
-            (UploadStateService service) => service.CheckUploadStateNowAsync(upload.UploadId)
+            (UploadOnlineCheckService service) =>
+                service.CheckOnlineStateOfUploadNowAsync(upload.UploadId)
         );
 
         if (checkedNow)
@@ -222,7 +225,7 @@ public partial class ReleaseUploads(
     private async Task CreateManualReuploadAsync(ReleaseUploadReadModel upload)
     {
         await operationRunner.RunAsync(
-            (UploadStateService service) => service.CreateManualReuploadAsync(upload.UploadId)
+            (UploadCreationService service) => service.CreateManualReuploadAsync(upload.UploadId)
         );
         toastService.Success(L["ManualReuploadCreated", upload.UploadId]);
         await RefreshUploadsAsync();

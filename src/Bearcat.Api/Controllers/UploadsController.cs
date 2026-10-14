@@ -4,7 +4,9 @@ using Bearcat.Api.Security;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
+using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +16,9 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/uploads")]
 public class UploadsController(
     IUploadReadRepository uploadReadRepository,
-    UploadStateService uploadStateService
+    UploadStateService uploadStateService,
+    UploadCreationService uploadCreationService,
+    UploadOnlineCheckService uploadOnlineCheckService
 ) : ControllerBase
 {
     private const string GetUploadRouteName = "GetUpload";
@@ -105,7 +109,7 @@ public class UploadsController(
 
         try
         {
-            newUploadId = await uploadStateService.CreateManualReuploadAsync(
+            newUploadId = await uploadCreationService.CreateManualReuploadAsync(
                 uploadId,
                 cancellationToken
             );
@@ -203,7 +207,12 @@ public class UploadsController(
             return NotFound();
         }
 
-        if (!await uploadStateService.CheckUploadStateNowAsync(uploadId, cancellationToken))
+        if (
+            !await uploadOnlineCheckService.CheckOnlineStateOfUploadNowAsync(
+                uploadId,
+                cancellationToken
+            )
+        )
         {
             return ConflictProblem(
                 "The online state can only be checked for uploads with uploaded files."

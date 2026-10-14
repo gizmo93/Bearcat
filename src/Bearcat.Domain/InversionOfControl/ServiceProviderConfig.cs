@@ -74,6 +74,8 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
+using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
@@ -186,6 +188,8 @@ public static class ServiceProviderConfig
             services.AddScoped<MissingFileValidationService>();
             services.AddScoped<UploadConcurrencyService>();
             services.AddScoped<UploadStateService>();
+            services.AddScoped<UploadOnlineCheckService>();
+            services.AddScoped<UploadCreationService>();
             services.AddScoped<QualityGateEvaluator>();
             services.AddScoped<QualityGateService>();
             services.AddScoped<IQualityCheck, FilePatternQualityCheck>();

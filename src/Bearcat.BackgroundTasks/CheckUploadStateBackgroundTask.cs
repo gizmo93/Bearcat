@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageUploads;
+﻿using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -19,9 +20,20 @@ public class CheckUploadStateBackgroundTask(
         CancellationToken stoppingToken
     )
     {
-        var uploadStateService = serviceProvider.GetRequiredService<UploadStateService>();
+        var uploadOnlineCheckService =
+            serviceProvider.GetRequiredService<UploadOnlineCheckService>();
+        var uploadCreationService = serviceProvider.GetRequiredService<UploadCreationService>();
         var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
+        var localNow = timeProvider.GetLocalNow();
 
-        await uploadStateService.CheckUploadStatesAsync(timeProvider.GetLocalNow(), stoppingToken);
+        await uploadOnlineCheckService.CheckOnlineStateOfLeastRecentlyCheckedUploadsAsync(
+            localNow,
+            stoppingToken
+        );
+        await uploadCreationService.CreateMissingInitialUploadsAsync(localNow, stoppingToken);
+        await uploadCreationService.CreateAutomaticReuploadsForOfflineUploadsAsync(
+            localNow,
+            stoppingToken
+        );
     }
 }
