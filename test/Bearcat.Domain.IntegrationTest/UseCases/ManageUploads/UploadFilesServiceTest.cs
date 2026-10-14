@@ -121,6 +121,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             CreateTimeProvider(),
             notificationService,
             credentialsRejectionService,
+            captchaVerificationService,
             new HosterStorageAvailabilityCache(),
             Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
         );
@@ -1680,6 +1681,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                 CreateTimeProvider(),
                 notificationService,
                 credentialsRejectionService,
+                captchaService,
                 new HosterStorageAvailabilityCache(),
                 Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
             ),

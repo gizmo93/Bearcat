@@ -195,6 +195,68 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
             .ShouldBe([(1, "First", true), (2, "Second", false)], ignoreOrder: true);
     }
 
+    [Test]
+    public async Task HasUnresolvedNotificationForUploadAsync_OnlyResolvedOrOtherKindOrOtherUpload_ReturnsTrueOnlyForUnresolvedNotificationOfKindOnUpload()
+    {
+        // Arrange
+        var uploadWithResolvedNotification = await AddUploadAsync(UploadState.Pending);
+        var uploadWithUnresolvedNotification = await AddUploadAsync(UploadState.Pending);
+        DbContext.Notifications.AddRange(
+            CreateNotification(
+                uploadWithResolvedNotification.Id,
+                NotificationKind.HosterAccountPoolFull,
+                resolvedAt: DateTime.UtcNow
+            ),
+            CreateNotification(
+                uploadWithResolvedNotification.Id,
+                NotificationKind.UploadFailed,
+                resolvedAt: null
+            ),
+            CreateNotification(
+                uploadWithUnresolvedNotification.Id,
+                NotificationKind.HosterAccountPoolFull,
+                resolvedAt: null
+            )
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var resultForResolvedNotification =
+            await repository.HasUnresolvedNotificationForUploadAsync(
+                uploadWithResolvedNotification.Id,
+                NotificationKind.HosterAccountPoolFull,
+                CancellationToken.None
+            );
+        var resultForUnresolvedNotification =
+            await repository.HasUnresolvedNotificationForUploadAsync(
+                uploadWithUnresolvedNotification.Id,
+                NotificationKind.HosterAccountPoolFull,
+                CancellationToken.None
+            );
+
+        // Assert
+        resultForResolvedNotification.ShouldBeFalse();
+        resultForUnresolvedNotification.ShouldBeTrue();
+    }
+
+    private static Notification CreateNotification(
+        int uploadId,
+        NotificationKind kind,
+        DateTime? resolvedAt
+    )
+    {
+        return new Notification
+        {
+            UploadId = uploadId,
+            NotificationKind = kind,
+            NotificationSeverity = NotificationSeverity.Warning,
+            Message = kind.ToString(),
+            CreatedAt = DateTime.UtcNow,
+            ResolvedAt = resolvedAt,
+        };
+    }
+
     private async Task<Upload> AddUploadAsync(
         UploadState uploadState,
         bool hosterRegistrationOfUploadConfigIsActive = true,

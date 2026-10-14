@@ -292,8 +292,10 @@ public class UploadFilesService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private static bool HasHosterRegistrationAssigned(Upload upload) =>
-        upload.HosterRegistrationId is not null;
+    private static bool HasHosterRegistrationAssigned(Upload upload)
+    {
+        return upload.HosterRegistrationId is not null;
+    }
 
     private async Task<bool> TryAssignHosterRegistrationFromHosterAccountPoolAsync(
         Upload upload,

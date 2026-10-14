@@ -1444,7 +1444,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateManualReuploadAsync_UploadOfHosterAccountPoolUploadConfig_CreatesReuploadWithoutHosterRegistration()
+    public async Task CreateManualReuploadAsync_UploadOfHosterAccountPoolUploadConfigOnActiveMember_CreatesReuploadOnSameAccount()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
@@ -1464,10 +1464,39 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         DbContext.ChangeTracker.Clear();
         var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
-        var previousUpload = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
 
+        reupload.HosterRegistrationId.ShouldBe(upload.HosterRegistrationId);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadOfHosterAccountPoolUploadConfigOnInactiveMember_CreatesReuploadWithoutHosterRegistration()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true
+        );
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync(u =>
+            u.Id == upload.UploadConfigId
+        );
+        await MoveUploadConfigToHosterAccountPoolAsync(uploadConfig, memberIsActive: false);
+        uploadConfig.HosterAccountPool!.Members.Add(
+            new HosterAccountPoolMember { HosterRegistration = CreateHosterRegistration() }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id != upload.Id);
+
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         reupload.HosterRegistrationId.ShouldBeNull();
-        previousUpload.HosterRegistrationId.ShouldNotBeNull();
     }
 
     [Test]

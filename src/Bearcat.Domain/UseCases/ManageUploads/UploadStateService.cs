@@ -617,7 +617,7 @@ public class UploadStateService(
         var newUpload = new Upload
         {
             UploadConfig = upload.UploadConfig,
-            HosterRegistrationId = DetermineHosterRegistrationIdForReupload(upload),
+            HosterRegistrationId = GetHosterRegistrationIdForReupload(upload),
             CreatedAt = timeProvider.GetLocalNow(),
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
@@ -636,7 +636,7 @@ public class UploadStateService(
         return newUpload;
     }
 
-    private static int? DetermineHosterRegistrationIdForReupload(Upload previousUpload)
+    private static int? GetHosterRegistrationIdForReupload(Upload previousUpload)
     {
         var uploadConfig = previousUpload.UploadConfig;
 
@@ -648,9 +648,7 @@ public class UploadStateService(
         var previousRegistration = previousUpload.HosterRegistration;
 
         var previousRegistrationIsStillUsable =
-            previousRegistration is not null
-            && previousRegistration.IsActive
-            && !previousRegistration.HasUnreadableSecrets
+            previousRegistration is { IsActive: true, HasUnreadableSecrets: false }
             && uploadConfig.HosterAccountPool!.Members.Any(member =>
                 member.HosterRegistrationId == previousRegistration.Id
             );

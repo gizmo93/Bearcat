@@ -19,6 +19,7 @@ public class HosterAccountPoolAccountSelectionService(
     TimeProvider timeProvider,
     INotificationService notificationService,
     HosterCredentialsRejectionService credentialsRejectionService,
+    HosterCaptchaVerificationService captchaVerificationService,
     HosterStorageAvailabilityCache storageAvailabilityCache,
     ILogger<HosterAccountPoolAccountSelectionService> logger
 )
@@ -136,6 +137,16 @@ public class HosterAccountPoolAccountSelectionService(
 
             return null;
         }
+        catch (CaptchaVerificationRequiredException ex)
+        {
+            await captchaVerificationService.MarkRequiredAsync(
+                registration,
+                ex.Message,
+                cancellationToken
+            );
+
+            return null;
+        }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(
@@ -177,13 +188,6 @@ public class HosterAccountPoolAccountSelectionService(
     {
         var requiredSize = FormatBytes(requiredBytes);
 
-        logger.LogInformation(
-            "Upload {UploadId} stays pending because no account of hoster account pool {HosterAccountPool} has enough free storage for {RequiredSize}",
-            upload.Id,
-            hosterAccountPool.Name,
-            requiredSize
-        );
-
         var hasUnresolvedNotification = await repository.HasUnresolvedNotificationForUploadAsync(
             upload.Id,
             NotificationKind.HosterAccountPoolFull,
@@ -192,8 +196,22 @@ public class HosterAccountPoolAccountSelectionService(
 
         if (hasUnresolvedNotification)
         {
+            logger.LogDebug(
+                "Upload {UploadId} stays pending because no account of hoster account pool {HosterAccountPool} has enough free storage for {RequiredSize}",
+                upload.Id,
+                hosterAccountPool.Name,
+                requiredSize
+            );
+
             return;
         }
+
+        logger.LogInformation(
+            "Upload {UploadId} stays pending because no account of hoster account pool {HosterAccountPool} has enough free storage for {RequiredSize}",
+            upload.Id,
+            hosterAccountPool.Name,
+            requiredSize
+        );
 
         notificationService.Create(
             kind: NotificationKind.HosterAccountPoolFull,
@@ -203,6 +221,8 @@ public class HosterAccountPoolAccountSelectionService(
         );
     }
 
-    private static string FormatBytes(long bytes) =>
-        bytes.Bytes().Humanize("0.0", CultureInfo.InvariantCulture);
+    private static string FormatBytes(long bytes)
+    {
+        return bytes.Bytes().Humanize("0.0", CultureInfo.InvariantCulture);
+    }
 }
