@@ -40,6 +40,17 @@ public sealed class UploadExecutionContext(
 
     public CancellationToken CancellationToken => CancellationTokenSource.Token;
 
+    public long GetBytesOfFilesNotYetUploaded()
+    {
+        var processedArchiveFileIds = Upload
+            .UploadedFiles.Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+
+        return PlannedFiles
+            .Where(file => !processedArchiveFileIds.Contains(file.FileId))
+            .Sum(file => file.SizeBytes!.Value);
+    }
+
     public void RequestCancellation()
     {
         CancellationRequested = true;

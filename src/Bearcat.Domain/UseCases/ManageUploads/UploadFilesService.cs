@@ -1,14 +1,9 @@
-using System.Diagnostics;
-using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster;
-using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
-using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -25,18 +20,13 @@ public class UploadFilesService(
     UploadCancellationService uploadCancellationService,
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
-    HosterCredentialsRejectionService credentialsRejectionService,
-    HosterAccountPoolAccountSelectionService hosterAccountPoolAccountSelectionService,
+    UploadPreparationService uploadPreparationService,
     ITransferProgressTracker progressTracker
 )
 {
     public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
 
     public TimeSpan NewPendingUploadsPollDelay { get; set; } = TimeSpan.FromSeconds(30);
-
-    public int FolderCreationRetryAttempts { get; set; } = 3;
-
-    public TimeSpan FolderCreationRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     public TimeSpan FileUploadTimeout
     {
@@ -48,9 +38,9 @@ public class UploadFilesService(
     {
         try
         {
-            await CleanupOrphanedUploadsAsync(cancellationToken);
-            await FinalizeUnprocessedCancellationRequestsAsync(cancellationToken);
-            await ProcessPendingUploadsAsync(cancellationToken);
+            await ResetOrphanedUploadsToPendingAsync(cancellationToken);
+            await CancelUploadsWithUnprocessedCancellationRequestAsync(cancellationToken);
+            await UploadPendingUploadsAsync(cancellationToken);
         }
         finally
         {
@@ -58,11 +48,14 @@ public class UploadFilesService(
         }
     }
 
-    private async Task ProcessPendingUploadsAsync(CancellationToken cancellationToken)
+    private async Task UploadPendingUploadsAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting processing pending uploads");
 
-        var pendingUploads = await GetPendingUploadsAsync(cancellationToken: cancellationToken);
+        var pendingUploads = await GetPendingUploadsWithoutMissingFilesAsync(
+            uploadIdsToExclude: new HashSet<int>(),
+            cancellationToken: cancellationToken
+        );
 
         if (pendingUploads.Count == 0)
         {
@@ -70,113 +63,91 @@ public class UploadFilesService(
             return;
         }
 
-        var hosters = hosterFactory.GetHostersByName().ToDictionary();
+        var hostersByName = hosterFactory.GetHostersByName();
+        var uploadsInProgress = new UploadsInProgress(progressTracker);
 
-        await concurrencyService.EnsureHosterSemaphoresAsync(
-            pendingUploads.Select(u => u.GetHosterClassName()).Distinct().ToList(),
-            hostersByName: hosters,
-            cancellationToken: cancellationToken
-        );
-
-        var uploadContexts = new Dictionary<int, UploadExecutionContext>();
-        var trackedUploadIds = new HashSet<int>();
-        var runningUploadTasks = new List<Task>();
-
-        var channel = Channel.CreateUnbounded<FileUploadCompleted>(
-            options: new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }
-        );
-
-        await AddUploadContextsAsync(
+        await PrepareAndStartUploadsAsync(
             uploads: pendingUploads,
-            hosters: hosters,
-            uploadContexts: uploadContexts,
-            trackedUploadIds: trackedUploadIds,
+            hostersByName: hostersByName,
+            uploadsInProgress: uploadsInProgress,
             cancellationToken: cancellationToken
         );
 
         var nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
 
-        while (uploadContexts.Count > 0 || runningUploadTasks.Count > 0)
+        while (uploadsInProgress.HasUploadsOrRunningFileUploads)
         {
-            await HandleCancellationRequestsAsync(
-                uploadContexts: uploadContexts,
-                cancellationToken: cancellationToken
+            await ApplyCancellationRequestsAsync(uploadsInProgress, cancellationToken);
+
+            await RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
+                uploadsInProgress,
+                cancellationToken
             );
 
-            await HandleCompletedUploadTasksAsync(
-                runningUploadTasks: runningUploadTasks,
-                cancellationToken: cancellationToken
+            await ApplyAvailableFileUploadResultsAsync(uploadsInProgress, cancellationToken);
+
+            await StartFileUploadsWithinConcurrencyLimitsAsync(
+                uploadsInProgress,
+                cancellationToken
             );
 
-            await HandleAvailableFileUploadResultsAsync(
-                reader: channel.Reader,
-                uploadContexts: uploadContexts,
-                cancellationToken: cancellationToken
-            );
-
-            await ScheduleAvailableFileUploadsAsync(
-                uploadContexts: uploadContexts,
-                runningUploadTasks: runningUploadTasks,
-                resultWriter: channel.Writer,
-                cancellationToken: cancellationToken
-            );
-
-            if (uploadContexts.Count == 0 && runningUploadTasks.Count == 0)
+            if (!uploadsInProgress.HasUploadsOrRunningFileUploads)
             {
                 break;
             }
 
             if (DateTimeOffset.UtcNow >= nextPendingUploadCheck)
             {
-                var newPendingUploads = await GetPendingUploadsAsync(
-                    trackedUploadIds,
-                    cancellationToken
-                );
-
-                await concurrencyService.EnsureHosterSemaphoresAsync(
-                    newPendingUploads.Select(u => u.GetHosterClassName()).Distinct().ToList(),
-                    hostersByName: hosters,
+                await AddNewPendingUploadsAsync(
+                    hostersByName: hostersByName,
+                    uploadsInProgress: uploadsInProgress,
                     cancellationToken: cancellationToken
                 );
-
-                await AddUploadContextsAsync(
-                    uploads: newPendingUploads,
-                    hosters: hosters,
-                    uploadContexts: uploadContexts,
-                    trackedUploadIds: trackedUploadIds,
-                    cancellationToken: cancellationToken
-                );
-
-                if (newPendingUploads.Count > 0)
-                {
-                    logger.LogInformation(
-                        "Added {NewUploadCount} new uploads to the upload queue",
-                        newPendingUploads.Count
-                    );
-                }
 
                 nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
             }
 
-            await DelayQueuePollAsync(cancellationToken);
+            await WaitBeforeNextQueuePollAsync(cancellationToken);
         }
 
-        channel.Writer.Complete();
+        uploadsInProgress.CompletedFileUploads.Writer.Complete();
 
-        await HandleAvailableFileUploadResultsAsync(
-            reader: channel.Reader,
-            uploadContexts: uploadContexts,
-            cancellationToken: cancellationToken
-        );
+        await ApplyAvailableFileUploadResultsAsync(uploadsInProgress, cancellationToken);
 
         logger.LogInformation("Finished processing pending uploads");
     }
 
-    private async Task AddUploadContextsAsync(
+    private async Task AddNewPendingUploadsAsync(
+        IReadOnlyDictionary<string, IHoster> hostersByName,
+        UploadsInProgress uploadsInProgress,
+        CancellationToken cancellationToken
+    )
+    {
+        var newPendingUploads = await GetPendingUploadsWithoutMissingFilesAsync(
+            uploadIdsToExclude: uploadsInProgress.PickedUpUploadIds,
+            cancellationToken: cancellationToken
+        );
+
+        await PrepareAndStartUploadsAsync(
+            uploads: newPendingUploads,
+            hostersByName: hostersByName,
+            uploadsInProgress: uploadsInProgress,
+            cancellationToken: cancellationToken
+        );
+
+        if (newPendingUploads.Count > 0)
+        {
+            logger.LogInformation(
+                "Added {NewUploadCount} new uploads to the upload queue",
+                newPendingUploads.Count
+            );
+        }
+    }
+
+    private async Task PrepareAndStartUploadsAsync(
         IReadOnlyList<Upload> uploads,
-        Dictionary<string, IHoster> hosters,
-        Dictionary<int, UploadExecutionContext> uploadContexts,
-        HashSet<int> trackedUploadIds,
+        IReadOnlyDictionary<string, IHoster> hostersByName,
+        UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
     )
     {
@@ -185,107 +156,32 @@ public class UploadFilesService(
             return;
         }
 
+        await concurrencyService.EnsureHosterSemaphoresAsync(
+            uploads.Select(u => u.GetHosterClassName()).Distinct().ToList(),
+            hostersByName: hostersByName,
+            cancellationToken: cancellationToken
+        );
+
         var hosterConfigsByRegistrationId = await repository.GetConfigByHosterRegistrationId(
             cancellationToken
         );
 
         foreach (var upload in uploads)
         {
-            if (upload.ArchiveId is null)
-            {
-                logger.LogInformation(
-                    "Pending upload {UploadId} has no archive assigned, moving it back to waiting for archive",
-                    upload.Id
-                );
-
-                upload.UploadState = UploadState.WaitingForArchive;
-                continue;
-            }
-
-            if (IsHosterAccountPoolUploadOnUnusableAccount(upload))
-            {
-                logger.LogInformation(
-                    "Account {HosterRegistration} assigned to upload {UploadId} is no longer usable for uploads, selecting another account of hoster account pool {HosterAccountPool}",
-                    upload.HosterRegistration!.Name,
-                    upload.Id,
-                    upload.UploadConfig.HosterAccountPool!.Name
-                );
-
-                ResetHosterRegistrationAssignment(upload);
-            }
-
-            if (
-                !HasHosterRegistrationAssigned(upload)
-                && !await TryAssignHosterRegistrationFromHosterAccountPoolAsync(
-                    upload: upload,
-                    hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
-                    uploadContexts: uploadContexts,
-                    cancellationToken: cancellationToken
-                )
-            )
-            {
-                continue;
-            }
-
-            var hosterRegistration = upload.HosterRegistration!;
-            var hosterClassName = hosterRegistration.HosterClassName;
-
-            if (
-                !hosterRegistration.IsActive
-                || !concurrencyService.HasHosterSemaphore(hosterClassName)
-            )
-            {
-                logger.LogInformation(
-                    "Skipping pending upload {UploadId} because its hoster registration {HosterRegistration} is inactive or its parallel upload limit could not be determined",
-                    upload.Id,
-                    hosterRegistration.Name
-                );
-
-                continue;
-            }
-
-            trackedUploadIds.Add(upload.Id);
-
-            var hoster = hosters[hosterClassName];
-            var hosterConfig = hoster.DeserializeHosterConfig(
-                hosterConfigsByRegistrationId[hosterRegistration.Id]
+            var context = await uploadPreparationService.PrepareUploadForUploadingAsync(
+                upload: upload,
+                hostersByName: hostersByName,
+                hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
+                uploadsInProgress: uploadsInProgress,
+                cancellationToken: cancellationToken
             );
 
-            UploadExecutionContext context;
-
-            try
+            if (context is null)
             {
-                context = await CreateUploadContextAsync(
-                    upload: upload,
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
-                    hosterClassName: hosterClassName,
-                    cancellationToken: cancellationToken
-                );
-            }
-            catch (HosterCredentialsRejectedException ex)
-            {
-                credentialsRejectionService.DeactivateAndNotify(upload, ex.Message);
-
-                if (IsHosterAccountPoolUploadWithoutUploadedFiles(upload))
-                {
-                    ResetHosterRegistrationAssignment(upload);
-                }
-
-                trackedUploadIds.Remove(upload.Id);
                 continue;
             }
-            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-            {
-                logger.LogError(
-                    ex,
-                    "Failed to prepare upload {UploadId}, leaving it pending and skipping it for now",
-                    upload.Id
-                );
 
-                trackedUploadIds.Remove(upload.Id);
-                continue;
-            }
+            uploadsInProgress.PickedUpUploadIds.Add(upload.Id);
 
             if (context.TotalFileCount == 0)
             {
@@ -298,319 +194,27 @@ public class UploadFilesService(
                 continue;
             }
 
-            upload.UploadState = UploadState.Uploading;
-            uploadContexts[upload.Id] = context;
-            progressTracker.StartTracking(
-                new TransferIdentifier(TransferType.Upload, upload.Id),
-                context.PlannedFiles
-            );
+            uploadsInProgress.StartUploading(context);
         }
 
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private static bool HasHosterRegistrationAssigned(Upload upload)
-    {
-        return upload.HosterRegistrationId is not null;
-    }
-
-    private static bool IsHosterAccountPoolUploadOnUnusableAccount(Upload upload)
-    {
-        return HasHosterRegistrationAssigned(upload)
-            && IsHosterAccountPoolUploadWithoutUploadedFiles(upload)
-            && !upload.HosterRegistration!.IsUsableForUploads();
-    }
-
-    private static bool IsHosterAccountPoolUploadWithoutUploadedFiles(Upload upload)
-    {
-        return upload.UploadConfig.HosterAccountPoolId is not null
-            && upload.UploadedFiles.Count == 0;
-    }
-
-    private static void ResetHosterRegistrationAssignment(Upload upload)
-    {
-        upload.HosterRegistrationId = null;
-        upload.HosterRegistration = null;
-        upload.HosterFolderId = null;
-    }
-
-    private async Task<bool> TryAssignHosterRegistrationFromHosterAccountPoolAsync(
-        Upload upload,
-        IReadOnlyDictionary<int, string> hosterConfigsByRegistrationId,
-        Dictionary<int, UploadExecutionContext> uploadContexts,
+    private async Task StartFileUploadsWithinConcurrencyLimitsAsync(
+        UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
     )
     {
-        var hosterRegistration =
-            await hosterAccountPoolAccountSelectionService.SelectHosterRegistrationAsync(
-                upload: upload,
-                requiredBytes: upload
-                    .GetArchiveFilesWithoutUploadedFile()
-                    .Sum(archiveFile =>
-                        FileSizes.GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName)
-                    ),
-                hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
-                remainingBytesOfRunningUploadsByHosterRegistrationId: GetRemainingBytesOfRunningUploadsByHosterRegistrationId(
-                    uploadContexts
-                ),
-                cancellationToken: cancellationToken
-            );
-
-        if (hosterRegistration is null)
-        {
-            return false;
-        }
-
-        upload.HosterRegistrationId = hosterRegistration.Id;
-        upload.HosterRegistration = hosterRegistration;
-
-        return true;
-    }
-
-    private static Dictionary<int, long> GetRemainingBytesOfRunningUploadsByHosterRegistrationId(
-        Dictionary<int, UploadExecutionContext> uploadContexts
-    ) =>
-        uploadContexts
-            .Values.GroupBy(context => context.Upload.HosterRegistrationId!.Value)
-            .ToDictionary(
-                contextsOfRegistration => contextsOfRegistration.Key,
-                contextsOfRegistration => contextsOfRegistration.Sum(GetRemainingBytes)
-            );
-
-    private static long GetRemainingBytes(UploadExecutionContext context)
-    {
-        var processedArchiveFileIds = context
-            .Upload.UploadedFiles.Select(uf => uf.ArchiveFileId)
-            .ToHashSet();
-
-        return context
-            .PlannedFiles.Where(file => !processedArchiveFileIds.Contains(file.FileId))
-            .Sum(file => file.SizeBytes!.Value);
-    }
-
-    private async Task<UploadExecutionContext> CreateUploadContextAsync(
-        Upload upload,
-        IHoster hoster,
-        IHosterConfig hosterConfig,
-        string hosterClassName,
-        CancellationToken cancellationToken
-    )
-    {
-        var hosterRegistration = upload.HosterRegistration!;
-
-        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(hosterRegistration);
-
-        var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
-        var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
-
-        var successfullyUploadedArchiveFileIds = upload
-            .UploadedFiles.Where(uf => uf.ErrorMessages.Count == 0)
-            .Select(uf => uf.ArchiveFileId)
-            .ToHashSet();
-
-        var archiveFilesToUpload = upload.GetArchiveFilesWithoutUploadedFile();
-
-        var plannedFiles = upload
-            .Archive!.ArchiveFiles.Select(archiveFile => new TransferFile(
-                FileId: archiveFile.Id,
-                FileName: Path.GetFileName(archiveFile.FullFileName),
-                SourceName: hosterRegistration.Name,
-                SizeBytes: FileSizes.GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName),
-                IsAlreadyTransferred: successfullyUploadedArchiveFileIds.Contains(archiveFile.Id)
-            ))
-            .ToList();
-
-        var folderId = await CreateUploadFolderIdAsync(
-            upload: upload,
-            hoster: hoster,
-            hosterConfig: hosterConfig,
-            hasFilesToUpload: archiveFilesToUpload.Count > 0,
-            cancellationToken: cancellationToken
-        );
-
-        if (folderId is not null)
-        {
-            upload.HosterFolderId = folderId;
-
-            await MoveFilesFromOtherFoldersAsync(
-                upload: upload,
-                hoster: hoster,
-                hosterConfig: hosterConfig,
-                folderId: folderId,
-                cancellationToken: cancellationToken
-            );
-        }
-
-        var context = new UploadExecutionContext(
-            upload: upload,
-            totalFileCount: upload.Archive.ArchiveFiles.Count,
-            successfulFileCount: successfulFileCount,
-            failedFileCount: failedFileCount,
-            plannedFiles: plannedFiles,
-            cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken
+        foreach (
+            var context in GetUploadsWithPendingFilesRunningUploadsFirstThenOldest(
+                uploadsInProgress
             )
-        );
-
-        foreach (var archiveFile in archiveFilesToUpload)
-        {
-            context.PendingFiles.Enqueue(
-                new FileToUpload(
-                    UploadId: upload.Id,
-                    ArchiveFileId: archiveFile.Id,
-                    FullFileName: archiveFile.FullFileName,
-                    Md5Hash: archiveFile.Md5Hash,
-                    FolderId: folderId,
-                    HosterClassName: hosterClassName,
-                    Hoster: hoster,
-                    HosterConfig: hosterConfig
-                )
-            );
-        }
-
-        return context;
-    }
-
-    private async Task MoveFilesFromOtherFoldersAsync(
-        Upload upload,
-        IHoster hoster,
-        IHosterConfig hosterConfig,
-        string folderId,
-        CancellationToken cancellationToken
-    )
-    {
-        if (hoster is not IHosterWithFolders folderHoster)
-        {
-            return;
-        }
-
-        var filesToMove = upload
-            .UploadedFiles.Where(uf => uf.HasHosterFileLink() && uf.HosterFolderId != folderId)
-            .ToList();
-
-        foreach (var file in filesToMove)
-        {
-            try
-            {
-                await folderHoster.MoveFileToFolderAsync(
-                    fileUrl: file.HosterFileLink,
-                    externalId: file.ExternalId,
-                    folderId: folderId,
-                    hosterConfig: hosterConfig,
-                    cancellationToken: cancellationToken
-                );
-
-                file.HosterFolderId = folderId;
-
-                logger.LogInformation(
-                    "Moved carried-over file {FileLink} to folder {FolderId} for upload {UploadId}",
-                    file.HosterFileLink,
-                    folderId,
-                    upload.Id
-                );
-            }
-            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
-            {
-                logger.LogWarning(
-                    ex,
-                    "Failed to move file {FileLink} to folder {FolderId} for upload {UploadId}, leaving it in its current folder",
-                    file.HosterFileLink,
-                    folderId,
-                    upload.Id
-                );
-            }
-        }
-    }
-
-    private async Task<string?> CreateUploadFolderIdAsync(
-        Upload upload,
-        IHoster hoster,
-        IHosterConfig hosterConfig,
-        bool hasFilesToUpload,
-        CancellationToken cancellationToken
-    )
-    {
-        if (!hasFilesToUpload || hoster is not IHosterWithFolders folderHoster)
-        {
-            return null;
-        }
-
-        var folderName = $"{upload.UploadConfig.Release.Name}_UploadId_{upload.Id}";
-
-        return await CreateFolderWithRetryAsync(
-            folderHoster: folderHoster,
-            folderName: folderName,
-            hosterConfig: hosterConfig,
-            uploadId: upload.Id,
-            cancellationToken: cancellationToken
-        );
-    }
-
-    private async Task<string> CreateFolderWithRetryAsync(
-        IHosterWithFolders folderHoster,
-        string folderName,
-        IHosterConfig hosterConfig,
-        int uploadId,
-        CancellationToken cancellationToken
-    )
-    {
-        foreach (var attempt in Enumerable.Range(1, FolderCreationRetryAttempts))
-        {
-            try
-            {
-                return await folderHoster.CreateFolderAsync(
-                    folderName,
-                    hosterConfig,
-                    cancellationToken
-                );
-            }
-            catch (Exception ex)
-                when (attempt < FolderCreationRetryAttempts
-                    && ex is not HosterCredentialsRejectedException
-                )
-            {
-                logger.LogWarning(
-                    ex,
-                    "Failed to create folder {FolderName} for upload {UploadId} on attempt {Attempt}/{MaxAttempts}, retrying in {RetryDelay}",
-                    folderName,
-                    uploadId,
-                    attempt,
-                    FolderCreationRetryAttempts,
-                    FolderCreationRetryDelay
-                );
-
-                await Task.Delay(FolderCreationRetryDelay, cancellationToken);
-            }
-        }
-
-        throw new UnreachableException();
-    }
-
-    private async Task ScheduleAvailableFileUploadsAsync(
-        Dictionary<int, UploadExecutionContext> uploadContexts,
-        List<Task> runningUploadTasks,
-        ChannelWriter<FileUploadCompleted> resultWriter,
-        CancellationToken cancellationToken
-    )
-    {
-        // Priority: fully schedule one upload's files (up to its hoster limit) before
-        // moving on to the next upload. Already-running uploads come first, then oldest
-        // by id, so the order is deterministic instead of depending on dictionary layout.
-        var prioritizedContexts = uploadContexts
-            .Values.Where(context =>
-                !context.CancellationRequested && context.PendingFiles.Count > 0
-            )
-            .OrderByDescending(context => context.RunningFileCount > 0)
-            .ThenBy(context => context.UploadId)
-            .ToList();
-
-        foreach (var context in prioritizedContexts)
+        )
         {
             while (context.PendingFiles.Count > 0)
             {
                 if (!await concurrencyService.TryAcquireGlobalSlotAsync(cancellationToken))
                 {
-                    // Global limit of parallel uploads reached - nothing more to schedule.
                     return;
                 }
 
@@ -624,8 +228,6 @@ public class UploadFilesService(
 
                 if (!hosterSlotAcquired)
                 {
-                    // This upload's hoster is at its (smaller) limit. Free the global slot
-                    // and let the remaining capacity be used by the next upload.
                     concurrencyService.ReleaseGlobalSlot();
                     break;
                 }
@@ -633,13 +235,13 @@ public class UploadFilesService(
                 context.PendingFiles.Dequeue();
                 context.RunningFileCount++;
 
-                runningUploadTasks.Add(
+                uploadsInProgress.RunningFileUploadTasks.Add(
                     fileUploadExecutionService.UploadFileAsync(
                         fileToUpload: fileToUpload,
                         context: context,
                         concurrencyService: concurrencyService,
                         hosterSemaphore: hosterSemaphore!,
-                        resultWriter: resultWriter,
+                        resultWriter: uploadsInProgress.CompletedFileUploads.Writer,
                         processCancellationToken: cancellationToken
                     )
                 );
@@ -647,7 +249,20 @@ public class UploadFilesService(
         }
     }
 
-    private async Task DelayQueuePollAsync(CancellationToken cancellationToken)
+    private static List<UploadExecutionContext> GetUploadsWithPendingFilesRunningUploadsFirstThenOldest(
+        UploadsInProgress uploadsInProgress
+    )
+    {
+        return uploadsInProgress
+            .ContextsByUploadId.Values.Where(context =>
+                !context.CancellationRequested && context.PendingFiles.Count > 0
+            )
+            .OrderByDescending(context => context.RunningFileCount > 0)
+            .ThenBy(context => context.UploadId)
+            .ToList();
+    }
+
+    private async Task WaitBeforeNextQueuePollAsync(CancellationToken cancellationToken)
     {
         if (UploadQueuePollDelay == TimeSpan.Zero)
         {
@@ -658,13 +273,13 @@ public class UploadFilesService(
         await Task.Delay(UploadQueuePollDelay, cancellationToken);
     }
 
-    private async Task<List<Upload>> GetPendingUploadsAsync(
-        HashSet<int>? excludeUploadIds = null,
-        CancellationToken cancellationToken = default
+    private async Task<List<Upload>> GetPendingUploadsWithoutMissingFilesAsync(
+        IReadOnlySet<int> uploadIdsToExclude,
+        CancellationToken cancellationToken
     )
     {
         var pendingUploads = await repository.GetPendingUploadsAsync(
-            uploadIdsToExclude: excludeUploadIds ?? [],
+            uploadIdsToExclude: uploadIdsToExclude,
             cancellationToken: cancellationToken
         );
 
@@ -676,36 +291,35 @@ public class UploadFilesService(
         return pendingUploads.Except(uploadsToSkip).ToList();
     }
 
-    private async Task HandleAvailableFileUploadResultsAsync(
-        ChannelReader<FileUploadCompleted> reader,
-        Dictionary<int, UploadExecutionContext> uploadContexts,
+    private async Task ApplyAvailableFileUploadResultsAsync(
+        UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
     )
     {
-        while (reader.TryRead(out var result))
+        while (uploadsInProgress.CompletedFileUploads.Reader.TryRead(out var result))
         {
-            await HandleFileUploadResultAsync(
+            await ApplyFileUploadResultAsync(
                 result: result,
-                uploadContexts: uploadContexts,
+                uploadsInProgress: uploadsInProgress,
                 cancellationToken: cancellationToken
             );
         }
     }
 
-    private async Task HandleFileUploadResultAsync(
+    private async Task ApplyFileUploadResultAsync(
         FileUploadCompleted result,
-        Dictionary<int, UploadExecutionContext> uploadContexts,
+        UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
     )
     {
-        if (!uploadContexts.TryGetValue(result.UploadId, out var context))
+        if (!uploadsInProgress.ContextsByUploadId.TryGetValue(result.UploadId, out var context))
         {
             return;
         }
 
         context.RunningFileCount--;
 
-        result = await ApplyCancellationRequestToResultAsync(
+        result = await MarkResultAsCanceledWhenCancellationWasRequestedAsync(
             result: result,
             context: context,
             cancellationToken: cancellationToken
@@ -715,21 +329,18 @@ public class UploadFilesService(
 
         if (!result.WasCanceled)
         {
-            ApplyFileUploadResult(context, result);
+            AddUploadedFileAndCountResult(context, result);
         }
 
         if (finalizationService.TryFinalizeUpload(context))
         {
-            uploadContexts.Remove(context.UploadId);
-            progressTracker.StopTracking(
-                new TransferIdentifier(TransferType.Upload, context.UploadId)
-            );
+            uploadsInProgress.RemoveFinishedUpload(context.UploadId);
         }
 
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<FileUploadCompleted> ApplyCancellationRequestToResultAsync(
+    private async Task<FileUploadCompleted> MarkResultAsCanceledWhenCancellationWasRequestedAsync(
         FileUploadCompleted result,
         UploadExecutionContext context,
         CancellationToken cancellationToken
@@ -769,7 +380,10 @@ public class UploadFilesService(
         );
     }
 
-    private void ApplyFileUploadResult(UploadExecutionContext context, FileUploadCompleted result)
+    private void AddUploadedFileAndCountResult(
+        UploadExecutionContext context,
+        FileUploadCompleted result
+    )
     {
         var archiveFile = context.Upload.Archive!.ArchiveFiles.Single(f =>
             f.Id == result.ArchiveFileId
@@ -803,16 +417,18 @@ public class UploadFilesService(
         }
     }
 
-    private async Task HandleCompletedUploadTasksAsync(
-        List<Task> runningUploadTasks,
+    private async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
+        UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
     )
     {
-        var completedTasks = runningUploadTasks.Where(t => t.IsCompleted).ToList();
+        var completedTasks = uploadsInProgress
+            .RunningFileUploadTasks.Where(t => t.IsCompleted)
+            .ToList();
 
         foreach (var task in completedTasks)
         {
-            runningUploadTasks.Remove(task);
+            uploadsInProgress.RunningFileUploadTasks.Remove(task);
 
             try
             {
@@ -829,8 +445,8 @@ public class UploadFilesService(
         }
     }
 
-    private async Task HandleCancellationRequestsAsync(
-        Dictionary<int, UploadExecutionContext> uploadContexts,
+    private async Task ApplyCancellationRequestsAsync(
+        UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
     )
     {
@@ -841,7 +457,7 @@ public class UploadFilesService(
 
         foreach (var uploadId in cancellationRequestedUploadIds)
         {
-            if (uploadContexts.TryGetValue(uploadId, out var context))
+            if (uploadsInProgress.ContextsByUploadId.TryGetValue(uploadId, out var context))
             {
                 if (!context.CancellationRequested)
                 {
@@ -851,10 +467,7 @@ public class UploadFilesService(
 
                 if (finalizationService.TryFinalizeUpload(context))
                 {
-                    uploadContexts.Remove(uploadId);
-                    progressTracker.StopTracking(
-                        new TransferIdentifier(TransferType.Upload, uploadId)
-                    );
+                    uploadsInProgress.RemoveFinishedUpload(uploadId);
                     hasChanges = true;
                 }
 
@@ -873,7 +486,7 @@ public class UploadFilesService(
         }
     }
 
-    private async Task CleanupOrphanedUploadsAsync(CancellationToken cancellationToken)
+    private async Task ResetOrphanedUploadsToPendingAsync(CancellationToken cancellationToken)
     {
         var orphanedUploads = await repository.GetOrphanedUploadsAsync(cancellationToken);
 
@@ -887,7 +500,7 @@ public class UploadFilesService(
         repository.ClearChangeTracker();
     }
 
-    private async Task FinalizeUnprocessedCancellationRequestsAsync(
+    private async Task CancelUploadsWithUnprocessedCancellationRequestAsync(
         CancellationToken cancellationToken
     )
     {

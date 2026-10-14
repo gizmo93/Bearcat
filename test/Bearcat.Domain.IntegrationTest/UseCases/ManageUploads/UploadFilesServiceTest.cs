@@ -14,6 +14,7 @@ using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -74,78 +75,13 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             .Setup(f => f.GetHostersByName())
             .Returns(new Dictionary<string, IHoster> { [HosterClassName] = hosterMock.Object });
 
-        var notificationService = new NotificationService(
-            repository: new NotificationRepository(DbContext),
-            timeProvider: CreateTimeProvider(),
-            configurationProvider: CreateNotificationConfigurationProvider()
-        );
-
         var uploadFilesRepository = new UploadFilesRepository(
             DbContext,
             DbContext,
             NoOpSecretProtector.Instance
         );
-        var captchaVerificationService = new HosterCaptchaVerificationService(notificationService);
-        var credentialsRejectionService = new HosterCredentialsRejectionService(
-            notificationService
-        );
-        var uploadCancellationService = new UploadCancellationService(notificationService);
-        var finalizationService = new UploadFinalizationService(
-            CreateTimeProvider(),
-            Mock.Of<ILogger<UploadFinalizationService>>(),
-            notificationService,
-            uploadCancellationService
-        );
-        var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
-        var fileUploadExecutionService = new FileUploadExecutionService(
-            Mock.Of<ILogger<FileUploadExecutionService>>(),
-            captchaVerificationService,
-            credentialsRejectionService,
-            progressTracker,
-            new TransferSpeedLimitService(new DefaultConfigurationProvider())
-        );
-        var missingFileValidationService = new MissingFileValidationService(
-            uploadFilesRepository,
-            new FileSystemService(),
-            Mock.Of<ILogger<MissingFileValidationService>>(),
-            notificationService
-        );
-        var concurrencyService = new UploadConcurrencyService(
-            uploadFilesRepository,
-            new DefaultConfigurationProvider(),
-            credentialsRejectionService,
-            Mock.Of<ILogger<UploadConcurrencyService>>()
-        );
 
-        var hosterAccountPoolAccountSelectionService = new HosterAccountPoolAccountSelectionService(
-            uploadFilesRepository,
-            hosterFactoryMock.Object,
-            CreateTimeProvider(),
-            notificationService,
-            credentialsRejectionService,
-            captchaVerificationService,
-            new HosterStorageAvailabilityCache(),
-            Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
-        );
-
-        service = new UploadFilesService(
-            uploadFilesRepository,
-            hosterFactoryMock.Object,
-            CreateTimeProvider(),
-            Mock.Of<ILogger<UploadFilesService>>(),
-            missingFileValidationService,
-            finalizationService,
-            uploadCancellationService,
-            fileUploadExecutionService,
-            concurrencyService,
-            credentialsRejectionService,
-            hosterAccountPoolAccountSelectionService,
-            progressTracker
-        )
-        {
-            UploadQueuePollDelay = TimeSpan.Zero,
-            NewPendingUploadsPollDelay = TimeSpan.Zero,
-        };
+        service = CreateUploadFilesService(uploadFilesRepository);
     }
 
     [TearDown]
@@ -1591,50 +1527,50 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task HandleCompletedUploadTasksAsync_WorkerFails_LogsAndRemovesTask()
+    public async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync_WorkerFails_LogsAndRemovesTask()
     {
         // Arrange
-        var runningUploadTasks = new List<Task>
-        {
-            Task.FromException(new InvalidOperationException("Worker failed")),
-        };
+        var uploadsInProgress = CreateUploadsInProgress();
+        uploadsInProgress.RunningFileUploadTasks.Add(
+            Task.FromException(new InvalidOperationException("Worker failed"))
+        );
 
         // Act
         await InvokePrivateTaskAsync(
             service,
-            "HandleCompletedUploadTasksAsync",
-            runningUploadTasks,
+            "RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync",
+            uploadsInProgress,
             CancellationToken.None
         );
 
         // Assert
-        runningUploadTasks.ShouldBeEmpty();
+        uploadsInProgress.RunningFileUploadTasks.ShouldBeEmpty();
     }
 
     [Test]
-    public async Task HandleCompletedUploadTasksAsync_ProcessCancellationWasRequested_RethrowsCancellation()
+    public async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync_ProcessCancellationWasRequested_RethrowsCancellation()
     {
         // Arrange
         using var cancellationTokenSource = new CancellationTokenSource();
         await cancellationTokenSource.CancelAsync();
-        var runningUploadTasks = new List<Task>
-        {
-            Task.FromCanceled(cancellationTokenSource.Token),
-        };
+        var uploadsInProgress = CreateUploadsInProgress();
+        uploadsInProgress.RunningFileUploadTasks.Add(
+            Task.FromCanceled(cancellationTokenSource.Token)
+        );
 
         // Act / Assert
         await Should.ThrowAsync<OperationCanceledException>(async () =>
             await InvokePrivateTaskAsync(
                 service,
-                "HandleCompletedUploadTasksAsync",
-                runningUploadTasks,
+                "RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync",
+                uploadsInProgress,
                 cancellationTokenSource.Token
             )
         );
     }
 
     [Test]
-    public async Task HandleCancellationRequestsAsync_ContextHasNoOpenWork_CancelsAndRemovesContext()
+    public async Task ApplyCancellationRequestsAsync_ContextHasNoOpenWork_CancelsAndRemovesContext()
     {
         // Arrange
         var upload = await AddUploadAsync(UploadState.CancellationRequested, []);
@@ -1651,30 +1587,28 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             plannedFiles: [],
             CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None)
         );
-        var uploadContexts = new Dictionary<int, UploadExecutionContext>
-        {
-            [trackedUpload.Id] = context,
-        };
+        var uploadsInProgress = CreateUploadsInProgress();
+        uploadsInProgress.StartUploading(context);
 
         // Act
         await InvokePrivateTaskAsync(
             service,
-            "HandleCancellationRequestsAsync",
-            uploadContexts,
+            "ApplyCancellationRequestsAsync",
+            uploadsInProgress,
             CancellationToken.None
         );
 
         // Assert
-        uploadContexts.ShouldBeEmpty();
+        uploadsInProgress.ContextsByUploadId.ShouldBeEmpty();
         trackedUpload.UploadState.ShouldBe(UploadState.Canceled);
         trackedUpload.OnlineState.ShouldBe(OnlineState.Unknown);
     }
 
     [Test]
-    public async Task HandleFileUploadResultAsync_ContextDoesNotExist_IgnoresResult()
+    public async Task ApplyFileUploadResultAsync_ContextDoesNotExist_IgnoresResult()
     {
         // Arrange
-        var uploadContexts = new Dictionary<int, UploadExecutionContext>();
+        var uploadsInProgress = CreateUploadsInProgress();
         var result = new FileUploadCompleted(
             UploadId: 42,
             ArchiveFileId: 100,
@@ -1688,14 +1622,14 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         // Act
         await InvokePrivateTaskAsync(
             service,
-            "HandleFileUploadResultAsync",
+            "ApplyFileUploadResultAsync",
             result,
-            uploadContexts,
+            uploadsInProgress,
             CancellationToken.None
         );
 
         // Assert
-        uploadContexts.ShouldBeEmpty();
+        uploadsInProgress.ContextsByUploadId.ShouldBeEmpty();
     }
 
     [Test]
@@ -1703,71 +1637,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var repository = new MissingCancellationUploadRepository();
-        var notificationService = new NotificationService(
-            repository: new NotificationRepository(DbContext),
-            timeProvider: CreateTimeProvider(),
-            configurationProvider: CreateNotificationConfigurationProvider()
-        );
-
-        var captchaService = new HosterCaptchaVerificationService(notificationService);
-        var credentialsRejectionService = new HosterCredentialsRejectionService(
-            notificationService
-        );
-        var uploadCancellation = new UploadCancellationService(notificationService);
-        var finalization = new UploadFinalizationService(
-            CreateTimeProvider(),
-            Mock.Of<ILogger<UploadFinalizationService>>(),
-            notificationService,
-            uploadCancellation
-        );
-        var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
-        var fileUploadExecution = new FileUploadExecutionService(
-            Mock.Of<ILogger<FileUploadExecutionService>>(),
-            captchaService,
-            credentialsRejectionService,
-            progressTracker,
-            new TransferSpeedLimitService(new DefaultConfigurationProvider())
-        );
-        var missingFileValidation = new MissingFileValidationService(
-            repository,
-            new FileSystemService(),
-            Mock.Of<ILogger<MissingFileValidationService>>(),
-            notificationService
-        );
-        var concurrency = new UploadConcurrencyService(
-            repository,
-            new DefaultConfigurationProvider(),
-            credentialsRejectionService,
-            Mock.Of<ILogger<UploadConcurrencyService>>()
-        );
-
-        var serviceWithMissingUpload = new UploadFilesService(
-            repository,
-            hosterFactoryMock.Object,
-            CreateTimeProvider(),
-            Mock.Of<ILogger<UploadFilesService>>(),
-            missingFileValidation,
-            finalization,
-            uploadCancellation,
-            fileUploadExecution,
-            concurrency,
-            credentialsRejectionService,
-            new HosterAccountPoolAccountSelectionService(
-                repository,
-                hosterFactoryMock.Object,
-                CreateTimeProvider(),
-                notificationService,
-                credentialsRejectionService,
-                captchaService,
-                new HosterStorageAvailabilityCache(),
-                Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
-            ),
-            progressTracker
-        )
-        {
-            UploadQueuePollDelay = TimeSpan.Zero,
-            NewPendingUploadsPollDelay = TimeSpan.Zero,
-        };
+        var serviceWithMissingUpload = CreateUploadFilesService(repository);
 
         // Act
         await serviceWithMissingUpload.ProcessAsync(CancellationToken.None);
@@ -1998,6 +1868,87 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 
         return new TimeProvider(configuration);
     }
+
+    private UploadFilesService CreateUploadFilesService(
+        IUploadFilesRepository uploadFilesRepository
+    )
+    {
+        var notificationService = new NotificationService(
+            repository: new NotificationRepository(DbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
+        );
+
+        var captchaVerificationService = new HosterCaptchaVerificationService(notificationService);
+        var credentialsRejectionService = new HosterCredentialsRejectionService(
+            notificationService
+        );
+        var uploadCancellationService = new UploadCancellationService(notificationService);
+        var finalizationService = new UploadFinalizationService(
+            CreateTimeProvider(),
+            Mock.Of<ILogger<UploadFinalizationService>>(),
+            notificationService,
+            uploadCancellationService
+        );
+        var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
+        var fileUploadExecutionService = new FileUploadExecutionService(
+            Mock.Of<ILogger<FileUploadExecutionService>>(),
+            captchaVerificationService,
+            credentialsRejectionService,
+            progressTracker,
+            new TransferSpeedLimitService(new DefaultConfigurationProvider())
+        );
+        var missingFileValidationService = new MissingFileValidationService(
+            uploadFilesRepository,
+            new FileSystemService(),
+            Mock.Of<ILogger<MissingFileValidationService>>(),
+            notificationService
+        );
+        var concurrencyService = new UploadConcurrencyService(
+            uploadFilesRepository,
+            new DefaultConfigurationProvider(),
+            credentialsRejectionService,
+            Mock.Of<ILogger<UploadConcurrencyService>>()
+        );
+        var hosterAccountPoolAccountSelectionService = new HosterAccountPoolAccountSelectionService(
+            uploadFilesRepository,
+            hosterFactoryMock.Object,
+            CreateTimeProvider(),
+            notificationService,
+            credentialsRejectionService,
+            captchaVerificationService,
+            new HosterStorageAvailabilityCache(),
+            Mock.Of<ILogger<HosterAccountPoolAccountSelectionService>>()
+        );
+        var uploadPreparationService = new UploadPreparationService(
+            hosterAccountPoolAccountSelectionService,
+            concurrencyService,
+            credentialsRejectionService,
+            new UploadHosterFolderService(Mock.Of<ILogger<UploadHosterFolderService>>()),
+            Mock.Of<ILogger<UploadPreparationService>>()
+        );
+
+        return new UploadFilesService(
+            uploadFilesRepository,
+            hosterFactoryMock.Object,
+            CreateTimeProvider(),
+            Mock.Of<ILogger<UploadFilesService>>(),
+            missingFileValidationService,
+            finalizationService,
+            uploadCancellationService,
+            fileUploadExecutionService,
+            concurrencyService,
+            uploadPreparationService,
+            progressTracker
+        )
+        {
+            UploadQueuePollDelay = TimeSpan.Zero,
+            NewPendingUploadsPollDelay = TimeSpan.Zero,
+        };
+    }
+
+    private static UploadsInProgress CreateUploadsInProgress() =>
+        new(new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()));
 
     private static async Task InvokePrivateTaskAsync(
         object target,

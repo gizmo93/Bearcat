@@ -76,6 +76,7 @@ using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
+using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
@@ -180,6 +181,8 @@ public static class ServiceProviderConfig
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();
             services.AddSingleton<TransferSpeedLimitService>();
             services.AddScoped<UploadFilesService>();
+            services.AddScoped<UploadPreparationService>();
+            services.AddScoped<UploadHosterFolderService>();
             services.AddScoped<HosterAccountPoolAccountSelectionService>();
             services.AddSingleton<HosterStorageAvailabilityCache>();
             services.AddScoped<UploadFinalizationService>();

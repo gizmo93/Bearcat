@@ -115,4 +115,21 @@ public class Upload
 
         return Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id)).ToList();
     }
+
+    public bool HasHosterRegistrationAssigned() => HosterRegistrationId is not null;
+
+    public bool IsHosterAccountPoolUploadWithoutUploadedFiles() =>
+        UploadConfig.HosterAccountPoolId is not null && UploadedFiles.Count == 0;
+
+    public bool ShouldSelectAnotherAccountOfHosterAccountPool() =>
+        HasHosterRegistrationAssigned()
+        && IsHosterAccountPoolUploadWithoutUploadedFiles()
+        && !HosterRegistration!.IsUsableForUploads();
+
+    public void RemoveHosterRegistrationAndFolderAssignment()
+    {
+        HosterRegistrationId = null;
+        HosterRegistration = null;
+        HosterFolderId = null;
+    }
 }

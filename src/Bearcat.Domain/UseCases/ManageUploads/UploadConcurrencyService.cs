@@ -57,7 +57,7 @@ public class UploadConcurrencyService(
 
     public async Task EnsureHosterSemaphoresAsync(
         IReadOnlyList<string> hosterClassNames,
-        Dictionary<string, IHoster> hostersByName,
+        IReadOnlyDictionary<string, IHoster> hostersByName,
         CancellationToken cancellationToken
     )
     {
