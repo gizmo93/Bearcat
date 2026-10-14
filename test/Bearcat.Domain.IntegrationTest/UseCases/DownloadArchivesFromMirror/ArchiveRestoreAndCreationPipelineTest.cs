@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
@@ -9,12 +10,17 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
+using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -106,18 +112,12 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             NullLogger<ArchiveRestoreService>.Instance
         );
 
-        creationService = new ArchiveCreationService(
-            new ArchiveCreationRepository(DbContext),
-            NullLogger<ArchiveCreationService>.Instance,
-            archiverFactoryMock.Object,
+        creationService = CreateArchiveCreationService(
             new FileSystemService(),
-            CreateTimeProvider(),
             notificationService,
             new DefaultConfigurationProvider(),
-            new ReleaseFolderEntriesForPackingService(new FileSystemService()),
             transferProgressTracker,
             new TransferCancellationRegistry(),
-            new FolderSizeProgressReporter(),
             new ArchiveLocalWorkingCopyService(
                 new ArchiveCleanupRepository(DbContext),
                 new FileSystemService(),
@@ -125,8 +125,73 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 transferProgressTracker,
                 new TransferCancellationRegistry(),
                 NullLogger<ArchiveLocalWorkingCopyService>.Instance
+            )
+        );
+    }
+
+    private ArchiveCreationService CreateArchiveCreationService(
+        IFileSystemService fileSystemService,
+        INotificationService notificationService,
+        IApplicationConfigurationProvider configurationProvider,
+        ITransferProgressTracker progressTracker,
+        ITransferCancellationRegistry cancellationRegistry,
+        ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService
+    )
+    {
+        var repository = new ArchiveCreationRepository(DbContext);
+        var releaseFolderEntriesForPackingService = new ReleaseFolderEntriesForPackingService(
+            fileSystemService
+        );
+        var uploadCancellationService = new UploadCancellationService(notificationService);
+        var archiveFileHashService = new ArchiveFileHashService(
+            repository,
+            NullLogger<ArchiveFileHashService>.Instance,
+            configurationProvider,
+            progressTracker
+        );
+
+        return new ArchiveCreationService(
+            repository,
+            NullLogger<ArchiveCreationService>.Instance,
+            archiverFactoryMock.Object,
+            fileSystemService,
+            CreateTimeProvider(),
+            notificationService,
+            cancellationRegistry,
+            uploadCancellationService,
+            new InterruptedArchiveRecoveryService(
+                repository,
+                NullLogger<InterruptedArchiveRecoveryService>.Instance,
+                archiverFactoryMock.Object,
+                fileSystemService,
+                releaseFolderEntriesForPackingService,
+                archiveFileHashService
             ),
-            new UploadCancellationService(notificationService)
+            new ExistingArchiveAssignmentService(
+                repository,
+                NullLogger<ExistingArchiveAssignmentService>.Instance,
+                archiverFactoryMock.Object,
+                fileSystemService,
+                notificationService,
+                cancellationRegistry,
+                archiveLocalWorkingCopyService,
+                archiveFileHashService,
+                uploadCancellationService
+            ),
+            new ArchivePackingSettingsService(
+                repository,
+                NullLogger<ArchivePackingSettingsService>.Instance,
+                configurationProvider
+            ),
+            new ReleaseFolderPackingService(
+                repository,
+                NullLogger<ReleaseFolderPackingService>.Instance,
+                fileSystemService,
+                releaseFolderEntriesForPackingService,
+                progressTracker,
+                new FolderSizeProgressReporter()
+            ),
+            archiveFileHashService
         );
     }
 

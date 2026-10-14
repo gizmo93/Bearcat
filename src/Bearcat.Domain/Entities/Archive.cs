@@ -31,4 +31,14 @@ public class Archive
     public List<Upload> Uploads { get; set; } = null!;
 
     public List<Notification> Notifications { get; set; } = null!;
+
+    public void MarkAsCreatedAndSetWaitingUploadsPending()
+    {
+        ArchiveState = ArchiveState.Created;
+
+        foreach (var upload in Uploads.Where(u => u.UploadState == UploadState.WaitingForArchive))
+        {
+            upload.UploadState = UploadState.Pending;
+        }
+    }
 }

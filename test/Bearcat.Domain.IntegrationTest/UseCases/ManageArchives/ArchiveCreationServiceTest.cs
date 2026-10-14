@@ -9,7 +9,11 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
+using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -91,29 +95,68 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
     private ArchiveCreationService CreateService(IFileSystemService fileSystemService)
     {
+        var repository = new ArchiveCreationRepository(DbContext);
         var notificationService = CreateNotificationService();
+        var releaseFolderEntriesForPackingService = new ReleaseFolderEntriesForPackingService(
+            fileSystemService
+        );
+        var uploadCancellationService = new UploadCancellationService(notificationService);
+        var archiveFileHashService = new ArchiveFileHashService(
+            repository,
+            Mock.Of<ILogger<ArchiveFileHashService>>(),
+            configurationProviderMock.Object,
+            progressTracker
+        );
 
         return new ArchiveCreationService(
-            new ArchiveCreationRepository(DbContext),
+            repository,
             Mock.Of<ILogger<ArchiveCreationService>>(),
             archiverFactoryMock.Object,
             fileSystemService,
             CreateTimeProvider(),
             notificationService,
-            configurationProviderMock.Object,
-            new ReleaseFolderEntriesForPackingService(fileSystemService),
-            progressTracker,
             cancellationRegistry,
-            new FolderSizeProgressReporter(),
-            new ArchiveLocalWorkingCopyService(
-                new ArchiveCleanupRepository(DbContext),
+            uploadCancellationService,
+            new InterruptedArchiveRecoveryService(
+                repository,
+                Mock.Of<ILogger<InterruptedArchiveRecoveryService>>(),
+                archiverFactoryMock.Object,
                 fileSystemService,
-                CreateNotificationService(),
-                progressTracker,
-                cancellationRegistry,
-                Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
+                releaseFolderEntriesForPackingService,
+                archiveFileHashService
             ),
-            new UploadCancellationService(notificationService)
+            new ExistingArchiveAssignmentService(
+                repository,
+                Mock.Of<ILogger<ExistingArchiveAssignmentService>>(),
+                archiverFactoryMock.Object,
+                fileSystemService,
+                notificationService,
+                cancellationRegistry,
+                new ArchiveLocalWorkingCopyService(
+                    new ArchiveCleanupRepository(DbContext),
+                    fileSystemService,
+                    CreateNotificationService(),
+                    progressTracker,
+                    cancellationRegistry,
+                    Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
+                ),
+                archiveFileHashService,
+                uploadCancellationService
+            ),
+            new ArchivePackingSettingsService(
+                repository,
+                Mock.Of<ILogger<ArchivePackingSettingsService>>(),
+                configurationProviderMock.Object
+            ),
+            new ReleaseFolderPackingService(
+                repository,
+                Mock.Of<ILogger<ReleaseFolderPackingService>>(),
+                fileSystemService,
+                releaseFolderEntriesForPackingService,
+                progressTracker,
+                new FolderSizeProgressReporter()
+            ),
+            archiveFileHashService
         );
     }
 
