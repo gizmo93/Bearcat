@@ -86,6 +86,8 @@ using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Bearcat.Domain.UseCases.ManageUploads.UploadExecution.UploadPreparation;
 using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.PostCreation;
+using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -163,7 +165,9 @@ public static class ServiceProviderConfig
             services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ForumPostingRulePreviewService>();
             services.AddScoped<AutoForumPostingPlanService>();
-            services.AddScoped<AutoForumPostingService>();
+            services.AddScoped<ReleasePostedStatusService>();
+            services.AddScoped<AutoForumPostCreationService>();
+            services.AddScoped<AutoForumPostUpdateService>();
             services.AddScoped<AutoForumPostingRunner>();
             services.AddScoped<IForumPostContentRenderer>(provider =>
                 provider.GetRequiredService<ForumPostRenderService>()

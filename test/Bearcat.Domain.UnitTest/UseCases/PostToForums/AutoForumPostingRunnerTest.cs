@@ -1,6 +1,8 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.UseCases.PostToForums.PostCreation;
+using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
@@ -344,16 +346,28 @@ public class AutoForumPostingRunnerTest
     )
     {
         var planService = new AutoForumPostingPlanService(repository);
+        var contentRenderer = new FakeForumPostContentRenderer();
+        notificationService ??= new FakeNotificationService();
+        var releasePostedStatusService = new ReleasePostedStatusService(planService, repository);
 
         return new AutoForumPostingRunner(
             repository,
             planService,
-            new AutoForumPostingService(
+            new AutoForumPostCreationService(
                 planService,
                 repository,
-                new FakeForumPostContentRenderer(),
+                contentRenderer,
                 submitter,
-                notificationService ?? new FakeNotificationService()
+                notificationService,
+                releasePostedStatusService
+            ),
+            new AutoForumPostUpdateService(
+                planService,
+                repository,
+                contentRenderer,
+                submitter,
+                notificationService,
+                releasePostedStatusService
             )
         );
     }

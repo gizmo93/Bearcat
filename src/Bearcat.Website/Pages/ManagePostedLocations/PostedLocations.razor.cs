@@ -1,8 +1,8 @@
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManagePostedLocations.ReadModels;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
-using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -144,7 +144,7 @@ public partial class PostedLocations(
         await RunBusyAsync(async () =>
         {
             var result = await operationRunner.RunAsync(
-                (AutoForumPostingService service) =>
+                (AutoForumPostUpdateService service) =>
                     service.UpdatePostedLocationAsync(
                         location.PostedLocationId,
                         forumPostTemplateId

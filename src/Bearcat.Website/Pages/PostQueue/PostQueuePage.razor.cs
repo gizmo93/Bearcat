@@ -9,6 +9,8 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.UseCases.PostToForums.PostCreation;
+using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -181,8 +183,11 @@ public partial class PostQueuePage(
         try
         {
             var result = await operationRunner.RunAsync(
-                (AutoForumPostingService service) =>
-                    service.UpdateAsync(releaseId, site.DistributionSiteRegistrationId)
+                (AutoForumPostUpdateService service) =>
+                    service.UpdatePostOfReleaseOnSiteAsync(
+                        releaseId,
+                        site.DistributionSiteRegistrationId
+                    )
             );
 
             if (result.Status == AutoPostUpdateStatus.Updated)
@@ -222,8 +227,11 @@ public partial class PostQueuePage(
         siteErrors.Remove((releaseId, site.DistributionSiteRegistrationId));
 
         var result = await operationRunner.RunAsync(
-            (AutoForumPostingService service) =>
-                service.PostAsync(releaseId, site.DistributionSiteRegistrationId)
+            (AutoForumPostCreationService service) =>
+                service.CreatePostForReleaseOnSiteAsync(
+                    releaseId,
+                    site.DistributionSiteRegistrationId
+                )
         );
 
         if (result.Status == AutoPostExecutionStatus.Posted)
