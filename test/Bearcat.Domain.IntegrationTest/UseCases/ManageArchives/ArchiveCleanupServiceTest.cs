@@ -6,6 +6,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderMoves;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
@@ -634,7 +635,11 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
                     timeProvider: CreateTimeProvider(),
                     configurationProvider: CreateNotificationConfigurationProvider()
                 ),
-                progressTrackerMock.Object,
+                new ArchiveFileCopyService(
+                    fileSystemService,
+                    progressTrackerMock.Object,
+                    Mock.Of<ILogger<ArchiveFileCopyService>>()
+                ),
                 cancellationRegistry,
                 Mock.Of<ILogger<ArchiveStorageFolderMoveService>>()
             ),

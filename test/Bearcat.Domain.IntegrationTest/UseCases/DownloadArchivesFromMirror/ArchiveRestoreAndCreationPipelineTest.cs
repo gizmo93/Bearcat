@@ -16,6 +16,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
@@ -122,7 +123,11 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 new ArchiveCleanupRepository(DbContext),
                 new FileSystemService(),
                 notificationService,
-                transferProgressTracker,
+                new ArchiveFileCopyService(
+                    new FileSystemService(),
+                    transferProgressTracker,
+                    NullLogger<ArchiveFileCopyService>.Instance
+                ),
                 new TransferCancellationRegistry(),
                 NullLogger<ArchiveLocalWorkingCopyService>.Instance
             )

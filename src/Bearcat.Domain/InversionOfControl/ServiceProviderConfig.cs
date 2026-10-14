@@ -30,6 +30,7 @@ using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
@@ -166,6 +167,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveFileHashService>();
             services.AddScoped<ReleaseFolderEntriesForPackingService>();
             services.AddScoped<ArchiveCleanupService>();
+            services.AddScoped<ArchiveFileCopyService>();
             services.AddScoped<ArchiveStorageFolderMoveService>();
             services.AddScoped<ArchiveLocalWorkingCopyService>();
             services.AddScoped<ArchiveLocalWorkingCopyCleanupService>();

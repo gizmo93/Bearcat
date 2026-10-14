@@ -2,6 +2,7 @@ using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ public class ArchiveLocalWorkingCopyService(
     IArchiveCleanupRepository repository,
     IFileSystemService fileSystemService,
     INotificationService notificationService,
-    ITransferProgressTracker progressTracker,
+    ArchiveFileCopyService archiveFileCopyService,
     ITransferCancellationRegistry cancellationRegistry,
     ILogger<ArchiveLocalWorkingCopyService> logger
 )
@@ -69,7 +70,7 @@ public class ArchiveLocalWorkingCopyService(
             cancellationToken
         );
 
-        var copiedFilePathPerArchiveFile = await CopyArchiveFilesAsync(
+        var copiedFiles = await CopyArchiveFilesAsync(
             archive: archive,
             archiveFilesToCopy: archiveFilesToCopy,
             storageFolder: storageFolder,
@@ -78,27 +79,27 @@ public class ArchiveLocalWorkingCopyService(
             cancellationToken: cancellationToken
         );
 
-        if (copiedFilePathPerArchiveFile is null)
+        if (copiedFiles is null)
         {
             return;
         }
 
-        foreach (var (archiveFile, copiedFilePath) in copiedFilePathPerArchiveFile)
+        foreach (var copiedFile in copiedFiles)
         {
-            archiveFile.FullFileName = copiedFilePath;
+            copiedFile.ArchiveFile.FullFileName = copiedFile.CopiedFilePath;
         }
 
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Copied {FileCount} files of archive {ArchiveId} from storage folder {StorageFolderName} into a local working copy",
-            copiedFilePathPerArchiveFile.Count,
+            copiedFiles.Count,
             archive.Id,
             storageFolder.Name
         );
     }
 
-    private async Task<Dictionary<ArchiveFile, string>?> CopyArchiveFilesAsync(
+    private async Task<IReadOnlyList<CopiedArchiveFile>?> CopyArchiveFilesAsync(
         Archive archive,
         IReadOnlyList<ArchiveFile> archiveFilesToCopy,
         ArchiveStorageFolder storageFolder,
@@ -107,9 +108,6 @@ public class ArchiveLocalWorkingCopyService(
         CancellationToken cancellationToken
     )
     {
-        var copiedFilePathPerArchiveFile = new Dictionary<ArchiveFile, string>();
-        string? workingCopyFolderPath = null;
-
         try
         {
             var archiveFilesBasePath = archive.ArchiveConfig.ArchiveFilesBasePath;
@@ -121,34 +119,23 @@ public class ArchiveLocalWorkingCopyService(
                 );
             }
 
-            var archiveFilesWithSize = archiveFilesToCopy
-                .Select(file => new ArchiveFileWithSize(
-                    file,
-                    fileSystemService.GetFileSizeBytes(file.FullFileName)
-                ))
-                .ToList();
+            var archiveFilesWithSize = archiveFileCopyService.GetArchiveFilesWithSize(
+                archiveFilesToCopy
+            );
 
-            workingCopyFolderPath = GetWorkingCopyFolderPath(archiveFilesBasePath, archive);
+            var workingCopyFolderPath = GetWorkingCopyFolderPath(archiveFilesBasePath, archive);
 
-            await CopyAndVerifyArchiveFilesAsync(
+            return await archiveFileCopyService.CopyArchiveFilesAndVerifySizesAsync(
+                archiveId: archive.Id,
                 archiveFilesWithSize: archiveFilesWithSize,
-                storageFolder: storageFolder,
-                workingCopyFolderPath: workingCopyFolderPath,
-                copiedFilePathPerArchiveFile: copiedFilePathPerArchiveFile,
+                targetFolderPath: workingCopyFolderPath,
+                sourceName: storageFolder.Name,
                 transferIdentifier: transferIdentifier,
                 cancellationToken: userCancellableTransfer.CancellationToken
             );
-
-            return copiedFilePathPerArchiveFile;
         }
         catch (Exception ex)
         {
-            DeleteCopiedFiles(
-                archive,
-                copiedFilePathPerArchiveFile.Values.ToList(),
-                workingCopyFolderPath
-            );
-
             if (ex is OperationCanceledException && userCancellableTransfer.WasCanceledByUser)
             {
                 logger.LogInformation(
@@ -202,97 +189,6 @@ public class ArchiveLocalWorkingCopyService(
         return Path.Join(archiveFilesBasePath, $"{archiveFolderName}.{archive.Id}");
     }
 
-    private async Task CopyAndVerifyArchiveFilesAsync(
-        IReadOnlyList<ArchiveFileWithSize> archiveFilesWithSize,
-        ArchiveStorageFolder storageFolder,
-        string workingCopyFolderPath,
-        Dictionary<ArchiveFile, string> copiedFilePathPerArchiveFile,
-        TransferIdentifier transferIdentifier,
-        CancellationToken cancellationToken
-    )
-    {
-        fileSystemService.CreateDirectory(workingCopyFolderPath);
-
-        progressTracker.StartTracking(
-            identifier: transferIdentifier,
-            plannedFiles: archiveFilesWithSize
-                .Select(file => new TransferFile(
-                    FileId: file.ArchiveFile.Id,
-                    FileName: Path.GetFileName(file.ArchiveFile.FullFileName),
-                    SourceName: storageFolder.Name,
-                    SizeBytes: file.SizeBytes,
-                    IsAlreadyTransferred: false
-                ))
-                .ToList()
-        );
-
-        try
-        {
-            foreach (var file in archiveFilesWithSize)
-            {
-                var fileName = Path.GetFileName(file.ArchiveFile.FullFileName);
-                var workingCopyFilePath = Path.Join(workingCopyFolderPath, fileName);
-
-                await fileSystemService.CopyFileAsync(
-                    sourceFilePath: file.ArchiveFile.FullFileName,
-                    destinationFilePath: workingCopyFilePath,
-                    progress: new TransferProgressReporter(
-                        tracker: progressTracker,
-                        identifier: transferIdentifier,
-                        fileId: file.ArchiveFile.Id,
-                        fileName: fileName,
-                        sourceName: storageFolder.Name
-                    ),
-                    cancellationToken: cancellationToken
-                );
-
-                copiedFilePathPerArchiveFile[file.ArchiveFile] = workingCopyFilePath;
-
-                var copiedSizeBytes = fileSystemService.GetFileSizeBytes(workingCopyFilePath);
-
-                if (copiedSizeBytes != file.SizeBytes)
-                {
-                    throw new IOException(
-                        $"Copied file {workingCopyFilePath} has {copiedSizeBytes} bytes instead of {file.SizeBytes} bytes"
-                    );
-                }
-            }
-        }
-        finally
-        {
-            progressTracker.StopTracking(transferIdentifier);
-        }
-    }
-
-    private void DeleteCopiedFiles(
-        Archive archive,
-        IReadOnlyList<string> copiedFilePaths,
-        string? workingCopyFolderPath
-    )
-    {
-        try
-        {
-            foreach (var copiedFilePath in copiedFilePaths)
-            {
-                fileSystemService.DeleteFileIfExists(copiedFilePath);
-            }
-
-            if (workingCopyFolderPath is not null)
-            {
-                fileSystemService.DeleteDirectoryIfEmpty(workingCopyFolderPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(
-                ex,
-                "Could not delete the files copied to {WorkingCopyFolderPath} while copying archive {ArchiveId} from its storage folder",
-                workingCopyFolderPath,
-                archive.Id
-            );
-        }
-    }
-
     private async Task ReportCopyFailedAsync(
         Archive archive,
         ArchiveStorageFolder storageFolder,
@@ -328,6 +224,4 @@ public class ArchiveLocalWorkingCopyService(
 
         await repository.SaveChangesAsync(cancellationToken);
     }
-
-    private sealed record ArchiveFileWithSize(ArchiveFile ArchiveFile, long SizeBytes);
 }

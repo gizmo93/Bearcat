@@ -3,6 +3,7 @@ using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Humanizer;
@@ -14,7 +15,7 @@ public class ArchiveStorageFolderMoveService(
     IArchiveCleanupRepository repository,
     IFileSystemService fileSystemService,
     INotificationService notificationService,
-    ITransferProgressTracker progressTracker,
+    ArchiveFileCopyService archiveFileCopyService,
     ITransferCancellationRegistry cancellationRegistry,
     ILogger<ArchiveStorageFolderMoveService> logger
 )
@@ -119,19 +120,13 @@ public class ArchiveStorageFolderMoveService(
         CancellationToken cancellationToken
     )
     {
-        var copiedFilePaths = new List<string>();
         ArchiveStorageFolder? storageFolder = null;
-        string? targetFolderPath = null;
 
         try
         {
-            var archiveFilesWithSize = archive
-                .ArchiveFiles.OrderBy(file => file.Id)
-                .Select(file => new ArchiveFileWithSize(
-                    file,
-                    fileSystemService.GetFileSizeBytes(file.FullFileName)
-                ))
-                .ToList();
+            var archiveFilesWithSize = archiveFileCopyService.GetArchiveFilesWithSize(
+                archive.ArchiveFiles.OrderBy(file => file.Id).ToList()
+            );
             var archiveSizeBytes = archiveFilesWithSize.Sum(file => file.SizeBytes);
 
             storageFolder = ArchiveStorageFolderSelector.SelectStorageFolder(
@@ -150,13 +145,20 @@ public class ArchiveStorageFolderMoveService(
                 return null;
             }
 
-            targetFolderPath = GetTargetFolderPath(storageFolder, archive);
+            if (!fileSystemService.DirectoryExists(storageFolder.Path))
+            {
+                throw new DirectoryNotFoundException(
+                    $"Storage folder path {storageFolder.Path} does not exist"
+                );
+            }
 
-            await CopyAndVerifyArchiveFilesAsync(
+            var targetFolderPath = GetTargetFolderPath(storageFolder, archive);
+
+            var copiedFiles = await archiveFileCopyService.CopyArchiveFilesAndVerifySizesAsync(
+                archiveId: archive.Id,
                 archiveFilesWithSize: archiveFilesWithSize,
-                storageFolder: storageFolder,
                 targetFolderPath: targetFolderPath,
-                copiedFilePaths: copiedFilePaths,
+                sourceName: storageFolder.Name,
                 transferIdentifier: transferIdentifier,
                 cancellationToken: userCancellableTransfer.CancellationToken
             );
@@ -165,13 +167,11 @@ public class ArchiveStorageFolderMoveService(
                 StorageFolder: storageFolder,
                 TargetFolderPath: targetFolderPath,
                 ArchiveFilesWithSize: archiveFilesWithSize,
-                CopiedFilePaths: copiedFilePaths
+                CopiedFiles: copiedFiles
             );
         }
         catch (Exception ex)
         {
-            DeleteCopiedFiles(archive, copiedFilePaths, targetFolderPath);
-
             if (ex is OperationCanceledException && userCancellableTransfer.WasCanceledByUser)
             {
                 logger.LogInformation(
@@ -227,104 +227,6 @@ public class ArchiveStorageFolderMoveService(
         return Path.Join(storageFolder.Path, $"{archiveFolderName}.{archive.Id}");
     }
 
-    private async Task CopyAndVerifyArchiveFilesAsync(
-        IReadOnlyList<ArchiveFileWithSize> archiveFilesWithSize,
-        ArchiveStorageFolder storageFolder,
-        string targetFolderPath,
-        List<string> copiedFilePaths,
-        TransferIdentifier transferIdentifier,
-        CancellationToken cancellationToken
-    )
-    {
-        if (!fileSystemService.DirectoryExists(storageFolder.Path))
-        {
-            throw new DirectoryNotFoundException(
-                $"Storage folder path {storageFolder.Path} does not exist"
-            );
-        }
-
-        fileSystemService.CreateDirectory(targetFolderPath);
-
-        progressTracker.StartTracking(
-            identifier: transferIdentifier,
-            plannedFiles: archiveFilesWithSize
-                .Select(file => new TransferFile(
-                    FileId: file.ArchiveFile.Id,
-                    FileName: Path.GetFileName(file.ArchiveFile.FullFileName),
-                    SourceName: storageFolder.Name,
-                    SizeBytes: file.SizeBytes,
-                    IsAlreadyTransferred: false
-                ))
-                .ToList()
-        );
-
-        try
-        {
-            foreach (var file in archiveFilesWithSize)
-            {
-                var fileName = Path.GetFileName(file.ArchiveFile.FullFileName);
-                var targetFilePath = Path.Join(targetFolderPath, fileName);
-
-                await fileSystemService.CopyFileAsync(
-                    sourceFilePath: file.ArchiveFile.FullFileName,
-                    destinationFilePath: targetFilePath,
-                    progress: new TransferProgressReporter(
-                        tracker: progressTracker,
-                        identifier: transferIdentifier,
-                        fileId: file.ArchiveFile.Id,
-                        fileName: fileName,
-                        sourceName: storageFolder.Name
-                    ),
-                    cancellationToken: cancellationToken
-                );
-
-                copiedFilePaths.Add(targetFilePath);
-
-                var copiedSizeBytes = fileSystemService.GetFileSizeBytes(targetFilePath);
-
-                if (copiedSizeBytes != file.SizeBytes)
-                {
-                    throw new IOException(
-                        $"Copied file {targetFilePath} has {copiedSizeBytes} bytes instead of {file.SizeBytes} bytes"
-                    );
-                }
-            }
-        }
-        finally
-        {
-            progressTracker.StopTracking(transferIdentifier);
-        }
-    }
-
-    private void DeleteCopiedFiles(
-        Archive archive,
-        List<string> copiedFilePaths,
-        string? targetFolderPath
-    )
-    {
-        try
-        {
-            foreach (var copiedFilePath in copiedFilePaths)
-            {
-                fileSystemService.DeleteFileIfExists(copiedFilePath);
-            }
-
-            if (targetFolderPath is not null)
-            {
-                fileSystemService.DeleteDirectoryIfEmpty(targetFolderPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(
-                ex,
-                "Could not delete the files copied to {TargetFolderPath} while moving archive {ArchiveId}",
-                targetFolderPath,
-                archive.Id
-            );
-        }
-    }
-
     private async Task PointArchiveToStorageFolderAndDeleteLocalFilesAsync(
         Archive archive,
         ArchiveCopiedIntoStorageFolder copiedArchive,
@@ -333,9 +235,9 @@ public class ArchiveStorageFolderMoveService(
     {
         if (await ArchiveChangedDuringCopyAsync(archive, copiedArchive, cancellationToken))
         {
-            DeleteCopiedFiles(
-                archive: archive,
-                copiedFilePaths: copiedArchive.CopiedFilePaths,
+            archiveFileCopyService.DeleteCopiedFiles(
+                archiveId: archive.Id,
+                copiedFiles: copiedArchive.CopiedFiles,
                 targetFolderPath: copiedArchive.TargetFolderPath
             );
 
@@ -345,13 +247,10 @@ public class ArchiveStorageFolderMoveService(
         var localArchiveFolderPath = archive.ArchiveFolderPath;
         var localFilePaths = archive.ArchiveFiles.Select(file => file.FullFileName).ToList();
 
-        foreach (var archiveFile in archive.ArchiveFiles)
+        foreach (var copiedFile in copiedArchive.CopiedFiles)
         {
-            archiveFile.FullFileName = Path.Join(
-                copiedArchive.TargetFolderPath,
-                Path.GetFileName(archiveFile.FullFileName)
-            );
-            archiveFile.Md5HashInStorageFolder = archiveFile.Md5Hash;
+            copiedFile.ArchiveFile.FullFileName = copiedFile.CopiedFilePath;
+            copiedFile.ArchiveFile.Md5HashInStorageFolder = copiedFile.ArchiveFile.Md5Hash;
         }
 
         archive.ArchiveFolderPath = copiedArchive.TargetFolderPath;
@@ -491,13 +390,11 @@ public class ArchiveStorageFolderMoveService(
         );
     }
 
-    private sealed record ArchiveFileWithSize(ArchiveFile ArchiveFile, long SizeBytes);
-
     private sealed record ArchiveCopiedIntoStorageFolder(
         ArchiveStorageFolder StorageFolder,
         string TargetFolderPath,
         IReadOnlyList<ArchiveFileWithSize> ArchiveFilesWithSize,
-        List<string> CopiedFilePaths
+        IReadOnlyList<CopiedArchiveFile> CopiedFiles
     );
 
     private sealed record ArchiveIdsWithUnresolvedNotification(
