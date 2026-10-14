@@ -774,6 +774,58 @@ public class ApiClientTest
         response.Response.User.Traffic.Left.ShouldBeNull();
     }
 
+    [Test]
+    public async Task GetUserInfoAsync_StorageTotalAsString_ReturnsStorageInBytes()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var json = """
+            {"response":{"user":{"email":"user@example.test","is_premium":true,"premium_end_time":1790000000,"state":1,"state_label":"Activated","traffic":{"total":null,"left":null},"storage":{"total":"4398046511104","left":4398035213138},"upload":{"max_file_size":5368709120,"nb_pipes":5},"remote_upload":{"max_nb_jobs":200,"refresh_time":60}}},"status":200,"details":null}
+            """;
+        SetupLogin();
+        apiMock
+            .Setup(x => x.GetUserInfoAsync("token", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    JsonSerializer.Deserialize<InfoResponse>(json, JsonSerializerOptions)!
+                )
+            );
+
+        // Act
+        var user = await apiClient.GetUserInfoAsync(config, CancellationToken.None);
+
+        // Assert
+        user.Storage.Total.ShouldBe(4398046511104);
+        user.Storage.Left.ShouldBe(4398035213138);
+    }
+
+    [Test]
+    public async Task GetUserInfoAsync_ApiReturnsErrorStatus_ThrowsHttpRequestExceptionWithDetails()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        SetupLogin();
+        apiMock
+            .Setup(x => x.GetUserInfoAsync("token", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new InfoResponse
+                    {
+                        Status = (int)HttpStatusCode.Unauthorized,
+                        Details = "Error: Session not exist",
+                    }
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.GetUserInfoAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Error: Session not exist");
+    }
+
     private void SetupLogin()
     {
         apiMock

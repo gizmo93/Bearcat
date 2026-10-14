@@ -7,7 +7,8 @@ public record RunningUploadReadModel(
     int ReleaseId,
     string ReleaseName,
     string UploadConfigName,
-    string HosterRegistrationName,
+    string? HosterRegistrationName,
+    string? HosterAccountPoolName,
     UploadState UploadState,
     IReadOnlyList<RunningUploadReadModel.ArchiveFileReadModel> ArchiveFiles
 )

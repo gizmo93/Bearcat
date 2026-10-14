@@ -26,7 +26,8 @@ flowchart TD
 
 ## 1. Release and upload configuration
 
-An **upload configuration** connects a release, a hoster registration, and an archive configuration.
+In an **upload configuration**, choose the archive configuration and upload target for a release:
+a single hoster registration or an [account pool](/Bearcat/account-pools/).
 You can also choose link crypter configurations.
 
 Create an upload configuration for each hoster. Several configurations for the same hoster are

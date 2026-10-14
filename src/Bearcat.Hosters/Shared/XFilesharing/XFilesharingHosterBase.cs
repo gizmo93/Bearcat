@@ -16,9 +16,11 @@ namespace Bearcat.Hosters.Shared.XFilesharing;
 public abstract class XFilesharingHosterBase<TConfig>(
     IXFilesharingApiClient apiClient,
     ILogger logger
-) : IHosterWithFolders
+) : IHosterWithFolders, IHosterWithStorageQuota
     where TConfig : IXFilesharingHosterConfig
 {
+    private const string UnlimitedStorageLeftValue = "inf";
+
     public abstract string Name { get; }
 
     public abstract bool SupportsPremiumOnlyDownloads { get; }
@@ -281,6 +283,42 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    public async Task<HosterStorageQuota> GetStorageQuotaAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        var response = await apiClient.GetAccountInfoAsync(
+            apiKey: config.ApiKey,
+            cancellationToken: cancellationToken
+        );
+
+        if (response.Status != (int)HttpStatusCode.OK)
+        {
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
+            throw new InvalidOperationException(
+                $"{Name} account info request failed: {response.Msg}"
+            );
+        }
+
+        var storageLeft = response.Result!.StorageLeft;
+
+        if (storageLeft == UnlimitedStorageLeftValue)
+        {
+            return HosterStorageQuota.Unlimited();
+        }
+
+        var freeBytes = long.Parse(storageLeft, CultureInfo.InvariantCulture);
+        long? totalBytes = response.Result.StorageUsed is { } storageUsed
+            ? freeBytes + long.Parse(storageUsed, CultureInfo.InvariantCulture)
+            : null;
+
+        return HosterStorageQuota.Limited(freeBytes: freeBytes, totalBytes: totalBytes);
     }
 
     public async Task<string> CreateFolderAsync(

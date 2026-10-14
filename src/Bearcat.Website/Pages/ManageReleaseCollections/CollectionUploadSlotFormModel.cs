@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
@@ -8,7 +9,7 @@ public class CollectionUploadSlotFormModel
 
     public string Name { get; set; } = string.Empty;
 
-    public int? HosterRegistrationId { get; set; }
+    public UploadTarget? UploadTarget { get; set; }
 
     public string ArchiveConfigName { get; set; } = string.Empty;
 

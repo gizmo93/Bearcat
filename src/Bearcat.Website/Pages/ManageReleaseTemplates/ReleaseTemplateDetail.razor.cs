@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -280,7 +281,10 @@ public partial class ReleaseTemplateDetail(
                 new UploadConfigTemplateFormModel
                 {
                     Name = uploadConfig.Name,
-                    HosterRegistrationId = uploadConfig.HosterRegistrationId,
+                    UploadTarget = UploadTarget.FromIds(
+                        uploadConfig.HosterRegistrationId,
+                        uploadConfig.HosterAccountPoolId
+                    ),
                     ArchiveConfigTemplateId = uploadConfig.ArchiveConfigTemplateId,
                     PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
                     CollectionUploadSlotKey = uploadConfig.CollectionUploadSlotKey,

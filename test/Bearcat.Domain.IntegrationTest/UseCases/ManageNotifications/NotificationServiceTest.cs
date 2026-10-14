@@ -367,6 +367,7 @@ public class NotificationServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.Completed,
             OnlineState = OnlineState.Online,

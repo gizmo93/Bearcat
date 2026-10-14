@@ -17,7 +17,7 @@
                       CanCancel="@CanCancelUpload(upload)"
                       OnCancel="@(() => CancelUploadAsync(upload))">
             <Chips>
-                <ActivityChip IconName="server" Text="@upload.HosterRegistrationName" />
+                <ActivityChip IconName="server" Text="@L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName)" />
                 <ActivityChip IconName="sliders-horizontal" Text="@upload.UploadConfigName" />
                 <ProxyServerChip ProxyServerNames="@(snapshot?.ProxyServerNames ?? [])" />
                 @if (snapshot is not null && upload.UploadState is not UploadState.Uploading)

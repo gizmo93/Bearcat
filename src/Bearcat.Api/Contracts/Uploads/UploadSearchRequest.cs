@@ -14,6 +14,9 @@ public record UploadSearchRequest
 
     public OnlineState? OnlineState { get; init; }
 
+    /// <summary>
+    /// Only uploads whose files are held by this hoster account. Uploads of account pools without an assigned account never match.
+    /// </summary>
     public int? HosterRegistrationId { get; init; }
 
     public int? ReleaseId { get; init; }

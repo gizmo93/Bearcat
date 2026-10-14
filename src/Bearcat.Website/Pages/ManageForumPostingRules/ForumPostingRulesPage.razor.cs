@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -191,20 +192,10 @@ public partial class ForumPostingRulesPage(
 
     private async Task ReorderByDragAsync((int OldIndex, int NewIndex) move)
     {
-        if (
-            move.OldIndex == move.NewIndex
-            || move.OldIndex < 0
-            || move.OldIndex >= rules.Count
-            || move.NewIndex < 0
-            || move.NewIndex >= rules.Count
-        )
+        if (!SortableListReordering.TryMoveItem(rules, move))
         {
             return;
         }
-
-        var rule = rules[move.OldIndex];
-        rules.RemoveAt(move.OldIndex);
-        rules.Insert(move.NewIndex, rule);
 
         var ordered = rules.Select(candidate => candidate.ForumPostingRuleId).ToList();
 

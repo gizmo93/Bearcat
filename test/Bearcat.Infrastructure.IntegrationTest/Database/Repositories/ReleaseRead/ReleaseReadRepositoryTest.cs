@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
@@ -27,7 +28,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         repository = new ReleaseReadRepository(
             ReadDbContext,
             Mock.Of<IArchiverFactory>(),
-            Mock.Of<ILinkCrypterFactory>()
+            Mock.Of<ILinkCrypterFactory>(),
+            Mock.Of<IHosterFactory>()
         );
     }
 
@@ -578,7 +580,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         archiveGroup.ArchiveConfigName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
 
         var hoster = archiveGroup.Hosters.ShouldHaveSingleItem();
-        hoster.HosterRegistrationName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
+        hoster.HosterAccountOrPoolName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
         hoster.LinkCount.ShouldBe(1);
     }
 
@@ -628,6 +630,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                         HosterRegistration = hosterRegistration,
                         Name = "Upload",
                     },
+                    HosterRegistration = hosterRegistration,
                     CreatedAt = DateTime.UtcNow.AddMinutes(-10),
                     UploadedAt = DateTime.UtcNow.AddMinutes(-10),
                     UploadState = UploadState.Completed,
@@ -1252,6 +1255,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = spec.HasUploadedAt ? createdAt : null,
             UploadState = spec.State,
@@ -1534,6 +1538,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow,
             UploadedAt = DateTime.UtcNow,

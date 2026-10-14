@@ -579,6 +579,60 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.ToTable("ForumPostingRules");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPool", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("HosterClassName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("MinimumFreeSpaceBytes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0L);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("HosterAccountPools");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPoolMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HosterAccountPoolId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HosterRegistrationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HosterRegistrationId");
+
+                    b.HasIndex("HosterAccountPoolId", "HosterRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("HosterAccountPoolMembers");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -2110,6 +2164,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<string>("HosterFolderId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("HosterRegistrationId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("NotFullyOnlineSince")
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
@@ -2148,6 +2205,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("UploadState", "OnlineState");
 
+                    b.HasIndex("HosterRegistrationId", "OnlineState", "OldestUploadedFileCheckedAt");
+
                     b.HasIndex("UploadConfigId", "UploadState", "UploadedAt");
 
                     b.ToTable("Uploads");
@@ -2165,7 +2224,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("CollectionUploadSlotId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("HosterRegistrationId")
+                    b.Property<int?>("HosterAccountPoolId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("HosterRegistrationId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -2185,11 +2247,16 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("CollectionUploadSlotId");
 
+                    b.HasIndex("HosterAccountPoolId");
+
                     b.HasIndex("HosterRegistrationId");
 
                     b.HasIndex("ReleaseId");
 
-                    b.ToTable("UploadConfigs");
+                    b.ToTable("UploadConfigs", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadConfig_UploadTarget", "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadConfigLinkCrypter", b =>
@@ -2293,7 +2360,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("CollectionUploadSlotPasswordPolicy")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("HosterRegistrationId")
+                    b.Property<int?>("HosterAccountPoolId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("HosterRegistrationId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -2310,11 +2380,16 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("ArchiveConfigTemplateId");
 
+                    b.HasIndex("HosterAccountPoolId");
+
                     b.HasIndex("HosterRegistrationId");
 
                     b.HasIndex("ReleaseTemplateId");
 
-                    b.ToTable("UploadConfigTemplates");
+                    b.ToTable("UploadConfigTemplates", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadConfigTemplate_UploadTarget", "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadedFile", b =>
@@ -2502,6 +2577,25 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("DistributionSiteRegistration");
 
                     b.Navigation("ForumPostTemplate");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPoolMember", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
+                        .WithMany("Members")
+                        .HasForeignKey("HosterAccountPoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
+                        .WithMany("HosterAccountPoolMemberships")
+                        .HasForeignKey("HosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HosterAccountPool");
+
+                    b.Navigation("HosterRegistration");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
@@ -2996,6 +3090,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasForeignKey("ArchiveId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
+                        .WithMany("Uploads")
+                        .HasForeignKey("HosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Bearcat.Domain.Entities.UploadConfig", "UploadConfig")
                         .WithMany("Uploads")
                         .HasForeignKey("UploadConfigId")
@@ -3003,6 +3102,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("Archive");
+
+                    b.Navigation("HosterRegistration");
 
                     b.Navigation("UploadConfig");
                 });
@@ -3020,11 +3121,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasForeignKey("CollectionUploadSlotId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
+                        .WithMany("UploadConfigs")
+                        .HasForeignKey("HosterAccountPoolId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
                         .WithMany("UploadConfigs")
                         .HasForeignKey("HosterRegistrationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.Release", "Release")
                         .WithMany("UploadConfigs")
@@ -3035,6 +3140,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("ArchiveConfig");
 
                     b.Navigation("CollectionUploadSlot");
+
+                    b.Navigation("HosterAccountPool");
 
                     b.Navigation("HosterRegistration");
 
@@ -3087,11 +3194,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
+                        .WithMany("UploadConfigTemplates")
+                        .HasForeignKey("HosterAccountPoolId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
                         .WithMany()
                         .HasForeignKey("HosterRegistrationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
                         .WithMany("UploadConfigTemplates")
@@ -3100,6 +3211,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("ArchiveConfigTemplate");
+
+                    b.Navigation("HosterAccountPool");
 
                     b.Navigation("HosterRegistration");
 
@@ -3161,11 +3274,24 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("PostingRules");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterAccountPool", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("UploadConfigTemplates");
+
+                    b.Navigation("UploadConfigs");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
+                    b.Navigation("HosterAccountPoolMemberships");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("UploadConfigs");
+
+                    b.Navigation("Uploads");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>

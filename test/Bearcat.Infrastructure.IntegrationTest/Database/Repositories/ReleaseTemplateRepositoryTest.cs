@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Moq;
 using Shouldly;
@@ -265,6 +266,36 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetDetailAsync_UploadConfigTemplateTargetsHosterAccountPool_ReturnsHosterAccountPoolAsUploadTarget()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var hosterAccountPool = testData.AddHosterAccountPool(
+            "Main",
+            testData.AddHosterRegistration("Member")
+        );
+        var uploadConfigTemplate = testData.AddHosterAccountPoolUploadConfigTemplate(
+            hosterAccountPool
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetDetailAsync(
+            uploadConfigTemplate.ReleaseTemplateId,
+            CancellationToken.None
+        );
+
+        // Assert
+        var template = result!.UploadConfigTemplates.ShouldHaveSingleItem();
+        template.DisplayName.ShouldBe("Main");
+        template.HosterRegistrationId.ShouldBeNull();
+        template.HosterRegistrationName.ShouldBeNull();
+        template.HosterAccountPoolId.ShouldBe(hosterAccountPool.Id);
+        template.HosterAccountPoolName.ShouldBe("Main");
     }
 
     [Test]

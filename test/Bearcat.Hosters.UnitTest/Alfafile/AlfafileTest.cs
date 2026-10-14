@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
@@ -360,6 +361,53 @@ public class AlfafileTest
 
         // Assert
         result.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetStorageQuotaAsync_UserInfoCarriesStorage_ReturnsLimitedQuota()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+        var json = """
+            {"response":{"user":{"email":"user@example.test","is_premium":false,"premium_end_time":null,"state":1,"state_label":"Activated","storage":{"total":53687091200,"left":53687091200}}},"status":200,"details":null}
+            """;
+
+        apiClientMock
+            .Setup(x => x.GetUserInfoAsync(config, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(JsonSerializer.Deserialize<InfoResponse>(json, JsonSerializerOptions)!);
+
+        // Act
+        var result = await service.GetStorageQuotaAsync(config, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            HosterStorageQuota.Limited(freeBytes: 53687091200, totalBytes: 53687091200)
+        );
+    }
+
+    [Test]
+    public async Task GetStorageQuotaAsync_ApiReturnsErrorStatus_ThrowsHttpRequestExceptionWithDetails()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+
+        apiClientMock
+            .Setup(x => x.GetUserInfoAsync(config, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new InfoResponse
+                {
+                    Status = (int)HttpStatusCode.Forbidden,
+                    Details = "Access denied",
+                }
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            service.GetStorageQuotaAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Access denied");
     }
 
     [Test]

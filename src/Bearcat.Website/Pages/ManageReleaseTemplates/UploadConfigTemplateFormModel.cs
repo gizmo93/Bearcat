@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
@@ -6,7 +7,7 @@ public class UploadConfigTemplateFormModel
 {
     public string? Name { get; set; }
 
-    public int? HosterRegistrationId { get; set; }
+    public UploadTarget? UploadTarget { get; set; }
 
     public int? ArchiveConfigTemplateId { get; set; }
 

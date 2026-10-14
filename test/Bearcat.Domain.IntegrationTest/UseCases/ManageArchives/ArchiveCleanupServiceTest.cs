@@ -449,11 +449,9 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         await AddStorageFolderAsync();
         var archive = await AddScenarioAsync();
-        var uploadConfigId = (
-            await DbContext.UploadConfigs.SingleAsync(c =>
-                c.ArchiveConfigId == archive.ArchiveConfigId
-            )
-        ).Id;
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync(c =>
+            c.ArchiveConfigId == archive.ArchiveConfigId
+        );
         progressTrackerMock
             .Setup(t => t.StopTracking(It.IsAny<TransferIdentifier>()))
             .Callback(() =>
@@ -462,7 +460,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
                 dbContext.Uploads.Add(
                     new Upload
                     {
-                        UploadConfigId = uploadConfigId,
+                        UploadConfigId = uploadConfig.Id,
+                        HosterRegistrationId = uploadConfig.HosterRegistrationId,
                         CreatedAt = DateTime.UtcNow,
                         UploadState = UploadState.Pending,
                         OnlineState = OnlineState.Online,
@@ -752,6 +751,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             ArchiveId = assignToArchive ? archive.Id : null,
             CreatedAt = DateTime.UtcNow.AddDays(-61),
             UploadedAt = uploadedAt,

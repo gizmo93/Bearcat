@@ -12,8 +12,8 @@
                 <a class="bearcat-activity-queue-release" href="@($"/releases/{upload.ReleaseId}")" title="@upload.ReleaseName">
                     @upload.ReleaseName
                 </a>
-                <span class="bearcat-activity-queue-target" title="@($"{upload.HosterRegistrationName} · {upload.UploadConfigName}")">
-                    @upload.HosterRegistrationName · @upload.UploadConfigName
+                <span class="bearcat-activity-queue-target" title="@($"{L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName)} · {upload.UploadConfigName}")">
+                    @L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName) · @upload.UploadConfigName
                 </span>
                 <BbButton Variant="ButtonVariant.Ghost"
                           Size="ButtonSize.IconSmall"

@@ -378,6 +378,7 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
             Uploads = (uploads ?? [])
                 .Select(upload => new Upload
                 {
+                    HosterRegistration = hosterRegistration,
                     CreatedAt = new DateTime(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc),
                     UploadState = upload.UploadState,
                     OnlineState = upload.OnlineState,

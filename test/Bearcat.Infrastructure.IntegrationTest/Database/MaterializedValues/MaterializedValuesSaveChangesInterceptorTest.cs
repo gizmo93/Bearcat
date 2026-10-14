@@ -388,6 +388,32 @@ public class MaterializedValuesSaveChangesInterceptorTest(DatabaseProvider datab
     }
 
     [Test]
+    public async Task SaveChangesAsync_HosterRegistrationHoldingUploadOfUploadConfigOfOtherHosterRegistrationDeleted_UpdatesReleaseOnlineStateAfterDatabaseCascade()
+    {
+        // Arrange
+        var release = testData.AddRelease("Release");
+        var deletedHosterRegistration = testData.AddHosterRegistration("Deleted");
+        var upload = testData.AddUpload(
+            testData.AddUploadConfig(release, testData.AddHosterRegistration("Kept")),
+            OnlineState.Online
+        );
+        upload.HosterRegistration = deletedHosterRegistration;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        DbContext.HosterRegistrations.Remove(
+            await DbContext.HosterRegistrations.SingleAsync(registration =>
+                registration.Id == deletedHosterRegistration.Id
+            )
+        );
+
+        // Act
+        await DbContext.SaveChangesAsync();
+
+        // Assert
+        (await GetStoredOnlineStateAsync(release)).ShouldBe(OnlineState.Offline);
+    }
+
+    [Test]
     public async Task SaveChangesAsync_ArchiveConfigDeletedWithoutLoadedUploadConfigs_UpdatesReleaseOnlineStateAfterDatabaseCascade()
     {
         // Arrange
@@ -534,6 +560,7 @@ public class MaterializedValuesSaveChangesInterceptorTest(DatabaseProvider datab
         var uploadWithMissingUploadConfig = new Upload
         {
             UploadConfigId = uploadConfig.Id + 1000,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
             CreatedAt = LocalNow,
             UploadState = UploadState.Pending,
             OnlineState = OnlineState.Online,

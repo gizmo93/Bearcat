@@ -2,6 +2,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Shouldly;
 
@@ -54,6 +55,34 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldHaveSingleItem().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_ReturnsUploadOnlyForHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var registrationOfUploadConfig = await AddHosterRegistrationAsync(
+            "Configured",
+            isActive: true
+        );
+        var registrationOfUpload = await AddHosterRegistrationAsync("Holding", isActive: true);
+        var upload = await AddUploadAsync(
+            await AddUploadConfigAsync(registrationOfUploadConfig),
+            fileCheckedAts: [null],
+            hosterRegistrationOfUpload: registrationOfUpload
+        );
+
+        // Act
+        var resultOfRegistrationOfUpload = await GetLeastRecentlyCheckedUploadsToCheckAsync(
+            registrationOfUpload.Id
+        );
+        var resultOfRegistrationOfUploadConfig = await GetLeastRecentlyCheckedUploadsToCheckAsync(
+            registrationOfUploadConfig.Id
+        );
+
+        // Assert
+        resultOfRegistrationOfUpload.ShouldHaveSingleItem().Id.ShouldBe(upload.Id);
+        resultOfRegistrationOfUploadConfig.ShouldBeEmpty();
     }
 
     [TestCase(null, true)]
@@ -444,6 +473,89 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetUploadsDueForAutomaticReuploadAsync_HosterRegistrationOfUploadInactiveButOfUploadConfigActive_ReturnsNoUpload()
+    {
+        // Arrange
+        var registrationOfUploadConfig = await AddHosterRegistrationAsync(
+            "Configured",
+            isActive: true
+        );
+        var registrationOfUpload = await AddHosterRegistrationAsync("Holding", isActive: false);
+        await AddUploadAsync(
+            await AddUploadConfigAsync(registrationOfUploadConfig, numberOfHoursUntilReupload: 24),
+            fileCheckedAts: [LocalNow.AddHours(-1)],
+            onlineState: OnlineState.Offline,
+            notFullyOnlineSince: LocalNow.AddHours(-30),
+            fullyOfflineSince: LocalNow.AddHours(-30),
+            hosterRegistrationOfUpload: registrationOfUpload
+        );
+
+        // Act
+        var result = await GetUploadsDueForAutomaticReuploadAsync();
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetUploadsDueForAutomaticReuploadAsync_HoursOverrideOnlyOnHosterRegistrationOfUpload_UsesOverrideOfHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var registrationOfUploadConfig = await AddHosterRegistrationAsync(
+            "Configured",
+            isActive: true
+        );
+        var registrationOfUpload = await AddHosterRegistrationAsync(
+            "Holding",
+            isActive: true,
+            numberOfHoursUntilReuploadOverride: 2
+        );
+        var upload = await AddUploadAsync(
+            await AddUploadConfigAsync(registrationOfUploadConfig, numberOfHoursUntilReupload: 24),
+            fileCheckedAts: [LocalNow.AddHours(-1)],
+            onlineState: OnlineState.Offline,
+            notFullyOnlineSince: LocalNow.AddHours(-3),
+            fullyOfflineSince: LocalNow.AddHours(-3),
+            hosterRegistrationOfUpload: registrationOfUpload
+        );
+
+        // Act
+        var result = await GetUploadsDueForAutomaticReuploadAsync();
+
+        // Assert
+        var dueUpload = result.ShouldHaveSingleItem();
+        dueUpload.Id.ShouldBe(upload.Id);
+        dueUpload.HosterRegistration!.Name.ShouldBe("Holding");
+    }
+
+    [Test]
+    public async Task GetUploadForOnlineCheckAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_LoadsHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var registrationOfUploadConfig = await AddHosterRegistrationAsync(
+            "Configured",
+            isActive: true
+        );
+        var registrationOfUpload = await AddHosterRegistrationAsync("Holding", isActive: true);
+        var upload = await AddUploadAsync(
+            await AddUploadConfigAsync(registrationOfUploadConfig),
+            fileCheckedAts: [null],
+            hosterRegistrationOfUpload: registrationOfUpload
+        );
+
+        // Act
+        var result = await repository.GetUploadForOnlineCheckAsync(
+            upload.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HosterRegistration!.Name.ShouldBe("Holding");
+        result.UploadedFiles.ShouldHaveSingleItem();
+    }
+
+    [Test]
     public async Task GetUploadsDueForAutomaticReuploadAsync_DueUpload_LoadsUploadedFilesHosterRegistrationAndReleaseWithReleaseGroup()
     {
         // Arrange
@@ -459,10 +571,55 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         var upload = result.ShouldHaveSingleItem();
         upload.UploadedFiles.ShouldHaveSingleItem();
-        upload.UploadConfig.HosterRegistration.Name.ShouldBe("Hoster");
+        upload.HosterRegistration!.Name.ShouldBe("Hoster");
         upload.UploadConfig.Release.ReleaseGroup.Name.ShouldBe("Release group");
         upload.UploadConfig.Release.MediaFiles.ShouldBeEmpty();
         upload.UploadConfig.Release.QualityIssues.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetUploadConfigsWithoutUploadsAsync_HosterRegistrationAndHosterAccountPoolConfigs_ReturnsConfigsWithActiveHosterRegistrationOrPoolMember()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var release = testData.AddRelease("Release");
+        var activeRegistration = testData.AddHosterRegistration("Active");
+        var inactiveRegistration = testData.AddHosterRegistration("Inactive", isActive: false);
+        var activeRegistrationConfig = testData.AddUploadConfig(release, activeRegistration);
+        testData.AddUploadConfig(release, inactiveRegistration);
+        var poolWithActiveMemberConfig = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool(
+                "WithActiveMember",
+                inactiveRegistration,
+                activeRegistration
+            )
+        );
+        testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool("WithoutActiveMember", inactiveRegistration)
+        );
+        var poolConfigWithUpload = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool("WithUpload", activeRegistration)
+        );
+        testData.AddUnassignedUpload(poolConfigWithUpload, UploadState.WaitingForArchive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadConfigsWithoutUploadsAsync(
+            MaterializedValuesTestData.LocalNow,
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(uploadConfig => uploadConfig.Id)
+            .ShouldBe(
+                [activeRegistrationConfig.Id, poolWithActiveMemberConfig.Id],
+                ignoreOrder: true
+            );
     }
 
     private async Task<IReadOnlyList<Upload>> GetLeastRecentlyCheckedUploadsToCheckAsync(
@@ -575,7 +732,8 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         UploadState uploadState = UploadState.Completed,
         OnlineState onlineState = OnlineState.Online,
         DateTime? notFullyOnlineSince = null,
-        DateTime? fullyOfflineSince = null
+        DateTime? fullyOfflineSince = null,
+        HosterRegistration? hosterRegistrationOfUpload = null
     )
     {
         var archive = new Archive
@@ -599,6 +757,8 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId =
+                hosterRegistrationOfUpload?.Id ?? uploadConfig.HosterRegistrationId,
             Archive = archive,
             CreatedAt = LocalNow.AddDays(-5),
             UploadedAt = LocalNow.AddDays(-5),

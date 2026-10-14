@@ -97,8 +97,26 @@ public class HosterRegistrationService(
         return await readRepository.GetUploadCountAsync(id, cancellationToken);
     }
 
+    public async Task<int> GetHosterAccountPoolUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetHosterAccountPoolUploadCountAsync(id, cancellationToken);
+    }
+
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
+        var hosterAccountPoolUploadCount =
+            await readRepository.GetHosterAccountPoolUploadCountAsync(id, cancellationToken);
+
+        if (hosterAccountPoolUploadCount > 0)
+        {
+            throw new InvalidOperationException(
+                $"Hoster registration {id} still holds {hosterAccountPoolUploadCount} uploads of account pools and cannot be deleted."
+            );
+        }
+
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         writeRepository.Remove(registration);
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -219,6 +237,51 @@ public class HosterRegistrationService(
         catch (HosterCredentialsRejectedException ex)
         {
             return new TryLoginResult(IsSuccess: false, ErrorMessage: ex.Message);
+        }
+    }
+
+    public async Task<StorageQuotaCheckResult> GetStorageQuotaAsync(
+        int hosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await writeRepository.GetByIdAsync(
+            hosterRegistrationId,
+            cancellationToken
+        );
+
+        var hoster = hosterFactory.GetByName(registration.HosterClassName);
+        var storageQuotaHoster =
+            hoster as IHosterWithStorageQuota
+            ?? throw new InvalidOperationException(
+                $"Hoster {hoster.Name} does not support storage quota checks."
+            );
+        var config = hoster.DeserializeHosterConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
+
+        try
+        {
+            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+
+            var storageQuota = await storageQuotaHoster.GetStorageQuotaAsync(
+                config,
+                cancellationToken
+            );
+
+            return new StorageQuotaCheckResult(
+                IsSuccess: true,
+                StorageQuota: storageQuota,
+                ErrorMessage: null
+            );
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return new StorageQuotaCheckResult(
+                IsSuccess: false,
+                StorageQuota: null,
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
         }
     }
 

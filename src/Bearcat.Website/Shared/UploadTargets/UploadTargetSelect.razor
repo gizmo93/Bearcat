@@ -1,0 +1,38 @@
+@using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto
+
+<BbFormFieldSelect TValue="UploadTarget"
+                   Value="Value"
+                   ValueChanged="ValueChanged"
+                   ValueExpression="ValueExpression"
+                   Label="@L["UploadTarget"]"
+                   Placeholder="@L["SelectUploadTarget"]"
+                   DisplayTextSelector="Choices.GetName">
+    <BbSelectGroup>
+        <BbSelectLabel>@L["UploadTargetHosterAccounts"]</BbSelectLabel>
+        @foreach (var hosterRegistration in Choices.GetSelectableHosterRegistrations(Value))
+        {
+            <BbSelectItem Value="UploadTarget.ForHosterRegistration(hosterRegistration.Id)"
+                          Text="@hosterRegistration.Name" />
+        }
+    </BbSelectGroup>
+    @if (Choices.HosterAccountPools.Count > 0)
+    {
+        <BbSelectGroup>
+            <BbSelectLabel>@L["HosterAccountPools"]</BbSelectLabel>
+            @foreach (var hosterAccountPool in Choices.HosterAccountPools)
+            {
+                <BbSelectItem Value="UploadTarget.ForHosterAccountPool(hosterAccountPool.Id)"
+                              Text="@hosterAccountPool.Name">
+                    @if (UploadTargetChoices.HasActiveMember(hosterAccountPool))
+                    {
+                        @hosterAccountPool.Name
+                    }
+                    else
+                    {
+                        @L["HosterAccountPoolWithoutActiveAccounts", hosterAccountPool.Name]
+                    }
+                </BbSelectItem>
+            }
+        </BbSelectGroup>
+    }
+</BbFormFieldSelect>

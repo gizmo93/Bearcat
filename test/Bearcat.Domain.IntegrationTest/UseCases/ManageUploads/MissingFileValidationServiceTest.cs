@@ -189,6 +189,7 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.Pending,

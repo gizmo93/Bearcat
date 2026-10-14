@@ -623,6 +623,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
                 new Upload
                 {
                     UploadConfigId = uploadConfig.Id,
+                    HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     ArchiveId = archive.Id,
                     CreatedAt = DateTime.UtcNow.AddDays(-61),
                     UploadedAt = uploadedAt ?? DateTime.UtcNow.AddDays(-60),
@@ -650,6 +651,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
                 new Upload
                 {
                     UploadConfigId = uploadConfig.Id,
+                    HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     CreatedAt = DateTime.UtcNow,
                     UploadState = additionalUploadState.Value,
                     OnlineState = OnlineState.Unknown,

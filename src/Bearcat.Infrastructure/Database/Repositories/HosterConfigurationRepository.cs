@@ -63,6 +63,7 @@ public class HosterConfigurationRepository(
                     h.HasUnreadableSecrets,
                     h.RequiresCaptchaVerification,
                     hoster is IHosterWithCaptchaVerification,
+                    hoster is IHosterWithStorageQuota,
                     hoster.SupportsPremiumOnlyDownloads,
                     hoster is IHosterWithFileSizeLimit fileSizeLimit
                         ? fileSizeLimit.MaxFileSizeMb
@@ -98,7 +99,21 @@ public class HosterConfigurationRepository(
     )
     {
         return await dbRead.Uploads.CountAsync(
-            upload => upload.UploadConfig.HosterRegistrationId == id,
+            upload =>
+                upload.HosterRegistrationId == id || upload.UploadConfig.HosterRegistrationId == id,
+            cancellationToken
+        );
+    }
+
+    public async Task<int> GetHosterAccountPoolUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.Uploads.CountAsync(
+            upload =>
+                upload.HosterRegistrationId == id
+                && upload.UploadConfig.HosterAccountPoolId != null,
             cancellationToken
         );
     }

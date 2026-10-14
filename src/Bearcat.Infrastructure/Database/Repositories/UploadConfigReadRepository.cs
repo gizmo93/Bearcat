@@ -56,8 +56,10 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
         u => new UploadConfigReadModel(
             u.Id,
             u.Name,
-            u.HosterRegistration.Name,
             u.HosterRegistrationId,
+            u.HosterRegistrationId != null ? u.HosterRegistration!.Name : null,
+            u.HosterAccountPoolId,
+            u.HosterAccountPoolId != null ? u.HosterAccountPool!.Name : null,
             u.ArchiveConfigId,
             u.ArchiveConfig.Name,
             u.Release.Name,

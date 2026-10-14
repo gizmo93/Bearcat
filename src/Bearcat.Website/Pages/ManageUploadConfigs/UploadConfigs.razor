@@ -36,7 +36,7 @@
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold">@config.Name</span>
-                                    <BbBadge Variant="BadgeVariant.Outline">@config.HosterRegistrationName</BbBadge>
+                                    <BbBadge Variant="BadgeVariant.Outline">@(config.HosterRegistrationName ?? config.HosterAccountPoolName)</BbBadge>
                                     @if (config.PremiumOnlyDownload)
                                     {
                                         <BbBadge Variant="BadgeVariant.Secondary">@L["PremiumOnlyDownload"]</BbBadge>

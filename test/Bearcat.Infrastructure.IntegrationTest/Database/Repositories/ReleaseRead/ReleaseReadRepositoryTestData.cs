@@ -133,6 +133,7 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = uploadedAt,
             UploadState = uploadState,

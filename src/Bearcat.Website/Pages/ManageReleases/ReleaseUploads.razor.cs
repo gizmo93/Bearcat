@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
+using Bearcat.Website.Localization;
 using Bearcat.Website.Pages.ManageReleases.UploadHistory;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -355,10 +356,13 @@ public partial class ReleaseUploads(
             ? L["UploadHistoryContainerCountOne"]
             : L["UploadHistoryContainerCount", containerCount];
 
-    private static bool IsHosterNameShown(ReleaseUploadReadModel upload) =>
+    private string GetHosterAccountName(ReleaseUploadReadModel upload) =>
+        L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName);
+
+    private bool IsHosterAccountNameShown(ReleaseUploadReadModel upload) =>
         !string.Equals(
             upload.UploadConfigName,
-            upload.HosterRegistrationName,
+            GetHosterAccountName(upload),
             StringComparison.OrdinalIgnoreCase
         );
 

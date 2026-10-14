@@ -175,7 +175,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         var candidate = result.ShouldHaveSingleItem();
         candidate.Id.ShouldBe(archive.Id);
         var uploadConfig = candidate.ArchiveConfig.UploadConfigs.ShouldHaveSingleItem();
-        uploadConfig.HosterRegistration.Name.ShouldBe("Overdue hoster");
+        uploadConfig.HosterRegistration!.Name.ShouldBe("Overdue hoster");
         uploadConfig
             .Uploads.ShouldHaveSingleItem()
             .UploadedFiles.Select(file => file.HosterFileLink)
@@ -534,6 +534,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                 new Upload
                 {
                     UploadConfig = uploadConfig,
+                    HosterRegistration = uploadConfig.HosterRegistration,
                     CreatedAt = uploadedAt.AddHours(-1),
                     UploadedAt = uploadedAt,
                     UploadState = uploadState,
@@ -563,6 +564,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
                 new Upload
                 {
                     UploadConfig = uploadConfig,
+                    HosterRegistration = uploadConfig.HosterRegistration,
                     CreatedAt = uploadedAt.AddHours(-1),
                     UploadState = UploadState.Failed,
                     OnlineState = OnlineState.Unknown,

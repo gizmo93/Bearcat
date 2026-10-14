@@ -9,4 +9,9 @@ public interface IHosterConfigurationReadRepository
     );
 
     Task<int> GetUploadCountAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<int> GetHosterAccountPoolUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    );
 }

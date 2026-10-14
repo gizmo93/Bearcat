@@ -2,6 +2,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Validation;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -208,9 +209,10 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                         ? archiveConfigTemplatesByArchiveConfigId[config.ArchiveConfigId]
                         : unmanagedArchiveConfigTemplate!,
                 HosterRegistrationId = config.HosterRegistrationId,
+                HosterAccountPoolId = config.HosterAccountPoolId,
                 Name = string.Equals(
                     config.Name,
-                    config.HosterRegistration.Name,
+                    config.GetUploadTargetName(),
                     StringComparison.Ordinal
                 )
                     ? null
@@ -399,7 +401,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public async Task<int> CreateUploadConfigTemplateAsync(
         int releaseTemplateId,
         string? name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
         CancellationToken cancellationToken = default
@@ -408,7 +410,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         return await CreateUploadConfigTemplateAsync(
             releaseTemplateId,
             name,
-            hosterRegistrationId,
+            uploadTarget,
             archiveConfigTemplateId,
             premiumOnlyDownload,
             collectionUploadSlotKey: null,
@@ -423,7 +425,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public async Task<int> CreateUploadConfigTemplateAsync(
         int releaseTemplateId,
         string? name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
         string? collectionUploadSlotKey,
@@ -446,7 +448,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         var uploadConfigTemplate = new UploadConfigTemplate
         {
             Name = CleanOptional(name),
-            HosterRegistrationId = hosterRegistrationId,
+            HosterRegistrationId = uploadTarget.HosterRegistrationId,
+            HosterAccountPoolId = uploadTarget.HosterAccountPoolId,
             ArchiveConfigTemplateId = archiveConfigTemplate?.Id ?? archiveConfigTemplateId,
             PremiumOnlyDownload = premiumOnlyDownload,
             CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey),
@@ -473,7 +476,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public async Task UpdateUploadConfigTemplateAsync(
         int uploadConfigTemplateId,
         string? name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
         CancellationToken cancellationToken = default
@@ -482,7 +485,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         await UpdateUploadConfigTemplateAsync(
             uploadConfigTemplateId,
             name,
-            hosterRegistrationId,
+            uploadTarget,
             archiveConfigTemplateId,
             premiumOnlyDownload,
             collectionUploadSlotKey: null,
@@ -497,7 +500,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public async Task UpdateUploadConfigTemplateAsync(
         int uploadConfigTemplateId,
         string? name,
-        int hosterRegistrationId,
+        UploadTarget uploadTarget,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
         string? collectionUploadSlotKey,
@@ -518,7 +521,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         uploadConfigTemplate.Name = CleanOptional(name);
-        uploadConfigTemplate.HosterRegistrationId = hosterRegistrationId;
+        uploadConfigTemplate.HosterRegistrationId = uploadTarget.HosterRegistrationId;
+        uploadConfigTemplate.HosterAccountPoolId = uploadTarget.HosterAccountPoolId;
 
         uploadConfigTemplate.ArchiveConfigTemplateId =
             archiveConfigTemplate?.Id ?? archiveConfigTemplateId;

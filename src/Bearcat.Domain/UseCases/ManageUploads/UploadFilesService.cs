@@ -7,6 +7,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,7 @@ public class UploadFilesService(
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
     HosterCredentialsRejectionService credentialsRejectionService,
+    HosterAccountPoolAccountSelectionService hosterAccountPoolAccountSelectionService,
     ITransferProgressTracker progressTracker
 )
 {
@@ -71,10 +73,7 @@ public class UploadFilesService(
         var hosters = hosterFactory.GetHostersByName().ToDictionary();
 
         await concurrencyService.EnsureHosterSemaphoresAsync(
-            pendingUploads
-                .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
-                .Distinct()
-                .ToList(),
+            pendingUploads.Select(u => u.GetHosterClassName()).Distinct().ToList(),
             hostersByName: hosters,
             cancellationToken: cancellationToken
         );
@@ -135,10 +134,7 @@ public class UploadFilesService(
                 );
 
                 await concurrencyService.EnsureHosterSemaphoresAsync(
-                    newPendingUploads
-                        .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
-                        .Distinct()
-                        .ToList(),
+                    newPendingUploads.Select(u => u.GetHosterClassName()).Distinct().ToList(),
                     hostersByName: hosters,
                     cancellationToken: cancellationToken
                 );
@@ -206,17 +202,43 @@ public class UploadFilesService(
                 continue;
             }
 
-            var hosterClassName = upload.UploadConfig.HosterRegistration.HosterClassName;
+            if (IsHosterAccountPoolUploadOnUnusableAccount(upload))
+            {
+                logger.LogInformation(
+                    "Account {HosterRegistration} assigned to upload {UploadId} is no longer usable for uploads, selecting another account of hoster account pool {HosterAccountPool}",
+                    upload.HosterRegistration!.Name,
+                    upload.Id,
+                    upload.UploadConfig.HosterAccountPool!.Name
+                );
+
+                ResetHosterRegistrationAssignment(upload);
+            }
 
             if (
-                !upload.UploadConfig.HosterRegistration.IsActive
+                !HasHosterRegistrationAssigned(upload)
+                && !await TryAssignHosterRegistrationFromHosterAccountPoolAsync(
+                    upload: upload,
+                    hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
+                    uploadContexts: uploadContexts,
+                    cancellationToken: cancellationToken
+                )
+            )
+            {
+                continue;
+            }
+
+            var hosterRegistration = upload.HosterRegistration!;
+            var hosterClassName = hosterRegistration.HosterClassName;
+
+            if (
+                !hosterRegistration.IsActive
                 || !concurrencyService.HasHosterSemaphore(hosterClassName)
             )
             {
                 logger.LogInformation(
                     "Skipping pending upload {UploadId} because its hoster registration {HosterRegistration} is inactive or its parallel upload limit could not be determined",
                     upload.Id,
-                    upload.UploadConfig.HosterRegistration.Name
+                    hosterRegistration.Name
                 );
 
                 continue;
@@ -226,7 +248,7 @@ public class UploadFilesService(
 
             var hoster = hosters[hosterClassName];
             var hosterConfig = hoster.DeserializeHosterConfig(
-                hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
+                hosterConfigsByRegistrationId[hosterRegistration.Id]
             );
 
             UploadExecutionContext context;
@@ -244,6 +266,11 @@ public class UploadFilesService(
             catch (HosterCredentialsRejectedException ex)
             {
                 credentialsRejectionService.DeactivateAndNotify(upload, ex.Message);
+
+                if (IsHosterAccountPoolUploadWithoutUploadedFiles(upload))
+                {
+                    ResetHosterRegistrationAssignment(upload);
+                }
 
                 trackedUploadIds.Remove(upload.Id);
                 continue;
@@ -282,6 +309,93 @@ public class UploadFilesService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
+    private static bool HasHosterRegistrationAssigned(Upload upload)
+    {
+        return upload.HosterRegistrationId is not null;
+    }
+
+    private static bool IsHosterAccountPoolUploadOnUnusableAccount(Upload upload)
+    {
+        return HasHosterRegistrationAssigned(upload)
+            && IsHosterAccountPoolUploadWithoutUploadedFiles(upload)
+            && !upload.HosterRegistration!.IsUsableForUploads();
+    }
+
+    private static bool IsHosterAccountPoolUploadWithoutUploadedFiles(Upload upload)
+    {
+        return upload.UploadConfig.HosterAccountPoolId is not null
+            && upload.UploadedFiles.Count == 0;
+    }
+
+    private static void ResetHosterRegistrationAssignment(Upload upload)
+    {
+        upload.HosterRegistrationId = null;
+        upload.HosterRegistration = null;
+        upload.HosterFolderId = null;
+    }
+
+    private async Task<bool> TryAssignHosterRegistrationFromHosterAccountPoolAsync(
+        Upload upload,
+        IReadOnlyDictionary<int, string> hosterConfigsByRegistrationId,
+        Dictionary<int, UploadExecutionContext> uploadContexts,
+        CancellationToken cancellationToken
+    )
+    {
+        var hosterRegistration =
+            await hosterAccountPoolAccountSelectionService.SelectHosterRegistrationAsync(
+                upload: upload,
+                requiredBytes: GetArchiveFilesToUpload(upload)
+                    .Sum(archiveFile => GetFileSizeInBytes(archiveFile.FullFileName)),
+                hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
+                remainingBytesOfRunningUploadsByHosterRegistrationId: GetRemainingBytesOfRunningUploadsByHosterRegistrationId(
+                    uploadContexts
+                ),
+                cancellationToken: cancellationToken
+            );
+
+        if (hosterRegistration is null)
+        {
+            return false;
+        }
+
+        upload.HosterRegistrationId = hosterRegistration.Id;
+        upload.HosterRegistration = hosterRegistration;
+
+        return true;
+    }
+
+    private static Dictionary<int, long> GetRemainingBytesOfRunningUploadsByHosterRegistrationId(
+        Dictionary<int, UploadExecutionContext> uploadContexts
+    ) =>
+        uploadContexts
+            .Values.GroupBy(context => context.Upload.HosterRegistrationId!.Value)
+            .ToDictionary(
+                contextsOfRegistration => contextsOfRegistration.Key,
+                contextsOfRegistration => contextsOfRegistration.Sum(GetRemainingBytes)
+            );
+
+    private static long GetRemainingBytes(UploadExecutionContext context)
+    {
+        var processedArchiveFileIds = context
+            .Upload.UploadedFiles.Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+
+        return context
+            .PlannedFiles.Where(file => !processedArchiveFileIds.Contains(file.FileId))
+            .Sum(file => file.SizeBytes!.Value);
+    }
+
+    private static List<ArchiveFile> GetArchiveFilesToUpload(Upload upload)
+    {
+        var processedArchiveFileIds = upload
+            .UploadedFiles.Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+
+        return upload
+            .Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id))
+            .ToList();
+    }
+
     private async Task<UploadExecutionContext> CreateUploadContextAsync(
         Upload upload,
         IHoster hoster,
@@ -290,13 +404,9 @@ public class UploadFilesService(
         CancellationToken cancellationToken
     )
     {
-        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
-            upload.UploadConfig.HosterRegistration
-        );
+        var hosterRegistration = upload.HosterRegistration!;
 
-        var processedArchiveFileIds = upload
-            .UploadedFiles.Select(uf => uf.ArchiveFileId)
-            .ToHashSet();
+        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(hosterRegistration);
 
         var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
         var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
@@ -306,15 +416,13 @@ public class UploadFilesService(
             .Select(uf => uf.ArchiveFileId)
             .ToHashSet();
 
-        var archiveFilesToUpload = upload
-            .Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id))
-            .ToList();
+        var archiveFilesToUpload = GetArchiveFilesToUpload(upload);
 
         var plannedFiles = upload
-            .Archive.ArchiveFiles.Select(archiveFile => new TransferFile(
+            .Archive!.ArchiveFiles.Select(archiveFile => new TransferFile(
                 FileId: archiveFile.Id,
                 FileName: Path.GetFileName(archiveFile.FullFileName),
-                SourceName: upload.UploadConfig.HosterRegistration.Name,
+                SourceName: hosterRegistration.Name,
                 SizeBytes: GetFileSizeInBytes(archiveFile.FullFileName),
                 IsAlreadyTransferred: successfullyUploadedArchiveFileIds.Contains(archiveFile.Id)
             ))

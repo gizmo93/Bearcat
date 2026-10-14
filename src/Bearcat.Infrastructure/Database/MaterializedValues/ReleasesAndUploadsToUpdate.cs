@@ -94,9 +94,23 @@ public sealed class ReleasesAndUploadsToUpdate
             releaseIds.UnionWith(
                 await context
                     .UploadConfigs.Where(uploadConfig =>
-                        deletedHosterRegistrationIds.Contains(uploadConfig.HosterRegistrationId)
+                        uploadConfig.HosterRegistrationId != null
+                        && deletedHosterRegistrationIds.Contains(
+                            uploadConfig.HosterRegistrationId.Value
+                        )
                     )
                     .Select(uploadConfig => uploadConfig.ReleaseId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken)
+            );
+
+            releaseIds.UnionWith(
+                await context
+                    .Uploads.Where(upload =>
+                        upload.HosterRegistrationId != null
+                        && deletedHosterRegistrationIds.Contains(upload.HosterRegistrationId.Value)
+                    )
+                    .Select(upload => upload.UploadConfig.ReleaseId)
                     .Distinct()
                     .ToListAsync(cancellationToken)
             );

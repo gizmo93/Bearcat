@@ -122,8 +122,9 @@ public class ReleaseFromFolderCreationService(
         {
             var uploadConfig = new UploadConfig
             {
-                Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
+                Name = CleanOptional(template.Name) ?? template.GetUploadTargetName(),
                 HosterRegistrationId = template.HosterRegistrationId,
+                HosterAccountPoolId = template.HosterAccountPoolId,
                 PremiumOnlyDownload = template.PremiumOnlyDownload,
                 ArchiveConfig =
                     releaseType is ReleaseType.Managed

@@ -9,4 +9,7 @@ public class AccountInfoResponse
 
     [JsonPropertyName("status")]
     public int Status { get; set; }
+
+    [JsonPropertyName("result")]
+    public AccountInfoResult? Result { get; set; }
 }

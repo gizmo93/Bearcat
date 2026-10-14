@@ -80,10 +80,9 @@ public class AddReleaseOnlineStateAndUploadOldestUploadedFileCheckedAtMigrationT
             },
             ignoreOrder: true
         );
-        var oldestCheckedAtsByUploadId = await DbContext.Uploads.ToDictionaryAsync(
-            upload => upload.Id,
-            upload => upload.OldestUploadedFileCheckedAt
-        );
+        var oldestCheckedAtsByUploadId = await DbContext
+            .Uploads.Select(upload => new { upload.Id, upload.OldestUploadedFileCheckedAt })
+            .ToDictionaryAsync(upload => upload.Id, upload => upload.OldestUploadedFileCheckedAt);
         oldestCheckedAtsByUploadId[uploadWithoutFiles.Id].ShouldBeNull();
         oldestCheckedAtsByUploadId[uploadWithNeverCheckedFile.Id].ShouldBe(DateTime.MinValue);
         oldestCheckedAtsByUploadId[uploadWithCheckedFiles.Id].ShouldBe(LocalNow.AddHours(-4));

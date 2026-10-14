@@ -17,7 +17,8 @@ namespace Bearcat.Hosters.Alfafile;
 
 public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
     : IHosterWithFolders,
-        IHosterWithDownload
+        IHosterWithDownload,
+        IHosterWithStorageQuota
 {
     public string Name => "Alfafile";
 
@@ -148,6 +149,27 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
         var response = await apiClient.GetUserInfoAsync(config, cancellationToken);
 
         return response.Response?.User.Upload.NbPipes;
+    }
+
+    public async Task<HosterStorageQuota> GetStorageQuotaAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<AlfafileConfig>();
+        var response = await apiClient.GetUserInfoAsync(config, cancellationToken);
+
+        if (response.Status != (int)HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                response.Details
+                    ?? $"Alfafile user info request failed with status {response.Status}"
+            );
+        }
+
+        var storage = response.Response!.User.Storage;
+
+        return HosterStorageQuota.Limited(freeBytes: storage.Left, totalBytes: storage.Total);
     }
 
     public async Task<string> CreateFolderAsync(

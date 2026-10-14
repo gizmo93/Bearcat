@@ -26,14 +26,15 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                     .ThenInclude(a => a.ArchiveFiles)
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.HosterRegistration)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u => u.HosterRegistration)
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.UploadConfigs)
                     .ThenInclude(uc => uc.Uploads)
                         .ThenInclude(u =>
                             u.UploadedFiles.Where(f =>
                                 EF.Parameter(mirrorDownloadHosterRegistrationIds)
-                                    .Contains(f.Upload.UploadConfig.HosterRegistrationId)
+                                    .Contains(f.Upload.HosterRegistrationId!.Value)
                             )
                         )
             .Where(r =>

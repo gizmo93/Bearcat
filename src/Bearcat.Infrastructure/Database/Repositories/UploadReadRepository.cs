@@ -41,7 +41,7 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
         if (query.HosterRegistrationId is not null)
         {
             uploadsQuery = uploadsQuery.Where(u =>
-                u.UploadConfig.HosterRegistrationId == query.HosterRegistrationId.Value
+                u.HosterRegistrationId == query.HosterRegistrationId.Value
             );
         }
 
@@ -108,7 +108,12 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                 u.UploadConfig.ReleaseId,
                 ReleaseName = u.UploadConfig.Release.Name,
                 UploadConfigName = u.UploadConfig.Name,
-                HosterRegistrationName = u.UploadConfig.HosterRegistration.Name,
+                HosterRegistrationName = u.HosterRegistrationId != null
+                    ? u.HosterRegistration!.Name
+                    : null,
+                HosterAccountPoolName = u.UploadConfig.HosterAccountPoolId != null
+                    ? u.UploadConfig.HosterAccountPool!.Name
+                    : null,
                 u.UploadState,
                 ArchiveFiles = dbRead
                     .ArchiveFiles.Where(af => af.ArchiveId == u.ArchiveId)
@@ -132,6 +137,7 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                 upload.ReleaseName,
                 upload.UploadConfigName,
                 upload.HosterRegistrationName,
+                upload.HosterAccountPoolName,
                 upload.UploadState,
                 upload
                     .ArchiveFiles.OrderBy(
@@ -174,8 +180,12 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             u.UploadConfig.Release.Name,
             u.UploadConfigId,
             u.UploadConfig.Name,
-            u.UploadConfig.HosterRegistrationId,
-            u.UploadConfig.HosterRegistration.Name,
+            u.HosterRegistrationId,
+            u.HosterRegistrationId != null ? u.HosterRegistration!.Name : null,
+            u.UploadConfig.HosterAccountPoolId,
+            u.UploadConfig.HosterAccountPoolId != null
+                ? u.UploadConfig.HosterAccountPool!.Name
+                : null,
             u.CreatedAt,
             u.UploadedAt,
             u.UploadState,

@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Shouldly;
 
@@ -127,6 +128,44 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
                 uploads.UploadedAtMidnight.Id,
                 uploads.UploadedBeforeMidnight.Id,
             ]);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_FiltersByHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var upload = await AddUploadOnOtherHosterRegistrationThanItsUploadConfigAsync();
+
+        // Act
+        var resultOfHosterRegistrationOfUpload = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(HosterRegistrationId: upload.HosterRegistrationId),
+            CancellationToken.None
+        );
+        var resultOfHosterRegistrationOfUploadConfig = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(HosterRegistrationId: upload.UploadConfig.HosterRegistrationId),
+            CancellationToken.None
+        );
+
+        // Assert
+        resultOfHosterRegistrationOfUpload
+            .Items.Select(item => item.UploadId)
+            .ShouldBe([upload.Id]);
+        resultOfHosterRegistrationOfUploadConfig.Items.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetUploadAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_ProjectsHosterRegistrationOfUpload()
+    {
+        // Arrange
+        var upload = await AddUploadOnOtherHosterRegistrationThanItsUploadConfigAsync();
+
+        // Act
+        var result = await repository.GetUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HosterRegistrationId.ShouldBe(upload.HosterRegistrationId);
+        result.HosterRegistrationName.ShouldBe("Holding hoster");
     }
 
     [Test]
@@ -442,6 +481,60 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         pendingUpload.ArchiveFiles.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task GetUploadAsync_UnassignedUploadOfHosterAccountPool_ReturnsPoolWithoutHosterRegistration()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var hosterAccountPool = testData.AddHosterAccountPool(
+            "Pool",
+            testData.AddHosterRegistration("Member")
+        );
+        var upload = testData.AddUnassignedUpload(
+            testData.AddHosterAccountPoolUploadConfig(
+                testData.AddRelease("Release"),
+                hosterAccountPool
+            ),
+            UploadState.WaitingForArchive
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.HosterRegistrationId.ShouldBeNull();
+        result.HosterRegistrationName.ShouldBeNull();
+        result.HosterAccountPoolId.ShouldBe(hosterAccountPool.Id);
+        result.HosterAccountPoolName.ShouldBe("Pool");
+    }
+
+    [Test]
+    public async Task GetRunningUploadsAsync_UnassignedPendingUploadOfHosterAccountPool_ReturnsPoolNameWithoutHosterRegistration()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        testData.AddUnassignedUpload(
+            testData.AddHosterAccountPoolUploadConfig(
+                testData.AddRelease("Release"),
+                testData.AddHosterAccountPool("Pool", testData.AddHosterRegistration("Member"))
+            ),
+            UploadState.Pending
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        var upload = result.ShouldHaveSingleItem();
+        upload.HosterRegistrationName.ShouldBeNull();
+        upload.HosterAccountPoolName.ShouldBe("Pool");
+    }
+
     private async Task<RunningUploads> AddRunningUploadsAsync()
     {
         var hoster = CreateHosterRegistration("Running hoster");
@@ -671,6 +764,27 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         );
     }
 
+    private async Task<Upload> AddUploadOnOtherHosterRegistrationThanItsUploadConfigAsync()
+    {
+        var release = CreateRelease("Bearcat.Moved.2026-GRP");
+        var uploadConfig = CreateUploadConfig(
+            release,
+            CreateArchiveConfig(release),
+            CreateHosterRegistration("Configured hoster"),
+            "Moved upload"
+        );
+        var hosterRegistrationOfUpload = CreateHosterRegistration("Holding hoster");
+
+        return await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight,
+            uploadedAt: null,
+            uploadState: UploadState.Pending,
+            onlineState: OnlineState.Unknown,
+            configure: upload => upload.HosterRegistration = hosterRegistrationOfUpload
+        );
+    }
+
     private async Task<Upload> AddUploadAsync(
         UploadConfig uploadConfig,
         DateTime createdAt,
@@ -683,6 +797,7 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             CreatedAt = createdAt,
             UploadedAt = uploadedAt,
             UploadState = uploadState,

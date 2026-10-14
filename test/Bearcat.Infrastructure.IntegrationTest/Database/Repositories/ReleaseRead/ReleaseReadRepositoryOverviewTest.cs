@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
@@ -35,7 +36,8 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         repository = new ReleaseReadRepository(
             ReadDbContext,
             archiverFactory.Object,
-            Mock.Of<ILinkCrypterFactory>()
+            Mock.Of<ILinkCrypterFactory>(),
+            Mock.Of<IHosterFactory>()
         );
     }
 
@@ -117,7 +119,7 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
 
         var first = result[0];
         first.UploadConfigId.ShouldBe(firstConfig.Id);
-        first.HosterRegistrationName.ShouldBe("Hoster A");
+        first.UploadTargetName.ShouldBe("Hoster A");
         first.UploadId.ShouldBe(latestUploadByUploadedAt.Id);
         first.CreatedAt.ShouldBe(MidnightUtc);
         first.UploadedAt.ShouldBe(MidnightUtc.AddHours(3).AddMilliseconds(500));

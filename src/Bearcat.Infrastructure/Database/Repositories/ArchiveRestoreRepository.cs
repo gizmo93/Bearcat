@@ -23,8 +23,7 @@ public class ArchiveRestoreRepository(IBearcatWriteDbContext dbWrite) : IArchive
     {
         return await dbWrite
             .Uploads.AsSplitQuery()
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.HosterRegistration)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
             .Where(u =>
@@ -64,8 +63,7 @@ public class ArchiveRestoreRepository(IBearcatWriteDbContext dbWrite) : IArchive
     {
         return await dbWrite
             .Uploads.AsSplitQuery()
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.HosterRegistration)
             .Include(u => u.UploadedFiles)
             .Where(u => u.ArchiveId == archiveId)
             .OrderBy(u => u.Id)

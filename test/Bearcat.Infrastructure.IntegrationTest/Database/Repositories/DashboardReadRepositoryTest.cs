@@ -254,6 +254,7 @@ public class DashboardReadRepositoryTest(DatabaseProvider databaseProvider)
             new Upload
             {
                 UploadConfig = uploadConfig,
+                HosterRegistration = uploadConfig.HosterRegistration,
                 CreatedAt = uploadedAt ?? DateTime.UtcNow,
                 UploadedAt = uploadedAt,
                 UploadState = uploadState,

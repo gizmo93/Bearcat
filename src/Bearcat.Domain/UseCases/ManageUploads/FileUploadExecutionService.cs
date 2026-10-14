@@ -48,11 +48,11 @@ public class FileUploadExecutionService(
             );
 
             using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
-                context.Upload.UploadConfig.HosterRegistration
+                context.Upload.HosterRegistration!
             );
 
             using var speedLimitScope = transferSpeedLimitService.EnterUploadScope(
-                context.Upload.UploadConfig.HosterRegistration
+                context.Upload.HosterRegistration!
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(
@@ -63,7 +63,7 @@ public class FileUploadExecutionService(
                     identifier: new TransferIdentifier(TransferType.Upload, fileToUpload.UploadId),
                     fileId: fileToUpload.ArchiveFileId,
                     fileName: Path.GetFileName(fileToUpload.FullFileName),
-                    sourceName: context.Upload.UploadConfig.HosterRegistration.Name
+                    sourceName: context.Upload.HosterRegistration!.Name
                 ),
                 cancellationToken: fileUploadCancellationTokenSource.Token
             );

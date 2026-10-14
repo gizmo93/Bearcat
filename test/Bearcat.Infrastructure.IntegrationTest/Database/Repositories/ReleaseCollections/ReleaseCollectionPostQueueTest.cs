@@ -67,7 +67,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         slotGroup.SlotName.ShouldBe("1080p");
 
         var hoster = slotGroup.Hosters.ShouldHaveSingleItem();
-        hoster.HosterRegistrationName.ShouldBe("Open.Collection hoster");
+        hoster.HosterAccountOrPoolName.ShouldBe("Open.Collection hoster");
         hoster.LinkCount.ShouldBe(2);
 
         var container = slotGroup.Containers.ShouldHaveSingleItem();
@@ -250,6 +250,99 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         // Assert
         count.ShouldBe(1);
         result.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_HosterAccountPoolSlotConfigWithoutActiveMember_IsIgnored_ShowsCollection()
+    {
+        // Arrange
+        var collection = await AddPostQueueCollectionAsync(
+            "InactivePool.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec([new CollectionUploadSpec(UploadState.Completed, 10)]),
+                    new CollectionConfigSpec(
+                        [
+                            new CollectionUploadSpec(
+                                UploadState.Pending,
+                                5,
+                                HasUploadedAt: false,
+                                FileCount: 0
+                            ),
+                        ],
+                        HosterActive: false,
+                        UseHosterAccountPool: true
+                    ),
+                ]),
+            ]
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_HosterAccountPoolSlotConfigWithActiveMemberAndUnassignedPendingUpload_HidesCollection()
+    {
+        // Arrange
+        await AddPostQueueCollectionAsync(
+            "PendingPool.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec([new CollectionUploadSpec(UploadState.Completed, 10)]),
+                    new CollectionConfigSpec(
+                        [
+                            new CollectionUploadSpec(
+                                UploadState.Pending,
+                                5,
+                                HasUploadedAt: false,
+                                FileCount: 0
+                            ),
+                        ],
+                        UseHosterAccountPool: true
+                    ),
+                ]),
+            ]
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_HosterAccountPoolSlotConfigWithCompletedUpload_ShowsHosterRegistrationOfUpload()
+    {
+        // Arrange
+        await AddPostQueueCollectionAsync(
+            "CompletedPool.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec(
+                        [new CollectionUploadSpec(UploadState.Completed, 10)],
+                        UseHosterAccountPool: true
+                    ),
+                ]),
+            ]
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        var hoster = result
+            .ShouldHaveSingleItem()
+            .SlotGroups.ShouldHaveSingleItem()
+            .Hosters.ShouldHaveSingleItem();
+        hoster.HosterAccountOrPoolName.ShouldBe("CompletedPool.Collection hoster 1-1");
     }
 
     [Test]
@@ -497,11 +590,31 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 {
                     Release = release,
                     ArchiveConfig = archiveConfig,
-                    HosterRegistration = hosterRegistration,
                     CollectionUploadSlot = uploadSlot,
                     Name = $"{name} upload {releaseIndex}-{configIndex}",
                     LinkCrypters = [],
                 };
+
+                if (configSpec.UseHosterAccountPool)
+                {
+                    uploadConfig.HosterAccountPool = new HosterAccountPool
+                    {
+                        Name = $"{name} pool {releaseIndex}-{configIndex}",
+                        HosterClassName = hosterRegistration.HosterClassName,
+                        Members =
+                        [
+                            new HosterAccountPoolMember
+                            {
+                                HosterRegistration = hosterRegistration,
+                                Priority = 1,
+                            },
+                        ],
+                    };
+                }
+                else
+                {
+                    uploadConfig.HosterRegistration = hosterRegistration;
+                }
                 DbContext.AddRange(archiveConfig, hosterRegistration, uploadConfig);
 
                 foreach (var uploadSpec in configSpec.Uploads)
@@ -624,6 +737,13 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration =
+                uploadConfig.HosterRegistration
+                ?? (
+                    spec.FileCount > 0
+                        ? uploadConfig.HosterAccountPool!.Members[0].HosterRegistration
+                        : null
+                ),
             CreatedAt = createdAt,
             UploadedAt = spec.HasUploadedAt ? createdAt : null,
             UploadState = spec.State,
@@ -681,6 +801,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         bool UseSlot = true,
         bool HosterActive = true,
         string SlotName = "1080p",
+        bool UseHosterAccountPool = false,
         IReadOnlyList<CollectionLinkCrypterSpec> LinkCrypters = null!
     )
     {
@@ -807,6 +928,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddMinutes(-5),
             UploadedAt = DateTime.UtcNow,

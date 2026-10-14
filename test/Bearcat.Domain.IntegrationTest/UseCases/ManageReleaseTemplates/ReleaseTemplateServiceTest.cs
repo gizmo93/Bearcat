@@ -2,6 +2,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -109,7 +110,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         var uploadConfigTemplateId = await service.CreateUploadConfigTemplateAsync(
             releaseTemplate.Id,
             " ",
-            hosterRegistration.Id,
+            UploadTarget.ForHosterRegistration(hosterRegistration.Id),
             archiveConfigTemplateId,
             true,
             CancellationToken.None
@@ -410,7 +411,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         await service.CreateUploadConfigTemplateAsync(
             releaseTemplateId,
             null,
-            hosterRegistration.Id,
+            UploadTarget.ForHosterRegistration(hosterRegistration.Id),
             archiveConfigTemplateId: 12345,
             premiumOnlyDownload: true,
             CancellationToken.None
@@ -452,7 +453,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         await service.UpdateUploadConfigTemplateAsync(
             seed.UploadConfigTemplateId,
             "  Mirror upload  ",
-            secondHosterRegistration.Id,
+            UploadTarget.ForHosterRegistration(secondHosterRegistration.Id),
             secondArchiveConfigTemplateId,
             true,
             CancellationToken.None
@@ -1007,7 +1008,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         var uploadConfigTemplateId = await service.CreateUploadConfigTemplateAsync(
             releaseTemplate.Id,
             null,
-            hosterRegistration.Id,
+            UploadTarget.ForHosterRegistration(hosterRegistration.Id),
             archiveConfigTemplateId,
             true,
             CancellationToken.None

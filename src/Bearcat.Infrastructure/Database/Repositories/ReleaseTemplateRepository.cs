@@ -54,6 +54,8 @@ public class ReleaseTemplateRepository(
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.HosterRegistration)
             .Include(t => t.UploadConfigTemplates)
+                .ThenInclude(u => u.HosterAccountPool)
+            .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
                     .ThenInclude(l => l.LinkCrypterRegistration)
             .Include(t => t.ImageUploadConfigTemplates)
@@ -140,6 +142,8 @@ public class ReleaseTemplateRepository(
                 .ThenInclude(u => u.CollectionUploadSlot)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.HosterRegistration)
+            .Include(r => r.UploadConfigs)
+                .ThenInclude(u => u.HosterAccountPool)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.LinkCrypters)
             .Include(r => r.ImageUploadConfigs)
@@ -267,14 +271,16 @@ public class ReleaseTemplateRepository(
                 ))
                 .ToList(),
             releaseTemplate
-                .UploadConfigTemplates.OrderBy(u => u.Name ?? u.HosterRegistration.Name)
+                .UploadConfigTemplates.OrderBy(u => u.Name ?? u.GetUploadTargetName())
                 .ThenBy(u => u.Id)
                 .Select(u => new UploadConfigTemplateReadModel(
                     u.Id,
                     u.Name,
-                    string.IsNullOrWhiteSpace(u.Name) ? u.HosterRegistration.Name : u.Name,
+                    string.IsNullOrWhiteSpace(u.Name) ? u.GetUploadTargetName() : u.Name,
                     u.HosterRegistrationId,
-                    u.HosterRegistration.Name,
+                    u.HosterRegistration?.Name,
+                    u.HosterAccountPoolId,
+                    u.HosterAccountPool?.Name,
                     u.ArchiveConfigTemplateId,
                     releaseTemplate
                         .ArchiveConfigTemplates.First(a => a.Id == u.ArchiveConfigTemplateId)

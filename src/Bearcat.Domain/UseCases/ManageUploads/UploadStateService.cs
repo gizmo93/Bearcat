@@ -155,7 +155,7 @@ public class UploadStateService(
             return false;
         }
 
-        var registration = upload.UploadConfig.HosterRegistration;
+        var registration = upload.HosterRegistration!;
 
         logger.LogInformation(
             "Checking online status on demand for Upload {UploadId} on hoster registration {HosterRegistration}",
@@ -617,6 +617,7 @@ public class UploadStateService(
         var newUpload = new Upload
         {
             UploadConfig = upload.UploadConfig,
+            HosterRegistrationId = GetHosterRegistrationIdForReupload(upload),
             CreatedAt = timeProvider.GetLocalNow(),
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
@@ -633,6 +634,27 @@ public class UploadStateService(
 
         uploadStateRepository.Add(newUpload);
         return newUpload;
+    }
+
+    private static int? GetHosterRegistrationIdForReupload(Upload previousUpload)
+    {
+        var uploadConfig = previousUpload.UploadConfig;
+
+        if (uploadConfig.HosterAccountPoolId is null)
+        {
+            return uploadConfig.HosterRegistrationId;
+        }
+
+        var previousRegistration = previousUpload.HosterRegistration;
+
+        var previousRegistrationIsStillUsable =
+            previousRegistration is not null
+            && previousRegistration.IsUsableForUploads()
+            && uploadConfig.HosterAccountPool!.Members.Any(member =>
+                member.HosterRegistrationId == previousRegistration.Id
+            );
+
+        return previousRegistrationIsStillUsable ? previousRegistration!.Id : null;
     }
 
     private bool EvaluateAndCheckQualityGate(
@@ -717,6 +739,7 @@ public class UploadStateService(
                 var upload = new Upload
                 {
                     UploadConfig = uploadConfig,
+                    HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     CreatedAt = timeProvider.GetLocalNow(),
                     UploadState = UploadState.WaitingForArchive,
                     OnlineState = OnlineState.Unknown,

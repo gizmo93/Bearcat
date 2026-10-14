@@ -30,7 +30,7 @@ public class DashboardReadRepository(IBearcatReadDbContext dbRead) : IDashboardR
             .GroupBy(upload => new
             {
                 Day = upload.UploadedAt!.Value.Date,
-                upload.UploadConfig.HosterRegistration.Name,
+                upload.HosterRegistration!.Name,
             })
             .Select(group => new
             {

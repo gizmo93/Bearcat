@@ -380,6 +380,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         var mirrorUpload = new Upload
         {
             UploadConfigId = mirrorUploadConfig.Id,
+            HosterRegistrationId = mirrorUploadConfig.HosterRegistrationId,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-2),
@@ -411,6 +412,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         var waitingUpload = new Upload
         {
             UploadConfigId = targetUploadConfig.Id,
+            HosterRegistrationId = targetUploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
@@ -523,6 +525,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         var mirrorUpload = new Upload
         {
             UploadConfigId = mirrorUploadConfig.Id,
+            HosterRegistrationId = mirrorUploadConfig.HosterRegistrationId,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-2),
@@ -539,6 +542,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         var previousTargetUpload = new Upload
         {
             UploadConfigId = targetUploadConfig.Id,
+            HosterRegistrationId = targetUploadConfig.HosterRegistrationId,
             Archive = archive,
             CreatedAt = DateTime.UtcNow.AddHours(-2),
             UploadedAt = DateTime.UtcNow.AddHours(-2),
@@ -563,6 +567,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         var waitingUpload = new Upload
         {
             UploadConfigId = targetUploadConfig.Id,
+            HosterRegistrationId = targetUploadConfig.HosterRegistrationId,
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,

@@ -74,6 +74,98 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
         return uploadConfig;
     }
 
+    public HosterAccountPool AddHosterAccountPool(
+        string name,
+        params HosterRegistration[] membersInPriorityOrder
+    )
+    {
+        var hosterAccountPool = new HosterAccountPool
+        {
+            Name = name,
+            HosterClassName = $"{name}Hoster",
+            Members = membersInPriorityOrder
+                .Select(
+                    (member, index) =>
+                        new HosterAccountPoolMember
+                        {
+                            HosterRegistration = member,
+                            Priority = index + 1,
+                        }
+                )
+                .ToList(),
+        };
+        dbContext.HosterAccountPools.Add(hosterAccountPool);
+
+        return hosterAccountPool;
+    }
+
+    public UploadConfig AddHosterAccountPoolUploadConfig(
+        Release release,
+        HosterAccountPool hosterAccountPool,
+        ArchiveConfig? archiveConfig = null
+    )
+    {
+        var uploadConfig = new UploadConfig
+        {
+            Release = release,
+            ArchiveConfig = archiveConfig ?? AddArchiveConfig(release),
+            HosterAccountPool = hosterAccountPool,
+            Name = $"{hosterAccountPool.Name} upload",
+        };
+        dbContext.UploadConfigs.Add(uploadConfig);
+
+        return uploadConfig;
+    }
+
+    public UploadConfigTemplate AddHosterAccountPoolUploadConfigTemplate(
+        HosterAccountPool hosterAccountPool
+    )
+    {
+        var releaseTemplate = new ReleaseTemplate
+        {
+            Name = $"{hosterAccountPool.Name} template",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseContentType = ReleaseContentType.Movie,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = $"{hosterAccountPool.Name} template group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+        };
+        var uploadConfigTemplate = new UploadConfigTemplate
+        {
+            ReleaseTemplate = releaseTemplate,
+            ArchiveConfigTemplate = new ArchiveConfigTemplate
+            {
+                ReleaseTemplate = releaseTemplate,
+                Name = "RAR",
+                ArchiveFilesBasePath = "/archives",
+                ArchiverName = "rar",
+                ArchiveFileSizeMb = 512,
+            },
+            HosterAccountPool = hosterAccountPool,
+        };
+        dbContext.UploadConfigTemplates.Add(uploadConfigTemplate);
+
+        return uploadConfigTemplate;
+    }
+
+    public Upload AddUnassignedUpload(UploadConfig uploadConfig, UploadState uploadState)
+    {
+        var upload = new Upload
+        {
+            UploadConfig = uploadConfig,
+            CreatedAt = LocalNow,
+            UploadState = uploadState,
+            OnlineState = OnlineState.Unknown,
+            UploadedFiles = [],
+        };
+        dbContext.Uploads.Add(upload);
+
+        return upload;
+    }
+
     public Upload AddUpload(
         UploadConfig uploadConfig,
         OnlineState onlineState,
@@ -84,6 +176,7 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
             Archive = archive,
             CreatedAt = LocalNow,
             UploadedAt = LocalNow,

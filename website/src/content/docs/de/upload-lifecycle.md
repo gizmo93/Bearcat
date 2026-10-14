@@ -26,7 +26,8 @@ flowchart TD
 
 ## 1. Release und Uploadkonfiguration
 
-Eine **Uploadkonfiguration** verbindet Release, Hosterregistrierung und Archivkonfiguration.
+In einer **Uploadkonfiguration** wählst du für ein Release die Archivkonfiguration und das Uploadziel:
+eine einzelne Hosterregistrierung oder einen [Accountpool](/Bearcat/de/account-pools/).
 Optional wählst du Linkcrypterkonfigurationen dazu.
 
 Erstelle für jeden Hoster eine eigene Uploadkonfiguration. Mehrere Konfigurationen für denselben

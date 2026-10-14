@@ -409,6 +409,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             new Upload
             {
                 UploadConfigId = uploadConfig.Id,
+                HosterRegistrationId = uploadConfig.HosterRegistrationId,
                 ArchiveId = archive.Id,
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 UploadedAt = DateTime.UtcNow.AddDays(-1),
@@ -436,6 +437,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             new Upload
             {
                 UploadConfigId = uploadConfig.Id,
+                HosterRegistrationId = uploadConfig.HosterRegistrationId,
                 CreatedAt = DateTime.UtcNow,
                 UploadState = uploadState,
                 OnlineState = OnlineState.Unknown,

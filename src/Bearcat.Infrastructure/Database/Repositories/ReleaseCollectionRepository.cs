@@ -21,20 +21,21 @@ public class ReleaseCollectionRepository(
 
     private readonly Expression<Func<ReleaseCollection, bool>> isReadyForPostQueue = c =>
         c.Releases.Any(r =>
-            r.UploadConfigs.Any(uc =>
-                uc.CollectionUploadSlotId != null
-                && uc.HosterRegistration.IsActive
-                && uc.Uploads.Any(u =>
-                    u.UploadState == UploadState.Completed
-                    && u.UploadedAt != null
-                    && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+            r.UploadConfigs.AsQueryable()
+                .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+                .Any(uc =>
+                    uc.CollectionUploadSlotId != null
+                    && uc.Uploads.Any(u =>
+                        u.UploadState == UploadState.Completed
+                        && u.UploadedAt != null
+                        && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+                    )
                 )
-            )
         )
         && c.Releases.All(r =>
-            r.UploadConfigs.Where(uc =>
-                    uc.CollectionUploadSlotId != null && uc.HosterRegistration.IsActive
-                )
+            r.UploadConfigs.AsQueryable()
+                .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+                .Where(uc => uc.CollectionUploadSlotId != null)
                 .All(uc =>
                     uc.Uploads.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
                         .ThenByDescending(u => u.Id)
@@ -476,7 +477,9 @@ public class ReleaseCollectionRepository(
                                 u.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId,
                                 u.UploadConfig.CollectionUploadSlotId!.Value,
                                 u.UploadConfig.CollectionUploadSlot!.Name,
-                                u.UploadConfig.HosterRegistration.Name,
+                                u.HosterRegistrationId != null
+                                    ? u.HosterRegistration!.Name
+                                    : u.UploadConfig.HosterAccountPool!.Name,
                                 u.UploadedFiles.Count
                             ))
                             .First()
@@ -514,10 +517,10 @@ public class ReleaseCollectionRepository(
                 slotGroup => (slotGroup.Key.ReleaseCollectionId, slotGroup.Key.SlotId),
                 slotGroup =>
                     slotGroup
-                        .GroupBy(u => u.HosterRegistrationName)
+                        .GroupBy(u => u.HosterAccountOrPoolName)
                         .OrderBy(hosterGroup => hosterGroup.Key)
                         .Select(hosterGroup => new PostQueueHosterReadModel(
-                            HosterRegistrationName: hosterGroup.Key,
+                            HosterAccountOrPoolName: hosterGroup.Key,
                             LinkCount: hosterGroup.Sum(u => u.LinkCount)
                         ))
                         .ToList()
@@ -910,7 +913,7 @@ public class ReleaseCollectionRepository(
         int ReleaseCollectionId,
         int SlotId,
         string SlotName,
-        string HosterRegistrationName,
+        string HosterAccountOrPoolName,
         int LinkCount
     );
 

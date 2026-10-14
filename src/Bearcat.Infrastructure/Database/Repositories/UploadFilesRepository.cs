@@ -20,16 +20,23 @@ public class UploadFilesRepository(
         return await dbWrite
             .Uploads.AsSplitQuery()
             .Include(u => u.UploadedFiles)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.HosterRegistration)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.HosterAccountPool!)
+                    .ThenInclude(pool => pool.Members)
+                        .ThenInclude(member => member.HosterRegistration)
             .Include(u => u.Archive)
                 .ThenInclude(a => a!.ArchiveFiles)
             .Where(u =>
                 !uploadIdsToExclude.Contains(u.Id)
                 && u.UploadState == UploadState.Pending
-                && u.UploadConfig.HosterRegistration.IsActive
+                && (
+                    u.HosterRegistrationId == null
+                    || u.HosterRegistration!.IsActive
+                    || (u.UploadConfig.HosterAccountPoolId != null && !u.UploadedFiles.Any())
+                )
             )
             .ToListAsync(cancellationToken);
     }
@@ -131,6 +138,18 @@ public class UploadFilesRepository(
     {
         return await dbWrite.HosterRegistrations.FirstAsync(
             h => h.Id == hosterRegistrationId,
+            cancellationToken
+        );
+    }
+
+    public async Task<bool> HasUnresolvedNotificationForUploadAsync(
+        int uploadId,
+        NotificationKind kind,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead.Notifications.AnyAsync(
+            n => n.UploadId == uploadId && n.NotificationKind == kind && n.ResolvedAt == null,
             cancellationToken
         );
     }

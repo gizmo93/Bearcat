@@ -14,7 +14,8 @@ namespace Bearcat.Hosters.Fast2Share;
 
 public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logger)
     : IHosterWithFolders,
-        IHosterWithDownload
+        IHosterWithDownload,
+        IHosterWithStorageQuota
 {
     private const int MaxParallelUploads = 10;
 
@@ -171,6 +172,22 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
     )
     {
         return Task.FromResult(DefaultMaximumParallelUploads);
+    }
+
+    public async Task<HosterStorageQuota> GetStorageQuotaAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var user = await apiClient.GetUserAsync(
+            config: hosterConfig.As<Fast2ShareConfig>(),
+            cancellationToken: cancellationToken
+        );
+
+        return HosterStorageQuota.Limited(
+            freeBytes: user.Usage.RemainingBytes,
+            totalBytes: user.Plan?.StorageQuota
+        );
     }
 
     public async Task<string> CreateFolderAsync(

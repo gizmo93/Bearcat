@@ -192,7 +192,6 @@
   <data name="HosterRegistration" xml:space="preserve"><value>Hosterregistrierung</value></data>
   <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hosterregistrierung {0} aktiviert</value></data>
   <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hosterregistrierung {0} deaktiviert</value></data>
-  <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hosterregistrierung ist erforderlich.</value></data>
   <data name="HideFileColumn" xml:space="preserve"><value>Datei ausblenden</value></data>
   <data name="HosterRegistrations" xml:space="preserve"><value>Hosterregistrierungen</value></data>
   <data name="HosterTarget" xml:space="preserve"><value>Hosterziel</value></data>
@@ -423,7 +422,6 @@
   <data name="SelectCrypter" xml:space="preserve"><value>Crypter auswählen</value></data>
   <data name="SelectFolderRequired" xml:space="preserve"><value>Du musst einen Ordner auswählen</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>
-  <data name="SelectHosterRegistration" xml:space="preserve"><value>Hosterregistrierung auswählen</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>Du musst einen Hoster auswählen</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Bildhoster auswählen</value></data>
   <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Bildhosterregistrierung auswählen</value></data>
@@ -693,10 +691,9 @@
   <data name="SaveAsTemplate" xml:space="preserve"><value>Als Template speichern</value></data>
   <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Erstellt ein Releasetemplate aus der aktuellen Archiv-, Upload- und Linkcrypterkonfiguration dieses Releases.</value></data>
   <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>Du musst eine Archivkonfiguration auswählen.</value></data>
-  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>Du musst eine Hosterregistrierung auswählen.</value></data>
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Releasetemplate auswählen</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Releasetemplate auswählen.</value></data>
-  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen der Hosterregistrierung zu verwenden.</value></data>
+  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen des Accounts oder Accountpools zu verwenden.</value></data>
     <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Wähle den Hoster und die Archiveinstellungen für Releases aus dieser Vorlage.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hosternamen verwenden</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Releasename als Archivname verwenden</value></data>
@@ -1042,6 +1039,10 @@
   <data name="NotificationKind.UploadMarkedOffline" xml:space="preserve"><value>Upload als offline markiert</value></data><data name="NotificationKind.UploadMarkedOffline.Description" xml:space="preserve"><value>Ein Upload wurde manuell als offline markiert.</value></data>
   <data name="NotificationKind.HosterStatusCheckFailed" xml:space="preserve"><value>Hosterstatusprüfung fehlgeschlagen</value></data><data name="NotificationKind.HosterStatusCheckFailed.Description" xml:space="preserve"><value>Die Verfügbarkeit der Dateien konnte nicht geprüft werden.</value></data>
   <data name="NotificationKind.AutomaticReuploadCreated" xml:space="preserve"><value>Automatischer Reupload erstellt</value></data><data name="NotificationKind.AutomaticReuploadCreated.Description" xml:space="preserve"><value>Ein Reupload wurde automatisch erstellt.</value></data>
+  <data name="NotificationKind.HosterAccountPoolFull" xml:space="preserve"><value>Accountpool voll</value></data>
+  <data name="NotificationKind.HosterAccountPoolFull.Description" xml:space="preserve"><value>Ein Upload konnte nicht starten, weil kein Account seines Accountpools genug freien Speicherplatz hat. Der Upload bleibt ausstehend und startet, sobald ein Account genug Platz hat.</value></data>
+  <data name="NotificationKind.HosterAccountPoolWithoutUsableAccount" xml:space="preserve"><value>Accountpool ohne nutzbaren Account</value></data>
+  <data name="NotificationKind.HosterAccountPoolWithoutUsableAccount.Description" xml:space="preserve"><value>Ein Upload konnte nicht starten, weil sein Accountpool keinen nutzbaren Account hat: Alle Accounts sind inaktiv, brauchen eine Captchaverifizierung oder haben unlesbare Zugangsdaten, oder der Pool hat keine Accounts. Der Upload bleibt ausstehend.</value></data>
   <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA-Verifizierung erforderlich</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>Ein Hoster erfordert eine CAPTCHA-Verifizierung.</value></data>
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Zugangsdaten vom Hoster abgelehnt</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>Ein Hoster hat die Zugangsdaten einer Hosterregistrierung abgelehnt. Bearcat deaktiviert die Registrierung, bis du die Zugangsdaten korrigierst und sie wieder aktivierst.</value></data>
@@ -1742,4 +1743,40 @@
   <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>Der Pfad darf kein Arbeitsverzeichnis sein, nicht in einem liegen und keines enthalten.</value></data>
   <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>Der Pfad kann nicht geändert werden, solange Archive in diesem Ordner gespeichert sind.</value></data>
   <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der freizuhaltende Speicherplatz darf nicht negativ sein.</value></data>
+  <data name="CheckStorage" xml:space="preserve"><value>Speicherplatz prüfen</value></data>
+  <data name="StorageQuotaCheckFailed" xml:space="preserve"><value>Speicherplatzprüfung für Registrierung {0} fehlgeschlagen: {1}</value></data>
+  <data name="StorageQuotaOfRegistration" xml:space="preserve"><value>Registrierung {0}: {1}</value></data>
+  <data name="StorageQuotaUnlimitedValue" xml:space="preserve"><value>unbegrenzter Speicherplatz</value></data>
+  <data name="StorageQuotaFreeOfTotalValue" xml:space="preserve"><value>{0} von {1} frei</value></data>
+  <data name="StorageQuotaFreeValue" xml:space="preserve"><value>{0} frei</value></data>
+  <data name="StorageQuotaCheckFailedShort" xml:space="preserve"><value>Prüfung fehlgeschlagen</value></data>
+  <data name="HosterAccountPools" xml:space="preserve"><value>Accountpools</value></data>
+  <data name="HosterAccountPoolsIntro" xml:space="preserve"><value>Uploads gehen an den ersten Account der Liste mit genug freiem Speicherplatz.</value></data>
+  <data name="NewHosterAccountPool" xml:space="preserve"><value>Neuer Pool</value></data>
+  <data name="NoHosterAccountPoolsYet" xml:space="preserve"><value>Noch keine Accountpools.</value></data>
+  <data name="HosterAccountPoolDialogDescription" xml:space="preserve"><value>Wähle den Hoster, die Accounts und ihre Reihenfolge.</value></data>
+  <data name="HosterAccountPoolNamePlaceholder" xml:space="preserve"><value>z. B. Hauptaccounts</value></data>
+  <data name="HosterAccountPoolHosterHelp" xml:space="preserve"><value>Es werden nur Hoster angezeigt, die ihren freien Speicherplatz melden. Der Hoster lässt sich später nicht ändern.</value></data>
+  <data name="HosterAccountPoolMinimumFreeSpaceHelp" xml:space="preserve"><value>Speicherplatz, der nach einem Upload auf jedem Account frei bleiben muss.</value></data>
+  <data name="HosterAccountPoolMembers" xml:space="preserve"><value>Accounts</value></data>
+  <data name="HosterAccountPoolMembersHelp" xml:space="preserve"><value>Ziehe die Accounts in die gewünschte Reihenfolge. Der erste Account wird zuerst verwendet.</value></data>
+  <data name="NoHosterAccountPoolMembersYet" xml:space="preserve"><value>Noch keine Accounts in diesem Pool.</value></data>
+  <data name="SelectAccountToAdd" xml:space="preserve"><value>Account auswählen</value></data>
+  <data name="AddAccount" xml:space="preserve"><value>Account hinzufügen</value></data>
+  <data name="AllAccountsAlreadyInPool" xml:space="preserve"><value>Alle Accounts dieses Hosters sind bereits im Pool.</value></data>
+  <data name="InactiveAccountOption" xml:space="preserve"><value>{0} (inaktiv)</value></data>
+  <data name="MinimumFreeSpace" xml:space="preserve"><value>Mindestspeicherplatz</value></data>
+  <data name="DeleteHosterAccountPoolConfirmation" xml:space="preserve"><value>Accountpool "{0}" löschen? Die Accounts selbst bleiben erhalten.</value></data>
+  <data name="HosterAccountPoolDeleted" xml:space="preserve"><value>Accountpool {0} gelöscht.</value></data>
+  <data name="HosterAccountPoolValidationError.NameRequired" xml:space="preserve"><value>Der Name ist erforderlich.</value></data>
+  <data name="HosterAccountPoolValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 200 Zeichen lang sein.</value></data>
+  <data name="HosterAccountPoolValidationError.NameAlreadyExists" xml:space="preserve"><value>Es gibt bereits einen Accountpool mit diesem Namen.</value></data>
+  <data name="HosterAccountPoolValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Der Mindestspeicherplatz darf nicht negativ sein.</value></data>
+  <data name="SelectUploadTarget" xml:space="preserve"><value>Account oder Accountpool auswählen</value></data>
+  <data name="UploadTargetRequired" xml:space="preserve"><value>Du musst einen Account oder Accountpool auswählen.</value></data>
+  <data name="UploadTargetHosterAccounts" xml:space="preserve"><value>Accounts</value></data>
+  <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (kein aktiver Account)</value></data>
+  <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (Account noch nicht zugewiesen)</value></data>
+  <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil noch {1} Uploadkonfigurationen und {2} Uploadkonfigurationsvorlagen ihn verwenden.</value></data>
+  <data name="HosterRegistrationStillHoldsHosterAccountPoolUploads" xml:space="preserve"><value>{0} hält noch {1} Uploads von Accountpools und kann nicht gelöscht werden. Entferne den Account aus den Pools und deaktiviere ihn stattdessen.</value></data>
 </root>

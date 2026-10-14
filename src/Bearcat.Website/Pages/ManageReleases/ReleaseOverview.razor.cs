@@ -241,7 +241,7 @@ public partial class ReleaseOverview(
     private static bool IsHosterNameShown(ReleaseOverviewUploadReadModel upload) =>
         !string.Equals(
             upload.UploadConfigName,
-            upload.HosterRegistrationName,
+            upload.UploadTargetName,
             StringComparison.OrdinalIgnoreCase
         );
 

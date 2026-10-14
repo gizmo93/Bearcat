@@ -5,7 +5,8 @@ namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 public record ReleaseUploadReadModel(
     int UploadId,
     string UploadConfigName,
-    string HosterRegistrationName,
+    string? HosterRegistrationName,
+    string? HosterAccountPoolName,
     DateTime CreatedAt,
     DateTime? UploadedAt,
     UploadState UploadState,

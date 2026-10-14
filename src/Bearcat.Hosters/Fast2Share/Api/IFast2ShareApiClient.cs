@@ -39,6 +39,8 @@ public interface IFast2ShareApiClient
 
     Task EnsureApiKeyAcceptedAsync(Fast2ShareConfig config, CancellationToken cancellationToken);
 
+    Task<UserResponse> GetUserAsync(Fast2ShareConfig config, CancellationToken cancellationToken);
+
     Task DownloadFileAsync(
         Fast2ShareConfig config,
         string fileUrl,

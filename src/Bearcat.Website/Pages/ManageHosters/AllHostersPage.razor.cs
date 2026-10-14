@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Website.Formatting;
+using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -119,6 +120,23 @@ public partial class AllHostersPage(
 
     private async Task DeleteAsync(HosterRegistrationReadModel hoster)
     {
+        var hosterAccountPoolUploadCount = await operationRunner.RunAsync(
+            (HosterRegistrationService service) =>
+                service.GetHosterAccountPoolUploadCountAsync(hoster.Id)
+        );
+
+        if (hosterAccountPoolUploadCount > 0)
+        {
+            toastService.Error(
+                L[
+                    "HosterRegistrationStillHoldsHosterAccountPoolUploads",
+                    hoster.Name,
+                    hosterAccountPoolUploadCount
+                ]
+            );
+            return;
+        }
+
         var uploadCount = await operationRunner.RunAsync(
             (HosterRegistrationService service) => service.GetUploadCountAsync(hoster.Id)
         );
@@ -161,6 +179,25 @@ public partial class AllHostersPage(
 
         toastService.Error(L["LoginFailed", hoster.Name, result.ErrorMessage ?? string.Empty]);
         await LoadHostersAsync();
+    }
+
+    private async Task CheckStorageAsync(HosterRegistrationReadModel hoster)
+    {
+        var result = await operationRunner.RunAsync(
+            (HosterRegistrationService service) => service.GetStorageQuotaAsync(hoster.Id)
+        );
+
+        if (!result.IsSuccess)
+        {
+            toastService.Error(
+                L["StorageQuotaCheckFailed", hoster.Name, result.ErrorMessage ?? string.Empty]
+            );
+            return;
+        }
+
+        toastService.Success(
+            L["StorageQuotaOfRegistration", hoster.Name, L.Localize(result.StorageQuota!)]
+        );
     }
 
     private async Task ShowCaptchaDialogAsync(HosterRegistrationReadModel hoster)

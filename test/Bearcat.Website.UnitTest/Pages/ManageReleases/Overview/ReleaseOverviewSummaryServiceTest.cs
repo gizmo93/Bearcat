@@ -259,7 +259,7 @@ public class ReleaseOverviewSummaryServiceTest
         return new ReleaseOverviewUploadReadModel(
             UploadConfigId: uploadConfigId,
             UploadConfigName: $"Config {uploadConfigId}",
-            HosterRegistrationName: "Hoster",
+            UploadTargetName: "Hoster",
             UploadId: uploadId,
             CreatedAt: createdAt,
             UploadedAt: uploadedAt,

@@ -98,7 +98,7 @@
                                         @foreach (var hoster in slot.Hosters)
                                         {
                                             <BbBadge Variant="BadgeVariant.Secondary">
-                                                @hoster.HosterRegistrationName · @hoster.LinkCount
+                                                @hoster.HosterAccountOrPoolName · @hoster.LinkCount
                                             </BbBadge>
                                         }
                                         @foreach (var container in slot.Containers)
@@ -171,7 +171,7 @@
                                         @foreach (var hoster in group.Hosters)
                                         {
                                             <BbBadge Variant="BadgeVariant.Secondary">
-                                                @hoster.HosterRegistrationName · @hoster.LinkCount
+                                                @hoster.HosterAccountOrPoolName · @hoster.LinkCount
                                             </BbBadge>
                                         }
                                     </div>

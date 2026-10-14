@@ -33,14 +33,15 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                 .ThenInclude(c => c.Release)
             .Include(a => a.ArchiveConfig)
                 .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.HosterRegistration)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u => u.HosterRegistration)
             .Include(a => a.ArchiveConfig)
                 .ThenInclude(c => c.UploadConfigs)
                     .ThenInclude(uc => uc.Uploads)
                         .ThenInclude(u =>
                             u.UploadedFiles.Where(f =>
                                 EF.Parameter(mirrorDownloadHosterRegistrationIds)
-                                    .Contains(f.Upload.UploadConfig.HosterRegistrationId)
+                                    .Contains(f.Upload.HosterRegistrationId!.Value)
                             )
                         )
             .Where(a =>

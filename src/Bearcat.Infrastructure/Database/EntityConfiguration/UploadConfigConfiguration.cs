@@ -9,7 +9,8 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
     public void Configure(EntityTypeBuilder<UploadConfig> builder)
     {
         builder.HasKey(u => u.Id);
-        builder.Property(u => u.HosterRegistrationId).IsRequired();
+        builder.Property(u => u.HosterRegistrationId).IsRequired(false);
+        builder.Property(u => u.HosterAccountPoolId).IsRequired(false);
         builder.Property(u => u.ArchiveConfigId).IsRequired();
         builder.Property(u => u.CollectionUploadSlotId).IsRequired(false);
         builder.Property(u => u.Name).HasMaxLength(200).IsRequired();
@@ -20,8 +21,16 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
             .WithMany(h => h.UploadConfigs)
             .HasForeignKey(u => u.HosterRegistrationId)
             .HasPrincipalKey(h => h.Id)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(u => u.HosterAccountPool)
+            .WithMany(pool => pool.UploadConfigs)
+            .HasForeignKey(u => u.HosterAccountPoolId)
+            .HasPrincipalKey(pool => pool.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder
             .HasMany(u => u.Uploads)
@@ -46,5 +55,12 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
             .HasPrincipalKey(s => s.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.ToTable(table =>
+            table.HasCheckConstraint(
+                "CK_UploadConfig_UploadTarget",
+                "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)"
+            )
+        );
     }
 }

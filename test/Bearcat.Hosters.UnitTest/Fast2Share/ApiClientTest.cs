@@ -716,7 +716,20 @@ public class ApiClientTest
         apiMock
             .Setup(x => x.GetUserAsync("Bearer f2s_api-key", It.IsAny<CancellationToken>()))
             .ReturnsAsync(
-                CreateApiResponse(HttpStatusCode.OK, new UserResponse(42, "user@example.com", null))
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new UserResponse(
+                        Id: 42,
+                        Email: "user@example.com",
+                        DisplayName: null,
+                        Plan: null,
+                        Usage: new UserUsageResponse(
+                            UsedBytes: 0,
+                            FileCount: 0,
+                            RemainingBytes: 107374182400
+                        )
+                    )
+                )
             );
     }
 

@@ -148,6 +148,20 @@ public static class NotificationDefinitions
             Description: "NotificationKind.AutomaticReuploadCreated.Description"
         ),
         new(
+            Kind: NotificationKind.HosterAccountPoolFull,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Uploads,
+            DisplayName: "NotificationKind.HosterAccountPoolFull",
+            Description: "NotificationKind.HosterAccountPoolFull.Description"
+        ),
+        new(
+            Kind: NotificationKind.HosterAccountPoolWithoutUsableAccount,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Uploads,
+            DisplayName: "NotificationKind.HosterAccountPoolWithoutUsableAccount",
+            Description: "NotificationKind.HosterAccountPoolWithoutUsableAccount.Description"
+        ),
+        new(
             Kind: NotificationKind.CaptchaVerificationRequired,
             Severity: NotificationSeverity.Warning,
             Group: NotificationGroup.Hosters,
