@@ -1,23 +1,21 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
-using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageUploads;
 
 public class UploadFilesService(
     IUploadFilesRepository repository,
     IHosterFactory hosterFactory,
-    TimeProvider timeProvider,
     ILogger<UploadFilesService> logger,
     MissingFileValidationService missingFileValidationService,
     UploadFinalizationService finalizationService,
-    UploadCancellationService uploadCancellationService,
+    FileUploadResultService fileUploadResultService,
+    UploadCancellationRequestService uploadCancellationRequestService,
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
     UploadPreparationService uploadPreparationService,
@@ -39,7 +37,9 @@ public class UploadFilesService(
         try
         {
             await ResetOrphanedUploadsToPendingAsync(cancellationToken);
-            await CancelUploadsWithUnprocessedCancellationRequestAsync(cancellationToken);
+            await uploadCancellationRequestService.CancelUploadsWithUnprocessedCancellationRequestAsync(
+                cancellationToken
+            );
             await UploadPendingUploadsAsync(cancellationToken);
         }
         finally
@@ -64,7 +64,7 @@ public class UploadFilesService(
         }
 
         var hostersByName = hosterFactory.GetHostersByName();
-        var uploadsInProgress = new UploadsInProgress(progressTracker);
+        var uploadsInProgress = new UploadsInProgress(progressTracker, logger);
 
         await PrepareAndStartUploadsAsync(
             uploads: pendingUploads,
@@ -77,14 +77,19 @@ public class UploadFilesService(
 
         while (uploadsInProgress.HasUploadsOrRunningFileUploads)
         {
-            await ApplyCancellationRequestsAsync(uploadsInProgress, cancellationToken);
-
-            await RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
+            await uploadCancellationRequestService.ApplyCancellationRequestsToUploadsInProgressAsync(
                 uploadsInProgress,
                 cancellationToken
             );
 
-            await ApplyAvailableFileUploadResultsAsync(uploadsInProgress, cancellationToken);
+            await uploadsInProgress.RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
+                cancellationToken
+            );
+
+            await fileUploadResultService.ApplyAvailableFileUploadResultsAsync(
+                uploadsInProgress,
+                cancellationToken
+            );
 
             await StartFileUploadsWithinConcurrencyLimitsAsync(
                 uploadsInProgress,
@@ -112,7 +117,10 @@ public class UploadFilesService(
 
         uploadsInProgress.CompletedFileUploads.Writer.Complete();
 
-        await ApplyAvailableFileUploadResultsAsync(uploadsInProgress, cancellationToken);
+        await fileUploadResultService.ApplyAvailableFileUploadResultsAsync(
+            uploadsInProgress,
+            cancellationToken
+        );
 
         logger.LogInformation("Finished processing pending uploads");
     }
@@ -291,201 +299,6 @@ public class UploadFilesService(
         return pendingUploads.Except(uploadsToSkip).ToList();
     }
 
-    private async Task ApplyAvailableFileUploadResultsAsync(
-        UploadsInProgress uploadsInProgress,
-        CancellationToken cancellationToken
-    )
-    {
-        while (uploadsInProgress.CompletedFileUploads.Reader.TryRead(out var result))
-        {
-            await ApplyFileUploadResultAsync(
-                result: result,
-                uploadsInProgress: uploadsInProgress,
-                cancellationToken: cancellationToken
-            );
-        }
-    }
-
-    private async Task ApplyFileUploadResultAsync(
-        FileUploadCompleted result,
-        UploadsInProgress uploadsInProgress,
-        CancellationToken cancellationToken
-    )
-    {
-        if (!uploadsInProgress.ContextsByUploadId.TryGetValue(result.UploadId, out var context))
-        {
-            return;
-        }
-
-        context.RunningFileCount--;
-
-        result = await MarkResultAsCanceledWhenCancellationWasRequestedAsync(
-            result: result,
-            context: context,
-            cancellationToken: cancellationToken
-        );
-
-        LogFileUploadResult(result);
-
-        if (!result.WasCanceled)
-        {
-            AddUploadedFileAndCountResult(context, result);
-        }
-
-        if (finalizationService.TryFinalizeUpload(context))
-        {
-            uploadsInProgress.RemoveFinishedUpload(context.UploadId);
-        }
-
-        await repository.SaveChangesAsync(cancellationToken);
-    }
-
-    private async Task<FileUploadCompleted> MarkResultAsCanceledWhenCancellationWasRequestedAsync(
-        FileUploadCompleted result,
-        UploadExecutionContext context,
-        CancellationToken cancellationToken
-    )
-    {
-        if (result.IsSuccess)
-        {
-            return result;
-        }
-
-        if (context.CancellationRequested)
-        {
-            return result with { WasCanceled = true };
-        }
-
-        var cancellationRequested = await repository.IsCancellationRequestedAsync(
-            result.UploadId,
-            cancellationToken
-        );
-
-        if (!cancellationRequested)
-        {
-            return result;
-        }
-
-        context.RequestCancellation();
-        return result with { WasCanceled = true };
-    }
-
-    private void LogFileUploadResult(FileUploadCompleted result)
-    {
-        logger.LogInformation(
-            "Upload for file {FilePath} for upload {UploadId} completed with IsSuccess {Success}",
-            result.FullFileName,
-            result.UploadId,
-            result.IsSuccess
-        );
-    }
-
-    private void AddUploadedFileAndCountResult(
-        UploadExecutionContext context,
-        FileUploadCompleted result
-    )
-    {
-        var archiveFile = context.Upload.Archive!.ArchiveFiles.Single(f =>
-            f.Id == result.ArchiveFileId
-        );
-
-        context.Upload.UploadedFiles.Add(
-            new UploadedFile
-            {
-                Upload = context.Upload,
-                UploadId = context.UploadId,
-                ArchiveFile = archiveFile,
-                ArchiveFileId = result.ArchiveFileId,
-                HosterFileLink = result.FileUrl ?? string.Empty,
-                ExternalId = result.ExternalId,
-                HosterFolderId = context.Upload.HosterFolderId,
-                Md5Hash = result.IsSuccess ? result.Md5Hash ?? archiveFile.Md5Hash : null,
-                ErrorMessages = result.Errors.ToList(),
-                OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
-                CreatedAt = timeProvider.GetLocalNow(),
-                CheckedAt = timeProvider.GetLocalNow(),
-            }
-        );
-
-        if (result is { IsSuccess: true, Errors.Count: 0 })
-        {
-            context.SuccessfulFileCount++;
-        }
-        else
-        {
-            context.FailedFileCount++;
-        }
-    }
-
-    private async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
-        UploadsInProgress uploadsInProgress,
-        CancellationToken cancellationToken
-    )
-    {
-        var completedTasks = uploadsInProgress
-            .RunningFileUploadTasks.Where(t => t.IsCompleted)
-            .ToList();
-
-        foreach (var task in completedTasks)
-        {
-            uploadsInProgress.RunningFileUploadTasks.Remove(task);
-
-            try
-            {
-                await task;
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Unexpected error in file upload worker");
-            }
-        }
-    }
-
-    private async Task ApplyCancellationRequestsAsync(
-        UploadsInProgress uploadsInProgress,
-        CancellationToken cancellationToken
-    )
-    {
-        var cancellationRequestedUploadIds =
-            await repository.GetCancellationRequestedUploadIdsAsync(cancellationToken);
-
-        var hasChanges = false;
-
-        foreach (var uploadId in cancellationRequestedUploadIds)
-        {
-            if (uploadsInProgress.ContextsByUploadId.TryGetValue(uploadId, out var context))
-            {
-                if (!context.CancellationRequested)
-                {
-                    context.RequestCancellation();
-                    hasChanges = true;
-                }
-
-                if (finalizationService.TryFinalizeUpload(context))
-                {
-                    uploadsInProgress.RemoveFinishedUpload(uploadId);
-                    hasChanges = true;
-                }
-
-                continue;
-            }
-
-            if (await CancelUploadWithoutRunningContextAsync(uploadId, cancellationToken))
-            {
-                hasChanges = true;
-            }
-        }
-
-        if (hasChanges)
-        {
-            await repository.SaveChangesAsync(cancellationToken);
-        }
-    }
-
     private async Task ResetOrphanedUploadsToPendingAsync(CancellationToken cancellationToken)
     {
         var orphanedUploads = await repository.GetOrphanedUploadsAsync(cancellationToken);
@@ -498,37 +311,5 @@ public class UploadFilesService(
 
         await repository.SaveChangesAsync(cancellationToken);
         repository.ClearChangeTracker();
-    }
-
-    private async Task CancelUploadsWithUnprocessedCancellationRequestAsync(
-        CancellationToken cancellationToken
-    )
-    {
-        var uploadIds = await repository.GetCancellationRequestedUploadIdsAsync(cancellationToken);
-
-        foreach (var uploadId in uploadIds)
-        {
-            await CancelUploadWithoutRunningContextAsync(uploadId, cancellationToken);
-        }
-
-        await repository.SaveChangesAsync(cancellationToken);
-        repository.ClearChangeTracker();
-    }
-
-    private async Task<bool> CancelUploadWithoutRunningContextAsync(
-        int uploadId,
-        CancellationToken cancellationToken
-    )
-    {
-        var upload = await repository.GetUploadByIdAsync(uploadId, cancellationToken);
-
-        if (upload is null)
-        {
-            return false;
-        }
-
-        uploadCancellationService.CancelUploadAndNotify(upload, "Upload canceled");
-
-        return true;
     }
 }

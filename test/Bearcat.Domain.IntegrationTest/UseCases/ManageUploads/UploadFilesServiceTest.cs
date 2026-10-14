@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Reflection;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
@@ -11,7 +10,6 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
@@ -1527,112 +1525,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync_WorkerFails_LogsAndRemovesTask()
-    {
-        // Arrange
-        var uploadsInProgress = CreateUploadsInProgress();
-        uploadsInProgress.RunningFileUploadTasks.Add(
-            Task.FromException(new InvalidOperationException("Worker failed"))
-        );
-
-        // Act
-        await InvokePrivateTaskAsync(
-            service,
-            "RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync",
-            uploadsInProgress,
-            CancellationToken.None
-        );
-
-        // Assert
-        uploadsInProgress.RunningFileUploadTasks.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync_ProcessCancellationWasRequested_RethrowsCancellation()
-    {
-        // Arrange
-        using var cancellationTokenSource = new CancellationTokenSource();
-        await cancellationTokenSource.CancelAsync();
-        var uploadsInProgress = CreateUploadsInProgress();
-        uploadsInProgress.RunningFileUploadTasks.Add(
-            Task.FromCanceled(cancellationTokenSource.Token)
-        );
-
-        // Act / Assert
-        await Should.ThrowAsync<OperationCanceledException>(async () =>
-            await InvokePrivateTaskAsync(
-                service,
-                "RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync",
-                uploadsInProgress,
-                cancellationTokenSource.Token
-            )
-        );
-    }
-
-    [Test]
-    public async Task ApplyCancellationRequestsAsync_ContextHasNoOpenWork_CancelsAndRemovesContext()
-    {
-        // Arrange
-        var upload = await AddUploadAsync(UploadState.CancellationRequested, []);
-        DbContext.ChangeTracker.Clear();
-        var trackedUpload = await DbContext
-            .Uploads.Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.HosterRegistration)
-            .SingleAsync(u => u.Id == upload.Id);
-        var context = new UploadExecutionContext(
-            trackedUpload,
-            totalFileCount: 1,
-            successfulFileCount: 0,
-            failedFileCount: 0,
-            plannedFiles: [],
-            CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None)
-        );
-        var uploadsInProgress = CreateUploadsInProgress();
-        uploadsInProgress.StartUploading(context);
-
-        // Act
-        await InvokePrivateTaskAsync(
-            service,
-            "ApplyCancellationRequestsAsync",
-            uploadsInProgress,
-            CancellationToken.None
-        );
-
-        // Assert
-        uploadsInProgress.ContextsByUploadId.ShouldBeEmpty();
-        trackedUpload.UploadState.ShouldBe(UploadState.Canceled);
-        trackedUpload.OnlineState.ShouldBe(OnlineState.Unknown);
-    }
-
-    [Test]
-    public async Task ApplyFileUploadResultAsync_ContextDoesNotExist_IgnoresResult()
-    {
-        // Arrange
-        var uploadsInProgress = CreateUploadsInProgress();
-        var result = new FileUploadCompleted(
-            UploadId: 42,
-            ArchiveFileId: 100,
-            FullFileName: "/tmp/archive.part1.rar",
-            FileUrl: null,
-            ExternalId: null,
-            IsSuccess: false,
-            Errors: ["Ignored"]
-        );
-
-        // Act
-        await InvokePrivateTaskAsync(
-            service,
-            "ApplyFileUploadResultAsync",
-            result,
-            uploadsInProgress,
-            CancellationToken.None
-        );
-
-        // Assert
-        uploadsInProgress.ContextsByUploadId.ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task ProcessAsync_CancellationRequestedUploadIsMissing_SkipsCancellation()
     {
         // Arrange
@@ -1928,14 +1820,26 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             Mock.Of<ILogger<UploadPreparationService>>()
         );
 
+        var fileUploadResultService = new FileUploadResultService(
+            uploadFilesRepository,
+            CreateTimeProvider(),
+            finalizationService,
+            Mock.Of<ILogger<FileUploadResultService>>()
+        );
+        var uploadCancellationRequestService = new UploadCancellationRequestService(
+            uploadFilesRepository,
+            finalizationService,
+            uploadCancellationService
+        );
+
         return new UploadFilesService(
             uploadFilesRepository,
             hosterFactoryMock.Object,
-            CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
             missingFileValidationService,
             finalizationService,
-            uploadCancellationService,
+            fileUploadResultService,
+            uploadCancellationRequestService,
             fileUploadExecutionService,
             concurrencyService,
             uploadPreparationService,
@@ -1945,24 +1849,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             UploadQueuePollDelay = TimeSpan.Zero,
             NewPendingUploadsPollDelay = TimeSpan.Zero,
         };
-    }
-
-    private static UploadsInProgress CreateUploadsInProgress() =>
-        new(new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()));
-
-    private static async Task InvokePrivateTaskAsync(
-        object target,
-        string methodName,
-        params object[] parameters
-    )
-    {
-        var method = target
-            .GetType()
-            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        method.ShouldNotBeNull();
-
-        var task = (Task)method.Invoke(target, parameters)!;
-        await task;
     }
 
     private sealed class DefaultConfigurationProvider : IApplicationConfigurationProvider

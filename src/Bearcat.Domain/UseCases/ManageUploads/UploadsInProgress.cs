@@ -2,10 +2,11 @@ using System.Threading.Channels;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageUploads;
 
-public sealed class UploadsInProgress(ITransferProgressTracker progressTracker)
+public sealed class UploadsInProgress(ITransferProgressTracker progressTracker, ILogger logger)
 {
     private readonly Dictionary<int, UploadExecutionContext> contextsByUploadId = new();
 
@@ -38,6 +39,31 @@ public sealed class UploadsInProgress(ITransferProgressTracker progressTracker)
     {
         contextsByUploadId.Remove(uploadId);
         progressTracker.StopTracking(new TransferIdentifier(TransferType.Upload, uploadId));
+    }
+
+    public async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var completedTasks = RunningFileUploadTasks.Where(t => t.IsCompleted).ToList();
+
+        foreach (var task in completedTasks)
+        {
+            RunningFileUploadTasks.Remove(task);
+
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error in file upload worker");
+            }
+        }
     }
 
     public Dictionary<int, long> GetRemainingBytesOfRunningUploadsByHosterRegistrationId()

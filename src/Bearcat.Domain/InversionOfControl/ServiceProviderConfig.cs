@@ -181,6 +181,8 @@ public static class ServiceProviderConfig
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();
             services.AddSingleton<TransferSpeedLimitService>();
             services.AddScoped<UploadFilesService>();
+            services.AddScoped<FileUploadResultService>();
+            services.AddScoped<UploadCancellationRequestService>();
             services.AddScoped<UploadPreparationService>();
             services.AddScoped<UploadHosterFolderService>();
             services.AddScoped<HosterAccountPoolAccountSelectionService>();

@@ -84,19 +84,24 @@ public class Upload
         };
     }
 
-    public bool CanBeDeleted() =>
-        UploadState
+    public bool CanBeDeleted()
+    {
+        return UploadState
             is UploadState.Pending
                 or UploadState.Completed
                 or UploadState.Failed
                 or UploadState.Canceled;
+    }
 
-    public bool CanBeManuallyReuploaded() =>
-        UploadState is UploadState.Canceled or UploadState.Failed
-        || OnlineState is OnlineState.Offline or OnlineState.PartiallyOnline;
+    public bool CanBeManuallyReuploaded()
+    {
+        return UploadState is UploadState.Canceled or UploadState.Failed
+            || OnlineState is OnlineState.Offline or OnlineState.PartiallyOnline;
+    }
 
-    public bool HasExistingOrPendingReplacementUpload() =>
-        UploadConfig.Uploads.Any(otherUpload =>
+    public bool HasExistingOrPendingReplacementUpload()
+    {
+        return UploadConfig.Uploads.Any(otherUpload =>
             otherUpload.Id != Id
             && (
                 otherUpload.OnlineState == OnlineState.Online
@@ -108,6 +113,7 @@ public class Upload
                         or UploadState.CancellationRequested
             )
         );
+    }
 
     public List<ArchiveFile> GetArchiveFilesWithoutUploadedFile()
     {
@@ -121,10 +127,12 @@ public class Upload
     public bool IsHosterAccountPoolUploadWithoutUploadedFiles() =>
         UploadConfig.HosterAccountPoolId is not null && UploadedFiles.Count == 0;
 
-    public bool ShouldSelectAnotherAccountOfHosterAccountPool() =>
-        HasHosterRegistrationAssigned()
-        && IsHosterAccountPoolUploadWithoutUploadedFiles()
-        && !HosterRegistration!.IsUsableForUploads();
+    public bool ShouldSelectAnotherAccountOfHosterAccountPool()
+    {
+        return HasHosterRegistrationAssigned()
+            && IsHosterAccountPoolUploadWithoutUploadedFiles()
+            && !HosterRegistration!.IsUsableForUploads();
+    }
 
     public void RemoveHosterRegistrationAndFolderAssignment()
     {
