@@ -1,6 +1,6 @@
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
@@ -75,11 +75,11 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
 
     private async Task SaveAsync()
     {
-        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        await operationRunner.RunAsync<UploadConfigLinkCrypterTemplateService>(async service =>
         {
             if (isEdit)
             {
-                await service.UpdateUploadConfigLinkCrypterTemplateAsync(
+                await service.UpdateAsync(
                     UploadConfigLinkCrypterTemplateId!.Value,
                     FormModel.Password,
                     CanUseCaptcha && FormModel.EnableCaptcha,
@@ -90,7 +90,7 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
                 return;
             }
 
-            await service.CreateUploadConfigLinkCrypterTemplateAsync(
+            await service.CreateAsync(
                 UploadConfigTemplateId,
                 FormModel.LinkCrypterRegistrationId!.Value,
                 FormModel.Password,

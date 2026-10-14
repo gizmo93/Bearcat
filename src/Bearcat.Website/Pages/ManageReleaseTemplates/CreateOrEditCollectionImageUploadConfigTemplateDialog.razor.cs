@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.CollectionImageUploadConfigTemplates;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -51,11 +51,11 @@ public partial class CreateOrEditCollectionImageUploadConfigTemplateDialog(
 
     private async Task SaveAsync()
     {
-        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        await operationRunner.RunAsync<CollectionImageUploadConfigTemplateService>(async service =>
         {
             if (IsEdit)
             {
-                await service.UpdateCollectionImageUploadConfigTemplateAsync(
+                await service.UpdateAsync(
                     CollectionImageUploadConfigTemplateId!.Value,
                     FormModel.Name,
                     FormModel.ImageHosterRegistrationId!.Value
@@ -63,7 +63,7 @@ public partial class CreateOrEditCollectionImageUploadConfigTemplateDialog(
                 return;
             }
 
-            await service.CreateCollectionImageUploadConfigTemplateAsync(
+            await service.CreateAsync(
                 ReleaseTemplateId,
                 FormModel.Name,
                 FormModel.ImageHosterRegistrationId!.Value

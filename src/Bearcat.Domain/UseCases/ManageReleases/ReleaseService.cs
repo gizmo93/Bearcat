@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
@@ -44,7 +45,9 @@ public class ReleaseService(
             CreatedAt = localNow,
             ReleaseType = releaseType,
             ReleaseContentType = releaseContentType,
-            PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant(),
+            PrimaryLanguageCode = primaryLanguageCode
+                .TrimOrNullWhenWhitespace()
+                ?.ToLowerInvariant(),
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = isUnmanaged ? null : releaseFolderPath,
             ExcludeFromAutoCleanup = excludeFromAutoCleanup,
@@ -91,7 +94,9 @@ public class ReleaseService(
         release.Name = name;
         release.ReleaseContentType = releaseContentType;
         release.ReleaseGroupId = releaseGroupId;
-        release.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
+        release.PrimaryLanguageCode = primaryLanguageCode
+            .TrimOrNullWhenWhitespace()
+            ?.ToLowerInvariant();
         release.ExcludeFromAutoCleanup = excludeFromAutoCleanup;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -130,7 +135,9 @@ public class ReleaseService(
         }
 
         var releases = await writeRepository.GetByIdsAsync(releaseIds, cancellationToken);
-        var normalizedLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
+        var normalizedLanguageCode = primaryLanguageCode
+            .TrimOrNullWhenWhitespace()
+            ?.ToLowerInvariant();
 
         foreach (var release in releases)
         {
@@ -391,7 +398,7 @@ public class ReleaseService(
             releaseTemplate: releaseTemplate,
             folderPath: normalizedFolderPath,
             name: name,
-            primaryLanguageCode: CleanOptional(primaryLanguageCode)?.ToLowerInvariant(),
+            primaryLanguageCode: primaryLanguageCode.TrimOrNullWhenWhitespace()?.ToLowerInvariant(),
             localNow: timeProvider.GetLocalNow(),
             cancellationToken: cancellationToken
         );
@@ -443,10 +450,5 @@ public class ReleaseService(
         }
 
         return null;
-    }
-
-    private static string? CleanOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

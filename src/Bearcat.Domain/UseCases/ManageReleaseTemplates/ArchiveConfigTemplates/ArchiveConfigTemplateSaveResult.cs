@@ -1,6 +1,6 @@
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 
-namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.Validation;
+namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 
 public record ArchiveConfigTemplateSaveResult(
     int? ArchiveConfigTemplateId,

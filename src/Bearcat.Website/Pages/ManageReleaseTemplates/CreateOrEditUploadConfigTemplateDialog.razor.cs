@@ -1,7 +1,7 @@
 using System.Text;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
@@ -109,37 +109,27 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
     {
         PrepareCollectionUploadSlotForSave();
 
-        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        await operationRunner.RunAsync<UploadConfigTemplateService>(async service =>
         {
+            var settings = new UploadConfigTemplateSettings(
+                Name: FormModel.Name,
+                UploadTarget: FormModel.UploadTarget!,
+                ArchiveConfigTemplateId: FormModel.ArchiveConfigTemplateId!.Value,
+                PremiumOnlyDownload: CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
+                CollectionUploadSlotKey: FormModel.CollectionUploadSlotKey,
+                CollectionUploadSlotName: FormModel.CollectionUploadSlotName,
+                CollectionUploadSlotIsRequired: FormModel.CollectionUploadSlotIsRequired,
+                CollectionUploadSlotPasswordPolicy: FormModel.CollectionUploadSlotPasswordPolicy,
+                CollectionUploadSlotExpectedArchivePassword: FormModel.CollectionUploadSlotExpectedArchivePassword
+            );
+
             if (isEdit)
             {
-                await service.UpdateUploadConfigTemplateAsync(
-                    UploadConfigTemplateId!.Value,
-                    FormModel.Name,
-                    FormModel.UploadTarget!,
-                    FormModel.ArchiveConfigTemplateId!.Value,
-                    CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                    FormModel.CollectionUploadSlotKey,
-                    FormModel.CollectionUploadSlotName,
-                    FormModel.CollectionUploadSlotIsRequired,
-                    FormModel.CollectionUploadSlotPasswordPolicy,
-                    FormModel.CollectionUploadSlotExpectedArchivePassword
-                );
+                await service.UpdateAsync(UploadConfigTemplateId!.Value, settings);
                 return;
             }
 
-            await service.CreateUploadConfigTemplateAsync(
-                ReleaseTemplateId,
-                FormModel.Name,
-                FormModel.UploadTarget!,
-                FormModel.ArchiveConfigTemplateId!.Value,
-                CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                FormModel.CollectionUploadSlotKey,
-                FormModel.CollectionUploadSlotName,
-                FormModel.CollectionUploadSlotIsRequired,
-                FormModel.CollectionUploadSlotPasswordPolicy,
-                FormModel.CollectionUploadSlotExpectedArchivePassword
-            );
+            await service.CreateAsync(ReleaseTemplateId, settings);
         });
 
         await DialogRef.CloseAsync(DialogResult.Ok());

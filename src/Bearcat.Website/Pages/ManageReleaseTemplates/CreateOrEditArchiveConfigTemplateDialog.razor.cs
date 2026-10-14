@@ -1,7 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -59,33 +59,23 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
 
     private async Task SaveAsync()
     {
+        var settings = new ArchiveConfigTemplateSettings(
+            Name: FormModel.Name,
+            ArchiveFilesBasePath: FormModel.ArchiveFilesBasePath,
+            ArchiverName: FormModel.ArchiverName!,
+            ArchivePassword: FormModel.ArchivePassword,
+            ArchiveFileSizeMb: FormModel.ArchiveFileSizeMb,
+            UseReleaseNameAsArchiveName: FormModel.UseReleaseNameAsArchiveName,
+            PackReleaseFolderAsRootFolder: FormModel.PackReleaseFolderAsRootFolder,
+            CreateNonceFile: FormModel.CreateNonceFile,
+            AdditionalArchiveContentIds: FormModel.GetAdditionalArchiveContentIds()
+        );
+
         var result = await operationRunner.RunAsync(
-            (ReleaseTemplateService service) =>
+            (ArchiveConfigTemplateService service) =>
                 isEdit
-                    ? service.UpdateArchiveConfigTemplateAsync(
-                        ArchiveConfigTemplateId!.Value,
-                        FormModel.Name,
-                        FormModel.ArchiveFilesBasePath,
-                        FormModel.ArchiverName!,
-                        FormModel.ArchivePassword,
-                        FormModel.ArchiveFileSizeMb,
-                        FormModel.UseReleaseNameAsArchiveName,
-                        FormModel.PackReleaseFolderAsRootFolder,
-                        FormModel.CreateNonceFile,
-                        FormModel.GetAdditionalArchiveContentIds()
-                    )
-                    : service.CreateArchiveConfigTemplateAsync(
-                        ReleaseTemplateId,
-                        FormModel.Name,
-                        FormModel.ArchiveFilesBasePath,
-                        FormModel.ArchiverName!,
-                        FormModel.ArchivePassword,
-                        FormModel.ArchiveFileSizeMb,
-                        FormModel.UseReleaseNameAsArchiveName,
-                        FormModel.PackReleaseFolderAsRootFolder,
-                        FormModel.CreateNonceFile,
-                        FormModel.GetAdditionalArchiveContentIds()
-                    )
+                    ? service.UpdateAsync(ArchiveConfigTemplateId!.Value, settings)
+                    : service.CreateAsync(ReleaseTemplateId, settings)
         );
 
         if (!result.IsSuccess)

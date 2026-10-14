@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -39,7 +40,7 @@ public class ReleaseInfoService(
     )
     {
         var release = await repository.GetReleaseForCoverUpdateAsync(releaseId, cancellationToken);
-        var newCoverUrl = CleanOptional(data.CoverUrl);
+        var newCoverUrl = data.CoverUrl.TrimOrNullWhenWhitespace();
         var previousCoverUrl = release.Metadata?.CoverUrl;
 
         var releaseInfo = release.ReleaseInfo;
@@ -49,12 +50,12 @@ public class ReleaseInfoService(
             release.ReleaseInfo = releaseInfo;
         }
 
-        releaseInfo.ReleaseName = CleanOptional(data.ReleaseName) ?? release.Name;
-        releaseInfo.VideoType = CleanOptional(data.VideoType);
-        releaseInfo.AudioType = CleanOptional(data.AudioType);
+        releaseInfo.ReleaseName = data.ReleaseName.TrimOrNullWhenWhitespace() ?? release.Name;
+        releaseInfo.VideoType = data.VideoType.TrimOrNullWhenWhitespace();
+        releaseInfo.AudioType = data.AudioType.TrimOrNullWhenWhitespace();
         releaseInfo.SizeNumber = data.SizeNumber;
-        releaseInfo.SizeUnit = CleanOptional(data.SizeUnit);
-        releaseInfo.ReleaseDatabaseUrl = CleanOptional(data.ReleaseDatabaseUrl);
+        releaseInfo.SizeUnit = data.SizeUnit.TrimOrNullWhenWhitespace();
+        releaseInfo.ReleaseDatabaseUrl = data.ReleaseDatabaseUrl.TrimOrNullWhenWhitespace();
 
         var metadata = release.Metadata;
         if (metadata is null)
@@ -69,8 +70,8 @@ public class ReleaseInfoService(
         metadata.MetadataDatabaseClassName = ReleaseMetadata.ManualSource;
         metadata.Title = releaseInfo.ReleaseName;
         metadata.CoverUrl = newCoverUrl;
-        metadata.Genre = CleanOptional(data.Genre);
-        metadata.Description = CleanOptional(data.Description);
+        metadata.Genre = data.Genre.TrimOrNullWhenWhitespace();
+        metadata.Description = data.Description.TrimOrNullWhenWhitespace();
 
         ReleaseExternalIdentifierService.SyncImdbIds(
             release: release,
@@ -170,10 +171,5 @@ public class ReleaseInfoService(
         {
             repository.Remove(uploadedImage);
         }
-    }
-
-    private static string? CleanOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

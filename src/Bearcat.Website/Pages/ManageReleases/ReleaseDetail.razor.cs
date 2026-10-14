@@ -7,7 +7,7 @@ using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.CreationFromRelease;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -633,8 +633,8 @@ public partial class ReleaseDetail(
         }
 
         var releaseTemplateId = await operationRunner.RunAsync(
-            (ReleaseTemplateService service) =>
-                service.CreateTemplateFromReleaseAsync(release.ReleaseId, result.Value)
+            (ReleaseTemplateFromReleaseCreationService service) =>
+                service.CreateReleaseTemplateFromReleaseAsync(release.ReleaseId, result.Value)
         );
 
         navigationManager.NavigateTo($"/release-templates/{releaseTemplateId}");

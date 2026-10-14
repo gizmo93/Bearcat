@@ -1,5 +1,6 @@
 using System.Text;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -63,7 +64,7 @@ public class ReleaseCollectionService(
             releaseCollectionId,
             cancellationToken
         );
-        var newCoverUrl = CleanOptional(data.CoverUrl);
+        var newCoverUrl = data.CoverUrl.TrimOrNullWhenWhitespace();
         var previousCoverUrl = releaseCollection.Metadata?.CoverUrl;
 
         var metadata = releaseCollection.Metadata;
@@ -76,10 +77,10 @@ public class ReleaseCollectionService(
             releaseCollection.Metadata = metadata;
         }
 
-        metadata.Title = CleanOptional(data.Title) ?? releaseCollection.Name;
+        metadata.Title = data.Title.TrimOrNullWhenWhitespace() ?? releaseCollection.Name;
         metadata.CoverUrl = newCoverUrl;
-        metadata.Description = CleanOptional(data.Description);
-        metadata.MetadataDatabaseUrl = CleanOptional(data.MetadataDatabaseUrl);
+        metadata.Description = data.Description.TrimOrNullWhenWhitespace();
+        metadata.MetadataDatabaseUrl = data.MetadataDatabaseUrl.TrimOrNullWhenWhitespace();
 
         if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
         {
@@ -114,7 +115,8 @@ public class ReleaseCollectionService(
             cancellationToken
         );
         releaseCollection.ReleaseContentType = releaseContentType;
-        releaseCollection.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)
+        releaseCollection.PrimaryLanguageCode = primaryLanguageCode
+            .TrimOrNullWhenWhitespace()
             ?.ToLowerInvariant();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -453,11 +455,6 @@ public class ReleaseCollectionService(
         return string.IsNullOrWhiteSpace(value)
             ? throw new ArgumentException("Value is required.", parameterName)
             : value.Trim();
-    }
-
-    private static string? CleanOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private static string CreateStableKey(string value)

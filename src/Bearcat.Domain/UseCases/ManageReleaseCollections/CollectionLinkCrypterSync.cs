@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -108,7 +109,7 @@ public static class CollectionLinkCrypterSync
                 uploadConfig.LinkCrypters.Add(linkCrypter);
             }
 
-            linkCrypter.Password = CleanOptional(settings.Password);
+            linkCrypter.Password = settings.Password.TrimOrNullWhenWhitespace();
             linkCrypter.EnableCaptcha = settings.EnableCaptcha;
             linkCrypter.EnableContainerDownload = settings.EnableContainerDownload;
             linkCrypter.EnableClickAndLoad = settings.EnableClickAndLoad;
@@ -126,10 +127,5 @@ public static class CollectionLinkCrypterSync
             linkCrypter.EnableContainerDownload,
             linkCrypter.EnableClickAndLoad
         );
-    }
-
-    private static string? CleanOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }
