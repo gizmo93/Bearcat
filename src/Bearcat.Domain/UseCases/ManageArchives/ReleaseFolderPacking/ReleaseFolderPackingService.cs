@@ -1,6 +1,5 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
-using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;

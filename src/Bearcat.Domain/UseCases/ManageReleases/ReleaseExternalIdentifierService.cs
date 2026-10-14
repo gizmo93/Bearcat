@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleases.Parsers;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
@@ -16,7 +17,7 @@ public static class ReleaseExternalIdentifierService
             type: ExternalIdentifierType.Imdb,
             source: source,
             values: values,
-            extractor: Parsers.ImdbIdParser.ExtractAll
+            extractor: ImdbIdParser.ExtractAll
         );
     }
 
@@ -31,7 +32,7 @@ public static class ReleaseExternalIdentifierService
             type: ExternalIdentifierType.Steam,
             source: source,
             values: values,
-            extractor: Parsers.SteamAppIdParser.ExtractAll
+            extractor: SteamAppIdParser.ExtractAll
         );
     }
 

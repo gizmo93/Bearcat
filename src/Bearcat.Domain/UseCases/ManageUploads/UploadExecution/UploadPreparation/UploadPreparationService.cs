@@ -5,7 +5,6 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
-using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
