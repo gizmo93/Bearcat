@@ -31,4 +31,12 @@ public class UploadedFile
     public DateTime CreatedAt { get; set; }
 
     public DateTime? CheckedAt { get; set; }
+
+    public bool HasHosterFileLink() => !string.IsNullOrWhiteSpace(HosterFileLink);
+
+    public void SetOnlineStateAndCheckedAt(OnlineState onlineState, DateTime checkedAt)
+    {
+        OnlineState = onlineState;
+        CheckedAt = checkedAt;
+    }
 }

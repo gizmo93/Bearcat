@@ -11,6 +11,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
@@ -26,6 +27,7 @@ public class ArchiveRestoreService(
     ITransferCancellationRegistry cancellationRegistry,
     MirrorSourceResolver mirrorSourceResolver,
     MirrorDownloadCoordinator mirrorDownloadCoordinator,
+    UploadCancellationService uploadCancellationService,
     ILogger<ArchiveRestoreService> logger
 )
 {
@@ -268,57 +270,70 @@ public class ArchiveRestoreService(
         );
 
         var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, archive.Id);
-        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+            transferIdentifier,
+            cancellationToken
+        );
+
+        IReadOnlyList<FileDownloadResult> results;
 
         try
         {
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                userCancellationToken
+            var sizePerFileUrl = await GetFirstSourceFileSizesAsync(
+                neededArchiveFiles: neededArchiveFiles,
+                plan: plan,
+                hosters: hosters,
+                cancellationToken: userCancellableTransfer.CancellationToken
             );
 
-            IReadOnlyList<FileDownloadResult> results;
+            var downloads = neededArchiveFiles
+                .Select(archiveFile =>
+                {
+                    var sources = plan.SourcesPerArchiveFileId[archiveFile.Id];
 
-            try
-            {
-                var sizePerFileUrl = await GetFirstSourceFileSizesAsync(
-                    neededArchiveFiles: neededArchiveFiles,
-                    plan: plan,
-                    hosters: hosters,
-                    cancellationToken: linkedTokenSource.Token
-                );
+                    return new PlannedFileDownload(
+                        ArchiveFileId: archiveFile.Id,
+                        TargetFilePath: Path.Join(
+                            restoreFolderPath,
+                            Path.GetFileName(archiveFile.FullFileName)
+                        ),
+                        ExpectedSizeBytes: sizePerFileUrl.TryGetValue(
+                            sources[0].UploadedFile.HosterFileLink,
+                            out var sizeBytes
+                        )
+                            ? sizeBytes
+                            : null,
+                        Sources: sources
+                    );
+                })
+                .ToList();
 
-                var downloads = neededArchiveFiles
-                    .Select(archiveFile =>
-                    {
-                        var sources = plan.SourcesPerArchiveFileId[archiveFile.Id];
+            results = await mirrorDownloadCoordinator.RunDownloadsAsync(
+                archiveId: archive.Id,
+                downloads: downloads,
+                hosters: hosters,
+                downloadSettings: downloadSettings,
+                cancellationToken: userCancellableTransfer.CancellationToken
+            );
+        }
+        catch (OperationCanceledException) when (userCancellableTransfer.WasCanceledByUser)
+        {
+            await HandleRestoreCancellationAsync(
+                archive: archive,
+                previousArchiveState: previousArchiveState,
+                restoreFolderPath: restoreFolderPath,
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
+            );
 
-                        return new PlannedFileDownload(
-                            ArchiveFileId: archiveFile.Id,
-                            TargetFilePath: Path.Join(
-                                restoreFolderPath,
-                                Path.GetFileName(archiveFile.FullFileName)
-                            ),
-                            ExpectedSizeBytes: sizePerFileUrl.TryGetValue(
-                                sources[0].UploadedFile.HosterFileLink,
-                                out var sizeBytes
-                            )
-                                ? sizeBytes
-                                : null,
-                            Sources: sources
-                        );
-                    })
-                    .ToList();
+            return;
+        }
 
-                results = await mirrorDownloadCoordinator.RunDownloadsAsync(
-                    archiveId: archive.Id,
-                    downloads: downloads,
-                    hosters: hosters,
-                    downloadSettings: downloadSettings,
-                    cancellationToken: linkedTokenSource.Token
-                );
-            }
-            catch (OperationCanceledException) when (userCancellationToken.IsCancellationRequested)
+        var failures = results.Where(result => !result.IsSuccess).ToList();
+
+        if (failures.Count > 0)
+        {
+            if (userCancellableTransfer.WasCanceledByUser)
             {
                 await HandleRestoreCancellationAsync(
                     archive: archive,
@@ -331,68 +346,46 @@ public class ArchiveRestoreService(
                 return;
             }
 
-            var failures = results.Where(result => !result.IsSuccess).ToList();
-
-            if (failures.Count > 0)
-            {
-                if (userCancellationToken.IsCancellationRequested)
-                {
-                    await HandleRestoreCancellationAsync(
-                        archive: archive,
-                        previousArchiveState: previousArchiveState,
-                        restoreFolderPath: restoreFolderPath,
-                        waitingUploads: waitingUploads,
-                        cancellationToken: cancellationToken
-                    );
-
-                    return;
-                }
-
-                await HandleRestoreFailureAsync(
-                    archive: archive,
-                    previousArchiveState: previousArchiveState,
-                    restoreFolderPath: restoreFolderPath,
-                    failures: failures,
-                    totalFileCount: results.Count,
-                    maxAttempts: downloadSettings.MaxAttempts,
-                    waitingUploads: waitingUploads,
-                    cancellationToken: cancellationToken
-                );
-
-                return;
-            }
-
-            var archiveFilesById = archive.ArchiveFiles.ToDictionary(file => file.Id);
-
-            foreach (var result in results)
-            {
-                var archiveFile = archiveFilesById[result.ArchiveFileId];
-                archiveFile.FullFileName = result.TargetFilePath;
-                archiveFile.Md5Hash = result.Md5Hash;
-            }
-
-            archive.ArchiveState = ArchiveState.Created;
-            archive.ArchiveStorageFolderId = null;
-            archive.ArchiveStorageFolder = null;
-
-            foreach (var archiveFile in archive.ArchiveFiles)
-            {
-                archiveFile.Md5HashInStorageFolder = null;
-            }
-
-            await repository.SaveChangesAsync(cancellationToken);
-
-            logger.LogInformation(
-                "Restored {FileCount} archive files of archive {ArchiveId} into {RestoreFolderPath}",
-                results.Count,
-                archive.Id,
-                restoreFolderPath
+            await HandleRestoreFailureAsync(
+                archive: archive,
+                previousArchiveState: previousArchiveState,
+                restoreFolderPath: restoreFolderPath,
+                failures: failures,
+                totalFileCount: results.Count,
+                maxAttempts: downloadSettings.MaxAttempts,
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
             );
+
+            return;
         }
-        finally
+
+        var archiveFilesById = archive.ArchiveFiles.ToDictionary(file => file.Id);
+
+        foreach (var result in results)
         {
-            cancellationRegistry.Unregister(transferIdentifier);
+            var archiveFile = archiveFilesById[result.ArchiveFileId];
+            archiveFile.FullFileName = result.TargetFilePath;
+            archiveFile.Md5Hash = result.Md5Hash;
         }
+
+        archive.ArchiveState = ArchiveState.Created;
+        archive.ArchiveStorageFolderId = null;
+        archive.ArchiveStorageFolder = null;
+
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            archiveFile.Md5HashInStorageFolder = null;
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Restored {FileCount} archive files of archive {ArchiveId} into {RestoreFolderPath}",
+            results.Count,
+            archive.Id,
+            restoreFolderPath
+        );
     }
 
     private async Task HandleRestoreCancellationAsync(
@@ -413,17 +406,10 @@ public class ArchiveRestoreService(
 
         archive.ArchiveState = previousArchiveState;
 
-        foreach (var upload in waitingUploads)
-        {
-            upload.UploadState = UploadState.Canceled;
-
-            notificationService.Create(
-                kind: NotificationKind.UploadCanceled,
-                message: "Upload canceled because the archive restore was canceled.",
-                entity: upload,
-                selector: n => n.Upload
-            );
-        }
+        uploadCancellationService.CancelUploadsAndNotify(
+            waitingUploads,
+            "Upload canceled because the archive restore was canceled."
+        );
 
         await repository.SaveChangesAsync(cancellationToken);
 

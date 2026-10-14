@@ -1,5 +1,4 @@
 using Bearcat.Abstractions.Security;
-using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Entities;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;

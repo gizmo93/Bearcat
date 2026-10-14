@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using EntityFramework.Exceptions.Common;
 using Microsoft.Extensions.Logging;
+using ReleaseInfo = Bearcat.Domain.Entities.ReleaseInfo;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
@@ -272,7 +273,7 @@ public class ReleaseInfoResolutionService(
     private static bool IsDuplicateReleaseDataException(UniqueConstraintException exception)
     {
         return exception.Entries.Any(entry =>
-            entry.Entity is Entities.ReleaseInfo or ReleaseMetadata or ReleaseClassification
+            entry.Entity is ReleaseInfo or ReleaseMetadata or ReleaseClassification
         );
     }
 }

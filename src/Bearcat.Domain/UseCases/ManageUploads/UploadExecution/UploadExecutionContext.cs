@@ -1,9 +1,8 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public sealed class UploadExecutionContext(
     Upload upload,
@@ -39,6 +38,17 @@ public sealed class UploadExecutionContext(
     public bool HasOpenWork => PendingFiles.Count > 0 || RunningFileCount > 0;
 
     public CancellationToken CancellationToken => CancellationTokenSource.Token;
+
+    public long GetBytesOfFilesNotYetUploaded()
+    {
+        var processedArchiveFileIds = Upload
+            .UploadedFiles.Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+
+        return PlannedFiles
+            .Where(file => !processedArchiveFileIds.Contains(file.FileId))
+            .Sum(file => file.SizeBytes!.Value);
+    }
 
     public void RequestCancellation()
     {

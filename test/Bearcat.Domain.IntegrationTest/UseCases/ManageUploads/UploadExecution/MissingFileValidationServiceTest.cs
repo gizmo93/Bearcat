@@ -1,6 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNotifications;
-using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -14,7 +14,7 @@ using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
+namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads.UploadExecution;
 
 public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)

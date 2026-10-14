@@ -5,7 +5,7 @@ using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class MissingFileValidationService(
     IUploadFilesRepository repository,
@@ -49,8 +49,7 @@ public class MissingFileValidationService(
 
         var carriedOverArchiveFileIds = upload
             .UploadedFiles.Where(uf =>
-                uf.OnlineState == OnlineState.Online
-                && !string.IsNullOrWhiteSpace(uf.HosterFileLink)
+                uf.OnlineState == OnlineState.Online && uf.HasHosterFileLink()
             )
             .Select(uf => uf.ArchiveFileId)
             .ToHashSet();

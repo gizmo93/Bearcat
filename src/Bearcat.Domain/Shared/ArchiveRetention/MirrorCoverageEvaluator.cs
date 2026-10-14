@@ -37,8 +37,7 @@ public class MirrorCoverageEvaluator(IHosterFactory hosterFactory)
                 upload.UploadedFiles.Count > 0
                 && IsMirrorCapable(upload)
                 && upload.UploadedFiles.All(file =>
-                    file.OnlineState == OnlineState.Online
-                    && !string.IsNullOrWhiteSpace(file.HosterFileLink)
+                    file.OnlineState == OnlineState.Online && file.HasHosterFileLink()
                 )
             )
             .MaxBy(upload => upload.Id);

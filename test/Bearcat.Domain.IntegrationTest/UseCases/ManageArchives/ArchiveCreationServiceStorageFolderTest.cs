@@ -1,14 +1,21 @@
 using System.Security.Cryptography;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
+using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -71,18 +78,12 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
-        service = new ArchiveCreationService(
-            new ArchiveCreationRepository(DbContext),
-            Mock.Of<ILogger<ArchiveCreationService>>(),
-            archiverFactoryMock.Object,
+        service = CreateArchiveCreationService(
             fileSystemService,
-            CreateTimeProvider(),
             notificationService,
             CreateNotificationConfigurationProvider(),
-            new ReleaseFolderEntriesForPackingService(fileSystemService),
             progressTracker,
             cancellationRegistry,
-            new FolderSizeProgressReporter(),
             new ArchiveLocalWorkingCopyService(
                 new ArchiveCleanupRepository(DbContext),
                 fileSystemService,
@@ -91,6 +92,72 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
                 cancellationRegistry,
                 Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
             )
+        );
+    }
+
+    private ArchiveCreationService CreateArchiveCreationService(
+        IFileSystemService fileSystemService,
+        INotificationService notificationService,
+        IApplicationConfigurationProvider configurationProvider,
+        ITransferProgressTracker progressTracker,
+        ITransferCancellationRegistry cancellationRegistry,
+        ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService
+    )
+    {
+        var repository = new ArchiveCreationRepository(DbContext);
+        var releaseFolderEntriesForPackingService = new ReleaseFolderEntriesForPackingService(
+            fileSystemService
+        );
+        var uploadCancellationService = new UploadCancellationService(notificationService);
+        var archiveFileHashService = new ArchiveFileHashService(
+            repository,
+            Mock.Of<ILogger<ArchiveFileHashService>>(),
+            configurationProvider,
+            progressTracker
+        );
+
+        return new ArchiveCreationService(
+            repository,
+            Mock.Of<ILogger<ArchiveCreationService>>(),
+            archiverFactoryMock.Object,
+            fileSystemService,
+            CreateTimeProvider(),
+            notificationService,
+            cancellationRegistry,
+            uploadCancellationService,
+            new InterruptedArchiveRecoveryService(
+                repository,
+                Mock.Of<ILogger<InterruptedArchiveRecoveryService>>(),
+                archiverFactoryMock.Object,
+                fileSystemService,
+                releaseFolderEntriesForPackingService,
+                archiveFileHashService
+            ),
+            new ExistingArchiveAssignmentService(
+                repository,
+                Mock.Of<ILogger<ExistingArchiveAssignmentService>>(),
+                archiverFactoryMock.Object,
+                fileSystemService,
+                notificationService,
+                cancellationRegistry,
+                archiveLocalWorkingCopyService,
+                archiveFileHashService,
+                uploadCancellationService
+            ),
+            new ArchivePackingSettingsService(
+                repository,
+                Mock.Of<ILogger<ArchivePackingSettingsService>>(),
+                configurationProvider
+            ),
+            new ReleaseFolderPackingService(
+                repository,
+                Mock.Of<ILogger<ReleaseFolderPackingService>>(),
+                fileSystemService,
+                releaseFolderEntriesForPackingService,
+                progressTracker,
+                new FolderSizeProgressReporter()
+            ),
+            archiveFileHashService
         );
     }
 

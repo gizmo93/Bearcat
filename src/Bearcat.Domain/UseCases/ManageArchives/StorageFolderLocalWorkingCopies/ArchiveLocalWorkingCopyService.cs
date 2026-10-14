@@ -64,42 +64,38 @@ public class ArchiveLocalWorkingCopyService(
             archive.Id
         );
 
-        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+            transferIdentifier,
+            cancellationToken
+        );
 
-        try
+        var copiedFilePathPerArchiveFile = await CopyArchiveFilesAsync(
+            archive: archive,
+            archiveFilesToCopy: archiveFilesToCopy,
+            storageFolder: storageFolder,
+            transferIdentifier: transferIdentifier,
+            userCancellableTransfer: userCancellableTransfer,
+            cancellationToken: cancellationToken
+        );
+
+        if (copiedFilePathPerArchiveFile is null)
         {
-            var copiedFilePathPerArchiveFile = await CopyArchiveFilesAsync(
-                archive: archive,
-                archiveFilesToCopy: archiveFilesToCopy,
-                storageFolder: storageFolder,
-                transferIdentifier: transferIdentifier,
-                userCancellationToken: userCancellationToken,
-                cancellationToken: cancellationToken
-            );
-
-            if (copiedFilePathPerArchiveFile is null)
-            {
-                return;
-            }
-
-            foreach (var (archiveFile, copiedFilePath) in copiedFilePathPerArchiveFile)
-            {
-                archiveFile.FullFileName = copiedFilePath;
-            }
-
-            await repository.SaveChangesAsync(cancellationToken);
-
-            logger.LogInformation(
-                "Copied {FileCount} files of archive {ArchiveId} from storage folder {StorageFolderName} into a local working copy",
-                copiedFilePathPerArchiveFile.Count,
-                archive.Id,
-                storageFolder.Name
-            );
+            return;
         }
-        finally
+
+        foreach (var (archiveFile, copiedFilePath) in copiedFilePathPerArchiveFile)
         {
-            cancellationRegistry.Unregister(transferIdentifier);
+            archiveFile.FullFileName = copiedFilePath;
         }
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Copied {FileCount} files of archive {ArchiveId} from storage folder {StorageFolderName} into a local working copy",
+            copiedFilePathPerArchiveFile.Count,
+            archive.Id,
+            storageFolder.Name
+        );
     }
 
     private async Task<Dictionary<ArchiveFile, string>?> CopyArchiveFilesAsync(
@@ -107,15 +103,10 @@ public class ArchiveLocalWorkingCopyService(
         IReadOnlyList<ArchiveFile> archiveFilesToCopy,
         ArchiveStorageFolder storageFolder,
         TransferIdentifier transferIdentifier,
-        CancellationToken userCancellationToken,
+        UserCancellableTransfer userCancellableTransfer,
         CancellationToken cancellationToken
     )
     {
-        using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-            cancellationToken,
-            userCancellationToken
-        );
-
         var copiedFilePathPerArchiveFile = new Dictionary<ArchiveFile, string>();
         string? workingCopyFolderPath = null;
 
@@ -145,7 +136,7 @@ public class ArchiveLocalWorkingCopyService(
                 workingCopyFolderPath: workingCopyFolderPath,
                 copiedFilePathPerArchiveFile: copiedFilePathPerArchiveFile,
                 transferIdentifier: transferIdentifier,
-                cancellationToken: linkedTokenSource.Token
+                cancellationToken: userCancellableTransfer.CancellationToken
             );
 
             return copiedFilePathPerArchiveFile;
@@ -158,7 +149,7 @@ public class ArchiveLocalWorkingCopyService(
                 workingCopyFolderPath
             );
 
-            if (ex is OperationCanceledException && userCancellationToken.IsCancellationRequested)
+            if (ex is OperationCanceledException && userCancellableTransfer.WasCanceledByUser)
             {
                 logger.LogInformation(
                     "Canceled copying archive {ArchiveId} from storage folder {StorageFolderName} into a local working copy on user request, the upload reads the archive files from {ArchiveFolderPath}",

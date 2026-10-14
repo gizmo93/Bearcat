@@ -4,13 +4,13 @@ public sealed class TransferCancellationRegistry : ITransferCancellationRegistry
 {
     private readonly Dictionary<TransferIdentifier, CancellationTokenSource> tokenSources = new();
 
-    private readonly Lock gate = new();
+    private readonly Lock tokenSourcesLock = new();
 
     public CancellationToken Register(TransferIdentifier identifier)
     {
         var tokenSource = new CancellationTokenSource();
 
-        lock (gate)
+        lock (tokenSourcesLock)
         {
             tokenSources[identifier] = tokenSource;
         }
@@ -20,7 +20,7 @@ public sealed class TransferCancellationRegistry : ITransferCancellationRegistry
 
     public void Unregister(TransferIdentifier identifier)
     {
-        lock (gate)
+        lock (tokenSourcesLock)
         {
             if (tokenSources.Remove(identifier, out var tokenSource))
             {
@@ -31,7 +31,7 @@ public sealed class TransferCancellationRegistry : ITransferCancellationRegistry
 
     public bool RequestCancellation(TransferIdentifier identifier)
     {
-        lock (gate)
+        lock (tokenSourcesLock)
         {
             if (!tokenSources.TryGetValue(identifier, out var tokenSource))
             {
