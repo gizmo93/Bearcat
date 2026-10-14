@@ -89,10 +89,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         var credentialsRejectionService = new HosterCredentialsRejectionService(
             notificationService
         );
+        var uploadCancellationService = new UploadCancellationService(notificationService);
         var finalizationService = new UploadFinalizationService(
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFinalizationService>>(),
-            notificationService
+            notificationService,
+            uploadCancellationService
         );
         var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
         var fileUploadExecutionService = new FileUploadExecutionService(
@@ -131,9 +133,9 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             hosterFactoryMock.Object,
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
-            notificationService,
             missingFileValidationService,
             finalizationService,
+            uploadCancellationService,
             fileUploadExecutionService,
             concurrencyService,
             credentialsRejectionService,
@@ -1711,10 +1713,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         var credentialsRejectionService = new HosterCredentialsRejectionService(
             notificationService
         );
+        var uploadCancellation = new UploadCancellationService(notificationService);
         var finalization = new UploadFinalizationService(
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFinalizationService>>(),
-            notificationService
+            notificationService,
+            uploadCancellation
         );
         var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
         var fileUploadExecution = new FileUploadExecutionService(
@@ -1742,9 +1746,9 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             hosterFactoryMock.Object,
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
-            notificationService,
             missingFileValidation,
             finalization,
+            uploadCancellation,
             fileUploadExecution,
             concurrency,
             credentialsRejectionService,

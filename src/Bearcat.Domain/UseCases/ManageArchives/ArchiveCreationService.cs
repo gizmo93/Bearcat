@@ -29,7 +29,8 @@ public class ArchiveCreationService(
     ITransferProgressTracker progressTracker,
     ITransferCancellationRegistry cancellationRegistry,
     FolderSizeProgressReporter folderSizeProgressReporter,
-    ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService
+    ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService,
+    UploadCancellationService uploadCancellationService
 )
 {
     private const string SynologyMetadataFolderName = "@eaDir";
@@ -438,51 +439,42 @@ public class ArchiveCreationService(
     )
     {
         var transferIdentifier = new TransferIdentifier(TransferType.ArchiveCreation, archive.Id);
-        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+            transferIdentifier,
+            cancellationToken
+        );
 
         try
         {
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                userCancellationToken
+            await ChangeArchiveFileHashesAsync(
+                archive: archive,
+                archiveFiles: archiveFiles,
+                archiveConfig: archiveConfig,
+                knownHashes: await LoadKnownHashesAsync(
+                    archiveConfig.Id,
+                    userCancellableTransfer.CancellationToken
+                ),
+                transferType: TransferType.ArchiveHashChange,
+                cancellationToken: userCancellableTransfer.CancellationToken
             );
 
-            try
-            {
-                await ChangeArchiveFileHashesAsync(
-                    archive: archive,
-                    archiveFiles: archiveFiles,
-                    archiveConfig: archiveConfig,
-                    knownHashes: await LoadKnownHashesAsync(
-                        archiveConfig.Id,
-                        linkedTokenSource.Token
-                    ),
-                    transferType: TransferType.ArchiveHashChange,
-                    cancellationToken: linkedTokenSource.Token
-                );
-
-                return true;
-            }
-            catch (OperationCanceledException) when (userCancellationToken.IsCancellationRequested)
-            {
-                await SaveChangedHashesAndCancelWaitingUploadsAsync(
-                    archive: archive,
-                    waitingUploads: waitingUploads,
-                    cancellationToken: cancellationToken
-                );
-
-                return false;
-            }
-            catch (OperationCanceledException)
-            {
-                await repository.SaveChangesAsync(cancellationToken: CancellationToken.None);
-
-                throw;
-            }
+            return true;
         }
-        finally
+        catch (OperationCanceledException) when (userCancellableTransfer.WasCanceledByUser)
         {
-            cancellationRegistry.Unregister(transferIdentifier);
+            await SaveChangedHashesAndCancelWaitingUploadsAsync(
+                archive: archive,
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
+            );
+
+            return false;
+        }
+        catch (OperationCanceledException)
+        {
+            await repository.SaveChangesAsync(cancellationToken: CancellationToken.None);
+
+            throw;
         }
     }
 
@@ -507,17 +499,10 @@ public class ArchiveCreationService(
         IReadOnlyList<Upload> waitingUploads
     )
     {
-        foreach (var upload in waitingUploads)
-        {
-            upload.UploadState = UploadState.Canceled;
-
-            notificationService.Create(
-                kind: NotificationKind.UploadCanceled,
-                message: "Upload canceled because the archive creation was canceled.",
-                entity: upload,
-                selector: n => n.Upload
-            );
-        }
+        uploadCancellationService.CancelUploadsAndNotify(
+            waitingUploads,
+            "Upload canceled because the archive creation was canceled."
+        );
 
         logger.LogInformation(
             "Canceled {UploadCount} uploads that were waiting for the canceled archive creation",
@@ -730,7 +715,9 @@ public class ArchiveCreationService(
                             FileId: index + 1,
                             FileName: Path.GetFileName(archiveFile.FullFileName),
                             SourceName: archiveConfig.Name,
-                            SizeBytes: GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName),
+                            SizeBytes: FileSizes.GetFileSizeBytesOrZeroWhenMissing(
+                                archiveFile.FullFileName
+                            ),
                             IsAlreadyTransferred: false
                         )
                     )
@@ -765,13 +752,6 @@ public class ArchiveCreationService(
         {
             progressTracker.StopTracking(transferIdentifier);
         }
-    }
-
-    private static long GetFileSizeBytesOrZeroWhenMissing(string filePath)
-    {
-        var fileInfo = new FileInfo(filePath);
-
-        return fileInfo.Exists ? fileInfo.Length : 0;
     }
 
     private static async Task<string> ComputeMd5HashAsync(
@@ -909,37 +889,28 @@ public class ArchiveCreationService(
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
         var transferIdentifier = new TransferIdentifier(TransferType.ArchiveCreation, archive.Id);
-        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+            transferIdentifier,
+            cancellationToken
+        );
 
         try
         {
-            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                userCancellationToken
+            await PackAndHashArchiveAsync(
+                archive: archive,
+                archiver: archiver,
+                releaseFolderPath: releaseFolderPath,
+                archiveSettings: archiveSettings,
+                cancellationToken: userCancellableTransfer.CancellationToken
             );
-
-            try
-            {
-                await PackAndHashArchiveAsync(
-                    archive: archive,
-                    archiver: archiver,
-                    releaseFolderPath: releaseFolderPath,
-                    archiveSettings: archiveSettings,
-                    cancellationToken: linkedTokenSource.Token
-                );
-            }
-            catch (OperationCanceledException) when (userCancellationToken.IsCancellationRequested)
-            {
-                await DeleteArchiveAndCancelWaitingUploadsAsync(
-                    archive: archive,
-                    waitingUploads: uploads,
-                    cancellationToken: cancellationToken
-                );
-            }
         }
-        finally
+        catch (OperationCanceledException) when (userCancellableTransfer.WasCanceledByUser)
         {
-            cancellationRegistry.Unregister(transferIdentifier);
+            await DeleteArchiveAndCancelWaitingUploadsAsync(
+                archive: archive,
+                waitingUploads: uploads,
+                cancellationToken: cancellationToken
+            );
         }
     }
 

@@ -1394,7 +1394,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateManualReuploadAsync_OfflineUpload_CreatesWaitingForArchiveUpload()
+    public async Task CreateManualReuploadAsync_OfflineUpload_CreatesWaitingForArchiveUploadWithoutNotification()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
@@ -1414,6 +1414,7 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
         reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         reupload.OnlineState.ShouldBe(OnlineState.Unknown);
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]

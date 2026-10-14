@@ -17,6 +17,7 @@ using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -101,6 +102,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
+            new UploadCancellationService(notificationService),
             NullLogger<ArchiveRestoreService>.Instance
         );
 
@@ -123,7 +125,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 transferProgressTracker,
                 new TransferCancellationRegistry(),
                 NullLogger<ArchiveLocalWorkingCopyService>.Instance
-            )
+            ),
+            new UploadCancellationService(notificationService)
         );
     }
 

@@ -8,7 +8,8 @@ namespace Bearcat.Domain.UseCases.ManageUploads;
 public class UploadFinalizationService(
     TimeProvider timeProvider,
     ILogger<UploadFinalizationService> logger,
-    INotificationService notificationService
+    INotificationService notificationService,
+    UploadCancellationService uploadCancellationService
 )
 {
     public bool TryFinalizeUpload(UploadExecutionContext context)
@@ -81,15 +82,7 @@ public class UploadFinalizationService(
 
     public void CancelUpload(UploadExecutionContext context)
     {
-        context.Upload.UploadState = UploadState.Canceled;
-        context.Upload.OnlineState = OnlineState.Unknown;
-
-        notificationService.Create(
-            kind: NotificationKind.UploadCanceled,
-            message: "Upload canceled",
-            entity: context.Upload,
-            selector: n => n.Upload
-        );
+        uploadCancellationService.CancelUploadAndNotify(context.Upload, "Upload canceled");
 
         logger.LogInformation(
             "Canceled upload for Upload {UploadId} to hoster {Hoster}",

@@ -172,6 +172,7 @@ public static class ServiceProviderConfig
             services.AddScoped<HosterAccountPoolAccountSelectionService>();
             services.AddSingleton<HosterStorageAvailabilityCache>();
             services.AddScoped<UploadFinalizationService>();
+            services.AddScoped<UploadCancellationService>();
             services.AddScoped<FileUploadExecutionService>();
             services.AddScoped<MissingFileValidationService>();
             services.AddScoped<UploadConcurrencyService>();

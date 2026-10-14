@@ -20,9 +20,9 @@ public class UploadFilesService(
     IHosterFactory hosterFactory,
     TimeProvider timeProvider,
     ILogger<UploadFilesService> logger,
-    INotificationService notificationService,
     MissingFileValidationService missingFileValidationService,
     UploadFinalizationService finalizationService,
+    UploadCancellationService uploadCancellationService,
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
     HosterCredentialsRejectionService credentialsRejectionService,
@@ -344,8 +344,11 @@ public class UploadFilesService(
         var hosterRegistration =
             await hosterAccountPoolAccountSelectionService.SelectHosterRegistrationAsync(
                 upload: upload,
-                requiredBytes: GetArchiveFilesToUpload(upload)
-                    .Sum(archiveFile => GetFileSizeInBytes(archiveFile.FullFileName)),
+                requiredBytes: upload
+                    .GetArchiveFilesWithoutUploadedFile()
+                    .Sum(archiveFile =>
+                        FileSizes.GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName)
+                    ),
                 hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
                 remainingBytesOfRunningUploadsByHosterRegistrationId: GetRemainingBytesOfRunningUploadsByHosterRegistrationId(
                     uploadContexts
@@ -385,17 +388,6 @@ public class UploadFilesService(
             .Sum(file => file.SizeBytes!.Value);
     }
 
-    private static List<ArchiveFile> GetArchiveFilesToUpload(Upload upload)
-    {
-        var processedArchiveFileIds = upload
-            .UploadedFiles.Select(uf => uf.ArchiveFileId)
-            .ToHashSet();
-
-        return upload
-            .Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id))
-            .ToList();
-    }
-
     private async Task<UploadExecutionContext> CreateUploadContextAsync(
         Upload upload,
         IHoster hoster,
@@ -416,14 +408,14 @@ public class UploadFilesService(
             .Select(uf => uf.ArchiveFileId)
             .ToHashSet();
 
-        var archiveFilesToUpload = GetArchiveFilesToUpload(upload);
+        var archiveFilesToUpload = upload.GetArchiveFilesWithoutUploadedFile();
 
         var plannedFiles = upload
             .Archive!.ArchiveFiles.Select(archiveFile => new TransferFile(
                 FileId: archiveFile.Id,
                 FileName: Path.GetFileName(archiveFile.FullFileName),
                 SourceName: hosterRegistration.Name,
-                SizeBytes: GetFileSizeInBytes(archiveFile.FullFileName),
+                SizeBytes: FileSizes.GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName),
                 IsAlreadyTransferred: successfullyUploadedArchiveFileIds.Contains(archiveFile.Id)
             ))
             .ToList();
@@ -493,9 +485,7 @@ public class UploadFilesService(
         }
 
         var filesToMove = upload
-            .UploadedFiles.Where(uf =>
-                !string.IsNullOrWhiteSpace(uf.HosterFileLink) && uf.HosterFolderId != folderId
-            )
+            .UploadedFiles.Where(uf => uf.HasHosterFileLink() && uf.HosterFolderId != folderId)
             .ToList();
 
         foreach (var file in filesToMove)
@@ -594,13 +584,6 @@ public class UploadFilesService(
         }
 
         throw new UnreachableException();
-    }
-
-    private static long GetFileSizeInBytes(string fullFileName)
-    {
-        var fileInfo = new FileInfo(fullFileName);
-
-        return fileInfo.Exists ? fileInfo.Length : 0;
     }
 
     private async Task ScheduleAvailableFileUploadsAsync(
@@ -878,24 +861,10 @@ public class UploadFilesService(
                 continue;
             }
 
-            var upload = await repository.GetUploadByIdAsync(uploadId, cancellationToken);
-
-            if (upload is null)
+            if (await CancelUploadWithoutRunningContextAsync(uploadId, cancellationToken))
             {
-                continue;
+                hasChanges = true;
             }
-
-            upload.UploadState = UploadState.Canceled;
-            upload.OnlineState = OnlineState.Unknown;
-
-            notificationService.Create(
-                kind: NotificationKind.UploadCanceled,
-                message: "Upload canceled",
-                entity: upload,
-                selector: n => n.Upload
-            );
-
-            hasChanges = true;
         }
 
         if (hasChanges)
@@ -926,25 +895,27 @@ public class UploadFilesService(
 
         foreach (var uploadId in uploadIds)
         {
-            var upload = await repository.GetUploadByIdAsync(uploadId, cancellationToken);
-
-            if (upload is null)
-            {
-                continue;
-            }
-
-            upload.UploadState = UploadState.Canceled;
-            upload.OnlineState = OnlineState.Unknown;
-
-            notificationService.Create(
-                kind: NotificationKind.UploadCanceled,
-                message: "Upload canceled",
-                entity: upload,
-                selector: n => n.Upload
-            );
+            await CancelUploadWithoutRunningContextAsync(uploadId, cancellationToken);
         }
 
         await repository.SaveChangesAsync(cancellationToken);
         repository.ClearChangeTracker();
+    }
+
+    private async Task<bool> CancelUploadWithoutRunningContextAsync(
+        int uploadId,
+        CancellationToken cancellationToken
+    )
+    {
+        var upload = await repository.GetUploadByIdAsync(uploadId, cancellationToken);
+
+        if (upload is null)
+        {
+            return false;
+        }
+
+        uploadCancellationService.CancelUploadAndNotify(upload, "Upload canceled");
+
+        return true;
     }
 }

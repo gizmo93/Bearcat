@@ -96,45 +96,46 @@ public class RemoteSourceDownloadService(
         }
 
         var transferIdentifier = CreateTransferIdentifier(download.Id);
-        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
 
         IReadOnlyList<RemoteFileDto> files;
 
-        try
-        {
-            await MarkAsDownloadingAsync(download, stoppingToken);
-
-            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
-                userCancellationToken,
+        using (
+            var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+                transferIdentifier,
                 stoppingToken
-            );
-
-            files = await ListAndDownloadFilesAsync(
-                download: download,
-                registration: registration,
-                settings: settings,
-                transferIdentifier: transferIdentifier,
-                cancellationToken: cancellationSource.Token
-            );
-        }
-        catch (Exception)
-            when (userCancellationToken.IsCancellationRequested
-                && !stoppingToken.IsCancellationRequested
             )
+        )
         {
-            await DeleteFilesAndMarkAsCanceledAsync(download, stoppingToken);
-            return;
-        }
-        catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
-        {
-            folderService.DeleteLocalFolder(download);
-            await MarkAsFailedAndNotifyAsync(download, exception.Message, stoppingToken);
-            return;
-        }
-        finally
-        {
-            cancellationRegistry.Unregister(transferIdentifier);
-            progressTracker.StopTracking(transferIdentifier);
+            try
+            {
+                await MarkAsDownloadingAsync(download, stoppingToken);
+
+                files = await ListAndDownloadFilesAsync(
+                    download: download,
+                    registration: registration,
+                    settings: settings,
+                    transferIdentifier: transferIdentifier,
+                    cancellationToken: userCancellableTransfer.CancellationToken
+                );
+            }
+            catch (Exception)
+                when (userCancellableTransfer.WasCanceledByUser
+                    && !stoppingToken.IsCancellationRequested
+                )
+            {
+                await DeleteFilesAndMarkAsCanceledAsync(download, stoppingToken);
+                return;
+            }
+            catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
+            {
+                folderService.DeleteLocalFolder(download);
+                await MarkAsFailedAndNotifyAsync(download, exception.Message, stoppingToken);
+                return;
+            }
+            finally
+            {
+                progressTracker.StopTracking(transferIdentifier);
+            }
         }
 
         await MarkAsDownloadedAsync(download, files, stoppingToken);

@@ -9,6 +9,7 @@ using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -90,7 +91,8 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
                 progressTracker,
                 cancellationRegistry,
                 Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
-            )
+            ),
+            new UploadCancellationService(notificationService)
         );
     }
 

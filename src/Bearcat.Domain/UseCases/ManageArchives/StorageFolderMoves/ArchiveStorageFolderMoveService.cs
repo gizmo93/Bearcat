@@ -84,34 +84,30 @@ public class ArchiveStorageFolderMoveService(
             archive.Id
         );
 
-        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+            transferIdentifier,
+            cancellationToken
+        );
 
-        try
+        var copiedArchive = await CopyArchiveIntoStorageFolderAsync(
+            archive: archive,
+            storageFolders: storageFolders,
+            archiveIdsWithUnresolvedNotification: archiveIdsWithUnresolvedNotification,
+            transferIdentifier: transferIdentifier,
+            userCancellableTransfer: userCancellableTransfer,
+            cancellationToken: cancellationToken
+        );
+
+        if (copiedArchive is null)
         {
-            var copiedArchive = await CopyArchiveIntoStorageFolderAsync(
-                archive: archive,
-                storageFolders: storageFolders,
-                archiveIdsWithUnresolvedNotification: archiveIdsWithUnresolvedNotification,
-                transferIdentifier: transferIdentifier,
-                userCancellationToken: userCancellationToken,
-                cancellationToken: cancellationToken
-            );
-
-            if (copiedArchive is null)
-            {
-                return;
-            }
-
-            await PointArchiveToStorageFolderAndDeleteLocalFilesAsync(
-                archive: archive,
-                copiedArchive: copiedArchive,
-                cancellationToken: cancellationToken
-            );
+            return;
         }
-        finally
-        {
-            cancellationRegistry.Unregister(transferIdentifier);
-        }
+
+        await PointArchiveToStorageFolderAndDeleteLocalFilesAsync(
+            archive: archive,
+            copiedArchive: copiedArchive,
+            cancellationToken: cancellationToken
+        );
     }
 
     private async Task<ArchiveCopiedIntoStorageFolder?> CopyArchiveIntoStorageFolderAsync(
@@ -119,15 +115,10 @@ public class ArchiveStorageFolderMoveService(
         IReadOnlyList<ArchiveStorageFolder> storageFolders,
         ArchiveIdsWithUnresolvedNotification archiveIdsWithUnresolvedNotification,
         TransferIdentifier transferIdentifier,
-        CancellationToken userCancellationToken,
+        UserCancellableTransfer userCancellableTransfer,
         CancellationToken cancellationToken
     )
     {
-        using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-            cancellationToken,
-            userCancellationToken
-        );
-
         var copiedFilePaths = new List<string>();
         ArchiveStorageFolder? storageFolder = null;
         string? targetFolderPath = null;
@@ -167,7 +158,7 @@ public class ArchiveStorageFolderMoveService(
                 targetFolderPath: targetFolderPath,
                 copiedFilePaths: copiedFilePaths,
                 transferIdentifier: transferIdentifier,
-                cancellationToken: linkedTokenSource.Token
+                cancellationToken: userCancellableTransfer.CancellationToken
             );
 
             return new ArchiveCopiedIntoStorageFolder(
@@ -181,7 +172,7 @@ public class ArchiveStorageFolderMoveService(
         {
             DeleteCopiedFiles(archive, copiedFilePaths, targetFolderPath);
 
-            if (ex is OperationCanceledException && userCancellationToken.IsCancellationRequested)
+            if (ex is OperationCanceledException && userCancellableTransfer.WasCanceledByUser)
             {
                 logger.LogInformation(
                     "Canceled moving archive {ArchiveId} to a storage folder on user request, the archive stays at {ArchiveFolderPath}",

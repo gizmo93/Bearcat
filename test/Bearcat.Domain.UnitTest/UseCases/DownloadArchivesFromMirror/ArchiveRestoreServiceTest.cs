@@ -11,6 +11,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -674,6 +675,7 @@ public class ArchiveRestoreServiceTest
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
+            new UploadCancellationService(notificationServiceMock.Object),
             NullLogger<ArchiveRestoreService>.Instance
         );
     }

@@ -53,25 +53,21 @@ public class UploadStateService(
             cancellationToken
         );
 
-        if (
-            upload.UploadState != UploadState.Canceled
-            && upload.UploadState != UploadState.Failed
-            && upload.OnlineState is not OnlineState.Offline and not OnlineState.PartiallyOnline
-        )
+        if (!upload.CanBeManuallyReuploaded())
         {
             throw new InvalidUploadStateException(
                 "Manual reuploads can only be created for offline, partially online, canceled, or failed uploads."
             );
         }
 
-        if (HasBlockingReupload(upload))
+        if (upload.HasExistingOrPendingReplacementUpload())
         {
             throw new InvalidUploadStateException(
                 "A replacement upload already exists or is pending for this upload config."
             );
         }
 
-        var newUpload = CreateNewUpload(upload, "Manual reupload scheduled");
+        var newUpload = AddReuploadOfUpload(upload);
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
 
@@ -205,11 +201,10 @@ public class UploadStateService(
 
         foreach (var file in upload.UploadedFiles)
         {
-            file.OnlineState = OnlineState.Offline;
-            file.CheckedAt = localNow;
+            file.SetOnlineStateAndCheckedAt(OnlineState.Offline, localNow);
         }
 
-        SetOnlineState(upload: upload, onlineState: OnlineState.Offline, localNow: localNow);
+        upload.SetOnlineStateAndOfflineSinceTimestamps(OnlineState.Offline, localNow);
 
         notificationService.Create(
             kind: NotificationKind.UploadMarkedOffline,
@@ -237,7 +232,7 @@ public class UploadStateService(
             return false;
         }
 
-        if (!CanDeleteUpload(upload.UploadState))
+        if (!upload.CanBeDeleted())
         {
             return false;
         }
@@ -303,11 +298,13 @@ public class UploadStateService(
             MarkFilesWithoutLinkOffline(upload, localNow);
         }
 
-        var uploadsWithLinks = uploads.Where(HasFileWithLink).ToList();
+        var uploadsWithLinks = uploads
+            .Where(upload => upload.UploadedFiles.Any(file => file.HasHosterFileLink()))
+            .ToList();
 
         foreach (var upload in uploads.Except(uploadsWithLinks))
         {
-            SetOnlineState(upload, OnlineState.Offline, localNow);
+            upload.SetOnlineStateAndOfflineSinceTimestamps(OnlineState.Offline, localNow);
         }
 
         if (uploadsWithLinks.Count == 0)
@@ -317,7 +314,7 @@ public class UploadStateService(
 
         var filesByUrl = uploadsWithLinks
             .SelectMany(u => u.UploadedFiles)
-            .Where(HasLink)
+            .Where(file => file.HasHosterFileLink())
             .ToLookup(f => f.HosterFileLink);
 
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
@@ -409,7 +406,10 @@ public class UploadStateService(
         {
             var previousOnlineState = upload.OnlineState;
 
-            SetOnlineState(upload, DetermineOnlineState(upload), localNow);
+            upload.SetOnlineStateAndOfflineSinceTimestamps(
+                upload.CalculateOnlineStateFromUploadedFiles(),
+                localNow
+            );
 
             CreateOfflineNotificationIfNeeded(upload, previousOnlineState);
         }
@@ -417,7 +417,7 @@ public class UploadStateService(
 
     private void MarkFilesWithoutLinkOffline(Upload upload, DateTime localNow)
     {
-        var filesWithoutLink = upload.UploadedFiles.Where(f => !HasLink(f)).ToList();
+        var filesWithoutLink = upload.UploadedFiles.Where(f => !f.HasHosterFileLink()).ToList();
 
         if (filesWithoutLink.Count == 0)
         {
@@ -426,8 +426,7 @@ public class UploadStateService(
 
         foreach (var file in filesWithoutLink)
         {
-            file.OnlineState = OnlineState.Offline;
-            file.CheckedAt = localNow;
+            file.SetOnlineStateAndCheckedAt(OnlineState.Offline, localNow);
         }
 
         logger.LogWarning(
@@ -459,8 +458,10 @@ public class UploadStateService(
 
             foreach (var file in filesByUrl[url])
             {
-                file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
-                file.CheckedAt = localNow;
+                file.SetOnlineStateAndCheckedAt(
+                    exists ? OnlineState.Online : OnlineState.Offline,
+                    localNow
+                );
 
                 if (result.DownloadCountPerFileUrl?.TryGetValue(url, out var downloadCount) == true)
                 {
@@ -517,48 +518,6 @@ public class UploadStateService(
             && localNow - lastOnlineCheck.Value >= FailedCheckNotificationThreshold;
     }
 
-    private static OnlineState DetermineOnlineState(Upload upload)
-    {
-        var offlineFilesCount = upload.UploadedFiles.Count(f =>
-            f.OnlineState == OnlineState.Offline
-        );
-
-        return offlineFilesCount switch
-        {
-            0 => OnlineState.Online,
-            _ when offlineFilesCount == upload.UploadedFiles.Count => OnlineState.Offline,
-            _ => OnlineState.PartiallyOnline,
-        };
-    }
-
-    private static bool HasFileWithLink(Upload upload) => upload.UploadedFiles.Any(HasLink);
-
-    private static bool HasLink(UploadedFile file) =>
-        !string.IsNullOrWhiteSpace(file.HosterFileLink);
-
-    private static void SetOnlineState(Upload upload, OnlineState onlineState, DateTime localNow)
-    {
-        upload.OnlineState = onlineState;
-
-        if (onlineState is OnlineState.PartiallyOnline or OnlineState.Offline)
-        {
-            upload.NotFullyOnlineSince ??= localNow;
-        }
-        else
-        {
-            upload.NotFullyOnlineSince = null;
-        }
-
-        if (onlineState is OnlineState.Offline)
-        {
-            upload.FullyOfflineSince ??= localNow;
-        }
-        else
-        {
-            upload.FullyOfflineSince = null;
-        }
-    }
-
     private void CreateOfflineNotificationIfNeeded(Upload upload, OnlineState previousOnlineState)
     {
         var becameOffline =
@@ -606,34 +565,34 @@ public class UploadStateService(
                 continue;
             }
 
-            CreateNewUpload(upload, "Automatic reupload scheduled due to offline files");
+            AddReuploadOfUpload(upload);
+
+            notificationService.Create(
+                kind: NotificationKind.AutomaticReuploadCreated,
+                message: "Automatic reupload scheduled due to offline files",
+                entity: upload,
+                selector: u => u.Upload
+            );
         }
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
     }
 
-    private Upload CreateNewUpload(Upload upload, string notificationMessage)
+    private Upload AddReuploadOfUpload(Upload previousUpload)
     {
-        var newUpload = new Upload
+        var reupload = new Upload
         {
-            UploadConfig = upload.UploadConfig,
-            HosterRegistrationId = GetHosterRegistrationIdForReupload(upload),
+            UploadConfig = previousUpload.UploadConfig,
+            HosterRegistrationId = GetHosterRegistrationIdForReupload(previousUpload),
             CreatedAt = timeProvider.GetLocalNow(),
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
-            PremiumOnlyDownload = upload.UploadConfig.PremiumOnlyDownload,
+            PremiumOnlyDownload = previousUpload.UploadConfig.PremiumOnlyDownload,
         };
 
-        notificationService.Create(
-            kind: NotificationKind.AutomaticReuploadCreated,
-            message: notificationMessage,
-            entity: upload,
-            selector: u => u.Upload
-        );
-
-        uploadStateRepository.Add(newUpload);
-        return newUpload;
+        uploadStateRepository.Add(reupload);
+        return reupload;
     }
 
     private static int? GetHosterRegistrationIdForReupload(Upload previousUpload)
@@ -675,33 +634,6 @@ public class UploadStateService(
             is QualityGateState.Passed
                 or QualityGateState.ManuallyApproved;
     }
-
-    private static bool HasBlockingReupload(Upload upload)
-    {
-        List<UploadState> reuploadBlockingStates =
-        [
-            UploadState.Pending,
-            UploadState.Uploading,
-            UploadState.WaitingForArchive,
-            UploadState.Failed,
-            UploadState.CancellationRequested,
-        ];
-
-        return upload.UploadConfig.Uploads.Any(ru =>
-            ru.Id != upload.Id
-            && (
-                ru.OnlineState == OnlineState.Online
-                || reuploadBlockingStates.Contains(ru.UploadState)
-            )
-        );
-    }
-
-    private static bool CanDeleteUpload(UploadState uploadState) =>
-        uploadState
-            is UploadState.Pending
-                or UploadState.Completed
-                or UploadState.Failed
-                or UploadState.Canceled;
 
     private async Task CreateMissingUploadsAsync(
         DateTime localNow,

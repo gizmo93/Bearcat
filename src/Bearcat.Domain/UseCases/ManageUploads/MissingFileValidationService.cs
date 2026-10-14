@@ -49,8 +49,7 @@ public class MissingFileValidationService(
 
         var carriedOverArchiveFileIds = upload
             .UploadedFiles.Where(uf =>
-                uf.OnlineState == OnlineState.Online
-                && !string.IsNullOrWhiteSpace(uf.HosterFileLink)
+                uf.OnlineState == OnlineState.Online && uf.HasHosterFileLink()
             )
             .Select(uf => uf.ArchiveFileId)
             .ToHashSet();
