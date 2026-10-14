@@ -130,6 +130,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool HosterAccountPoolFull { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.HosterAccountPoolWithoutUsableAccount",
+        "NotificationKind.HosterAccountPoolWithoutUsableAccount.Description"
+    )]
+    public bool HosterAccountPoolWithoutUsableAccount { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.CaptchaVerificationRequired",
         "NotificationKind.CaptchaVerificationRequired.Description"
     )]

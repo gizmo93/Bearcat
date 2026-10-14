@@ -748,6 +748,79 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_PendingUploadOfHosterAccountPoolAssignedToInactiveAccount_ReassignsUsableAccountAndUploads()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        var usableRegistration = upload.UploadConfig.HosterRegistration!;
+        var inactiveRegistration = new HosterRegistration
+        {
+            Name = "Inactive hoster",
+            SerializedConfig = SerializedHosterConfig,
+            HosterClassName = HosterClassName,
+            IsActive = false,
+        };
+        upload.UploadConfig.HosterRegistration = null;
+        upload.UploadConfig.HosterRegistrationId = null;
+        upload.UploadConfig.HosterAccountPool = new HosterAccountPool
+        {
+            Name = "Pool",
+            HosterClassName = HosterClassName,
+            Members =
+            [
+                new HosterAccountPoolMember
+                {
+                    HosterRegistration = inactiveRegistration,
+                    Priority = 1,
+                },
+                new HosterAccountPoolMember
+                {
+                    HosterRegistration = usableRegistration,
+                    Priority = 2,
+                },
+            ],
+        };
+        upload.HosterRegistration = inactiveRegistration;
+        upload.HosterFolderId = "folder-of-inactive-account";
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
+        hosterMock
+            .As<IHosterWithStorageQuota>()
+            .Setup(h =>
+                h.GetStorageQuotaAsync(hosterConfigMock.Object, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(HosterStorageQuota.Unlimited());
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
+                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.UploadState.ShouldBe(UploadState.Completed);
+        result.HosterRegistrationId.ShouldBe(usableRegistration.Id);
+        result.HosterFolderId.ShouldBeNull();
+        result.UploadedFiles.ShouldHaveSingleItem();
+    }
+
+    [Test]
     public async Task ProcessAsync_HosterUploadFails_MarksUploadFailedAndCreatesErrorNotification()
     {
         // Arrange

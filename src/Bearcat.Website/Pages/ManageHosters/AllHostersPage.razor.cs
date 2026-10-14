@@ -120,6 +120,23 @@ public partial class AllHostersPage(
 
     private async Task DeleteAsync(HosterRegistrationReadModel hoster)
     {
+        var hosterAccountPoolUploadCount = await operationRunner.RunAsync(
+            (HosterRegistrationService service) =>
+                service.GetHosterAccountPoolUploadCountAsync(hoster.Id)
+        );
+
+        if (hosterAccountPoolUploadCount > 0)
+        {
+            toastService.Error(
+                L[
+                    "HosterRegistrationStillHoldsHosterAccountPoolUploads",
+                    hoster.Name,
+                    hosterAccountPoolUploadCount
+                ]
+            );
+            return;
+        }
+
         var uploadCount = await operationRunner.RunAsync(
             (HosterRegistrationService service) => service.GetUploadCountAsync(hoster.Id)
         );

@@ -167,6 +167,45 @@ public class HosterConfigurationRepositoryTest(DatabaseProvider databaseProvider
         result.ShouldBe(3);
     }
 
+    [Test]
+    public async Task GetHosterAccountPoolUploadCountAsync_PoolAndAccountUploadsOfSeveralAccounts_CountsOnlyPoolUploadsOnRegistration()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var alphaRegistration = testData.AddHosterRegistration("Alpha");
+        var betaRegistration = testData.AddHosterRegistration("Beta");
+        var hosterAccountPool = testData.AddHosterAccountPool(
+            "Pool",
+            alphaRegistration,
+            betaRegistration
+        );
+        var release = testData.AddRelease("Release");
+        var alphaUploadConfig = testData.AddUploadConfig(release, alphaRegistration);
+        var poolUploadConfig = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            hosterAccountPool
+        );
+        testData.AddUpload(alphaUploadConfig, OnlineState.Online);
+        testData.AddUpload(poolUploadConfig, OnlineState.Online).HosterRegistration =
+            alphaRegistration;
+        testData.AddUpload(poolUploadConfig, OnlineState.Offline).HosterRegistration =
+            alphaRegistration;
+        testData.AddUpload(poolUploadConfig, OnlineState.Online).HosterRegistration =
+            betaRegistration;
+        testData.AddUnassignedUpload(poolUploadConfig, UploadState.Pending);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetHosterAccountPoolUploadCountAsync(
+            alphaRegistration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(2);
+    }
+
     private static HosterRegistration CreateRegistration(
         string name,
         decimal? uploadSpeedLimitMegabytesPerSecond,

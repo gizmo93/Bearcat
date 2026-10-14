@@ -196,6 +196,56 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetPendingUploadsAsync_UploadsAssignedToInactiveAccount_ReturnsOnlyHosterAccountPoolUploadWithoutUploadedFiles()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var release = testData.AddRelease("Release");
+        var inactiveAccount = testData.AddHosterRegistration("Inactive", isActive: false);
+        var hosterAccountPoolUploadConfig = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool(
+                "Pool",
+                inactiveAccount,
+                testData.AddHosterRegistration("Active")
+            )
+        );
+        var poolUploadWithoutUploadedFiles = testData.AddUnassignedUpload(
+            hosterAccountPoolUploadConfig,
+            UploadState.Pending
+        );
+        poolUploadWithoutUploadedFiles.HosterRegistration = inactiveAccount;
+        var poolUploadWithUploadedFile = testData.AddUnassignedUpload(
+            hosterAccountPoolUploadConfig,
+            UploadState.Pending
+        );
+        poolUploadWithUploadedFile.HosterRegistration = inactiveAccount;
+        poolUploadWithUploadedFile.Archive = testData.AddArchive(
+            hosterAccountPoolUploadConfig.ArchiveConfig,
+            archiveFileCount: 1
+        );
+        testData.AddUploadedFile(
+            poolUploadWithUploadedFile,
+            poolUploadWithUploadedFile.Archive.ArchiveFiles.Single(),
+            checkedAt: null
+        );
+        var accountUploadConfig = testData.AddUploadConfig(release, inactiveAccount);
+        testData.AddUnassignedUpload(accountUploadConfig, UploadState.Pending).HosterRegistration =
+            inactiveAccount;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPendingUploadsAsync(
+            new HashSet<int>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldHaveSingleItem().Id.ShouldBe(poolUploadWithoutUploadedFiles.Id);
+    }
+
+    [Test]
     public async Task HasUnresolvedNotificationForUploadAsync_OnlyResolvedOrOtherKindOrOtherUpload_ReturnsTrueOnlyForUnresolvedNotificationOfKindOnUpload()
     {
         // Arrange

@@ -202,6 +202,18 @@ public class UploadFilesService(
                 continue;
             }
 
+            if (IsHosterAccountPoolUploadOnUnusableAccount(upload))
+            {
+                logger.LogInformation(
+                    "Account {HosterRegistration} assigned to upload {UploadId} is no longer usable for uploads, selecting another account of hoster account pool {HosterAccountPool}",
+                    upload.HosterRegistration!.Name,
+                    upload.Id,
+                    upload.UploadConfig.HosterAccountPool!.Name
+                );
+
+                ResetHosterRegistrationAssignment(upload);
+            }
+
             if (
                 !HasHosterRegistrationAssigned(upload)
                 && !await TryAssignHosterRegistrationFromHosterAccountPoolAsync(
@@ -255,6 +267,11 @@ public class UploadFilesService(
             {
                 credentialsRejectionService.DeactivateAndNotify(upload, ex.Message);
 
+                if (IsHosterAccountPoolUploadWithoutUploadedFiles(upload))
+                {
+                    ResetHosterRegistrationAssignment(upload);
+                }
+
                 trackedUploadIds.Remove(upload.Id);
                 continue;
             }
@@ -295,6 +312,26 @@ public class UploadFilesService(
     private static bool HasHosterRegistrationAssigned(Upload upload)
     {
         return upload.HosterRegistrationId is not null;
+    }
+
+    private static bool IsHosterAccountPoolUploadOnUnusableAccount(Upload upload)
+    {
+        return HasHosterRegistrationAssigned(upload)
+            && IsHosterAccountPoolUploadWithoutUploadedFiles(upload)
+            && !upload.HosterRegistration!.IsUsableForUploads();
+    }
+
+    private static bool IsHosterAccountPoolUploadWithoutUploadedFiles(Upload upload)
+    {
+        return upload.UploadConfig.HosterAccountPoolId is not null
+            && upload.UploadedFiles.Count == 0;
+    }
+
+    private static void ResetHosterRegistrationAssignment(Upload upload)
+    {
+        upload.HosterRegistrationId = null;
+        upload.HosterRegistration = null;
+        upload.HosterFolderId = null;
     }
 
     private async Task<bool> TryAssignHosterRegistrationFromHosterAccountPoolAsync(

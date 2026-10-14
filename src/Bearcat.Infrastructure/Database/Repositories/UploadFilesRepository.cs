@@ -32,7 +32,11 @@ public class UploadFilesRepository(
             .Where(u =>
                 !uploadIdsToExclude.Contains(u.Id)
                 && u.UploadState == UploadState.Pending
-                && (u.HosterRegistrationId == null || u.HosterRegistration!.IsActive)
+                && (
+                    u.HosterRegistrationId == null
+                    || u.HosterRegistration!.IsActive
+                    || (u.UploadConfig.HosterAccountPoolId != null && !u.UploadedFiles.Any())
+                )
             )
             .ToListAsync(cancellationToken);
     }

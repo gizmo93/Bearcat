@@ -97,8 +97,26 @@ public class HosterRegistrationService(
         return await readRepository.GetUploadCountAsync(id, cancellationToken);
     }
 
+    public async Task<int> GetHosterAccountPoolUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetHosterAccountPoolUploadCountAsync(id, cancellationToken);
+    }
+
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
+        var hosterAccountPoolUploadCount =
+            await readRepository.GetHosterAccountPoolUploadCountAsync(id, cancellationToken);
+
+        if (hosterAccountPoolUploadCount > 0)
+        {
+            throw new InvalidOperationException(
+                $"Hoster registration {id} still holds {hosterAccountPoolUploadCount} uploads of account pools and cannot be deleted."
+            );
+        }
+
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         writeRepository.Remove(registration);
         await writeRepository.SaveChangesAsync(cancellationToken);

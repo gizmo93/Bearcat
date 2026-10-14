@@ -1469,6 +1469,36 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateManualReuploadAsync_UploadOfHosterAccountPoolUploadConfigOnMemberRequiringCaptchaVerification_CreatesReuploadWithoutHosterRegistration()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync(u =>
+            u.Id == upload.UploadConfigId
+        );
+        await MoveUploadConfigToHosterAccountPoolAsync(uploadConfig, memberIsActive: true);
+        var memberRegistration = await DbContext.HosterRegistrations.SingleAsync(registration =>
+            registration.Id == upload.HosterRegistrationId
+        );
+        memberRegistration.RequiresCaptchaVerification = true;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
+
+        reupload.HosterRegistrationId.ShouldBeNull();
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_AutomaticReuploadOfHosterAccountPoolUploadConfigOnInactiveMember_CreatesReuploadWithoutHosterRegistration()
     {
         // Arrange

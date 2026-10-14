@@ -1038,6 +1038,8 @@
   <data name="NotificationKind.AutomaticReuploadCreated" xml:space="preserve"><value>Automatic reupload created</value></data><data name="NotificationKind.AutomaticReuploadCreated.Description" xml:space="preserve"><value>A reupload was created automatically.</value></data>
   <data name="NotificationKind.HosterAccountPoolFull" xml:space="preserve"><value>Account pool full</value></data>
   <data name="NotificationKind.HosterAccountPoolFull.Description" xml:space="preserve"><value>An upload could not start because no account of its account pool has enough free storage. The upload stays pending and starts once an account has enough space.</value></data>
+  <data name="NotificationKind.HosterAccountPoolWithoutUsableAccount" xml:space="preserve"><value>Account pool without usable account</value></data>
+  <data name="NotificationKind.HosterAccountPoolWithoutUsableAccount.Description" xml:space="preserve"><value>An upload could not start because its account pool has no usable account: all accounts are inactive, need captcha verification or have unreadable secrets, or the pool has no accounts. The upload stays pending.</value></data>
   <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA verification required</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>A hoster requires CAPTCHA verification.</value></data>
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Credentials rejected by hoster</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>A hoster rejected the credentials of a hoster registration. Bearcat deactivates the registration until you fix the credentials and activate it again.</value></data>
@@ -1773,4 +1775,5 @@
   <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (no active account)</value></data>
   <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (account not assigned yet)</value></data>
   <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" cannot be deleted because {1} upload configurations and {2} upload configuration templates still use it.</value></data>
+  <data name="HosterRegistrationStillHoldsHosterAccountPoolUploads" xml:space="preserve"><value>{0} still holds {1} uploads of account pools and cannot be deleted. Remove it from the pools and deactivate it instead.</value></data>
 </root>

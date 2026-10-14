@@ -41,15 +41,29 @@ Bearcat keeps the result of each storage check for 5 minutes.
 ## Pool full
 
 If no account has enough space, the upload waits. Bearcat sends an **Account pool full** notification
-once per upload.
+once per upload. If the pool has no usable account (all accounts are inactive, have unreadable
+credentials or a pending captcha, or the pool is empty), Bearcat sends an **Account pool without
+usable account** notification instead.
 
 Bearcat checks the pool again on each upload run. The upload starts automatically once an account has
 enough space. You can add an account or free up storage to make room.
 
 ## Reuploads
 
-A reupload uses the previous account as long as it is active and still in the pool. Bearcat does not
-check its free storage. Otherwise, Bearcat picks another account from the pool when the reupload starts.
+A reupload uses the previous account as long as it is active, has readable credentials, has no pending
+captcha and is still in the pool. Bearcat does not check its free storage. Otherwise, Bearcat picks
+another account from the pool when the reupload starts. This also applies if the account becomes
+unusable before the first file is uploaded.
+
+## Remove an account
+
+An account that still holds uploads of a pool cannot be deleted. Remove it from the pool and deactivate
+it instead. A deactivated account gets no new uploads, its existing uploads stay.
+
+## Forum posts
+
+In forum posts, the hoster name of a pool upload is the hoster's display name (e.g. "Rapidgator"), not
+the pool or account name.
 
 ## Parallel uploads
 

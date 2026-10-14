@@ -40,10 +40,21 @@ public class HosterAccountPoolAccountSelectionService(
             .Members.OrderBy(member => member.Priority)
             .Select(member => member.HosterRegistration)
             .Where(registration =>
-                IsUsableForUploads(registration)
+                registration.IsUsableForUploads()
                 && hosterConfigsByRegistrationId.ContainsKey(registration.Id)
             )
             .ToList();
+
+        if (candidateRegistrations.Count == 0)
+        {
+            await ReportNoUsableAccountAsync(
+                upload: upload,
+                hosterAccountPool: hosterAccountPool,
+                cancellationToken: cancellationToken
+            );
+
+            return null;
+        }
 
         foreach (var registration in candidateRegistrations)
         {
@@ -88,11 +99,6 @@ public class HosterAccountPoolAccountSelectionService(
 
         return null;
     }
-
-    private static bool IsUsableForUploads(HosterRegistration registration) =>
-        registration.IsActive
-        && !registration.HasUnreadableSecrets
-        && !registration.RequiresCaptchaVerification;
 
     private async Task<HosterStorageAvailability?> GetStorageAvailabilityAsync(
         HosterRegistration registration,
@@ -177,6 +183,43 @@ public class HosterAccountPoolAccountSelectionService(
         using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
 
         return await hoster.GetStorageQuotaAsync(hosterConfig, cancellationToken);
+    }
+
+    private async Task ReportNoUsableAccountAsync(
+        Upload upload,
+        HosterAccountPool hosterAccountPool,
+        CancellationToken cancellationToken
+    )
+    {
+        var hasUnresolvedNotification = await repository.HasUnresolvedNotificationForUploadAsync(
+            upload.Id,
+            NotificationKind.HosterAccountPoolWithoutUsableAccount,
+            cancellationToken
+        );
+
+        if (hasUnresolvedNotification)
+        {
+            logger.LogDebug(
+                "Upload {UploadId} stays pending because hoster account pool {HosterAccountPool} has no usable account",
+                upload.Id,
+                hosterAccountPool.Name
+            );
+
+            return;
+        }
+
+        logger.LogInformation(
+            "Upload {UploadId} stays pending because hoster account pool {HosterAccountPool} has no usable account",
+            upload.Id,
+            hosterAccountPool.Name
+        );
+
+        notificationService.Create(
+            kind: NotificationKind.HosterAccountPoolWithoutUsableAccount,
+            message: $"Upload {upload.Id} of release '{upload.UploadConfig.Release.Name}' could not start: account pool '{hosterAccountPool.Name}' has no usable account (all accounts are inactive, need captcha verification or have unreadable secrets, or the pool has no accounts). The upload stays pending.",
+            entity: upload,
+            selector: n => n.Upload
+        );
     }
 
     private async Task ReportNoAccountHasEnoughFreeStorageAsync(

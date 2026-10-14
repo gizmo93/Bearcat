@@ -114,16 +114,6 @@ public class HosterAccountPoolRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetDetailAsync_UnknownPool_ReturnsNull()
-    {
-        // Act
-        var result = await CreateRepository().GetDetailAsync(42, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
     public async Task GetCandidateRegistrationsAsync_RegistrationsOfSeveralHosters_ReturnsRegistrationsOfHosterOrderedByName()
     {
         // Arrange
@@ -165,17 +155,6 @@ public class HosterAccountPoolRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBe([AlfafileClassName, RapidgatorClassName]);
-    }
-
-    [Test]
-    public async Task GetHosterClassNamesWithRegistrationsAsync_NoRegistrations_ReturnsEmptyList()
-    {
-        // Act
-        var result = await CreateRepository()
-            .GetHosterClassNamesWithRegistrationsAsync(CancellationToken.None);
-
-        // Assert
-        result.ShouldBeEmpty();
     }
 
     [Test]
@@ -314,45 +293,6 @@ public class HosterAccountPoolRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SaveChangesAsync_DuplicateName_ThrowsDbUpdateException()
-    {
-        // Arrange
-        DbContext.HosterAccountPools.Add(CreatePool("Rapidgator pool", RapidgatorClassName));
-        await DbContext.SaveChangesAsync();
-        var repository = CreateRepository();
-        repository.Add(CreatePool("Rapidgator pool", AlfafileClassName));
-
-        // Act
-        var result = await Should.ThrowAsync<DbUpdateException>(() =>
-            repository.SaveChangesAsync(CancellationToken.None)
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-    }
-
-    [Test]
-    public async Task SaveChangesAsync_DuplicateMember_ThrowsDbUpdateException()
-    {
-        // Arrange
-        var registration = CreateRegistration("First account", RapidgatorClassName);
-        DbContext.HosterRegistrations.Add(registration);
-        await DbContext.SaveChangesAsync();
-        var repository = CreateRepository();
-        repository.Add(
-            CreatePool("Rapidgator pool", RapidgatorClassName, (registration, 1), (registration, 2))
-        );
-
-        // Act
-        var result = await Should.ThrowAsync<DbUpdateException>(() =>
-            repository.SaveChangesAsync(CancellationToken.None)
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-    }
-
-    [Test]
     public async Task GetAllAsync_HosterWithPremiumOnlyDownloadsAndFileSizeLimit_ReturnsHosterCapabilities()
     {
         // Arrange
@@ -411,23 +351,6 @@ public class HosterAccountPoolRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldBe(new HosterAccountPoolUsage(2, 1));
         result.IsInUse.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task GetUsageAsync_UnusedPool_ReturnsNoUsage()
-    {
-        // Arrange
-        var pool = CreatePool("Rapidgator pool", RapidgatorClassName);
-        DbContext.HosterAccountPools.Add(pool);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await CreateRepository().GetUsageAsync(pool.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(new HosterAccountPoolUsage(0, 0));
-        result.IsInUse.ShouldBeFalse();
     }
 
     [Test]

@@ -648,7 +648,8 @@ public class UploadStateService(
         var previousRegistration = previousUpload.HosterRegistration;
 
         var previousRegistrationIsStillUsable =
-            previousRegistration is { IsActive: true, HasUnreadableSecrets: false }
+            previousRegistration is not null
+            && previousRegistration.IsUsableForUploads()
             && uploadConfig.HosterAccountPool!.Members.Any(member =>
                 member.HosterRegistrationId == previousRegistration.Id
             );

@@ -35,4 +35,5 @@ public enum NotificationKind
     ArchiveMoveToStorageFolderFailed = 31,
     ArchiveCopyIntoLocalWorkingCopyFailed = 32,
     HosterAccountPoolFull = 33,
+    HosterAccountPoolWithoutUsableAccount = 34,
 }

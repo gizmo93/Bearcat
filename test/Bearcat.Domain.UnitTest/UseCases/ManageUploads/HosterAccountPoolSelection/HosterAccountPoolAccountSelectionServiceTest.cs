@@ -197,6 +197,78 @@ public class HosterAccountPoolAccountSelectionServiceTest
         );
     }
 
+    [Test]
+    public async Task SelectHosterRegistrationAsync_SecondUploadInSameCycle_AssignsNextAccountBecauseFirstAssignmentReservedCachedFreeSpace()
+    {
+        // Arrange
+        var firstAccount = CreateRegistration(1);
+        var secondAccount = CreateRegistration(2);
+        var firstUpload = CreateUpload(
+            minimumFreeSpaceBytes: 0,
+            (firstAccount, 1),
+            (secondAccount, 2)
+        );
+        var secondUpload = CreateUpload(
+            minimumFreeSpaceBytes: 0,
+            (firstAccount, 1),
+            (secondAccount, 2)
+        );
+        SetupQuota(firstAccount, HosterStorageQuota.Limited(150, null));
+        SetupQuota(secondAccount, HosterStorageQuota.Limited(1_000, null));
+
+        // Act
+        var firstResult = await SelectAsync(firstUpload, requiredBytes: 100);
+        var secondResult = await SelectAsync(secondUpload, requiredBytes: 100);
+
+        // Assert
+        firstResult.ShouldBe(firstAccount);
+        secondResult.ShouldBe(secondAccount);
+        VerifyQuotaRequested(firstAccount, Times.Once());
+    }
+
+    [Test]
+    public async Task SelectHosterRegistrationAsync_NoMemberUsable_CreatesHosterAccountPoolWithoutUsableAccountNotification()
+    {
+        // Arrange
+        var inactiveAccount = CreateRegistration(1);
+        inactiveAccount.IsActive = false;
+        var accountRequiringCaptcha = CreateRegistration(2);
+        accountRequiringCaptcha.RequiresCaptchaVerification = true;
+        var upload = CreateUpload(
+            minimumFreeSpaceBytes: 0,
+            (inactiveAccount, 1),
+            (accountRequiringCaptcha, 2)
+        );
+        SetupQuota(inactiveAccount, HosterStorageQuota.Unlimited());
+        SetupQuota(accountRequiringCaptcha, HosterStorageQuota.Unlimited());
+
+        // Act
+        var result = await SelectAsync(upload, requiredBytes: 100);
+
+        // Assert
+        result.ShouldBeNull();
+        notificationServiceMock.Verify(
+            notificationService =>
+                notificationService.Create(
+                    NotificationKind.HosterAccountPoolWithoutUsableAccount,
+                    It.Is<string>(message => message.Contains("'Pool'")),
+                    upload,
+                    It.IsAny<Expression<Func<Notification, Upload?>>>()
+                ),
+            Times.Once()
+        );
+        notificationServiceMock.Verify(
+            notificationService =>
+                notificationService.Create(
+                    NotificationKind.HosterAccountPoolFull,
+                    It.IsAny<string>(),
+                    It.IsAny<Upload>(),
+                    It.IsAny<Expression<Func<Notification, Upload?>>>()
+                ),
+            Times.Never()
+        );
+    }
+
     private async Task<HosterRegistration?> SelectAsync(
         Upload upload,
         long requiredBytes,

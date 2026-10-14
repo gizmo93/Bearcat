@@ -53,6 +53,9 @@ public class HosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntit
 
     public List<HosterAccountPoolMember> HosterAccountPoolMemberships { get; set; } = null!;
 
+    public bool IsUsableForUploads() =>
+        IsActive && !HasUnreadableSecrets && !RequiresCaptchaVerification;
+
     public string GetEncryptedSecrets() => SerializedConfig;
 
     public string GetRegistrationTypeName() => "Hoster";
