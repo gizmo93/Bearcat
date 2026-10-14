@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 
-namespace Bearcat.Domain.UseCases.ManageUploads.Dto;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public record FileToUpload(
     int UploadId,

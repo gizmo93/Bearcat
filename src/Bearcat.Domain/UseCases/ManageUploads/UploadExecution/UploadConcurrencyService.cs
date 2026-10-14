@@ -7,7 +7,7 @@ using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class UploadConcurrencyService(
     IUploadFilesRepository repository,

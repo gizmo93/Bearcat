@@ -5,7 +5,7 @@ using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class MissingFileValidationService(
     IUploadFilesRepository repository,

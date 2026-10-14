@@ -3,7 +3,7 @@ using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class UploadFinalizationService(
     TimeProvider timeProvider,

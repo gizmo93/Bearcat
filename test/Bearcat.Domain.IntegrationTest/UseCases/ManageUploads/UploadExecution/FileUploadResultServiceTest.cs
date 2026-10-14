@@ -1,15 +1,15 @@
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
+namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads.UploadExecution;
 
 public class FileUploadResultServiceTest
 {

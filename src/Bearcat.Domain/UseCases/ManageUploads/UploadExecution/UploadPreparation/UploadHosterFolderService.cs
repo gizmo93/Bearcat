@@ -4,7 +4,7 @@ using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution.UploadPreparation;
 
 public class UploadHosterFolderService(ILogger<UploadHosterFolderService> logger)
 {

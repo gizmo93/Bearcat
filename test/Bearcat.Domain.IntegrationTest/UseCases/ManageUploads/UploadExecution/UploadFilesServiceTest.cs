@@ -12,7 +12,8 @@ using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
-using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution.UploadPreparation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -26,7 +27,7 @@ using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
+namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads.UploadExecution;
 
 public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)

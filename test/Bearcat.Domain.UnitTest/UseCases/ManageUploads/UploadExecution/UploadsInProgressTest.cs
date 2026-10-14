@@ -1,10 +1,10 @@
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 
-namespace Bearcat.Domain.UnitTest.UseCases.ManageUploads;
+namespace Bearcat.Domain.UnitTest.UseCases.ManageUploads.UploadExecution;
 
 public class UploadsInProgressTest
 {

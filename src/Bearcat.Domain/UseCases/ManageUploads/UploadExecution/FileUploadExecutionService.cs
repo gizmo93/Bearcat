@@ -4,10 +4,9 @@ using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class FileUploadExecutionService(
     ILogger<FileUploadExecutionService> logger,

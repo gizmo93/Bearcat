@@ -4,12 +4,12 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution.UploadPreparation;
 
 public class UploadPreparationService(
     HosterAccountPoolAccountSelectionService hosterAccountPoolAccountSelectionService,

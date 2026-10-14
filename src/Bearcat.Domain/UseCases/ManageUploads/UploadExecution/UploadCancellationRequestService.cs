@@ -1,6 +1,6 @@
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class UploadCancellationRequestService(
     IUploadFilesRepository repository,

@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
+namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads.UploadExecution;
 
 public class UploadCancellationRequestServiceTest(DatabaseProvider databaseProvider)
     : UploadIntegrationTest(databaseProvider)

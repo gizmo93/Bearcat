@@ -1,9 +1,8 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public sealed class UploadExecutionContext(
     Upload upload,

@@ -1,10 +1,9 @@
 using System.Threading.Channels;
 using Bearcat.Domain.Shared.Transfers;
-using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public sealed class UploadsInProgress(ITransferProgressTracker progressTracker, ILogger logger)
 {

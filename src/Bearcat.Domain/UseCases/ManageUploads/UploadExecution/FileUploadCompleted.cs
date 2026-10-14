@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.UseCases.ManageUploads.Dto;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public record FileUploadCompleted(
     int UploadId,

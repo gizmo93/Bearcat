@@ -2,11 +2,11 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
-using Bearcat.Domain.UseCases.ManageUploads.UploadPreparation;
+using Bearcat.Domain.UseCases.ManageUploads.UploadExecution.UploadPreparation;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ManageUploads;
+namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public class UploadFilesService(
     IUploadFilesRepository repository,
