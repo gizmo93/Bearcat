@@ -25,7 +25,7 @@ public partial class TelegramPage(
     private bool forwardError;
     private bool isLoading = true;
     private bool isSavingConfiguration;
-    private bool isSavingLevels;
+    private bool isSavingForwardedNotificationSeverities;
     private bool isSendingTest;
     private bool isStartingPairing;
     private bool isRefreshing;
@@ -43,8 +43,7 @@ public partial class TelegramPage(
     {
         isLoading = true;
         settings = await operationRunner.RunAsync(
-            (TelegramNotificationService service) =>
-                service.GetSettingsAsync(navigationManager.BaseUri)
+            (TelegramSettingsService service) => service.GetSettingsAsync(navigationManager.BaseUri)
         );
         notificationBaseUrl = settings.NotificationBaseUrl;
         forwardInfo = settings.ForwardInfo;
@@ -52,7 +51,7 @@ public partial class TelegramPage(
         forwardError = settings.ForwardError;
         deliveryStatus = settings.IsConnected
             ? await operationRunner.RunAsync(
-                (TelegramNotificationService service) => service.GetDeliveryStatusAsync()
+                (TelegramDeliveryService service) => service.GetDeliveryStatusAsync()
             )
             : null;
         isLoading = false;
@@ -70,7 +69,7 @@ public partial class TelegramPage(
         try
         {
             await operationRunner.RunAsync(
-                (TelegramNotificationService service) =>
+                (TelegramSettingsService service) =>
                     service.SaveConfigurationAsync(botToken, notificationBaseUrl)
             );
             botToken = null;
@@ -88,14 +87,18 @@ public partial class TelegramPage(
         }
     }
 
-    private async Task SaveLevelsAsync()
+    private async Task SaveForwardedNotificationSeveritiesAsync()
     {
-        isSavingLevels = true;
+        isSavingForwardedNotificationSeverities = true;
         try
         {
             await operationRunner.RunAsync(
-                (TelegramNotificationService service) =>
-                    service.SaveLevelsAsync(forwardInfo, forwardWarning, forwardError)
+                (TelegramSettingsService service) =>
+                    service.SaveForwardedNotificationSeveritiesAsync(
+                        forwardInfo,
+                        forwardWarning,
+                        forwardError
+                    )
             );
             toastService.Success(L["TelegramLevelsSaved"]);
         }
@@ -105,17 +108,17 @@ public partial class TelegramPage(
         }
         finally
         {
-            isSavingLevels = false;
+            isSavingForwardedNotificationSeverities = false;
         }
     }
 
-    private async Task BeginPairingAsync()
+    private async Task CreatePairingLinkAsync()
     {
         isStartingPairing = true;
         try
         {
             pairingUrl = await operationRunner.RunAsync(
-                (TelegramNotificationService service) => service.BeginPairingAsync()
+                (TelegramPairingService service) => service.CreatePairingLinkAsync()
             );
         }
         catch (Exception exception)
@@ -152,7 +155,7 @@ public partial class TelegramPage(
         try
         {
             await operationRunner.RunAsync(
-                (TelegramNotificationService service) => service.SendTestMessageAsync()
+                (TelegramDeliveryService service) => service.SendTestMessageAsync()
             );
             toastService.Success(L["TestNotificationSent"]);
         }
@@ -188,7 +191,7 @@ public partial class TelegramPage(
         try
         {
             await operationRunner.RunAsync(
-                (TelegramNotificationService service) => service.DisconnectAsync()
+                (TelegramPairingService service) => service.DisconnectChatAsync()
             );
             pairingUrl = null;
             await LoadAsync();

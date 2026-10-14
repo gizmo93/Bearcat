@@ -1,7 +1,6 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
@@ -147,19 +146,18 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
                 )
             )
             .Returns(Task.CompletedTask);
-        var telegram = new TelegramNotificationService(
-            configurationRepository: new TelegramConfigurationRepository(DbContext),
+        var telegram = new TelegramDeliveryService(
+            configurationService: new TelegramConfigurationService(
+                configurationRepository: new TelegramConfigurationRepository(DbContext),
+                readRepository: new TelegramNotificationReadRepository(ReadDbContext),
+                configurationCache: new TelegramConfigurationCache()
+            ),
             readRepository: new TelegramNotificationReadRepository(ReadDbContext),
             notificationReadRepository: new NotificationReadRepository(ReadDbContext),
             deliveryRepository: new TelegramDeliveryRepository(DbContext),
             secretProtector: NoOpSecretProtector.Instance,
             telegramClient: client.Object,
-            timeProvider: timeProvider,
-            configurationCache: new TelegramConfigurationCache(),
-            unreadableSecretsNotificationService: UnreadableSecretsNotificationServiceFactory.Create(
-                DbContext,
-                CreateNotificationConfigurationProvider()
-            )
+            timeProvider: timeProvider
         );
 
         await telegram.ProcessDeliveriesAsync(CancellationToken.None);

@@ -22,15 +22,19 @@ public sealed class TelegramNotificationBackgroundTask(
 
                 await using (var scope = serviceScopeFactory.CreateAsyncScope())
                 {
-                    var service =
-                        scope.ServiceProvider.GetRequiredService<TelegramNotificationService>();
+                    var deliveryService =
+                        scope.ServiceProvider.GetRequiredService<TelegramDeliveryService>();
+                    var pairingService =
+                        scope.ServiceProvider.GetRequiredService<TelegramPairingService>();
 
-                    await service.ProcessDeliveriesAsync(stoppingToken);
+                    await deliveryService.ProcessDeliveriesAsync(stoppingToken);
 
-                    hasPendingPairing = service.HasPendingPairing;
+                    hasPendingPairing = pairingService.HasPendingPairing;
                     if (hasPendingPairing)
                     {
-                        await service.PollPairingAsync(stoppingToken);
+                        await pairingService.ConnectChatFromReceivedStartMessagesAsync(
+                            stoppingToken
+                        );
                     }
                 }
 

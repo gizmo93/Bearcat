@@ -223,7 +223,10 @@ public static class ServiceProviderConfig
             services.AddScoped<UnreadableSecretsNotificationService>();
             services.AddSingleton<TelegramConfigurationCache>();
             services.AddSingleton<PostQueueCountCache>();
-            services.AddScoped<TelegramNotificationService>();
+            services.AddScoped<TelegramConfigurationService>();
+            services.AddScoped<TelegramSettingsService>();
+            services.AddScoped<TelegramPairingService>();
+            services.AddScoped<TelegramDeliveryService>();
             services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<HosterCredentialsRejectionService>();
             services.AddScoped<ArchiveConfigService>();
