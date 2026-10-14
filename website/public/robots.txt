@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gizmo93.github.io/Bearcat/sitemap-index.xml
