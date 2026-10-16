@@ -1,10 +1,12 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.FirstStartSetup.ReleaseTemplates;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.FileSystem;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
 
@@ -27,7 +29,8 @@ public class FirstStartReleaseTemplateServiceTest(DatabaseProvider databaseProvi
         var service = new FirstStartReleaseTemplateService(
             CreateRepository(),
             archiverFactoryMock.Object,
-            new FileSystemService()
+            new FileSystemService(),
+            Options.Create(new WorkingDirectoriesConfig())
         );
 
         // Act

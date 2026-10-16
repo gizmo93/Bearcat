@@ -1,6 +1,7 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
@@ -8,16 +9,34 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
+using Microsoft.Extensions.Options;
 
 namespace Bearcat.Domain.UseCases.FirstStartSetup.ReleaseTemplates;
 
 public class FirstStartReleaseTemplateService(
     IReleaseTemplateWriteRepository releaseTemplateWriteRepository,
     IArchiverFactory archiverFactory,
-    IFileSystemService fileSystemService
+    IFileSystemService fileSystemService,
+    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
 )
 {
     private const ReleaseContentType DefaultReleaseContentType = ReleaseContentType.Movie;
+    private const string SuggestedArchiveOutputFolderName = "bearcat-archives";
+
+    public string GetSuggestedArchiveOutputFolderPath()
+    {
+        var firstExistingWritableWorkingDirectory = workingDirectoriesConfig
+            .Value.GetWorkingDirectories()
+            .First(workingDirectory =>
+                fileSystemService.DirectoryExists(workingDirectory)
+                && fileSystemService.IsDirectoryWritable(workingDirectory)
+            );
+
+        return Path.Combine(
+            firstExistingWritableWorkingDirectory,
+            SuggestedArchiveOutputFolderName
+        );
+    }
 
     public async Task<int> CreateReleaseGroupAndTemplateAsync(
         FirstStartReleaseTemplateInput input,

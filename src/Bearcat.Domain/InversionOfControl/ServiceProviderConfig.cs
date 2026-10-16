@@ -26,7 +26,6 @@ using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
-using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveDefaults;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.ReleaseTemplates;
 using Bearcat.Domain.UseCases.FirstStartSetup.Sources;
@@ -170,7 +169,6 @@ public static class ServiceProviderConfig
             services.AddScoped<CollectionImageUploadConfigTemplateService>();
             services.AddScoped<UploadConfigLinkCrypterTemplateService>();
             services.AddScoped<FirstStartSetupStatusService>();
-            services.AddScoped<FirstStartArchiveDefaultsService>();
             services.AddScoped<FirstStartArchiveOutputFolderService>();
             services.AddScoped<FirstStartReleaseTemplateService>();
             services.AddScoped<ArchiveOutputFolderInsideSourceFolderValidator>();

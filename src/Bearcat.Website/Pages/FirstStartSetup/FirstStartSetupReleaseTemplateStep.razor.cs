@@ -1,10 +1,11 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveDefaults;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
 using Bearcat.Domain.UseCases.FirstStartSetup.ReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
+using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.ScopedOperations;
@@ -25,6 +26,8 @@ public partial class FirstStartSetupReleaseTemplateStep(
 ) : ComponentBase
 {
     private const string SevenZipArchiveFileExtension = ".7z";
+    private const string RarArchiveFileExtension = ".rar";
+    private const int ArchiveFileSizeMbWithoutHosterFileSizeLimit = 0;
 
     [Parameter]
     [EditorRequired]
@@ -71,25 +74,39 @@ public partial class FirstStartSetupReleaseTemplateStep(
         archiverOptions = archivers
             .Select(archiver => new SelectOption<string>(archiver.ClassName, archiver.Name))
             .ToList();
-        var archiveDefaults = await operationRunner.RunAsync(
-            (FirstStartArchiveDefaultsService service) =>
-                service.GetArchiveDefaultsAsync(WizardState.SelectedHosterRegistrationIds.ToList())
+        var hosterRegistrations = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
+        var suggestedArchiveOutputFolderPath = operationRunner.Run(
+            (FirstStartReleaseTemplateService service) =>
+                service.GetSuggestedArchiveOutputFolderPath()
         );
 
-        ApplyDefaults(archiveDefaults);
+        ApplyDefaults(hosterRegistrations, suggestedArchiveOutputFolderPath);
         isLoading = false;
     }
 
-    private void ApplyDefaults(FirstStartArchiveDefaults archiveDefaults)
+    private void ApplyDefaults(
+        IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations,
+        string suggestedArchiveOutputFolderPath
+    )
     {
         var defaultReleaseGroupName = L["FirstStartSetupDefaultReleaseGroupName"].Value;
 
         formModel.ReleaseGroupName = defaultReleaseGroupName;
         formModel.ReleaseTemplateName = defaultReleaseGroupName;
-        formModel.ArchiverName = archiveDefaults.ArchiverName;
-        formModel.ArchiveFileSizeMb = archiveDefaults.ArchiveFileSizeMb;
-        formModel.ArchiveOutputFolderPath = archiveDefaults.SuggestedArchiveOutputFolderPath;
-        archiveOutputFolderExists = archiveDefaults.SuggestedArchiveOutputFolderExists;
+        formModel.ArchiverName = archivers
+            .Single(archiver => archiver.FileExtension == RarArchiveFileExtension)
+            .ClassName;
+        formModel.ArchiveFileSizeMb =
+            hosterRegistrations
+                .Where(hosterRegistration =>
+                    WizardState.SelectedHosterRegistrationIds.Contains(hosterRegistration.Id)
+                )
+                .Min(hosterRegistration => hosterRegistration.MaxFileSizeMb)
+            ?? ArchiveFileSizeMbWithoutHosterFileSizeLimit;
+        formModel.ArchiveOutputFolderPath = suggestedArchiveOutputFolderPath;
+        CheckArchiveOutputFolderExists();
 
         if (releaseTemplates.Count == 0)
         {
