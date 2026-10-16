@@ -36,11 +36,14 @@ public class LocalFolderScanService(
         }
 
         var settings = ReadScanSettings();
+
         var candidates = await GetCandidateFoldersAsync(automations, cancellationToken);
+
         var candidatesWithoutUsedFolder = await GetCandidatesWhoseFolderIsNotUsedYetAsync(
             candidates,
             cancellationToken
         );
+
         var ignoredFolders = await GetIgnoredFoldersAsync(automations, cancellationToken);
 
         var localNow = timeProvider.GetLocalNow();
@@ -50,6 +53,7 @@ public class LocalFolderScanService(
             ignoredFolders,
             localNow
         );
+
         hasChanges |= MarkInitialScanAsCompleted(automations);
 
         var candidatesToProcess = GetCandidatesWhoseFolderIsNotIgnored(
@@ -143,9 +147,10 @@ public class LocalFolderScanService(
     )
     {
         var automationIds = automations.Select(automation => automation.Id).ToList();
+
         var ignoredFolders = await repository.GetIgnoredFoldersAsync(
-            automationIds,
-            cancellationToken
+            releaseFolderAutomationIds: automationIds,
+            cancellationToken: cancellationToken
         );
 
         return ignoredFolders
@@ -171,8 +176,8 @@ public class LocalFolderScanService(
         )
         {
             var ignoredFolder = new IgnoredFolderOfAutomation(
-                candidate.Automation.Id,
-                candidate.FolderPath
+                ReleaseFolderAutomationId: candidate.Automation.Id,
+                FolderPath: candidate.FolderPath
             );
 
             if (!ignoredFolders.Add(ignoredFolder))
@@ -269,12 +274,10 @@ public class LocalFolderScanService(
 
         var shouldExtractArchives = ShouldExtractArchives(candidate.Automation);
 
-        if (shouldExtractArchives && observation.ExtractionErrorMessage is not null)
-        {
-            return CandidateFolderProcessingResult.NothingChanged;
-        }
-
-        if (fileCountAndSize.TotalBytes < settings.MinimumBytes)
+        if (
+            shouldExtractArchives && observation.ExtractionErrorMessage is not null
+            || fileCountAndSize.TotalBytes < settings.MinimumBytes
+        )
         {
             return CandidateFolderProcessingResult.NothingChanged;
         }
