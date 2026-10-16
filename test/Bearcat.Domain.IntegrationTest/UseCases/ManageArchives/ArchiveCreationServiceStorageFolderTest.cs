@@ -803,6 +803,8 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
 
         public bool DirectoryHasEntries(string path) => inner.DirectoryHasEntries(path);
 
+        public bool IsDirectoryWritable(string path) => inner.IsDirectoryWritable(path);
+
         public long? GetAvailableFreeSpaceBytes(string path) =>
             inner.GetAvailableFreeSpaceBytes(path);
 

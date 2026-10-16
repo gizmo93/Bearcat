@@ -12,6 +12,7 @@ public interface IFileSystemService
     bool FileExists(string filePath);
     bool DirectoryExists(string path);
     bool DirectoryHasEntries(string path);
+    bool IsDirectoryWritable(string path);
     long? GetAvailableFreeSpaceBytes(string path);
     long GetFileSizeBytes(string filePath);
     void CreateDirectory(string path);

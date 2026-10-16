@@ -17,15 +17,12 @@ public class ReleaseGroupService(
         CancellationToken cancellationToken = default
     )
     {
-        Validate(name, numberOfHoursUntilReupload);
-
-        var releaseGroup = new ReleaseGroup
-        {
-            Name = name.Trim(),
-            EnableAutomaticReuploads = enableAutomaticReuploads,
-            NumberOfHoursUntilReupload = numberOfHoursUntilReupload,
-            QualityProfileId = qualityProfileId,
-        };
+        var releaseGroup = CreateValidatedReleaseGroup(
+            name,
+            enableAutomaticReuploads,
+            numberOfHoursUntilReupload,
+            qualityProfileId
+        );
 
         writeRepository.Add(releaseGroup);
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -76,6 +73,24 @@ public class ReleaseGroupService(
         writeRepository.Remove(releaseGroup);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    internal static ReleaseGroup CreateValidatedReleaseGroup(
+        string name,
+        bool enableAutomaticReuploads,
+        int numberOfHoursUntilReupload,
+        int? qualityProfileId
+    )
+    {
+        Validate(name, numberOfHoursUntilReupload);
+
+        return new ReleaseGroup
+        {
+            Name = name.Trim(),
+            EnableAutomaticReuploads = enableAutomaticReuploads,
+            NumberOfHoursUntilReupload = numberOfHoursUntilReupload,
+            QualityProfileId = qualityProfileId,
+        };
     }
 
     private static void Validate(string name, int numberOfHoursUntilReupload)
