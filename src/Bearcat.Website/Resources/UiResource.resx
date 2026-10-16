@@ -891,6 +891,9 @@
   <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Controls the post queue that tracks uploads you still need to post somewhere.</value></data>
   <data name="PostQueueEnabled" xml:space="preserve"><value>Enable post queue</value></data>
   <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Show the post queue and its menu indicator.</value></data>
+  <data name="FirstStartSetupConfigurationDescription" xml:space="preserve"><value>Controls the setup hints on the activity page.</value></data>
+  <data name="ShowAssistantOnActivityPage" xml:space="preserve"><value>Show assistant on activity page</value></data>
+  <data name="ShowAssistantOnActivityPageDescription" xml:space="preserve"><value>Show the banner for missing setup steps and the optional next steps on the activity page. Hide on the activity page turns this off.</value></data>
   <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posting</value></data>
   <data name="PostQueueProgress" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Skip" xml:space="preserve"><value>Skip</value></data>

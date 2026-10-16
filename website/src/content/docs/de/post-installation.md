@@ -145,7 +145,10 @@ Fehlen Hoster, Releasetemplate oder Quelle, zeigt ein Banner auf der Startseite,
 Nach der erforderlichen Einrichtung zeigt die Startseite **Optionale nächste Schritte**: Metadaten und NFOs,
 ein Bildhoster für Coverbilder, Linkcrypter, Telegrambenachrichtigungen, Forenposts und Proxyserver.
 Jeder Eintrag verlinkt auf seine Einstellungsseite und wird als erledigt markiert, sobald er eingerichtet ist.
-Mit **Ausblenden** blendest du die Liste aus.
+
+**Ausblenden** schaltet **Assistent auf der Aktivitätsseite anzeigen** unter **Konfigurationen > Erste Einrichtung**
+aus. Damit sind die Liste und das Einrichtungsbanner in jedem Browser ausgeblendet. Schalte die Einstellung wieder
+ein, um sie anzuzeigen.
 
 ## Manuell einrichten
 

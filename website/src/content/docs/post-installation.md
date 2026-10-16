@@ -145,7 +145,10 @@ missing. **Continue setup** opens the wizard again.
 
 After the required setup, the start page shows **Optional next steps**: metadata and NFOs, an image
 hoster for cover images, link crypters, Telegram notifications, forum posting, and proxy servers.
-Each item links to its settings page and is marked as done once set up. Click **Hide** to hide the list.
+Each item links to its settings page and is marked as done once set up.
+
+**Hide** turns off **Show assistant on activity page** under **Configurations > Initial Setup**. This hides
+the list and the setup banner for every browser. Turn the setting on again to show them.
 
 ## Set up manually
 

@@ -17,6 +17,7 @@ public static class ConfigurationSectionCatalog
         "ArchiveCleanup",
         "ArchiveRepackaging",
         NotificationsKey,
+        "FirstStartSetup",
     ];
 
     private static readonly Dictionary<string, ConfigurationSectionAppearance> appearancesByKey =
@@ -31,6 +32,7 @@ public static class ConfigurationSectionCatalog
             ["ArchiveCleanup"] = new("brush-cleaning", ConfigurationCategory.Archives),
             ["ArchiveRepackaging"] = new("package", ConfigurationCategory.Archives),
             [NotificationsKey] = new("bell", ConfigurationCategory.Notifications),
+            ["FirstStartSetup"] = new("list-checks", ConfigurationCategory.Notifications),
         };
 
     private static readonly Dictionary<string, int> positionsByKey = orderedKeys

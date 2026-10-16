@@ -261,6 +261,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<DownloadConfiguration>();
             services.AddApplicationConfiguration<NotificationConfiguration>();
             services.AddApplicationConfiguration<PostQueueConfiguration>();
+            services.AddApplicationConfiguration<FirstStartSetupConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();
             services.AddSingleton<
                 IApplicationConfigurationProvider,

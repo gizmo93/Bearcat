@@ -8,7 +8,7 @@
     <div class="space-y-6">
         <RunningProcesses>
             <ContentBelowHeader>
-                @if (!setupStatus.IsRequiredSetupComplete)
+                @if (showsAssistant && !setupStatus.IsRequiredSetupComplete)
                 {
                     <FirstStartSetupIncompleteBanner SetupStatus="setupStatus" />
                 }
@@ -18,7 +18,7 @@
         @if (ShowsOptionalSetupChecklist())
         {
             <FirstStartOptionalSetupChecklist SetupStatus="setupStatus"
-                                              OnHide="browserState.HideOptionalStepsAsync" />
+                                              OnHide="HideAssistantAsync" />
         }
     </div>
 }

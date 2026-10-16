@@ -1,5 +1,8 @@
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.UseCases.FirstStartSetup.Repositories;
 using Bearcat.Domain.UseCases.FirstStartSetup.Status;
+using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Website.Pages.FirstStartSetup;
 using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
@@ -16,6 +19,7 @@ public sealed partial class Home(
     private const string SetupStatusKey = "bearcat.home.firstStartSetupStatus";
 
     private FirstStartSetupDatabaseStatus? setupStatus;
+    private bool showsAssistant;
     private PersistingComponentStateSubscription persistSubscription;
 
     private bool ShowsOptionalSetupChecklist()
@@ -31,9 +35,9 @@ public sealed partial class Home(
                 HasProxyServer: true,
             };
 
-        return setupStatus is { IsRequiredSetupComplete: true }
-            && !isEveryOptionalStepDone
-            && !browserState.AreOptionalStepsHidden;
+        return showsAssistant
+            && setupStatus is { IsRequiredSetupComplete: true }
+            && !isEveryOptionalStepDone;
     }
 
     protected override async Task OnInitializedAsync()
@@ -54,6 +58,26 @@ public sealed partial class Home(
         }
 
         setupStatus = loadedSetupStatus;
+        showsAssistant = operationRunner.Run(
+            (IApplicationConfigurationProvider configuration) =>
+                configuration.GetValue<FirstStartSetupConfiguration>(c =>
+                    c.ShowAssistantOnActivityPage
+                )
+        );
+    }
+
+    private async Task HideAssistantAsync()
+    {
+        showsAssistant = false;
+        await operationRunner.RunAsync(
+            (ApplicationConfigurationService service) =>
+                service.SaveOverrideAsync(
+                    configurationKey: "FirstStartSetup",
+                    propertyName: nameof(FirstStartSetupConfiguration.ShowAssistantOnActivityPage),
+                    value: false,
+                    cancellationToken: CancellationToken.None
+                )
+        );
     }
 
     private Task<FirstStartSetupDatabaseStatus> LoadSetupStatusAsync()

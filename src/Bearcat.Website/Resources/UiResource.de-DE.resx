@@ -894,6 +894,9 @@
   <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Steuert die Postwarteschlange, die Uploads erfasst, die du noch irgendwo posten musst.</value></data>
   <data name="PostQueueEnabled" xml:space="preserve"><value>Postwarteschlange aktivieren</value></data>
   <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Zeigt die Postwarteschlange und ihren Indikator im Menü an.</value></data>
+  <data name="FirstStartSetupConfigurationDescription" xml:space="preserve"><value>Steuert die Einrichtungshinweise auf der Aktivitätsseite.</value></data>
+  <data name="ShowAssistantOnActivityPage" xml:space="preserve"><value>Assistent auf der Aktivitätsseite anzeigen</value></data>
+  <data name="ShowAssistantOnActivityPageDescription" xml:space="preserve"><value>Zeigt das Banner für fehlende Einrichtungsschritte und die optionalen nächsten Schritte auf der Aktivitätsseite. Ausblenden auf der Aktivitätsseite schaltet das aus.</value></data>
   <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posten</value></data>
   <data name="PostQueueProgress" xml:space="preserve"><value>{0} von {1}</value></data>
   <data name="Skip" xml:space="preserve"><value>Überspringen</value></data>

@@ -7,7 +7,6 @@ namespace Bearcat.Website.Pages.FirstStartSetup;
 public sealed class FirstStartSetupBrowserState : IDisposable
 {
     private const string SetupAutoOpenDisabledKey = "bearcat.firstStartSetup.autoOpenDisabled";
-    private const string OptionalStepsHiddenKey = "bearcat.firstStartSetup.optionalStepsHidden";
 
     private readonly PersistentComponentState applicationState;
     private readonly IHttpContextAccessor httpContextAccessor;
@@ -26,23 +25,14 @@ public sealed class FirstStartSetupBrowserState : IDisposable
         persistSubscription = applicationState.RegisterOnPersisting(PersistValues);
 
         IsSetupAutoOpenDisabled = RestoreValue(SetupAutoOpenDisabledKey);
-        AreOptionalStepsHidden = RestoreValue(OptionalStepsHiddenKey);
     }
 
     public bool IsSetupAutoOpenDisabled { get; private set; }
-
-    public bool AreOptionalStepsHidden { get; private set; }
 
     public async Task DisableSetupAutoOpenAsync()
     {
         IsSetupAutoOpenDisabled = true;
         await WriteCookieAsync(SetupAutoOpenDisabledKey);
-    }
-
-    public async Task HideOptionalStepsAsync()
-    {
-        AreOptionalStepsHidden = true;
-        await WriteCookieAsync(OptionalStepsHiddenKey);
     }
 
     private bool RestoreValue(string key)
@@ -60,7 +50,6 @@ public sealed class FirstStartSetupBrowserState : IDisposable
     private Task PersistValues()
     {
         applicationState.PersistAsJson(SetupAutoOpenDisabledKey, IsSetupAutoOpenDisabled);
-        applicationState.PersistAsJson(OptionalStepsHiddenKey, AreOptionalStepsHidden);
         return Task.CompletedTask;
     }
 
