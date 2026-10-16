@@ -13,6 +13,14 @@ public sealed class ScopedOperationRunner(IServiceScopeFactory scopeFactory)
         return operation(service);
     }
 
+    public void Run<TService>(Action<TService> operation)
+        where TService : notnull
+    {
+        using var scope = scopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<TService>();
+        operation(service);
+    }
+
     public Task RunAsync<TService>(Func<TService, Task> operation)
         where TService : notnull => RunAsync<TService>((service, _) => operation(service));
 

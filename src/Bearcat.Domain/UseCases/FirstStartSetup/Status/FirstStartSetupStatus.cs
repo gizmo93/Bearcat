@@ -9,4 +9,11 @@ public sealed record FirstStartSetupStatus(
 )
 {
     public bool IsFreshInstallation => !HasHosterRegistration && !HasRelease;
+
+    public bool HasExistingWritableWorkingDirectory()
+    {
+        return WorkingDirectoryStatuses.Any(workingDirectoryStatus =>
+            workingDirectoryStatus is { Exists: true, IsWritable: true }
+        );
+    }
 }

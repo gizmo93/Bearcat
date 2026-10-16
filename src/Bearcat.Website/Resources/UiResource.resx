@@ -1792,4 +1792,65 @@
   <data name="InitialUploadsCreated" xml:space="preserve"><value>{0} initial uploads created. Packing starts shortly.</value></data>
   <data name="InitialUploadsBlockedByQualityGate" xml:space="preserve"><value>The uploads were not started because the release does not pass its quality gate.</value></data>
   <data name="NoInitialUploadsPending" xml:space="preserve"><value>All upload configurations already have an upload.</value></data>
+  <data name="FirstStartSetup" xml:space="preserve"><value>Setup</value></data>
+  <data name="FirstStartSetupIntro" xml:space="preserve"><value>Set up Bearcat step by step. You can skip every step and change everything later.</value></data>
+  <data name="FirstStartSetupProgress" xml:space="preserve"><value>Setup progress</value></data>
+  <data name="FirstStartSetupStepWelcome" xml:space="preserve"><value>Welcome</value></data>
+  <data name="WorkingDirectories" xml:space="preserve"><value>Working directories</value></data>
+  <data name="FirstStartSetupStepSource" xml:space="preserve"><value>Source</value></data>
+  <data name="FirstStartSetupStepFoldersShort" xml:space="preserve"><value>Folders</value></data>
+  <data name="FirstStartSetupStepTemplateShort" xml:space="preserve"><value>Template</value></data>
+  <data name="FirstStartSetupStepCurrent" xml:space="preserve"><value>Current step</value></data>
+  <data name="FirstStartSetupStepDone" xml:space="preserve"><value>Done</value></data>
+  <data name="FirstStartSetupStepOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="FirstStartSetupWelcomeTitle" xml:space="preserve"><value>Welcome to Bearcat</value></data>
+  <data name="FirstStartSetupLifecycle" xml:space="preserve"><value>Release lifecycle</value></data>
+  <data name="FirstStartSetupLinkCheck" xml:space="preserve"><value>Link check</value></data>
+  <data name="FirstStartSetupWelcomeDescription" xml:space="preserve"><value>Bearcat packs release folders into archives, uploads them to hosters, checks the links and reuploads files that went offline.</value></data>
+  <data name="FirstStartSetupWelcomeWizardDescription" xml:space="preserve"><value>This setup connects a hoster, creates a release template and adds a source in a few minutes.</value></data>
+  <data name="FirstStartSetupStartSetup" xml:space="preserve"><value>Start setup</value></data>
+  <data name="FirstStartSetupSkipSetup" xml:space="preserve"><value>Skip setup</value></data>
+  <data name="FirstStartSetupWorkingDirectoriesDescription" xml:space="preserve"><value>Bearcat only sees folders inside its working directories. They come from the configuration and cannot be changed here.</value></data>
+  <data name="FirstStartSetupNoWorkingDirectoryConfigured" xml:space="preserve"><value>No working directory is configured.</value></data>
+  <data name="FirstStartSetupWorkingDirectoryOk" xml:space="preserve"><value>OK</value></data>
+  <data name="FirstStartSetupWorkingDirectoryMissing" xml:space="preserve"><value>Missing</value></data>
+  <data name="FirstStartSetupWorkingDirectoryNotWritable" xml:space="preserve"><value>Not writable</value></data>
+  <data name="FirstStartSetupWorkingDirectoriesContainerHint" xml:space="preserve"><value>Bearcat runs in a container. The host folder RELEASES_DIR from your .env file appears here as /mnt/data/releases.</value></data>
+  <data name="FirstStartSetupWorkingDirectoriesDesktopHint" xml:space="preserve"><value>Set working directories in the desktop app settings or in appsettings.user.json, then restart Bearcat.</value></data>
+  <data name="FirstStartSetupCheckAgain" xml:space="preserve"><value>Check again</value></data>
+  <data name="FirstStartSetupLearnMore" xml:space="preserve"><value>Learn more</value></data>
+  <data name="FirstStartSetupHosterDescription" xml:space="preserve"><value>A hoster registration is your account at a one-click hoster. Bearcat uploads with it. Select the registrations to use and try the login.</value></data>
+  <data name="FirstStartSetupNoHosterRegistrations" xml:space="preserve"><value>No hoster registrations yet</value></data>
+  <data name="FirstStartSetupNoHosterRegistrationsDescription" xml:space="preserve"><value>Add your account at a hoster to continue.</value></data>
+  <data name="FirstStartSetupLoginSuccessful" xml:space="preserve"><value>Login successful</value></data>
+  <data name="FirstStartSetupLoginFailed" xml:space="preserve"><value>Login failed: {0}</value></data>
+  <data name="FirstStartSetupHosterNextRequirement" xml:space="preserve"><value>Select at least one registration with a successful login to continue.</value></data>
+  <data name="FirstStartSetupCaptchaVerificationCompleted" xml:space="preserve"><value>Captcha verification for {0} completed.</value></data>
+  <data name="FirstStartSetupReleaseTemplateTitle" xml:space="preserve"><value>Release group and template</value></data>
+  <data name="FirstStartSetupReleaseTemplateDescription" xml:space="preserve"><value>A release group decides whether Bearcat reuploads offline links. A release template is the recipe that automations use for every new release: archive settings and target hosters. You can change both later on the release groups and release templates pages.</value></data>
+  <data name="FirstStartSetupReleaseTemplateChoice" xml:space="preserve"><value>Release template choice</value></data>
+  <data name="FirstStartSetupUseExistingTemplate" xml:space="preserve"><value>Use existing template</value></data>
+  <data name="FirstStartSetupUseExistingTemplateDescription" xml:space="preserve"><value>Continue with a template you already created.</value></data>
+  <data name="FirstStartSetupCreateNewTemplate" xml:space="preserve"><value>Create new template</value></data>
+  <data name="FirstStartSetupCreateNewTemplateDescription" xml:space="preserve"><value>Create a release group and a template for the selected hosters.</value></data>
+  <data name="FirstStartSetupSelectReleaseTemplate" xml:space="preserve"><value>Select a release template</value></data>
+  <data name="FirstStartSetupSelectReleaseTemplateRequired" xml:space="preserve"><value>Select a release template.</value></data>
+  <data name="FirstStartSetupReleaseTemplateNoHosterSelected" xml:space="preserve"><value>No hoster selected. The template is created without uploads. Go back to select hosters or add them later on the release templates page.</value></data>
+  <data name="FirstStartSetupReleaseGroupName" xml:space="preserve"><value>Release group name</value></data>
+  <data name="FirstStartSetupDefaultReleaseGroupName" xml:space="preserve"><value>Default</value></data>
+  <data name="FirstStartSetupReleaseTemplateName" xml:space="preserve"><value>Template name</value></data>
+  <data name="FirstStartSetupArchivePartSizeMb" xml:space="preserve"><value>Part size (MB)</value></data>
+  <data name="FirstStartSetupArchivePartSizeMbHelp" xml:space="preserve"><value>0 means no splitting.</value></data>
+  <data name="FirstStartSetupSevenZipRequiresArchivePartSize" xml:space="preserve"><value>7z needs a part size greater than 0.</value></data>
+  <data name="FirstStartSetupArchivePasswordHelp" xml:space="preserve"><value>Optional. Leave empty for archives without a password.</value></data>
+  <data name="FirstStartSetupArchiveOutputFolder" xml:space="preserve"><value>Archive output folder</value></data>
+  <data name="FirstStartSetupArchiveOutputFolderHelp" xml:space="preserve"><value>Bearcat writes the archives here. Keep this folder separate from your source folders.</value></data>
+  <data name="FirstStartSetupArchiveOutputFolderDoesNotExist" xml:space="preserve"><value>This folder does not exist yet.</value></data>
+  <data name="FirstStartSetupCreateFolder" xml:space="preserve"><value>Create folder</value></data>
+  <data name="FirstStartSetupArchiveOutputFolderCreated" xml:space="preserve"><value>Archive output folder created.</value></data>
+  <data name="FirstStartSetupArchiveOutputFolderMustExist" xml:space="preserve"><value>The archive output folder does not exist. Create it first.</value></data>
+  <data name="FirstStartSetupCreateAndContinue" xml:space="preserve"><value>Create and continue</value></data>
+  <data name="FirstStartSetupReleaseTemplateCreated" xml:space="preserve"><value>Release template {0} created.</value></data>
+  <data name="FirstStartSetupSourcePlaceholder" xml:space="preserve"><value>Add a folder automation or a remote automation so Bearcat picks up new releases automatically.</value></data>
+  <data name="FirstStartSetupFinish" xml:space="preserve"><value>Finish</value></data>
 </root>

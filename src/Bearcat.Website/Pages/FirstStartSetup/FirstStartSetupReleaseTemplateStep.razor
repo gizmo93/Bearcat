@@ -1,0 +1,160 @@
+<div class="space-y-6">
+    <div class="space-y-1">
+        <h2 class="text-xl font-semibold tracking-tight">@L["FirstStartSetupReleaseTemplateTitle"]</h2>
+        <p class="text-sm text-muted-foreground">@L["FirstStartSetupReleaseTemplateDescription"]</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+            <BbSpinner Size="SpinnerSize.Small" />
+            <span>@L["Loading"]</span>
+        </div>
+    }
+    else
+    {
+        <EditForm EditContext="editContext" OnValidSubmit="SubmitAsync">
+            <div class="space-y-6">
+                @if (releaseTemplates.Count > 0)
+                {
+                    <div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="@L["FirstStartSetupReleaseTemplateChoice"]">
+                        <button type="button"
+                                role="radio"
+                                aria-checked="@(choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate ? "true" : "false")"
+                                class="@GetChoiceClass(FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)"
+                                @onclick="() => SelectChoice(FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)">
+                            <span class="flex items-center gap-2 text-sm font-medium">
+                                <LucideIcon Name="layout-template" class="h-4 w-4 text-muted-foreground" />
+                                @L["FirstStartSetupUseExistingTemplate"]
+                            </span>
+                            <span class="text-xs text-muted-foreground">@L["FirstStartSetupUseExistingTemplateDescription"]</span>
+                        </button>
+                        <button type="button"
+                                role="radio"
+                                aria-checked="@(choice is FirstStartSetupReleaseTemplateChoice.CreateNewTemplate ? "true" : "false")"
+                                class="@GetChoiceClass(FirstStartSetupReleaseTemplateChoice.CreateNewTemplate)"
+                                @onclick="() => SelectChoice(FirstStartSetupReleaseTemplateChoice.CreateNewTemplate)">
+                            <span class="flex items-center gap-2 text-sm font-medium">
+                                <LucideIcon Name="plus" class="h-4 w-4 text-muted-foreground" />
+                                @L["FirstStartSetupCreateNewTemplate"]
+                            </span>
+                            <span class="text-xs text-muted-foreground">@L["FirstStartSetupCreateNewTemplateDescription"]</span>
+                        </button>
+                    </div>
+                }
+
+                @if (choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)
+                {
+                    <BbFormFieldSelect TValue="int?"
+                                       @bind-Value="formModel.ExistingReleaseTemplateId"
+                                       Label="@L["ReleaseTemplate"]"
+                                       Placeholder="@L["FirstStartSetupSelectReleaseTemplate"]"
+                                       Options="releaseTemplateOptions" />
+                }
+                else
+                {
+                    @if (WizardState.SelectedHosterRegistrationIds.Count == 0)
+                    {
+                        <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                            <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>@L["FirstStartSetupReleaseTemplateNoHosterSelected"]</span>
+                        </div>
+                    }
+
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-semibold">@L["ReleaseGroup"]</h3>
+
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="formModel.ReleaseGroupName"
+                                          Label="@L["FirstStartSetupReleaseGroupName"]" />
+
+                        <BbFormFieldSwitch @bind-Checked="formModel.EnableAutomaticReuploads"
+                                           Label="@L["AutomaticReuploads"]"
+                                           HelperText="@L["AutomaticReuploadsHelp"]" />
+
+                        @if (formModel.EnableAutomaticReuploads)
+                        {
+                            <BbFormFieldNumericInput TValue="int"
+                                                     @bind-Value="formModel.NumberOfHoursUntilReupload"
+                                                     Label="@L["HoursUntilReupload"]"
+                                                     Min="0"
+                                                     Step="1"
+                                                     ShowButtons="true"
+                                                     HelperText="@L["HoursUntilReuploadHelp"]" />
+                        }
+                    </div>
+
+                    <div class="space-y-4 border-t border-border/70 pt-4">
+                        <h3 class="text-sm font-semibold">@L["ReleaseTemplate"]</h3>
+
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="formModel.ReleaseTemplateName"
+                                          Label="@L["FirstStartSetupReleaseTemplateName"]" />
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <BbFormFieldSelect TValue="string"
+                                               @bind-Value="formModel.ArchiverName"
+                                               Label="@L["Archiver"]"
+                                               Placeholder="@L["SelectArchiver"]"
+                                               Options="archiverOptions" />
+
+                            <BbFormFieldNumericInput TValue="int"
+                                                     @bind-Value="formModel.ArchiveFileSizeMb"
+                                                     Label="@L["FirstStartSetupArchivePartSizeMb"]"
+                                                     Min="0"
+                                                     Step="1"
+                                                     AllowNegative="false"
+                                                     HelperText="@L["FirstStartSetupArchivePartSizeMbHelp"]" />
+                        </div>
+
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="formModel.ArchivePassword"
+                                          Label="@L["ArchivePassword"]"
+                                          HelperText="@L["FirstStartSetupArchivePasswordHelp"]" />
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">@L["FirstStartSetupArchiveOutputFolder"]</label>
+                            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                                <BbInput @bind-Value="formModel.ArchiveOutputFolderPath"
+                                         @bind-Value:after="CheckArchiveOutputFolderExists"
+                                         class="sm:flex-1" />
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Size="ButtonSize.Small"
+                                          Class="justify-center whitespace-nowrap"
+                                          AriaLabel="@L["BrowseArchiveFolders"]"
+                                          OnClick="OpenFolderDialogAsync">
+                                    <LucideIcon Name="folder-open" class="h-4 w-4" />
+                                    @L["Browse"]
+                                </BbButton>
+                            </div>
+                            <p class="text-xs text-muted-foreground">@L["FirstStartSetupArchiveOutputFolderHelp"]</p>
+                            @if (!archiveOutputFolderExists && !string.IsNullOrWhiteSpace(formModel.ArchiveOutputFolderPath))
+                            {
+                                <div class="flex flex-col gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <span class="text-sm text-muted-foreground">@L["FirstStartSetupArchiveOutputFolderDoesNotExist"]</span>
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              Class="self-start sm:self-auto"
+                                              OnClick="CreateArchiveOutputFolder">
+                                        <LucideIcon Name="folder-plus" class="h-4 w-4" />
+                                        @L["FirstStartSetupCreateFolder"]
+                                    </BbButton>
+                                </div>
+                            }
+                            <ValidationMessage For="() => formModel.ArchiveOutputFolderPath" class="text-sm text-destructive" />
+                        </div>
+                    </div>
+                }
+
+                <FirstStartSetupStepNavigation OnBack="OnBack" OnSkip="OnSkip">
+                    <BbButton Type="ButtonType.Submit" Loading="isSubmitting">
+                        @(choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate
+                            ? L["Next"]
+                            : L["FirstStartSetupCreateAndContinue"])
+                        <LucideIcon Name="arrow-right" class="h-4 w-4" />
+                    </BbButton>
+                </FirstStartSetupStepNavigation>
+            </div>
+        </EditForm>
+    }
+</div>

@@ -22,8 +22,15 @@ public class FirstStartArchiveDefaultsService(
         CancellationToken cancellationToken = default
     )
     {
+        var firstExistingWritableWorkingDirectory = workingDirectoriesConfig
+            .Value.GetWorkingDirectories()
+            .First(workingDirectory =>
+                fileSystemService.DirectoryExists(workingDirectory)
+                && fileSystemService.IsDirectoryWritable(workingDirectory)
+            );
+
         var suggestedArchiveOutputFolderPath = Path.Combine(
-            workingDirectoriesConfig.Value.GetWorkingDirectories().First(),
+            firstExistingWritableWorkingDirectory,
             SuggestedArchiveOutputFolderName
         );
 

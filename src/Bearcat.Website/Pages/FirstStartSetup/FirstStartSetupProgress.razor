@@ -1,0 +1,8 @@
+@using Bearcat.Website.Shared.ProgressSteps
+
+<div class="bearcat-first-start-setup-progress overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+    <ProgressStepBar TKind="FirstStartSetupStep"
+                     Steps="GetStepDisplays()"
+                     AriaLabel="@L["FirstStartSetupProgress"]"
+                     OnStepSelected="OnStepSelected" />
+</div>

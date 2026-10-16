@@ -24,6 +24,7 @@ public partial class ProgressStepBar<TKind> : ComponentBase
             ProgressStepState.Pending => "bearcat-release-progress-step-marker-pending",
             ProgressStepState.NotApplicable =>
                 "bearcat-release-progress-step-marker-not-applicable",
+            ProgressStepState.Current => "bearcat-release-progress-step-marker-current",
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null),
         };
 }

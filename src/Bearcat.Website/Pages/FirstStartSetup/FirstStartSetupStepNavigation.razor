@@ -1,0 +1,16 @@
+<div class="flex flex-col-reverse gap-2 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+    <BbButton Variant="ButtonVariant.Ghost" OnClick="@(() => OnBack.InvokeAsync())">
+        <LucideIcon Name="arrow-left" class="h-4 w-4" />
+        @L["Back"]
+    </BbButton>
+
+    <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+        @if (OnSkip.HasDelegate)
+        {
+            <BbButton Variant="ButtonVariant.Outline" OnClick="@(() => OnSkip.InvokeAsync())">
+                @L["Skip"]
+            </BbButton>
+        }
+        @ChildContent
+    </div>
+</div>
