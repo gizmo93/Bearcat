@@ -217,7 +217,24 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
+        return await BuildUploadConfigsWithoutUploadsQuery()
+            .Where(u => u.Release.CreatedAt <= releaseCreatedBefore)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsOfReleaseAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await BuildUploadConfigsWithoutUploadsQuery()
+            .Where(u => u.ReleaseId == releaseId)
+            .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<UploadConfig> BuildUploadConfigsWithoutUploadsQuery()
+    {
+        return dbWrite
             .UploadConfigs.AsSplitQuery()
             .Include(u => u.Release)
                 .ThenInclude(r => r.ReleaseGroup)
@@ -234,8 +251,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Include(u => u.Release)
                 .ThenInclude(r => r.QualityIssues)
             .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-            .Where(u => !u.Uploads.Any() && u.Release.CreatedAt <= releaseCreatedBefore)
-            .ToListAsync(cancellationToken);
+            .Where(u => !u.Uploads.Any());
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

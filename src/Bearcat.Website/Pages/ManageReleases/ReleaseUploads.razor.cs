@@ -12,6 +12,7 @@ using Bearcat.Website.Formatting;
 using Bearcat.Website.Localization;
 using Bearcat.Website.Pages.ManageReleases.UploadHistory;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -24,7 +25,7 @@ public partial class ReleaseUploads(
     IScopedOperationRunner operationRunner,
     ToastService toastService,
     TimeProvider timeProvider
-) : ComponentBase
+) : ComponentBase, IReloadableComponent
 {
     [Parameter]
     [EditorRequired]
@@ -90,6 +91,12 @@ public partial class ReleaseUploads(
             pageIndex = 0;
             await RefreshUploadsAsync();
         }
+    }
+
+    public async Task ReloadAsync()
+    {
+        await RefreshUploadsAsync();
+        StateHasChanged();
     }
 
     private async Task RefreshUploadsAsync()

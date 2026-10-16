@@ -1789,4 +1789,10 @@
   <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (Account noch nicht zugewiesen)</value></data>
   <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil noch {1} Uploadkonfigurationen und {2} Uploadkonfigurationsvorlagen ihn verwenden.</value></data>
   <data name="HosterRegistrationStillHoldsHosterAccountPoolUploads" xml:space="preserve"><value>{0} hält noch {1} Uploads von Accountpools und kann nicht gelöscht werden. Entferne den Account aus den Pools und deaktiviere ihn stattdessen.</value></data>
+  <data name="StartUploadsNow" xml:space="preserve"><value>Uploads jetzt starten</value></data>
+  <data name="StartUploadsNowDescription" xml:space="preserve"><value>Erstellt die initialen Uploads sofort, statt auf den Cooldown für initiale Uploads zu warten.</value></data>
+  <data name="InitialUploadsCreatedOne" xml:space="preserve"><value>Initialer Upload erstellt. Das Packen startet in Kürze.</value></data>
+  <data name="InitialUploadsCreated" xml:space="preserve"><value>{0} initiale Uploads erstellt. Das Packen startet in Kürze.</value></data>
+  <data name="InitialUploadsBlockedByQualityGate" xml:space="preserve"><value>Die Uploads wurden nicht gestartet, weil das Release sein Quality Gate nicht besteht.</value></data>
+  <data name="NoInitialUploadsPending" xml:space="preserve"><value>Alle Uploadkonfigurationen haben bereits einen Upload.</value></data>
 </root>

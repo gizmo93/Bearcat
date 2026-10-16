@@ -21,6 +21,11 @@ public interface IUploadStateRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsOfReleaseAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyList<Upload>> GetUploadsDueForAutomaticReuploadAsync(
         DateTime localNow,
         int maximumUploadCount,

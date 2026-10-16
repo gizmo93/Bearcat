@@ -1432,7 +1432,11 @@ public class ReleaseReadRepository(
                 .Distinct()
                 .Count(),
             entity.ExcludeFromAutoCleanup,
-            entity.UploadsPostedAt
+            entity.UploadsPostedAt,
+            entity
+                .UploadConfigs.AsQueryable()
+                .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+                .Any(uc => !uc.Uploads.Any())
         );
     }
 
