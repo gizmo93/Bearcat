@@ -40,7 +40,7 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
     )
     {
         return await QueryExistingReleaseFolderPaths(folderPaths)
-            .Union(QueryExistingArchiveFolderPathsOfUnmanagedReleases(folderPaths))
+            .Union(QueryArchiveOutputFolderPaths(folderPaths))
             .Union(QueryRemoteDownloadFolderPaths(folderPaths))
             .ToHashSetAsync(cancellationToken);
     }
@@ -68,6 +68,21 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
             .Where(archiveFolderPath =>
                 EF.Parameter(archiveFolderPaths).Contains(archiveFolderPath)
             );
+    }
+
+    private IQueryable<string> QueryArchiveOutputFolderPaths(IReadOnlyList<string> folderPaths)
+    {
+        var archiveConfigFolderPaths = dbWrite
+            .ArchiveConfigs.Select(archiveConfig => archiveConfig.ArchiveFilesBasePath)
+            .Where(archiveFolderPath => EF.Parameter(folderPaths).Contains(archiveFolderPath));
+
+        var archiveConfigTemplateFolderPaths = dbWrite
+            .ArchiveConfigTemplates.Select(archiveConfigTemplate =>
+                archiveConfigTemplate.ArchiveFilesBasePath
+            )
+            .Where(archiveFolderPath => EF.Parameter(folderPaths).Contains(archiveFolderPath));
+
+        return archiveConfigFolderPaths.Union(archiveConfigTemplateFolderPaths);
     }
 
     private IQueryable<string> QueryRemoteDownloadFolderPaths(

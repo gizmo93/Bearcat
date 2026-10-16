@@ -1,4 +1,3 @@
-using Bearcat.Domain.UseCases.FirstStartSetup.Status;
 using Bearcat.Website.Shared.ProgressSteps;
 using Microsoft.AspNetCore.Components;
 
@@ -12,11 +11,7 @@ public partial class FirstStartSetupProgress : ComponentBase
 
     [Parameter]
     [EditorRequired]
-    public FirstStartSetupStatus Status { get; set; } = null!;
-
-    [Parameter]
-    [EditorRequired]
-    public FirstStartSetupWizardState WizardState { get; set; } = null!;
+    public IReadOnlySet<FirstStartSetupStep> CompletedSteps { get; set; } = null!;
 
     [Parameter]
     public EventCallback<FirstStartSetupStep> OnStepSelected { get; set; }
@@ -29,14 +24,45 @@ public partial class FirstStartSetupProgress : ComponentBase
     private ProgressStepDisplay<FirstStartSetupStep> CreateStepDisplay(FirstStartSetupStep step)
     {
         var state = GetState(step);
+        var (title, shortTitle, iconName) = step switch
+        {
+            FirstStartSetupStep.Welcome => (
+                L["FirstStartSetupStepWelcome"],
+                L["FirstStartSetupStepWelcome"],
+                "play"
+            ),
+            FirstStartSetupStep.WorkingDirectories => (
+                L["WorkingDirectories"],
+                L["FirstStartSetupStepFoldersShort"],
+                "folder-tree"
+            ),
+            FirstStartSetupStep.Hoster => (L["Hoster"], L["Hoster"], "server"),
+            FirstStartSetupStep.ReleaseTemplate => (
+                L["ReleaseTemplate"],
+                L["FirstStartSetupStepTemplateShort"],
+                "layout-template"
+            ),
+            FirstStartSetupStep.Source => (
+                L["FirstStartSetupStepSource"],
+                L["FirstStartSetupStepSource"],
+                "folder-input"
+            ),
+            _ => throw new ArgumentOutOfRangeException(nameof(step), step, null),
+        };
+        var description = state switch
+        {
+            ProgressStepState.Done => L["FirstStartSetupStepDone"],
+            ProgressStepState.Current => L["FirstStartSetupStepCurrent"],
+            _ => L["FirstStartSetupStepOpen"],
+        };
 
         return new ProgressStepDisplay<FirstStartSetupStep>(
-            Kind: step,
-            State: state,
-            Title: GetTitle(step),
-            ShortTitle: GetShortTitle(step),
-            Description: GetDescription(state),
-            IconName: GetIconName(step)
+            step,
+            state,
+            title,
+            shortTitle,
+            description,
+            iconName
         );
     }
 
@@ -47,69 +73,6 @@ public partial class FirstStartSetupProgress : ComponentBase
             return ProgressStepState.Current;
         }
 
-        return IsStepCompleted(step) ? ProgressStepState.Done : ProgressStepState.Pending;
-    }
-
-    private bool IsStepCompleted(FirstStartSetupStep step)
-    {
-        return step switch
-        {
-            FirstStartSetupStep.Welcome => CurrentStep > FirstStartSetupStep.Welcome,
-            FirstStartSetupStep.WorkingDirectories => Status.HasExistingWritableWorkingDirectory(),
-            FirstStartSetupStep.Hoster => Status.DatabaseStatus.HasHosterRegistration
-                || WizardState.HasSelectedHosterRegistrationWithSuccessfulLogin(),
-            FirstStartSetupStep.ReleaseTemplate => Status.DatabaseStatus.HasReleaseTemplate
-                || WizardState.ReleaseTemplateId is not null,
-            FirstStartSetupStep.Source => Status
-                .DatabaseStatus
-                .HasReleaseFolderAutomationOrRemoteSourceAutomation,
-            _ => throw new ArgumentOutOfRangeException(nameof(step), step, null),
-        };
-    }
-
-    private string GetTitle(FirstStartSetupStep step)
-    {
-        return step switch
-        {
-            FirstStartSetupStep.Welcome => L["FirstStartSetupStepWelcome"],
-            FirstStartSetupStep.WorkingDirectories => L["WorkingDirectories"],
-            FirstStartSetupStep.Hoster => L["Hoster"],
-            FirstStartSetupStep.ReleaseTemplate => L["ReleaseTemplate"],
-            FirstStartSetupStep.Source => L["FirstStartSetupStepSource"],
-            _ => throw new ArgumentOutOfRangeException(nameof(step), step, null),
-        };
-    }
-
-    private string GetShortTitle(FirstStartSetupStep step)
-    {
-        return step switch
-        {
-            FirstStartSetupStep.WorkingDirectories => L["FirstStartSetupStepFoldersShort"],
-            FirstStartSetupStep.ReleaseTemplate => L["FirstStartSetupStepTemplateShort"],
-            _ => GetTitle(step),
-        };
-    }
-
-    private string GetDescription(ProgressStepState state)
-    {
-        return state switch
-        {
-            ProgressStepState.Current => L["FirstStartSetupStepCurrent"],
-            ProgressStepState.Done => L["FirstStartSetupStepDone"],
-            _ => L["FirstStartSetupStepOpen"],
-        };
-    }
-
-    private static string GetIconName(FirstStartSetupStep step)
-    {
-        return step switch
-        {
-            FirstStartSetupStep.Welcome => "play",
-            FirstStartSetupStep.WorkingDirectories => "folder-tree",
-            FirstStartSetupStep.Hoster => "server",
-            FirstStartSetupStep.ReleaseTemplate => "layout-template",
-            FirstStartSetupStep.Source => "folder-input",
-            _ => throw new ArgumentOutOfRangeException(nameof(step), step, null),
-        };
+        return CompletedSteps.Contains(step) ? ProgressStepState.Done : ProgressStepState.Pending;
     }
 }

@@ -65,7 +65,7 @@ public class UploadConfigTemplateService(IReleaseTemplateWriteRepository writeRe
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
-    internal static void ApplySettings(
+    private static void ApplySettings(
         UploadConfigTemplate uploadConfigTemplate,
         UploadConfigTemplateSettings settings,
         ArchiveConfigTemplate? unmanagedArchiveConfigTemplate

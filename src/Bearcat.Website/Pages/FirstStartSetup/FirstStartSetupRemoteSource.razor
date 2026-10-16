@@ -1,73 +1,29 @@
-<div class="space-y-6">
-    @if (isLoading)
-    {
-        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-            <BbSpinner Size="SpinnerSize.Small" />
-            <span>@L["Loading"]</span>
-        </div>
-    }
-    else
-    {
-        <div class="space-y-4">
-            @if (registrations.Count == 0)
-            {
-                <BbEmpty Title="@L["FirstStartSetupNoRemoteSources"]"
-                         Description="@L["FirstStartSetupNoRemoteSourcesDescription"]"
-                         Size="EmptySize.Small">
-                    <Icon>
-                        <LucideIcon Name="server" class="h-6 w-6 text-muted-foreground" />
-                    </Icon>
-                </BbEmpty>
-            }
-            else
-            {
-                <BbFormFieldSelect TValue="int?"
-                                   Value="selectedRegistrationId"
-                                   ValueChanged="SelectRegistration"
-                                   Label="@L["RemoteSource"]"
-                                   Placeholder="@L["SelectRemoteSource"]"
-                                   Options="registrationOptions" />
+@if (isSourceCreated)
+{
+    <FirstStartSetupSourceCreatedSummary OnBack="OnBack" />
+}
+else
+{
+    <div class="space-y-6">
+        @if (hasActiveRemoteSourceRegistration == false)
+        {
+            <p class="text-sm text-muted-foreground">@L["FirstStartSetupNoRemoteSourcesDescription"]</p>
+        }
 
-                @if (connectionTestResult is { IsSuccess: true })
-                {
-                    <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <LucideIcon Name="check" class="h-3.5 w-3.5 shrink-0" />
-                        @L["RemoteSourceConnectionSuccessful", SelectedRegistrationName, connectionTestResult.RootFolderCount]
-                    </span>
-                }
-                else if (connectionTestResult is { IsSuccess: false })
-                {
-                    <span class="flex items-start gap-1.5 text-xs text-destructive">
-                        <LucideIcon Name="circle-alert" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <span class="break-words">@L["RemoteSourceConnectionFailed", SelectedRegistrationName, connectionTestResult.ErrorMessage ?? string.Empty]</span>
-                    </span>
-                }
-            }
+        <p class="text-xs text-muted-foreground">@L["FirstStartSetupRemoteSourceAutomationHint"]</p>
 
-            <div class="flex flex-wrap gap-2">
+        <FirstStartSetupStepNavigation OnBack="OnBack">
+            @if (hasActiveRemoteSourceRegistration == false)
+            {
                 <BbButton Variant="ButtonVariant.Outline" OnClick="ShowAddRemoteSourceDialogAsync">
                     <LucideIcon Name="plus" class="h-4 w-4" />
                     @L["AddRemoteSource"]
                 </BbButton>
-                @if (selectedRegistrationId is not null)
-                {
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Loading="isTestingConnection"
-                              OnClick="TestConnectionAsync">
-                        <LucideIcon Name="plug" class="h-4 w-4" />
-                        @L["TestConnection"]
-                    </BbButton>
-                }
-            </div>
-        </div>
-
-        <p class="text-xs text-muted-foreground">@L["FirstStartSetupRemoteSourceAutomationHint"]</p>
-    }
-
-    <FirstStartSetupStepNavigation OnBack="OnBack">
-        <BbButton Disabled="@(selectedRegistrationId is null)" OnClick="ShowCreateRemoteSourceAutomationDialogAsync">
-            <LucideIcon Name="folder-plus" class="h-4 w-4" />
-            @L["FirstStartSetupCreateRemoteSourceAutomation"]
-        </BbButton>
-    </FirstStartSetupStepNavigation>
-</div>
+            }
+            <BbButton Disabled="@(hasActiveRemoteSourceRegistration != true)" OnClick="ShowCreateRemoteSourceAutomationDialogAsync">
+                <LucideIcon Name="folder-plus" class="h-4 w-4" />
+                @L["FirstStartSetupCreateRemoteSourceAutomation"]
+            </BbButton>
+        </FirstStartSetupStepNavigation>
+    </div>
+}

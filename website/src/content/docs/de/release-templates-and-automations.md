@@ -64,7 +64,7 @@ jeden vorhandenen Ordner ohne Release ein Release zu erstellen.
 erster Scan. **Vorhandene Ordner ignorieren** gilt dann für die Ordner, die mit den neuen Einstellungen gefunden werden.
 
 Die **Ordnervorschau** im Dialog listet die Ordner, die zum aktuellen Basispfad und Muster passen, und markiert
-Ordner mit Release als **Hat Release**. Startet das Speichern einen ersten Scan, zeigt die Vorschau ausserdem,
+Ordner mit Release und Archivausgabeordner als **Bereits verwendet**. Startet das Speichern einen ersten Scan, zeigt die Vorschau ausserdem,
 was mit den übrigen Ordnern passiert: Der erste Scan ignoriert sie, oder eine Warnung zeigt, wie viele Ordner
 zu Releases werden und hochgeladen werden. Die Schaltfläche zum Aktualisieren lädt die Vorschau neu.
 

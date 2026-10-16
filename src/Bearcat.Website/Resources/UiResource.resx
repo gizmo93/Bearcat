@@ -419,6 +419,7 @@
   <data name="SelectCrypter" xml:space="preserve"><value>Select a crypter</value></data>
   <data name="SelectFolderRequired" xml:space="preserve"><value>You must select a folder</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Select a hoster</value></data>
+  <data name="NoHosterFound" xml:space="preserve"><value>No hoster found.</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>You must select a hoster</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Select an image hoster</value></data>
   <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Select an image hoster registration</value></data>
@@ -1704,10 +1705,10 @@
   <data name="RefreshReleaseFolderPreview" xml:space="preserve"><value>Refresh folder preview</value></data>
   <data name="ReleaseFolderPreviewBasePathMissing" xml:space="preserve"><value>The base path does not exist.</value></data>
   <data name="ReleaseFolderPreviewNoMatchingFolders" xml:space="preserve"><value>No folders match.</value></data>
-  <data name="ReleaseFolderPreviewSummary" xml:space="preserve"><value>{0} folders match, {1} already have a release.</value></data>
+  <data name="ReleaseFolderPreviewSummary" xml:space="preserve"><value>{0} folders match, {1} are already in use.</value></data>
   <data name="ReleaseFolderPreviewIgnoredFolders" xml:space="preserve"><value>The first scan ignores the remaining {0} folders. Only folders added later become releases.</value></data>
   <data name="ReleaseFolderPreviewFoldersBecomeReleases" xml:space="preserve"><value>{0} folders will become releases and be uploaded.</value></data>
-  <data name="ReleaseFolderPreviewHasRelease" xml:space="preserve"><value>Has release</value></data>
+  <data name="ReleaseFolderPreviewInUse" xml:space="preserve"><value>Already in use</value></data>
   <data name="ReleaseFolderPreviewMoreFolders" xml:space="preserve"><value>And {0} more folders</value></data>
   <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archive storage folders</value></data>
   <data name="ArchiveStorageFolder" xml:space="preserve"><value>Storage folder</value></data>
@@ -1792,7 +1793,7 @@
   <data name="InitialUploadsCreated" xml:space="preserve"><value>{0} initial uploads created. Packing starts shortly.</value></data>
   <data name="InitialUploadsBlockedByQualityGate" xml:space="preserve"><value>The uploads were not started because the release does not pass its quality gate.</value></data>
   <data name="NoInitialUploadsPending" xml:space="preserve"><value>All upload configurations already have an upload.</value></data>
-  <data name="FirstStartSetup" xml:space="preserve"><value>Setup</value></data>
+    <data name="FirstStartSetup" xml:space="preserve"><value>Initial Setup</value></data>
   <data name="FirstStartSetupIntro" xml:space="preserve"><value>Set up Bearcat step by step. You can skip every step and change everything later.</value></data>
   <data name="FirstStartSetupProgress" xml:space="preserve"><value>Setup progress</value></data>
   <data name="FirstStartSetupStepWelcome" xml:space="preserve"><value>Welcome</value></data>
@@ -1816,7 +1817,7 @@
   <data name="FirstStartSetupWorkingDirectoryMissing" xml:space="preserve"><value>Missing</value></data>
   <data name="FirstStartSetupWorkingDirectoryNotWritable" xml:space="preserve"><value>Not writable</value></data>
   <data name="FirstStartSetupWorkingDirectoriesContainerHint" xml:space="preserve"><value>Bearcat runs in a container. The host folder RELEASES_DIR from your .env file appears here as /mnt/data/releases.</value></data>
-  <data name="FirstStartSetupWorkingDirectoriesDesktopHint" xml:space="preserve"><value>Set working directories in the desktop app settings or in appsettings.user.json, then restart Bearcat.</value></data>
+  <data name="FirstStartSetupWorkingDirectoriesDesktopHint" xml:space="preserve"><value>Set working directories in the desktop app settings or the docker-compose file, then restart Bearcat.</value></data>
   <data name="FirstStartSetupCheckAgain" xml:space="preserve"><value>Check again</value></data>
   <data name="FirstStartSetupLearnMore" xml:space="preserve"><value>Learn more</value></data>
   <data name="FirstStartSetupHosterDescription" xml:space="preserve"><value>A hoster registration is your account at a one-click hoster. Bearcat uploads with it. Select the registrations to use and try the login.</value></data>
@@ -1832,12 +1833,14 @@
   <data name="FirstStartSetupUseExistingTemplate" xml:space="preserve"><value>Use existing template</value></data>
   <data name="FirstStartSetupUseExistingTemplateDescription" xml:space="preserve"><value>Continue with a template you already created.</value></data>
   <data name="FirstStartSetupCreateNewTemplate" xml:space="preserve"><value>Create new template</value></data>
-  <data name="FirstStartSetupCreateNewTemplateDescription" xml:space="preserve"><value>Create a release group and a template for the selected hosters.</value></data>
+  <data name="FirstStartSetupCreateNewTemplateDescription" xml:space="preserve"><value>Create a template for the selected hosters.</value></data>
   <data name="FirstStartSetupSelectReleaseTemplate" xml:space="preserve"><value>Select a release template</value></data>
   <data name="FirstStartSetupSelectReleaseTemplateRequired" xml:space="preserve"><value>Select a release template.</value></data>
   <data name="FirstStartSetupReleaseTemplateNoHosterSelected" xml:space="preserve"><value>No hoster selected. The template is created without uploads. Go back to select hosters or add them later on the release templates page.</value></data>
-  <data name="FirstStartSetupReleaseGroupName" xml:space="preserve"><value>Release group name</value></data>
-  <data name="FirstStartSetupDefaultReleaseGroupName" xml:space="preserve"><value>Default</value></data>
+  <data name="FirstStartSetupDefaultReleaseTemplateName" xml:space="preserve"><value>Default</value></data>
+  <data name="FirstStartSetupNoReleaseGroup" xml:space="preserve"><value>No release group exists yet. Create one on the release groups page first.</value></data>
+  <data name="FirstStartSetupReleaseGroupReuploadsAfterHours" xml:space="preserve"><value>This group reuploads offline links automatically after {0} hours.</value></data>
+  <data name="FirstStartSetupReleaseGroupWithoutReuploads" xml:space="preserve"><value>This group does not reupload offline links automatically.</value></data>
   <data name="FirstStartSetupReleaseTemplateName" xml:space="preserve"><value>Template name</value></data>
   <data name="FirstStartSetupArchivePartSizeMb" xml:space="preserve"><value>Part size (MB)</value></data>
   <data name="FirstStartSetupArchivePartSizeMbHelp" xml:space="preserve"><value>0 means no splitting.</value></data>
@@ -1851,10 +1854,8 @@
   <data name="FirstStartSetupArchiveOutputFolderMustExist" xml:space="preserve"><value>The archive output folder does not exist. Create it first.</value></data>
   <data name="FirstStartSetupCreateAndContinue" xml:space="preserve"><value>Create and continue</value></data>
   <data name="FirstStartSetupReleaseTemplateCreated" xml:space="preserve"><value>Release template {0} created.</value></data>
-  <data name="ArchiveOutputFolderInsideSourceFolder" xml:space="preserve"><value>The archive output folder {0} of the release template is inside the selected folder. Bearcat would pick up its own archives. Choose a folder that does not contain the archive output folder.</value></data>
   <data name="FirstStartSetupSourceDescription" xml:space="preserve"><value>A source is where new releases come from. Bearcat watches it and creates a release with the release template for every new folder.</value></data>
-  <data name="FirstStartSetupExistingSources" xml:space="preserve"><value>Existing sources: {0}. You can add another one here.</value></data>
-  <data name="FirstStartSetupSourceReleaseTemplateRequired" xml:space="preserve"><value>A source needs a release template. Go back and create one first.</value></data>
+  <data name="FirstStartSetupSourceReleaseTemplateRequired" xml:space="preserve"><value>A source needs a release template. Go back and select or create one first.</value></data>
   <data name="FirstStartSetupSourceKind" xml:space="preserve"><value>Source type</value></data>
   <data name="FirstStartSetupLocalFolderSource" xml:space="preserve"><value>Local folder</value></data>
   <data name="FirstStartSetupLocalFolderSourceDescription" xml:space="preserve"><value>Watch a folder on this machine or on a mounted share.</value></data>
@@ -1874,20 +1875,20 @@
   <data name="FirstStartSetupSelectTestFolder" xml:space="preserve"><value>Select test folder</value></data>
   <data name="FirstStartSetupTestFolderHelp" xml:space="preserve"><value>Pick a small folder to check archives and uploads quickly.</value></data>
   <data name="FirstStartSetupTestFolderUnavailableWithExtraction" xml:space="preserve"><value>A test upload is not available with archive extraction. The automation extracts new folders before it creates releases.</value></data>
-  <data name="FirstStartSetupSelectTestFolderRequired" xml:space="preserve"><value>Select a test folder.</value></data>
   <data name="FirstStartSetupCreateSource" xml:space="preserve"><value>Create source</value></data>
-  <data name="FirstStartSetupNoRemoteSources" xml:space="preserve"><value>No remote sources yet</value></data>
   <data name="FirstStartSetupNoRemoteSourcesDescription" xml:space="preserve"><value>Add your FTP or FTPS server to continue.</value></data>
-  <data name="FirstStartSetupRemoteSourceAutomationHint" xml:space="preserve"><value>In the next dialog you choose the remote folder to watch and the local download folder. Existing folders on the server are ignored.</value></data>
+  <data name="FirstStartSetupRemoteSourceAutomationHint" xml:space="preserve"><value>In the next dialog you choose the remote source, the remote folder to watch, and the local download folder. Existing folders on the server are ignored.</value></data>
   <data name="FirstStartSetupCreateRemoteSourceAutomation" xml:space="preserve"><value>Create remote automation</value></data>
-  <data name="FirstStartSetupFolderSourceCreated" xml:space="preserve"><value>Folder automation for {0} created.</value></data>
-  <data name="FirstStartSetupRemoteSourceCreated" xml:space="preserve"><value>Remote automation {0} created. Downloads go to {1}.</value></data>
-  <data name="FirstStartSetupFolderSourcePickupTiming" xml:space="preserve"><value>Bearcat creates a release once a new folder has stayed unchanged for {0}. Uploads start {1} later (initial upload cooldown).</value></data>
-  <data name="FirstStartSetupRemoteSourcePickupTiming" xml:space="preserve"><value>Bearcat downloads a new folder once it has stayed unchanged on the server for {0}. After the download it creates the release. Uploads start {1} later (initial upload cooldown).</value></data>
+  <data name="FirstStartSetupSourceCreated" xml:space="preserve"><value>Source created. Bearcat checks it regularly and takes over new folders once they have stopped changing for a few minutes.</value></data>
   <data name="FirstStartSetupTestRelease" xml:space="preserve"><value>Test release</value></data>
   <data name="FirstStartSetupTestReleaseHasNoUploadConfigs" xml:space="preserve"><value>The test release has no upload configurations. Add hosters to the release template.</value></data>
   <data name="FirstStartSetupGoToActivity" xml:space="preserve"><value>Go to activity</value></data>
-  <data name="FirstStartSetupIncomplete" xml:space="preserve"><value>Setup incomplete. Missing: {0}.</value></data>
+  <data name="FirstStartSetupIncomplete" xml:space="preserve"><value>Missing: {0}.</value></data>
+  <data name="FirstStartSetupExistingReleaseTemplates" xml:space="preserve"><value>Already set up: {0}. Create more release templates on the Release templates page.</value></data>
+  <data name="FirstStartSetupExistingSources" xml:space="preserve"><value>Existing sources: {0}. Create more on the Folder automations or Remote automations page.</value></data>
+  <data name="FirstStartSetupIncompleteTitle" xml:space="preserve"><value>Setup incomplete</value></data>
+  <data name="FirstStartSetupNotSetUpTitle" xml:space="preserve"><value>Bearcat is not set up yet</value></data>
+  <data name="FirstStartSetupNotSetUpDescription" xml:space="preserve"><value>The setup connects a hoster, creates a release template and adds a source. It takes a few minutes.</value></data>
   <data name="FirstStartSetupContinue" xml:space="preserve"><value>Continue setup</value></data>
   <data name="FirstStartOptionalSetupTitle" xml:space="preserve"><value>Optional next steps</value></data>
   <data name="FirstStartOptionalSetupDescription" xml:space="preserve"><value>Not needed for uploading. Set them up when you need them.</value></data>

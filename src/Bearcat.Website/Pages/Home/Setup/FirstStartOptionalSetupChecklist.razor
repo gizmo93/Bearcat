@@ -16,33 +16,43 @@
     </BbCardHeader>
     <BbCardContent>
         <ul class="divide-y divide-border/70">
-            @foreach (var item in GetItems())
-            {
-                <li class="@($"flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between {(item.IsDone ? "text-muted-foreground" : string.Empty)}")">
-                    <div class="flex min-w-0 items-start gap-3">
-                        <LucideIcon Name="@(item.IsDone ? "circle-check" : item.IconName)"
-                                    class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div class="min-w-0 space-y-0.5">
-                            <p class="text-sm font-medium">
-                                @item.Title
-                                @if (item.IsDone)
-                                {
-                                    <span class="sr-only">(@L["FirstStartOptionalSetupDone"])</span>
-                                }
-                            </p>
-                            <p class="text-sm text-muted-foreground">@item.Description</p>
-                        </div>
-                    </div>
-                    <div class="flex shrink-0 flex-wrap gap-2 pl-7 sm:pl-0">
-                        @foreach (var link in item.Links)
-                        {
-                            <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="@link.Href">
-                                @link.Label
-                            </BbButton>
-                        }
-                    </div>
-                </li>
-            }
+            <FirstStartOptionalSetupChecklistItem IconName="database"
+                                                  Title="@L["FirstStartOptionalSetupMetadata"]"
+                                                  Description="@L["FirstStartOptionalSetupMetadataDescription"]"
+                                                  IsDone="SetupStatus.HasNfoDatabaseOrMediaDatabaseRegistration">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/nfo-database-registrations">@L["NfoDatabases"]</BbButton>
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/media-database-registrations">@L["MediaDatabases"]</BbButton>
+            </FirstStartOptionalSetupChecklistItem>
+            <FirstStartOptionalSetupChecklistItem IconName="image-up"
+                                                  Title="@L["FirstStartOptionalSetupImageHoster"]"
+                                                  Description="@L["FirstStartOptionalSetupImageHosterDescription"]"
+                                                  IsDone="SetupStatus.HasImageHosterRegistration">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/image-hoster-registrations">@L["ImageHosters"]</BbButton>
+            </FirstStartOptionalSetupChecklistItem>
+            <FirstStartOptionalSetupChecklistItem IconName="shield"
+                                                  Title="@L["FirstStartOptionalSetupLinkCrypters"]"
+                                                  Description="@L["FirstStartOptionalSetupLinkCryptersDescription"]"
+                                                  IsDone="SetupStatus.HasLinkCrypterRegistration">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/link-crypter-registrations">@L["Crypters"]</BbButton>
+            </FirstStartOptionalSetupChecklistItem>
+            <FirstStartOptionalSetupChecklistItem IconName="send"
+                                                  Title="@L["FirstStartOptionalSetupTelegram"]"
+                                                  Description="@L["FirstStartOptionalSetupTelegramDescription"]"
+                                                  IsDone="SetupStatus.HasConnectedTelegramConfiguration">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/telegram">@L["FirstStartOptionalSetupTelegramLink"]</BbButton>
+            </FirstStartOptionalSetupChecklistItem>
+            <FirstStartOptionalSetupChecklistItem IconName="message-square-text"
+                                                  Title="@L["FirstStartOptionalSetupForumPosting"]"
+                                                  Description="@L["FirstStartOptionalSetupForumPostingDescription"]"
+                                                  IsDone="SetupStatus.HasDistributionSiteRegistration">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/distribution-site-registrations">@L["DistributionSites"]</BbButton>
+            </FirstStartOptionalSetupChecklistItem>
+            <FirstStartOptionalSetupChecklistItem IconName="network"
+                                                  Title="@L["FirstStartOptionalSetupProxyServers"]"
+                                                  Description="@L["FirstStartOptionalSetupProxyServersDescription"]"
+                                                  IsDone="SetupStatus.HasProxyServer">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/proxy-servers">@L["ProxyServers"]</BbButton>
+            </FirstStartOptionalSetupChecklistItem>
         </ul>
     </BbCardContent>
 </BbCard>

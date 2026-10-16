@@ -7,7 +7,7 @@ public partial class FirstStartSetupWorkingDirectoriesStep : ComponentBase
 {
     [Parameter]
     [EditorRequired]
-    public FirstStartSetupStatus Status { get; set; } = null!;
+    public List<WorkingDirectoryStatus> WorkingDirectoryStatuses { get; set; } = null!;
 
     [Parameter]
     public EventCallback OnCheckAgain { get; set; }
@@ -26,20 +26,4 @@ public partial class FirstStartSetupWorkingDirectoriesStep : ComponentBase
         "true",
         StringComparison.OrdinalIgnoreCase
     );
-
-    private bool isCheckingAgain;
-
-    private async Task CheckAgainAsync()
-    {
-        isCheckingAgain = true;
-
-        try
-        {
-            await OnCheckAgain.InvokeAsync();
-        }
-        finally
-        {
-            isCheckingAgain = false;
-        }
-    }
 }

@@ -1,26 +1,15 @@
 using Bearcat.Abstractions;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.FirstStartSetup.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Domain.UseCases.FirstStartSetup.Status;
 
-public class FirstStartSetupStatusService(
-    IFirstStartSetupStatusRepository statusRepository,
+public class FirstStartWorkingDirectoryStatusService(
     IFileSystemService fileSystemService,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
 )
 {
-    public async Task<FirstStartSetupStatus> GetStatusAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        var databaseStatus = await statusRepository.GetDatabaseStatusAsync(cancellationToken);
-
-        return new FirstStartSetupStatus(databaseStatus, GetWorkingDirectoryStatuses());
-    }
-
-    private List<WorkingDirectoryStatus> GetWorkingDirectoryStatuses()
+    public List<WorkingDirectoryStatus> GetWorkingDirectoryStatuses()
     {
         return workingDirectoriesConfig
             .Value.GetWorkingDirectories()

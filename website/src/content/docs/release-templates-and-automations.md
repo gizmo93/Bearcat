@@ -61,7 +61,7 @@ Changing **Release base path** or **Folder name pattern** of an automation start
 **Ignore existing folders** then applies to the folders found with the new settings.
 
 The **Folder preview** in the dialog lists the folders that match the current base path and pattern
-and marks folders that already have a release with **Has release**. If the save starts a first scan,
+and marks folders that already have a release or are an archive output folder with **Already in use**. If the save starts a first scan,
 the preview also shows what happens with the remaining folders: the first scan ignores them, or a
 warning shows how many folders will become releases and be uploaded. The refresh button reloads the
 preview.

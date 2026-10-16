@@ -18,10 +18,23 @@ public sealed partial class Home(
     private FirstStartSetupDatabaseStatus? setupStatus;
     private PersistingComponentStateSubscription persistSubscription;
 
-    private bool ShowsOptionalSetupChecklist =>
-        setupStatus is { IsRequiredSetupComplete: true }
-        && !setupStatus.OptionalSetupStatus.IsEverythingSetUp
-        && !browserState.AreOptionalStepsHidden;
+    private bool ShowsOptionalSetupChecklist()
+    {
+        var isEveryOptionalStepDone =
+            setupStatus is
+            {
+                HasNfoDatabaseOrMediaDatabaseRegistration: true,
+                HasImageHosterRegistration: true,
+                HasLinkCrypterRegistration: true,
+                HasConnectedTelegramConfiguration: true,
+                HasDistributionSiteRegistration: true,
+                HasProxyServer: true,
+            };
+
+        return setupStatus is { IsRequiredSetupComplete: true }
+            && !isEveryOptionalStepDone
+            && !browserState.AreOptionalStepsHidden;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,11 +71,6 @@ public sealed partial class Home(
         }
 
         return Task.CompletedTask;
-    }
-
-    private async Task HideOptionalSetupChecklistAsync()
-    {
-        await browserState.HideOptionalStepsAsync();
     }
 
     public void Dispose()

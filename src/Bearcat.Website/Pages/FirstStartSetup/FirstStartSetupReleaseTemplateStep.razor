@@ -17,39 +17,45 @@
             <div class="space-y-6">
                 @if (releaseTemplates.Count > 0)
                 {
+                    <FirstStartSetupExistingNotice Text="@L["FirstStartSetupExistingReleaseTemplates", string.Join(", ", releaseTemplates.Select(releaseTemplate => releaseTemplate.Name))]">
+                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/release-templates">
+                            @L["ReleaseTemplates"]
+                        </BbButton>
+                    </FirstStartSetupExistingNotice>
+
                     <div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="@L["FirstStartSetupReleaseTemplateChoice"]">
-                        <button type="button"
-                                role="radio"
-                                aria-checked="@(choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate ? "true" : "false")"
-                                class="@GetChoiceClass(FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)"
-                                @onclick="() => SelectChoice(FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)">
-                            <span class="flex items-center gap-2 text-sm font-medium">
-                                <LucideIcon Name="layout-template" class="h-4 w-4 text-muted-foreground" />
-                                @L["FirstStartSetupUseExistingTemplate"]
-                            </span>
-                            <span class="text-xs text-muted-foreground">@L["FirstStartSetupUseExistingTemplateDescription"]</span>
-                        </button>
-                        <button type="button"
-                                role="radio"
-                                aria-checked="@(choice is FirstStartSetupReleaseTemplateChoice.CreateNewTemplate ? "true" : "false")"
-                                class="@GetChoiceClass(FirstStartSetupReleaseTemplateChoice.CreateNewTemplate)"
-                                @onclick="() => SelectChoice(FirstStartSetupReleaseTemplateChoice.CreateNewTemplate)">
-                            <span class="flex items-center gap-2 text-sm font-medium">
-                                <LucideIcon Name="plus" class="h-4 w-4 text-muted-foreground" />
-                                @L["FirstStartSetupCreateNewTemplate"]
-                            </span>
-                            <span class="text-xs text-muted-foreground">@L["FirstStartSetupCreateNewTemplateDescription"]</span>
-                        </button>
+                        <FirstStartSetupChoiceCard IconName="layout-template"
+                                                   Title="@L["FirstStartSetupUseExistingTemplate"]"
+                                                   Description="@L["FirstStartSetupUseExistingTemplateDescription"]"
+                                                   IsSelected="useExistingTemplate"
+                                                   OnSelected="@(() => SelectUseExistingTemplate(true))" />
+                        <FirstStartSetupChoiceCard IconName="plus"
+                                                   Title="@L["FirstStartSetupCreateNewTemplate"]"
+                                                   Description="@L["FirstStartSetupCreateNewTemplateDescription"]"
+                                                   IsSelected="!useExistingTemplate"
+                                                   OnSelected="@(() => SelectUseExistingTemplate(false))" />
                     </div>
                 }
 
-                @if (choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)
+                @if (useExistingTemplate)
                 {
                     <BbFormFieldSelect TValue="int?"
                                        @bind-Value="formModel.ExistingReleaseTemplateId"
                                        Label="@L["ReleaseTemplate"]"
                                        Placeholder="@L["FirstStartSetupSelectReleaseTemplate"]"
                                        Options="releaseTemplateOptions" />
+                }
+                else if (releaseGroups.Count == 0)
+                {
+                    <div class="flex flex-col gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                        <span class="flex items-start gap-2">
+                            <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                            @L["FirstStartSetupNoReleaseGroup"]
+                        </span>
+                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/release-groups" Class="self-start sm:self-auto">
+                            @L["ReleaseGroups"]
+                        </BbButton>
+                    </div>
                 }
                 else
                 {
@@ -61,27 +67,17 @@
                         </div>
                     }
 
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-semibold">@L["ReleaseGroup"]</h3>
-
-                        <BbFormFieldInput TValue="string"
-                                          @bind-Value="formModel.ReleaseGroupName"
-                                          Label="@L["FirstStartSetupReleaseGroupName"]" />
-
-                        <BbFormFieldSwitch @bind-Checked="formModel.EnableAutomaticReuploads"
-                                           Label="@L["AutomaticReuploads"]"
-                                           HelperText="@L["AutomaticReuploadsHelp"]" />
-
-                        @if (formModel.EnableAutomaticReuploads)
-                        {
-                            <BbFormFieldNumericInput TValue="int"
-                                                     @bind-Value="formModel.NumberOfHoursUntilReupload"
-                                                     Label="@L["HoursUntilReupload"]"
-                                                     Min="0"
-                                                     Step="1"
-                                                     ShowButtons="true"
-                                                     HelperText="@L["HoursUntilReuploadHelp"]" />
-                        }
+                    <div class="space-y-2">
+                        <BbFormFieldSelect TValue="int?"
+                                           @bind-Value="formModel.ReleaseGroupId"
+                                           Label="@L["ReleaseGroup"]"
+                                           Options="releaseGroupOptions" />
+                        <p class="text-xs text-muted-foreground">
+                            @(SelectedReleaseGroup is { EnableAutomaticReuploads: true } releaseGroup
+                                ? L["FirstStartSetupReleaseGroupReuploadsAfterHours", releaseGroup.NumberOfHoursUntilReupload]
+                                : L["FirstStartSetupReleaseGroupWithoutReuploads"])
+                            <a href="/release-groups" class="font-medium text-primary underline-offset-4 hover:underline">@L["ReleaseGroups"]</a>
+                        </p>
                     </div>
 
                     <div class="space-y-4 border-t border-border/70 pt-4">
@@ -147,10 +143,10 @@
                 }
 
                 <FirstStartSetupStepNavigation OnBack="OnBack" OnSkip="OnSkip">
-                    <BbButton Type="ButtonType.Submit" Loading="isSubmitting">
-                        @(choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate
-                            ? L["Next"]
-                            : L["FirstStartSetupCreateAndContinue"])
+                    <BbButton Type="ButtonType.Submit"
+                              Loading="isSubmitting"
+                              Disabled="@(!useExistingTemplate && releaseGroups.Count == 0)">
+                        @(useExistingTemplate ? L["Next"] : L["FirstStartSetupCreateAndContinue"])
                         <LucideIcon Name="arrow-right" class="h-4 w-4" />
                     </BbButton>
                 </FirstStartSetupStepNavigation>

@@ -1,10 +1,15 @@
-<div class="flex flex-col gap-3 rounded-md border border-border/70 bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-    <div class="flex min-w-0 items-start gap-2 text-sm text-muted-foreground sm:items-center">
-        <LucideIcon Name="list-checks" class="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
-        <span class="min-w-0">@MissingPartsText</span>
+<div class="flex flex-col gap-4 rounded-xl border border-primary/40 bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex min-w-0 items-start gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <LucideIcon Name="list-checks" class="h-5 w-5" />
+        </span>
+        <div class="min-w-0 space-y-1">
+            <p class="text-base font-semibold">@(SetupStatus.IsFreshInstallation ? L["FirstStartSetupNotSetUpTitle"] : L["FirstStartSetupIncompleteTitle"])</p>
+            <p class="text-sm text-muted-foreground">@(SetupStatus.IsFreshInstallation ? L["FirstStartSetupNotSetUpDescription"] : MissingPartsText)</p>
+        </div>
     </div>
-    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/setup" Class="shrink-0 self-start sm:self-auto">
-        @L["FirstStartSetupContinue"]
+    <BbButton Href="/setup" Class="shrink-0 self-start sm:self-auto">
+        @(SetupStatus.IsFreshInstallation ? L["FirstStartSetupStartSetup"] : L["FirstStartSetupContinue"])
         <LucideIcon Name="arrow-right" class="h-4 w-4" />
     </BbButton>
 </div>

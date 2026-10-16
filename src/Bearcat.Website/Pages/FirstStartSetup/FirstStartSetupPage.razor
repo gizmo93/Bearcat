@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    @if (status is null)
+    @if (currentStep is null)
     {
         <BbCard Class="border-border/70 shadow-sm">
             <BbCardContent Class="py-8">
@@ -23,9 +23,8 @@
     }
     else
     {
-        <FirstStartSetupProgress CurrentStep="currentStep"
-                                 Status="status"
-                                 WizardState="wizardState"
+        <FirstStartSetupProgress CurrentStep="currentStep.Value"
+                                 CompletedSteps="GetCompletedSteps()"
                                  OnStepSelected="GoToStep" />
 
         <BbCard Class="border-border/70 shadow-sm">
@@ -37,8 +36,8 @@
                                                     OnSkipSetup="SkipSetupAsync" />
                         break;
                     case FirstStartSetupStep.WorkingDirectories:
-                        <FirstStartSetupWorkingDirectoriesStep Status="status"
-                                                               OnCheckAgain="LoadStatusAsync"
+                        <FirstStartSetupWorkingDirectoriesStep WorkingDirectoryStatuses="workingDirectoryStatuses"
+                                                               OnCheckAgain="LoadWorkingDirectoryStatuses"
                                                                OnBack="GoToPreviousStep"
                                                                OnSkip="GoToNextStep"
                                                                OnNext="GoToNextStep" />
@@ -53,12 +52,12 @@
                         <FirstStartSetupReleaseTemplateStep WizardState="wizardState"
                                                             OnBack="GoToPreviousStep"
                                                             OnSkip="GoToNextStep"
-                                                            OnNext="GoToNextStep" />
+                                                            OnNext="GoToNextStepAfterChangeAsync" />
                         break;
                     case FirstStartSetupStep.Source:
-                        <FirstStartSetupSourceStep WizardState="wizardState"
+                        <FirstStartSetupSourceStep ReleaseTemplateId="wizardState.ReleaseTemplateId"
                                                    OnBack="GoToPreviousStep"
-                                                   OnSourceCreated="LoadStatusAsync" />
+                                                   OnSourceCreated="LoadDatabaseStatusAsync" />
                         break;
                 }
             </BbCardContent>

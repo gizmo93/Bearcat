@@ -1,4 +1,6 @@
+using Bearcat.Domain.UseCases.FirstStartSetup.Repositories;
 using Bearcat.Domain.UseCases.FirstStartSetup.Status;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
 
@@ -11,13 +13,19 @@ public partial class FirstStartSetupPage(
 )
 {
     private readonly FirstStartSetupWizardState wizardState = new();
-    private FirstStartSetupStatus? status;
-    private FirstStartSetupStep currentStep = FirstStartSetupStep.Welcome;
+    private List<WorkingDirectoryStatus> workingDirectoryStatuses = [];
+    private FirstStartSetupDatabaseStatus databaseStatus = null!;
+    private FirstStartSetupStep? currentStep;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadStatusAsync();
-        currentStep = GetStartStep(status!);
+        LoadWorkingDirectoryStatuses();
+        await LoadDatabaseStatusAsync();
+        var releaseTemplates = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
+        );
+        wizardState.ReleaseTemplateId = releaseTemplates.FirstOrDefault()?.ReleaseTemplateId;
+        currentStep = GetStartStep();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -28,36 +36,81 @@ public partial class FirstStartSetupPage(
         }
     }
 
-    private async Task LoadStatusAsync()
+    private void LoadWorkingDirectoryStatuses()
     {
-        status = await operationRunner.RunAsync(
-            (FirstStartSetupStatusService service) => service.GetStatusAsync()
+        workingDirectoryStatuses = operationRunner.Run(
+            (FirstStartWorkingDirectoryStatusService service) =>
+                service.GetWorkingDirectoryStatuses()
         );
     }
 
-    private static FirstStartSetupStep GetStartStep(FirstStartSetupStatus setupStatus)
+    private async Task LoadDatabaseStatusAsync()
     {
-        if (setupStatus.DatabaseStatus.IsFreshInstallation)
+        databaseStatus = await operationRunner.RunAsync(
+            (IFirstStartSetupStatusRepository repository) => repository.GetDatabaseStatusAsync()
+        );
+    }
+
+    private HashSet<FirstStartSetupStep> GetCompletedSteps()
+    {
+        HashSet<FirstStartSetupStep> completedSteps = [];
+
+        if (!databaseStatus.IsFreshInstallation)
+        {
+            completedSteps.Add(FirstStartSetupStep.Welcome);
+        }
+
+        if (HasExistingWritableWorkingDirectory())
+        {
+            completedSteps.Add(FirstStartSetupStep.WorkingDirectories);
+        }
+
+        if (databaseStatus.HasHosterRegistration)
+        {
+            completedSteps.Add(FirstStartSetupStep.Hoster);
+        }
+
+        if (databaseStatus.HasReleaseTemplate)
+        {
+            completedSteps.Add(FirstStartSetupStep.ReleaseTemplate);
+        }
+
+        if (databaseStatus.HasReleaseFolderAutomationOrRemoteSourceAutomation)
+        {
+            completedSteps.Add(FirstStartSetupStep.Source);
+        }
+
+        return completedSteps;
+    }
+
+    private FirstStartSetupStep GetStartStep()
+    {
+        if (databaseStatus.IsFreshInstallation)
         {
             return FirstStartSetupStep.Welcome;
         }
 
-        if (!setupStatus.HasExistingWritableWorkingDirectory())
+        if (!HasExistingWritableWorkingDirectory())
         {
             return FirstStartSetupStep.WorkingDirectories;
         }
 
-        if (!setupStatus.DatabaseStatus.HasHosterRegistration)
+        if (!databaseStatus.HasHosterRegistration)
         {
             return FirstStartSetupStep.Hoster;
         }
 
-        if (!setupStatus.DatabaseStatus.HasReleaseTemplate)
+        if (!databaseStatus.HasReleaseTemplate)
         {
             return FirstStartSetupStep.ReleaseTemplate;
         }
 
         return FirstStartSetupStep.Source;
+    }
+
+    private bool HasExistingWritableWorkingDirectory()
+    {
+        return workingDirectoryStatuses.Any(status => status is { Exists: true, IsWritable: true });
     }
 
     private void GoToStep(FirstStartSetupStep step)
@@ -68,6 +121,12 @@ public partial class FirstStartSetupPage(
     private void GoToNextStep()
     {
         currentStep += 1;
+    }
+
+    private async Task GoToNextStepAfterChangeAsync()
+    {
+        await LoadDatabaseStatusAsync();
+        GoToNextStep();
     }
 
     private void GoToPreviousStep()

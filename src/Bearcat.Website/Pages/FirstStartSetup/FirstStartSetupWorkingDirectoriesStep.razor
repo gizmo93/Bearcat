@@ -4,7 +4,7 @@
         <p class="text-sm text-muted-foreground">@L["FirstStartSetupWorkingDirectoriesDescription"]</p>
     </div>
 
-    @if (Status.WorkingDirectoryStatuses.Count == 0)
+    @if (WorkingDirectoryStatuses.Count == 0)
     {
         <div class="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
             <LucideIcon Name="circle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
@@ -14,7 +14,7 @@
     else
     {
         <ul class="divide-y divide-border/70 rounded-md border border-border/70">
-            @foreach (var workingDirectoryStatus in Status.WorkingDirectoryStatuses)
+            @foreach (var workingDirectoryStatus in WorkingDirectoryStatuses)
             {
                 <li class="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                     <span class="flex min-w-0 items-center gap-2 text-sm">
@@ -48,11 +48,11 @@
     </div>
 
     <FirstStartSetupStepNavigation OnBack="OnBack" OnSkip="OnSkip">
-        <BbButton Variant="ButtonVariant.Outline" Loading="isCheckingAgain" OnClick="CheckAgainAsync">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="@(() => OnCheckAgain.InvokeAsync())">
             <LucideIcon Name="refresh-cw" class="h-4 w-4" />
             @L["FirstStartSetupCheckAgain"]
         </BbButton>
-        <BbButton Disabled="!Status.HasExistingWritableWorkingDirectory()" OnClick="@(() => OnNext.InvokeAsync())">
+        <BbButton Disabled="!WorkingDirectoryStatuses.Any(status => status is { Exists: true, IsWritable: true })" OnClick="@(() => OnNext.InvokeAsync())">
             @L["Next"]
             <LucideIcon Name="arrow-right" class="h-4 w-4" />
         </BbButton>

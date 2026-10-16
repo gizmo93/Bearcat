@@ -5,7 +5,12 @@ public sealed record FirstStartSetupDatabaseStatus(
     bool HasReleaseTemplate,
     bool HasReleaseFolderAutomationOrRemoteSourceAutomation,
     bool HasRelease,
-    FirstStartOptionalSetupStatus OptionalSetupStatus
+    bool HasNfoDatabaseOrMediaDatabaseRegistration,
+    bool HasImageHosterRegistration,
+    bool HasLinkCrypterRegistration,
+    bool HasConnectedTelegramConfiguration,
+    bool HasDistributionSiteRegistration,
+    bool HasProxyServer
 )
 {
     public bool IsFreshInstallation => !HasHosterRegistration && !HasRelease;

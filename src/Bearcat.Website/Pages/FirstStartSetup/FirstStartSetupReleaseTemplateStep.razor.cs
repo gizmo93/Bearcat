@@ -3,11 +3,16 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
-using Bearcat.Domain.UseCases.FirstStartSetup.ReleaseTemplates;
-using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -25,9 +30,9 @@ public partial class FirstStartSetupReleaseTemplateStep(
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
-    private const string SevenZipArchiveFileExtension = ".7z";
+    private const string DefaultReleaseGroupName = "Default";
     private const string RarArchiveFileExtension = ".rar";
-    private const int ArchiveFileSizeMbWithoutHosterFileSizeLimit = 0;
+    private const string SevenZipArchiveFileExtension = ".7z";
 
     [Parameter]
     [EditorRequired]
@@ -44,16 +49,22 @@ public partial class FirstStartSetupReleaseTemplateStep(
 
     private readonly FirstStartSetupReleaseTemplateFormModel formModel = new();
     private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
+    private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private IReadOnlyList<ArchiverDto> archivers = [];
     private List<SelectOption<int?>> releaseTemplateOptions = [];
+    private List<SelectOption<int?>> releaseGroupOptions = [];
     private List<SelectOption<string>> archiverOptions = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private FirstStartSetupReleaseTemplateChoice choice =
-        FirstStartSetupReleaseTemplateChoice.CreateNewTemplate;
+    private bool useExistingTemplate;
     private bool archiveOutputFolderExists;
     private bool isLoading = true;
     private bool isSubmitting;
+
+    private ReleaseGroupReadModel? SelectedReleaseGroup =>
+        releaseGroups.FirstOrDefault(releaseGroup =>
+            releaseGroup.ReleaseGroupId == formModel.ReleaseGroupId
+        );
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,37 +75,38 @@ public partial class FirstStartSetupReleaseTemplateStep(
         releaseTemplates = await operationRunner.RunAsync(
             (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
         );
+        releaseGroups = await operationRunner.RunAsync(
+            (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
+        );
+        var hosterRegistrations = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
         archivers = operationRunner.Run((IArchiverFactory factory) => factory.GetArchivers());
+
         releaseTemplateOptions = releaseTemplates
             .Select(releaseTemplate => new SelectOption<int?>(
                 releaseTemplate.ReleaseTemplateId,
                 releaseTemplate.Name
             ))
             .ToList();
+        releaseGroupOptions = releaseGroups
+            .Select(releaseGroup => new SelectOption<int?>(
+                releaseGroup.ReleaseGroupId,
+                releaseGroup.Name
+            ))
+            .ToList();
         archiverOptions = archivers
             .Select(archiver => new SelectOption<string>(archiver.ClassName, archiver.Name))
             .ToList();
-        var hosterRegistrations = await operationRunner.RunAsync(
-            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
-        );
-        var suggestedArchiveOutputFolderPath = operationRunner.Run(
-            (FirstStartReleaseTemplateService service) =>
-                service.GetSuggestedArchiveOutputFolderPath()
-        );
 
-        ApplyDefaults(hosterRegistrations, suggestedArchiveOutputFolderPath);
-        isLoading = false;
-    }
-
-    private void ApplyDefaults(
-        IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations,
-        string suggestedArchiveOutputFolderPath
-    )
-    {
-        var defaultReleaseGroupName = L["FirstStartSetupDefaultReleaseGroupName"].Value;
-
-        formModel.ReleaseGroupName = defaultReleaseGroupName;
-        formModel.ReleaseTemplateName = defaultReleaseGroupName;
+        useExistingTemplate = releaseTemplates.Count > 0;
+        formModel.ExistingReleaseTemplateId = WizardState.ReleaseTemplateId;
+        formModel.ReleaseGroupId = (
+            releaseGroups.FirstOrDefault(releaseGroup =>
+                releaseGroup.Name == DefaultReleaseGroupName
+            ) ?? releaseGroups.FirstOrDefault()
+        )?.ReleaseGroupId;
+        formModel.ReleaseTemplateName = L["FirstStartSetupDefaultReleaseTemplateName"];
         formModel.ArchiverName = archivers
             .Single(archiver => archiver.FileExtension == RarArchiveFileExtension)
             .ClassName;
@@ -104,31 +116,19 @@ public partial class FirstStartSetupReleaseTemplateStep(
                     WizardState.SelectedHosterRegistrationIds.Contains(hosterRegistration.Id)
                 )
                 .Min(hosterRegistration => hosterRegistration.MaxFileSizeMb)
-            ?? ArchiveFileSizeMbWithoutHosterFileSizeLimit;
-        formModel.ArchiveOutputFolderPath = suggestedArchiveOutputFolderPath;
+            ?? 0;
+        formModel.ArchiveOutputFolderPath = operationRunner.Run(
+            (FirstStartArchiveOutputFolderService service) =>
+                service.GetSuggestedArchiveOutputFolderPath()
+        );
         CheckArchiveOutputFolderExists();
 
-        if (releaseTemplates.Count == 0)
-        {
-            return;
-        }
-
-        choice = FirstStartSetupReleaseTemplateChoice.UseExistingTemplate;
-        formModel.ExistingReleaseTemplateId = releaseTemplates.Any(releaseTemplate =>
-            releaseTemplate.ReleaseTemplateId == WizardState.ReleaseTemplateId
-        )
-            ? WizardState.ReleaseTemplateId
-            : null;
+        isLoading = false;
     }
 
-    private string GetChoiceClass(FirstStartSetupReleaseTemplateChoice choiceToRender)
+    private void SelectUseExistingTemplate(bool useExisting)
     {
-        return FirstStartSetupChoiceCardStyle.GetClass(choice == choiceToRender);
-    }
-
-    private void SelectChoice(FirstStartSetupReleaseTemplateChoice selectedChoice)
-    {
-        choice = selectedChoice;
+        useExistingTemplate = useExisting;
         messageStore.Clear();
         editContext.NotifyValidationStateChanged();
     }
@@ -136,17 +136,12 @@ public partial class FirstStartSetupReleaseTemplateStep(
     private void CheckArchiveOutputFolderExists()
     {
         ClearArchiveOutputFolderValidationMessages();
-
-        if (string.IsNullOrWhiteSpace(formModel.ArchiveOutputFolderPath))
-        {
-            archiveOutputFolderExists = false;
-            return;
-        }
-
-        archiveOutputFolderExists = operationRunner.Run(
-            (IFileSystemService service) =>
-                service.DirectoryExists(formModel.ArchiveOutputFolderPath)
-        );
+        archiveOutputFolderExists =
+            !string.IsNullOrWhiteSpace(formModel.ArchiveOutputFolderPath)
+            && operationRunner.Run(
+                (IFileSystemService service) =>
+                    service.DirectoryExists(formModel.ArchiveOutputFolderPath)
+            );
     }
 
     private void CreateArchiveOutputFolder()
@@ -160,14 +155,15 @@ public partial class FirstStartSetupReleaseTemplateStep(
                     service.CreateArchiveOutputFolder(formModel.ArchiveOutputFolderPath)
             );
         }
-        catch (ArchiveOutputFolderNotInsideExistingWorkingDirectoryException exception)
+        catch (Exception exception)
+            when (exception
+                    is ArchiveOutputFolderNotInsideExistingWorkingDirectoryException
+                        or IOException
+                        or UnauthorizedAccessException
+            )
         {
-            ShowArchiveOutputFolderValidationMessage(exception.Message);
-            return;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            ShowArchiveOutputFolderValidationMessage(exception.Message);
+            messageStore.Add(() => formModel.ArchiveOutputFolderPath, exception.Message);
+            editContext.NotifyValidationStateChanged();
             return;
         }
 
@@ -195,12 +191,7 @@ public partial class FirstStartSetupReleaseTemplateStep(
             }
         );
 
-        if (result.Cancelled)
-        {
-            return;
-        }
-
-        var selectedPath = result.GetData<string>();
+        var selectedPath = result.Cancelled ? null : result.GetData<string>();
         if (string.IsNullOrWhiteSpace(selectedPath))
         {
             return;
@@ -212,81 +203,91 @@ public partial class FirstStartSetupReleaseTemplateStep(
 
     private async Task SubmitAsync()
     {
-        if (choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)
+        if (useExistingTemplate)
         {
-            WizardState.ReleaseTemplateId = formModel.ExistingReleaseTemplateId!.Value;
+            WizardState.ReleaseTemplateId = formModel.ExistingReleaseTemplateId;
             await OnNext.InvokeAsync();
             return;
         }
 
         isSubmitting = true;
-        int releaseTemplateId;
 
         try
         {
-            var input = formModel.ToInput(WizardState.SelectedHosterRegistrationIds.ToList());
-            releaseTemplateId = await operationRunner.RunAsync(
-                (FirstStartReleaseTemplateService service) =>
-                    service.CreateReleaseGroupAndTemplateAsync(input)
-            );
-        }
-        catch (ArchiveOutputFolderNotFoundException)
-        {
-            archiveOutputFolderExists = false;
-            ShowArchiveOutputFolderValidationMessage(
-                L["FirstStartSetupArchiveOutputFolderMustExist"]
-            );
-            return;
+            WizardState.ReleaseTemplateId = await CreateReleaseTemplateAsync();
         }
         finally
         {
             isSubmitting = false;
         }
 
-        WizardState.ReleaseTemplateId = releaseTemplateId;
         toastService.Success(
             L["FirstStartSetupReleaseTemplateCreated", formModel.ReleaseTemplateName]
         );
         await OnNext.InvokeAsync();
     }
 
+    private async Task<int> CreateReleaseTemplateAsync()
+    {
+        var releaseTemplateId = await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.CreateAsync(
+                    formModel.ReleaseTemplateName.Trim(),
+                    ReleaseType.Managed,
+                    ReleaseContentType.Movie,
+                    formModel.ReleaseGroupId!.Value
+                )
+        );
+
+        var archiveConfigTemplateSettings = new ArchiveConfigTemplateSettings(
+            Name: archivers.Single(archiver => archiver.ClassName == formModel.ArchiverName).Name,
+            ArchiveFilesBasePath: formModel.ArchiveOutputFolderPath,
+            ArchiverName: formModel.ArchiverName!,
+            ArchivePassword: formModel.ArchivePassword,
+            ArchiveFileSizeMb: formModel.ArchiveFileSizeMb,
+            UseReleaseNameAsArchiveName: false,
+            PackReleaseFolderAsRootFolder: true,
+            CreateNonceFile: true,
+            AdditionalArchiveContentIds: []
+        );
+        var archiveConfigTemplateResult = await operationRunner.RunAsync(
+            (ArchiveConfigTemplateService service) =>
+                service.CreateAsync(releaseTemplateId, archiveConfigTemplateSettings)
+        );
+        var archiveConfigTemplateId = archiveConfigTemplateResult.ArchiveConfigTemplateId!.Value;
+
+        foreach (var hosterRegistrationId in WizardState.SelectedHosterRegistrationIds)
+        {
+            var uploadConfigTemplateSettings = new UploadConfigTemplateSettings(
+                Name: null,
+                UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistrationId),
+                ArchiveConfigTemplateId: archiveConfigTemplateId,
+                PremiumOnlyDownload: false
+            );
+            await operationRunner.RunAsync(
+                (UploadConfigTemplateService service) =>
+                    service.CreateAsync(releaseTemplateId, uploadConfigTemplateSettings)
+            );
+        }
+
+        return releaseTemplateId;
+    }
+
     private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
     {
         messageStore.Clear();
 
-        if (choice is FirstStartSetupReleaseTemplateChoice.UseExistingTemplate)
+        if (useExistingTemplate)
         {
-            ValidateExistingReleaseTemplateSelection();
+            if (formModel.ExistingReleaseTemplateId is null)
+            {
+                messageStore.Add(
+                    () => formModel.ExistingReleaseTemplateId!,
+                    L["FirstStartSetupSelectReleaseTemplateRequired"]
+                );
+            }
+
             return;
-        }
-
-        ValidateNewReleaseTemplate();
-    }
-
-    private void ValidateExistingReleaseTemplateSelection()
-    {
-        if (formModel.ExistingReleaseTemplateId is null)
-        {
-            messageStore.Add(
-                () => formModel.ExistingReleaseTemplateId!,
-                L["FirstStartSetupSelectReleaseTemplateRequired"]
-            );
-        }
-    }
-
-    private void ValidateNewReleaseTemplate()
-    {
-        if (string.IsNullOrWhiteSpace(formModel.ReleaseGroupName))
-        {
-            messageStore.Add(() => formModel.ReleaseGroupName, L["NameIsRequired"]);
-        }
-
-        if (formModel.EnableAutomaticReuploads && formModel.NumberOfHoursUntilReupload < 0)
-        {
-            messageStore.Add(
-                () => formModel.NumberOfHoursUntilReupload,
-                L["HoursUntilReuploadMustBeZeroOrGreater"]
-            );
         }
 
         if (string.IsNullOrWhiteSpace(formModel.ReleaseTemplateName))
@@ -299,43 +300,18 @@ public partial class FirstStartSetupReleaseTemplateStep(
             messageStore.Add(() => formModel.ArchiverName!, L["SelectArchiverRequired"]);
         }
 
-        ValidateArchiveFileSize();
-        ValidateArchiveOutputFolder();
-    }
-
-    private void ValidateArchiveFileSize()
-    {
-        if (formModel.ArchiveFileSizeMb < 0)
-        {
-            messageStore.Add(
-                () => formModel.ArchiveFileSizeMb,
-                L["ArchiveFileSizeMustBeZeroOrGreater"]
-            );
-            return;
-        }
-
-        var selectedArchiver = archivers.FirstOrDefault(archiver =>
-            archiver.ClassName == formModel.ArchiverName
-        );
-
         if (
-            selectedArchiver?.FileExtension == SevenZipArchiveFileExtension
-            && formModel.ArchiveFileSizeMb == 0
+            formModel.ArchiveFileSizeMb == 0
+            && archivers.Any(archiver =>
+                archiver.ClassName == formModel.ArchiverName
+                && archiver.FileExtension == SevenZipArchiveFileExtension
+            )
         )
         {
             messageStore.Add(
                 () => formModel.ArchiveFileSizeMb,
                 L["FirstStartSetupSevenZipRequiresArchivePartSize"]
             );
-        }
-    }
-
-    private void ValidateArchiveOutputFolder()
-    {
-        if (string.IsNullOrWhiteSpace(formModel.ArchiveOutputFolderPath))
-        {
-            messageStore.Add(() => formModel.ArchiveOutputFolderPath, L["BasePathRequired"]);
-            return;
         }
 
         if (!archiveOutputFolderExists)
@@ -345,12 +321,6 @@ public partial class FirstStartSetupReleaseTemplateStep(
                 L["FirstStartSetupArchiveOutputFolderMustExist"]
             );
         }
-    }
-
-    private void ShowArchiveOutputFolderValidationMessage(string message)
-    {
-        messageStore.Add(() => formModel.ArchiveOutputFolderPath, message);
-        editContext.NotifyValidationStateChanged();
     }
 
     private void ClearArchiveOutputFolderValidationMessages()

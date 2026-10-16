@@ -1,5 +1,3 @@
-using Bearcat.Domain.UseCases.FirstStartSetup.Sources;
-
 namespace Bearcat.Website.Pages.FirstStartSetup;
 
 public class FirstStartSetupLocalFolderSourceFormModel
@@ -10,8 +8,8 @@ public class FirstStartSetupLocalFolderSourceFormModel
 
     public bool ExtractArchivesBeforeReleaseCreation { get; set; }
 
-    public FirstStartExistingFolderHandling ExistingFolderHandling { get; set; } =
-        FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers;
+    public FirstStartSetupExistingFolderHandling ExistingFolderHandling { get; set; } =
+        FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers;
 
     public string? TestFolderPath { get; set; }
 }

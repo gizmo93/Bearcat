@@ -27,14 +27,12 @@ public class FirstStartSetupStatusRepositoryTest(DatabaseProvider databaseProvid
                 HasReleaseTemplate: false,
                 HasReleaseFolderAutomationOrRemoteSourceAutomation: false,
                 HasRelease: false,
-                OptionalSetupStatus: new FirstStartOptionalSetupStatus(
-                    HasNfoDatabaseOrMediaDatabaseRegistration: false,
-                    HasImageHosterRegistration: false,
-                    HasLinkCrypterRegistration: false,
-                    HasConnectedTelegramConfiguration: false,
-                    HasDistributionSiteRegistration: false,
-                    HasProxyServer: false
-                )
+                HasNfoDatabaseOrMediaDatabaseRegistration: false,
+                HasImageHosterRegistration: false,
+                HasLinkCrypterRegistration: false,
+                HasConnectedTelegramConfiguration: false,
+                HasDistributionSiteRegistration: false,
+                HasProxyServer: false
             )
         );
     }
@@ -156,14 +154,12 @@ public class FirstStartSetupStatusRepositoryTest(DatabaseProvider databaseProvid
                 HasReleaseTemplate: true,
                 HasReleaseFolderAutomationOrRemoteSourceAutomation: true,
                 HasRelease: true,
-                OptionalSetupStatus: new FirstStartOptionalSetupStatus(
-                    HasNfoDatabaseOrMediaDatabaseRegistration: true,
-                    HasImageHosterRegistration: true,
-                    HasLinkCrypterRegistration: true,
-                    HasConnectedTelegramConfiguration: true,
-                    HasDistributionSiteRegistration: true,
-                    HasProxyServer: true
-                )
+                HasNfoDatabaseOrMediaDatabaseRegistration: true,
+                HasImageHosterRegistration: true,
+                HasLinkCrypterRegistration: true,
+                HasConnectedTelegramConfiguration: true,
+                HasDistributionSiteRegistration: true,
+                HasProxyServer: true
             )
         );
     }

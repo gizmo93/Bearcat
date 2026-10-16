@@ -61,19 +61,24 @@ If templates already exist, choose **Use existing template** or **Create new tem
 
 | Field | Default |
 | --- | --- |
-| **Release group name** and **Template name** | `Default` |
-| **Automatic reuploads** | Off. Turn it on to replace offline uploads after **Hours until reupload**. |
+| **Release group** | `Default`, or the first group if `Default` does not exist |
+| **Template name** | `Default` |
 | **Archiver** | RAR |
 | **Part size (MB)** | The smallest file size limit of the selected hosters. `0` means no splitting; 7z needs a value greater than `0`. |
 | **Archive password** | Empty, no password |
 | **Archive output folder** | `bearcat-archives` in the first writable working directory |
+
+The wizard does not create a release group. Below **Release group** it shows whether the selected group
+reuploads offline links automatically. Change this on **Release groups**. Without any release group, the
+step links to **Release groups** instead of showing the form.
 
 Keep the archive output folder separate from your source folders. If it does not exist yet, click
 **Create folder**. Then click **Create and continue**.
 
 Bearcat creates a managed template with one archive configuration and one upload configuration per
 selected hoster. Without a selected hoster, the template has no uploads. Add hosters later on
-**Release templates**.
+**Release templates**. Archives get a random name. To use the release name instead, edit the archive
+configuration on **Release templates**.
 
 ### Source
 
@@ -86,8 +91,8 @@ A source is where new releases come from. Choose **Local folder** or **FTP/FTPS 
 3. For RAR or 7z archives in the folders, turn on **Extract archives before release creation**.
    See [Extract archives before release creation](/Bearcat/release-templates-and-automations/#extract-archives-before-release-creation).
 
-The **Folder preview** lists the matching folders and how many already have a release. The base path
-must not contain the template's archive output folder.
+The **Folder preview** lists the matching folders and how many are already in use. Archive output
+folders count as used and never become releases.
 
 If matching folders without a release exist, choose what happens with them under **Existing folders**:
 
@@ -101,16 +106,15 @@ Pick a small test folder to check archives and uploads quickly. Click **Create s
 
 **FTP/FTPS server:**
 
-1. Select a remote source, or click **Add remote source** and enter your server details.
-2. Click **Test connection**.
-3. Click **Create remote automation**. In the dialog, choose the remote folder to watch and the local
-   download folder.
+1. Without an active remote source, click **Add remote source** and enter your server details.
+2. Click **Create remote automation**. In the dialog, choose the remote source, the remote folder to
+   watch, and the local download folder.
 
 Existing folders on the server are ignored. See [FTP / FTPS Downloads](/Bearcat/remote-downloads/)
 for the settings.
 
-After the source is created, Bearcat shows when new folders are picked up. **Open release** opens the
-test release. **Go to activity** opens the start page.
+After the source is created, Bearcat confirms it and shows the upload result of the test release.
+**Open release** opens the test release. **Go to activity** opens the start page.
 
 ## What happens next
 

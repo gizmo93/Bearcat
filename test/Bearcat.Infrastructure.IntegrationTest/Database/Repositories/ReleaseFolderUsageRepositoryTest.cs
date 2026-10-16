@@ -58,7 +58,7 @@ public class ReleaseFolderUsageRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync_PathIsArchiveFilesBasePathOfManagedRelease_ReturnsNoPath()
+    public async Task GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync_PathsAreArchiveOutputFoldersOfManagedReleaseAndReleaseTemplate_ReturnsPaths()
     {
         // Arrange
         AddRelease(
@@ -67,17 +67,32 @@ public class ReleaseFolderUsageRepositoryTest(DatabaseProvider databaseProvider)
             releaseFolderPath: "/releases/Managed",
             archiveFilesBasePath: "/archives/Managed"
         );
+        DbContext.ArchiveConfigTemplates.Add(
+            new ArchiveConfigTemplate
+            {
+                ReleaseTemplate = new ReleaseTemplate
+                {
+                    Name = "Template",
+                    ReleaseType = ReleaseType.Managed,
+                    ReleaseContentType = ReleaseContentType.Movie,
+                    ReleaseGroup = new ReleaseGroup { Name = "Template group" },
+                },
+                Name = "Template archive",
+                ArchiveFilesBasePath = "/archives/Template",
+                ArchiverName = "zip",
+            }
+        );
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
-            ["/archives/Managed"],
+            ["/archives/Managed", "/archives/Template", "/archives/Unused"],
             CancellationToken.None
         );
 
         // Assert
-        result.ShouldBeEmpty();
+        result.ShouldBe(["/archives/Managed", "/archives/Template"], ignoreOrder: true);
     }
 
     private void AddRelease(

@@ -11,6 +11,23 @@ public class FirstStartArchiveOutputFolderService(
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
 )
 {
+    private const string SuggestedArchiveOutputFolderName = "bearcat-archives";
+
+    public string GetSuggestedArchiveOutputFolderPath()
+    {
+        var firstExistingWritableWorkingDirectory = workingDirectoriesConfig
+            .Value.GetWorkingDirectories()
+            .First(workingDirectory =>
+                fileSystemService.DirectoryExists(workingDirectory)
+                && fileSystemService.IsDirectoryWritable(workingDirectory)
+            );
+
+        return Path.Combine(
+            firstExistingWritableWorkingDirectory,
+            SuggestedArchiveOutputFolderName
+        );
+    }
+
     public void CreateArchiveOutputFolder(string folderPath)
     {
         var fullFolderPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folderPath));

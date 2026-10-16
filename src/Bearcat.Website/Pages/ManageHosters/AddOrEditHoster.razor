@@ -10,13 +10,17 @@
                               Label="@L["Name"]"
                               Placeholder="@L["ConfigurationNamePlaceholder"]" />
 
-            <BbFormFieldSelect TValue="string"
-                               @bind-Value="FormModel.FullClassName"
-                               @bind-Value:after="OnSelectedHosterChanged"
-                               Label="@L["Hoster"]"
-                               Disabled="FormModel.IsEdit"
-                               Placeholder="@L["SelectHoster"]"
-                               Options="hosterReadModels.Select(hoster => new SelectOption<string>(hoster.HosterClassName, hoster.Name))" />
+            <BbFormFieldCombobox TValue="string"
+                                 @bind-Value="FormModel.FullClassName"
+                                 @bind-Value:after="OnSelectedHosterChanged"
+                                 Label="@L["Hoster"]"
+                                 Disabled="FormModel.IsEdit"
+                                 Placeholder="@L["SelectHoster"]"
+                                 SearchPlaceholder="@L["Search"]"
+                                 EmptyMessage="@L["NoHosterFound"]"
+                                 MatchTriggerWidth="true"
+                                 InputClass="w-full"
+                                 Options="hosterReadModels.Select(hoster => new SelectOption<string>(hoster.HosterClassName, hoster.Name))" />
 
             @if (selectedHoster is not null)
             {

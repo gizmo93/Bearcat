@@ -160,13 +160,11 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
             .Where(entry => entry.Key is not NameKey and not MaxConnectionsKey)
             .ToDictionary(entry => entry.Key, entry => entry.Value);
 
-        int registrationId;
-
         try
         {
             if (Registration is null)
             {
-                registrationId = await operationRunner.RunAsync(
+                await operationRunner.RunAsync(
                     (RemoteSourceRegistrationService service) =>
                         service.CreateAsync(
                             name,
@@ -178,10 +176,9 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
             }
             else
             {
-                registrationId = Registration.Id;
                 await operationRunner.RunAsync(
                     (RemoteSourceRegistrationService service) =>
-                        service.UpdateAsync(registrationId, name, configValues, maxConnections)
+                        service.UpdateAsync(Registration.Id, name, configValues, maxConnections)
                 );
             }
         }
@@ -206,7 +203,7 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
             isSaving = false;
         }
 
-        await DialogRef.CloseAsync(DialogResult.Ok(registrationId));
+        await DialogRef.CloseAsync(DialogResult.Ok());
     }
 
     private async Task CancelAsync()

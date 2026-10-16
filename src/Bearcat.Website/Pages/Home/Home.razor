@@ -15,10 +15,10 @@
             </ContentBelowHeader>
         </RunningProcesses>
 
-        @if (ShowsOptionalSetupChecklist)
+        @if (ShowsOptionalSetupChecklist())
         {
-            <FirstStartOptionalSetupChecklist OptionalSetupStatus="setupStatus.OptionalSetupStatus"
-                                              OnHide="HideOptionalSetupChecklistAsync" />
+            <FirstStartOptionalSetupChecklist SetupStatus="setupStatus"
+                                              OnHide="browserState.HideOptionalStepsAsync" />
         }
     </div>
 }

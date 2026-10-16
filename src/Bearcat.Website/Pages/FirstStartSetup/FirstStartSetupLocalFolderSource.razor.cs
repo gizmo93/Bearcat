@@ -1,8 +1,9 @@
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
-using Bearcat.Domain.UseCases.FirstStartSetup.Sources;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -21,95 +22,70 @@ public partial class FirstStartSetupLocalFolderSource(
 ) : ComponentBase
 {
     [Parameter]
-    [EditorRequired]
-    public ReleaseTemplateSummaryReadModel ReleaseTemplate { get; set; } = null!;
+    public int ReleaseTemplateId { get; set; }
 
     [Parameter]
     public EventCallback OnBack { get; set; }
 
     [Parameter]
-    public EventCallback<FirstStartSetupCreatedSource> OnSourceCreated { get; set; }
+    public EventCallback OnSourceCreated { get; set; }
 
     private readonly FirstStartSetupLocalFolderSourceFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private ReleaseFolderAutomationPreview? preview;
-    private List<ReleaseFolderAutomationPreviewFolder> unusedFolders = [];
     private List<SelectOption<string>> unusedFolderOptions = [];
+    private bool isManagedReleaseTemplate;
     private bool isSubmitting;
+    private bool isSourceCreated;
+    private int? testReleaseId;
+    private InitialUploadCreationForReleaseResult? testReleaseUploadCreationResult;
 
-    private bool IsManagedReleaseTemplate => ReleaseTemplate.ReleaseType is ReleaseType.Managed;
+    private bool ExtractsArchivesBeforeReleaseCreation =>
+        isManagedReleaseTemplate && formModel.ExtractArchivesBeforeReleaseCreation;
 
-    private bool CanUploadTestFolder =>
-        !(IsManagedReleaseTemplate && formModel.ExtractArchivesBeforeReleaseCreation);
+    private bool CanUploadTestFolder => !ExtractsArchivesBeforeReleaseCreation;
 
-    private FirstStartExistingFolderHandling SelectedExistingFolderHandling
+    private FirstStartSetupExistingFolderHandling SelectedExistingFolderHandling
     {
         get
         {
-            if (unusedFolders.Count == 0)
-            {
-                return FirstStartExistingFolderHandling.IgnoreExisting;
-            }
-
-            if (
+            var isUnavailableTestUpload =
                 !CanUploadTestFolder
                 && formModel.ExistingFolderHandling
-                    is FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers
-            )
-            {
-                return FirstStartExistingFolderHandling.IgnoreExisting;
-            }
+                    is FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers;
 
-            return formModel.ExistingFolderHandling;
+            return unusedFolderOptions.Count == 0 || isUnavailableTestUpload
+                ? FirstStartSetupExistingFolderHandling.IgnoreExisting
+                : formModel.ExistingFolderHandling;
         }
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(formModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
-        editContext.OnFieldChanged += (_, args) => messageStore.Clear(args.FieldIdentifier);
+
+        var releaseTemplate = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) =>
+                repository.GetDetailAsync(ReleaseTemplateId)
+        );
+        isManagedReleaseTemplate = releaseTemplate!.ReleaseType is ReleaseType.Managed;
     }
 
-    private void HandlePreviewLoaded(ReleaseFolderAutomationPreview? loadedPreview)
+    private void HandlePreviewLoaded(ReleaseFolderAutomationPreview? preview)
     {
-        preview = loadedPreview;
-        unusedFolders =
-            loadedPreview
+        unusedFolderOptions =
+            preview
                 ?.MatchingFolders.Where(folder => !folder.IsUsedByReleaseArchiveOrRemoteDownload)
+                .Select(folder => new SelectOption<string>(folder.FolderPath, folder.FolderName))
                 .ToList()
             ?? [];
-        unusedFolderOptions = unusedFolders
-            .Select(folder => new SelectOption<string>(folder.FolderPath, folder.FolderName))
-            .ToList();
 
-        if (unusedFolders.All(folder => folder.FolderPath != formModel.TestFolderPath))
+        if (unusedFolderOptions.All(option => option.Value != formModel.TestFolderPath))
         {
-            formModel.TestFolderPath = unusedFolders.FirstOrDefault()?.FolderPath;
+            formModel.TestFolderPath = unusedFolderOptions.FirstOrDefault()?.Value;
         }
-    }
-
-    private string GetChoiceClass(FirstStartExistingFolderHandling existingFolderHandling)
-    {
-        return FirstStartSetupChoiceCardStyle.GetClass(
-            SelectedExistingFolderHandling == existingFolderHandling
-        );
-    }
-
-    private string IsCheckedAttributeValue(FirstStartExistingFolderHandling existingFolderHandling)
-    {
-        return SelectedExistingFolderHandling == existingFolderHandling ? "true" : "false";
-    }
-
-    private void SelectExistingFolderHandling(
-        FirstStartExistingFolderHandling existingFolderHandling
-    )
-    {
-        formModel.ExistingFolderHandling = existingFolderHandling;
-        messageStore.Clear(editContext.Field(nameof(formModel.TestFolderPath)));
-        editContext.NotifyValidationStateChanged();
     }
 
     private async Task OpenFolderDialogAsync()
@@ -132,68 +108,67 @@ public partial class FirstStartSetupLocalFolderSource(
             }
         );
 
-        if (result.Cancelled)
-        {
-            return;
-        }
-
-        var selectedPath = result.GetData<string>();
+        var selectedPath = result.Cancelled ? null : result.GetData<string>();
         if (!string.IsNullOrWhiteSpace(selectedPath))
         {
             formModel.BasePath = selectedPath;
-            messageStore.Clear(editContext.Field(nameof(formModel.BasePath)));
-            editContext.NotifyValidationStateChanged();
         }
     }
 
     private async Task SubmitAsync()
     {
         var existingFolderHandling = SelectedExistingFolderHandling;
-        var input = new FirstStartFolderSourceInput(
-            BasePath: formModel.BasePath,
-            FolderNamePattern: formModel.FolderNamePattern,
-            ReleaseTemplateId: ReleaseTemplate.ReleaseTemplateId,
-            ExtractArchivesBeforeReleaseCreation: IsManagedReleaseTemplate
-                && formModel.ExtractArchivesBeforeReleaseCreation,
-            ExistingFolderHandling: existingFolderHandling,
-            TestFolderPath: existingFolderHandling
-            is FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers
-                ? formModel.TestFolderPath
-                : null
-        );
-
         isSubmitting = true;
-        FirstStartFolderSourceResult result;
 
         try
         {
-            result = await operationRunner.RunAsync(
-                (FirstStartFolderSourceService service) => service.CreateFolderSourceAsync(input)
+            if (
+                existingFolderHandling
+                is FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers
+            )
+            {
+                testReleaseId = await operationRunner.RunAsync(
+                    (ReleaseService service) =>
+                        service.CreateFromTemplateAsync(
+                            ReleaseTemplateId,
+                            formModel.TestFolderPath!,
+                            name: null,
+                            primaryLanguageCode: null
+                        )
+                );
+            }
+
+            await operationRunner.RunAsync(
+                (ReleaseFolderAutomationService service) =>
+                    service.CreateAsync(
+                        formModel.BasePath,
+                        formModel.FolderNamePattern,
+                        ReleaseTemplateId,
+                        primaryLanguageCode: null,
+                        extractArchivesBeforeReleaseCreation: ExtractsArchivesBeforeReleaseCreation,
+                        isEnabled: true,
+                        ignoreExistingOnFirstScan: existingFolderHandling
+                            is not FirstStartSetupExistingFolderHandling.ImportExisting
+                    )
             );
-        }
-        catch (ArchiveOutputFolderInsideSourceFolderException exception)
-        {
-            messageStore.Add(
-                () => formModel.BasePath,
-                L["ArchiveOutputFolderInsideSourceFolder", exception.ArchiveOutputFolderPath]
-            );
-            editContext.NotifyValidationStateChanged();
-            return;
+
+            if (testReleaseId is { } releaseId)
+            {
+                testReleaseUploadCreationResult = await operationRunner.RunAsync(
+                    (UploadCreationService service) =>
+                        service.CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync(
+                            releaseId
+                        )
+                );
+            }
         }
         finally
         {
             isSubmitting = false;
         }
 
-        await OnSourceCreated.InvokeAsync(
-            new FirstStartSetupCreatedSource(
-                FirstStartSetupSourceKind.LocalFolder,
-                RemoteSourceAutomationName: null,
-                FolderPath: formModel.BasePath.Trim(),
-                result.TestReleaseId,
-                result.TestReleaseInitialUploadCreationResult
-            )
-        );
+        isSourceCreated = true;
+        await OnSourceCreated.InvokeAsync();
     }
 
     private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
@@ -203,22 +178,6 @@ public partial class FirstStartSetupLocalFolderSource(
         if (string.IsNullOrWhiteSpace(formModel.BasePath))
         {
             messageStore.Add(() => formModel.BasePath, L["BasePathRequired"]);
-        }
-        else if (preview is not { BasePathExists: true })
-        {
-            messageStore.Add(() => formModel.BasePath, L["ReleaseFolderPreviewBasePathMissing"]);
-        }
-
-        if (
-            SelectedExistingFolderHandling
-                is FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers
-            && formModel.TestFolderPath is null
-        )
-        {
-            messageStore.Add(
-                () => formModel.TestFolderPath!,
-                L["FirstStartSetupSelectTestFolderRequired"]
-            );
         }
     }
 }

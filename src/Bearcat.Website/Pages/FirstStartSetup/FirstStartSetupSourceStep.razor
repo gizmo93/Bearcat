@@ -4,18 +4,7 @@
         <p class="text-sm text-muted-foreground">@L["FirstStartSetupSourceDescription"]</p>
     </div>
 
-    @if (isLoading)
-    {
-        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-            <BbSpinner Size="SpinnerSize.Small" />
-            <span>@L["Loading"]</span>
-        </div>
-    }
-    else if (createdSource is not null)
-    {
-        <FirstStartSetupSourceCreatedSummary CreatedSource="createdSource" OnBack="OnBack" />
-    }
-    else if (releaseTemplates.Count == 0)
+    @if (ReleaseTemplateId is not { } releaseTemplateId)
     {
         <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
             <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
@@ -26,65 +15,45 @@
     }
     else
     {
-        @if (existingSourceCount > 0)
+        @if (existingSourceNames.Count > 0)
         {
-            <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
-                <span>@L["FirstStartSetupExistingSources", existingSourceCount]</span>
+            <FirstStartSetupExistingNotice Text="@L["FirstStartSetupExistingSources", string.Join(", ", existingSourceNames)]">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/release-folder-automations">
+                    @L["ReleaseFolderAutomations"]
+                </BbButton>
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/remote-source-automations">
+                    @L["RemoteSourceAutomations"]
+                </BbButton>
+            </FirstStartSetupExistingNotice>
+        }
+
+        @if (!isSourceCreated)
+        {
+            <div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="@L["FirstStartSetupSourceKind"]">
+                <FirstStartSetupChoiceCard IconName="folder"
+                                           Title="@L["FirstStartSetupLocalFolderSource"]"
+                                           Description="@L["FirstStartSetupLocalFolderSourceDescription"]"
+                                           IsSelected="!usesRemoteSource"
+                                           OnSelected="@(() => usesRemoteSource = false)" />
+                <FirstStartSetupChoiceCard IconName="server"
+                                           Title="@L["FirstStartSetupRemoteSource"]"
+                                           Description="@L["FirstStartSetupRemoteSourceDescription"]"
+                                           IsSelected="usesRemoteSource"
+                                           OnSelected="@(() => usesRemoteSource = true)" />
             </div>
         }
 
-        @if (showsReleaseTemplateSelection)
+        @if (usesRemoteSource)
         {
-            <BbFormFieldSelect TValue="int?"
-                               Value="WizardState.ReleaseTemplateId"
-                               ValueChanged="SelectReleaseTemplate"
-                               Label="@L["ReleaseTemplate"]"
-                               Placeholder="@L["FirstStartSetupSelectReleaseTemplate"]"
-                               Options="releaseTemplateOptions" />
-        }
-
-        <div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="@L["FirstStartSetupSourceKind"]">
-            <button type="button"
-                    role="radio"
-                    aria-checked="@IsCheckedAttributeValue(FirstStartSetupSourceKind.LocalFolder)"
-                    class="@GetChoiceClass(FirstStartSetupSourceKind.LocalFolder)"
-                    @onclick="() => SelectSourceKind(FirstStartSetupSourceKind.LocalFolder)">
-                <span class="flex items-center gap-2 text-sm font-medium">
-                    <LucideIcon Name="folder" class="h-4 w-4 text-muted-foreground" />
-                    @L["FirstStartSetupLocalFolderSource"]
-                </span>
-                <span class="text-xs text-muted-foreground">@L["FirstStartSetupLocalFolderSourceDescription"]</span>
-            </button>
-            <button type="button"
-                    role="radio"
-                    aria-checked="@IsCheckedAttributeValue(FirstStartSetupSourceKind.RemoteSource)"
-                    class="@GetChoiceClass(FirstStartSetupSourceKind.RemoteSource)"
-                    @onclick="() => SelectSourceKind(FirstStartSetupSourceKind.RemoteSource)">
-                <span class="flex items-center gap-2 text-sm font-medium">
-                    <LucideIcon Name="server" class="h-4 w-4 text-muted-foreground" />
-                    @L["FirstStartSetupRemoteSource"]
-                </span>
-                <span class="text-xs text-muted-foreground">@L["FirstStartSetupRemoteSourceDescription"]</span>
-            </button>
-        </div>
-
-        @if (SelectedReleaseTemplate is null)
-        {
-            <FirstStartSetupStepNavigation OnBack="OnBack" />
-        }
-        else if (sourceKind is FirstStartSetupSourceKind.LocalFolder)
-        {
-            <FirstStartSetupLocalFolderSource @key="SelectedReleaseTemplate.ReleaseTemplateId"
-                                              ReleaseTemplate="SelectedReleaseTemplate"
-                                              OnBack="OnBack"
-                                              OnSourceCreated="HandleSourceCreatedAsync" />
+            <FirstStartSetupRemoteSource ReleaseTemplateId="releaseTemplateId"
+                                         OnBack="OnBack"
+                                         OnSourceCreated="HandleSourceCreatedAsync" />
         }
         else
         {
-            <FirstStartSetupRemoteSource ReleaseTemplateId="SelectedReleaseTemplate.ReleaseTemplateId"
-                                         OnBack="OnBack"
-                                         OnSourceCreated="HandleSourceCreatedAsync" />
+            <FirstStartSetupLocalFolderSource ReleaseTemplateId="releaseTemplateId"
+                                              OnBack="OnBack"
+                                              OnSourceCreated="HandleSourceCreatedAsync" />
         }
     }
 </div>

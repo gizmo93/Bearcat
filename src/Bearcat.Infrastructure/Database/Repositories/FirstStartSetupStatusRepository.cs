@@ -104,24 +104,22 @@ public class FirstStartSetupStatusRepository(IBearcatReadDbContext dbRead)
                 ReleaseFolderAutomationMarker
             ) || existingEntityMarkers.Contains(RemoteSourceAutomationMarker),
             HasRelease: existingEntityMarkers.Contains(ReleaseMarker),
-            OptionalSetupStatus: new FirstStartOptionalSetupStatus(
-                HasNfoDatabaseOrMediaDatabaseRegistration: existingEntityMarkers.Contains(
-                    NfoDatabaseRegistrationMarker
-                ) || existingEntityMarkers.Contains(MediaDatabaseRegistrationMarker),
-                HasImageHosterRegistration: existingEntityMarkers.Contains(
-                    ImageHosterRegistrationMarker
-                ),
-                HasLinkCrypterRegistration: existingEntityMarkers.Contains(
-                    LinkCrypterRegistrationMarker
-                ),
-                HasConnectedTelegramConfiguration: existingEntityMarkers.Contains(
-                    ConnectedTelegramConfigurationMarker
-                ),
-                HasDistributionSiteRegistration: existingEntityMarkers.Contains(
-                    DistributionSiteRegistrationMarker
-                ),
-                HasProxyServer: existingEntityMarkers.Contains(ProxyServerMarker)
-            )
+            HasNfoDatabaseOrMediaDatabaseRegistration: existingEntityMarkers.Contains(
+                NfoDatabaseRegistrationMarker
+            ) || existingEntityMarkers.Contains(MediaDatabaseRegistrationMarker),
+            HasImageHosterRegistration: existingEntityMarkers.Contains(
+                ImageHosterRegistrationMarker
+            ),
+            HasLinkCrypterRegistration: existingEntityMarkers.Contains(
+                LinkCrypterRegistrationMarker
+            ),
+            HasConnectedTelegramConfiguration: existingEntityMarkers.Contains(
+                ConnectedTelegramConfigurationMarker
+            ),
+            HasDistributionSiteRegistration: existingEntityMarkers.Contains(
+                DistributionSiteRegistrationMarker
+            ),
+            HasProxyServer: existingEntityMarkers.Contains(ProxyServerMarker)
         );
     }
 }

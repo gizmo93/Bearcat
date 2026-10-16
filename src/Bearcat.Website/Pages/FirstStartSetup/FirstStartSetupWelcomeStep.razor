@@ -2,19 +2,12 @@
     <h2 class="text-xl font-semibold tracking-tight">@L["FirstStartSetupWelcomeTitle"]</h2>
 
     <ol class="flex flex-wrap items-center gap-2" aria-label="@L["FirstStartSetupLifecycle"]">
-        @foreach (var lifecycleStage in lifecycleStages)
-        {
-            <li class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-sm">
-                    <LucideIcon Name="@lifecycleStage.IconName" class="h-4 w-4 text-muted-foreground" />
-                    @lifecycleStage.Label
-                </span>
-                @if (lifecycleStage != lifecycleStages.Last())
-                {
-                    <LucideIcon Name="arrow-right" class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                }
-            </li>
-        }
+        @LifecycleStage("folder", L["Folder"], isLastStage: false)
+        @LifecycleStage("package", L["Release"], isLastStage: false)
+        @LifecycleStage("archive", L["Archive"], isLastStage: false)
+        @LifecycleStage("upload", L["Upload"], isLastStage: false)
+        @LifecycleStage("link", L["FirstStartSetupLinkCheck"], isLastStage: false)
+        @LifecycleStage("refresh-cw", L["Reupload"], isLastStage: true)
     </ol>
 
     <div class="space-y-1 text-sm text-muted-foreground">
@@ -32,3 +25,17 @@
         </BbButton>
     </div>
 </div>
+
+@code {
+    private static RenderFragment LifecycleStage(string iconName, string label, bool isLastStage) =>
+        @<li class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-sm">
+                <LucideIcon Name="@iconName" class="h-4 w-4 text-muted-foreground" />
+                @label
+            </span>
+            @if (!isLastStage)
+            {
+                <LucideIcon Name="arrow-right" class="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            }
+        </li>;
+}

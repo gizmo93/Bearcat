@@ -121,7 +121,7 @@ public class ArchiveConfigTemplateService(IReleaseTemplateWriteRepository writeR
         );
     }
 
-    internal static void ApplySettings(
+    private static void ApplySettings(
         ArchiveConfigTemplate archiveConfigTemplate,
         ArchiveConfigTemplateSettings settings,
         IReadOnlyList<AdditionalArchiveContent> additionalArchiveContents

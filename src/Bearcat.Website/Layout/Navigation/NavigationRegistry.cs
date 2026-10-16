@@ -81,9 +81,9 @@ public static class NavigationRegistry
                     "monitor-cog",
                     [
                         Entry("Configurations", "/configurations", "settings"),
-                        Entry("FirstStartSetup", "/setup", "list-checks"),
                         Entry("TelegramNotifications", "/telegram", "send"),
                         Entry("ProxyServers", "/proxy-servers", "network"),
+                        Entry("FirstStartSetup", "/setup", "list-checks"),
                     ]
                 ),
             ]

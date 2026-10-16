@@ -1,123 +1,113 @@
-@using Bearcat.Domain.UseCases.FirstStartSetup.Sources
 @using Bearcat.Website.Pages.ManageReleaseFolderAutomations
 
-<EditForm EditContext="editContext" OnValidSubmit="SubmitAsync">
-    <div class="space-y-6">
-        <div class="space-y-4">
-            <div class="space-y-2">
-                <label class="text-sm font-medium">@L["ReleaseBasePath"]</label>
-                <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                    <BbInput @bind-Value="formModel.BasePath"
-                             UpdateTiming="UpdateTiming.Debounced"
-                             class="sm:flex-1" />
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Small"
-                              Class="justify-center whitespace-nowrap"
-                              AriaLabel="@L["BrowseReleaseFolders"]"
-                              OnClick="OpenFolderDialogAsync">
-                        <LucideIcon Name="folder-open" class="h-4 w-4" />
-                        @L["Browse"]
-                    </BbButton>
+@if (isSourceCreated)
+{
+    <FirstStartSetupSourceCreatedSummary TestReleaseId="testReleaseId"
+                                         TestReleaseUploadCreationResult="testReleaseUploadCreationResult"
+                                         OnBack="OnBack" />
+}
+else
+{
+    <EditForm EditContext="editContext" OnValidSubmit="SubmitAsync">
+        <div class="space-y-6">
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">@L["ReleaseBasePath"]</label>
+                    <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                        <BbInput @bind-Value="formModel.BasePath"
+                                 UpdateTiming="UpdateTiming.Debounced"
+                                 class="sm:flex-1" />
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Class="justify-center whitespace-nowrap"
+                                  AriaLabel="@L["BrowseReleaseFolders"]"
+                                  OnClick="OpenFolderDialogAsync">
+                            <LucideIcon Name="folder-open" class="h-4 w-4" />
+                            @L["Browse"]
+                        </BbButton>
+                    </div>
+                    <p class="text-xs text-muted-foreground">@L["FirstStartSetupLocalFolderBasePathHelp"]</p>
+                    <ValidationMessage For="() => formModel.BasePath" class="text-sm text-destructive" />
                 </div>
-                <p class="text-xs text-muted-foreground">@L["FirstStartSetupLocalFolderBasePathHelp"]</p>
-                <ValidationMessage For="() => formModel.BasePath" class="text-sm text-destructive" />
+
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="formModel.FolderNamePattern"
+                                  UpdateTiming="UpdateTiming.Debounced"
+                                  Label="@L["FolderNamePattern"]"
+                                  Placeholder="@L["FolderNamePatternPlaceholder"]"
+                                  HelperText="@L["FolderNamePatternHelp"]" />
+
+                @if (isManagedReleaseTemplate)
+                {
+                    <BbFormFieldSwitch @bind-Checked="formModel.ExtractArchivesBeforeReleaseCreation"
+                                       Label="@L["ExtractArchivesBeforeReleaseCreation"]"
+                                       HelperText="@L["ReleaseFolderExtractArchivesBeforeReleaseCreationHelp"]" />
+                }
+
+                <ReleaseFolderAutomationPreviewPanel BasePath="@formModel.BasePath"
+                                                     FolderNamePattern="@formModel.FolderNamePattern"
+                                                     OnPreviewLoaded="HandlePreviewLoaded" />
             </div>
 
-            <BbFormFieldInput TValue="string"
-                              @bind-Value="formModel.FolderNamePattern"
-                              UpdateTiming="UpdateTiming.Debounced"
-                              Label="@L["FolderNamePattern"]"
-                              Placeholder="@L["FolderNamePatternPlaceholder"]"
-                              HelperText="@L["FolderNamePatternHelp"]" />
-
-            @if (IsManagedReleaseTemplate)
+            @if (unusedFolderOptions.Count > 0)
             {
-                <BbFormFieldSwitch @bind-Checked="formModel.ExtractArchivesBeforeReleaseCreation"
-                                   Label="@L["ExtractArchivesBeforeReleaseCreation"]"
-                                   HelperText="@L["ReleaseFolderExtractArchivesBeforeReleaseCreationHelp"]" />
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <h3 class="text-sm font-semibold">@L["FirstStartSetupExistingFolders"]</h3>
+                        <p class="text-xs text-muted-foreground">@L["FirstStartSetupExistingFoldersDescription", unusedFolderOptions.Count]</p>
+                    </div>
+
+                    <div class="@(CanUploadTestFolder ? "grid gap-2 sm:grid-cols-3" : "grid gap-2 sm:grid-cols-2")" role="radiogroup" aria-label="@L["FirstStartSetupExistingFolders"]">
+                        @if (CanUploadTestFolder)
+                        {
+                            <FirstStartSetupChoiceCard IconName="flask-conical"
+                                                       Title="@L["FirstStartSetupUploadTestFolder"]"
+                                                       Description="@L["FirstStartSetupUploadTestFolderDescription"]"
+                                                       IsSelected="@(SelectedExistingFolderHandling is FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers)"
+                                                       OnSelected="@(() => formModel.ExistingFolderHandling = FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers)" />
+                        }
+                        <FirstStartSetupChoiceCard IconName="eye-off"
+                                                   Title="@L["FirstStartSetupIgnoreExistingFolders"]"
+                                                   Description="@L["FirstStartSetupIgnoreExistingFoldersDescription"]"
+                                                   IsSelected="@(SelectedExistingFolderHandling is FirstStartSetupExistingFolderHandling.IgnoreExisting)"
+                                                   OnSelected="@(() => formModel.ExistingFolderHandling = FirstStartSetupExistingFolderHandling.IgnoreExisting)" />
+                        <FirstStartSetupChoiceCard IconName="folder-input"
+                                                   Title="@L["FirstStartSetupImportExistingFolders"]"
+                                                   Description="@L["FirstStartSetupImportExistingFoldersDescription"]"
+                                                   IsSelected="@(SelectedExistingFolderHandling is FirstStartSetupExistingFolderHandling.ImportExisting)"
+                                                   OnSelected="@(() => formModel.ExistingFolderHandling = FirstStartSetupExistingFolderHandling.ImportExisting)" />
+                    </div>
+
+                    @if (!CanUploadTestFolder)
+                    {
+                        <p class="text-xs text-muted-foreground">@L["FirstStartSetupTestFolderUnavailableWithExtraction"]</p>
+                    }
+
+                    @if (SelectedExistingFolderHandling is FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers)
+                    {
+                        <BbFormFieldSelect TValue="string"
+                                           @bind-Value="formModel.TestFolderPath"
+                                           Label="@L["FirstStartSetupTestFolder"]"
+                                           Placeholder="@L["FirstStartSetupSelectTestFolder"]"
+                                           HelperText="@L["FirstStartSetupTestFolderHelp"]"
+                                           Options="unusedFolderOptions" />
+                    }
+                    else if (SelectedExistingFolderHandling is FirstStartSetupExistingFolderHandling.ImportExisting)
+                    {
+                        <div class="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                            <LucideIcon Name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>@L["FirstStartSetupImportExistingFoldersWarning", unusedFolderOptions.Count]</span>
+                        </div>
+                    }
+                </div>
             }
 
-            <ReleaseFolderAutomationPreviewPanel BasePath="@formModel.BasePath"
-                                                 FolderNamePattern="@formModel.FolderNamePattern"
-                                                 OnPreviewLoaded="HandlePreviewLoaded" />
+            <FirstStartSetupStepNavigation OnBack="OnBack">
+                <BbButton Type="ButtonType.Submit" Loading="isSubmitting">
+                    <LucideIcon Name="folder-plus" class="h-4 w-4" />
+                    @L["FirstStartSetupCreateSource"]
+                </BbButton>
+            </FirstStartSetupStepNavigation>
         </div>
-
-        @if (unusedFolders.Count > 0)
-        {
-            <div class="space-y-3">
-                <div class="space-y-1">
-                    <h3 class="text-sm font-semibold">@L["FirstStartSetupExistingFolders"]</h3>
-                    <p class="text-xs text-muted-foreground">@L["FirstStartSetupExistingFoldersDescription", unusedFolders.Count]</p>
-                </div>
-
-                <div class="@(CanUploadTestFolder ? "grid gap-2 sm:grid-cols-3" : "grid gap-2 sm:grid-cols-2")" role="radiogroup" aria-label="@L["FirstStartSetupExistingFolders"]">
-                    @if (CanUploadTestFolder)
-                    {
-                    <button type="button"
-                            role="radio"
-                            aria-checked="@IsCheckedAttributeValue(FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers)"
-                            class="@GetChoiceClass(FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers)"
-                            @onclick="() => SelectExistingFolderHandling(FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers)">
-                        <span class="flex items-center gap-2 text-sm font-medium">
-                            <LucideIcon Name="flask-conical" class="h-4 w-4 text-muted-foreground" />
-                            @L["FirstStartSetupUploadTestFolder"]
-                        </span>
-                        <span class="text-xs text-muted-foreground">@L["FirstStartSetupUploadTestFolderDescription"]</span>
-                    </button>
-                    }
-                    <button type="button"
-                            role="radio"
-                            aria-checked="@IsCheckedAttributeValue(FirstStartExistingFolderHandling.IgnoreExisting)"
-                            class="@GetChoiceClass(FirstStartExistingFolderHandling.IgnoreExisting)"
-                            @onclick="() => SelectExistingFolderHandling(FirstStartExistingFolderHandling.IgnoreExisting)">
-                        <span class="flex items-center gap-2 text-sm font-medium">
-                            <LucideIcon Name="eye-off" class="h-4 w-4 text-muted-foreground" />
-                            @L["FirstStartSetupIgnoreExistingFolders"]
-                        </span>
-                        <span class="text-xs text-muted-foreground">@L["FirstStartSetupIgnoreExistingFoldersDescription"]</span>
-                    </button>
-                    <button type="button"
-                            role="radio"
-                            aria-checked="@IsCheckedAttributeValue(FirstStartExistingFolderHandling.ImportExisting)"
-                            class="@GetChoiceClass(FirstStartExistingFolderHandling.ImportExisting)"
-                            @onclick="() => SelectExistingFolderHandling(FirstStartExistingFolderHandling.ImportExisting)">
-                        <span class="flex items-center gap-2 text-sm font-medium">
-                            <LucideIcon Name="folder-input" class="h-4 w-4 text-muted-foreground" />
-                            @L["FirstStartSetupImportExistingFolders"]
-                        </span>
-                        <span class="text-xs text-muted-foreground">@L["FirstStartSetupImportExistingFoldersDescription"]</span>
-                    </button>
-                </div>
-
-                @if (!CanUploadTestFolder)
-                {
-                    <p class="text-xs text-muted-foreground">@L["FirstStartSetupTestFolderUnavailableWithExtraction"]</p>
-                }
-
-                @if (SelectedExistingFolderHandling is FirstStartExistingFolderHandling.UploadTestFolderAndIgnoreOthers)
-                {
-                    <BbFormFieldSelect TValue="string"
-                                       @bind-Value="formModel.TestFolderPath"
-                                       Label="@L["FirstStartSetupTestFolder"]"
-                                       Placeholder="@L["FirstStartSetupSelectTestFolder"]"
-                                       HelperText="@L["FirstStartSetupTestFolderHelp"]"
-                                       Options="unusedFolderOptions" />
-                }
-                else if (SelectedExistingFolderHandling is FirstStartExistingFolderHandling.ImportExisting)
-                {
-                    <div class="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                        <LucideIcon Name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>@L["FirstStartSetupImportExistingFoldersWarning", unusedFolders.Count]</span>
-                    </div>
-                }
-            </div>
-        }
-
-        <FirstStartSetupStepNavigation OnBack="OnBack">
-            <BbButton Type="ButtonType.Submit" Loading="isSubmitting">
-                <LucideIcon Name="folder-plus" class="h-4 w-4" />
-                @L["FirstStartSetupCreateSource"]
-            </BbButton>
-        </FirstStartSetupStepNavigation>
-    </div>
-</EditForm>
+    </EditForm>
+}

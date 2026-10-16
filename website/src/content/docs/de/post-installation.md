@@ -61,19 +61,24 @@ Gibt es bereits Templates, wähle **Vorhandenes Template verwenden** oder **Neue
 
 | Feld | Standard |
 | --- | --- |
-| **Name der Releasegruppe** und **Name des Templates** | `Standard` |
-| **Automatische Reuploads** | Aus. Schalte es ein, um Offlineuploads nach **Stunden bis Reupload** zu ersetzen. |
+| **Releasegruppe** | `Default`, oder die erste Gruppe, wenn es `Default` nicht gibt |
+| **Name des Templates** | `Standard` |
 | **Archiver** | RAR |
 | **Teilgrösse (MB)** | Das kleinste Dateigrössenlimit der ausgewählten Hoster. `0` bedeutet keine Aufteilung, 7z braucht einen Wert grösser als `0`. |
 | **Archivpasswort** | Leer, kein Passwort |
 | **Archivausgabeordner** | `bearcat-archives` im ersten beschreibbaren Arbeitsverzeichnis |
+
+Die Einrichtung erstellt keine Releasegruppe. Unter **Releasegruppe** zeigt sie, ob die gewählte Gruppe
+Offlinelinks automatisch erneut hochlädt. Das änderst du unter **Releasegruppen**. Gibt es keine
+Releasegruppe, verlinkt der Schritt auf **Releasegruppen**, statt das Formular zu zeigen.
 
 Halte den Archivausgabeordner getrennt von deinen Quellordnern. Existiert er noch nicht, klicke auf
 **Ordner erstellen**. Klicke dann auf **Erstellen und weiter**.
 
 Bearcat erstellt ein Managed Template mit einer Archivkonfiguration und einer Uploadkonfiguration pro
 ausgewähltem Hoster. Ohne ausgewählten Hoster hat das Template keine Uploads. Hoster fügst du später unter
-**Releasetemplates** hinzu.
+**Releasetemplates** hinzu. Archive bekommen einen zufälligen Namen. Wenn du den Releasenamen verwenden willst,
+ändere die Archivkonfiguration unter **Releasetemplates**.
 
 ### Quelle
 
@@ -86,8 +91,8 @@ Eine Quelle ist der Ort, an dem neue Releases ankommen. Wähle **Lokaler Ordner*
 3. Liegen RAR- oder 7z-Archive in den Ordnern, aktiviere **Archive vor der Releaseerstellung entpacken**.
    Siehe [Archive vor der Releaseerstellung entpacken](/Bearcat/de/release-templates-and-automations/#archive-vor-der-releaseerstellung-entpacken).
 
-Die **Ordnervorschau** listet die passenden Ordner und zeigt, wie viele davon bereits ein Release haben. Der
-Basispfad darf den Archivausgabeordner des Templates nicht enthalten.
+Die **Ordnervorschau** listet die passenden Ordner und zeigt, wie viele davon bereits verwendet werden.
+Archivausgabeordner gelten als belegt und werden nie zu Releases.
 
 Gibt es passende Ordner ohne Release, wählst du unter **Vorhandene Ordner**, was mit ihnen passiert:
 
@@ -101,15 +106,14 @@ Wähle einen kleinen Testordner, um Archive und Uploads schnell zu prüfen. Klic
 
 **Server (FTP/FTPS):**
 
-1. Wähle eine Remotequelle aus oder klicke auf **Remotequelle hinzufügen** und gib deine Serverdaten ein.
-2. Klicke auf **Verbindung testen**.
-3. Klicke auf **Remoteautomatisierung anlegen**. Im Dialog wählst du den überwachten Remoteordner und den
-   lokalen Downloadordner.
+1. Gibt es keine aktive Remotequelle, klicke auf **Remotequelle hinzufügen** und gib deine Serverdaten ein.
+2. Klicke auf **Remoteautomatisierung anlegen**. Im Dialog wählst du die Remotequelle, den überwachten
+   Remoteordner und den lokalen Downloadordner.
 
 Vorhandene Ordner auf dem Server werden ignoriert. Die Einstellungen beschreibt [FTP/FTPS-Downloads](/Bearcat/de/remote-downloads/).
 
-Nach dem Anlegen der Quelle zeigt Bearcat, wann neue Ordner übernommen werden. **Release öffnen** öffnet das
-Testrelease. **Zur Aktivität** öffnet die Startseite.
+Nach dem Anlegen der Quelle bestätigt Bearcat sie und zeigt das Uploadergebnis des Testrelease.
+**Release öffnen** öffnet das Testrelease. **Zur Aktivität** öffnet die Startseite.
 
 ## Wie es weitergeht
 

@@ -27,6 +27,7 @@ public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
                 DownloadRequiresPremium: (h as IHosterWithDownload)?.DownloadRequiresPremium
                     ?? false
             ))
+            .OrderBy(hoster => hoster.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
