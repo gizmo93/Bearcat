@@ -48,6 +48,8 @@ Sobald mindestens ein Logintest erfolgreich war, kannst du auf **Weiter** klicke
 <details>
 <summary>Hostereinrichtung anzeigen</summary>
 
+![Hosterschritt mit erfolgreichem Login](../images/setup-hoster-step.png)
+
 ![Hosterkonto registrieren](../images/register-hoster.png)
 
 </details>
@@ -85,6 +87,13 @@ pro ausgewähltem Hoster. Hast du keinen Hoster ausgewählt, musst du die Upload
 Archive erhalten einen zufälligen Namen. Wenn du den Releasenamen verwenden möchtest, ändere die
 Archivkonfiguration unter **Releasetemplates**.
 
+<details>
+<summary>Templateschritt anzeigen</summary>
+
+![Schritt Releasegruppe und Template](../images/setup-template-step.png)
+
+</details>
+
 ### Quelle
 
 Eine Quelle legt fest, wo Bearcat nach neuen Releases sucht. Wähle **Lokaler Ordner** oder **Server (FTP/FTPS)**.
@@ -108,6 +117,13 @@ Unter **Vorhandene Ordner** wählst du, was mit passenden Ordnern passiert, die 
 | **Alle importieren** | Alle passenden Ordner ohne Release werden importiert und hochgeladen. |
 
 Wähle einen kleinen Testordner, um Archive und Uploads schnell zu prüfen. Klicke auf **Quelle anlegen**.
+
+<details>
+<summary>Quellenschritt anzeigen</summary>
+
+![Quellenschritt mit lokalem Ordner](../images/setup-source-step.png)
+
+</details>
 
 **Server (FTP/FTPS):**
 
@@ -152,6 +168,13 @@ Ein Banner auf der Startseite zeigt dir, ob noch Hoster, Releasetemplate oder Qu
 Sobald die Grundeinrichtung abgeschlossen ist, zeigt die Startseite **Optionale nächste Schritte**: Metadaten und NFOs,
 ein Bildhoster für Coverbilder, Linkcrypter, Telegrambenachrichtigungen, Forenposts und Proxyserver.
 Jeder Eintrag führt zu den passenden Einstellungen und wird nach der Einrichtung als erledigt markiert.
+
+<details>
+<summary>Optionale nächste Schritte anzeigen</summary>
+
+![Optionale nächste Schritte auf der Startseite](../images/start-page-optional-steps.png)
+
+</details>
 
 Mit **Ausblenden** blendest du die Liste und das Einrichtungsbanner in allen Browsern aus. Um beides wieder
 anzuzeigen, aktiviere **Assistent auf der Aktivitätsseite anzeigen** unter **Konfigurationen > Erste Einrichtung**.

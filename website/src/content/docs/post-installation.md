@@ -47,6 +47,8 @@ Once at least one login test succeeds, you can click **Next**.
 <details>
 <summary>Show hoster setup</summary>
 
+![Hoster step with a successful login](images/setup-hoster-step.png)
+
 ![Register a hoster account](images/register-hoster.png)
 
 </details>
@@ -81,6 +83,13 @@ selected hoster. If you have not selected a hoster, add the upload configuration
 
 Archives get a random name. To use the release name, edit the archive configuration under **Release templates**.
 
+<details>
+<summary>Show template step</summary>
+
+![Release group and template step](images/setup-template-step.png)
+
+</details>
+
 ### Source
 
 A source tells Bearcat where to look for new releases. Choose **Local folder** or **FTP/FTPS server**.
@@ -104,6 +113,13 @@ Under **Existing folders**, choose what to do with matching folders that do not 
 | **Import all** | All matching folders without a release are imported and uploaded. |
 
 Pick a small test folder to check archives and uploads quickly. Click **Create source**.
+
+<details>
+<summary>Show source step</summary>
+
+![Source step with a local folder](images/setup-source-step.png)
+
+</details>
 
 **FTP/FTPS server:**
 
@@ -147,6 +163,13 @@ Click **Continue setup** to return to the wizard.
 Once basic setup is complete, the start page shows **Optional next steps**: metadata and NFOs, an image
 hoster for cover images, link crypters, Telegram notifications, forum posting, and proxy servers.
 Each item links to the relevant settings and is marked as done once configured.
+
+<details>
+<summary>Show optional next steps</summary>
+
+![Optional next steps on the start page](images/start-page-optional-steps.png)
+
+</details>
 
 Click **Hide** to hide the list and setup banner in all browsers. To show them again, enable
 **Show assistant on activity page** under **Configurations > Initial Setup**.
