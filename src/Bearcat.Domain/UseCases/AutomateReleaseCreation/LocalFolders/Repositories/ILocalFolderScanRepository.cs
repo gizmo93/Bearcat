@@ -18,6 +18,13 @@ public interface ILocalFolderScanRepository
 
     void AddFolderObservation(ReleaseFolderObservation observation);
 
+    Task<IReadOnlyList<ReleaseFolderAutomationIgnoredFolder>> GetIgnoredFoldersAsync(
+        IReadOnlyList<int> releaseFolderAutomationIds,
+        CancellationToken cancellationToken = default
+    );
+
+    void AddIgnoredFolder(ReleaseFolderAutomationIgnoredFolder ignoredFolder);
+
     void RemoveFolderObservation(ReleaseFolderObservation observation);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

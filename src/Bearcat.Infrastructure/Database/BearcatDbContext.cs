@@ -106,6 +106,9 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; } = null!;
 
+    public DbSet<ReleaseFolderAutomationIgnoredFolder> ReleaseFolderAutomationIgnoredFolders { get; set; } =
+        null!;
+
     public DbSet<QualityProfile> QualityProfiles { get; set; } = null!;
 
     public DbSet<QualityCheckRule> QualityCheckRules { get; set; } = null!;

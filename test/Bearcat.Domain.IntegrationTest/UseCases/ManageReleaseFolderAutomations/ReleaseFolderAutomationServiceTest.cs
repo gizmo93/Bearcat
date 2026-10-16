@@ -37,6 +37,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             "de",
             true,
             true,
+            true,
             CancellationToken.None
         );
 
@@ -51,15 +52,17 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         automation.PrimaryLanguageCode.ShouldBe("de");
         automation.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         automation.IsEnabled.ShouldBeTrue();
+        automation.IgnoreExistingOnFirstScan.ShouldBeTrue();
+        automation.HasCompletedInitialScan.ShouldBeFalse();
     }
 
     [Test]
-    public async Task UpdateAsync_AutomationExists_UpdatesAutomation()
+    public async Task UpdateAsync_AutomationExists_UpdatesAutomationAndRestartsInitialScan()
     {
         // Arrange
         var firstTemplate = await AddReleaseTemplateAsync("First template");
         var secondTemplate = await AddReleaseTemplateAsync("Second template");
-        var automation = await AddAutomationAsync(firstTemplate.Id);
+        var automation = await AddAutomationAsync(firstTemplate.Id, hasCompletedInitialScan: true);
 
         // Act
         await service.UpdateAsync(
@@ -70,6 +73,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             "en",
             true,
             false,
+            true,
             CancellationToken.None
         );
 
@@ -82,6 +86,39 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         result.PrimaryLanguageCode.ShouldBe("en");
         result.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         result.IsEnabled.ShouldBeFalse();
+        result.IgnoreExistingOnFirstScan.ShouldBeTrue();
+        result.HasCompletedInitialScan.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateAsync_BasePathAndPatternUnchanged_KeepsCompletedInitialScan()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var automation = await AddAutomationAsync(
+            releaseTemplate.Id,
+            hasCompletedInitialScan: true
+        );
+
+        // Act
+        await service.UpdateAsync(
+            automation.Id,
+            " /tmp/releases ",
+            " ",
+            releaseTemplate.Id,
+            "en",
+            false,
+            true,
+            true,
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await CreateDbContext()
+            .ReleaseFolderAutomations.SingleAsync(a => a.Id == automation.Id);
+
+        result.HasCompletedInitialScan.ShouldBeTrue();
+        result.IgnoreExistingOnFirstScan.ShouldBeTrue();
     }
 
     [Test]
@@ -169,6 +206,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         highResolutionAutomation.FolderNamePattern = "*1080p*";
         highResolutionAutomation.PrimaryLanguageCode = "de";
         highResolutionAutomation.ExtractArchivesBeforeReleaseCreation = true;
+        highResolutionAutomation.IgnoreExistingOnFirstScan = true;
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
@@ -187,7 +225,8 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
                 ReleaseContentType: ReleaseContentType.Movie,
                 PrimaryLanguageCode: "de",
                 ExtractArchivesBeforeReleaseCreation: true,
-                IsEnabled: true
+                IsEnabled: true,
+                IgnoreExistingOnFirstScan: true
             ),
             new ReleaseFolderAutomationReadModel(
                 ReleaseFolderAutomationId: lowResolutionAutomation.Id,
@@ -199,7 +238,8 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
                 ReleaseContentType: ReleaseContentType.TvShowEpisode,
                 PrimaryLanguageCode: null,
                 ExtractArchivesBeforeReleaseCreation: false,
-                IsEnabled: false
+                IsEnabled: false,
+                IgnoreExistingOnFirstScan: false
             ),
             new ReleaseFolderAutomationReadModel(
                 ReleaseFolderAutomationId: otherBasePathAutomation.Id,
@@ -211,7 +251,8 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
                 ReleaseContentType: ReleaseContentType.Movie,
                 PrimaryLanguageCode: null,
                 ExtractArchivesBeforeReleaseCreation: false,
-                IsEnabled: true
+                IsEnabled: true,
+                IgnoreExistingOnFirstScan: false
             ),
         ]);
     }
@@ -239,7 +280,8 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
 
     private async Task<ReleaseFolderAutomation> AddAutomationAsync(
         int releaseTemplateId,
-        bool isEnabled = true
+        bool isEnabled = true,
+        bool hasCompletedInitialScan = false
     )
     {
         var automation = new ReleaseFolderAutomation
@@ -248,6 +290,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             FolderNamePattern = null,
             ReleaseTemplateId = releaseTemplateId,
             IsEnabled = isEnabled,
+            HasCompletedInitialScan = hasCompletedInitialScan,
         };
 
         DbContext.ReleaseFolderAutomations.Add(automation);

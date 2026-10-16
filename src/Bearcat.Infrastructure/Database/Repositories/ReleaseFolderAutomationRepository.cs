@@ -32,7 +32,8 @@ public class ReleaseFolderAutomationRepository(
                 a.ReleaseTemplate.ReleaseContentType,
                 a.PrimaryLanguageCode,
                 a.ExtractArchivesBeforeReleaseCreation,
-                a.IsEnabled
+                a.IsEnabled,
+                a.IgnoreExistingOnFirstScan
             ))
             .ToListAsync(cancellationToken);
     }
@@ -141,6 +142,23 @@ public class ReleaseFolderAutomationRepository(
     public void RemoveFolderObservation(ReleaseFolderObservation observation)
     {
         dbWrite.Remove(observation);
+    }
+
+    public async Task<IReadOnlyList<ReleaseFolderAutomationIgnoredFolder>> GetIgnoredFoldersAsync(
+        IReadOnlyList<int> releaseFolderAutomationIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ReleaseFolderAutomationIgnoredFolders.Where(ignoredFolder =>
+                releaseFolderAutomationIds.Contains(ignoredFolder.ReleaseFolderAutomationId)
+            )
+            .ToListAsync(cancellationToken);
+    }
+
+    public void AddIgnoredFolder(ReleaseFolderAutomationIgnoredFolder ignoredFolder)
+    {
+        dbWrite.Add(ignoredFolder);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

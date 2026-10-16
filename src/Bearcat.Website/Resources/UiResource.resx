@@ -1699,6 +1699,16 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Retry</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} will be processed again on the next folder scan.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Folder automation phases</value></data>
+  <data name="ReleaseFolderIgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Folders that already exist during the first scan are skipped. Only folders that appear afterwards become releases. Changing the base path or the folder name pattern starts a new first scan.</value></data>
+  <data name="ReleaseFolderPreview" xml:space="preserve"><value>Folder preview</value></data>
+  <data name="RefreshReleaseFolderPreview" xml:space="preserve"><value>Refresh folder preview</value></data>
+  <data name="ReleaseFolderPreviewBasePathMissing" xml:space="preserve"><value>The base path does not exist.</value></data>
+  <data name="ReleaseFolderPreviewNoMatchingFolders" xml:space="preserve"><value>No folders match.</value></data>
+  <data name="ReleaseFolderPreviewSummary" xml:space="preserve"><value>{0} folders match, {1} already have a release.</value></data>
+  <data name="ReleaseFolderPreviewIgnoredFolders" xml:space="preserve"><value>The first scan ignores the remaining {0} folders. Only folders added later become releases.</value></data>
+  <data name="ReleaseFolderPreviewFoldersBecomeReleases" xml:space="preserve"><value>{0} folders will become releases and be uploaded.</value></data>
+  <data name="ReleaseFolderPreviewHasRelease" xml:space="preserve"><value>Has release</value></data>
+  <data name="ReleaseFolderPreviewMoreFolders" xml:space="preserve"><value>And {0} more folders</value></data>
   <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archive storage folders</value></data>
   <data name="ArchiveStorageFolder" xml:space="preserve"><value>Storage folder</value></data>
   <data name="LocalWorkingCopy" xml:space="preserve"><value>local working copy</value></data>

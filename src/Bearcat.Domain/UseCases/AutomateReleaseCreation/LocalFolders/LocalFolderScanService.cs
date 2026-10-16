@@ -1,4 +1,3 @@
-using System.IO.Enumeration;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
@@ -9,7 +8,6 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
-using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -19,6 +17,7 @@ public class LocalFolderScanService(
     ILocalFolderScanRepository repository,
     IReleaseFolderUsageRepository releaseFolderUsageRepository,
     IFileSystemService fileSystemService,
+    ReleaseFolderCandidateFinder candidateFinder,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     ReleaseFolderVerificationAndExtractionService verificationAndExtractionService,
     TimeProvider timeProvider,
@@ -42,15 +41,28 @@ public class LocalFolderScanService(
             candidates,
             cancellationToken
         );
+        var ignoredFolders = await GetIgnoredFoldersAsync(automations, cancellationToken);
+
+        var localNow = timeProvider.GetLocalNow();
+
+        var hasChanges = IgnoreCandidatesOfAutomationsInInitialScan(
+            candidatesWithoutUsedFolder,
+            ignoredFolders,
+            localNow
+        );
+        hasChanges |= MarkInitialScanAsCompleted(automations);
+
+        var candidatesToProcess = GetCandidatesWhoseFolderIsNotIgnored(
+            candidatesWithoutUsedFolder,
+            ignoredFolders
+        );
 
         var observations = await repository.GetFolderObservationsAsync(cancellationToken);
         var observationsByPath = observations.ToDictionary(observation => observation.FolderPath);
 
-        var localNow = timeProvider.GetLocalNow();
         var createdCount = 0;
-        var hasChanges = false;
 
-        foreach (var candidate in candidatesWithoutUsedFolder)
+        foreach (var candidate in candidatesToProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -72,7 +84,7 @@ public class LocalFolderScanService(
 
         hasChanges |= RemoveObservationsOfFoldersThatAreNoLongerCandidates(
             observations,
-            candidatesWithoutUsedFolder
+            candidatesToProcess
         );
 
         if (hasChanges)
@@ -122,6 +134,100 @@ public class LocalFolderScanService(
 
         return candidates
             .Where(candidate => !usedFolderPaths.Contains(candidate.FolderPath))
+            .ToList();
+    }
+
+    private async Task<HashSet<IgnoredFolderOfAutomation>> GetIgnoredFoldersAsync(
+        IReadOnlyList<ReleaseFolderAutomation> automations,
+        CancellationToken cancellationToken
+    )
+    {
+        var automationIds = automations.Select(automation => automation.Id).ToList();
+        var ignoredFolders = await repository.GetIgnoredFoldersAsync(
+            automationIds,
+            cancellationToken
+        );
+
+        return ignoredFolders
+            .Select(ignoredFolder => new IgnoredFolderOfAutomation(
+                ignoredFolder.ReleaseFolderAutomationId,
+                ignoredFolder.FolderPath
+            ))
+            .ToHashSet();
+    }
+
+    private bool IgnoreCandidatesOfAutomationsInInitialScan(
+        List<ReleaseFolderCandidate> candidatesWithoutUsedFolder,
+        HashSet<IgnoredFolderOfAutomation> ignoredFolders,
+        DateTime localNow
+    )
+    {
+        var hasChanges = false;
+
+        foreach (
+            var candidate in candidatesWithoutUsedFolder.Where(candidate =>
+                IsInInitialScanThatIgnoresExistingFolders(candidate.Automation)
+            )
+        )
+        {
+            var ignoredFolder = new IgnoredFolderOfAutomation(
+                candidate.Automation.Id,
+                candidate.FolderPath
+            );
+
+            if (!ignoredFolders.Add(ignoredFolder))
+            {
+                continue;
+            }
+
+            repository.AddIgnoredFolder(
+                new ReleaseFolderAutomationIgnoredFolder
+                {
+                    ReleaseFolderAutomationId = candidate.Automation.Id,
+                    FolderPath = candidate.FolderPath,
+                    IgnoredAt = localNow,
+                }
+            );
+            hasChanges = true;
+        }
+
+        return hasChanges;
+    }
+
+    private static bool IsInInitialScanThatIgnoresExistingFolders(
+        ReleaseFolderAutomation automation
+    )
+    {
+        return automation is { IgnoreExistingOnFirstScan: true, HasCompletedInitialScan: false };
+    }
+
+    private static bool MarkInitialScanAsCompleted(
+        IReadOnlyList<ReleaseFolderAutomation> automations
+    )
+    {
+        var automationsWithoutCompletedInitialScan = automations
+            .Where(automation => !automation.HasCompletedInitialScan)
+            .ToList();
+
+        foreach (var automation in automationsWithoutCompletedInitialScan)
+        {
+            automation.HasCompletedInitialScan = true;
+        }
+
+        return automationsWithoutCompletedInitialScan.Count > 0;
+    }
+
+    private static List<ReleaseFolderCandidate> GetCandidatesWhoseFolderIsNotIgnored(
+        List<ReleaseFolderCandidate> candidatesWithoutUsedFolder,
+        HashSet<IgnoredFolderOfAutomation> ignoredFolders
+    )
+    {
+        return candidatesWithoutUsedFolder
+            .Where(candidate =>
+                !ignoredFolders.Contains(
+                    new IgnoredFolderOfAutomation(candidate.Automation.Id, candidate.FolderPath)
+                )
+            )
             .DistinctBy(candidate => candidate.FolderPath)
             .ToList();
     }
@@ -223,10 +329,10 @@ public class LocalFolderScanService(
 
     private bool RemoveObservationsOfFoldersThatAreNoLongerCandidates(
         IReadOnlyList<ReleaseFolderObservation> observations,
-        List<ReleaseFolderCandidate> candidatesWithoutUsedFolder
+        List<ReleaseFolderCandidate> candidatesToProcess
     )
     {
-        var candidateFolderPaths = candidatesWithoutUsedFolder
+        var candidateFolderPaths = candidatesToProcess
             .Select(candidate => candidate.FolderPath)
             .ToHashSet();
 
@@ -288,13 +394,16 @@ public class LocalFolderScanService(
             await semaphore.WaitAsync(cancellationToken);
             try
             {
-                var folders = await Task.Run(
-                    () => fileSystemService.GetFoldersInPath(automation.BasePath),
+                var folderPaths = await Task.Run(
+                    () =>
+                        candidateFinder.FindMatchingFolderPaths(
+                            automation.BasePath,
+                            automation.FolderNamePattern
+                        ),
                     cancellationToken
                 );
 
-                return folders
-                    .Where(folderPath => MatchesPattern(folderPath, automation.FolderNamePattern))
+                return folderPaths
                     .Select(folderPath => new ReleaseFolderCandidate(automation, folderPath))
                     .ToList();
             }
@@ -308,29 +417,13 @@ public class LocalFolderScanService(
         return candidateGroups.SelectMany(group => group).ToHashSet();
     }
 
-    private static bool MatchesPattern(string folderPath, string? folderNamePattern)
-    {
-        const string magicSynologyFolder = "@eaDir";
-
-        if (folderPath.Contains(magicSynologyFolder, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(folderNamePattern))
-        {
-            return true;
-        }
-
-        return FileSystemName.MatchesSimpleExpression(
-            folderNamePattern,
-            FolderPathHelper.GetFolderName(folderPath),
-            ignoreCase: true
-        );
-    }
-
     private sealed record ReleaseFolderCandidate(
         ReleaseFolderAutomation Automation,
+        string FolderPath
+    );
+
+    private sealed record IgnoredFolderOfAutomation(
+        int ReleaseFolderAutomationId,
         string FolderPath
     );
 

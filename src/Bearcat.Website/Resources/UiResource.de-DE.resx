@@ -1702,6 +1702,16 @@
   <data name="RetryReleaseFolderExtraction" xml:space="preserve"><value>Erneut versuchen</value></data>
   <data name="ReleaseFolderExtractionRetryQueued" xml:space="preserve"><value>{0} wird beim nächsten Ordnerscan erneut verarbeitet.</value></data>
   <data name="ReleaseFolderExtractionPhases" xml:space="preserve"><value>Phasen der Ordnerautomatisierung</value></data>
+  <data name="ReleaseFolderIgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Ordner, die beim ersten Scan bereits vorhanden sind, werden übersprungen. Nur später hinzukommende Ordner werden zu Releases. Wenn du den Basispfad oder das Muster für Ordnernamen änderst, startet ein neuer erster Scan.</value></data>
+  <data name="ReleaseFolderPreview" xml:space="preserve"><value>Ordnervorschau</value></data>
+  <data name="RefreshReleaseFolderPreview" xml:space="preserve"><value>Ordnervorschau aktualisieren</value></data>
+  <data name="ReleaseFolderPreviewBasePathMissing" xml:space="preserve"><value>Der Basispfad existiert nicht.</value></data>
+  <data name="ReleaseFolderPreviewNoMatchingFolders" xml:space="preserve"><value>Keine passenden Ordner.</value></data>
+  <data name="ReleaseFolderPreviewSummary" xml:space="preserve"><value>{0} Ordner passen, {1} davon haben bereits ein Release.</value></data>
+  <data name="ReleaseFolderPreviewIgnoredFolders" xml:space="preserve"><value>Der erste Scan ignoriert die übrigen {0} Ordner. Nur später hinzukommende Ordner werden zu Releases.</value></data>
+  <data name="ReleaseFolderPreviewFoldersBecomeReleases" xml:space="preserve"><value>{0} Ordner werden zu Releases und hochgeladen.</value></data>
+  <data name="ReleaseFolderPreviewHasRelease" xml:space="preserve"><value>Hat Release</value></data>
+  <data name="ReleaseFolderPreviewMoreFolders" xml:space="preserve"><value>Und {0} weitere Ordner</value></data>
   <data name="ArchiveStorageFolders" xml:space="preserve"><value>Archivspeicherordner</value></data>
   <data name="ArchiveStorageFolder" xml:space="preserve"><value>Speicherordner</value></data>
   <data name="LocalWorkingCopy" xml:space="preserve"><value>lokale Arbeitskopie</value></data>

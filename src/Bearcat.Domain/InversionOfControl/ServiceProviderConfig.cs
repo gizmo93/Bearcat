@@ -63,6 +63,7 @@ using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
@@ -122,7 +123,9 @@ public static class ServiceProviderConfig
             services.AddScoped<ImageUploadService>();
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
+            services.AddScoped<ReleaseFolderAutomationPreviewService>();
             services.AddScoped<LocalFolderScanService>();
+            services.AddScoped<ReleaseFolderCandidateFinder>();
             services.AddScoped<ReleaseFolderVerificationAndExtractionService>();
             services.AddScoped<ReleaseFromFolderCreationService>();
             services.AddScoped<UnmanagedReleaseArchiveInitializationService>();

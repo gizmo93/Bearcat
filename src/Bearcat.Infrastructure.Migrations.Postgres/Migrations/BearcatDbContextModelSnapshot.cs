@@ -1645,6 +1645,12 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<bool>("HasCompletedInitialScan")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IgnoreExistingOnFirstScan")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");
 
@@ -1660,6 +1666,34 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasIndex("ReleaseTemplateId");
 
                     b.ToTable("ReleaseFolderAutomations");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseFolderAutomationIgnoredFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FolderPath")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("IgnoredAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int>("ReleaseFolderAutomationId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseFolderAutomationId", "FolderPath")
+                        .IsUnique();
+
+                    b.ToTable("ReleaseFolderAutomationIgnoredFolders");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseFolderObservation", b =>
@@ -3062,6 +3096,17 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired();
 
                     b.Navigation("ReleaseTemplate");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseFolderAutomationIgnoredFolder", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseFolderAutomation", "ReleaseFolderAutomation")
+                        .WithMany()
+                        .HasForeignKey("ReleaseFolderAutomationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReleaseFolderAutomation");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseGroup", b =>
