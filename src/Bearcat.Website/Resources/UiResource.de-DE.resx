@@ -423,6 +423,7 @@
   <data name="SelectFolderRequired" xml:space="preserve"><value>Du musst einen Ordner auswählen</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>
   <data name="NoHosterFound" xml:space="preserve"><value>Kein Hoster gefunden.</value></data>
+  <data name="NoFolderFound" xml:space="preserve"><value>Kein Ordner gefunden.</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>Du musst einen Hoster auswählen</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Bildhoster auswählen</value></data>
   <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Bildhosterregistrierung auswählen</value></data>
@@ -1877,6 +1878,7 @@
   <data name="FirstStartSetupTestFolder" xml:space="preserve"><value>Testordner</value></data>
   <data name="FirstStartSetupSelectTestFolder" xml:space="preserve"><value>Testordner auswählen</value></data>
   <data name="FirstStartSetupTestFolderHelp" xml:space="preserve"><value>Wähle einen kleinen Ordner, um Archive und Uploads schnell zu prüfen.</value></data>
+  <data name="FirstStartSetupTestFolderHelpLimited" xml:space="preserve"><value>Zeigt bis zu {0} von {1} Ordnern ohne Release. Tippe, um alle zu durchsuchen. Wähle einen kleinen Ordner, um Archive und Uploads schnell zu prüfen.</value></data>
   <data name="FirstStartSetupTestFolderUnavailableWithExtraction" xml:space="preserve"><value>Mit Entpacken ist kein Testupload möglich. Die Automatisierung entpackt neue Ordner, bevor sie Releases erstellt.</value></data>
   <data name="FirstStartSetupCreateSource" xml:space="preserve"><value>Quelle anlegen</value></data>
   <data name="FirstStartSetupNoRemoteSourcesDescription" xml:space="preserve"><value>Füge deinen Server (FTP oder FTPS) hinzu, um fortzufahren.</value></data>

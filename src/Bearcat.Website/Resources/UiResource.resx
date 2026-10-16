@@ -420,6 +420,7 @@
   <data name="SelectFolderRequired" xml:space="preserve"><value>You must select a folder</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Select a hoster</value></data>
   <data name="NoHosterFound" xml:space="preserve"><value>No hoster found.</value></data>
+  <data name="NoFolderFound" xml:space="preserve"><value>No folder found.</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>You must select a hoster</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Select an image hoster</value></data>
   <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Select an image hoster registration</value></data>
@@ -1874,6 +1875,7 @@
   <data name="FirstStartSetupTestFolder" xml:space="preserve"><value>Test folder</value></data>
   <data name="FirstStartSetupSelectTestFolder" xml:space="preserve"><value>Select test folder</value></data>
   <data name="FirstStartSetupTestFolderHelp" xml:space="preserve"><value>Pick a small folder to check archives and uploads quickly.</value></data>
+  <data name="FirstStartSetupTestFolderHelpLimited" xml:space="preserve"><value>Shows up to {0} of {1} folders without a release. Type to search all of them. Pick a small folder to check archives and uploads quickly.</value></data>
   <data name="FirstStartSetupTestFolderUnavailableWithExtraction" xml:space="preserve"><value>A test upload is not available with archive extraction. The automation extracts new folders before it creates releases.</value></data>
   <data name="FirstStartSetupCreateSource" xml:space="preserve"><value>Create source</value></data>
   <data name="FirstStartSetupNoRemoteSourcesDescription" xml:space="preserve"><value>Add your FTP or FTPS server to continue.</value></data>

@@ -29,8 +29,8 @@ public class ReleaseFolderCandidateFinder(IFileSystemService fileSystemService)
         }
 
         return FileSystemName.MatchesSimpleExpression(
-            folderNamePattern,
-            FolderPathHelper.GetFolderName(folderPath),
+            expression: folderNamePattern,
+            name: FolderPathHelper.GetFolderName(folderPath),
             ignoreCase: true
         );
     }

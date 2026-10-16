@@ -21,6 +21,8 @@ public partial class FirstStartSetupLocalFolderSource(
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
+    private const int MaxTestFolderOptionCount = 50;
+
     [Parameter]
     public int ReleaseTemplateId { get; set; }
 
@@ -33,7 +35,8 @@ public partial class FirstStartSetupLocalFolderSource(
     private readonly FirstStartSetupLocalFolderSourceFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private List<SelectOption<string>> unusedFolderOptions = [];
+    private List<ReleaseFolderAutomationPreviewFolder> unusedFolders = [];
+    private string testFolderSearchQuery = string.Empty;
     private bool isManagedReleaseTemplate;
     private bool isSubmitting;
     private bool isSourceCreated;
@@ -54,7 +57,7 @@ public partial class FirstStartSetupLocalFolderSource(
                 && formModel.ExistingFolderHandling
                     is FirstStartSetupExistingFolderHandling.UploadTestFolderAndIgnoreOthers;
 
-            return unusedFolderOptions.Count == 0 || isUnavailableTestUpload
+            return unusedFolders.Count == 0 || isUnavailableTestUpload
                 ? FirstStartSetupExistingFolderHandling.IgnoreExisting
                 : formModel.ExistingFolderHandling;
         }
@@ -75,17 +78,30 @@ public partial class FirstStartSetupLocalFolderSource(
 
     private void HandlePreviewLoaded(ReleaseFolderAutomationPreview? preview)
     {
-        unusedFolderOptions =
+        unusedFolders =
             preview
                 ?.MatchingFolders.Where(folder => !folder.IsUsedByReleaseArchiveOrRemoteDownload)
-                .Select(folder => new SelectOption<string>(folder.FolderPath, folder.FolderName))
                 .ToList()
             ?? [];
 
-        if (unusedFolderOptions.All(option => option.Value != formModel.TestFolderPath))
+        if (unusedFolders.All(folder => folder.FolderPath != formModel.TestFolderPath))
         {
-            formModel.TestFolderPath = unusedFolderOptions.FirstOrDefault()?.Value;
+            formModel.TestFolderPath = unusedFolders.FirstOrDefault()?.FolderPath;
         }
+    }
+
+    private List<SelectOption<string>> GetTestFolderOptions()
+    {
+        return unusedFolders
+            .Where(folder =>
+                folder.FolderName.Contains(
+                    testFolderSearchQuery,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .Take(MaxTestFolderOptionCount)
+            .Select(folder => new SelectOption<string>(folder.FolderPath, folder.FolderName))
+            .ToList();
     }
 
     private async Task OpenFolderDialogAsync()

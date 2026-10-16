@@ -1869,12 +1869,17 @@ button .bearcat-nav-group-label:hover {
 }
 
 @media (min-width: 641px) {
-    .bearcat-hosters-table :where(.rounded-md.border) {
+    .bearcat-hosters-table :where(div:has(> table)),
+    .bearcat-folder-automations-table :where(div:has(> table)) {
         overflow-x: auto;
     }
 
     .bearcat-hosters-table :where(table) {
         min-width: 64rem;
+    }
+
+    .bearcat-folder-automations-table :where(table) {
+        min-width: 75rem;
     }
 
     .bearcat-hosters-table :where(tbody td:nth-child(1)),
