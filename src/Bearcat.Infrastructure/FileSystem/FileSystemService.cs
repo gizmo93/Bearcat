@@ -105,6 +105,23 @@ public class FileSystemService : IFileSystemService
         return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
     }
 
+    public bool IsDirectoryWritable(string path)
+    {
+        var writeTestFilePath = Path.Combine(path, $".bearcat-write-test-{Guid.NewGuid():N}");
+
+        try
+        {
+            File.WriteAllBytes(writeTestFilePath, []);
+            File.Delete(writeTestFilePath);
+
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     public long? GetAvailableFreeSpaceBytes(string path)
     {
         if (!Directory.Exists(path))

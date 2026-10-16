@@ -140,6 +140,63 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync_ReleaseWithinInitialUploadCooldown_CreatesInitialUploadOnlyForThatRelease()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            releaseCreatedAt: CreateTimeProvider().GetLocalNow()
+        );
+        var otherUploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads: false);
+
+        // Act
+        var result = await service.CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync(
+            uploadConfig.ReleaseId
+        );
+
+        // Assert
+        result.ShouldBe(
+            new InitialUploadCreationForReleaseResult(
+                CreatedUploadCount: 1,
+                IsBlockedByQualityGate: false
+            )
+        );
+        DbContext.ChangeTracker.Clear();
+        var upload = await DbContext.Uploads.Include(u => u.Notifications).SingleAsync();
+        upload.UploadConfigId.ShouldBe(uploadConfig.Id);
+        upload.UploadConfigId.ShouldNotBe(otherUploadConfig.Id);
+        upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        upload.Notifications.Single().Message.ShouldBe("Initial upload created for release");
+    }
+
+    [Test]
+    public async Task CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync_QualityGateFails_DoesNotCreateUploadAndReportsQualityGate()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            qualityProfile: CreateRequireNfoProfile()
+        );
+
+        // Act
+        var result = await service.CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync(
+            uploadConfig.ReleaseId
+        );
+
+        // Assert
+        result.ShouldBe(
+            new InitialUploadCreationForReleaseResult(
+                CreatedUploadCount: 0,
+                IsBlockedByQualityGate: true
+            )
+        );
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Uploads.AnyAsync()).ShouldBeFalse();
+        var release = await DbContext.Releases.SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Failed);
+    }
+
+    [Test]
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_MoreDueAutomaticReuploadsThanOneRunCreates_CreatesOneHundredReuploads()
     {
         // Arrange

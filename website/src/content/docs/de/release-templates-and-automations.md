@@ -28,9 +28,11 @@ einer TV-Staffel. Siehe [Releasecollections](/Bearcat/de/release-collections/).
 3. Setze optional ein **Muster für Ordnernamen**, etwa `*1080p*` oder `*.GERMAN.*`. Der Abgleich ignoriert
    Gross- und Kleinschreibung und unterstützt Wildcards, aber keine regulären Ausdrücke. Lass das Feld leer,
    um alle direkten Unterordner einzubeziehen.
-4. Wähle das Template und optional eine Primärsprache für übersetzte Metadaten. Ohne Sprache wird die
+4. Lass **Vorhandene Ordner ignorieren** eingeschaltet, um nur neue Ordner zu verarbeiten.
+   Zum Importieren vorhandener Ordner schaltest du die Option aus. Siehe [Vorhandene Ordner](#vorhandene-ordner).
+5. Wähle das Template und optional eine Primärsprache für übersetzte Metadaten. Ohne Sprache wird die
    Standardsprache des Metadatenanbieters verwendet.
-5. Lass **Aktiviert** eingeschaltet und speichere. Über das Aktionsmenü kannst du die Automatisierung deaktivieren
+6. Lass **Aktiviert** eingeschaltet und speichere. Über das Aktionsmenü kannst du die Automatisierung deaktivieren
    oder wieder aktivieren.
 
 ![Ordnerautomatisierungen](../images/folder-automations-page.png)
@@ -50,6 +52,22 @@ Bearcat scannt etwa alle zwei Minuten und überspringt Ordner, die schon ein Rel
 ein Ordner die [Vorgaben für Stabilität und Mindestgrösse](/Bearcat/de/advanced-configuration/#ordnerautomatisierung)
 erfüllt, erstellt Bearcat das Release und ruft die Metadaten ab. Danach packt es die Dateien und
 lädt sie mit den Einstellungen des Templates hoch.
+
+### Vorhandene Ordner
+
+**Vorhandene Ordner ignorieren** ist standardmässig eingeschaltet. Beim ersten Scan merkt sich Bearcat alle
+passenden Ordner und ignoriert sie dauerhaft für diese Automatisierung. Nur neue Ordner werden zu Releases.
+Schalte die Option aus, um auch vorhandene Ordner ohne Release zu importieren.
+
+Änderst du **Releasebasispfad** oder **Muster für Ordnernamen**, gilt die Einstellung erneut für die Ordner,
+die Bearcat mit den neuen Einstellungen findet.
+
+Die **Ordnervorschau** zeigt, welche Ordner zum Basispfad und Muster passen. Ordner mit einem Release und
+Archivausgabeordner sind als **Bereits verwendet** markiert.
+
+Beim Anlegen oder Ändern von Basispfad oder Muster zeigt die Vorschau auch, was mit den übrigen Ordnern
+passiert: Bearcat ignoriert sie oder zeigt eine Warnung mit der Anzahl der Ordner, die importiert und
+hochgeladen werden. Mit der Schaltfläche zum Aktualisieren lädst du die Vorschau neu.
 
 ### Archive vor der Releaseerstellung entpacken
 

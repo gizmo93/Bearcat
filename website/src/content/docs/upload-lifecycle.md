@@ -42,6 +42,11 @@ Once the cooldown has passed and an upload configuration exists, Bearcat schedul
 on its next check. Set `0` minutes to skip the wait.
 The release must also pass [quality checks](/Bearcat/quality-gates/) or be manually approved.
 
+To skip the wait for a release, click **Start uploads now** at the top of its detail page. The button
+appears if at least one upload configuration has no upload yet. Bearcat creates the missing uploads
+right away and packs the files on the next archive creation run. Quality checks still apply.
+You can also start these uploads through the [REST API](/Bearcat/rest-api/).
+
 ## 3. Creating the archive
 
 For each waiting upload, Bearcat prepares an archive:

@@ -14,7 +14,8 @@ public record ReleaseReadModel(
     int UploadConfigsCount,
     int OnlineUploadConfigsCount,
     bool ExcludeFromAutoCleanup,
-    DateTime? UploadsPostedAt
+    DateTime? UploadsPostedAt,
+    bool HasUploadConfigsWaitingForInitialUpload
 )
 {
     public OnlineState? OnlineState

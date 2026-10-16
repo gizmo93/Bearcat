@@ -84,6 +84,7 @@ public partial class ReleaseFolderAutomationsPage(
                     ExtractArchivesBeforeReleaseCreation =
                         automation.ExtractArchivesBeforeReleaseCreation,
                     IsEnabled = automation.IsEnabled,
+                    IgnoreExistingOnFirstScan = automation.IgnoreExistingOnFirstScan,
                     IsEdit = true,
                 },
         };

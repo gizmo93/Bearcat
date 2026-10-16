@@ -29,6 +29,8 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
     private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
+    private string originalBasePath = string.Empty;
+    private string? originalFolderNamePattern;
 
     private IReadOnlyList<SelectOption<int?>> ReleaseTemplateOptions =>
         releaseTemplates
@@ -58,14 +60,32 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
         SelectedReleaseType is ReleaseType.Managed
         && FormModel.ExtractArchivesBeforeReleaseCreation;
 
+    private bool StartsInitialScan =>
+        !FormModel.IsEdit
+        || NormalizeBasePath(FormModel.BasePath) != NormalizeBasePath(originalBasePath)
+        || NormalizeFolderNamePattern(FormModel.FolderNamePattern)
+            != NormalizeFolderNamePattern(originalFolderNamePattern);
+
     protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
+        originalBasePath = FormModel.BasePath;
+        originalFolderNamePattern = FormModel.FolderNamePattern;
         releaseTemplates = await operationRunner.RunAsync(
             (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
         );
+    }
+
+    private static string NormalizeBasePath(string basePath)
+    {
+        return basePath.Trim();
+    }
+
+    private static string? NormalizeFolderNamePattern(string? folderNamePattern)
+    {
+        return string.IsNullOrWhiteSpace(folderNamePattern) ? null : folderNamePattern.Trim();
     }
 
     private async Task SaveAsync()
@@ -81,7 +101,8 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                         FormModel.ReleaseTemplateId!.Value,
                         FormModel.PrimaryLanguageCode,
                         ExtractArchivesBeforeReleaseCreation,
-                        FormModel.IsEnabled
+                        FormModel.IsEnabled,
+                        FormModel.IgnoreExistingOnFirstScan
                     )
             );
         }
@@ -95,7 +116,8 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                         FormModel.ReleaseTemplateId!.Value,
                         FormModel.PrimaryLanguageCode,
                         ExtractArchivesBeforeReleaseCreation,
-                        FormModel.IsEnabled
+                        FormModel.IsEnabled,
+                        FormModel.IgnoreExistingOnFirstScan
                     )
             );
         }

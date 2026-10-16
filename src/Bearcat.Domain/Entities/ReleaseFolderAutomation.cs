@@ -17,4 +17,8 @@ public class ReleaseFolderAutomation
     public bool ExtractArchivesBeforeReleaseCreation { get; set; }
 
     public bool IsEnabled { get; set; }
+
+    public bool IgnoreExistingOnFirstScan { get; set; }
+
+    public bool HasCompletedInitialScan { get; set; }
 }

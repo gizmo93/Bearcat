@@ -26,6 +26,8 @@ using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
+using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
+using Bearcat.Domain.UseCases.FirstStartSetup.Status;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -63,6 +65,7 @@ using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
@@ -122,7 +125,9 @@ public static class ServiceProviderConfig
             services.AddScoped<ImageUploadService>();
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
+            services.AddScoped<ReleaseFolderAutomationPreviewService>();
             services.AddScoped<LocalFolderScanService>();
+            services.AddScoped<ReleaseFolderCandidateFinder>();
             services.AddScoped<ReleaseFolderVerificationAndExtractionService>();
             services.AddScoped<ReleaseFromFolderCreationService>();
             services.AddScoped<UnmanagedReleaseArchiveInitializationService>();
@@ -161,6 +166,8 @@ public static class ServiceProviderConfig
             services.AddScoped<ImageUploadConfigTemplateService>();
             services.AddScoped<CollectionImageUploadConfigTemplateService>();
             services.AddScoped<UploadConfigLinkCrypterTemplateService>();
+            services.AddScoped<FirstStartWorkingDirectoryStatusService>();
+            services.AddScoped<FirstStartArchiveOutputFolderService>();
             services.AddScoped<ForumPostTemplateService>();
             services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ForumPostingRulePreviewService>();
@@ -254,6 +261,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<DownloadConfiguration>();
             services.AddApplicationConfiguration<NotificationConfiguration>();
             services.AddApplicationConfiguration<PostQueueConfiguration>();
+            services.AddApplicationConfiguration<FirstStartSetupConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();
             services.AddSingleton<
                 IApplicationConfigurationProvider,

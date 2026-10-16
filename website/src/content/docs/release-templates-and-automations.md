@@ -23,13 +23,15 @@ season. See [Release Collections](/Bearcat/release-collections/).
 
 ## Setting up folder automations
 
-1. Create a release template, then open **Release folder automations** and click **New release folder automation**.
+1. Create a release template, then open **Folder automations** and click **New folder automation**.
 2. Set **Release base path** to the folder Bearcat should scan. Only direct subfolders are checked.
 3. Optionally set a **Folder name pattern**, such as `*1080p*` or `*.GERMAN.*`. Matching ignores case
    and supports wildcards, but not regular expressions. Leave it empty to include all direct subfolders.
-4. Select the template and optionally a primary language for translated metadata. An empty language
+4. Leave **Ignore existing folders** on to process only new folders.
+   Turn it off to import existing folders. See [Existing folders](#existing-folders).
+5. Select the template and optionally a primary language for translated metadata. An empty language
    uses the metadata provider's default.
-5. Save with **Enabled** checked. You can disable or re-enable the automation from its action menu.
+6. Save with **Enabled** checked. You can disable or re-enable the automation from its action menu.
 
 ![Folder automations](images/folder-automations-page.png)
 
@@ -47,6 +49,22 @@ The pattern `*1080p*` selects only `Movie.One.2026.1080p`. An empty pattern incl
 Bearcat scans about every two minutes and skips folders that already have a release. Once a folder
 meets the [stability and minimum size requirements](/Bearcat/advanced-configuration/#folder-automation),
 Bearcat creates the release, looks up its metadata, and packs and uploads it using the template.
+
+### Existing folders
+
+**Ignore existing folders** is on by default. On its first scan, Bearcat records all matching folders
+and permanently ignores them for this automation. Only new folders become releases. Turn the option off
+to also import existing folders that do not have a release yet.
+
+If you change **Release base path** or **Folder name pattern**, this setting applies again to the folders
+Bearcat finds with the new settings.
+
+The **Folder preview** lists folders that match the base path and pattern. Folders with a release and
+archive output folders are marked **Already in use**.
+
+When you create an automation or change its base path or pattern, the preview also shows what will happen
+to the remaining folders: Bearcat ignores them or shows a warning with the number of folders that will be
+imported and uploaded. Use the refresh button to reload the preview.
 
 ### Extract archives before release creation
 

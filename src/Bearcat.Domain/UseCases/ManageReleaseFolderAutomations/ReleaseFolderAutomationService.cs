@@ -12,6 +12,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         string? primaryLanguageCode,
         bool extractArchivesBeforeReleaseCreation,
         bool isEnabled,
+        bool ignoreExistingOnFirstScan,
         CancellationToken cancellationToken = default
     )
     {
@@ -27,6 +28,8 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
                 : primaryLanguageCode.Trim().ToLowerInvariant(),
             ExtractArchivesBeforeReleaseCreation = extractArchivesBeforeReleaseCreation,
             IsEnabled = isEnabled,
+            IgnoreExistingOnFirstScan = ignoreExistingOnFirstScan,
+            HasCompletedInitialScan = false,
         };
 
         repository.Add(automation);
@@ -43,6 +46,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         string? primaryLanguageCode,
         bool extractArchivesBeforeReleaseCreation,
         bool isEnabled,
+        bool ignoreExistingOnFirstScan,
         CancellationToken cancellationToken = default
     )
     {
@@ -51,11 +55,21 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             cancellationToken
         );
 
-        automation.BasePath = basePath.Trim();
-
-        automation.FolderNamePattern = string.IsNullOrWhiteSpace(folderNamePattern)
+        var normalizedBasePath = basePath.Trim();
+        var normalizedFolderNamePattern = string.IsNullOrWhiteSpace(folderNamePattern)
             ? null
             : folderNamePattern.Trim();
+
+        if (
+            automation.BasePath != normalizedBasePath
+            || automation.FolderNamePattern != normalizedFolderNamePattern
+        )
+        {
+            automation.HasCompletedInitialScan = false;
+        }
+
+        automation.BasePath = normalizedBasePath;
+        automation.FolderNamePattern = normalizedFolderNamePattern;
 
         automation.ReleaseTemplateId = releaseTemplateId;
 
@@ -65,6 +79,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
 
         automation.ExtractArchivesBeforeReleaseCreation = extractArchivesBeforeReleaseCreation;
         automation.IsEnabled = isEnabled;
+        automation.IgnoreExistingOnFirstScan = ignoreExistingOnFirstScan;
 
         await repository.SaveChangesAsync(cancellationToken);
     }

@@ -1,5 +1,24 @@
 @page "/"
+@using Bearcat.Website.Pages.Home.Setup
 
 <PageTitle>@L["Activity"] - Bearcat</PageTitle>
 
-<RunningProcesses />
+@if (setupStatus is not null)
+{
+    <div class="space-y-6">
+        <RunningProcesses>
+            <ContentBelowHeader>
+                @if (showsAssistant && !setupStatus.IsRequiredSetupComplete)
+                {
+                    <FirstStartSetupIncompleteBanner SetupStatus="setupStatus" />
+                }
+            </ContentBelowHeader>
+        </RunningProcesses>
+
+        @if (ShowsOptionalSetupChecklist())
+        {
+            <FirstStartOptionalSetupChecklist SetupStatus="setupStatus"
+                                              OnHide="HideAssistantAsync" />
+        }
+    </div>
+}

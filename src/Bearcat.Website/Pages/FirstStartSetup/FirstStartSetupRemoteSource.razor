@@ -1,0 +1,29 @@
+@if (isSourceCreated)
+{
+    <FirstStartSetupSourceCreatedSummary OnBack="OnBack" />
+}
+else
+{
+    <div class="space-y-6">
+        @if (hasActiveRemoteSourceRegistration == false)
+        {
+            <p class="text-sm text-muted-foreground">@L["FirstStartSetupNoRemoteSourcesDescription"]</p>
+        }
+
+        <p class="text-xs text-muted-foreground">@L["FirstStartSetupRemoteSourceAutomationHint"]</p>
+
+        <FirstStartSetupStepNavigation OnBack="OnBack">
+            @if (hasActiveRemoteSourceRegistration == false)
+            {
+                <BbButton Variant="ButtonVariant.Outline" OnClick="ShowAddRemoteSourceDialogAsync">
+                    <LucideIcon Name="plus" class="h-4 w-4" />
+                    @L["AddRemoteSource"]
+                </BbButton>
+            }
+            <BbButton Disabled="@(hasActiveRemoteSourceRegistration != true)" OnClick="ShowCreateRemoteSourceAutomationDialogAsync">
+                <LucideIcon Name="folder-plus" class="h-4 w-4" />
+                @L["FirstStartSetupCreateRemoteSourceAutomation"]
+            </BbButton>
+        </FirstStartSetupStepNavigation>
+    </div>
+}

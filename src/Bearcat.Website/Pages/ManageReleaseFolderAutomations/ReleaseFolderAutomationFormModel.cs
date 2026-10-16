@@ -16,5 +16,7 @@ public class ReleaseFolderAutomationFormModel
 
     public bool IsEnabled { get; set; } = true;
 
+    public bool IgnoreExistingOnFirstScan { get; set; } = true;
+
     public bool IsEdit { get; set; }
 }

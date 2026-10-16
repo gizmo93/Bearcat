@@ -69,9 +69,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
             FormModel.MirrorDownloadSpeedLimitMegabytesPerSecondInput
         );
 
+        int hosterRegistrationId;
+
         if (!FormModel.IsEdit)
         {
-            await operationRunner.RunAsync(
+            hosterRegistrationId = await operationRunner.RunAsync(
                 (HosterRegistrationService service) =>
                     service.RegisterHosterAsync(
                         name: FormModel.Name,
@@ -95,10 +97,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
         }
         else
         {
+            hosterRegistrationId = FormModel.HosterRegistrationId!.Value;
             await operationRunner.RunAsync(
                 (HosterRegistrationService service) =>
                     service.UpdateRegistrationAsync(
-                        id: FormModel.HosterRegistrationId!.Value,
+                        id: hosterRegistrationId,
                         name: FormModel.Name,
                         configuration: FormModel.Configuration,
                         maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride,
@@ -117,7 +120,7 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
             );
         }
 
-        await DialogRef.CloseAsync(DialogResult.Ok());
+        await DialogRef.CloseAsync(DialogResult.Ok(hosterRegistrationId));
     }
 
     private async Task CancelAsync()

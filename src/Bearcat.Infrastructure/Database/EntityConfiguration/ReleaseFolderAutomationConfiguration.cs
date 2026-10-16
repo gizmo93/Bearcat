@@ -16,6 +16,8 @@ public class ReleaseFolderAutomationConfiguration
         builder.Property(a => a.ReleaseTemplateId).IsRequired();
         builder.Property(a => a.ExtractArchivesBeforeReleaseCreation).IsRequired();
         builder.Property(a => a.IsEnabled).IsRequired();
+        builder.Property(a => a.IgnoreExistingOnFirstScan).IsRequired();
+        builder.Property(a => a.HasCompletedInitialScan).IsRequired();
 
         builder
             .HasOne(a => a.ReleaseTemplate)

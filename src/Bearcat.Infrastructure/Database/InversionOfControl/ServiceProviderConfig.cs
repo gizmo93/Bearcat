@@ -11,6 +11,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Verification
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
+using Bearcat.Domain.UseCases.FirstStartSetup.Repositories;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -217,6 +218,7 @@ public static class ServiceProviderConfig
             >();
             services.AddScoped<ITelegramDeliveryRepository, TelegramDeliveryRepository>();
             services.AddScoped<IUnreadableSecretsRepository, UnreadableSecretsRepository>();
+            services.AddScoped<IFirstStartSetupStatusRepository, FirstStartSetupStatusRepository>();
             services.AddScoped<
                 IReleaseFolderAutomationReadRepository,
                 ReleaseFolderAutomationRepository

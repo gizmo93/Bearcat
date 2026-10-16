@@ -85,7 +85,7 @@ docker compose up -d
 Open [http://localhost:8080](http://localhost:8080). If Docker runs on another computer or a NAS,
 open `http://<server-address>:8080` instead. The first start may take a moment.
 
-**Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
+**Next: [Set up Bearcat and upload your first release](/Bearcat/post-installation/).**
 
 In Bearcat's folder picker, your release folder appears as `/mnt/data/releases`.
 

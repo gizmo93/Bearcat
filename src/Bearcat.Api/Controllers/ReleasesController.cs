@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +16,8 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/releases")]
 public class ReleasesController(
     IReleaseReadRepository releaseReadRepository,
-    ReleaseService releaseService
+    ReleaseService releaseService,
+    UploadCreationService uploadCreationService
 ) : ControllerBase
 {
     private const string GetReleaseRouteName = "GetRelease";
@@ -220,6 +222,44 @@ public class ReleasesController(
         await releaseService.MarkUploadsPostedAsync(releaseId, cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Create the missing initial uploads of a release now.
+    /// </summary>
+    /// <remarks>
+    /// Creates an upload for every upload config of the release that has no upload yet, without waiting for the initial upload cooldown. The quality gate is applied the same way as for the automatic initial uploads. Archive creation and the upload itself are picked up by the background tasks. Returns 0 created uploads if every upload config already has an upload. Fails with 409 if the quality gate of the release is not satisfied.
+    /// </remarks>
+    [HttpPost("{releaseId:int}/start-initial-uploads")]
+    [RequiresApiKey]
+    [ProducesResponseType(typeof(StartInitialUploadsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<StartInitialUploadsResponse>> StartInitialUploadsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (await releaseReadRepository.GetReleaseAsync(releaseId, cancellationToken) is null)
+        {
+            return NotFound();
+        }
+
+        var result =
+            await uploadCreationService.CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync(
+                releaseId,
+                cancellationToken
+            );
+
+        if (result.IsBlockedByQualityGate)
+        {
+            return Problem(
+                detail: "The quality gate of the release is not satisfied.",
+                statusCode: StatusCodes.Status409Conflict
+            );
+        }
+
+        return Ok(new StartInitialUploadsResponse(result.CreatedUploadCount));
     }
 
     private void Validate(CreateReleaseRequest request)

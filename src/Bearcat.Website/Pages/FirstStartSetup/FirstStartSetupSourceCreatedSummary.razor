@@ -1,0 +1,49 @@
+<div class="space-y-6">
+    <div class="flex items-start gap-3 rounded-md border border-border/70 p-4">
+        <LucideIcon Name="circle-check" class="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+        <p class="text-sm">@L["FirstStartSetupSourceCreated"]</p>
+    </div>
+
+    @if (TestReleaseUploadCreationResult is { } uploadCreationResult)
+    {
+        <div class="flex items-start gap-3 rounded-md border border-border/70 p-4">
+            <LucideIcon Name="@(uploadCreationResult.IsBlockedByQualityGate ? "circle-alert" : "upload")"
+                        class="@(uploadCreationResult.IsBlockedByQualityGate ? "mt-0.5 h-5 w-5 shrink-0 text-destructive" : "mt-0.5 h-5 w-5 shrink-0 text-primary")" />
+            <div class="min-w-0 space-y-1">
+                <p class="text-sm font-medium">@L["FirstStartSetupTestRelease"]</p>
+                <p class="@(uploadCreationResult.IsBlockedByQualityGate ? "text-sm text-destructive" : "text-sm text-muted-foreground")">
+                    @if (uploadCreationResult.IsBlockedByQualityGate)
+                    {
+                        @L["InitialUploadsBlockedByQualityGate"]
+                    }
+                    else if (uploadCreationResult.CreatedUploadCount == 0)
+                    {
+                        @L["FirstStartSetupTestReleaseHasNoUploadConfigs"]
+                    }
+                    else if (uploadCreationResult.CreatedUploadCount == 1)
+                    {
+                        @L["InitialUploadsCreatedOne"]
+                    }
+                    else
+                    {
+                        @L["InitialUploadsCreated", uploadCreationResult.CreatedUploadCount]
+                    }
+                </p>
+            </div>
+        </div>
+    }
+
+    <FirstStartSetupStepNavigation OnBack="OnBack">
+        @if (TestReleaseId is { } testReleaseId)
+        {
+            <BbButton Variant="ButtonVariant.Outline" Href="@($"/releases/{testReleaseId}")">
+                <LucideIcon Name="external-link" class="h-4 w-4" />
+                @L["OpenRelease"]
+            </BbButton>
+        }
+        <BbButton OnClick="GoToActivityAsync">
+            @L["FirstStartSetupGoToActivity"]
+            <LucideIcon Name="arrow-right" class="h-4 w-4" />
+        </BbButton>
+    </FirstStartSetupStepNavigation>
+</div>

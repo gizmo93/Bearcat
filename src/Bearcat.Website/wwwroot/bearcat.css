@@ -354,6 +354,11 @@ a {
     color: var(--primary);
 }
 
+.bearcat-release-progress-step-marker-current {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
 .bearcat-release-progress-step-marker-attention {
     background: var(--destructive);
     color: var(--destructive-foreground);
@@ -407,6 +412,10 @@ a {
 
 .bearcat-release-progress-step-description-attention {
     color: var(--destructive);
+}
+
+.bearcat-first-start-setup-progress .bearcat-release-progress-steps {
+    border-top: 0;
 }
 
 @media (max-width: 767px) {
@@ -1860,12 +1869,17 @@ button .bearcat-nav-group-label:hover {
 }
 
 @media (min-width: 641px) {
-    .bearcat-hosters-table :where(.rounded-md.border) {
+    .bearcat-hosters-table :where(div:has(> table)),
+    .bearcat-folder-automations-table :where(div:has(> table)) {
         overflow-x: auto;
     }
 
     .bearcat-hosters-table :where(table) {
         min-width: 64rem;
+    }
+
+    .bearcat-folder-automations-table :where(table) {
+        min-width: 75rem;
     }
 
     .bearcat-hosters-table :where(tbody td:nth-child(1)),

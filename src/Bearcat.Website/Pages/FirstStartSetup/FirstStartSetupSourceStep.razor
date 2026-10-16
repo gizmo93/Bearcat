@@ -1,0 +1,59 @@
+<div class="space-y-6">
+    <div class="space-y-1">
+        <h2 class="text-xl font-semibold tracking-tight">@L["FirstStartSetupStepSource"]</h2>
+        <p class="text-sm text-muted-foreground">@L["FirstStartSetupSourceDescription"]</p>
+    </div>
+
+    @if (ReleaseTemplateId is not { } releaseTemplateId)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+            <span>@L["FirstStartSetupSourceReleaseTemplateRequired"]</span>
+        </div>
+
+        <FirstStartSetupStepNavigation OnBack="OnBack" />
+    }
+    else
+    {
+        @if (existingSourceNames.Count > 0)
+        {
+            <FirstStartSetupExistingNotice Text="@L["FirstStartSetupExistingSources", string.Join(", ", existingSourceNames)]">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/release-folder-automations">
+                    @L["ReleaseFolderAutomations"]
+                </BbButton>
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="/remote-source-automations">
+                    @L["RemoteSourceAutomations"]
+                </BbButton>
+            </FirstStartSetupExistingNotice>
+        }
+
+        @if (!isSourceCreated)
+        {
+            <div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="@L["FirstStartSetupSourceKind"]">
+                <FirstStartSetupChoiceCard IconName="folder"
+                                           Title="@L["FirstStartSetupLocalFolderSource"]"
+                                           Description="@L["FirstStartSetupLocalFolderSourceDescription"]"
+                                           IsSelected="!usesRemoteSource"
+                                           OnSelected="@(() => usesRemoteSource = false)" />
+                <FirstStartSetupChoiceCard IconName="server"
+                                           Title="@L["FirstStartSetupRemoteSource"]"
+                                           Description="@L["FirstStartSetupRemoteSourceDescription"]"
+                                           IsSelected="usesRemoteSource"
+                                           OnSelected="@(() => usesRemoteSource = true)" />
+            </div>
+        }
+
+        @if (usesRemoteSource)
+        {
+            <FirstStartSetupRemoteSource ReleaseTemplateId="releaseTemplateId"
+                                         OnBack="OnBack"
+                                         OnSourceCreated="HandleSourceCreatedAsync" />
+        }
+        else
+        {
+            <FirstStartSetupLocalFolderSource ReleaseTemplateId="releaseTemplateId"
+                                              OnBack="OnBack"
+                                              OnSourceCreated="HandleSourceCreatedAsync" />
+        }
+    }
+</div>

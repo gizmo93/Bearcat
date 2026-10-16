@@ -7,7 +7,9 @@
             <div class="space-y-2">
                 <label class="text-sm font-medium">@L["ReleaseBasePath"]</label>
                 <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                    <BbInput @bind-Value="FormModel.BasePath" class="sm:flex-1" />
+                    <BbInput @bind-Value="FormModel.BasePath"
+                             UpdateTiming="UpdateTiming.Debounced"
+                             class="sm:flex-1" />
                     <BbButton Variant="ButtonVariant.Outline"
                               Size="ButtonSize.Small"
                               Class="justify-center whitespace-nowrap"
@@ -21,9 +23,19 @@
 
             <BbFormFieldInput TValue="string"
                               @bind-Value="FormModel.FolderNamePattern"
+                               UpdateTiming="UpdateTiming.Debounced"
                               Label="@L["FolderNamePattern"]"
                               Placeholder="@L["FolderNamePatternPlaceholder"]"
                               HelperText="@L["FolderNamePatternHelp"]" />
+
+            <BbFormFieldSwitch @bind-Checked="FormModel.IgnoreExistingOnFirstScan"
+                               Label="@L["IgnoreExistingOnFirstScan"]"
+                               HelperText="@L["ReleaseFolderIgnoreExistingOnFirstScanHelp"]" />
+
+            <ReleaseFolderAutomationPreviewPanel BasePath="@FormModel.BasePath"
+                                                 FolderNamePattern="@FormModel.FolderNamePattern"
+                                                 ShowInitialScanOutcome="StartsInitialScan"
+                                                 IgnoreExistingOnFirstScan="FormModel.IgnoreExistingOnFirstScan" />
 
             <BbFormFieldSelect TValue="int?"
                                @bind-Value="FormModel.ReleaseTemplateId"

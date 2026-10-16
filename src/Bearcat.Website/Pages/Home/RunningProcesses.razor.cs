@@ -8,6 +8,7 @@ using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.Home.Summary;
 using Bearcat.Website.ScopedOperations;
+using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.Home;
 
@@ -17,6 +18,9 @@ public sealed partial class RunningProcesses(
 ) : IDisposable
 {
     private const int SpeedHistoryCapacity = 40;
+
+    [Parameter]
+    public RenderFragment? ContentBelowHeader { get; set; }
 
     private readonly CancellationTokenSource lifetimeCancellation = new();
 

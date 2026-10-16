@@ -86,6 +86,7 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
             repository: new ReleaseFolderAutomationRepository(DbContext, DbContext),
             releaseFolderUsageRepository: new ReleaseFolderUsageRepository(DbContext),
             fileSystemService: new FileSystemService(),
+            candidateFinder: new ReleaseFolderCandidateFinder(new FileSystemService()),
             releaseFromFolderCreationService: new ReleaseFromFolderCreationService(
                 releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
                 mediaMetadataService: CreateMediaMetadataService(),
@@ -685,6 +686,107 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_IgnoreExistingOnFirstScan_IgnoresExistingFoldersWithoutObservations()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var firstFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.First.1080p")
+        );
+        var secondFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.Second.1080p")
+        );
+        DbContext.ReleaseFolderObservations.Add(
+            new ReleaseFolderObservation
+            {
+                FolderPath = firstFolder.FullName,
+                FileCount = 0,
+                TotalBytes = 0,
+                LastChangedAt = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Unspecified),
+            }
+        );
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            ignoreExistingOnFirstScan: true
+        );
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(0);
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+
+        var ignoredFolderPaths = await DbContext
+            .ReleaseFolderAutomationIgnoredFolders.Select(ignoredFolder => ignoredFolder.FolderPath)
+            .ToListAsync();
+        ignoredFolderPaths.ShouldBe(
+            [firstFolder.FullName, secondFolder.FullName],
+            ignoreOrder: true
+        );
+
+        var automation = await CreateDbContext().ReleaseFolderAutomations.SingleAsync();
+        automation.HasCompletedInitialScan.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ProcessAsync_FolderAddedAfterInitialScanIgnoredExistingFolders_CreatesReleaseOnlyForNewFolder()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var existingFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.Existing.1080p")
+        );
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            ignoreExistingOnFirstScan: true
+        );
+        await service.ProcessAsync(CancellationToken.None);
+
+        var newFolder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.New.1080p"));
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+
+        var release = await DbContext.Releases.SingleAsync();
+        release.ReleaseFolderPath.ShouldBe(newFolder.FullName);
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+
+        var ignoredFolder = await DbContext.ReleaseFolderAutomationIgnoredFolders.SingleAsync();
+        ignoredFolder.FolderPath.ShouldBe(existingFolder.FullName);
+    }
+
+    [Test]
+    public async Task ProcessAsync_IgnoreExistingOnFirstScanDisabled_ObservesExistingFolderAndCompletesInitialScan()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+        (await DbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
+            folder.FullName
+        );
+        (await DbContext.ReleaseFolderAutomationIgnoredFolders.AnyAsync()).ShouldBeFalse();
+
+        var automation = await CreateDbContext().ReleaseFolderAutomations.SingleAsync();
+        automation.HasCompletedInitialScan.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task ProcessAsync_FolderBelowMinimumSize_DoesNotCreateRelease()
     {
         // Arrange
@@ -1125,12 +1227,14 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
         string? folderNamePattern,
         bool isEnabled = true,
         string? primaryLanguageCode = null,
-        bool extractArchivesBeforeReleaseCreation = false
+        bool extractArchivesBeforeReleaseCreation = false,
+        bool ignoreExistingOnFirstScan = false
     )
     {
         DbContext.ReleaseFolderAutomations.Add(
             new ReleaseFolderAutomation
             {
+                IgnoreExistingOnFirstScan = ignoreExistingOnFirstScan,
                 BasePath = basePath,
                 FolderNamePattern = folderNamePattern,
                 PrimaryLanguageCode = primaryLanguageCode,

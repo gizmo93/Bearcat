@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CreationFromRelease;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
@@ -77,6 +78,7 @@ public partial class ReleaseDetail(
     private int imageUploadConfigCount;
     private PostedLocations? postedLocations;
     private bool hasActiveForumRegistration;
+    private bool isStartingInitialUploads;
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
     private bool IsPostQueueWorkflow =>
@@ -317,6 +319,54 @@ public partial class ReleaseDetail(
         if (postedLocations is not null)
         {
             await postedLocations.ReloadAsync();
+        }
+    }
+
+    private async Task StartInitialUploadsNowAsync()
+    {
+        isStartingInitialUploads = true;
+
+        try
+        {
+            var result = await operationRunner.RunAsync(
+                (UploadCreationService service) =>
+                    service.CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync(
+                        release.ReleaseId
+                    )
+            );
+
+            ShowInitialUploadCreationResultToast(result);
+
+            foreach (var component in reloadableComponents.Values)
+            {
+                await component.ReloadAsync();
+            }
+
+            await ReloadProgressAsync();
+        }
+        finally
+        {
+            isStartingInitialUploads = false;
+        }
+    }
+
+    private void ShowInitialUploadCreationResultToast(InitialUploadCreationForReleaseResult result)
+    {
+        if (result.IsBlockedByQualityGate)
+        {
+            toastService.Error(L["InitialUploadsBlockedByQualityGate"]);
+        }
+        else if (result.CreatedUploadCount == 0)
+        {
+            toastService.Info(L["NoInitialUploadsPending"]);
+        }
+        else if (result.CreatedUploadCount == 1)
+        {
+            toastService.Success(L["InitialUploadsCreatedOne"]);
+        }
+        else
+        {
+            toastService.Success(L["InitialUploadsCreated", result.CreatedUploadCount]);
         }
     }
 

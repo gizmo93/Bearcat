@@ -7,4 +7,5 @@ public enum ProgressStepState
     Attention = 3,
     Pending = 4,
     NotApplicable = 5,
+    Current = 6,
 }

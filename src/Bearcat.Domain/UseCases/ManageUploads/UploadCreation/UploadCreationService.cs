@@ -38,46 +38,46 @@ public class UploadCreationService(
                 cancellationToken
             );
 
-        var releaseIdsWithAppliedQualityGate = new HashSet<int>();
-
         foreach (var releaseUploadConfigs in uploadConfigsWithoutUploads.GroupBy(uc => uc.Release))
         {
-            var release = releaseUploadConfigs.Key;
-
-            if (
-                !ApplyQualityGateOnceAndCheckIfSatisfied(
-                    release,
-                    localNow,
-                    releaseIdsWithAppliedQualityGate
-                )
-            )
-            {
-                logger.LogInformation(
-                    "Skipping upload creation for Release {ReleaseId} because the quality gate is not satisfied",
-                    release.Id
-                );
-                continue;
-            }
-
-            foreach (var uploadConfig in releaseUploadConfigs)
-            {
-                var upload = AddInitialUploadForUploadConfig(uploadConfig);
-
-                notificationService.Create(
-                    kind: NotificationKind.InitialUploadCreated,
-                    message: "Initial upload created for release",
-                    entity: upload,
-                    selector: u => u.Upload
-                );
-
-                logger.LogInformation(
-                    "Created missing upload for UploadConfig {UploadConfigId}",
-                    uploadConfig.Id
-                );
-            }
+            CreateInitialUploadsForReleaseIfQualityGateIsSatisfied(
+                releaseUploadConfigs.Key,
+                releaseUploadConfigs.ToList(),
+                localNow
+            );
         }
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<InitialUploadCreationForReleaseResult> CreateMissingInitialUploadsForReleaseIgnoringCooldownAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uploadConfigsWithoutUploads =
+            await uploadStateRepository.GetUploadConfigsWithoutUploadsOfReleaseAsync(
+                releaseId,
+                cancellationToken
+            );
+
+        if (uploadConfigsWithoutUploads.Count == 0)
+        {
+            return new InitialUploadCreationForReleaseResult(
+                CreatedUploadCount: 0,
+                IsBlockedByQualityGate: false
+            );
+        }
+
+        var result = CreateInitialUploadsForReleaseIfQualityGateIsSatisfied(
+            uploadConfigsWithoutUploads.First().Release,
+            uploadConfigsWithoutUploads,
+            timeProvider.GetLocalNow()
+        );
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        return result;
     }
 
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync(
@@ -156,6 +156,47 @@ public class UploadCreationService(
         return newUpload.Id;
     }
 
+    private InitialUploadCreationForReleaseResult CreateInitialUploadsForReleaseIfQualityGateIsSatisfied(
+        Release release,
+        IReadOnlyList<UploadConfig> uploadConfigsWithoutUploads,
+        DateTime localNow
+    )
+    {
+        if (!ApplyQualityGateAndCheckIfSatisfied(release, localNow))
+        {
+            logger.LogInformation(
+                "Skipping upload creation for Release {ReleaseId} because the quality gate is not satisfied",
+                release.Id
+            );
+            return new InitialUploadCreationForReleaseResult(
+                CreatedUploadCount: 0,
+                IsBlockedByQualityGate: true
+            );
+        }
+
+        foreach (var uploadConfig in uploadConfigsWithoutUploads)
+        {
+            var upload = AddInitialUploadForUploadConfig(uploadConfig);
+
+            notificationService.Create(
+                kind: NotificationKind.InitialUploadCreated,
+                message: "Initial upload created for release",
+                entity: upload,
+                selector: u => u.Upload
+            );
+
+            logger.LogInformation(
+                "Created missing upload for UploadConfig {UploadConfigId}",
+                uploadConfig.Id
+            );
+        }
+
+        return new InitialUploadCreationForReleaseResult(
+            CreatedUploadCount: uploadConfigsWithoutUploads.Count,
+            IsBlockedByQualityGate: false
+        );
+    }
+
     private Upload AddInitialUploadForUploadConfig(UploadConfig uploadConfig)
     {
         return AddUploadWaitingForArchive(uploadConfig, uploadConfig.HosterRegistrationId);
@@ -212,14 +253,26 @@ public class UploadCreationService(
         HashSet<int> releaseIdsWithAppliedQualityGate
     )
     {
-        if (
-            releaseIdsWithAppliedQualityGate.Add(release.Id)
-            && release.QualityGateState is QualityGateState.NotEvaluated or QualityGateState.Passed
-        )
+        if (!releaseIdsWithAppliedQualityGate.Add(release.Id))
+        {
+            return IsQualityGateSatisfied(release);
+        }
+
+        return ApplyQualityGateAndCheckIfSatisfied(release, localNow);
+    }
+
+    private bool ApplyQualityGateAndCheckIfSatisfied(Release release, DateTime localNow)
+    {
+        if (release.QualityGateState is QualityGateState.NotEvaluated or QualityGateState.Passed)
         {
             qualityGateEvaluator.EvaluateAndApply(release, localNow);
         }
 
+        return IsQualityGateSatisfied(release);
+    }
+
+    private static bool IsQualityGateSatisfied(Release release)
+    {
         return release.QualityGateState
             is QualityGateState.Passed
                 or QualityGateState.ManuallyApproved;

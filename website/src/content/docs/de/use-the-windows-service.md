@@ -53,7 +53,7 @@ Das Setup speichert die Konfiguration, installiert den Dienst und startet Bearca
 
 Öffne [http://127.0.0.1:17208](http://127.0.0.1:17208) oder verwende den Port, den du im Setup gewählt hast.
 
-**Weiter: [Hosterkonto hinzufügen und erstes Release hochladen](/Bearcat/de/post-installation/).**
+**Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
 
 ## Setup später ändern
 

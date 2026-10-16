@@ -63,6 +63,7 @@ public interface IBearcatWriteDbContext
     DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; }
     DbSet<ReleaseClassification> ReleaseClassifications { get; set; }
     DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; }
+    DbSet<ReleaseFolderAutomationIgnoredFolder> ReleaseFolderAutomationIgnoredFolders { get; set; }
     DbSet<QualityProfile> QualityProfiles { get; set; }
     DbSet<QualityCheckRule> QualityCheckRules { get; set; }
     DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; }

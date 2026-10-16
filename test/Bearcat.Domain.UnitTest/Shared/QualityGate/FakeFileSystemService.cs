@@ -17,6 +17,8 @@ public sealed class FakeFileSystemService : IFileSystemService
 
     public bool DirectoryHasEntries(string path) => throw new NotSupportedException();
 
+    public bool IsDirectoryWritable(string path) => throw new NotSupportedException();
+
     public long? GetAvailableFreeSpaceBytes(string path) => throw new NotSupportedException();
 
     public FolderFileCountAndSize GetFolderFileCountAndSize(string path) =>

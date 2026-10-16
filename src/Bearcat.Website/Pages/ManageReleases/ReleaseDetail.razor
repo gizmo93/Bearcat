@@ -160,6 +160,18 @@
             </div>
 
             <div class="bearcat-release-header-actions">
+                @if (release.HasUploadConfigsWaitingForInitialUpload)
+                {
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="isStartingInitialUploads"
+                              title="@L["StartUploadsNowDescription"]"
+                              OnClick="StartInitialUploadsNowAsync">
+                        <LucideIcon Name="upload" class="h-4 w-4" />
+                        @L["StartUploadsNow"]
+                    </BbButton>
+                }
+
                 @ForumPostActions(isInStickyHeader: false)
 
                 <BbDropdownMenu>
@@ -307,7 +319,10 @@
             }
             else
             {
-                <ReleaseUploads ReleaseId="@ReleaseId" InitialUploadConfigId="@FocusUploadConfigId" />
+                <ReleaseUploads
+                    @ref="@reloadableComponents[nameof(ReleaseUploads)]"
+                    ReleaseId="@ReleaseId"
+                    InitialUploadConfigId="@FocusUploadConfigId" />
             }
         </BbTabsContent>
 

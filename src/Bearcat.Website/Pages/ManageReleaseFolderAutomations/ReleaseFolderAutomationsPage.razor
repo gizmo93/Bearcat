@@ -28,8 +28,7 @@
         <Columns>
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["ReleaseBasePath"]"
-                               Property="@(automation => automation.BasePath)"
-                               Width="34%">
+                               Property="@(automation => automation.BasePath)">
                 <CellTemplate Context="automation">
                     <p class="bearcat-release-list-path" title="@automation.BasePath">
                         @automation.BasePath
@@ -39,7 +38,7 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["FolderNamePattern"]"
                                Property="@(automation => automation.FolderNamePattern ?? string.Empty)"
-                               Width="180px">
+                               Width="160px">
                 <CellTemplate Context="automation">
                     @if (string.IsNullOrWhiteSpace(automation.FolderNamePattern))
                     {
@@ -54,7 +53,7 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["ReleaseTemplate"]"
                                Property="@(automation => automation.ReleaseTemplateName)"
-                               Width="220px">
+                               Width="170px">
                 <CellTemplate Context="automation">
                     <BbBadge Variant="BadgeVariant.Secondary">@automation.ReleaseTemplateName</BbBadge>
                 </CellTemplate>
@@ -62,7 +61,7 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["ReleaseType"]"
                                Property="@(automation => automation.ReleaseType.ToString())"
-                               Width="140px">
+                               Width="120px">
                 <CellTemplate Context="automation">
                     <BbBadge Variant="BadgeVariant.Outline">@L.Localize(automation.ReleaseType)</BbBadge>
                 </CellTemplate>
@@ -70,7 +69,7 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["ReleaseContentType"]"
                                Property="@(automation => automation.ReleaseContentType.ToString())"
-                               Width="150px">
+                               Width="120px">
                 <CellTemplate Context="automation">
                     <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(automation.ReleaseContentType)</BbBadge>
                 </CellTemplate>
@@ -78,7 +77,7 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["PrimaryLanguage"]"
                                Property="@(automation => automation.PrimaryLanguageCode ?? string.Empty)"
-                               Width="170px">
+                               Width="150px">
                 <CellTemplate Context="automation">
                     @if (string.IsNullOrWhiteSpace(automation.PrimaryLanguageCode))
                     {
@@ -95,7 +94,7 @@
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="bool"
                                Header="@L["Status"]"
                                Property="@(automation => automation.IsEnabled)"
-                               Width="250px">
+                               Width="220px">
                 <CellTemplate Context="automation">
                     <div class="flex items-center gap-1.5 whitespace-nowrap">
                         <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">

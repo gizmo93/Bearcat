@@ -1,0 +1,64 @@
+@if (!string.IsNullOrWhiteSpace(BasePath))
+{
+    <div class="space-y-2 rounded-md border border-border/70 p-3">
+        <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-medium">@L["ReleaseFolderPreview"]</p>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.IconSmall"
+                      AriaLabel="@L["RefreshReleaseFolderPreview"]"
+                      Disabled="isLoadingPreview"
+                      OnClick="RefreshPreviewAsync">
+                <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+            </BbButton>
+        </div>
+
+        @if (preview is null)
+        {
+            <p class="text-sm text-muted-foreground">@L["Loading"]</p>
+        }
+        else if (!preview.BasePathExists)
+        {
+            <p class="text-sm text-destructive">@L["ReleaseFolderPreviewBasePathMissing"]</p>
+        }
+        else if (preview.MatchingFolderCount == 0)
+        {
+            <p class="text-sm text-muted-foreground">@L["ReleaseFolderPreviewNoMatchingFolders"]</p>
+        }
+        else
+        {
+            <p class="text-sm">@L["ReleaseFolderPreviewSummary", preview.MatchingFolderCount, preview.UsedFolderCount]</p>
+
+            @if (ShowInitialScanOutcome && preview.UnusedFolderCount > 0)
+            {
+                @if (IgnoreExistingOnFirstScan)
+                {
+                    <p class="text-sm text-muted-foreground">@L["ReleaseFolderPreviewIgnoredFolders", preview.UnusedFolderCount]</p>
+                }
+                else
+                {
+                    <p class="text-sm font-medium text-destructive">@L["ReleaseFolderPreviewFoldersBecomeReleases", preview.UnusedFolderCount]</p>
+                }
+            }
+
+            <ul class="max-h-48 space-y-1 overflow-y-auto">
+                @foreach (var folder in preview.MatchingFolders.Take(MaxPreviewFolderCount))
+                {
+                    <li class="flex min-w-0 items-center justify-between gap-2 text-sm" title="@folder.FolderPath">
+                        <span class="truncate">@folder.FolderName</span>
+                        @if (folder.IsUsedByReleaseArchiveOrRemoteDownload)
+                        {
+                            <BbBadge Variant="BadgeVariant.Outline" Class="shrink-0 text-muted-foreground">
+                                @L["ReleaseFolderPreviewInUse"]
+                            </BbBadge>
+                        }
+                    </li>
+                }
+            </ul>
+
+            @if (preview.MatchingFolderCount > MaxPreviewFolderCount)
+            {
+                <p class="text-xs text-muted-foreground">@L["ReleaseFolderPreviewMoreFolders", preview.MatchingFolderCount - MaxPreviewFolderCount]</p>
+            }
+        }
+    </div>
+}

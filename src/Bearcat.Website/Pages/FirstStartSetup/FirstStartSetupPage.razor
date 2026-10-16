@@ -1,0 +1,66 @@
+@page "/setup"
+
+<PageTitle>@L["FirstStartSetup"] - Bearcat</PageTitle>
+
+<section class="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["FirstStartSetup"]</h1>
+            <p class="text-sm text-muted-foreground">@L["FirstStartSetupIntro"]</p>
+        </div>
+    </div>
+
+    @if (currentStep is null)
+    {
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardContent Class="py-8">
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <BbSpinner Size="SpinnerSize.Small" />
+                    <span>@L["Loading"]</span>
+                </div>
+            </BbCardContent>
+        </BbCard>
+    }
+    else
+    {
+        <FirstStartSetupProgress CurrentStep="currentStep.Value"
+                                 CompletedSteps="GetCompletedSteps()"
+                                 OnStepSelected="GoToStep" />
+
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardContent Class="pt-6">
+                @switch (currentStep)
+                {
+                    case FirstStartSetupStep.Welcome:
+                        <FirstStartSetupWelcomeStep OnStart="GoToNextStep"
+                                                    OnSkipSetup="SkipSetupAsync" />
+                        break;
+                    case FirstStartSetupStep.WorkingDirectories:
+                        <FirstStartSetupWorkingDirectoriesStep WorkingDirectoryStatuses="workingDirectoryStatuses"
+                                                               OnCheckAgain="LoadWorkingDirectoryStatuses"
+                                                               OnBack="GoToPreviousStep"
+                                                               OnSkip="GoToNextStep"
+                                                               OnNext="GoToNextStep" />
+                        break;
+                    case FirstStartSetupStep.Hoster:
+                        <FirstStartSetupHosterStep WizardState="wizardState"
+                                                   OnBack="GoToPreviousStep"
+                                                   OnSkip="GoToNextStep"
+                                                   OnNext="GoToNextStep" />
+                        break;
+                    case FirstStartSetupStep.ReleaseTemplate:
+                        <FirstStartSetupReleaseTemplateStep WizardState="wizardState"
+                                                            OnBack="GoToPreviousStep"
+                                                            OnSkip="GoToNextStep"
+                                                            OnNext="GoToNextStepAfterChangeAsync" />
+                        break;
+                    case FirstStartSetupStep.Source:
+                        <FirstStartSetupSourceStep ReleaseTemplateId="wizardState.ReleaseTemplateId"
+                                                   OnBack="GoToPreviousStep"
+                                                   OnSourceCreated="LoadDatabaseStatusAsync" />
+                        break;
+                }
+            </BbCardContent>
+        </BbCard>
+    }
+</section>
