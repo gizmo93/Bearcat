@@ -7,8 +7,11 @@ using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.FirstStartSetup;
 
-public partial class FirstStartSetupSourceCreatedSummary(IScopedOperationRunner operationRunner)
-    : ComponentBase
+public partial class FirstStartSetupSourceCreatedSummary(
+    IScopedOperationRunner operationRunner,
+    NavigationManager navigationManager,
+    FirstStartSetupBrowserState browserState
+) : ComponentBase
 {
     [Parameter]
     [EditorRequired]
@@ -88,5 +91,11 @@ public partial class FirstStartSetupSourceCreatedSummary(IScopedOperationRunner 
     private static string FormatMinutes(int minutes)
     {
         return TimeSpan.FromMinutes(minutes).Humanize(culture: CultureInfo.CurrentCulture);
+    }
+
+    private async Task GoToActivityAsync()
+    {
+        await browserState.DisableSetupAutoOpenAsync();
+        navigationManager.NavigateTo("/");
     }
 }

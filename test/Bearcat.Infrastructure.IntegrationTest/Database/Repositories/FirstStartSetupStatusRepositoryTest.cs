@@ -26,7 +26,15 @@ public class FirstStartSetupStatusRepositoryTest(DatabaseProvider databaseProvid
                 HasHosterRegistration: false,
                 HasReleaseTemplate: false,
                 HasReleaseFolderAutomationOrRemoteSourceAutomation: false,
-                HasRelease: false
+                HasRelease: false,
+                OptionalSetupStatus: new FirstStartOptionalSetupStatus(
+                    HasNfoDatabaseOrMediaDatabaseRegistration: false,
+                    HasImageHosterRegistration: false,
+                    HasLinkCrypterRegistration: false,
+                    HasConnectedTelegramConfiguration: false,
+                    HasDistributionSiteRegistration: false,
+                    HasProxyServer: false
+                )
             )
         );
     }
@@ -83,6 +91,58 @@ public class FirstStartSetupStatusRepositoryTest(DatabaseProvider databaseProvid
                 ReleaseGroup = releaseGroup,
             }
         );
+        DbContext.NfoDatabaseRegistrations.Add(
+            new NfoDatabaseRegistration { NfoDatabaseClassName = "SrrDb", SerializedConfig = "{}" }
+        );
+        DbContext.MediaDatabaseRegistrations.Add(
+            new MediaDatabaseRegistration
+            {
+                MediaDatabaseClassName = "Tmdb",
+                SerializedConfig = "{}",
+            }
+        );
+        DbContext.ImageHosterRegistrations.Add(
+            new ImageHosterRegistration
+            {
+                Name = "Image hoster",
+                ImageHosterClassName = "ImgBb",
+                SerializedConfig = "{}",
+            }
+        );
+        DbContext.LinkCrypterRegistrations.Add(
+            new LinkCrypterRegistration
+            {
+                Name = "Crypter",
+                LinkCrypterClassName = "FileCrypt",
+                SerializedConfig = "{}",
+            }
+        );
+        DbContext.TelegramConfigurations.Add(
+            new TelegramConfiguration
+            {
+                EncryptedBotToken = "encrypted",
+                BotUsername = "bearcat_bot",
+                NotificationBaseUrl = "http://localhost",
+                ChatId = 42,
+            }
+        );
+        DbContext.DistributionSiteRegistrations.Add(
+            new DistributionSiteRegistration
+            {
+                Name = "Forum",
+                DistributionSiteClassName = "XenForo",
+                SerializedConfig = "{}",
+            }
+        );
+        DbContext.ProxyServers.Add(
+            new ProxyServer
+            {
+                Name = "Proxy",
+                ProxyType = ProxyType.Http,
+                Host = "proxy.local",
+                Port = 8080,
+            }
+        );
         await DbContext.SaveChangesAsync();
         var repository = new FirstStartSetupStatusRepository(ReadDbContext);
 
@@ -95,7 +155,15 @@ public class FirstStartSetupStatusRepositoryTest(DatabaseProvider databaseProvid
                 HasHosterRegistration: true,
                 HasReleaseTemplate: true,
                 HasReleaseFolderAutomationOrRemoteSourceAutomation: true,
-                HasRelease: true
+                HasRelease: true,
+                OptionalSetupStatus: new FirstStartOptionalSetupStatus(
+                    HasNfoDatabaseOrMediaDatabaseRegistration: true,
+                    HasImageHosterRegistration: true,
+                    HasLinkCrypterRegistration: true,
+                    HasConnectedTelegramConfiguration: true,
+                    HasDistributionSiteRegistration: true,
+                    HasProxyServer: true
+                )
             )
         );
     }

@@ -1,0 +1,48 @@
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div class="flex min-w-0 items-center gap-2">
+                <LucideIcon Name="list-todo" class="h-4 w-4 shrink-0" />
+                <div class="min-w-0">
+                    <BbCardTitle class="text-base">@L["FirstStartOptionalSetupTitle"]</BbCardTitle>
+                    <p class="text-sm text-muted-foreground">@L["FirstStartOptionalSetupDescription"]</p>
+                </div>
+            </div>
+            <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" OnClick="@(() => OnHide.InvokeAsync())">
+                <LucideIcon Name="eye-off" class="h-4 w-4" />
+                @L["FirstStartOptionalSetupHide"]
+            </BbButton>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        <ul class="divide-y divide-border/70">
+            @foreach (var item in GetItems())
+            {
+                <li class="@($"flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between {(item.IsDone ? "text-muted-foreground" : string.Empty)}")">
+                    <div class="flex min-w-0 items-start gap-3">
+                        <LucideIcon Name="@(item.IsDone ? "circle-check" : item.IconName)"
+                                    class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="text-sm font-medium">
+                                @item.Title
+                                @if (item.IsDone)
+                                {
+                                    <span class="sr-only">(@L["FirstStartOptionalSetupDone"])</span>
+                                }
+                            </p>
+                            <p class="text-sm text-muted-foreground">@item.Description</p>
+                        </div>
+                    </div>
+                    <div class="flex shrink-0 flex-wrap gap-2 pl-7 sm:pl-0">
+                        @foreach (var link in item.Links)
+                        {
+                            <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" Href="@link.Href">
+                                @link.Label
+                            </BbButton>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    </BbCardContent>
+</BbCard>

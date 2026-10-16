@@ -56,11 +56,13 @@ public partial class FirstStartSetupProgress : ComponentBase
         {
             FirstStartSetupStep.Welcome => CurrentStep > FirstStartSetupStep.Welcome,
             FirstStartSetupStep.WorkingDirectories => Status.HasExistingWritableWorkingDirectory(),
-            FirstStartSetupStep.Hoster => Status.HasHosterRegistration
+            FirstStartSetupStep.Hoster => Status.DatabaseStatus.HasHosterRegistration
                 || WizardState.HasSelectedHosterRegistrationWithSuccessfulLogin(),
-            FirstStartSetupStep.ReleaseTemplate => Status.HasReleaseTemplate
+            FirstStartSetupStep.ReleaseTemplate => Status.DatabaseStatus.HasReleaseTemplate
                 || WizardState.ReleaseTemplateId is not null,
-            FirstStartSetupStep.Source => Status.HasReleaseFolderAutomationOrRemoteSourceAutomation,
+            FirstStartSetupStep.Source => Status
+                .DatabaseStatus
+                .HasReleaseFolderAutomationOrRemoteSourceAutomation,
             _ => throw new ArgumentOutOfRangeException(nameof(step), step, null),
         };
     }

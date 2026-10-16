@@ -1890,4 +1890,23 @@
   <data name="FirstStartSetupTestRelease" xml:space="preserve"><value>Testrelease</value></data>
   <data name="FirstStartSetupTestReleaseHasNoUploadConfigs" xml:space="preserve"><value>Das Testrelease hat keine Uploadkonfigurationen. Füge dem Releasetemplate Hoster hinzu.</value></data>
   <data name="FirstStartSetupGoToActivity" xml:space="preserve"><value>Zur Aktivität</value></data>
+  <data name="FirstStartSetupIncomplete" xml:space="preserve"><value>Einrichtung unvollständig. Es fehlt: {0}.</value></data>
+  <data name="FirstStartSetupContinue" xml:space="preserve"><value>Einrichtung fortsetzen</value></data>
+  <data name="FirstStartOptionalSetupTitle" xml:space="preserve"><value>Optionale nächste Schritte</value></data>
+  <data name="FirstStartOptionalSetupDescription" xml:space="preserve"><value>Für Uploads nicht nötig. Richte sie ein, sobald du sie brauchst.</value></data>
+  <data name="FirstStartOptionalSetupHide" xml:space="preserve"><value>Ausblenden</value></data>
+  <data name="FirstStartOptionalSetupDone" xml:space="preserve"><value>erledigt</value></data>
+  <data name="FirstStartOptionalSetupMetadata" xml:space="preserve"><value>Metadaten und NFOs</value></data>
+  <data name="FirstStartOptionalSetupMetadataDescription" xml:space="preserve"><value>Holt NFOs, Cover und Releasedetails aus NFO-Datenbanken und Metadatenquellen.</value></data>
+  <data name="FirstStartOptionalSetupImageHoster" xml:space="preserve"><value>Bildhoster für Coverbilder</value></data>
+  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Lädt Coverbilder hoch, damit Forenposts sie anzeigen können.</value></data>
+  <data name="FirstStartOptionalSetupLinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
+  <data name="FirstStartOptionalSetupLinkCryptersDescription" xml:space="preserve"><value>Legt Downloadlinks in Linkcryptercontainern ab.</value></data>
+  <data name="FirstStartOptionalSetupTelegram" xml:space="preserve"><value>Telegrambenachrichtigungen</value></data>
+  <data name="FirstStartOptionalSetupTelegramDescription" xml:space="preserve"><value>Leitet Benachrichtigungen an einen Telegramchat weiter.</value></data>
+  <data name="FirstStartOptionalSetupTelegramLink" xml:space="preserve"><value>Telegram</value></data>
+  <data name="FirstStartOptionalSetupForumPosting" xml:space="preserve"><value>Forenposts</value></data>
+  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Erstellt Forenpostentwürfe auf Verteilungsseiten.</value></data>
+  <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxyserver</value></data>
+  <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Leitet ausgehende Verbindungen über einen Proxy.</value></data>
 </root>

@@ -17,13 +17,7 @@ public class FirstStartSetupStatusService(
     {
         var databaseStatus = await statusRepository.GetDatabaseStatusAsync(cancellationToken);
 
-        return new FirstStartSetupStatus(
-            databaseStatus.HasHosterRegistration,
-            databaseStatus.HasReleaseTemplate,
-            databaseStatus.HasReleaseFolderAutomationOrRemoteSourceAutomation,
-            databaseStatus.HasRelease,
-            GetWorkingDirectoryStatuses()
-        );
+        return new FirstStartSetupStatus(databaseStatus, GetWorkingDirectoryStatuses());
     }
 
     private List<WorkingDirectoryStatus> GetWorkingDirectoryStatuses()

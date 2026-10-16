@@ -34,7 +34,7 @@
                 {
                     case FirstStartSetupStep.Welcome:
                         <FirstStartSetupWelcomeStep OnStart="GoToNextStep"
-                                                    OnSkipSetup="SkipSetup" />
+                                                    OnSkipSetup="SkipSetupAsync" />
                         break;
                     case FirstStartSetupStep.WorkingDirectories:
                         <FirstStartSetupWorkingDirectoriesStep Status="status"

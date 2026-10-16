@@ -6,7 +6,8 @@ namespace Bearcat.Website.Pages.FirstStartSetup;
 
 public partial class FirstStartSetupPage(
     IScopedOperationRunner operationRunner,
-    NavigationManager navigationManager
+    NavigationManager navigationManager,
+    FirstStartSetupBrowserState browserState
 )
 {
     private readonly FirstStartSetupWizardState wizardState = new();
@@ -19,6 +20,14 @@ public partial class FirstStartSetupPage(
         currentStep = GetStartStep(status!);
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !browserState.IsSetupAutoOpenDisabled)
+        {
+            await browserState.DisableSetupAutoOpenAsync();
+        }
+    }
+
     private async Task LoadStatusAsync()
     {
         status = await operationRunner.RunAsync(
@@ -28,7 +37,7 @@ public partial class FirstStartSetupPage(
 
     private static FirstStartSetupStep GetStartStep(FirstStartSetupStatus setupStatus)
     {
-        if (setupStatus.IsFreshInstallation)
+        if (setupStatus.DatabaseStatus.IsFreshInstallation)
         {
             return FirstStartSetupStep.Welcome;
         }
@@ -38,12 +47,12 @@ public partial class FirstStartSetupPage(
             return FirstStartSetupStep.WorkingDirectories;
         }
 
-        if (!setupStatus.HasHosterRegistration)
+        if (!setupStatus.DatabaseStatus.HasHosterRegistration)
         {
             return FirstStartSetupStep.Hoster;
         }
 
-        if (!setupStatus.HasReleaseTemplate)
+        if (!setupStatus.DatabaseStatus.HasReleaseTemplate)
         {
             return FirstStartSetupStep.ReleaseTemplate;
         }
@@ -66,8 +75,9 @@ public partial class FirstStartSetupPage(
         currentStep -= 1;
     }
 
-    private void SkipSetup()
+    private async Task SkipSetupAsync()
     {
+        await browserState.DisableSetupAutoOpenAsync();
         navigationManager.NavigateTo("/");
     }
 }

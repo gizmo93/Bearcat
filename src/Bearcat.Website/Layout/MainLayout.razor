@@ -1,9 +1,11 @@
 @inherits LayoutComponentBase
 @using Bearcat.Abstractions.Updates
 @using Bearcat.Website.Layout.Navigation
+@using Bearcat.Website.Pages.FirstStartSetup
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IUpdateChecker UpdateChecker
+@inject FirstStartSetupBrowserState FirstStartSetupBrowserState
 
 <BbSidebarProvider DefaultOpen="true" Variant="SidebarVariant.Inset">
     <BbSidebar Class="bearcat-sidebar border-r border-border/70 bg-sidebar text-sidebar-foreground">
@@ -122,6 +124,7 @@
             "additional-archive-contents" => L["AdditionalArchiveContents"],
             "archive-storage-folders" => L["ArchiveStorageFolders"],
             "proxy-servers" => L["ProxyServers"],
+            "setup" => L["FirstStartSetup"],
             _ => "Bearcat"
         };
     }

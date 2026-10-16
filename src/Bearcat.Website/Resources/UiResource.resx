@@ -1887,4 +1887,23 @@
   <data name="FirstStartSetupTestRelease" xml:space="preserve"><value>Test release</value></data>
   <data name="FirstStartSetupTestReleaseHasNoUploadConfigs" xml:space="preserve"><value>The test release has no upload configurations. Add hosters to the release template.</value></data>
   <data name="FirstStartSetupGoToActivity" xml:space="preserve"><value>Go to activity</value></data>
+  <data name="FirstStartSetupIncomplete" xml:space="preserve"><value>Setup incomplete. Missing: {0}.</value></data>
+  <data name="FirstStartSetupContinue" xml:space="preserve"><value>Continue setup</value></data>
+  <data name="FirstStartOptionalSetupTitle" xml:space="preserve"><value>Optional next steps</value></data>
+  <data name="FirstStartOptionalSetupDescription" xml:space="preserve"><value>Not needed for uploading. Set them up when you need them.</value></data>
+  <data name="FirstStartOptionalSetupHide" xml:space="preserve"><value>Hide</value></data>
+  <data name="FirstStartOptionalSetupDone" xml:space="preserve"><value>done</value></data>
+  <data name="FirstStartOptionalSetupMetadata" xml:space="preserve"><value>Metadata and NFOs</value></data>
+  <data name="FirstStartOptionalSetupMetadataDescription" xml:space="preserve"><value>Fetches NFOs, covers and release details from NFO databases and metadata sources.</value></data>
+  <data name="FirstStartOptionalSetupImageHoster" xml:space="preserve"><value>Image hoster for cover images</value></data>
+  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Uploads cover images so forum posts can show them.</value></data>
+  <data name="FirstStartOptionalSetupLinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
+  <data name="FirstStartOptionalSetupLinkCryptersDescription" xml:space="preserve"><value>Puts download links into link crypter containers.</value></data>
+  <data name="FirstStartOptionalSetupTelegram" xml:space="preserve"><value>Telegram notifications</value></data>
+  <data name="FirstStartOptionalSetupTelegramDescription" xml:space="preserve"><value>Forwards notifications to a Telegram chat.</value></data>
+  <data name="FirstStartOptionalSetupTelegramLink" xml:space="preserve"><value>Telegram</value></data>
+  <data name="FirstStartOptionalSetupForumPosting" xml:space="preserve"><value>Forum posting</value></data>
+  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Creates forum post drafts on distribution sites.</value></data>
+  <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
+  <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Routes outbound connections through a proxy.</value></data>
 </root>

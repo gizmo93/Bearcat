@@ -1,5 +1,6 @@
 using Bearcat.Domain.Shared;
 using Bearcat.Website.Layout;
+using Bearcat.Website.Pages.FirstStartSetup;
 using Bearcat.Website.Pages.PostQueue;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -23,6 +24,7 @@ public static class ServiceProviderConfig
         services.AddScoped<PostQueueWorkflowState>();
         services.AddScoped<NavMenuState>();
         services.AddScoped<ClientPlatform>();
+        services.AddScoped<FirstStartSetupBrowserState>();
         services
             .AddControllers()
             .AddApplicationPart(typeof(ServiceProviderConfig).Assembly)
