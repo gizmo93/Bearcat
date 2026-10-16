@@ -1,6 +1,6 @@
 ---
 title: "Your First Upload"
-description: "Connect a hoster, create a release template, and add a source with the setup wizard."
+description: "Connect your hoster, create a release template, and add a source."
 ---
 
 Have your hoster account and files ready. The files you upload together form a **release**.
@@ -12,38 +12,37 @@ Open Bearcat in your browser:
 
 If you changed the web port during installation, use that port instead.
 
-## Open the setup
+## Open setup
 
-On a fresh installation, **Setup** opens automatically the first time you open the start page.
-It opens automatically only once. Later, open **Setup** under **System** in the navigation, or find it
-with **Ctrl+K** or **Cmd+K**.
+After installation, **Initial Setup** opens automatically on your first visit to the start page.
+To return later, use **System > Initial Setup** or search with **Ctrl+K** or **Cmd+K**.
 
-You can skip every step and change everything later.
+You can skip steps and change all settings later.
 
 ### Welcome
 
-Click **Start setup**. **Skip setup** returns to the start page. To set up Bearcat without the wizard,
-see [Set up manually](#set-up-manually).
+Click **Start setup**. Use **Skip setup** to return to the start page.
+You can also [set up Bearcat manually](#set-up-manually).
 
 ### Working directories
 
-Bearcat only sees folders inside its working directories. The step lists each one as **OK**,
-**Missing**, or **Not writable**. You need at least one existing, writable working directory to continue.
+Bearcat can only access folders inside its working directories. Setup shows each directory as **OK**,
+**Missing**, or **Not writable**. At least one must exist and be writable before you can click **Next**.
 
 - **Docker:** the host folder `RELEASES_DIR` from your `.env` file appears as `/mnt/data/releases`.
 - **Desktop app or Windows service:** set working directories in the desktop app settings or in
   `appsettings.user.json`, then restart Bearcat and click **Check again**.
 
-The working directories cannot be changed in the wizard.
+You cannot change working directories in the wizard.
 
 ### Hoster
 
 1. Click **Add hoster**, choose your hoster, and enter its username and password or API key.
    Leave upload limits and reupload settings at their defaults.
-2. Select the registrations Bearcat should upload to.
-3. Click **Try login** for each selected registration.
+2. Select the hoster registrations Bearcat should use for uploads.
+3. Click **Try login** for each selected hoster registration.
 
-**Next** is available once at least one selected registration has a successful login.
+Once at least one login test succeeds, you can click **Next**.
 
 <details>
 <summary>Show hoster setup</summary>
@@ -54,81 +53,83 @@ The working directories cannot be changed in the wizard.
 
 ### Release group and template
 
-The release group decides whether Bearcat reuploads offline links. The release template holds the
-archive settings and target hosters that automations use for every new release.
+The release group controls whether Bearcat replaces uploads that go offline. The release template stores
+the archive settings and target hosters. Automations use these settings for new releases.
 
-If templates already exist, choose **Use existing template** or **Create new template**. For a new template:
+If you already have a template, choose **Use existing template**. Otherwise, choose **Create new template**.
+New templates use these defaults:
 
 | Field | Default |
 | --- | --- |
 | **Release group** | `Default`, or the first group if `Default` does not exist |
 | **Template name** | `Default` |
 | **Archiver** | RAR |
-| **Part size (MB)** | The smallest file size limit of the selected hosters. `0` means no splitting; 7z needs a value greater than `0`. |
+| **Part size (MB)** | The smallest file size limit of the selected hosters. Use `0` to keep the archive in one part. For 7z, the value must be greater than `0`. |
 | **Archive password** | Empty, no password |
 | **Archive output folder** | `bearcat-archives` in the first writable working directory |
 
-The wizard does not create a release group. Below **Release group** it shows whether the selected group
-reuploads offline links automatically. Change this on **Release groups**. Without any release group, the
-step links to **Release groups** instead of showing the form.
+Below **Release group**, you can see whether automatic reuploads are enabled for the selected group.
+You can change this under **Release groups**.
 
-Keep the archive output folder separate from your source folders. If it does not exist yet, click
-**Create folder**. Then click **Create and continue**.
+If no group exists, a link takes you to **Release groups**. Create a group there before creating the template.
 
-Bearcat creates a managed template with one archive configuration and one upload configuration per
-selected hoster. Without a selected hoster, the template has no uploads. Add hosters later on
-**Release templates**. Archives get a random name. To use the release name instead, edit the archive
-configuration on **Release templates**.
+Choose an archive output folder separate from your source folders. If it does not exist yet, click
+**Create folder**. Save the template with **Create and continue**.
+
+The new template is **Managed** and contains one archive configuration and one upload configuration per
+selected hoster. If you have not selected a hoster, add the upload configurations later under **Release templates**.
+
+Archives get a random name. To use the release name, edit the archive configuration under **Release templates**.
 
 ### Source
 
-A source is where new releases come from. Choose **Local folder** or **FTP/FTPS server**.
+A source tells Bearcat where to look for new releases. Choose **Local folder** or **FTP/FTPS server**.
 
 **Local folder:**
 
-1. Set **Release base path**. Each direct subfolder becomes a release.
+1. Set **Release base path** to the folder whose direct subfolders should become releases.
 2. Optionally set a **Folder name pattern**, such as `*1080p*`.
-3. For RAR or 7z archives in the folders, turn on **Extract archives before release creation**.
+3. If the folders contain RAR or 7z archives, turn on **Extract archives before release creation**.
    See [Extract archives before release creation](/Bearcat/release-templates-and-automations/#extract-archives-before-release-creation).
 
-The **Folder preview** lists the matching folders and how many are already in use. Archive output
+The **Folder preview** lists matching folders and shows how many are already in use. Archive output
 folders count as used and never become releases.
 
-If matching folders without a release exist, choose what happens with them under **Existing folders**:
+Under **Existing folders**, choose what to do with matching folders that do not have a release yet:
 
 | Option | Result |
 | --- | --- |
-| **Upload one as a test** (default) | Bearcat creates a release for the selected **Test folder** right away and starts its uploads without the initial upload cooldown. The other existing folders are ignored. Not available with archive extraction. |
+| **Upload one as a test** (default) | Bearcat creates a release from the selected **Test folder** and starts its uploads without waiting. Other existing folders are ignored. This option is unavailable when archive extraction is enabled. |
 | **Only new folders** | Existing folders are ignored. Only folders added later become releases. |
-| **Import all** | Every existing folder becomes a release and is uploaded. |
+| **Import all** | All matching folders without a release are imported and uploaded. |
 
 Pick a small test folder to check archives and uploads quickly. Click **Create source**.
 
 **FTP/FTPS server:**
 
-1. Without an active remote source, click **Add remote source** and enter your server details.
+1. If no active remote source exists, click **Add remote source** and enter your server details.
 2. Click **Create remote automation**. In the dialog, choose the remote source, the remote folder to
    watch, and the local download folder.
 
 Existing folders on the server are ignored. See [FTP / FTPS Downloads](/Bearcat/remote-downloads/)
-for the settings.
+for more about these settings.
 
-After the source is created, Bearcat confirms it and shows the upload result of the test release.
-**Open release** opens the test release. **Go to activity** opens the start page.
+Bearcat confirms the new source. If you selected a test folder, it also shows whether its uploads were created.
+Click **Open release** to view the test release or **Go to activity** to return to the start page.
 
 ## What happens next
 
 - **Test release:** packing starts shortly after you click **Create source**.
-- **New local folders:** Bearcat scans about every two minutes. It creates the release once the folder
-  has stayed unchanged for the [folder stability](/Bearcat/advanced-configuration/#folder-automation)
-  period (default: 5 minutes).
-- **New folders on the server:** Bearcat downloads a folder once it has stayed unchanged on the server
-  for the [stability period](/Bearcat/advanced-configuration/#remote-downloads) (default: 5 minutes),
-  then creates the release.
+- **New local folders:** Bearcat scans about every two minutes. A folder must remain unchanged for the
+  [stability period](/Bearcat/advanced-configuration/#folder-automation) (default: 5 minutes).
+  Bearcat then creates the release.
+- **New folders on the server:** Bearcat also waits until the folder has remained unchanged for the
+  [stability period](/Bearcat/advanced-configuration/#remote-downloads) (default: 5 minutes).
+  It then downloads the folder and creates the release.
 - **Uploads** start after the [initial upload cooldown](/Bearcat/advanced-configuration/#initial-upload-cooldown)
   (default: 5 minutes). To skip the wait for one release, click **Start uploads now** on its detail page.
 
-Running archive creations and uploads appear on the start page. On the release detail page, open
+You can follow archive creation and uploads on the start page. On the release detail page, open
 **Uploads** and switch to **History** to follow progress. Once the upload finishes, copy the download
 links from **Overview**.
 
@@ -140,15 +141,15 @@ for the stages.
 
 ### Start page
 
-While the hoster, release template, or source is missing, a banner on the start page shows what is
-missing. **Continue setup** opens the wizard again.
+A banner on the start page shows whether you still need a hoster, release template, or source.
+Click **Continue setup** to return to the wizard.
 
-After the required setup, the start page shows **Optional next steps**: metadata and NFOs, an image
+Once basic setup is complete, the start page shows **Optional next steps**: metadata and NFOs, an image
 hoster for cover images, link crypters, Telegram notifications, forum posting, and proxy servers.
-Each item links to its settings page and is marked as done once set up.
+Each item links to the relevant settings and is marked as done once configured.
 
-**Hide** turns off **Show assistant on activity page** under **Configurations > Initial Setup**. This hides
-the list and the setup banner for every browser. Turn the setting on again to show them.
+Click **Hide** to hide the list and setup banner in all browsers. To show them again, enable
+**Show assistant on activity page** under **Configurations > Initial Setup**.
 
 ## Set up manually
 
@@ -160,9 +161,10 @@ the list and the setup banner for every browser. Turn the setting on again to sh
    Open **Releases**, click **New release**, select **Managed**, choose the folder and the group, and
    click **Create release**. In Docker, `RELEASES_DIR` appears as `/mnt/data/releases`. For archives you
    already have, use an [unmanaged release](/Bearcat/release-types/#unmanaged-releases).
-4. **Archives:** on the release's **Archives** tab, click **Add**. Choose RAR or 7z, a writable output
-   folder in a working directory separate from your source files, a file prefix, a part size within
-   your hoster's file size limit, and an optional password.
+4. **Archives:** on the release's **Archives** tab, click **Add** and choose RAR or 7z.
+   Choose a writable output folder in a working directory, separate from your source files.
+   Enter a file prefix and a part size in MB within your hoster's file size limit.
+   Set a password if needed, then save.
 5. **Uploads:** on **Uploads** > **Configuration**, click **Add**, select your hoster account and the
    archive configuration, and save. Leave **Links distributed to** empty for now.
 

@@ -1,6 +1,6 @@
 ---
 title: "Dein erster Upload"
-description: "Mit der Einrichtung einen Hoster verbinden, ein Releasetemplate erstellen und eine Quelle anlegen."
+description: "Verbinde deinen Hoster, erstelle ein Releasetemplate und lege eine Quelle an."
 ---
 
 Halte dein Hosterkonto und deine Dateien bereit. Die Dateien, die du gemeinsam hochlädst, bilden ein **Release**.
@@ -14,21 +14,21 @@ Falls du den Webport geändert hast, verwende diesen Port.
 
 ## Einrichtung öffnen
 
-Bei einer neuen Installation öffnet sich die **Einrichtung** automatisch, wenn du die Startseite zum ersten Mal aufrufst.
-Das passiert nur einmal. Später öffnest du **Einrichtung** unter **System** in der Navigation oder findest sie
-mit **Ctrl+K** oder **Cmd+K**.
+Nach der Installation öffnet sich die **Erste Einrichtung** einmalig beim ersten Aufruf der Startseite.
+Später findest du sie unter **System > Erste Einrichtung** oder über die Suche mit **Ctrl+K** oder **Cmd+K**.
 
-Du kannst jeden Schritt überspringen und alles später ändern.
+Du kannst Schritte überspringen und alle Einstellungen später ändern.
 
 ### Willkommen
 
-Klicke auf **Einrichtung starten**. **Einrichtung überspringen** führt zurück zur Startseite. Wie du Bearcat
-ohne Einrichtung konfigurierst, steht unter [Manuell einrichten](#manuell-einrichten).
+Klicke auf **Einrichtung starten**. Mit **Einrichtung überspringen** kehrst du zur Startseite zurück.
+Du kannst Bearcat auch [manuell einrichten](#manuell-einrichten).
 
 ### Arbeitsverzeichnisse
 
-Bearcat sieht nur Ordner innerhalb seiner Arbeitsverzeichnisse. Der Schritt zeigt jedes davon als **OK**,
-**Fehlt** oder **Nicht beschreibbar**. Um fortzufahren, brauchst du mindestens ein vorhandenes, beschreibbares Arbeitsverzeichnis.
+Bearcat kann nur auf Ordner in seinen Arbeitsverzeichnissen zugreifen. Die Einrichtung zeigt für jedes
+Arbeitsverzeichnis den Status **OK**, **Fehlt** oder **Nicht beschreibbar**. Für **Weiter** muss mindestens
+eines vorhanden und beschreibbar sein.
 
 - **Docker:** Der Hostordner `RELEASES_DIR` aus deiner Datei `.env` erscheint als `/mnt/data/releases`.
 - **Desktopanwendung oder Windows-Dienst:** Lege die Arbeitsverzeichnisse in den Einstellungen der Desktopanwendung
@@ -40,10 +40,10 @@ In der Einrichtung lassen sich die Arbeitsverzeichnisse nicht ändern.
 
 1. Klicke auf **Hoster hinzufügen**, wähle deinen Hoster und gib Benutzername und Passwort oder API-Schlüssel ein.
    Lass Uploadlimits und Reuploadeinstellungen auf den Standardwerten.
-2. Wähle die Registrierungen aus, zu denen Bearcat hochladen soll.
-3. Klicke bei jeder ausgewählten Registrierung auf **Login testen**.
+2. Wähle die Hosterregistrierungen aus, die Bearcat für Uploads verwenden soll.
+3. Klicke bei jeder ausgewählten Hosterregistrierung auf **Login testen**.
 
-**Weiter** ist verfügbar, sobald mindestens eine ausgewählte Registrierung einen erfolgreichen Login hat.
+Sobald mindestens ein Logintest erfolgreich war, kannst du auf **Weiter** klicken.
 
 <details>
 <summary>Hostereinrichtung anzeigen</summary>
@@ -54,76 +54,83 @@ In der Einrichtung lassen sich die Arbeitsverzeichnisse nicht ändern.
 
 ### Releasegruppe und Template
 
-Die Releasegruppe legt fest, ob Bearcat Offlinelinks erneut hochlädt. Das Releasetemplate enthält die
-Archiveinstellungen und Zielhoster, die Automatisierungen für jedes neue Release verwenden.
+Die Releasegruppe legt fest, ob Bearcat Uploads ersetzt, die offline gehen. Im Releasetemplate speicherst du
+die Archiveinstellungen und Zielhoster. Automatisierungen übernehmen diese Einstellungen für neue Releases.
 
-Gibt es bereits Templates, wähle **Vorhandenes Template verwenden** oder **Neues Template erstellen**. Für ein neues Template:
+Falls du bereits ein Template hast, wähle **Vorhandenes Template verwenden**. Ansonsten wähle
+**Neues Template erstellen**. Für neue Templates gelten diese Standardwerte:
 
 | Feld | Standard |
 | --- | --- |
-| **Releasegruppe** | `Default`, oder die erste Gruppe, wenn es `Default` nicht gibt |
+| **Releasegruppe** | `Default`, sonst die erste Gruppe |
 | **Name des Templates** | `Standard` |
 | **Archiver** | RAR |
-| **Teilgrösse (MB)** | Das kleinste Dateigrössenlimit der ausgewählten Hoster. `0` bedeutet keine Aufteilung, 7z braucht einen Wert grösser als `0`. |
+| **Teilgrösse (MB)** | Das kleinste Dateigrössenlimit der ausgewählten Hoster. Mit `0` wird das Archiv nicht aufgeteilt. Für 7z muss der Wert grösser als `0` sein. |
 | **Archivpasswort** | Leer, kein Passwort |
 | **Archivausgabeordner** | `bearcat-archives` im ersten beschreibbaren Arbeitsverzeichnis |
 
-Die Einrichtung erstellt keine Releasegruppe. Unter **Releasegruppe** zeigt sie, ob die gewählte Gruppe
-Offlinelinks automatisch erneut hochlädt. Das änderst du unter **Releasegruppen**. Gibt es keine
-Releasegruppe, verlinkt der Schritt auf **Releasegruppen**, statt das Formular zu zeigen.
+Unter **Releasegruppe** siehst du, ob automatische Reuploads für die gewählte Gruppe aktiv sind.
+Ändern kannst du das unter **Releasegruppen**.
 
-Halte den Archivausgabeordner getrennt von deinen Quellordnern. Existiert er noch nicht, klicke auf
-**Ordner erstellen**. Klicke dann auf **Erstellen und weiter**.
+Falls noch keine Gruppe existiert, führt dich ein Link zu **Releasegruppen**. Lege dort eine Gruppe an,
+damit du das Template erstellen kannst.
 
-Bearcat erstellt ein Managed Template mit einer Archivkonfiguration und einer Uploadkonfiguration pro
-ausgewähltem Hoster. Ohne ausgewählten Hoster hat das Template keine Uploads. Hoster fügst du später unter
-**Releasetemplates** hinzu. Archive bekommen einen zufälligen Namen. Wenn du den Releasenamen verwenden willst,
-ändere die Archivkonfiguration unter **Releasetemplates**.
+Wähle einen Archivausgabeordner getrennt von deinen Quellordnern. Falls er noch nicht existiert, klicke auf
+**Ordner erstellen**. Speichere das Template mit **Erstellen und weiter**.
+
+Das neue Template hat den Typ **Managed** und enthält eine Archivkonfiguration sowie eine Uploadkonfiguration
+pro ausgewähltem Hoster. Hast du keinen Hoster ausgewählt, musst du die Uploadkonfigurationen später unter
+**Releasetemplates** ergänzen.
+
+Archive erhalten einen zufälligen Namen. Wenn du den Releasenamen verwenden möchtest, ändere die
+Archivkonfiguration unter **Releasetemplates**.
 
 ### Quelle
 
-Eine Quelle ist der Ort, an dem neue Releases ankommen. Wähle **Lokaler Ordner** oder **Server (FTP/FTPS)**.
+Eine Quelle legt fest, wo Bearcat nach neuen Releases sucht. Wähle **Lokaler Ordner** oder **Server (FTP/FTPS)**.
 
 **Lokaler Ordner:**
 
-1. Setze den **Releasebasispfad**. Jeder direkte Unterordner wird zu einem Release.
-2. Setze optional ein **Muster für Ordnernamen**, etwa `*1080p*`.
+1. Wähle unter **Releasebasispfad** den Ordner, dessen direkte Unterordner zu Releases werden sollen.
+2. Gib bei Bedarf ein **Muster für Ordnernamen** ein, etwa `*1080p*`.
 3. Liegen RAR- oder 7z-Archive in den Ordnern, aktiviere **Archive vor der Releaseerstellung entpacken**.
    Siehe [Archive vor der Releaseerstellung entpacken](/Bearcat/de/release-templates-and-automations/#archive-vor-der-releaseerstellung-entpacken).
 
 Die **Ordnervorschau** listet die passenden Ordner und zeigt, wie viele davon bereits verwendet werden.
 Archivausgabeordner gelten als belegt und werden nie zu Releases.
 
-Gibt es passende Ordner ohne Release, wählst du unter **Vorhandene Ordner**, was mit ihnen passiert:
+Unter **Vorhandene Ordner** wählst du, was mit passenden Ordnern passiert, die noch kein Release haben:
 
 | Option | Ergebnis |
 | --- | --- |
-| **Einen als Test hochladen** (Standard) | Bearcat erstellt sofort ein Release für den gewählten **Testordner** und startet seine Uploads ohne Cooldown für initiale Uploads. Die übrigen vorhandenen Ordner werden ignoriert. Nicht verfügbar mit Entpacken. |
+| **Einen als Test hochladen** (Standard) | Bearcat erstellt ein Release aus dem gewählten **Testordner** und startet die Uploads ohne Wartezeit. Die übrigen vorhandenen Ordner werden ignoriert. Diese Option ist bei aktiviertem Entpacken nicht verfügbar. |
 | **Nur neue Ordner** | Vorhandene Ordner werden ignoriert. Nur später hinzugefügte Ordner werden zu Releases. |
-| **Alle importieren** | Jeder vorhandene Ordner wird zu einem Release und hochgeladen. |
+| **Alle importieren** | Alle passenden Ordner ohne Release werden importiert und hochgeladen. |
 
 Wähle einen kleinen Testordner, um Archive und Uploads schnell zu prüfen. Klicke auf **Quelle anlegen**.
 
 **Server (FTP/FTPS):**
 
-1. Gibt es keine aktive Remotequelle, klicke auf **Remotequelle hinzufügen** und gib deine Serverdaten ein.
+1. Falls noch keine aktive Remotequelle existiert, klicke auf **Remotequelle hinzufügen** und gib deine Serverdaten ein.
 2. Klicke auf **Remoteautomatisierung anlegen**. Im Dialog wählst du die Remotequelle, den überwachten
    Remoteordner und den lokalen Downloadordner.
 
-Vorhandene Ordner auf dem Server werden ignoriert. Die Einstellungen beschreibt [FTP/FTPS-Downloads](/Bearcat/de/remote-downloads/).
+Vorhandene Ordner auf dem Server werden ignoriert. Mehr zu den Einstellungen findest du unter
+[FTP/FTPS-Downloads](/Bearcat/de/remote-downloads/).
 
-Nach dem Anlegen der Quelle bestätigt Bearcat sie und zeigt das Uploadergebnis des Testrelease.
-**Release öffnen** öffnet das Testrelease. **Zur Aktivität** öffnet die Startseite.
+Nach dem Anlegen bestätigt Bearcat die neue Quelle. Falls du einen Testordner gewählt hast, siehst du auch,
+ob seine Uploads erstellt wurden. Mit **Release öffnen** gelangst du zum Testrelease, mit **Zur Aktivität**
+zur Startseite.
 
 ## Wie es weitergeht
 
 - **Testrelease:** Das Packen startet kurz nach dem Klick auf **Quelle anlegen**.
-- **Neue lokale Ordner:** Bearcat scannt etwa alle zwei Minuten. Es erstellt das Release, sobald sich der Ordner
-  während der [Ordnerstabilität](/Bearcat/de/advanced-configuration/#ordnerautomatisierung) nicht verändert hat
-  (Standard: 5 Minuten).
-- **Neue Ordner auf dem Server:** Bearcat lädt einen Ordner herunter, sobald er sich auf dem Server während der
-  [Stabilitätsdauer](/Bearcat/de/advanced-configuration/#remotedownloads) nicht verändert hat (Standard: 5 Minuten),
-  und erstellt danach das Release.
+- **Neue lokale Ordner:** Bearcat scannt etwa alle zwei Minuten. Ein Ordner muss für die eingestellte
+  [Stabilitätsdauer](/Bearcat/de/advanced-configuration/#ordnerautomatisierung) unverändert bleiben
+  (Standard: 5 Minuten). Danach erstellt Bearcat das Release.
+- **Neue Ordner auf dem Server:** Auch hier wartet Bearcat, bis der Ordner für die eingestellte
+  [Stabilitätsdauer](/Bearcat/de/advanced-configuration/#remotedownloads) unverändert bleibt
+  (Standard: 5 Minuten). Dann lädt es ihn herunter und erstellt das Release.
 - **Uploads** starten nach dem [Cooldown für initiale Uploads](/Bearcat/de/advanced-configuration/#cooldown-für-initiale-uploads)
   (Standard: 5 Minuten). Um die Wartezeit für ein Release zu überspringen, klicke auf seiner Detailseite auf **Uploads jetzt starten**.
 
@@ -135,20 +142,19 @@ Downloadlinks aus der **Übersicht**.
 
 Schlägt der Upload fehl oder startet er nicht, prüfe die Fehler unter der Benachrichtigungsglocke.
 Stelle sicher, dass **Login testen** erfolgreich ist und der Archivausgabeordner beschreibbar ist.
-Die Phasen beschreibt [Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/).
+Mehr dazu findest du unter [Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/).
 
 ### Startseite
 
-Fehlen Hoster, Releasetemplate oder Quelle, zeigt ein Banner auf der Startseite, was fehlt.
+Ein Banner auf der Startseite zeigt dir, ob noch Hoster, Releasetemplate oder Quelle fehlen.
 **Einrichtung fortsetzen** öffnet die Einrichtung erneut.
 
-Nach der erforderlichen Einrichtung zeigt die Startseite **Optionale nächste Schritte**: Metadaten und NFOs,
+Sobald die Grundeinrichtung abgeschlossen ist, zeigt die Startseite **Optionale nächste Schritte**: Metadaten und NFOs,
 ein Bildhoster für Coverbilder, Linkcrypter, Telegrambenachrichtigungen, Forenposts und Proxyserver.
-Jeder Eintrag verlinkt auf seine Einstellungsseite und wird als erledigt markiert, sobald er eingerichtet ist.
+Jeder Eintrag führt zu den passenden Einstellungen und wird nach der Einrichtung als erledigt markiert.
 
-**Ausblenden** schaltet **Assistent auf der Aktivitätsseite anzeigen** unter **Konfigurationen > Erste Einrichtung**
-aus. Damit sind die Liste und das Einrichtungsbanner in jedem Browser ausgeblendet. Schalte die Einstellung wieder
-ein, um sie anzuzeigen.
+Mit **Ausblenden** blendest du die Liste und das Einrichtungsbanner in allen Browsern aus. Um beides wieder
+anzuzeigen, aktiviere **Assistent auf der Aktivitätsseite anzeigen** unter **Konfigurationen > Erste Einrichtung**.
 
 ## Manuell einrichten
 
@@ -160,9 +166,10 @@ ein, um sie anzuzeigen.
    Öffne **Releases**, klicke auf **Neues Release**, wähle **Managed**, den Ordner und die Gruppe und klicke
    auf **Release erstellen**. In Docker erscheint `RELEASES_DIR` als `/mnt/data/releases`. Für bereits fertige
    Archive verwende ein [Unmanaged Release](/Bearcat/de/release-types/#unmanaged-releases).
-4. **Archive:** Klicke im Tab **Archive** des Releases auf **Hinzufügen**. Wähle RAR oder 7z, einen beschreibbaren
-   Ausgabeordner in einem Arbeitsverzeichnis getrennt von den Quelldateien, ein Dateipräfix, eine Partgrösse
-   innerhalb des Dateigrössenlimits deines Hosters und optional ein Passwort.
+4. **Archive:** Klicke im Tab **Archive** des Releases auf **Hinzufügen** und wähle RAR oder 7z.
+   Wähle einen beschreibbaren Ausgabeordner in einem Arbeitsverzeichnis, getrennt von den Quelldateien.
+   Gib ein Dateipräfix und eine Partgrösse in MB ein, die das Dateigrössenlimit deines Hosters einhält.
+   Setze bei Bedarf ein Passwort und speichere.
 5. **Uploads:** Klicke unter **Uploads** > **Konfiguration** auf **Hinzufügen**, wähle dein Hosterkonto und die
    Archivkonfiguration und speichere. Lass **Links verteilt an** vorerst leer.
 

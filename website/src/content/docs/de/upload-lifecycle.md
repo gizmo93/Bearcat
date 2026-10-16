@@ -42,10 +42,11 @@ Sobald der Cooldown abgelaufen ist und eine Uploadkonfiguration existiert, plant
 Upload bei der nächsten Prüfung ein. Mit `0` Minuten entfällt die Wartezeit.
 Das Release muss auch die [Qualitätsprüfungen](/Bearcat/de/quality-gates/) bestehen oder manuell freigegeben sein.
 
-Um den Cooldown für ein einzelnes Release zu überspringen, klicke in der Kopfzeile der Releasedetailseite auf
-**Uploads jetzt starten**. Die Schaltfläche erscheint, solange Uploadkonfigurationen auf ihren ersten Upload warten.
-Bearcat erstellt diese Uploads sofort, und das Packen startet mit dem nächsten Durchlauf der Archiverstellung.
-Die Qualitätsprüfungen gelten weiterhin. Dieselbe Aktion steht über die [REST-API](/Bearcat/de/rest-api/) bereit.
+Du kannst die Wartezeit für ein Release überspringen: Klicke oben auf der Releasedetailseite auf
+**Uploads jetzt starten**. Die Schaltfläche erscheint, wenn für mindestens eine Uploadkonfiguration noch
+kein Upload erstellt wurde. Bearcat erstellt die fehlenden Uploads sofort und packt die Dateien beim
+nächsten Durchlauf der Archiverstellung. Die Qualitätsprüfungen gelten weiterhin. Du kannst die Uploads
+auch über die [REST-API](/Bearcat/de/rest-api/) starten.
 
 ## 3. Archiv erstellen
 

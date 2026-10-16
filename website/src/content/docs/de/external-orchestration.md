@@ -11,7 +11,7 @@ Alle Parameter und Antwortfelder stehen in der [API-Referenz](/Bearcat/api/).
 | Endpunkt | Zweck |
 | --- | --- |
 | `POST /api/v1/releases` | Erstellt ein Release aus einem Ordner und einem Releasetemplate. |
-| `POST /api/v1/releases/{releaseId}/start-initial-uploads` | Erstellt die ersten Uploads sofort, ohne den [Cooldown für initiale Uploads](/Bearcat/de/upload-lifecycle/#2-der-erste-upload) abzuwarten. |
+| `POST /api/v1/releases/{releaseId}/start-initial-uploads` | Erstellt die ersten Uploads ohne [Wartezeit](/Bearcat/de/upload-lifecycle/#2-der-erste-upload). |
 | `POST /api/v1/uploads/{uploadId}/reupload` | Erstellt einen neuen Upload, wenn der bisherige `Offline`, `PartiallyOnline`, `Canceled` oder `Failed` ist. |
 | `POST /api/v1/uploads/{uploadId}/cancel` | Bricht einen anstehenden oder laufenden Upload ab. |
 | `POST /api/v1/uploads/{uploadId}/resume` | Stellt einen abgebrochenen Upload erneut in die Warteschlange. |

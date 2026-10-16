@@ -76,7 +76,7 @@ Behalte die Standardwerte für **SQLite (recommended)**, **Database file**, **Be
 Klicke auf **Save** und dann auf **Start Bearcat**. Sobald Bearcat bereit ist, klicke auf **Open Bearcat** oder öffne
 [http://127.0.0.1:17208](http://127.0.0.1:17208).
 
-**Weiter: [Einrichtung durchlaufen und erstes Release hochladen](/Bearcat/de/post-installation/).**
+**Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
 
 Schliesst du das Einstellungsfenster, läuft Bearcat weiter. Mit **Stop** oder **Quit** beendest du es.
 Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Dienst](/Bearcat/de/use-the-windows-service/).

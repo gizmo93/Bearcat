@@ -11,7 +11,7 @@ See the [API reference](/Bearcat/api/) for parameters and response fields.
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /api/v1/releases` | Create a release from a folder and a release template. |
-| `POST /api/v1/releases/{releaseId}/start-initial-uploads` | Create the first uploads now, without waiting for the [initial upload cooldown](/Bearcat/upload-lifecycle/#2-the-first-upload). |
+| `POST /api/v1/releases/{releaseId}/start-initial-uploads` | Create the first uploads without the [initial upload cooldown](/Bearcat/upload-lifecycle/#2-the-first-upload). |
 | `POST /api/v1/uploads/{uploadId}/reupload` | Create a replacement upload when the old one is `Offline`, `PartiallyOnline`, `Canceled`, or `Failed`. |
 | `POST /api/v1/uploads/{uploadId}/cancel` | Cancel a pending or running upload. |
 | `POST /api/v1/uploads/{uploadId}/resume` | Queue a canceled upload again. |

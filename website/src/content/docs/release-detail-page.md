@@ -13,8 +13,8 @@ Open **Releases** and click a release name. For a walkthrough, see [Your first u
 when the release has at least one online hoster and has not been posted yet. Without an active forum
 distribution site, you see **Render forum post** instead.
 
-**Start uploads now** appears while upload configurations are waiting for their first upload. It skips
-the [initial upload cooldown](/Bearcat/upload-lifecycle/#2-the-first-upload) for this release.
+Click **Start uploads now** to skip the [initial upload cooldown](/Bearcat/upload-lifecycle/#2-the-first-upload)
+for this release. The button appears if at least one upload configuration has no upload yet.
 
 Use the `...` menu to convert between [release types](/Bearcat/release-types/#converting-between-types).
 
