@@ -29,6 +29,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveDefaults;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.ReleaseTemplates;
+using Bearcat.Domain.UseCases.FirstStartSetup.Sources;
 using Bearcat.Domain.UseCases.FirstStartSetup.Status;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -172,6 +173,8 @@ public static class ServiceProviderConfig
             services.AddScoped<FirstStartArchiveDefaultsService>();
             services.AddScoped<FirstStartArchiveOutputFolderService>();
             services.AddScoped<FirstStartReleaseTemplateService>();
+            services.AddScoped<ArchiveOutputFolderInsideSourceFolderValidator>();
+            services.AddScoped<FirstStartFolderSourceService>();
             services.AddScoped<ForumPostTemplateService>();
             services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ForumPostingRulePreviewService>();

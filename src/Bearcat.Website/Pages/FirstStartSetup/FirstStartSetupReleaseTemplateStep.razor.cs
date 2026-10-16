@@ -106,12 +106,7 @@ public partial class FirstStartSetupReleaseTemplateStep(
 
     private string GetChoiceClass(FirstStartSetupReleaseTemplateChoice choiceToRender)
     {
-        const string baseClass =
-            "flex flex-col items-start gap-1 rounded-md border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring";
-
-        return choice == choiceToRender
-            ? $"{baseClass} border-primary bg-primary/5"
-            : $"{baseClass} border-border/70 hover:bg-muted/40";
+        return FirstStartSetupChoiceCardStyle.GetClass(choice == choiceToRender);
     }
 
     private void SelectChoice(FirstStartSetupReleaseTemplateChoice selectedChoice)

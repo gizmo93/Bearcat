@@ -1,5 +1,7 @@
 using System.Globalization;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
+using Bearcat.Domain.UseCases.FirstStartSetup.Sources;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations;
@@ -24,6 +26,9 @@ public partial class CreateOrEditRemoteSourceAutomationDialog(
 {
     [Parameter]
     public RemoteSourceAutomationFormModel FormModel { get; set; } = null!;
+
+    [Parameter]
+    public bool RejectArchiveOutputFolderInsideTargetPath { get; set; }
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -161,6 +166,17 @@ public partial class CreateOrEditRemoteSourceAutomationDialog(
 
         try
         {
+            if (RejectArchiveOutputFolderInsideTargetPath)
+            {
+                await operationRunner.RunAsync(
+                    (ArchiveOutputFolderInsideSourceFolderValidator validator) =>
+                        validator.EnsureNoArchiveOutputFolderIsInsideSourceFolderAsync(
+                            input.ReleaseTemplateId,
+                            input.TargetPath
+                        )
+                );
+            }
+
             if (FormModel.RemoteSourceAutomationId is { } automationId)
             {
                 await operationRunner.RunAsync(
@@ -174,6 +190,15 @@ public partial class CreateOrEditRemoteSourceAutomationDialog(
                     (RemoteSourceAutomationService service) => service.CreateAsync(input)
                 );
             }
+        }
+        catch (ArchiveOutputFolderInsideSourceFolderException exception)
+        {
+            errorMessage = L[
+                "ArchiveOutputFolderInsideSourceFolder",
+                exception.ArchiveOutputFolderPath
+            ];
+
+            return;
         }
         catch (ArgumentException exception)
         {

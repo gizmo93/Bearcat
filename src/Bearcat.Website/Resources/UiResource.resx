@@ -1851,6 +1851,40 @@
   <data name="FirstStartSetupArchiveOutputFolderMustExist" xml:space="preserve"><value>The archive output folder does not exist. Create it first.</value></data>
   <data name="FirstStartSetupCreateAndContinue" xml:space="preserve"><value>Create and continue</value></data>
   <data name="FirstStartSetupReleaseTemplateCreated" xml:space="preserve"><value>Release template {0} created.</value></data>
-  <data name="FirstStartSetupSourcePlaceholder" xml:space="preserve"><value>Add a folder automation or a remote automation so Bearcat picks up new releases automatically.</value></data>
-  <data name="FirstStartSetupFinish" xml:space="preserve"><value>Finish</value></data>
+  <data name="ArchiveOutputFolderInsideSourceFolder" xml:space="preserve"><value>The archive output folder {0} of the release template is inside the selected folder. Bearcat would pick up its own archives. Choose a folder that does not contain the archive output folder.</value></data>
+  <data name="FirstStartSetupSourceDescription" xml:space="preserve"><value>A source is where new releases come from. Bearcat watches it and creates a release with the release template for every new folder.</value></data>
+  <data name="FirstStartSetupExistingSources" xml:space="preserve"><value>Existing sources: {0}. You can add another one here.</value></data>
+  <data name="FirstStartSetupSourceReleaseTemplateRequired" xml:space="preserve"><value>A source needs a release template. Go back and create one first.</value></data>
+  <data name="FirstStartSetupSourceKind" xml:space="preserve"><value>Source type</value></data>
+  <data name="FirstStartSetupLocalFolderSource" xml:space="preserve"><value>Local folder</value></data>
+  <data name="FirstStartSetupLocalFolderSourceDescription" xml:space="preserve"><value>Watch a folder on this machine or on a mounted share.</value></data>
+  <data name="FirstStartSetupRemoteSource" xml:space="preserve"><value>FTP/FTPS server</value></data>
+  <data name="FirstStartSetupRemoteSourceDescription" xml:space="preserve"><value>Watch a folder on a remote server and download new releases first.</value></data>
+  <data name="FirstStartSetupLocalFolderBasePathHelp" xml:space="preserve"><value>Bearcat watches the direct subfolders of this folder. Each new subfolder becomes a release.</value></data>
+  <data name="FirstStartSetupExistingFolders" xml:space="preserve"><value>Existing folders</value></data>
+  <data name="FirstStartSetupExistingFoldersDescription" xml:space="preserve"><value>{0} matching folders have no release yet. Choose what happens with them.</value></data>
+  <data name="FirstStartSetupUploadTestFolder" xml:space="preserve"><value>Upload one as a test</value></data>
+  <data name="FirstStartSetupUploadTestFolderDescription" xml:space="preserve"><value>Create a release for one folder now and upload it. Ignore the others.</value></data>
+  <data name="FirstStartSetupIgnoreExistingFolders" xml:space="preserve"><value>Only new folders</value></data>
+  <data name="FirstStartSetupIgnoreExistingFoldersDescription" xml:space="preserve"><value>Ignore existing folders. Only folders added later become releases.</value></data>
+  <data name="FirstStartSetupImportExistingFolders" xml:space="preserve"><value>Import all</value></data>
+  <data name="FirstStartSetupImportExistingFoldersDescription" xml:space="preserve"><value>Turn every existing folder into a release.</value></data>
+  <data name="FirstStartSetupImportExistingFoldersWarning" xml:space="preserve"><value>{0} folders will become releases and be uploaded.</value></data>
+  <data name="FirstStartSetupTestFolder" xml:space="preserve"><value>Test folder</value></data>
+  <data name="FirstStartSetupSelectTestFolder" xml:space="preserve"><value>Select test folder</value></data>
+  <data name="FirstStartSetupTestFolderHelp" xml:space="preserve"><value>Pick a small folder to check archives and uploads quickly.</value></data>
+  <data name="FirstStartSetupTestFolderUnavailableWithExtraction" xml:space="preserve"><value>A test upload is not available with archive extraction. The automation extracts new folders before it creates releases.</value></data>
+  <data name="FirstStartSetupSelectTestFolderRequired" xml:space="preserve"><value>Select a test folder.</value></data>
+  <data name="FirstStartSetupCreateSource" xml:space="preserve"><value>Create source</value></data>
+  <data name="FirstStartSetupNoRemoteSources" xml:space="preserve"><value>No remote sources yet</value></data>
+  <data name="FirstStartSetupNoRemoteSourcesDescription" xml:space="preserve"><value>Add your FTP or FTPS server to continue.</value></data>
+  <data name="FirstStartSetupRemoteSourceAutomationHint" xml:space="preserve"><value>In the next dialog you choose the remote folder to watch and the local download folder. Existing folders on the server are ignored.</value></data>
+  <data name="FirstStartSetupCreateRemoteSourceAutomation" xml:space="preserve"><value>Create remote automation</value></data>
+  <data name="FirstStartSetupFolderSourceCreated" xml:space="preserve"><value>Folder automation for {0} created.</value></data>
+  <data name="FirstStartSetupRemoteSourceCreated" xml:space="preserve"><value>Remote automation {0} created. Downloads go to {1}.</value></data>
+  <data name="FirstStartSetupFolderSourcePickupTiming" xml:space="preserve"><value>Bearcat creates a release once a new folder has stayed unchanged for {0}. Uploads start {1} later (initial upload cooldown).</value></data>
+  <data name="FirstStartSetupRemoteSourcePickupTiming" xml:space="preserve"><value>Bearcat downloads a new folder once it has stayed unchanged on the server for {0}. After the download it creates the release. Uploads start {1} later (initial upload cooldown).</value></data>
+  <data name="FirstStartSetupTestRelease" xml:space="preserve"><value>Test release</value></data>
+  <data name="FirstStartSetupTestReleaseHasNoUploadConfigs" xml:space="preserve"><value>The test release has no upload configurations. Add hosters to the release template.</value></data>
+  <data name="FirstStartSetupGoToActivity" xml:space="preserve"><value>Go to activity</value></data>
 </root>

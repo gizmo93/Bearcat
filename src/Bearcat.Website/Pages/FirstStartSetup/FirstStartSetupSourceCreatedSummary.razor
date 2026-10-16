@@ -1,0 +1,35 @@
+<div class="space-y-6">
+    <div class="flex items-start gap-3 rounded-md border border-border/70 p-4">
+        <LucideIcon Name="circle-check" class="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+        <div class="min-w-0 space-y-2">
+            <p class="break-words text-sm font-medium">@CreatedSourceText</p>
+            <p class="text-sm text-muted-foreground">@PickupTimingText</p>
+        </div>
+    </div>
+
+    @if (CreatedSource.TestReleaseId is not null)
+    {
+        <div class="flex items-start gap-3 rounded-md border border-border/70 p-4">
+            <LucideIcon Name="@(IsBlockedByQualityGate ? "circle-alert" : "upload")"
+                        class="@(IsBlockedByQualityGate ? "mt-0.5 h-5 w-5 shrink-0 text-destructive" : "mt-0.5 h-5 w-5 shrink-0 text-primary")" />
+            <div class="min-w-0 space-y-1">
+                <p class="text-sm font-medium">@L["FirstStartSetupTestRelease"]</p>
+                <p class="@(IsBlockedByQualityGate ? "text-sm text-destructive" : "text-sm text-muted-foreground")">@InitialUploadCreationResultText</p>
+            </div>
+        </div>
+    }
+
+    <FirstStartSetupStepNavigation OnBack="OnBack">
+        @if (CreatedSource.TestReleaseId is { } testReleaseId)
+        {
+            <BbButton Variant="ButtonVariant.Outline" Href="@($"/releases/{testReleaseId}")">
+                <LucideIcon Name="external-link" class="h-4 w-4" />
+                @L["OpenRelease"]
+            </BbButton>
+        }
+        <BbButton Href="/">
+            @L["FirstStartSetupGoToActivity"]
+            <LucideIcon Name="arrow-right" class="h-4 w-4" />
+        </BbButton>
+    </FirstStartSetupStepNavigation>
+</div>

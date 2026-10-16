@@ -1,7 +1,6 @@
 using System.Globalization;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
-using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -27,14 +26,9 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private const int MaxPreviewFolderCount = 50;
-
     private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private ReleaseFolderAutomationPreview? preview;
-    private bool isLoadingPreview;
-    private int previewRequestNumber;
     private string originalBasePath = string.Empty;
     private string? originalFolderNamePattern;
 
@@ -82,36 +76,6 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
         releaseTemplates = await operationRunner.RunAsync(
             (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
         );
-        await RefreshPreviewAsync();
-    }
-
-    private async Task RefreshPreviewAsync()
-    {
-        var requestNumber = ++previewRequestNumber;
-
-        if (string.IsNullOrWhiteSpace(FormModel.BasePath))
-        {
-            preview = null;
-            isLoadingPreview = false;
-            return;
-        }
-
-        isLoadingPreview = true;
-
-        var basePath = FormModel.BasePath;
-        var folderNamePattern = FormModel.FolderNamePattern;
-        var result = await operationRunner.RunAsync(
-            (ReleaseFolderAutomationPreviewService service) =>
-                service.PreviewMatchingFoldersAsync(basePath, folderNamePattern)
-        );
-
-        if (requestNumber != previewRequestNumber)
-        {
-            return;
-        }
-
-        preview = result;
-        isLoadingPreview = false;
     }
 
     private static string NormalizeBasePath(string basePath)
@@ -190,7 +154,6 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
         if (!string.IsNullOrWhiteSpace(selectedPath))
         {
             FormModel.BasePath = selectedPath;
-            await RefreshPreviewAsync();
         }
     }
 

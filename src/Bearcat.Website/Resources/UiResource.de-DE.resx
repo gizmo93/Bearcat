@@ -1854,6 +1854,40 @@
   <data name="FirstStartSetupArchiveOutputFolderMustExist" xml:space="preserve"><value>Der Archivausgabeordner existiert nicht. Erstelle ihn zuerst.</value></data>
   <data name="FirstStartSetupCreateAndContinue" xml:space="preserve"><value>Erstellen und weiter</value></data>
   <data name="FirstStartSetupReleaseTemplateCreated" xml:space="preserve"><value>Releasetemplate {0} erstellt.</value></data>
-  <data name="FirstStartSetupSourcePlaceholder" xml:space="preserve"><value>Lege eine Ordnerautomatisierung oder eine Remoteautomatisierung an, damit Bearcat neue Releases automatisch übernimmt.</value></data>
-  <data name="FirstStartSetupFinish" xml:space="preserve"><value>Abschließen</value></data>
+  <data name="ArchiveOutputFolderInsideSourceFolder" xml:space="preserve"><value>Der Archivausgabeordner {0} des Releasetemplates liegt im ausgewählten Ordner. Bearcat würde seine eigenen Archive übernehmen. Wähle einen Ordner, der den Archivausgabeordner nicht enthält.</value></data>
+  <data name="FirstStartSetupSourceDescription" xml:space="preserve"><value>Eine Quelle ist der Ort, an dem neue Releases ankommen. Bearcat überwacht sie und erstellt für jeden neuen Ordner ein Release mit dem Releasetemplate.</value></data>
+  <data name="FirstStartSetupExistingSources" xml:space="preserve"><value>Vorhandene Quellen: {0}. Hier kannst du eine weitere anlegen.</value></data>
+  <data name="FirstStartSetupSourceReleaseTemplateRequired" xml:space="preserve"><value>Eine Quelle braucht ein Releasetemplate. Geh zurück und erstelle zuerst eins.</value></data>
+  <data name="FirstStartSetupSourceKind" xml:space="preserve"><value>Quellentyp</value></data>
+  <data name="FirstStartSetupLocalFolderSource" xml:space="preserve"><value>Lokaler Ordner</value></data>
+  <data name="FirstStartSetupLocalFolderSourceDescription" xml:space="preserve"><value>Einen Ordner auf diesem Rechner oder einer eingebundenen Freigabe überwachen.</value></data>
+  <data name="FirstStartSetupRemoteSource" xml:space="preserve"><value>Server (FTP/FTPS)</value></data>
+  <data name="FirstStartSetupRemoteSourceDescription" xml:space="preserve"><value>Einen Ordner auf einem Remoteserver überwachen und neue Releases zuerst herunterladen.</value></data>
+  <data name="FirstStartSetupLocalFolderBasePathHelp" xml:space="preserve"><value>Bearcat überwacht die direkten Unterordner dieses Ordners. Jeder neue Unterordner wird zu einem Release.</value></data>
+  <data name="FirstStartSetupExistingFolders" xml:space="preserve"><value>Vorhandene Ordner</value></data>
+  <data name="FirstStartSetupExistingFoldersDescription" xml:space="preserve"><value>{0} passende Ordner haben noch kein Release. Wähle, was mit ihnen passiert.</value></data>
+  <data name="FirstStartSetupUploadTestFolder" xml:space="preserve"><value>Einen als Test hochladen</value></data>
+  <data name="FirstStartSetupUploadTestFolderDescription" xml:space="preserve"><value>Jetzt ein Release für einen Ordner erstellen und hochladen. Die anderen werden ignoriert.</value></data>
+  <data name="FirstStartSetupIgnoreExistingFolders" xml:space="preserve"><value>Nur neue Ordner</value></data>
+  <data name="FirstStartSetupIgnoreExistingFoldersDescription" xml:space="preserve"><value>Vorhandene Ordner ignorieren. Nur später hinzugefügte Ordner werden zu Releases.</value></data>
+  <data name="FirstStartSetupImportExistingFolders" xml:space="preserve"><value>Alle importieren</value></data>
+  <data name="FirstStartSetupImportExistingFoldersDescription" xml:space="preserve"><value>Jeden vorhandenen Ordner in ein Release umwandeln.</value></data>
+  <data name="FirstStartSetupImportExistingFoldersWarning" xml:space="preserve"><value>{0} Ordner werden zu Releases und hochgeladen.</value></data>
+  <data name="FirstStartSetupTestFolder" xml:space="preserve"><value>Testordner</value></data>
+  <data name="FirstStartSetupSelectTestFolder" xml:space="preserve"><value>Testordner auswählen</value></data>
+  <data name="FirstStartSetupTestFolderHelp" xml:space="preserve"><value>Wähle einen kleinen Ordner, um Archive und Uploads schnell zu prüfen.</value></data>
+  <data name="FirstStartSetupTestFolderUnavailableWithExtraction" xml:space="preserve"><value>Mit Entpacken ist kein Testupload möglich. Die Automatisierung entpackt neue Ordner, bevor sie Releases erstellt.</value></data>
+  <data name="FirstStartSetupSelectTestFolderRequired" xml:space="preserve"><value>Wähle einen Testordner aus.</value></data>
+  <data name="FirstStartSetupCreateSource" xml:space="preserve"><value>Quelle anlegen</value></data>
+  <data name="FirstStartSetupNoRemoteSources" xml:space="preserve"><value>Noch keine Remotequellen</value></data>
+  <data name="FirstStartSetupNoRemoteSourcesDescription" xml:space="preserve"><value>Füge deinen Server (FTP oder FTPS) hinzu, um fortzufahren.</value></data>
+  <data name="FirstStartSetupRemoteSourceAutomationHint" xml:space="preserve"><value>Im nächsten Dialog wählst du den überwachten Remoteordner und den lokalen Downloadordner. Vorhandene Ordner auf dem Server werden ignoriert.</value></data>
+  <data name="FirstStartSetupCreateRemoteSourceAutomation" xml:space="preserve"><value>Remoteautomatisierung anlegen</value></data>
+  <data name="FirstStartSetupFolderSourceCreated" xml:space="preserve"><value>Ordnerautomatisierung für {0} angelegt.</value></data>
+  <data name="FirstStartSetupRemoteSourceCreated" xml:space="preserve"><value>Remoteautomatisierung {0} angelegt. Downloads landen in {1}.</value></data>
+  <data name="FirstStartSetupFolderSourcePickupTiming" xml:space="preserve"><value>Bearcat erstellt ein Release, sobald sich ein neuer Ordner {0} lang nicht verändert hat. Die Uploads starten {1} später (Cooldown für initiale Uploads).</value></data>
+  <data name="FirstStartSetupRemoteSourcePickupTiming" xml:space="preserve"><value>Bearcat lädt einen neuen Ordner herunter, sobald er sich auf dem Server {0} lang nicht verändert hat. Nach dem Download erstellt Bearcat das Release. Die Uploads starten {1} später (Cooldown für initiale Uploads).</value></data>
+  <data name="FirstStartSetupTestRelease" xml:space="preserve"><value>Testrelease</value></data>
+  <data name="FirstStartSetupTestReleaseHasNoUploadConfigs" xml:space="preserve"><value>Das Testrelease hat keine Uploadkonfigurationen. Füge dem Releasetemplate Hoster hinzu.</value></data>
+  <data name="FirstStartSetupGoToActivity" xml:space="preserve"><value>Zur Aktivität</value></data>
 </root>

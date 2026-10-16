@@ -56,7 +56,9 @@
                                                             OnNext="GoToNextStep" />
                         break;
                     case FirstStartSetupStep.Source:
-                        <FirstStartSetupSourceStep OnBack="GoToPreviousStep" />
+                        <FirstStartSetupSourceStep WizardState="wizardState"
+                                                   OnBack="GoToPreviousStep"
+                                                   OnSourceCreated="LoadStatusAsync" />
                         break;
                 }
             </BbCardContent>

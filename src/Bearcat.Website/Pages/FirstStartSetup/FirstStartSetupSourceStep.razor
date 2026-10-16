@@ -1,12 +1,90 @@
 <div class="space-y-6">
     <div class="space-y-1">
         <h2 class="text-xl font-semibold tracking-tight">@L["FirstStartSetupStepSource"]</h2>
-        <p class="text-sm text-muted-foreground">@L["FirstStartSetupSourcePlaceholder"]</p>
+        <p class="text-sm text-muted-foreground">@L["FirstStartSetupSourceDescription"]</p>
     </div>
 
-    <FirstStartSetupStepNavigation OnBack="OnBack">
-        <BbButton Href="/">
-            @L["FirstStartSetupFinish"]
-        </BbButton>
-    </FirstStartSetupStepNavigation>
+    @if (isLoading)
+    {
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+            <BbSpinner Size="SpinnerSize.Small" />
+            <span>@L["Loading"]</span>
+        </div>
+    }
+    else if (createdSource is not null)
+    {
+        <FirstStartSetupSourceCreatedSummary CreatedSource="createdSource" OnBack="OnBack" />
+    }
+    else if (releaseTemplates.Count == 0)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+            <span>@L["FirstStartSetupSourceReleaseTemplateRequired"]</span>
+        </div>
+
+        <FirstStartSetupStepNavigation OnBack="OnBack" />
+    }
+    else
+    {
+        @if (existingSourceCount > 0)
+        {
+            <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>@L["FirstStartSetupExistingSources", existingSourceCount]</span>
+            </div>
+        }
+
+        @if (showsReleaseTemplateSelection)
+        {
+            <BbFormFieldSelect TValue="int?"
+                               Value="WizardState.ReleaseTemplateId"
+                               ValueChanged="SelectReleaseTemplate"
+                               Label="@L["ReleaseTemplate"]"
+                               Placeholder="@L["FirstStartSetupSelectReleaseTemplate"]"
+                               Options="releaseTemplateOptions" />
+        }
+
+        <div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="@L["FirstStartSetupSourceKind"]">
+            <button type="button"
+                    role="radio"
+                    aria-checked="@IsCheckedAttributeValue(FirstStartSetupSourceKind.LocalFolder)"
+                    class="@GetChoiceClass(FirstStartSetupSourceKind.LocalFolder)"
+                    @onclick="() => SelectSourceKind(FirstStartSetupSourceKind.LocalFolder)">
+                <span class="flex items-center gap-2 text-sm font-medium">
+                    <LucideIcon Name="folder" class="h-4 w-4 text-muted-foreground" />
+                    @L["FirstStartSetupLocalFolderSource"]
+                </span>
+                <span class="text-xs text-muted-foreground">@L["FirstStartSetupLocalFolderSourceDescription"]</span>
+            </button>
+            <button type="button"
+                    role="radio"
+                    aria-checked="@IsCheckedAttributeValue(FirstStartSetupSourceKind.RemoteSource)"
+                    class="@GetChoiceClass(FirstStartSetupSourceKind.RemoteSource)"
+                    @onclick="() => SelectSourceKind(FirstStartSetupSourceKind.RemoteSource)">
+                <span class="flex items-center gap-2 text-sm font-medium">
+                    <LucideIcon Name="server" class="h-4 w-4 text-muted-foreground" />
+                    @L["FirstStartSetupRemoteSource"]
+                </span>
+                <span class="text-xs text-muted-foreground">@L["FirstStartSetupRemoteSourceDescription"]</span>
+            </button>
+        </div>
+
+        @if (SelectedReleaseTemplate is null)
+        {
+            <FirstStartSetupStepNavigation OnBack="OnBack" />
+        }
+        else if (sourceKind is FirstStartSetupSourceKind.LocalFolder)
+        {
+            <FirstStartSetupLocalFolderSource @key="SelectedReleaseTemplate.ReleaseTemplateId"
+                                              ReleaseTemplate="SelectedReleaseTemplate"
+                                              OnBack="OnBack"
+                                              OnSourceCreated="HandleSourceCreatedAsync" />
+        }
+        else
+        {
+            <FirstStartSetupRemoteSource ReleaseTemplateId="SelectedReleaseTemplate.ReleaseTemplateId"
+                                         OnBack="OnBack"
+                                         OnSourceCreated="HandleSourceCreatedAsync" />
+        }
+    }
 </div>
