@@ -2572,12 +2572,12 @@ button .bearcat-nav-group-label:hover {
         overflow: visible !important;
     }
 
-    .bearcat-background-tasks-table :where(.rounded-md.border),
-    .bearcat-folder-automations-table :where(.rounded-md.border),
-    .bearcat-release-groups-table :where(.rounded-md.border),
-    .bearcat-release-templates-table :where(.rounded-md.border),
-    .bearcat-registrations-table :where(.rounded-md.border),
-    .bearcat-notifications-table :where(.rounded-md.border) {
+    .bearcat-background-tasks-table :where(div:has(> table)),
+    .bearcat-folder-automations-table :where(div:has(> table)),
+    .bearcat-release-groups-table :where(div:has(> table)),
+    .bearcat-release-templates-table :where(div:has(> table)),
+    .bearcat-registrations-table :where(div:has(> table)),
+    .bearcat-notifications-table :where(div:has(> table)) {
         border: 0;
         border-radius: 0;
     }
@@ -2934,7 +2934,7 @@ button .bearcat-nav-group-label:hover {
         background: transparent;
     }
 
-    .bearcat-upload-links-table :where(.rounded-md.border) {
+    .bearcat-upload-links-table :where(div:has(> table)) {
         border: 0;
         border-radius: 0;
     }
