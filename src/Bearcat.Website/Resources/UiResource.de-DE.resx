@@ -1842,9 +1842,9 @@
   <data name="FirstStartSetupReleaseGroupName" xml:space="preserve"><value>Name der Releasegruppe</value></data>
   <data name="FirstStartSetupDefaultReleaseGroupName" xml:space="preserve"><value>Standard</value></data>
   <data name="FirstStartSetupReleaseTemplateName" xml:space="preserve"><value>Name des Templates</value></data>
-  <data name="FirstStartSetupArchivePartSizeMb" xml:space="preserve"><value>Teilgröße (MB)</value></data>
+  <data name="FirstStartSetupArchivePartSizeMb" xml:space="preserve"><value>Teilgrösse (MB)</value></data>
   <data name="FirstStartSetupArchivePartSizeMbHelp" xml:space="preserve"><value>0 bedeutet keine Aufteilung.</value></data>
-  <data name="FirstStartSetupSevenZipRequiresArchivePartSize" xml:space="preserve"><value>7z braucht eine Teilgröße größer als 0.</value></data>
+  <data name="FirstStartSetupSevenZipRequiresArchivePartSize" xml:space="preserve"><value>7z braucht eine Teilgrösse grösser als 0.</value></data>
   <data name="FirstStartSetupArchivePasswordHelp" xml:space="preserve"><value>Optional. Leer lassen für Archive ohne Passwort.</value></data>
   <data name="FirstStartSetupArchiveOutputFolder" xml:space="preserve"><value>Archivausgabeordner</value></data>
   <data name="FirstStartSetupArchiveOutputFolderHelp" xml:space="preserve"><value>Bearcat schreibt die Archive hierhin. Halte diesen Ordner getrennt von deinen Quellordnern.</value></data>

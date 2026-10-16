@@ -53,7 +53,7 @@ Setup saves the configuration, installs the service, and starts Bearcat.
 
 Open [http://127.0.0.1:17208](http://127.0.0.1:17208), or use the port you chose during setup.
 
-**Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
+**Next: [Follow the setup wizard and upload your first release](/Bearcat/post-installation/).**
 
 ## Change the setup later
 

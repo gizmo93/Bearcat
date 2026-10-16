@@ -1,9 +1,9 @@
 ---
 title: "Dein erster Upload"
-description: "Füge ein Hosterkonto hinzu, wähle einen Ordner und lade dein erstes Release hoch."
+description: "Mit der Einrichtung einen Hoster verbinden, ein Releasetemplate erstellen und eine Quelle anlegen."
 ---
 
-Starte Bearcat und halte dein Hosterkonto und deine Dateien bereit. Die Dateien, die du gemeinsam hochlädst, bilden ein **Release**.
+Halte dein Hosterkonto und deine Dateien bereit. Die Dateien, die du gemeinsam hochlädst, bilden ein **Release**.
 
 Öffne Bearcat im Browser:
 
@@ -12,70 +12,164 @@ Starte Bearcat und halte dein Hosterkonto und deine Dateien bereit. Die Dateien,
 
 Falls du den Webport geändert hast, verwende diesen Port.
 
-## 1. Hosterkonto hinzufügen
+## Einrichtung öffnen
 
-1. Öffne **Hosterregistrierungen** und klicke auf **Neuer Hoster**.
-2. Wähle deinen Hoster und gib Benutzername und Passwort oder API-Schlüssel ein.
-3. Speichere und klicke dann auf **Login testen**, um die Verbindung zu prüfen.
+Bei einer neuen Installation öffnet sich die **Einrichtung** automatisch, wenn du die Startseite zum ersten Mal aufrufst.
+Das passiert nur einmal. Später öffnest du **Einrichtung** unter **System** in der Navigation oder findest sie
+mit **Ctrl+K** oder **Cmd+K**.
 
-Lass Uploadlimits und Reuploadeinstellungen auf den Standardwerten.
+Du kannst jeden Schritt überspringen und alles später ändern.
+
+### Willkommen
+
+Klicke auf **Einrichtung starten**. **Einrichtung überspringen** führt zurück zur Startseite. Wie du Bearcat
+ohne Einrichtung konfigurierst, steht unter [Manuell einrichten](#manuell-einrichten).
+
+### Arbeitsverzeichnisse
+
+Bearcat sieht nur Ordner innerhalb seiner Arbeitsverzeichnisse. Der Schritt zeigt jedes davon als **OK**,
+**Fehlt** oder **Nicht beschreibbar**. Um fortzufahren, brauchst du mindestens ein vorhandenes, beschreibbares Arbeitsverzeichnis.
+
+- **Docker:** Der Hostordner `RELEASES_DIR` aus deiner Datei `.env` erscheint als `/mnt/data/releases`.
+- **Desktopanwendung oder Windows-Dienst:** Lege die Arbeitsverzeichnisse in den Einstellungen der Desktopanwendung
+  oder in `appsettings.user.json` fest, starte Bearcat neu und klicke auf **Erneut prüfen**.
+
+In der Einrichtung lassen sich die Arbeitsverzeichnisse nicht ändern.
+
+### Hoster
+
+1. Klicke auf **Hoster hinzufügen**, wähle deinen Hoster und gib Benutzername und Passwort oder API-Schlüssel ein.
+   Lass Uploadlimits und Reuploadeinstellungen auf den Standardwerten.
+2. Wähle die Registrierungen aus, zu denen Bearcat hochladen soll.
+3. Klicke bei jeder ausgewählten Registrierung auf **Login testen**.
+
+**Weiter** ist verfügbar, sobald mindestens eine ausgewählte Registrierung einen erfolgreichen Login hat.
 
 <details>
 <summary>Hostereinrichtung anzeigen</summary>
 
 ![Hosterkonto registrieren](../images/register-hoster.png)
-![Hosterlogin testen](../images/try-login.png)
 
 </details>
 
-## 2. Releasegruppe erstellen
+### Releasegruppe und Template
 
-Öffne **Releasegruppen**, klicke auf **Neue Releasegruppe** und nenne sie `My uploads`.
-Lass automatische Reuploads für diesen ersten Upload deaktiviert und speichere.
+Die Releasegruppe legt fest, ob Bearcat Offlinelinks erneut hochlädt. Das Releasetemplate enthält die
+Archiveinstellungen und Zielhoster, die Automatisierungen für jedes neue Release verwenden.
 
-Die Gruppe legt fest, ob Bearcat Uploads ersetzt, die offline gehen. Bearcat prüft die Links auch bei deaktivierten Reuploads.
+Gibt es bereits Templates, wähle **Vorhandenes Template verwenden** oder **Neues Template erstellen**. Für ein neues Template:
 
-## 3. Dateien wählen
+| Feld | Standard |
+| --- | --- |
+| **Name der Releasegruppe** und **Name des Templates** | `Standard` |
+| **Automatische Reuploads** | Aus. Schalte es ein, um Offlineuploads nach **Stunden bis Reupload** zu ersetzen. |
+| **Archiver** | RAR |
+| **Teilgrösse (MB)** | Das kleinste Dateigrössenlimit der ausgewählten Hoster. `0` bedeutet keine Aufteilung, 7z braucht einen Wert grösser als `0`. |
+| **Archivpasswort** | Leer, kein Passwort |
+| **Archivausgabeordner** | `bearcat-archives` im ersten beschreibbaren Arbeitsverzeichnis |
 
-Lege die Dateien für deinen ersten Upload in einen Unterordner deines Arbeitsverzeichnisses, zum Beispiel
-`releases/My.First.Upload/`.
+Halte den Archivausgabeordner getrennt von deinen Quellordnern. Existiert er noch nicht, klicke auf
+**Ordner erstellen**. Klicke dann auf **Erstellen und weiter**.
 
-1. Öffne **Releases** und klicke auf **Neues Release**.
-2. Wähle **Managed**. Damit erstellt Bearcat die Archive für dich.
-3. Wähle den Ordner `My.First.Upload`. Lass den Namen leer, um den Ordnernamen zu verwenden.
-4. Wähle die Gruppe `My uploads` und klicke auf **Release erstellen**.
-5. Klicke auf den Releasenamen, um die Detailseite zu öffnen.
+Bearcat erstellt ein Managed Template mit einer Archivkonfiguration und einer Uploadkonfiguration pro
+ausgewähltem Hoster. Ohne ausgewählten Hoster hat das Template keine Uploads. Hoster fügst du später unter
+**Releasetemplates** hinzu.
 
-In Docker erscheint dein Ordner `RELEASES_DIR` in der Ordnerauswahl als `/mnt/data/releases`.
-Hast du bereits fertige Archive zum Hochladen, verwende ein [Unmanaged Release](/Bearcat/de/release-types/#unmanaged-releases).
+### Quelle
 
-## 4. Archiverstellung festlegen
+Eine Quelle ist der Ort, an dem neue Releases ankommen. Wähle **Lokaler Ordner** oder **Server (FTP/FTPS)**.
 
-Klicke im Tab **Archive** auf **Hinzufügen**:
+**Lokaler Ordner:**
 
-- Nenne die Konfiguration `Main archive` und wähle RAR oder 7z.
-- Wähle einen beschreibbaren Ausgabeordner in einem Arbeitsverzeichnis, getrennt von den Quelldateien.
-- Setze das Dateipräfix auf `My.First.Upload`. Bearcat ergänzt die Dateiendung.
-- Wähle eine Partgrösse in MB, die das Dateigrössenlimit deines Hosters einhält.
-- Setze bei Bedarf ein Passwort und speichere.
+1. Setze den **Releasebasispfad**. Jeder direkte Unterordner wird zu einem Release.
+2. Setze optional ein **Muster für Ordnernamen**, etwa `*1080p*`.
+3. Liegen RAR- oder 7z-Archive in den Ordnern, aktiviere **Archive vor der Releaseerstellung entpacken**.
+   Siehe [Archive vor der Releaseerstellung entpacken](/Bearcat/de/release-templates-and-automations/#archive-vor-der-releaseerstellung-entpacken).
 
-## 5. Uploadziel festlegen
+Die **Ordnervorschau** listet die passenden Ordner und zeigt, wie viele davon bereits ein Release haben. Der
+Basispfad darf den Archivausgabeordner des Templates nicht enthalten.
 
-Klicke unter **Uploads** > **Konfiguration** auf **Hinzufügen**. Gib der Konfiguration einen Namen,
-wähle dein Hosterkonto und `Main archive` und speichere. Lass **Links verteilt an** vorerst leer.
+Gibt es passende Ordner ohne Release, wählst du unter **Vorhandene Ordner**, was mit ihnen passiert:
 
-## 6. Auf den Upload warten und Links kopieren
+| Option | Ergebnis |
+| --- | --- |
+| **Einen als Test hochladen** (Standard) | Bearcat erstellt sofort ein Release für den gewählten **Testordner** und startet seine Uploads ohne Cooldown für initiale Uploads. Die übrigen vorhandenen Ordner werden ignoriert. Nicht verfügbar mit Entpacken. |
+| **Nur neue Ordner** | Vorhandene Ordner werden ignoriert. Nur später hinzugefügte Ordner werden zu Releases. |
+| **Alle importieren** | Jeder vorhandene Ordner wird zu einem Release und hochgeladen. |
 
-Standardmässig packt Bearcat die Dateien und lädt sie automatisch hoch, sobald das Release fünf Minuten alt ist.
-Diese Wartezeit kannst du in den **Konfigurationen** ändern.
+Wähle einen kleinen Testordner, um Archive und Uploads schnell zu prüfen. Klicke auf **Quelle anlegen**.
 
-Öffne **Uploads** und wechsle zu **Verlauf**, um den Fortschritt zu verfolgen. Ist der Upload fertig, kopiere die Downloadlinks aus der **Übersicht**.
+**Server (FTP/FTPS):**
+
+1. Wähle eine Remotequelle aus oder klicke auf **Remotequelle hinzufügen** und gib deine Serverdaten ein.
+2. Klicke auf **Verbindung testen**.
+3. Klicke auf **Remoteautomatisierung anlegen**. Im Dialog wählst du den überwachten Remoteordner und den
+   lokalen Downloadordner.
+
+Vorhandene Ordner auf dem Server werden ignoriert. Die Einstellungen beschreibt [FTP/FTPS-Downloads](/Bearcat/de/remote-downloads/).
+
+Nach dem Anlegen der Quelle zeigt Bearcat, wann neue Ordner übernommen werden. **Release öffnen** öffnet das
+Testrelease. **Zur Aktivität** öffnet die Startseite.
+
+## Wie es weitergeht
+
+- **Testrelease:** Das Packen startet kurz nach dem Klick auf **Quelle anlegen**.
+- **Neue lokale Ordner:** Bearcat scannt etwa alle zwei Minuten. Es erstellt das Release, sobald sich der Ordner
+  während der [Ordnerstabilität](/Bearcat/de/advanced-configuration/#ordnerautomatisierung) nicht verändert hat
+  (Standard: 5 Minuten).
+- **Neue Ordner auf dem Server:** Bearcat lädt einen Ordner herunter, sobald er sich auf dem Server während der
+  [Stabilitätsdauer](/Bearcat/de/advanced-configuration/#remotedownloads) nicht verändert hat (Standard: 5 Minuten),
+  und erstellt danach das Release.
+- **Uploads** starten nach dem [Cooldown für initiale Uploads](/Bearcat/de/advanced-configuration/#cooldown-für-initiale-uploads)
+  (Standard: 5 Minuten). Um die Wartezeit für ein Release zu überspringen, klicke auf seiner Detailseite auf **Uploads jetzt starten**.
+
+Laufende Archiverstellungen und Uploads erscheinen auf der Startseite. Öffne auf der Releasedetailseite
+**Uploads** und wechsle zu **Verlauf**, um den Fortschritt zu verfolgen. Ist der Upload fertig, kopiere die
+Downloadlinks aus der **Übersicht**.
 
 ![Uploads eines Releases](../images/release-uploads-tab.png)
 
 Schlägt der Upload fehl oder startet er nicht, prüfe die Fehler unter der Benachrichtigungsglocke.
-Stelle sicher, dass **Login testen** erfolgreich ist, beide Konfigurationen gespeichert sind und
-der Ausgabeordner der Archive beschreibbar ist. Die Phasen beschreibt [Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/).
+Stelle sicher, dass **Login testen** erfolgreich ist und der Archivausgabeordner beschreibbar ist.
+Die Phasen beschreibt [Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/).
+
+### Startseite
+
+Fehlen Hoster, Releasetemplate oder Quelle, zeigt ein Banner auf der Startseite, was fehlt.
+**Einrichtung fortsetzen** öffnet die Einrichtung erneut.
+
+Nach der erforderlichen Einrichtung zeigt die Startseite **Optionale nächste Schritte**: Metadaten und NFOs,
+ein Bildhoster für Coverbilder, Linkcrypter, Telegrambenachrichtigungen, Forenposts und Proxyserver.
+Jeder Eintrag verlinkt auf seine Einstellungsseite und wird als erledigt markiert, sobald er eingerichtet ist.
+Mit **Ausblenden** blendest du die Liste aus.
+
+## Manuell einrichten
+
+1. **Hoster:** Öffne **Hosterregistrierungen**, klicke auf **Neuer Hoster**, gib deine Zugangsdaten ein,
+   speichere und klicke auf **Login testen**.
+2. **Releasegruppe:** Öffne **Releasegruppen**, klicke auf **Neue Releasegruppe** und speichere. Lass
+   automatische Reuploads für einen ersten Test deaktiviert.
+3. **Release:** Lege deine Dateien in einen Unterordner eines Arbeitsverzeichnisses, zum Beispiel `releases/My.First.Upload/`.
+   Öffne **Releases**, klicke auf **Neues Release**, wähle **Managed**, den Ordner und die Gruppe und klicke
+   auf **Release erstellen**. In Docker erscheint `RELEASES_DIR` als `/mnt/data/releases`. Für bereits fertige
+   Archive verwende ein [Unmanaged Release](/Bearcat/de/release-types/#unmanaged-releases).
+4. **Archive:** Klicke im Tab **Archive** des Releases auf **Hinzufügen**. Wähle RAR oder 7z, einen beschreibbaren
+   Ausgabeordner in einem Arbeitsverzeichnis getrennt von den Quelldateien, ein Dateipräfix, eine Partgrösse
+   innerhalb des Dateigrössenlimits deines Hosters und optional ein Passwort.
+5. **Uploads:** Klicke unter **Uploads** > **Konfiguration** auf **Hinzufügen**, wähle dein Hosterkonto und die
+   Archivkonfiguration und speichere. Lass **Links verteilt an** vorerst leer.
+
+Der Upload startet nach dem Cooldown für initiale Uploads oder sofort mit **Uploads jetzt starten**.
+
+<details>
+<summary>Logintest anzeigen</summary>
+
+![Hosterlogin testen](../images/try-login.png)
+
+</details>
+
+Um Releases automatisch aus neuen Ordnern zu erstellen, speichere die Einstellungen als Template und lege eine
+[Ordnerautomatisierung](/Bearcat/de/release-templates-and-automations/) an.
 
 ## Nach deinem ersten Upload
 

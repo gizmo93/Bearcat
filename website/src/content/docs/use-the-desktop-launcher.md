@@ -76,7 +76,7 @@ Keep the defaults for **SQLite (recommended)**, **Database file**, **Bearcat Hos
 Click **Save**, then **Start Bearcat**. Once it is ready, click **Open Bearcat** or open
 [http://127.0.0.1:17208](http://127.0.0.1:17208).
 
-**Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
+**Next: [Follow the setup wizard and upload your first release](/Bearcat/post-installation/).**
 
 Closing the settings window keeps Bearcat running. Use **Stop** or **Quit** to stop it.
 To run Bearcat on Windows without logging in, use the [Windows service](/Bearcat/use-the-windows-service/).

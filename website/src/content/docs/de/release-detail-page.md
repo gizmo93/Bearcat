@@ -13,6 +13,9 @@ description: "Uploadfortschritt, Downloadlinks, Metadaten und Archiveinstellunge
 wenn das Release mindestens einen Hoster online hat und noch nicht gepostet wurde. Ohne aktive
 Forenverteilungsseite siehst du stattdessen **Forenpost rendern**.
 
+**Uploads jetzt starten** erscheint, solange Uploadkonfigurationen auf ihren ersten Upload warten. Damit
+überspringst du den [Cooldown für initiale Uploads](/Bearcat/de/upload-lifecycle/#2-der-erste-upload) für dieses Release.
+
 Über das `...`-Menü wandelst du zwischen den [Releasetypen](/Bearcat/de/release-types/#zwischen-typen-umwandeln) um.
 
 Die Statusanzeige unter der Kopfzeile zeigt den Fortschritt. Rot weist auf ein Problem oder einen offenen Schritt hin.

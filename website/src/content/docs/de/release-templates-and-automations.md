@@ -28,9 +28,11 @@ einer TV-Staffel. Siehe [Releasecollections](/Bearcat/de/release-collections/).
 3. Setze optional ein **Muster für Ordnernamen**, etwa `*1080p*` oder `*.GERMAN.*`. Der Abgleich ignoriert
    Gross- und Kleinschreibung und unterstützt Wildcards, aber keine regulären Ausdrücke. Lass das Feld leer,
    um alle direkten Unterordner einzubeziehen.
-4. Wähle das Template und optional eine Primärsprache für übersetzte Metadaten. Ohne Sprache wird die
+4. Lege mit **Vorhandene Ordner ignorieren** fest, ob bereits vorhandene Ordner zu Releases werden.
+   Siehe [Vorhandene Ordner](#vorhandene-ordner).
+5. Wähle das Template und optional eine Primärsprache für übersetzte Metadaten. Ohne Sprache wird die
    Standardsprache des Metadatenanbieters verwendet.
-5. Lass **Aktiviert** eingeschaltet und speichere. Über das Aktionsmenü kannst du die Automatisierung deaktivieren
+6. Lass **Aktiviert** eingeschaltet und speichere. Über das Aktionsmenü kannst du die Automatisierung deaktivieren
    oder wieder aktivieren.
 
 ![Ordnerautomatisierungen](../images/folder-automations-page.png)
@@ -50,6 +52,21 @@ Bearcat scannt etwa alle zwei Minuten und überspringt Ordner, die schon ein Rel
 ein Ordner die [Vorgaben für Stabilität und Mindestgrösse](/Bearcat/de/advanced-configuration/#ordnerautomatisierung)
 erfüllt, erstellt Bearcat das Release und ruft die Metadaten ab. Danach packt es die Dateien und
 lädt sie mit den Einstellungen des Templates hoch.
+
+### Vorhandene Ordner
+
+**Vorhandene Ordner ignorieren** ist standardmässig eingeschaltet. Der erste Scan der Automatisierung
+überspringt alle passenden Ordner, die bereits vorhanden sind. Nur später hinzukommende Ordner werden zu
+Releases. Übersprungene Ordner bleiben für diese Automatisierung ignoriert. Schalte die Option aus, um für
+jeden vorhandenen Ordner ohne Release ein Release zu erstellen.
+
+Änderst du **Releasebasispfad** oder **Muster für Ordnernamen** einer Automatisierung, startet ein neuer
+erster Scan. **Vorhandene Ordner ignorieren** gilt dann für die Ordner, die mit den neuen Einstellungen gefunden werden.
+
+Die **Ordnervorschau** im Dialog listet die Ordner, die zum aktuellen Basispfad und Muster passen, und markiert
+Ordner mit Release als **Hat Release**. Startet das Speichern einen ersten Scan, zeigt die Vorschau ausserdem,
+was mit den übrigen Ordnern passiert: Der erste Scan ignoriert sie, oder eine Warnung zeigt, wie viele Ordner
+zu Releases werden und hochgeladen werden. Die Schaltfläche zum Aktualisieren lädt die Vorschau neu.
 
 ### Archive vor der Releaseerstellung entpacken
 
