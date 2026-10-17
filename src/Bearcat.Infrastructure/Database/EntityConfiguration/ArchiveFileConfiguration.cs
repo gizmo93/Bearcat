@@ -19,7 +19,7 @@ public class ArchiveFileConfiguration : IEntityTypeConfiguration<ArchiveFile>
             .WithOne(u => u.ArchiveFile)
             .HasForeignKey(u => u.ArchiveFileId)
             .HasPrincipalKey(a => a.Id)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

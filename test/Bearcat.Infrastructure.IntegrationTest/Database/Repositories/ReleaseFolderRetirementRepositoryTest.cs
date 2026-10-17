@@ -138,6 +138,24 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
     }
 
     [Test]
+    public async Task GetConversionCandidatesAsync_OverdueReleaseWithVideoUploadConfig_ReturnsNoCandidates()
+    {
+        // Arrange
+        await AddReleaseAsync(
+            "Video",
+            ReleaseType.Managed,
+            uploadsPostedAt: Cutoff.AddDays(-1),
+            hasVideoUploadConfig: true
+        );
+
+        // Act
+        var result = await GetConversionCandidatesAsync();
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task GetConversionCandidatesAsync_MoreCandidatesThanMaximumCount_ReturnsCandidatesWithLowestIdsAfterGivenReleaseId()
     {
         // Arrange
@@ -245,7 +263,8 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         DateTime? uploadsPostedAt,
         IReadOnlyList<(DateTime? UploadedAt, UploadState UploadState)>? uploads = null,
         bool hosterRegistrationIsActive = true,
-        bool hosterRegistrationUseForMirrorDownloads = false
+        bool hosterRegistrationUseForMirrorDownloads = false,
+        bool hasVideoUploadConfig = false
     )
     {
         var release = new Release
@@ -308,6 +327,7 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         [
             new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Release = release,
                 Name = "Default upload",
                 HosterRegistration = hosterRegistration,
@@ -337,6 +357,21 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         ];
 
         DbContext.ArchiveConfigs.Add(archiveConfig);
+
+        if (hasVideoUploadConfig)
+        {
+            DbContext.UploadConfigs.Add(
+                new UploadConfig
+                {
+                    UploadSource = UploadSource.VideoFiles,
+                    Release = release,
+                    Name = "Video upload",
+                    HosterRegistration = hosterRegistration,
+                    Uploads = [],
+                }
+            );
+        }
+
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
@@ -94,20 +95,32 @@ public partial class CreateOrEditReleaseTemplateDialog(IScopedOperationRunner op
 
         if (FormModel.IsEdit && FormModel.ReleaseTemplateId is not null)
         {
-            await operationRunner.RunAsync(
-                (ReleaseTemplateService service) =>
-                    service.UpdateAsync(
-                        FormModel.ReleaseTemplateId.Value,
-                        FormModel.Name,
-                        FormModel.ReleaseType,
-                        FormModel.ReleaseContentType,
-                        FormModel.ReleaseGroupId,
-                        detectionMode,
-                        FormModel.ReleaseCollectionPattern,
-                        FormModel.ReleaseCollectionKeyTemplate,
-                        FormModel.ReleaseCollectionNameTemplate
-                    )
-            );
+            try
+            {
+                await operationRunner.RunAsync(
+                    (ReleaseTemplateService service) =>
+                        service.UpdateAsync(
+                            FormModel.ReleaseTemplateId.Value,
+                            FormModel.Name,
+                            FormModel.ReleaseType,
+                            FormModel.ReleaseContentType,
+                            FormModel.ReleaseGroupId,
+                            detectionMode,
+                            FormModel.ReleaseCollectionPattern,
+                            FormModel.ReleaseCollectionKeyTemplate,
+                            FormModel.ReleaseCollectionNameTemplate
+                        )
+                );
+            }
+            catch (InvalidUploadSourceException)
+            {
+                messageStore.Add(
+                    () => FormModel.ReleaseContentType,
+                    L["ReleaseTemplateContentTypeLockedByVideoUploadConfigs"]
+                );
+                editContext.NotifyValidationStateChanged();
+                return;
+            }
             await DialogRef.CloseAsync(DialogResult.Ok(FormModel.ReleaseTemplateId.Value));
             return;
         }

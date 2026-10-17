@@ -1105,6 +1105,7 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
 
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = new ArchiveConfig
             {

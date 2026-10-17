@@ -199,25 +199,28 @@ public class UploadCreationService(
 
     private Upload AddInitialUploadForUploadConfig(UploadConfig uploadConfig)
     {
-        return AddUploadWaitingForArchive(uploadConfig, uploadConfig.HosterRegistrationId);
+        return AddUpload(uploadConfig, uploadConfig.HosterRegistrationId);
     }
 
     private Upload AddReuploadOfUpload(Upload previousUpload)
     {
-        return AddUploadWaitingForArchive(
+        return AddUpload(
             previousUpload.UploadConfig,
             GetHosterRegistrationIdForReupload(previousUpload)
         );
     }
 
-    private Upload AddUploadWaitingForArchive(UploadConfig uploadConfig, int? hosterRegistrationId)
+    private Upload AddUpload(UploadConfig uploadConfig, int? hosterRegistrationId)
     {
         var upload = new Upload
         {
             UploadConfig = uploadConfig,
             HosterRegistrationId = hosterRegistrationId,
             CreatedAt = timeProvider.GetLocalNow(),
-            UploadState = UploadState.WaitingForArchive,
+            UploadState =
+                uploadConfig.UploadSource == UploadSource.VideoFiles
+                    ? UploadState.Pending
+                    : UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
             PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
         };

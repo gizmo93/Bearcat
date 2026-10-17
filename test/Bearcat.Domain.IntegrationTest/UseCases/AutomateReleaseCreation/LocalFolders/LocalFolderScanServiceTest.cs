@@ -1196,6 +1196,7 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
         [
             new UploadConfigTemplate
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 ReleaseTemplate = releaseTemplate,
                 ArchiveConfigTemplate = releaseTemplate.ArchiveConfigTemplates.Single(),
                 HosterRegistration = hosterRegistration,

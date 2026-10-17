@@ -32,7 +32,7 @@ public class ArchiveConfigConfiguration : IEntityTypeConfiguration<ArchiveConfig
             .WithOne(u => u.ArchiveConfig)
             .HasForeignKey(u => u.ArchiveConfigId)
             .HasPrincipalKey(a => a.Id)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder

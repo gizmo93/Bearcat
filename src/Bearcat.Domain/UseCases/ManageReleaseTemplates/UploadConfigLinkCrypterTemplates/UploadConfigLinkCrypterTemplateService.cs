@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
@@ -22,6 +23,13 @@ public class UploadConfigLinkCrypterTemplateService(IReleaseTemplateWriteReposit
             uploadConfigTemplateId,
             cancellationToken
         );
+
+        if (uploadConfigTemplate.UploadSource == UploadSource.VideoFiles)
+        {
+            throw new InvalidUploadSourceException(
+                "Link crypters cannot be added to video upload configuration templates."
+            );
+        }
 
         var linkCrypterTemplate = new UploadConfigLinkCrypterTemplate
         {

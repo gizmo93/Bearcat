@@ -572,6 +572,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration

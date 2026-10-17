@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
@@ -51,6 +52,7 @@ public partial class FirstStartSetupReleaseTemplateStep(
     private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private IReadOnlyList<ArchiverDto> archivers = [];
+    private IReadOnlyList<HosterRegistrationReadModel> selectedArchiveHosterRegistrations = [];
     private List<SelectOption<int?>> releaseTemplateOptions = [];
     private List<SelectOption<int?>> releaseGroupOptions = [];
     private List<SelectOption<string>> archiverOptions = [];
@@ -75,12 +77,22 @@ public partial class FirstStartSetupReleaseTemplateStep(
         releaseTemplates = await operationRunner.RunAsync(
             (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
         );
+
         releaseGroups = await operationRunner.RunAsync(
             (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
         );
+
         var hosterRegistrations = await operationRunner.RunAsync(
             (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
         );
+
+        selectedArchiveHosterRegistrations = hosterRegistrations
+            .Where(hosterRegistration =>
+                WizardState.SelectedHosterRegistrationIds.Contains(hosterRegistration.Id)
+                && !hosterRegistration.IsVideoHoster
+            )
+            .ToList();
+
         archivers = operationRunner.Run((IArchiverFactory factory) => factory.GetArchivers());
 
         releaseTemplateOptions = releaseTemplates
@@ -89,38 +101,42 @@ public partial class FirstStartSetupReleaseTemplateStep(
                 releaseTemplate.Name
             ))
             .ToList();
+
         releaseGroupOptions = releaseGroups
             .Select(releaseGroup => new SelectOption<int?>(
                 releaseGroup.ReleaseGroupId,
                 releaseGroup.Name
             ))
             .ToList();
+
         archiverOptions = archivers
             .Select(archiver => new SelectOption<string>(archiver.ClassName, archiver.Name))
             .ToList();
 
         useExistingTemplate = releaseTemplates.Count > 0;
         formModel.ExistingReleaseTemplateId = WizardState.ReleaseTemplateId;
+
         formModel.ReleaseGroupId = (
             releaseGroups.FirstOrDefault(releaseGroup =>
                 releaseGroup.Name == DefaultReleaseGroupName
             ) ?? releaseGroups.FirstOrDefault()
         )?.ReleaseGroupId;
+
         formModel.ReleaseTemplateName = L["FirstStartSetupDefaultReleaseTemplateName"];
         formModel.ArchiverName = archivers
             .Single(archiver => archiver.FileExtension == RarArchiveFileExtension)
             .ClassName;
+
         formModel.ArchiveFileSizeMb =
-            hosterRegistrations
-                .Where(hosterRegistration =>
-                    WizardState.SelectedHosterRegistrationIds.Contains(hosterRegistration.Id)
-                )
-                .Min(hosterRegistration => hosterRegistration.MaxFileSizeMb)
-            ?? 0;
+            selectedArchiveHosterRegistrations.Min(hosterRegistration =>
+                hosterRegistration.MaxFileSizeMb
+            ) ?? 0;
+
         formModel.ArchiveOutputFolderPath = operationRunner.Run(
             (FirstStartArchiveOutputFolderService service) =>
                 service.GetSuggestedArchiveOutputFolderPath()
         );
+
         CheckArchiveOutputFolderExists();
 
         isLoading = false;
@@ -136,6 +152,7 @@ public partial class FirstStartSetupReleaseTemplateStep(
     private void CheckArchiveOutputFolderExists()
     {
         ClearArchiveOutputFolderValidationMessages();
+
         archiveOutputFolderExists =
             !string.IsNullOrWhiteSpace(formModel.ArchiveOutputFolderPath)
             && operationRunner.Run(
@@ -250,23 +267,30 @@ public partial class FirstStartSetupReleaseTemplateStep(
             CreateNonceFile: true,
             AdditionalArchiveContentIds: []
         );
+
         var archiveConfigTemplateResult = await operationRunner.RunAsync(
             (ArchiveConfigTemplateService service) =>
                 service.CreateAsync(releaseTemplateId, archiveConfigTemplateSettings)
         );
+
         var archiveConfigTemplateId = archiveConfigTemplateResult.ArchiveConfigTemplateId!.Value;
 
-        foreach (var hosterRegistrationId in WizardState.SelectedHosterRegistrationIds)
+        foreach (var hosterRegistration in selectedArchiveHosterRegistrations)
         {
             var uploadConfigTemplateSettings = new UploadConfigTemplateSettings(
                 Name: null,
-                UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistrationId),
+                UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistration.Id),
                 ArchiveConfigTemplateId: archiveConfigTemplateId,
                 PremiumOnlyDownload: false
             );
+
             await operationRunner.RunAsync(
                 (UploadConfigTemplateService service) =>
-                    service.CreateAsync(releaseTemplateId, uploadConfigTemplateSettings)
+                    service.CreateAsync(
+                        releaseTemplateId,
+                        UploadSource.ArchiveFiles,
+                        uploadConfigTemplateSettings
+                    )
             );
         }
 

@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -31,6 +32,12 @@ public partial class ReleaseTemplateDetail(
     {
         await LoadReleaseTemplateAsync();
     }
+
+    private bool AllowsVideoFileUploads =>
+        UploadSourceValidator.AllowsVideoFileUploads(
+            releaseTemplate.ReleaseType,
+            releaseTemplate.ReleaseContentType
+        );
 
     private string ArchiveConfigTemplateGridClass =>
         releaseTemplate.ReleaseType is ReleaseType.Managed
@@ -239,7 +246,9 @@ public partial class ReleaseTemplateDetail(
             await LoadReleaseTemplateAsync();
         }
 
-        if (releaseTemplate.ArchiveConfigTemplates.Count == 0)
+        var hasArchiveConfigTemplates = releaseTemplate.ArchiveConfigTemplates.Count > 0;
+
+        if (!hasArchiveConfigTemplates && !AllowsVideoFileUploads)
         {
             toastService.Error(L["CreateArchiveConfigTemplateFirst"]);
             return;
@@ -251,9 +260,12 @@ public partial class ReleaseTemplateDetail(
             [nameof(CreateOrEditUploadConfigTemplateDialog.FormModel)] =
                 new UploadConfigTemplateFormModel
                 {
+                    UploadSource = hasArchiveConfigTemplates
+                        ? UploadSource.ArchiveFiles
+                        : UploadSource.VideoFiles,
                     ArchiveConfigTemplateId = releaseTemplate
-                        .ArchiveConfigTemplates.First()
-                        .ArchiveConfigTemplateId,
+                        .ArchiveConfigTemplates.FirstOrDefault()
+                        ?.ArchiveConfigTemplateId,
                 },
         };
 
@@ -286,6 +298,7 @@ public partial class ReleaseTemplateDetail(
                 new UploadConfigTemplateFormModel
                 {
                     Name = uploadConfig.Name,
+                    UploadSource = uploadConfig.UploadSource,
                     UploadTarget = UploadTarget.FromIds(
                         uploadConfig.HosterRegistrationId,
                         uploadConfig.HosterAccountPoolId

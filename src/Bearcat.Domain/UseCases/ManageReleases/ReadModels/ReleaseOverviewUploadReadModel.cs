@@ -6,6 +6,7 @@ public record ReleaseOverviewUploadReadModel(
     int UploadConfigId,
     string UploadConfigName,
     string UploadTargetName,
+    UploadSource UploadSource,
     int? UploadId,
     DateTime? CreatedAt,
     DateTime? UploadedAt,

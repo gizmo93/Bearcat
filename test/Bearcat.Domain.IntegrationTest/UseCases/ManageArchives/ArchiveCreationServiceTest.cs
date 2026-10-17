@@ -223,7 +223,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         await File.WriteAllTextAsync(archiveFilePath, "archive-data");
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -280,7 +280,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var originalLength = new FileInfo(archiveFilePath).Length;
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -335,7 +335,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         await File.WriteAllTextAsync(archiveFilePath, "archive-data");
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -393,7 +393,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var originalLength = new FileInfo(archiveFilePath).Length;
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -476,7 +476,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var originalLength = new FileInfo(archiveFilePath).Length;
         var existingArchive = new Archive
         {
-            ArchiveConfigId = firstUpload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = firstUpload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -538,7 +538,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig.ArchiverName = "7Zip";
+        upload.UploadConfig.ArchiveConfig!.ArchiverName = "7Zip";
         var existingArchiveFolder = Directory
             .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
             .FullName;
@@ -550,7 +550,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var originalSecondFileLength = new FileInfo(secondArchiveFilePath).Length;
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -626,7 +626,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var originalLength = new FileInfo(archiveFilePath).Length;
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -942,7 +942,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         DbContext.Archives.Add(
             new Archive
             {
-                ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+                ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
                 ArchiveFolderPath = Directory
                     .CreateDirectory(Path.Combine(archiveFilesBasePath, "previous"))
                     .FullName,
@@ -989,7 +989,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         DbContext.Archives.Add(
             new Archive
             {
-                ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+                ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
                 ArchiveFolderPath = Directory
                     .CreateDirectory(Path.Combine(archiveFilesBasePath, "previous"))
                     .FullName,
@@ -1047,9 +1047,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         SetupArchiveRepackagingStrategy(strategy);
         archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        upload.UploadConfig.ArchiveConfig!.CreateNonceFile = false;
         await AddPreviousArchiveAsync(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFileSizeMb: 512,
             md5Hash: "0123456789ABCDEF0123456789ABCDEF"
         );
@@ -1089,7 +1089,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         SetupArchiveRepackagingStrategy(ArchiveRepackagingStrategies.NonceOnly);
         archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        upload.UploadConfig.ArchiveConfig!.CreateNonceFile = false;
         await DbContext.SaveChangesAsync();
         SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
 
@@ -1114,7 +1114,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
         var upload = await AddUploadWaitingForArchiveAsync();
         await AddPreviousArchiveAsync(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFileSizeMb: 512,
             md5Hash: "0123456789ABCDEF0123456789ABCDEF"
         );
@@ -1142,9 +1142,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         SetupArchiveRepackagingStrategy(strategy);
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        upload.UploadConfig.ArchiveConfig!.CreateNonceFile = false;
         await AddPreviousArchiveAsync(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFileSizeMb: 512,
             md5Hash: previousArchiveFileMd5Hash
         );
@@ -1176,7 +1176,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -1187,7 +1187,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         };
         var blockedHashArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = Directory
                 .CreateDirectory(Path.Combine(archiveFilesBasePath, "blocked"))
                 .FullName,
@@ -1263,7 +1263,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         var restoredArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = restoredArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -1453,7 +1453,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -1539,7 +1539,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -1642,7 +1642,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -1822,7 +1822,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var upload = await AddUploadWaitingForArchiveAsync([
             CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
         ]);
-        upload.UploadConfig.ArchiveConfig.CreateNonceFile = false;
+        upload.UploadConfig.ArchiveConfig!.CreateNonceFile = false;
         await DbContext.SaveChangesAsync();
         List<string> releaseFolderEntriesDuringArchiving = [];
         List<string> persistedEntryNamesDuringArchiving = [];
@@ -1860,7 +1860,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig.PackReleaseFolderAsRootFolder =
+        upload.UploadConfig.ArchiveConfig!.PackReleaseFolderAsRootFolder =
             packReleaseFolderAsRootFolder;
         await DbContext.SaveChangesAsync();
         SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
@@ -2383,7 +2383,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         await File.WriteAllTextAsync(untouchedFilePath, "third");
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -2486,7 +2486,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         await File.WriteAllTextAsync(untouchedFilePath, "third");
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -2581,7 +2581,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var fileWithHashHash = ComputeMd5Hash(fileWithHashPath);
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -2635,7 +2635,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         await File.WriteAllTextAsync(fileWithoutHashPath, "first");
         var existingArchive = new Archive
         {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = existingArchiveFolder,
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 512,
@@ -2682,7 +2682,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var onlineFileHash = onlineArchiveFile.Md5Hash;
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [onlineArchiveFile, offlineArchiveFile]
         );
@@ -2741,7 +2741,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             "offline"
         );
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [onlineArchiveFile, offlineArchiveFile]
         );
@@ -2801,7 +2801,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             "second"
         );
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [firstArchiveFile, secondArchiveFile]
         );
@@ -2869,7 +2869,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var onlineFileHash = onlineArchiveFile.Md5Hash;
         var offlineFileHash = offlineArchiveFile.Md5Hash;
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [onlineArchiveFile, offlineArchiveFile, missingArchiveFile]
         );
@@ -2941,7 +2941,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             Md5Hash = PreviouslyComputedMd5Hash,
         };
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [missingArchiveFile]
         );
@@ -2985,7 +2985,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             "offline"
         );
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [missingOnlineArchiveFile, offlineArchiveFile]
         );
@@ -3041,7 +3041,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
         var offlineFileHash = offlineArchiveFile.Md5Hash;
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [onlineArchiveFileWithoutHash, offlineArchiveFile]
         );
@@ -3082,7 +3082,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig.ArchiverName = "7Zip";
+        upload.UploadConfig.ArchiveConfig!.ArchiverName = "7Zip";
         archiverFactoryMock.Setup(f => f.GetByName("7Zip")).Returns(archiverMock.Object);
         archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
         var existingArchiveFolder = CreateExistingArchiveFolder();
@@ -3095,7 +3095,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             "second"
         );
         var existingArchive = CreateExistingArchive(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
             archiveFolderPath: existingArchiveFolder,
             archiveFiles: [firstArchiveFile, secondArchiveFile]
         );
@@ -3504,6 +3504,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseId = archiveConfig.ReleaseId,
             ArchiveConfigId = archiveConfig.Id,
             HosterRegistration = hosterRegistration,

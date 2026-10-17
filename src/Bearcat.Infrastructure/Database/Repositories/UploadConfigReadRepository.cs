@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -52,16 +53,38 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<string> GetHosterClassNameAsync(
+        UploadTarget uploadTarget,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (uploadTarget.HosterAccountPoolId is { } hosterAccountPoolId)
+        {
+            return await dbRead
+                .HosterAccountPools.Where(pool => pool.Id == hosterAccountPoolId)
+                .Select(pool => pool.HosterClassName)
+                .FirstAsync(cancellationToken);
+        }
+
+        return await dbRead
+            .HosterRegistrations.Where(registration =>
+                registration.Id == uploadTarget.HosterRegistrationId
+            )
+            .Select(registration => registration.HosterClassName)
+            .FirstAsync(cancellationToken);
+    }
+
     private static readonly Expression<Func<UploadConfig, UploadConfigReadModel>> ToReadModel =
         u => new UploadConfigReadModel(
             u.Id,
             u.Name,
+            u.UploadSource,
             u.HosterRegistrationId,
             u.HosterRegistrationId != null ? u.HosterRegistration!.Name : null,
             u.HosterAccountPoolId,
             u.HosterAccountPoolId != null ? u.HosterAccountPool!.Name : null,
             u.ArchiveConfigId,
-            u.ArchiveConfig.Name,
+            u.ArchiveConfig != null ? u.ArchiveConfig.Name : null,
             u.Release.Name,
             u.PremiumOnlyDownload,
             u.Uploads.Any(upload => upload.UploadedFiles.Any(file => file.DownloadCount != null))

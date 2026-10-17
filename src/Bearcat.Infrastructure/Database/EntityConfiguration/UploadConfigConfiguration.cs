@@ -11,7 +11,8 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.HosterRegistrationId).IsRequired(false);
         builder.Property(u => u.HosterAccountPoolId).IsRequired(false);
-        builder.Property(u => u.ArchiveConfigId).IsRequired();
+        builder.Property(u => u.UploadSource).IsRequired();
+        builder.Property(u => u.ArchiveConfigId).IsRequired(false);
         builder.Property(u => u.CollectionUploadSlotId).IsRequired(false);
         builder.Property(u => u.Name).HasMaxLength(200).IsRequired();
         builder.Property(u => u.PremiumOnlyDownload).IsRequired();
@@ -57,10 +58,15 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.ToTable(table =>
+        {
             table.HasCheckConstraint(
                 "CK_UploadConfig_UploadTarget",
                 "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)"
-            )
-        );
+            );
+            table.HasCheckConstraint(
+                "CK_UploadConfig_UploadSource",
+                "(\"UploadSource\" = 1) = (\"ArchiveConfigId\" IS NOT NULL)"
+            );
+        });
     }
 }

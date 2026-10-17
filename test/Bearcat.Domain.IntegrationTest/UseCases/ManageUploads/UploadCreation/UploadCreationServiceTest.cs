@@ -51,6 +51,26 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateMissingInitialUploadsAsync_VideoUploadConfigWithoutUploads_CreatesPendingUploadWithoutArchive()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            uploadSource: UploadSource.VideoFiles
+        );
+
+        // Act
+        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
+
+        // Assert
+        var result = await DbContext.Uploads.SingleAsync();
+
+        result.UploadConfigId.ShouldBe(uploadConfig.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.ArchiveId.ShouldBeNull();
+    }
+
+    [Test]
     public async Task CreateMissingInitialUploadsAsync_InactiveHosterRegistrationWithoutUploads_DoesNotCreateInitialUpload()
     {
         // Arrange

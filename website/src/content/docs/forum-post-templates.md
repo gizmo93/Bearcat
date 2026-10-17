@@ -83,6 +83,27 @@ A complete example with NFO and link crypter links:
 Collection templates work the same way. They loop over the collection's releases with
 `{{~ for release in releases ~}}`.
 
+### Video uploads
+
+For [video uploads](/Bearcat/video-hosters/), you can use two more variables inside the
+`{{~ for upload in uploads ~}}` loop:
+
+- `upload.is_video_upload`: `true` for a video upload.
+- `upload.embed_links`: a list of embed links in the same order as `upload.links`. It contains one entry
+  for video uploads and is empty for archive uploads.
+
+For video uploads, `upload.archive_format` and `upload.archive_password` are empty.
+
+```text
+{{~ for upload in uploads ~}}
+{{~ if upload.is_video_upload ~}}
+{{~ for embed_link in upload.embed_links ~}}
+[URL]{{ embed_link }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}
+```
+
 ## Render a post
 
 Open a release or release collection and click **Render forum post** in the arrow menu of

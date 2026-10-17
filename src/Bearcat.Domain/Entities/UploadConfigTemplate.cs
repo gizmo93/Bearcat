@@ -10,9 +10,11 @@ public class UploadConfigTemplate
 
     public ReleaseTemplate ReleaseTemplate { get; set; } = null!;
 
-    public int ArchiveConfigTemplateId { get; set; }
+    public UploadSource UploadSource { get; set; }
 
-    public ArchiveConfigTemplate ArchiveConfigTemplate { get; set; } = null!;
+    public int? ArchiveConfigTemplateId { get; set; }
+
+    public ArchiveConfigTemplate? ArchiveConfigTemplate { get; set; }
 
     public int? HosterRegistrationId { get; set; }
 

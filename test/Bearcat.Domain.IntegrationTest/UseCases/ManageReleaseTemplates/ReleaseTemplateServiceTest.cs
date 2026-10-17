@@ -1,5 +1,7 @@
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CollectionImageUploadConfigTemplates;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -121,6 +123,46 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Message.ShouldBe("Release template type cannot be changed.");
+    }
+
+    [Test]
+    public async Task UpdateAsync_VideoUploadConfigTemplateAndNonVideoContentType_ThrowsInvalidUploadSourceException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var hosterRegistration = await AddHosterRegistrationAsync();
+        DbContext.UploadConfigTemplates.Add(
+            new UploadConfigTemplate
+            {
+                ReleaseTemplateId = releaseTemplate.Id,
+                UploadSource = UploadSource.VideoFiles,
+                HosterRegistrationId = hosterRegistration.Id,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidUploadSourceException>(async () =>
+            await service.UpdateAsync(
+                releaseTemplate.Id,
+                "Updated template",
+                ReleaseType.Managed,
+                ReleaseContentType.Game,
+                releaseGroup.Id,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "The content type must stay movie or TV show episode while the release template has video file upload config templates."
+        );
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ReleaseTemplates.SingleAsync()).ReleaseContentType.ShouldBe(
+            ReleaseContentType.Movie
+        );
     }
 
     [Test]

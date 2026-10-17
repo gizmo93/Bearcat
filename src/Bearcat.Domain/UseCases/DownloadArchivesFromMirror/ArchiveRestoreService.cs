@@ -71,7 +71,7 @@ public class ArchiveRestoreService(
         }
 
         var uploadsByArchiveConfigId = waitingUploads
-            .GroupBy(upload => upload.UploadConfig.ArchiveConfigId)
+            .GroupBy(upload => upload.UploadConfig.ArchiveConfigId!.Value)
             .ToList();
 
         foreach (var group in uploadsByArchiveConfigId)

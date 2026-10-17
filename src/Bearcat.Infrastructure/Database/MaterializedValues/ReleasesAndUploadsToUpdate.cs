@@ -121,7 +121,8 @@ public sealed class ReleasesAndUploadsToUpdate
             releaseIds.UnionWith(
                 await context
                     .UploadConfigs.Where(uploadConfig =>
-                        deletedArchiveConfigIds.Contains(uploadConfig.ArchiveConfigId)
+                        uploadConfig.ArchiveConfigId != null
+                        && deletedArchiveConfigIds.Contains(uploadConfig.ArchiveConfigId.Value)
                     )
                     .Select(uploadConfig => uploadConfig.ReleaseId)
                     .Distinct()
@@ -134,7 +135,7 @@ public sealed class ReleasesAndUploadsToUpdate
             uploadIds.UnionWith(
                 await context
                     .UploadedFiles.Where(uploadedFile =>
-                        deletedArchiveIds.Contains(uploadedFile.ArchiveFile.ArchiveId)
+                        deletedArchiveIds.Contains(uploadedFile.ArchiveFile!.ArchiveId)
                     )
                     .Select(uploadedFile => uploadedFile.UploadId)
                     .Distinct()
@@ -147,7 +148,8 @@ public sealed class ReleasesAndUploadsToUpdate
             uploadIds.UnionWith(
                 await context
                     .UploadedFiles.Where(uploadedFile =>
-                        deletedArchiveFileIds.Contains(uploadedFile.ArchiveFileId)
+                        uploadedFile.ArchiveFileId != null
+                        && deletedArchiveFileIds.Contains(uploadedFile.ArchiveFileId.Value)
                     )
                     .Select(uploadedFile => uploadedFile.UploadId)
                     .Distinct()

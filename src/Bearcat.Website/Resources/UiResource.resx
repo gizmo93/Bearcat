@@ -452,7 +452,7 @@
   <data name="UnhandledError" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="UploadConfig" xml:space="preserve"><value>Upload config</value></data>
-  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Choose the hoster and archive configuration for this upload.</value></data>
+  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Choose the upload target and source for this upload.</value></data>
   <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload config link crypters</value></data>
     <data name="UploadConfigs" xml:space="preserve"><value>Total upload configs</value></data>
   <data name="UploadConfigurations" xml:space="preserve"><value>Upload configurations</value></data>
@@ -693,7 +693,7 @@
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Select release template</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>You must select a release template.</value></data>
   <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leave empty to use the name of the account or account pool.</value></data>
-    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Choose the hoster and archive settings for releases created from this template.</value></data>
+    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Choose the upload target and source for releases created from this template.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Use hoster name</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Use release name as archive name</value></data>
   <data name="AllFolders" xml:space="preserve"><value>All folders</value></data>
@@ -1912,4 +1912,16 @@
   <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Creates forum post drafts on distribution sites.</value></data>
   <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
   <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Routes outbound connections through a proxy.</value></data>
+  <data name="UploadSource" xml:space="preserve"><value>Upload source</value></data>
+  <data name="UploadSourceHelp" xml:space="preserve"><value>Video file uploads the main video of the release to a video hoster instead of archive files. The upload source cannot be changed later.</value></data>
+  <data name="UploadSource.ArchiveFiles" xml:space="preserve"><value>Archive files</value></data>
+  <data name="UploadSource.VideoFiles" xml:space="preserve"><value>Video file</value></data>
+  <data name="VideoUploadConfigWithoutLinkCrypters" xml:space="preserve"><value>Video upload configurations do not support link crypters.</value></data>
+  <data name="EmbedLink" xml:space="preserve"><value>Embed link</value></data>
+  <data name="CopyEmbedLink" xml:space="preserve"><value>Copy embed link</value></data>
+  <data name="NoHosterAccountsYet" xml:space="preserve"><value>No hoster accounts yet.</value></data>
+  <data name="NoVideoHosterAccountsYet" xml:space="preserve"><value>No video hoster accounts yet.</value></data>
+  <data name="ConvertToUnmanagedBlockedByVideoUploadConfigs" xml:space="preserve"><value>Releases with video upload configurations keep their release folder and cannot be converted to unmanaged.</value></data>
+  <data name="ReleaseContentTypeLockedByVideoUploadConfigs" xml:space="preserve"><value>The content type must stay movie or TV show episode while the release has video upload configurations.</value></data>
+  <data name="ReleaseTemplateContentTypeLockedByVideoUploadConfigs" xml:space="preserve"><value>The content type must stay movie or TV show episode while the template has video upload configurations.</value></data>
 </root>

@@ -33,6 +33,10 @@ You can also choose link crypter configurations.
 Create an upload configuration for each hoster. Several configurations for the same hoster are
 possible, for example with different part sizes.
 
+With the upload source **Video file**, Bearcat uploads the main video directly to a
+[video hoster](/Bearcat/video-hosters/). These uploads start as `Pending` and skip `WaitingForArchive`
+and archive creation.
+
 ## 2. The first upload
 
 The **Initial upload cooldown** starts when the release is created.

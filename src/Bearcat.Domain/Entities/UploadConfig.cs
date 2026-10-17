@@ -1,4 +1,6 @@
-﻿namespace Bearcat.Domain.Entities;
+﻿using Bearcat.Domain.ValueObjects;
+
+namespace Bearcat.Domain.Entities;
 
 public class UploadConfig
 {
@@ -12,9 +14,11 @@ public class UploadConfig
 
     public int? HosterAccountPoolId { get; set; }
 
-    public int ArchiveConfigId { get; set; }
+    public UploadSource UploadSource { get; set; }
 
-    public ArchiveConfig ArchiveConfig { get; set; } = null!;
+    public int? ArchiveConfigId { get; set; }
+
+    public ArchiveConfig? ArchiveConfig { get; set; }
 
     public int? CollectionUploadSlotId { get; set; }
 

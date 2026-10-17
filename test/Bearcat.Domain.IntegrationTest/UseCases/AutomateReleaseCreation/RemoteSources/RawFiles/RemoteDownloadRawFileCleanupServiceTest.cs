@@ -149,6 +149,19 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
     }
 
     [Test]
+    public async Task ProcessAsync_ReleaseWithCompletedVideoUploadConfig_LeavesReleaseUntouched()
+    {
+        // Arrange
+        var release = await AddScenarioAsync(withCompletedVideoUploadConfig: true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        await ShouldBeUntouchedAsync(release, rawFolderPath);
+    }
+
+    [Test]
     public async Task ProcessAsync_ReleaseWithoutUploadConfigs_LeavesReleaseUntouched()
     {
         // Arrange
@@ -234,7 +247,8 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
         UploadState? additionalUploadState = null,
         string? releaseFolderPath = null,
         bool archiveInsideRawFolder = false,
-        ArchiveState archiveState = ArchiveState.Created
+        ArchiveState archiveState = ArchiveState.Created,
+        bool withCompletedVideoUploadConfig = false
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -348,6 +362,21 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             {
                 AddUpload(uploadConfig, additionalUploadState.Value);
             }
+
+            if (withCompletedVideoUploadConfig)
+            {
+                var videoUploadConfig = new UploadConfig
+                {
+                    UploadSource = UploadSource.VideoFiles,
+                    Release = release,
+                    HosterRegistration = hosterRegistration,
+                    Name = "Video upload",
+                };
+                DbContext.UploadConfigs.Add(videoUploadConfig);
+                await DbContext.SaveChangesAsync();
+
+                AddUpload(videoUploadConfig, UploadState.Completed);
+            }
         }
 
         DbContext.RemoteSourceDownloads.Add(
@@ -388,6 +417,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

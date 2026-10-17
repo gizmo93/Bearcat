@@ -12,6 +12,7 @@ public record HosterRegistrationReadModel(
     bool SupportsCaptchaVerification,
     bool SupportsStorageQuota,
     bool SupportsPremiumOnlyDownloads,
+    bool IsVideoHoster,
     int? MaxFileSizeMb,
     bool HasFixedParallelUploadLimit,
     int? DefaultMaximumParallelUploads,

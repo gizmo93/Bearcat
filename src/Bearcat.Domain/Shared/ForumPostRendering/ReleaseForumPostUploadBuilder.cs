@@ -24,10 +24,12 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
         {
             Name = upload.UploadConfigName,
             HosterName = upload.HosterName,
+            IsVideoUpload = upload.IsVideoUpload,
             UploadedAt = upload.UploadedAt,
-            ArchiveFormat = upload.ArchiveFormat,
+            ArchiveFormat = upload.ArchiveFormat ?? string.Empty,
             ArchivePassword = upload.ArchivePassword ?? string.Empty,
             Links = upload.Links,
+            EmbedLinks = upload.EmbedLinks,
             LinkCrypters = upload
                 .LinkCrypters.Select(linkCrypter => new ForumPostTemplateLinkCrypterModel
                 {

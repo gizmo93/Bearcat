@@ -96,7 +96,7 @@ public class FileUploadResultService(
     {
         logger.LogInformation(
             "Upload for file {FilePath} for upload {UploadId} completed with IsSuccess {Success}",
-            result.FullFileName,
+            result.SourceFile.FullFileName,
             result.UploadId,
             result.IsSuccess
         );
@@ -107,9 +107,10 @@ public class FileUploadResultService(
         FileUploadCompleted result
     )
     {
-        var archiveFile = context.Upload.Archive!.ArchiveFiles.Single(f =>
-            f.Id == result.ArchiveFileId
-        );
+        var sourceFile = result.SourceFile;
+        var archiveFile = sourceFile.ArchiveFileId is null
+            ? null
+            : context.Upload.Archive!.ArchiveFiles.Single(f => f.Id == sourceFile.ArchiveFileId);
 
         context.Upload.UploadedFiles.Add(
             new UploadedFile
@@ -117,11 +118,13 @@ public class FileUploadResultService(
                 Upload = context.Upload,
                 UploadId = context.UploadId,
                 ArchiveFile = archiveFile,
-                ArchiveFileId = result.ArchiveFileId,
+                ArchiveFileId = sourceFile.ArchiveFileId,
+                VideoFileRelativePath = sourceFile.VideoFileRelativePath,
                 HosterFileLink = result.FileUrl ?? string.Empty,
+                HosterEmbedLink = result.EmbedUrl,
                 ExternalId = result.ExternalId,
                 HosterFolderId = context.Upload.HosterFolderId,
-                Md5Hash = result.IsSuccess ? result.Md5Hash ?? archiveFile.Md5Hash : null,
+                Md5Hash = result.IsSuccess ? sourceFile.Md5Hash ?? archiveFile?.Md5Hash : null,
                 ErrorMessages = result.Errors.ToList(),
                 OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
                 CreatedAt = timeProvider.GetLocalNow(),

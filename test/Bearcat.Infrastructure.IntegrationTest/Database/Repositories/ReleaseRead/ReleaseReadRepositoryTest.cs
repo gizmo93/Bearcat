@@ -576,8 +576,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var item = result.ShouldHaveSingleItem();
         item.ReleaseId.ShouldBe(openRelease.Release.Id);
 
-        var archiveGroup = item.ArchiveGroups.ShouldHaveSingleItem();
-        archiveGroup.ArchiveConfigName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
+        var archiveGroup = item.UploadGroups.ShouldHaveSingleItem();
+        archiveGroup.GroupName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
 
         var hoster = archiveGroup.Hosters.ShouldHaveSingleItem();
         hoster.HosterAccountOrPoolName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
@@ -618,6 +618,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 {
                     UploadConfig = new UploadConfig
                     {
+                        UploadSource = UploadSource.ArchiveFiles,
                         Release = release,
                         ArchiveConfig = new ArchiveConfig
                         {
@@ -650,7 +651,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Count.ShouldBe(queuedReleaseCount);
-        result.ShouldAllBe(item => item.ArchiveGroups.Count == 1);
+        result.ShouldAllBe(item => item.UploadGroups.Count == 1);
     }
 
     [Test]
@@ -1141,6 +1142,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             };
             var uploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 ReleaseId = release.Id,
                 ArchiveConfig = archiveConfig,
                 HosterRegistration = hosterRegistration,
@@ -1269,7 +1271,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         {
             var archive = new Archive
             {
-                ArchiveConfig = uploadConfig.ArchiveConfig,
+                ArchiveConfig = uploadConfig.ArchiveConfig!,
                 ArchiveFolderPath = "/tmp/archives",
                 CreatedAt = createdAt,
                 ArchiveState = ArchiveState.Created,
@@ -1511,6 +1513,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseId = release.Id,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

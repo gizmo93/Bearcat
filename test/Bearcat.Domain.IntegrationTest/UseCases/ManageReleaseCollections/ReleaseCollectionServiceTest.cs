@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -50,6 +51,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
                 ),
                 NoOpSecretProtector.Instance
             ),
+            TestUploadSourceValidator.Create(DbContext),
             CreateTimeProvider()
         );
     }
@@ -560,6 +562,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             [
                 new UploadConfigTemplate
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     CollectionUploadSlotKey = "rapidgator",
                     LinkCrypterTemplates =
                     [
@@ -583,6 +586,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             [
                 new UploadConfig
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     LinkCrypters =
                     [
                         new UploadConfigLinkCrypter
@@ -888,6 +892,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
 
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

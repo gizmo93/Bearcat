@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
+﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 
@@ -20,6 +21,11 @@ public interface IUploadConfigReadRepository
 
     Task<IReadOnlyList<ArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
         int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<string> GetHosterClassNameAsync(
+        UploadTarget uploadTarget,
         CancellationToken cancellationToken = default
     );
 }

@@ -10,11 +10,15 @@ public class UploadedFile
 
     public Upload Upload { get; set; } = null!;
 
-    public int ArchiveFileId { get; set; }
+    public int? ArchiveFileId { get; set; }
 
-    public ArchiveFile ArchiveFile { get; set; } = null!;
+    public ArchiveFile? ArchiveFile { get; set; }
+
+    public string? VideoFileRelativePath { get; set; }
 
     public string HosterFileLink { get; set; } = null!;
+
+    public string? HosterEmbedLink { get; set; }
 
     public string? ExternalId { get; set; }
 

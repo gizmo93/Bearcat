@@ -26,7 +26,7 @@
             <div class="bearcat-config-list">
                 <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)_84px]">
                     <span>@L["UploadTarget"]</span>
-                    <span>@L["ArchiveConfig"]</span>
+                    <span>@L["Source"]</span>
                     <span class="text-right">@L["Actions"]</span>
                 </div>
                 @foreach (var config in uploadConfigs)
@@ -64,8 +64,15 @@
                             </div>
 
                             <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["ArchiveConfig"]</p>
-                                <p class="truncate text-sm font-medium" title="@config.ArchiveConfigName">@config.ArchiveConfigName</p>
+                                <p class="bearcat-mobile-label">@L["Source"]</p>
+                                @if (config.UploadSource is UploadSource.VideoFiles)
+                                {
+                                    <p class="truncate text-sm font-medium">@L.Localize(config.UploadSource)</p>
+                                }
+                                else
+                                {
+                                    <p class="truncate text-sm font-medium" title="@config.ArchiveConfigName">@config.ArchiveConfigName</p>
+                                }
                             </div>
 
                             <div class="bearcat-config-actions">
@@ -93,7 +100,14 @@
                         </div>
                         <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
                             <div class="space-y-4">
-                                <UploadConfigLinkCryptersList UploadConfigId="@config.UploadConfigId" ReleaseName="@config.ReleaseName" />
+                                @if (config.UploadSource is UploadSource.VideoFiles)
+                                {
+                                    <p class="text-sm text-muted-foreground">@L["VideoUploadConfigWithoutLinkCrypters"]</p>
+                                }
+                                else
+                                {
+                                    <UploadConfigLinkCryptersList UploadConfigId="@config.UploadConfigId" ReleaseName="@config.ReleaseName" />
+                                }
                             </div>
                         </BbCollapsibleContent>
                     </BbCollapsible>

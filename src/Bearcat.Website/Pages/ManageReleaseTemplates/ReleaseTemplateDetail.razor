@@ -173,7 +173,7 @@
                     <div class="bearcat-config-list">
                         <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_90px_84px]">
                             <span>@L["UploadTarget"]</span>
-                            <span>@L["ArchiveConfig"]</span>
+                            <span>@L["Source"]</span>
                             <span>@L["Crypters"]</span>
                             <span class="text-right">@L["Actions"]</span>
                         </div>
@@ -198,8 +198,15 @@
                                         </div>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="bearcat-mobile-label">@L["ArchiveConfig"]</p>
-                                        <p class="truncate text-sm font-medium" title="@config.ArchiveConfigTemplateName">@config.ArchiveConfigTemplateName</p>
+                                        <p class="bearcat-mobile-label">@L["Source"]</p>
+                                        @if (config.UploadSource is UploadSource.VideoFiles)
+                                        {
+                                            <p class="truncate text-sm font-medium">@L.Localize(config.UploadSource)</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="truncate text-sm font-medium" title="@config.ArchiveConfigTemplateName">@config.ArchiveConfigTemplateName</p>
+                                        }
                                     </div>
                                     <div>
                                         <p class="bearcat-mobile-label">@L["Crypters"]</p>
@@ -230,75 +237,82 @@
                                 </div>
                                 <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
                                     <div class="space-y-4">
-                                        <div class="space-y-3">
-                                            <div class="bearcat-section-header">
-                                                <div class="flex items-center gap-2">
-                                                    <LucideIcon Name="shield" class="h-4 w-4" />
-                                                    <p class="text-sm font-medium">@L["LinkCrypters"]</p>
+                                        @if (config.UploadSource is UploadSource.VideoFiles)
+                                        {
+                                            <p class="text-sm text-muted-foreground">@L["VideoUploadConfigWithoutLinkCrypters"]</p>
+                                        }
+                                        else
+                                        {
+                                            <div class="space-y-3">
+                                                <div class="bearcat-section-header">
+                                                    <div class="flex items-center gap-2">
+                                                        <LucideIcon Name="shield" class="h-4 w-4" />
+                                                        <p class="text-sm font-medium">@L["LinkCrypters"]</p>
+                                                    </div>
+                                                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(async () => await ShowAddLinkCrypterDialogAsync(config))">
+                                                        <LucideIcon Name="plus" class="h-4 w-4" />
+                                                        @L["Add"]
+                                                    </BbButton>
                                                 </div>
-                                                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(async () => await ShowAddLinkCrypterDialogAsync(config))">
-                                                    <LucideIcon Name="plus" class="h-4 w-4" />
-                                                    @L["Add"]
-                                                </BbButton>
-                                            </div>
 
-                                            @if (config.LinkCrypterTemplates.Count == 0)
-                                            {
-                                                <div class="rounded-md border border-dashed border-border/70 px-3 py-4 text-sm text-muted-foreground">
-                                                    @L["NoLinkCryptersYet"]
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="grid gap-2">
-                                                    @foreach (var linkCrypter in config.LinkCrypterTemplates)
-                                                    {
-                                                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
-                                                            <div class="flex flex-wrap items-center gap-2">
-                                                                <BbBadge Variant="BadgeVariant.Outline">@linkCrypter.LinkCrypterRegistrationName</BbBadge>
-                                                                <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(linkCrypter.ContainerScope)</BbBadge>
-                                                                @if (!string.IsNullOrWhiteSpace(linkCrypter.Password))
-                                                                {
-                                                                    <span class="text-xs text-muted-foreground">@L["PasswordProtected"]</span>
-                                                                }
-                                                                @if (linkCrypter.SupportsCaptcha)
-                                                                {
-                                                                    <BbBadge Variant="@(linkCrypter.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                                                        @L["Captcha"]: @(linkCrypter.EnableCaptcha ? L["Enabled"] : L["Disabled"])
-                                                                    </BbBadge>
-                                                                }
-                                                                @if (linkCrypter.SupportsContainerDownload)
-                                                                {
-                                                                    <BbBadge Variant="@(linkCrypter.EnableContainerDownload ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                                                        @L["ContainerDownloadShort"]: @(linkCrypter.EnableContainerDownload ? L["Enabled"] : L["Disabled"])
-                                                                    </BbBadge>
-                                                                }
-                                                                @if (linkCrypter.SupportsClickAndLoad)
-                                                                {
-                                                                    <BbBadge Variant="@(linkCrypter.EnableClickAndLoad ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                                                        @L["ClickAndLoadShort"]: @(linkCrypter.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])
-                                                                    </BbBadge>
-                                                                }
+                                                @if (config.LinkCrypterTemplates.Count == 0)
+                                                {
+                                                    <div class="rounded-md border border-dashed border-border/70 px-3 py-4 text-sm text-muted-foreground">
+                                                        @L["NoLinkCryptersYet"]
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="grid gap-2">
+                                                        @foreach (var linkCrypter in config.LinkCrypterTemplates)
+                                                        {
+                                                            <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
+                                                                <div class="flex flex-wrap items-center gap-2">
+                                                                    <BbBadge Variant="BadgeVariant.Outline">@linkCrypter.LinkCrypterRegistrationName</BbBadge>
+                                                                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(linkCrypter.ContainerScope)</BbBadge>
+                                                                    @if (!string.IsNullOrWhiteSpace(linkCrypter.Password))
+                                                                    {
+                                                                        <span class="text-xs text-muted-foreground">@L["PasswordProtected"]</span>
+                                                                    }
+                                                                    @if (linkCrypter.SupportsCaptcha)
+                                                                    {
+                                                                        <BbBadge Variant="@(linkCrypter.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                                            @L["Captcha"]: @(linkCrypter.EnableCaptcha ? L["Enabled"] : L["Disabled"])
+                                                                        </BbBadge>
+                                                                    }
+                                                                    @if (linkCrypter.SupportsContainerDownload)
+                                                                    {
+                                                                        <BbBadge Variant="@(linkCrypter.EnableContainerDownload ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                                            @L["ContainerDownloadShort"]: @(linkCrypter.EnableContainerDownload ? L["Enabled"] : L["Disabled"])
+                                                                        </BbBadge>
+                                                                    }
+                                                                    @if (linkCrypter.SupportsClickAndLoad)
+                                                                    {
+                                                                        <BbBadge Variant="@(linkCrypter.EnableClickAndLoad ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                                            @L["ClickAndLoadShort"]: @(linkCrypter.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])
+                                                                        </BbBadge>
+                                                                    }
+                                                                </div>
+                                                                <div class="flex items-center gap-1">
+                                                                    <BbButton Variant="ButtonVariant.Ghost"
+                                                                              Size="ButtonSize.IconSmall"
+                                                                              AriaLabel="@L["Edit"]"
+                                                                              OnClick="@(async () => await ShowEditLinkCrypterDialogAsync(config, linkCrypter))">
+                                                                        <LucideIcon Name="pencil" class="h-4 w-4" />
+                                                                    </BbButton>
+                                                                    <BbButton Variant="ButtonVariant.Ghost"
+                                                                              Size="ButtonSize.IconSmall"
+                                                                              AriaLabel="@L["Delete"]"
+                                                                              OnClick="@(async () => await DeleteLinkCrypterTemplateAsync(linkCrypter))">
+                                                                        <LucideIcon Name="trash-2" class="h-4 w-4" />
+                                                                    </BbButton>
+                                                                </div>
                                                             </div>
-                                                            <div class="flex items-center gap-1">
-                                                                <BbButton Variant="ButtonVariant.Ghost"
-                                                                          Size="ButtonSize.IconSmall"
-                                                                          AriaLabel="@L["Edit"]"
-                                                                          OnClick="@(async () => await ShowEditLinkCrypterDialogAsync(config, linkCrypter))">
-                                                                    <LucideIcon Name="pencil" class="h-4 w-4" />
-                                                                </BbButton>
-                                                                <BbButton Variant="ButtonVariant.Ghost"
-                                                                          Size="ButtonSize.IconSmall"
-                                                                          AriaLabel="@L["Delete"]"
-                                                                          OnClick="@(async () => await DeleteLinkCrypterTemplateAsync(linkCrypter))">
-                                                                    <LucideIcon Name="trash-2" class="h-4 w-4" />
-                                                                </BbButton>
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            }
-                                        </div>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
                                     </div>
                                 </BbCollapsibleContent>
                             </BbCollapsible>

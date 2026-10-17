@@ -61,6 +61,11 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        UploadSource uploadSource
+    ) => localizer[$"UploadSource.{uploadSource}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         ReleaseResolution resolution
     ) => localizer[$"ReleaseResolution.{resolution}"];
 

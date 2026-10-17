@@ -2362,7 +2362,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ArchiveConfigId")
+                    b.Property<int?>("ArchiveConfigId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("CollectionUploadSlotId")
@@ -2385,6 +2385,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ReleaseId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("UploadSource")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveConfigId");
@@ -2399,6 +2402,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.ToTable("UploadConfigs", t =>
                         {
+                            t.HasCheckConstraint("CK_UploadConfig_UploadSource", "(\"UploadSource\" = 1) = (\"ArchiveConfigId\" IS NOT NULL)");
+
                             t.HasCheckConstraint("CK_UploadConfig_UploadTarget", "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)");
                         });
                 });
@@ -2489,7 +2494,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ArchiveConfigTemplateId")
+                    b.Property<int?>("ArchiveConfigTemplateId")
                         .HasColumnType("integer");
 
                     b.Property<string>("CollectionUploadSlotExpectedArchivePassword")
@@ -2526,6 +2531,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("UploadSource")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveConfigTemplateId");
@@ -2538,6 +2546,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.ToTable("UploadConfigTemplates", t =>
                         {
+                            t.HasCheckConstraint("CK_UploadConfigTemplate_UploadSource", "(\"UploadSource\" = 1) = (\"ArchiveConfigTemplateId\" IS NOT NULL)");
+
                             t.HasCheckConstraint("CK_UploadConfigTemplate_UploadTarget", "(\"HosterRegistrationId\" IS NULL) <> (\"HosterAccountPoolId\" IS NULL)");
                         });
                 });
@@ -2550,7 +2560,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ArchiveFileId")
+                    b.Property<int?>("ArchiveFileId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("CheckedAt")
@@ -2572,6 +2582,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("HosterEmbedLink")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("HosterFileLink")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -2590,6 +2604,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("UploadId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("VideoFileRelativePath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArchiveFileId");
@@ -2598,7 +2616,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UploadId");
 
-                    b.ToTable("UploadedFiles");
+                    b.ToTable("UploadedFiles", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadedFile_FileSource", "(\"ArchiveFileId\" IS NULL) <> (\"VideoFileRelativePath\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("ArchiveConfigAdditionalArchiveContents", b =>
@@ -3276,8 +3297,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasOne("Bearcat.Domain.Entities.ArchiveConfig", "ArchiveConfig")
                         .WithMany("UploadConfigs")
                         .HasForeignKey("ArchiveConfigId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.CollectionUploadSlot", "CollectionUploadSlot")
                         .WithMany("UploadConfigs")
@@ -3354,8 +3374,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasOne("Bearcat.Domain.Entities.ArchiveConfigTemplate", "ArchiveConfigTemplate")
                         .WithMany("UploadConfigTemplates")
                         .HasForeignKey("ArchiveConfigTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.HosterAccountPool", "HosterAccountPool")
                         .WithMany("UploadConfigTemplates")
@@ -3387,8 +3406,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasOne("Bearcat.Domain.Entities.ArchiveFile", "ArchiveFile")
                         .WithMany("UploadedFiles")
                         .HasForeignKey("ArchiveFileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.Upload", "Upload")
                         .WithMany("UploadedFiles")

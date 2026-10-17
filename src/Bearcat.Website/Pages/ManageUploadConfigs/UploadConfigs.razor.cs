@@ -20,6 +20,9 @@ public partial class UploadConfigs(
     [Parameter]
     public int? FocusUploadConfigId { get; set; }
 
+    [Parameter]
+    public bool AllowsVideoFileUploads { get; set; }
+
     private IReadOnlyList<UploadConfigReadModel> uploadConfigs = [];
 
     protected override async Task OnInitializedAsync()
@@ -32,6 +35,8 @@ public partial class UploadConfigs(
         var parameters = new Dictionary<string, object?>
         {
             [nameof(CreateOrEditUploadConfigDialog.ReleaseId)] = ReleaseId,
+            [nameof(CreateOrEditUploadConfigDialog.AllowsVideoFileUploads)] =
+                AllowsVideoFileUploads,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditUploadConfigDialog>(
@@ -59,6 +64,8 @@ public partial class UploadConfigs(
             [nameof(CreateOrEditUploadConfigDialog.ReleaseId)] = ReleaseId,
             [nameof(CreateOrEditUploadConfigDialog.UploadConfigId)] =
                 uploadConfigReadModel.UploadConfigId,
+            [nameof(CreateOrEditUploadConfigDialog.AllowsVideoFileUploads)] =
+                AllowsVideoFileUploads,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditUploadConfigDialog>(

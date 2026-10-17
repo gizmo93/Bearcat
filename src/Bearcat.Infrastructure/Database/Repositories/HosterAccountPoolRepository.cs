@@ -170,6 +170,7 @@ public class HosterAccountPoolRepository(
             pool.HosterClassName,
             hoster.Name,
             hoster.SupportsPremiumOnlyDownloads,
+            hoster is IVideoHoster,
             hoster is IHosterWithFileSizeLimit fileSizeLimit ? fileSizeLimit.MaxFileSizeMb : null,
             pool.MinimumFreeSpaceBytes,
             pool.MembersInPriorityOrder

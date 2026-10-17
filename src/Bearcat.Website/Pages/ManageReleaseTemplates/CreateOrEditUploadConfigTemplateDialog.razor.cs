@@ -2,6 +2,7 @@ using System.Text;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
@@ -36,6 +37,12 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
     private bool isEdit;
     private bool isUnmanagedReleaseTemplate;
     private bool usesReleaseCollections;
+    private bool allowsVideoFileUploads;
+
+    private bool ShowUploadSource =>
+        allowsVideoFileUploads || FormModel.UploadSource is UploadSource.VideoFiles;
+
+    private bool UsesArchiveFiles => FormModel.UploadSource is UploadSource.ArchiveFiles;
 
     private IReadOnlyList<SelectOption<int?>> ArchiveConfigOptions =>
         archiveConfigTemplates
@@ -79,6 +86,12 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
         isUnmanagedReleaseTemplate = detail?.ReleaseType is ReleaseType.Unmanaged;
         usesReleaseCollections =
             detail?.ReleaseCollectionDetectionMode is not ReleaseCollectionDetectionMode.Disabled;
+        allowsVideoFileUploads =
+            detail is not null
+            && UploadSourceValidator.AllowsVideoFileUploads(
+                detail.ReleaseType,
+                detail.ReleaseContentType
+            );
 
         useCollectionUploadSlot =
             usesReleaseCollections
@@ -114,7 +127,9 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
             var settings = new UploadConfigTemplateSettings(
                 Name: FormModel.Name,
                 UploadTarget: FormModel.UploadTarget!,
-                ArchiveConfigTemplateId: FormModel.ArchiveConfigTemplateId!.Value,
+                ArchiveConfigTemplateId: UsesArchiveFiles
+                    ? FormModel.ArchiveConfigTemplateId
+                    : null,
                 PremiumOnlyDownload: CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
                 CollectionUploadSlotKey: FormModel.CollectionUploadSlotKey,
                 CollectionUploadSlotName: FormModel.CollectionUploadSlotName,
@@ -129,10 +144,23 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
                 return;
             }
 
-            await service.CreateAsync(ReleaseTemplateId, settings);
+            await service.CreateAsync(ReleaseTemplateId, FormModel.UploadSource, settings);
         });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
+    }
+
+    private void OnUploadSourceChanged()
+    {
+        if (
+            FormModel.UploadTarget is { } uploadTarget
+            && !uploadTargetChoices.MatchesUploadSource(uploadTarget, FormModel.UploadSource)
+        )
+        {
+            FormModel.UploadTarget = null;
+        }
+
+        ResetPremiumOnlyDownloadIfUnsupported();
     }
 
     private void OnUploadTargetChanged()
@@ -160,6 +188,11 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
         if (FormModel.UploadTarget is null)
         {
             messageStore.Add(() => FormModel.UploadTarget!, L["UploadTargetRequired"]);
+        }
+
+        if (!UsesArchiveFiles)
+        {
+            return;
         }
 
         if (!isUnmanagedReleaseTemplate && FormModel.ArchiveConfigTemplateId is null)
@@ -219,7 +252,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
 
     private void PrepareCollectionUploadSlotForSave()
     {
-        if (!usesReleaseCollections || !useCollectionUploadSlot)
+        if (!usesReleaseCollections || !useCollectionUploadSlot || !UsesArchiveFiles)
         {
             ClearCollectionUploadSlot();
             return;

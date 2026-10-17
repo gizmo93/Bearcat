@@ -64,7 +64,8 @@ The period starts at the posting date, or the first completed upload if the rele
 as posted. Without either date, it stays managed.
 
 Bearcat converts the release only when no upload is running and every archive configuration has
-a local archive or a fully online [mirror](/Bearcat/mirror-downloads/).
+a local archive or a fully online [mirror](/Bearcat/mirror-downloads/). Releases with a
+[video upload configuration](/Bearcat/video-hosters/#release-folder) stay managed.
 
 By default, Bearcat keeps the release folder and sends you its path in a notification.
 You can delete the release files yourself. If the folder also holds archives, keep those files.

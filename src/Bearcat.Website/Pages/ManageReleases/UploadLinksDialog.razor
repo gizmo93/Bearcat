@@ -96,6 +96,21 @@
                             </a>
                             <ErrorMessagesTooltip Messages="link.ErrorMessages" />
                         </div>
+                        @if (link.HosterEmbedLink is not null)
+                        {
+                            <div class="mt-1 flex min-w-0 items-center gap-2">
+                                <span class="shrink-0 text-xs text-muted-foreground">@L["EmbedLink"]</span>
+                                <a class="bearcat-upload-link"
+                                   href="@link.HosterEmbedLink"
+                                   target="_blank"
+                                   rel="noreferrer noopener"
+                                   title="@link.HosterEmbedLink">
+                                    @link.HosterEmbedLink
+                                </a>
+                                <CopyButton Value="@link.HosterEmbedLink"
+                                            Label="@L["CopyEmbedLink"]" />
+                            </div>
+                        }
                     </CellTemplate>
                 </BbDataTableColumn>
                 @if (showFileColumn)

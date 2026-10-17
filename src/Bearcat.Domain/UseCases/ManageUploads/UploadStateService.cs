@@ -66,9 +66,11 @@ public class UploadStateService(
             return false;
         }
 
-        upload.UploadState = upload.ArchiveId is null
-            ? UploadState.WaitingForArchive
-            : UploadState.Pending;
+        upload.UploadState =
+            upload.UploadConfig.UploadSource == UploadSource.ArchiveFiles
+            && upload.ArchiveId is null
+                ? UploadState.WaitingForArchive
+                : UploadState.Pending;
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
 

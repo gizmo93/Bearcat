@@ -115,13 +115,6 @@ public class Upload
         );
     }
 
-    public List<ArchiveFile> GetArchiveFilesWithoutUploadedFile()
-    {
-        var processedArchiveFileIds = UploadedFiles.Select(uf => uf.ArchiveFileId).ToHashSet();
-
-        return Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id)).ToList();
-    }
-
     public bool HasHosterRegistrationAssigned() => HosterRegistrationId is not null;
 
     public bool IsHosterAccountPoolUploadWithoutUploadedFiles() =>

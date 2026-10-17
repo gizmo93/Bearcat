@@ -1,8 +1,10 @@
+using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -21,12 +23,49 @@ public class UploadConfigTemplateServiceTest(DatabaseProvider databaseProvider)
     [SetUp]
     public void Setup()
     {
-        service = new UploadConfigTemplateService(CreateRepository());
+        service = new UploadConfigTemplateService(
+            CreateRepository(),
+            TestUploadSourceValidator.Create(DbContext)
+        );
         releaseTemplateService = new ReleaseTemplateService(CreateRepository());
         archiveConfigTemplateService = new ArchiveConfigTemplateService(CreateRepository());
         uploadConfigLinkCrypterTemplateService = new UploadConfigLinkCrypterTemplateService(
             CreateRepository()
         );
+    }
+
+    [Test]
+    public async Task CreateAsync_VideoFilesWithCollectionUploadSlot_ThrowsInvalidUploadSourceException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(
+            releaseGroup.Id,
+            ReleaseContentType.TvShowEpisode
+        );
+        var hosterRegistration = await AddHosterRegistrationAsync(
+            hosterClassName: TestUploadSourceValidator.VideoHosterClassName
+        );
+
+        // Act
+        var action = () =>
+            service.CreateAsync(
+                releaseTemplate.Id,
+                UploadSource.VideoFiles,
+                new UploadConfigTemplateSettings(
+                    Name: null,
+                    UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistration.Id),
+                    ArchiveConfigTemplateId: null,
+                    PremiumOnlyDownload: false,
+                    CollectionUploadSlotKey: "video",
+                    CollectionUploadSlotName: "Video"
+                ),
+                CancellationToken.None
+            );
+
+        // Assert
+        await Should.ThrowAsync<InvalidUploadSourceException>(action);
+        (await DbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -60,6 +99,7 @@ public class UploadConfigTemplateServiceTest(DatabaseProvider databaseProvider)
             .Value;
         var uploadConfigTemplateId = await service.CreateAsync(
             releaseTemplate.Id,
+            UploadSource.ArchiveFiles,
             new UploadConfigTemplateSettings(
                 Name: " ",
                 UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistration.Id),
@@ -127,6 +167,7 @@ public class UploadConfigTemplateServiceTest(DatabaseProvider databaseProvider)
         // Act
         await service.CreateAsync(
             releaseTemplateId,
+            UploadSource.ArchiveFiles,
             new UploadConfigTemplateSettings(
                 Name: null,
                 UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistration.Id),

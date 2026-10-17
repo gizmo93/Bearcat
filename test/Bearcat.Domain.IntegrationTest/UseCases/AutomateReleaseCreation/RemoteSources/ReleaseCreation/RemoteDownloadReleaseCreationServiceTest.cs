@@ -346,6 +346,7 @@ public class RemoteDownloadReleaseCreationServiceTest(DatabaseProvider databaseP
         [
             new UploadConfigTemplate
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 ReleaseTemplate = releaseTemplate,
                 ArchiveConfigTemplate = releaseTemplate.ArchiveConfigTemplates.Single(),
                 HosterRegistration = hosterRegistration,

@@ -71,7 +71,7 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
         );
         var archive = new Archive
         {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = "/tmp/archive",
             ArchiveState = ArchiveState.Created,
             CreatedAt = DateTime.UtcNow,
@@ -129,7 +129,8 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         ReleaseType releaseType = ReleaseType.Managed,
-        HosterRegistration? hosterRegistration = null
+        HosterRegistration? hosterRegistration = null,
+        UploadSource uploadSource = UploadSource.ArchiveFiles
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -151,16 +152,19 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
                 ? new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" }
                 : null,
         };
-        var archiveConfig = new ArchiveConfig
-        {
-            Release = release,
-            Name = "Main archive",
-            ArchiveFilesBasePath = "/tmp/archive",
-            ArchiverName = "zip",
-            ArchiveNamePrefix = "bearcat-release",
-            ArchivePassword = "secret",
-            ArchiveFileSizeMb = 512,
-        };
+        var archiveConfig =
+            uploadSource is UploadSource.ArchiveFiles
+                ? new ArchiveConfig
+                {
+                    Release = release,
+                    Name = "Main archive",
+                    ArchiveFilesBasePath = "/tmp/archive",
+                    ArchiverName = "zip",
+                    ArchiveNamePrefix = "bearcat-release",
+                    ArchivePassword = "secret",
+                    ArchiveFileSizeMb = 512,
+                }
+                : null;
         hosterRegistration ??= new HosterRegistration
         {
             Name = "Hoster",
@@ -172,6 +176,7 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = uploadSource,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

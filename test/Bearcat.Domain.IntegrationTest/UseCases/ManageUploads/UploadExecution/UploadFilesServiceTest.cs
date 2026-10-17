@@ -1,8 +1,10 @@
 using System.Linq.Expressions;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
@@ -34,6 +36,9 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
     private const string SerializedHosterConfig = "{\"apiKey\":\"test\"}";
+    private const string VideoMediaInfoJson = """
+        { "media": { "track": [ { "@type": "General", "Format": "Matroska" }, { "@type": "Video", "StreamOrder": "0", "Format": "AVC" } ] } }
+        """;
 
     public interface IFolderHoster : IHosterWithFolders { }
 
@@ -159,6 +164,90 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Info);
         result.Notifications.Single().Message.ShouldBe("All files uploaded successfully");
         VerifyUploadPipelineCalled(archiveFilePath);
+    }
+
+    [Test]
+    public async Task ProcessAsync_PendingVideoUpload_UploadsMainVideoAndStoresEmbedLink()
+    {
+        // Arrange
+        var mainVideoPath = Path.Combine(releaseFolderPath, "movie.mkv");
+        await File.WriteAllTextAsync(mainVideoPath, "video");
+        var upload = await AddPendingVideoUploadAsync([
+            ("sample/sample.mkv", 1_000),
+            ("movie.mkv", 5_000_000),
+        ]);
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == mainVideoPath),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
+                    new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        "https://hoster.test/f/movie",
+                        "movie",
+                        "https://hoster.test/e/movie"
+                    )
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.UploadState.ShouldBe(UploadState.Completed);
+        var uploadedFile = result.UploadedFiles.Single();
+        uploadedFile.ArchiveFileId.ShouldBeNull();
+        uploadedFile.VideoFileRelativePath.ShouldBe("movie.mkv");
+        uploadedFile.HosterFileLink.ShouldBe("https://hoster.test/f/movie");
+        uploadedFile.HosterEmbedLink.ShouldBe("https://hoster.test/e/movie");
+        uploadedFile.Md5Hash.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_PendingVideoUploadWithoutMainVideo_FailsUploadWithErrorMessage()
+    {
+        // Arrange
+        await AddPendingVideoUploadAsync([]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.UploadState.ShouldBe(UploadState.Failed);
+        result.ErrorMessages.Single().ShouldContain("no main video file");
+        result.UploadedFiles.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_PendingVideoUploadWithMissingMainVideoFile_FailsUploadWithErrorMessage()
+    {
+        // Arrange
+        await AddPendingVideoUploadAsync([("movie.mkv", 5_000_000)]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.UploadState.ShouldBe(UploadState.Failed);
+        result.ErrorMessages.Single().ShouldContain("movie.mkv does not exist");
+        result.UploadedFiles.ShouldBeEmpty();
     }
 
     [Test]
@@ -1155,7 +1244,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         result.UploadState.ShouldBe(UploadState.Completed);
         result.UploadedFiles.Count.ShouldBe(2);
         result
-            .UploadedFiles.Select(f => f.ArchiveFile.FullFileName)
+            .UploadedFiles.Select(f => f.ArchiveFile!.FullFileName)
             .ShouldBe([alreadyUploadedFilePath, missingUploadedFilePath], ignoreOrder: true);
         hosterMock.Verify(
             h =>
@@ -1262,7 +1351,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 
         result.UploadState.ShouldBe(UploadState.Completed);
         result.OnlineState.ShouldBe(OnlineState.Online);
-        result.UploadedFiles.Single().ArchiveFile.FullFileName.ShouldBe(archiveFilePath);
+        result.UploadedFiles.Single().ArchiveFile!.FullFileName.ShouldBe(archiveFilePath);
         hosterMock.Verify(
             h =>
                 h.UploadFileAsync(
@@ -1597,7 +1686,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         );
         var archive = new Archive
         {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = archiveFilesBasePath,
             ArchiveState = ArchiveState.Created,
             CreatedAt = DateTime.UtcNow,
@@ -1635,6 +1724,43 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
                 }
             );
         }
+
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
+
+        return upload;
+    }
+
+    private async Task<Upload> AddPendingVideoUploadAsync(
+        IReadOnlyList<(string RelativePath, long SizeBytes)> mediaFilesWithVideoStream
+    )
+    {
+        var uploadConfig = await AddUploadConfigAsync(uploadSource: UploadSource.VideoFiles);
+
+        foreach (var (relativePath, sizeBytes) in mediaFilesWithVideoStream)
+        {
+            DbContext.ReleaseMediaFiles.Add(
+                new ReleaseMediaFile
+                {
+                    Release = uploadConfig.Release,
+                    RelativePath = relativePath,
+                    SizeBytes = sizeBytes,
+                    MediaInfoJson = VideoMediaInfoJson,
+                    MediaInfoText = "General",
+                }
+            );
+        }
+
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Pending,
+            OnlineState = OnlineState.Unknown,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
 
         DbContext.Uploads.Add(upload);
         await DbContext.SaveChangesAsync();
@@ -1698,7 +1824,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         ReleaseType releaseType = ReleaseType.Managed,
         bool hosterIsActive = true,
         string hosterClassName = HosterClassName,
-        string serializedHosterConfig = SerializedHosterConfig
+        string serializedHosterConfig = SerializedHosterConfig,
+        UploadSource uploadSource = UploadSource.ArchiveFiles
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1714,16 +1841,19 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             ReleaseFolderPath = releaseFolderPath,
             ReleaseGroup = releaseGroup,
         };
-        var archiveConfig = new ArchiveConfig
-        {
-            Release = release,
-            Name = "Main archive",
-            ArchiveFilesBasePath = archiveFilesBasePath,
-            ArchiverName = "zip",
-            ArchiveNamePrefix = "bearcat-release",
-            ArchivePassword = "secret",
-            ArchiveFileSizeMb = 512,
-        };
+        var archiveConfig =
+            uploadSource is UploadSource.ArchiveFiles
+                ? new ArchiveConfig
+                {
+                    Release = release,
+                    Name = "Main archive",
+                    ArchiveFilesBasePath = archiveFilesBasePath,
+                    ArchiverName = "zip",
+                    ArchiveNamePrefix = "bearcat-release",
+                    ArchivePassword = "secret",
+                    ArchiveFileSizeMb = 512,
+                }
+                : null;
         var hosterRegistration = new HosterRegistration
         {
             Name = "Hoster",
@@ -1733,6 +1863,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = uploadSource,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,
@@ -1818,6 +1949,14 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             concurrencyService,
             credentialsRejectionService,
             new UploadHosterFolderService(Mock.Of<ILogger<UploadHosterFolderService>>()),
+            new ReleaseReadRepository(
+                DbContext,
+                Mock.Of<IArchiverFactory>(),
+                Mock.Of<ILinkCrypterFactory>(),
+                hosterFactoryMock.Object
+            ),
+            new FileSystemService(),
+            notificationService,
             Mock.Of<ILogger<UploadPreparationService>>()
         );
 

@@ -89,7 +89,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         // Assert
         var item = result.ShouldHaveSingleItem();
         item.ReleaseId.ShouldBe(release.Id);
-        item.ArchiveGroups.ShouldHaveSingleItem()
+        item.UploadGroups.ShouldHaveSingleItem()
             .Hosters.Select(hoster => hoster.HosterAccountOrPoolName)
             .ShouldBe(["Pool", "Single account hoster"]);
     }
@@ -205,6 +205,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         memberRegistration.IsActive = memberIsActive;
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             Name = "Pool upload",
             HosterAccountPool = new HosterAccountPool

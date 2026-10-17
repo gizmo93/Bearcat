@@ -441,6 +441,7 @@ public class ReleaseProgressStepServiceTest
             1,
             "Upload config",
             "Hoster",
+            UploadSource.ArchiveFiles,
             1,
             new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc),
             null,

@@ -319,6 +319,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
 
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             HosterRegistration = hosterRegistration,
             ArchiveConfig = archiveConfig,

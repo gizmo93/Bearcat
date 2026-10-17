@@ -12,7 +12,7 @@ public class UploadPartListBuilderTest
     public void Build_ArchiveFilesWithOnlineStates_MapsOnlineAndOtherStatesToOnlineAndOffline()
     {
         // Arrange
-        List<RunningUploadReadModel.ArchiveFileReadModel> archiveFiles =
+        List<RunningUploadReadModel.FileReadModel> archiveFiles =
         [
             new("/archives/release.part1.rar", OnlineState.Online),
             new("/archives/release.part2.rar", OnlineState.Offline),
@@ -32,7 +32,7 @@ public class UploadPartListBuilderTest
     public void Build_SnapshotFileHasTransferredBytes_MatchesByFileNameAndReturnsUploading()
     {
         // Arrange
-        List<RunningUploadReadModel.ArchiveFileReadModel> archiveFiles =
+        List<RunningUploadReadModel.FileReadModel> archiveFiles =
         [
             new("/archives/release.part1.rar", null),
             new("/archives/release.part2.rar", null),
@@ -60,7 +60,7 @@ public class UploadPartListBuilderTest
     public void Build_OnlineStateKnown_OnlineStateWinsOverSnapshotProgress()
     {
         // Arrange
-        List<RunningUploadReadModel.ArchiveFileReadModel> archiveFiles =
+        List<RunningUploadReadModel.FileReadModel> archiveFiles =
         [
             new("/archives/release.part1.rar", OnlineState.Online),
         ];
@@ -79,7 +79,7 @@ public class UploadPartListBuilderTest
     public void Build_NoSnapshotAndNoOnlineState_ReturnsPendingWithoutProgress()
     {
         // Arrange
-        List<RunningUploadReadModel.ArchiveFileReadModel> archiveFiles =
+        List<RunningUploadReadModel.FileReadModel> archiveFiles =
         [
             new("/archives/release.part1.rar", null),
         ];

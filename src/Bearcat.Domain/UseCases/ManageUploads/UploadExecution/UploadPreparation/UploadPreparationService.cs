@@ -1,9 +1,12 @@
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -15,6 +18,9 @@ public class UploadPreparationService(
     UploadConcurrencyService concurrencyService,
     HosterCredentialsRejectionService credentialsRejectionService,
     UploadHosterFolderService hosterFolderService,
+    IReleaseReadRepository releaseReadRepository,
+    IFileSystemService fileSystemService,
+    INotificationService notificationService,
     ILogger<UploadPreparationService> logger
 )
 {
@@ -26,7 +32,10 @@ public class UploadPreparationService(
         CancellationToken cancellationToken
     )
     {
-        if (upload.ArchiveId is null)
+        if (
+            upload.UploadConfig.UploadSource == UploadSource.ArchiveFiles
+            && upload.ArchiveId is null
+        )
         {
             logger.LogInformation(
                 "Pending upload {UploadId} has no archive assigned, moving it back to waiting for archive",
@@ -34,6 +43,13 @@ public class UploadPreparationService(
             );
 
             upload.UploadState = UploadState.WaitingForArchive;
+            return null;
+        }
+
+        var sourceFiles = await GetSourceFilesOrFailUploadAsync(upload, cancellationToken);
+
+        if (sourceFiles is null)
+        {
             return null;
         }
 
@@ -53,6 +69,7 @@ public class UploadPreparationService(
             !upload.HasHosterRegistrationAssigned()
             && !await TryAssignAccountOfHosterAccountPoolAsync(
                 upload: upload,
+                sourceFiles: sourceFiles,
                 hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
                 uploadsInProgress: uploadsInProgress,
                 cancellationToken: cancellationToken
@@ -85,6 +102,7 @@ public class UploadPreparationService(
         {
             return await CreateUploadExecutionContextAsync(
                 upload: upload,
+                sourceFiles: sourceFiles,
                 hoster: hoster,
                 hosterConfig: hosterConfig,
                 hosterClassName: hosterClassName,
@@ -114,8 +132,107 @@ public class UploadPreparationService(
         }
     }
 
+    private async Task<List<UploadSourceFile>?> GetSourceFilesOrFailUploadAsync(
+        Upload upload,
+        CancellationToken cancellationToken
+    )
+    {
+        if (upload.UploadConfig.UploadSource == UploadSource.ArchiveFiles)
+        {
+            return upload
+                .Archive!.ArchiveFiles.Select(archiveFile => new UploadSourceFile(
+                    TransferFileId: archiveFile.Id,
+                    ArchiveFileId: archiveFile.Id,
+                    VideoFileRelativePath: null,
+                    FullFileName: archiveFile.FullFileName,
+                    Md5Hash: archiveFile.Md5Hash
+                ))
+                .ToList();
+        }
+
+        var mainVideoSourceFile = await GetMainVideoSourceFileOrFailUploadAsync(
+            upload,
+            cancellationToken
+        );
+
+        return mainVideoSourceFile is null ? null : [mainVideoSourceFile];
+    }
+
+    private async Task<UploadSourceFile?> GetMainVideoSourceFileOrFailUploadAsync(
+        Upload upload,
+        CancellationToken cancellationToken
+    )
+    {
+        var release = upload.UploadConfig.Release;
+        var mediaFiles = await releaseReadRepository.GetMediaFilesAsync(
+            release.Id,
+            cancellationToken
+        );
+        var mainVideo = ReleaseMediaFileSelector.SelectMainVideo(mediaFiles);
+
+        if (mainVideo is null)
+        {
+            FailUpload(
+                upload,
+                "The release has no main video file because media metadata was not extracted or no media file contains a video stream."
+            );
+            return null;
+        }
+
+        var fullFileName = release.ReleaseFolderPath is null
+            ? null
+            : Path.Combine(release.ReleaseFolderPath, mainVideo.RelativePath);
+
+        if (fullFileName is null || !fileSystemService.FileExists(fullFileName))
+        {
+            FailUpload(
+                upload,
+                $"The main video file {mainVideo.RelativePath} does not exist in the release folder."
+            );
+            return null;
+        }
+
+        return new UploadSourceFile(
+            TransferFileId: mainVideo.MediaFileId,
+            ArchiveFileId: null,
+            VideoFileRelativePath: mainVideo.RelativePath,
+            FullFileName: fullFileName,
+            Md5Hash: null
+        );
+    }
+
+    private void FailUpload(Upload upload, string errorMessage)
+    {
+        logger.LogWarning(
+            "Failed to prepare video upload {UploadId}: {ErrorMessage}",
+            upload.Id,
+            errorMessage
+        );
+
+        upload.UploadState = UploadState.Failed;
+        upload.ErrorMessages.Add(errorMessage);
+
+        notificationService.Create(
+            kind: NotificationKind.UploadFailed,
+            message: errorMessage,
+            entity: upload,
+            selector: n => n.Upload
+        );
+    }
+
+    private static List<UploadSourceFile> GetSourceFilesWithoutUploadedFile(
+        Upload upload,
+        IReadOnlyList<UploadSourceFile> sourceFiles
+    )
+    {
+        return sourceFiles
+            .Where(sourceFile => !upload.UploadedFiles.Any(sourceFile.IsSourceOf))
+            .ToList();
+    }
+
     private async Task<bool> TryAssignAccountOfHosterAccountPoolAsync(
         Upload upload,
+        IReadOnlyList<UploadSourceFile> sourceFiles,
         IReadOnlyDictionary<int, string> hosterConfigsByRegistrationId,
         UploadsInProgress uploadsInProgress,
         CancellationToken cancellationToken
@@ -124,10 +241,9 @@ public class UploadPreparationService(
         var hosterRegistration =
             await hosterAccountPoolAccountSelectionService.SelectHosterRegistrationAsync(
                 upload: upload,
-                requiredBytes: upload
-                    .GetArchiveFilesWithoutUploadedFile()
-                    .Sum(archiveFile =>
-                        FileSizes.GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName)
+                requiredBytes: GetSourceFilesWithoutUploadedFile(upload, sourceFiles)
+                    .Sum(sourceFile =>
+                        FileSizes.GetFileSizeBytesOrZeroWhenMissing(sourceFile.FullFileName)
                     ),
                 hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
                 remainingBytesOfRunningUploadsByHosterRegistrationId: uploadsInProgress.GetRemainingBytesOfRunningUploadsByHosterRegistrationId(),
@@ -147,6 +263,7 @@ public class UploadPreparationService(
 
     private async Task<UploadExecutionContext> CreateUploadExecutionContextAsync(
         Upload upload,
+        IReadOnlyList<UploadSourceFile> sourceFiles,
         IHoster hoster,
         IHosterConfig hosterConfig,
         string hosterClassName,
@@ -160,20 +277,19 @@ public class UploadPreparationService(
         var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
         var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
 
-        var successfullyUploadedArchiveFileIds = upload
+        var successfullyUploadedFiles = upload
             .UploadedFiles.Where(uf => uf.ErrorMessages.Count == 0)
-            .Select(uf => uf.ArchiveFileId)
-            .ToHashSet();
+            .ToList();
 
-        var archiveFilesToUpload = upload.GetArchiveFilesWithoutUploadedFile();
+        var sourceFilesToUpload = GetSourceFilesWithoutUploadedFile(upload, sourceFiles);
 
-        var plannedFiles = upload
-            .Archive!.ArchiveFiles.Select(archiveFile => new TransferFile(
-                FileId: archiveFile.Id,
-                FileName: Path.GetFileName(archiveFile.FullFileName),
+        var plannedFiles = sourceFiles
+            .Select(sourceFile => new TransferFile(
+                FileId: sourceFile.TransferFileId,
+                FileName: Path.GetFileName(sourceFile.FullFileName),
                 SourceName: hosterRegistration.Name,
-                SizeBytes: FileSizes.GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName),
-                IsAlreadyTransferred: successfullyUploadedArchiveFileIds.Contains(archiveFile.Id)
+                SizeBytes: FileSizes.GetFileSizeBytesOrZeroWhenMissing(sourceFile.FullFileName),
+                IsAlreadyTransferred: successfullyUploadedFiles.Any(sourceFile.IsSourceOf)
             ))
             .ToList();
 
@@ -181,7 +297,7 @@ public class UploadPreparationService(
             upload: upload,
             hoster: hoster,
             hosterConfig: hosterConfig,
-            hasFilesToUpload: archiveFilesToUpload.Count > 0,
+            hasFilesToUpload: sourceFilesToUpload.Count > 0,
             cancellationToken: cancellationToken
         );
 
@@ -200,7 +316,7 @@ public class UploadPreparationService(
 
         var context = new UploadExecutionContext(
             upload: upload,
-            totalFileCount: upload.Archive.ArchiveFiles.Count,
+            sourceFiles: sourceFiles,
             successfulFileCount: successfulFileCount,
             failedFileCount: failedFileCount,
             plannedFiles: plannedFiles,
@@ -209,14 +325,12 @@ public class UploadPreparationService(
             )
         );
 
-        foreach (var archiveFile in archiveFilesToUpload)
+        foreach (var sourceFile in sourceFilesToUpload)
         {
             context.PendingFiles.Enqueue(
                 new FileToUpload(
                     UploadId: upload.Id,
-                    ArchiveFileId: archiveFile.Id,
-                    FullFileName: archiveFile.FullFileName,
-                    Md5Hash: archiveFile.Md5Hash,
+                    SourceFile: sourceFile,
                     FolderId: folderId,
                     HosterClassName: hosterClassName,
                     Hoster: hoster,

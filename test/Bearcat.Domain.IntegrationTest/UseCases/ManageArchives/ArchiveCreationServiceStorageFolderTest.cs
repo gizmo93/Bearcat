@@ -667,6 +667,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = archiveConfig.Release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration

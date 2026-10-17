@@ -65,7 +65,8 @@ Die Frist beginnt mit dem Postingdatum oder dem ersten abgeschlossenen Upload, w
 als gepostet markiert wurde. Ohne eines dieser Daten bleibt es managed.
 
 Bearcat wandelt das Release nur um, wenn kein Upload läuft und jede Archivkonfiguration ein lokales
-Archiv oder einen vollständig verfügbaren [Mirror](/Bearcat/de/mirror-downloads/) hat.
+Archiv oder einen vollständig verfügbaren [Mirror](/Bearcat/de/mirror-downloads/) hat. Releases mit einer
+[Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) bleiben managed.
 
 Standardmässig bleibt der Releaseordner erhalten. Eine Benachrichtigung enthält seinen Pfad.
 Du kannst die Releasedateien selbst löschen. Liegen dort auch Archive, behalte diese Dateien.

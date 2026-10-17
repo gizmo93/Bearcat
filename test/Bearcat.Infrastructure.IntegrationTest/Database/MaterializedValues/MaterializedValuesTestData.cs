@@ -64,6 +64,7 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig ?? AddArchiveConfig(release),
             HosterRegistration = hosterRegistration,
@@ -107,6 +108,7 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig ?? AddArchiveConfig(release),
             HosterAccountPool = hosterAccountPool,
@@ -135,6 +137,7 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
         };
         var uploadConfigTemplate = new UploadConfigTemplate
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseTemplate = releaseTemplate,
             ArchiveConfigTemplate = new ArchiveConfigTemplate
             {
@@ -172,7 +175,7 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
         params DateTime?[] fileCheckedAts
     )
     {
-        var archive = AddArchive(uploadConfig.ArchiveConfig, fileCheckedAts.Length);
+        var archive = AddArchive(uploadConfig.ArchiveConfig!, fileCheckedAts.Length);
         var upload = new Upload
         {
             UploadConfig = uploadConfig,

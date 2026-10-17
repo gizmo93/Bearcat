@@ -243,7 +243,7 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
         var notification = CreateNotification("Archive failed", DateTime.UtcNow);
         notification.Archive = new Archive
         {
-            ArchiveConfig = uploadConfig.ArchiveConfig,
+            ArchiveConfig = uploadConfig.ArchiveConfig!,
             ArchiveFolderPath = "/tmp/archive/Bearcat.Release.001",
             CreatedAt = DateTime.UtcNow,
             ArchiveState = ArchiveState.Created,
@@ -473,6 +473,7 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
 
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = new ArchiveConfig
             {

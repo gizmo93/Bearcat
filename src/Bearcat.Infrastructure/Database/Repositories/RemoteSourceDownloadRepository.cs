@@ -163,6 +163,9 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
                 && download.Release != null
                 && download.Release.ReleaseType == ReleaseType.Managed
                 && download.Release.ReleaseFolderPath == download.LocalFolderPath
+                && !download.Release.UploadConfigs.Any(uploadConfig =>
+                    uploadConfig.UploadSource == UploadSource.VideoFiles
+                )
             )
             .OrderBy(download => download.Id)
             .ToListAsync(cancellationToken);

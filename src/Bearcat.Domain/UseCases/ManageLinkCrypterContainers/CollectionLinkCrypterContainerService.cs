@@ -312,7 +312,7 @@ public class CollectionLinkCrypterContainerService(
     )
     {
         var passwords = uploads
-            .Select(upload => CleanPassword(upload.UploadConfig.ArchiveConfig.ArchivePassword))
+            .Select(upload => CleanPassword(upload.UploadConfig.ArchiveConfig!.ArchivePassword))
             .Distinct(StringComparer.Ordinal)
             .ToList();
 

@@ -297,7 +297,7 @@ public class MaterializedValuesSaveChangesInterceptorTest(DatabaseProvider datab
         // Arrange
         var upload = AddUploadOfNewRelease(LocalNow.AddHours(-1));
         await DbContext.SaveChangesAsync();
-        var archive = testData.AddArchive(upload.UploadConfig.ArchiveConfig, 1);
+        var archive = testData.AddArchive(upload.UploadConfig.ArchiveConfig!, 1);
         testData.AddUploadedFile(upload, archive.ArchiveFiles[0], LocalNow.AddHours(-2));
 
         // Act
@@ -445,7 +445,7 @@ public class MaterializedValuesSaveChangesInterceptorTest(DatabaseProvider datab
     {
         // Arrange
         var upload = AddUploadOfNewRelease(LocalNow.AddHours(-1));
-        var deletedArchive = testData.AddArchive(upload.UploadConfig.ArchiveConfig, 1);
+        var deletedArchive = testData.AddArchive(upload.UploadConfig.ArchiveConfig!, 1);
         testData.AddUploadedFile(upload, deletedArchive.ArchiveFiles[0], null);
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
