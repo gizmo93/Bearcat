@@ -850,6 +850,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = AddArchiveConfig(release, $"{name} archive", 512),
             HosterRegistration = hosterRegistration,

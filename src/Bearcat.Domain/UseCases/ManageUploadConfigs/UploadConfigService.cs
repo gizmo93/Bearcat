@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigs;
 
@@ -17,6 +18,7 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseId = releaseId,
             Name = name,
             HosterRegistrationId = uploadTarget.HosterRegistrationId,

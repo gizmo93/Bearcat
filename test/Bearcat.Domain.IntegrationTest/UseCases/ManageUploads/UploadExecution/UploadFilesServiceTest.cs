@@ -1155,7 +1155,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         result.UploadState.ShouldBe(UploadState.Completed);
         result.UploadedFiles.Count.ShouldBe(2);
         result
-            .UploadedFiles.Select(f => f.ArchiveFile.FullFileName)
+            .UploadedFiles.Select(f => f.ArchiveFile!.FullFileName)
             .ShouldBe([alreadyUploadedFilePath, missingUploadedFilePath], ignoreOrder: true);
         hosterMock.Verify(
             h =>
@@ -1262,7 +1262,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 
         result.UploadState.ShouldBe(UploadState.Completed);
         result.OnlineState.ShouldBe(OnlineState.Online);
-        result.UploadedFiles.Single().ArchiveFile.FullFileName.ShouldBe(archiveFilePath);
+        result.UploadedFiles.Single().ArchiveFile!.FullFileName.ShouldBe(archiveFilePath);
         hosterMock.Verify(
             h =>
                 h.UploadFileAsync(
@@ -1597,7 +1597,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         );
         var archive = new Archive
         {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = archiveFilesBasePath,
             ArchiveState = ArchiveState.Created,
             CreatedAt = DateTime.UtcNow,
@@ -1733,6 +1733,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

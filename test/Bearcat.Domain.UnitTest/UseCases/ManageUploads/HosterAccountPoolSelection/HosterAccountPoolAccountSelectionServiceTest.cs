@@ -347,6 +347,7 @@ public class HosterAccountPoolAccountSelectionServiceTest
             Id = 7,
             UploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Name = "Upload config",
                 Release = new Release { Name = "Bearcat.Release.001" },
                 HosterAccountPoolId = hosterAccountPool.Id,

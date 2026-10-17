@@ -225,6 +225,7 @@ public class DashboardReadRepositoryTest(DatabaseProvider databaseProvider)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = new ArchiveConfig
             {

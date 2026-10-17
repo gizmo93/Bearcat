@@ -206,7 +206,7 @@ public class UploadOnlineCheckServiceTest(DatabaseProvider databaseProvider)
 
         var newerArchive = new Archive
         {
-            ArchiveConfigId = supersededUpload.UploadConfig.ArchiveConfigId,
+            ArchiveConfigId = supersededUpload.UploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = "/tmp/archive",
             ArchiveState = ArchiveState.Created,
             CreatedAt = DateTime.UtcNow,

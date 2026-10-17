@@ -23,7 +23,7 @@ public class ArchiveConfigTemplateConfiguration : IEntityTypeConfiguration<Archi
             .WithOne(u => u.ArchiveConfigTemplate)
             .HasForeignKey(u => u.ArchiveConfigTemplateId)
             .HasPrincipalKey(a => a.Id)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder

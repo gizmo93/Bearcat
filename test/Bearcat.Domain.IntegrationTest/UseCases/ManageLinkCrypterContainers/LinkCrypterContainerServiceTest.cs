@@ -558,7 +558,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
             .OrderBy(uploadConfig => uploadConfig.Id)
             .ToListAsync();
 
-        uploadConfigs[1].ArchiveConfig.ArchivePassword = "different";
+        uploadConfigs[1].ArchiveConfig!.ArchivePassword = "different";
         await DbContext.SaveChangesAsync();
 
         await collectionContainerService.UpdateContainersAsync(
@@ -1510,6 +1510,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
 
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             CollectionUploadSlot = collectionSlot,
@@ -1568,6 +1569,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

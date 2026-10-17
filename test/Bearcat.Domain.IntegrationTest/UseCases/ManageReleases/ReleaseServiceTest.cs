@@ -1319,6 +1319,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         {
             UploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Release = release,
                 ArchiveConfig = archiveConfig,
                 HosterRegistration = mirrorHoster,
@@ -1351,6 +1352,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         {
             UploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Release = release,
                 ArchiveConfig = archiveConfig,
                 HosterRegistration = otherHoster,
@@ -1511,6 +1513,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         [
             new UploadConfigTemplate
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 ReleaseTemplate = releaseTemplate,
                 ArchiveConfigTemplate = releaseTemplate.ArchiveConfigTemplates.Single(),
                 HosterRegistration = hosterRegistration,

@@ -169,6 +169,7 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

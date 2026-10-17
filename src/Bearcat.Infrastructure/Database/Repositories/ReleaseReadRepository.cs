@@ -444,7 +444,9 @@ public class ReleaseReadRepository(
                     .Select(u => new
                     {
                         u.UploadConfig.ReleaseId,
-                        ArchiveConfigName = u.UploadConfig.ArchiveConfig.Name,
+                        ArchiveConfigName = u.UploadConfig.ArchiveConfig != null
+                            ? u.UploadConfig.ArchiveConfig.Name
+                            : u.UploadConfig.Name,
                         HosterAccountOrPoolName = u.HosterRegistrationId != null
                             ? u.HosterRegistration!.Name
                             : u.UploadConfig.HosterAccountPool!.Name,
@@ -591,8 +593,8 @@ public class ReleaseReadRepository(
                 HosterAccountPoolHosterClassName = c.HosterAccountPoolId != null
                     ? c.HosterAccountPool!.HosterClassName
                     : null,
-                ArchiverName = c.ArchiveConfig.ArchiverName,
-                ArchivePassword = c.ArchiveConfig.ArchivePassword,
+                ArchiverName = c.ArchiveConfig != null ? c.ArchiveConfig.ArchiverName : null,
+                ArchivePassword = c.ArchiveConfig != null ? c.ArchiveConfig.ArchivePassword : null,
                 LinkCrypters = c
                     .LinkCrypters.Select(linkCrypter => new
                     {
@@ -639,7 +641,9 @@ public class ReleaseReadRepository(
                 .UploadedFiles.Where(f =>
                     uploadIds.Contains(f.UploadId) && f.Upload.UploadConfig.ReleaseId == releaseId
                 )
-                .OrderBy(f => f.ArchiveFile.FullFileName)
+                .OrderBy(f =>
+                    f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath
+                )
                 .ThenBy(f => f.Id)
                 .Select(f => new { f.UploadId, f.HosterFileLink })
                 .ToListAsync(cancellationToken: cancellationToken);
@@ -749,10 +753,12 @@ public class ReleaseReadRepository(
                     UploadConfigName: config.UploadConfigName,
                     HosterName: config.HosterRegistrationName
                         ?? hosterFactory.GetByName(config.HosterAccountPoolHosterClassName!).Name,
-                    ArchiveFormat: archiverNamesByClassName.GetValueOrDefault(
-                        config.ArchiverName,
-                        config.ArchiverName
-                    ),
+                    ArchiveFormat: config.ArchiverName is null
+                        ? null
+                        : archiverNamesByClassName.GetValueOrDefault(
+                            config.ArchiverName,
+                            config.ArchiverName
+                        ),
                     ArchivePassword: config.ArchivePassword,
                     UploadedAt: upload?.UploadedAt,
                     Links: links,
@@ -1281,12 +1287,14 @@ public class ReleaseReadRepository(
         var totalCount = await linksQuery.CountAsync(cancellationToken);
 
         var links = await linksQuery
-            .OrderBy(f => f.ArchiveFile.FullFileName)
+            .OrderBy(f =>
+                f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath
+            )
             .ThenBy(f => f.Id)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
             .Select(f => new ReleaseUploadLinkReadModel(
-                f.ArchiveFile.FullFileName,
+                f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath!,
                 f.HosterFileLink,
                 f.OnlineState,
                 f.CheckedAt,
@@ -1315,7 +1323,9 @@ public class ReleaseReadRepository(
         }
 
         return await linksQuery
-            .OrderBy(f => f.ArchiveFile.FullFileName)
+            .OrderBy(f =>
+                f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath
+            )
             .ThenBy(f => f.Id)
             .Select(f => f.HosterFileLink)
             .ToListAsync(cancellationToken: cancellationToken);

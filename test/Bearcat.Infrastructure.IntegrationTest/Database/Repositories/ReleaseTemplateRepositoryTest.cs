@@ -426,6 +426,7 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
         };
         var rapidgatorTemplate = new UploadConfigTemplate
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseTemplate = releaseTemplate,
             ArchiveConfigTemplate = rarTemplate,
             HosterRegistration = rapidgator,
@@ -440,6 +441,7 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
         };
         var mirrorTemplate = new UploadConfigTemplate
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseTemplate = releaseTemplate,
             ArchiveConfigTemplate = sevenZipTemplate,
             HosterRegistration = ddownload,

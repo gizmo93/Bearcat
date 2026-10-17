@@ -51,7 +51,7 @@ public class ArchiveCreationService(
 
         foreach (
             var uploadsOfArchiveConfig in uploadsWithoutArchive.GroupBy(upload =>
-                upload.UploadConfig.ArchiveConfig
+                upload.UploadConfig.ArchiveConfig!
             )
         )
         {

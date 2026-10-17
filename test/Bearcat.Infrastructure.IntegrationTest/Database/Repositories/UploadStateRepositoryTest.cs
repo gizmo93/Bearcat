@@ -691,6 +691,7 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = new ArchiveConfig
             {
@@ -738,7 +739,7 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
     {
         var archive = new Archive
         {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = "/archives/bearcat-release",
             ArchiveState = ArchiveState.Created,
             CreatedAt = LocalNow.AddDays(-5),

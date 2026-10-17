@@ -294,6 +294,7 @@ public class ArchiveFilesToUploadTest
     {
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Id = id,
             HosterRegistration = new HosterRegistration
             {

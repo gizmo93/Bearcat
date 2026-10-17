@@ -14,10 +14,10 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
         return await dbWrite
             .Uploads.Include(u => u.UploadConfig)
                 .ThenInclude(u => u.ArchiveConfig)
-                    .ThenInclude(a => a.Release)
+                    .ThenInclude(a => a!.Release)
             .Include(u => u.UploadConfig)
                 .ThenInclude(u => u.ArchiveConfig)
-                    .ThenInclude(a => a.AdditionalArchiveContents)
+                    .ThenInclude(a => a!.AdditionalArchiveContents)
             .Include(u => u.UploadConfig)
                 .ThenInclude(u => u.HosterAccountPool)
             .Include(u => u.HosterRegistration)
@@ -99,7 +99,7 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
 
         var uploadedFileHashes = dbWrite
             .UploadedFiles.Where(f =>
-                f.ArchiveFile.Archive.ArchiveConfigId == archiveConfigId && f.Md5Hash != null
+                f.ArchiveFile!.Archive.ArchiveConfigId == archiveConfigId && f.Md5Hash != null
             )
             .Select(f => f.Md5Hash!);
 

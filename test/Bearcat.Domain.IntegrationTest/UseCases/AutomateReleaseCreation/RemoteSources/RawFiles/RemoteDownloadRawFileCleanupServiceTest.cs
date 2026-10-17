@@ -388,6 +388,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

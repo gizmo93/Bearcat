@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 
@@ -20,7 +21,10 @@ public class UploadConfigTemplateService(IReleaseTemplateWriteRepository writeRe
         var unmanagedArchiveConfigTemplate =
             UnmanagedArchiveConfigTemplates.GetForUnmanagedReleaseTemplateOrNull(releaseTemplate);
 
-        var uploadConfigTemplate = new UploadConfigTemplate();
+        var uploadConfigTemplate = new UploadConfigTemplate
+        {
+            UploadSource = UploadSource.ArchiveFiles,
+        };
         ApplySettings(uploadConfigTemplate, settings, unmanagedArchiveConfigTemplate);
 
         releaseTemplate.UploadConfigTemplates.Add(uploadConfigTemplate);

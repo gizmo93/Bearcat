@@ -588,6 +588,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
 
                 var uploadConfig = new UploadConfig
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     Release = release,
                     ArchiveConfig = archiveConfig,
                     CollectionUploadSlot = uploadSlot,
@@ -755,7 +756,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
         {
             var archive = new Archive
             {
-                ArchiveConfig = uploadConfig.ArchiveConfig,
+                ArchiveConfig = uploadConfig.ArchiveConfig!,
                 ArchiveFolderPath = "/tmp/archives",
                 CreatedAt = createdAt,
                 ArchiveState = ArchiveState.Created,
@@ -908,6 +909,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
 
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             HosterRegistration = hosterRegistration,
             ArchiveConfig = archiveConfig,

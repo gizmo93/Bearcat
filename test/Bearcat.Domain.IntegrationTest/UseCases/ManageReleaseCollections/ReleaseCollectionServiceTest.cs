@@ -560,6 +560,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             [
                 new UploadConfigTemplate
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     CollectionUploadSlotKey = "rapidgator",
                     LinkCrypterTemplates =
                     [
@@ -583,6 +584,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             [
                 new UploadConfig
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     LinkCrypters =
                     [
                         new UploadConfigLinkCrypter
@@ -888,6 +890,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
 
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

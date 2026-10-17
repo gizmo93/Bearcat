@@ -238,6 +238,7 @@ public class UploadConfigLinkCrypterReadRepositoryTest(DatabaseProvider database
         };
         var releaseUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,
@@ -245,6 +246,7 @@ public class UploadConfigLinkCrypterReadRepositoryTest(DatabaseProvider database
         };
         var collectionUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

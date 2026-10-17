@@ -33,7 +33,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.GetKnownArchiveFileHashesAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             CancellationToken.None
         );
 
@@ -62,7 +62,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.GetKnownArchiveFileHashesAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             CancellationToken.None
         );
 
@@ -84,7 +84,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.GetKnownArchiveFileHashesAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             CancellationToken.None
         );
 
@@ -113,7 +113,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.GetKnownArchiveFileHashesAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             CancellationToken.None
         );
 
@@ -137,20 +137,28 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
             UseLocalWorkingCopyForReuploads = true,
         };
         DbContext.Archives.Add(
-            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Created, storageFolder: null)
+            CreateArchive(
+                uploadConfig.ArchiveConfigId!.Value,
+                ArchiveState.Created,
+                storageFolder: null
+            )
         );
         DbContext.Archives.Add(
-            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Created, storageFolder)
+            CreateArchive(uploadConfig.ArchiveConfigId!.Value, ArchiveState.Created, storageFolder)
         );
         DbContext.Archives.Add(
-            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Deleted, storageFolder: null)
+            CreateArchive(
+                uploadConfig.ArchiveConfigId!.Value,
+                ArchiveState.Deleted,
+                storageFolder: null
+            )
         );
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPossibleAssignableArchiveAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             CancellationToken.None
         );
 
@@ -170,14 +178,18 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         // Arrange
         var uploadConfig = await AddUploadConfigAsync("Main archive");
         DbContext.Archives.Add(
-            CreateArchive(uploadConfig.ArchiveConfigId, ArchiveState.Created, storageFolder: null)
+            CreateArchive(
+                uploadConfig.ArchiveConfigId!.Value,
+                ArchiveState.Created,
+                storageFolder: null
+            )
         );
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPossibleAssignableArchiveAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             CancellationToken.None
         );
 
@@ -197,12 +209,12 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var resultForHosterClassOfUpload = await repository.HasCompletedUploadForHosterAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             "OtherHoster",
             CancellationToken.None
         );
         var resultForHosterClassOfUploadConfig = await repository.HasCompletedUploadForHosterAsync(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             "TestHoster",
             CancellationToken.None
         );
@@ -341,6 +353,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration
@@ -374,7 +387,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         };
         var archive = new Archive
         {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = "/tmp/archives",
             ArchiveState = ArchiveState.Created,
             ArchiveFileSizeMb = 100,

@@ -132,6 +132,7 @@ public class ReleaseTemplateFromReleaseCreationServiceTest(DatabaseProvider data
         [
             new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Name = hosterRegistration.Name,
                 CollectionUploadSlot = new CollectionUploadSlot
                 {

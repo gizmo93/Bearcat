@@ -32,9 +32,9 @@ public class MirrorSourceResolver(IHosterFactory hosterFactory)
 
             var newestUploadedFiles = upload
                 .UploadedFiles.Where(uploadedFile =>
-                    neededArchiveFileIds.Contains(uploadedFile.ArchiveFileId)
+                    neededArchiveFileIds.Contains(uploadedFile.ArchiveFileId!.Value)
                 )
-                .GroupBy(uploadedFile => uploadedFile.ArchiveFileId)
+                .GroupBy(uploadedFile => uploadedFile.ArchiveFileId!.Value)
                 .Select(group => group.MaxBy(uploadedFile => uploadedFile.Id)!)
                 .Where(uploadedFile =>
                     uploadedFile.OnlineState == OnlineState.Online
@@ -45,13 +45,13 @@ public class MirrorSourceResolver(IHosterFactory hosterFactory)
             {
                 if (
                     !candidatesPerArchiveFileId.TryGetValue(
-                        uploadedFile.ArchiveFileId,
+                        uploadedFile.ArchiveFileId!.Value,
                         out var candidates
                     )
                 )
                 {
                     candidates = [];
-                    candidatesPerArchiveFileId[uploadedFile.ArchiveFileId] = candidates;
+                    candidatesPerArchiveFileId[uploadedFile.ArchiveFileId!.Value] = candidates;
                 }
 
                 candidates.Add(

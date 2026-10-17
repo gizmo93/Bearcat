@@ -221,7 +221,7 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         );
         poolUploadWithUploadedFile.HosterRegistration = inactiveAccount;
         poolUploadWithUploadedFile.Archive = testData.AddArchive(
-            hosterAccountPoolUploadConfig.ArchiveConfig,
+            hosterAccountPoolUploadConfig.ArchiveConfig!,
             archiveFileCount: 1
         );
         testData.AddUploadedFile(
@@ -345,6 +345,7 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         {
             UploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Release = release,
                 ArchiveConfig = archiveConfig,
                 HosterRegistration = hosterRegistration,

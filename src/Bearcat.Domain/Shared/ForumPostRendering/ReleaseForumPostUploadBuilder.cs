@@ -25,7 +25,7 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
             Name = upload.UploadConfigName,
             HosterName = upload.HosterName,
             UploadedAt = upload.UploadedAt,
-            ArchiveFormat = upload.ArchiveFormat,
+            ArchiveFormat = upload.ArchiveFormat ?? string.Empty,
             ArchivePassword = upload.ArchivePassword ?? string.Empty,
             Links = upload.Links,
             LinkCrypters = upload

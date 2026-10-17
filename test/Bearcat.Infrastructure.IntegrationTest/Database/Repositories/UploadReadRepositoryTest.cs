@@ -873,6 +873,7 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     {
         return new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

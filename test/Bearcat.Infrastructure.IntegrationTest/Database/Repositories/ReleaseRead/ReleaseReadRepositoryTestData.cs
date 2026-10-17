@@ -110,10 +110,31 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             Name = name,
             HosterRegistration = hosterRegistration ?? AddHosterRegistration($"{name} hoster"),
             ArchiveConfig = archiveConfig ?? AddArchiveConfig(release, $"{name} archive"),
+            LinkCrypters = [],
+            Uploads = [],
+        };
+        dbContext.UploadConfigs.Add(uploadConfig);
+
+        return uploadConfig;
+    }
+
+    public UploadConfig AddVideoUploadConfig(
+        Release release,
+        string name,
+        HosterRegistration? hosterRegistration = null
+    )
+    {
+        var uploadConfig = new UploadConfig
+        {
+            UploadSource = UploadSource.VideoFiles,
+            Release = release,
+            Name = name,
+            HosterRegistration = hosterRegistration ?? AddHosterRegistration($"{name} hoster"),
             LinkCrypters = [],
             Uploads = [],
         };
@@ -154,7 +175,7 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
         OnlineState onlineState = OnlineState.Online
     )
     {
-        upload.Archive ??= AddArchive(upload.UploadConfig.ArchiveConfig, upload.CreatedAt);
+        upload.Archive ??= AddArchive(upload.UploadConfig.ArchiveConfig!, upload.CreatedAt);
 
         var archiveFile = new ArchiveFile
         {
@@ -171,6 +192,25 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
             CreatedAt = upload.CreatedAt,
         };
         dbContext.AddRange(archiveFile, uploadedFile);
+
+        return uploadedFile;
+    }
+
+    public UploadedFile AddVideoUploadedFile(
+        Upload upload,
+        string videoFileRelativePath,
+        string hosterFileLink
+    )
+    {
+        var uploadedFile = new UploadedFile
+        {
+            Upload = upload,
+            VideoFileRelativePath = videoFileRelativePath,
+            HosterFileLink = hosterFileLink,
+            OnlineState = OnlineState.Online,
+            CreatedAt = upload.CreatedAt,
+        };
+        dbContext.UploadedFiles.Add(uploadedFile);
 
         return uploadedFile;
     }

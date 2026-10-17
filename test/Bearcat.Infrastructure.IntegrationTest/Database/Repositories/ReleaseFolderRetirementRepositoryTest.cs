@@ -308,6 +308,7 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         [
             new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Release = release,
                 Name = "Default upload",
                 HosterRegistration = hosterRegistration,

@@ -196,6 +196,7 @@ public class ReleaseCollectionService(
             uploadSlot.UploadConfigs.Add(
                 new UploadConfig
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     ReleaseId = target.ReleaseId,
                     ArchiveConfigId = target.ArchiveConfigId,
                     HosterRegistrationId = uploadTarget.HosterRegistrationId,
@@ -333,7 +334,7 @@ public class ReleaseCollectionService(
         {
             var archiveConfigNames = releaseCollection
                 .UploadSlots.Select(slot =>
-                    slot.UploadConfigs.Select(uc => uc.ArchiveConfig.Name).FirstOrDefault()
+                    slot.UploadConfigs.Select(uc => uc.ArchiveConfig!.Name).FirstOrDefault()
                 )
                 .Where(name => name is not null)
                 .Distinct()
@@ -358,7 +359,7 @@ public class ReleaseCollectionService(
                     continue;
                 }
 
-                var archiveConfigName = referenceUploadConfig.ArchiveConfig.Name;
+                var archiveConfigName = referenceUploadConfig.ArchiveConfig!.Name;
                 if (!targetsByName.TryGetValue(archiveConfigName, out var target))
                 {
                     continue;
@@ -366,6 +367,7 @@ public class ReleaseCollectionService(
 
                 var uploadConfig = new UploadConfig
                 {
+                    UploadSource = UploadSource.ArchiveFiles,
                     ReleaseId = releaseId,
                     ArchiveConfigId = target.ArchiveConfigId,
                     HosterRegistrationId = referenceUploadConfig.HosterRegistrationId,

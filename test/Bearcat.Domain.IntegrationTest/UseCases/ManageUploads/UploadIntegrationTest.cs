@@ -71,7 +71,7 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
         );
         var archive = new Archive
         {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
             ArchiveFolderPath = "/tmp/archive",
             ArchiveState = ArchiveState.Created,
             CreatedAt = DateTime.UtcNow,
@@ -172,6 +172,7 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

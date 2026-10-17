@@ -124,13 +124,14 @@ public class ReleaseFromFolderCreationService(
         {
             var uploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Name = template.Name.TrimOrNullWhenWhitespace() ?? template.GetUploadTargetName(),
                 HosterRegistrationId = template.HosterRegistrationId,
                 HosterAccountPoolId = template.HosterAccountPoolId,
                 PremiumOnlyDownload = template.PremiumOnlyDownload,
                 ArchiveConfig =
                     releaseType is ReleaseType.Managed
-                        ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId]
+                        ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId!.Value]
                         : unmanagedArchiveConfig!,
                 Uploads = [],
                 LinkCrypters = template

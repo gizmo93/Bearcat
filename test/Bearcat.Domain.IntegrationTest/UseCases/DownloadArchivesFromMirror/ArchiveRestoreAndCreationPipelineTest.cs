@@ -409,6 +409,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         };
         var mirrorUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration
@@ -423,6 +424,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         };
         var targetUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration
@@ -535,6 +537,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         };
         var mirrorUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration
@@ -549,6 +552,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         };
         var targetUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration

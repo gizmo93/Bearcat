@@ -342,6 +342,7 @@ public class HosterAccountPoolServiceTest(DatabaseProvider databaseProvider)
         DbContext.UploadConfigs.Add(
             new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 Release = release,
                 ArchiveConfig = new ArchiveConfig
                 {

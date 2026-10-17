@@ -574,6 +574,7 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
     {
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseId = seed.ReleaseId,
             ArchiveConfigId = seed.ArchiveConfigId,
             HosterRegistrationId = seed.HosterRegistrationId,

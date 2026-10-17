@@ -816,6 +816,7 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         );
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = firstRelease,
             ArchiveConfig = rarArchiveConfig,
             HosterRegistration = new HosterRegistration

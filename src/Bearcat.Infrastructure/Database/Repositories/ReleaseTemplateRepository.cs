@@ -282,9 +282,11 @@ public class ReleaseTemplateRepository(
                     u.HosterAccountPoolId,
                     u.HosterAccountPool?.Name,
                     u.ArchiveConfigTemplateId,
-                    releaseTemplate
-                        .ArchiveConfigTemplates.First(a => a.Id == u.ArchiveConfigTemplateId)
-                        .Name,
+                    u.ArchiveConfigTemplateId is null
+                        ? null
+                        : releaseTemplate
+                            .ArchiveConfigTemplates.First(a => a.Id == u.ArchiveConfigTemplateId)
+                            .Name,
                     u.PremiumOnlyDownload,
                     u.CollectionUploadSlotKey,
                     u.CollectionUploadSlotName,

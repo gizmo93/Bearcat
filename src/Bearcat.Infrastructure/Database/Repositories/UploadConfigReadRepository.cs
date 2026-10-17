@@ -61,7 +61,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
             u.HosterAccountPoolId,
             u.HosterAccountPoolId != null ? u.HosterAccountPool!.Name : null,
             u.ArchiveConfigId,
-            u.ArchiveConfig.Name,
+            u.ArchiveConfig != null ? u.ArchiveConfig.Name : null,
             u.Release.Name,
             u.PremiumOnlyDownload,
             u.Uploads.Any(upload => upload.UploadedFiles.Any(file => file.DownloadCount != null))

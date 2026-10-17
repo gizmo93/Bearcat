@@ -205,6 +205,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         memberRegistration.IsActive = memberIsActive;
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             Name = "Pool upload",
             HosterAccountPool = new HosterAccountPool

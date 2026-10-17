@@ -172,6 +172,46 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task SearchUploadLinksAsync_VideoUploadedFiles_ReturnsVideoFileRelativePathsAsFileNamesOrderedByPath()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.Video.2026-GRP");
+        var upload = testData.AddUpload(
+            testData.AddVideoUploadConfig(release, "Video"),
+            MidnightUtc,
+            MidnightUtc
+        );
+        testData.AddVideoUploadedFile(
+            upload,
+            "Bearcat.Video.2026-GRP/sample/bearcat-sample.mkv",
+            "https://video.example/sample"
+        );
+        testData.AddVideoUploadedFile(
+            upload,
+            "Bearcat.Video.2026-GRP/bearcat.mkv",
+            "https://video.example/main"
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.SearchUploadLinksAsync(
+            new ReleaseUploadLinkSearchQuery(release.Id, upload.Id),
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Items.Select(link => (link.FileName, link.HosterFileLink))
+            .ShouldBe([
+                ("Bearcat.Video.2026-GRP/bearcat.mkv", "https://video.example/main"),
+                (
+                    "Bearcat.Video.2026-GRP/sample/bearcat-sample.mkv",
+                    "https://video.example/sample"
+                ),
+            ]);
+    }
+
+    [Test]
     public async Task GetUploadLinksAsync_WithoutOnlineState_ReturnsAllLinksOfUploadOrderedByFileName()
     {
         // Arrange
@@ -611,6 +651,75 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         unusedCrypter.Name.ShouldBe("Crypter Release");
         unusedCrypter.ContainerUrl.ShouldBeEmpty();
         unusedCrypter.StatusImageId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetForumPostUploadsAsync_VideoUploadConfigWithoutArchiveConfig_ReturnsLinksWithoutArchiveFormatAndPassword()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.VideoForumPost.2026-GRP");
+        var videoConfig = testData.AddVideoUploadConfig(
+            release,
+            "Video",
+            testData.AddHosterRegistration("Video Hoster")
+        );
+        var upload = testData.AddUpload(videoConfig, MidnightUtc, MidnightUtc.AddMinutes(5));
+        testData.AddVideoUploadedFile(
+            upload,
+            "Bearcat.VideoForumPost.2026-GRP/sample.mkv",
+            "https://video.example/sample"
+        );
+        testData.AddVideoUploadedFile(
+            upload,
+            "Bearcat.VideoForumPost.2026-GRP/main.mkv",
+            "https://video.example/main"
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        var videoUpload = result.ShouldHaveSingleItem();
+        videoUpload.UploadConfigName.ShouldBe("Video");
+        videoUpload.HosterName.ShouldBe("Video Hoster");
+        videoUpload.ArchiveFormat.ShouldBeNull();
+        videoUpload.ArchivePassword.ShouldBeNull();
+        videoUpload.UploadedAt.ShouldBe(MidnightUtc.AddMinutes(5));
+        videoUpload.Links.ShouldBe(["https://video.example/main", "https://video.example/sample"]);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_VideoUploadConfig_GroupsLinksUnderUploadConfigName()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.VideoPostQueue.2026-GRP");
+        var upload = testData.AddUpload(
+            testData.AddVideoUploadConfig(
+                release,
+                "Video",
+                testData.AddHosterRegistration("Video Hoster")
+            ),
+            MidnightUtc,
+            MidnightUtc
+        );
+        testData.AddVideoUploadedFile(
+            upload,
+            "Bearcat.VideoPostQueue.2026-GRP/main.mkv",
+            "https://video.example/main"
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        var item = result.ShouldHaveSingleItem();
+        var group = item.ArchiveGroups.ShouldHaveSingleItem();
+        group.ArchiveConfigName.ShouldBe("Video");
+        group
+            .Hosters.Select(hoster => (hoster.HosterAccountOrPoolName, hoster.LinkCount))
+            .ShouldBe([("Video Hoster", 1)]);
     }
 
     [Test]

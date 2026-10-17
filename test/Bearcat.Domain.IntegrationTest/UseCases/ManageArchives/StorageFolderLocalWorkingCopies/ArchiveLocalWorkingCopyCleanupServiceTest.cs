@@ -239,6 +239,7 @@ public class ArchiveLocalWorkingCopyCleanupServiceTest(DatabaseProvider database
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Release = release,
             ArchiveConfig = archiveConfig,
             HosterRegistration = new HosterRegistration

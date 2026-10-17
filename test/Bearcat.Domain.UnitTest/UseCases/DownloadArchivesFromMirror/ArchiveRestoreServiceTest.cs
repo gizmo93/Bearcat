@@ -765,6 +765,7 @@ public class ArchiveRestoreServiceTest
 
         var mirrorUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Id = 21,
             ArchiveConfigId = archiveConfig.Id,
             ArchiveConfig = archiveConfig,
@@ -775,6 +776,7 @@ public class ArchiveRestoreServiceTest
 
         var targetUploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Id = 22,
             ArchiveConfigId = archiveConfig.Id,
             ArchiveConfig = archiveConfig,
@@ -851,6 +853,7 @@ public class ArchiveRestoreServiceTest
 
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             Id = 23,
             ArchiveConfigId = archiveConfig.Id,
             ArchiveConfig = archiveConfig,

@@ -618,6 +618,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 {
                     UploadConfig = new UploadConfig
                     {
+                        UploadSource = UploadSource.ArchiveFiles,
                         Release = release,
                         ArchiveConfig = new ArchiveConfig
                         {
@@ -1141,6 +1142,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             };
             var uploadConfig = new UploadConfig
             {
+                UploadSource = UploadSource.ArchiveFiles,
                 ReleaseId = release.Id,
                 ArchiveConfig = archiveConfig,
                 HosterRegistration = hosterRegistration,
@@ -1269,7 +1271,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         {
             var archive = new Archive
             {
-                ArchiveConfig = uploadConfig.ArchiveConfig,
+                ArchiveConfig = uploadConfig.ArchiveConfig!,
                 ArchiveFolderPath = "/tmp/archives",
                 CreatedAt = createdAt,
                 ArchiveState = ArchiveState.Created,
@@ -1511,6 +1513,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         };
         var uploadConfig = new UploadConfig
         {
+            UploadSource = UploadSource.ArchiveFiles,
             ReleaseId = release.Id,
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,

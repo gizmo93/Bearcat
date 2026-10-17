@@ -10,8 +10,10 @@ public class UploadedFileConfiguration : IEntityTypeConfiguration<UploadedFile>
     {
         builder.HasKey(u => u.Id);
         builder.Property(u => u.UploadId).IsRequired();
-        builder.Property(u => u.ArchiveFileId).IsRequired();
+        builder.Property(u => u.ArchiveFileId).IsRequired(false);
+        builder.Property(u => u.VideoFileRelativePath).IsRequired(false).HasMaxLength(1000);
         builder.Property(u => u.HosterFileLink).IsRequired().HasMaxLength(500);
+        builder.Property(u => u.HosterEmbedLink).IsRequired(false).HasMaxLength(500);
         builder.Property(u => u.ExternalId).IsRequired(false).HasMaxLength(200);
         builder.Property(u => u.HosterFolderId).IsRequired(false);
         builder.Property(u => u.Md5Hash).IsRequired(false).HasMaxLength(32);
@@ -21,5 +23,12 @@ public class UploadedFileConfiguration : IEntityTypeConfiguration<UploadedFile>
         builder.Property(u => u.CheckedAt).IsRequired(false).HasPrecision(4);
         builder.Property(u => u.ErrorMessages).IsRequired();
         builder.HasIndex(u => u.HosterFileLink);
+
+        builder.ToTable(table =>
+            table.HasCheckConstraint(
+                "CK_UploadedFile_FileSource",
+                "(\"ArchiveFileId\" IS NULL) <> (\"VideoFileRelativePath\" IS NULL)"
+            )
+        );
     }
 }
