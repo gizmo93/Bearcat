@@ -3,6 +3,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
@@ -109,18 +110,30 @@ public partial class CreateOrEditReleaseDialog(
     {
         if (formModel.IsEdit && ReleaseId is not null)
         {
-            await operationRunner.RunAsync(
-                (ReleaseService service) =>
-                    service.UpdateAsync(
-                        releaseId: ReleaseId.Value,
-                        name: formModel.Name,
-                        releaseFolderPath: formModel.FolderPath,
-                        releaseContentType: formModel.ReleaseContentType,
-                        releaseGroupId: formModel.ReleaseGroupId,
-                        primaryLanguageCode: formModel.PrimaryLanguageCode,
-                        excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
-                    )
-            );
+            try
+            {
+                await operationRunner.RunAsync(
+                    (ReleaseService service) =>
+                        service.UpdateAsync(
+                            releaseId: ReleaseId.Value,
+                            name: formModel.Name,
+                            releaseFolderPath: formModel.FolderPath,
+                            releaseContentType: formModel.ReleaseContentType,
+                            releaseGroupId: formModel.ReleaseGroupId,
+                            primaryLanguageCode: formModel.PrimaryLanguageCode,
+                            excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
+                        )
+                );
+            }
+            catch (InvalidUploadSourceException)
+            {
+                messageStore!.Add(
+                    () => formModel.ReleaseContentType,
+                    L["ReleaseContentTypeLockedByVideoUploadConfigs"]
+                );
+                editContext.NotifyValidationStateChanged();
+                return;
+            }
 
             await DialogRef.CloseAsync(DialogResult.Ok(ReleaseId.Value));
             return;

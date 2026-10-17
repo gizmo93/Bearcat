@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -63,6 +64,17 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         if (releaseTemplate.ReleaseType != releaseType)
         {
             throw new InvalidOperationException("Release template type cannot be changed.");
+        }
+
+        if (
+            releaseTemplate.UploadConfigTemplates.Any(template =>
+                template.UploadSource is UploadSource.VideoFiles
+            ) && !UploadSourceValidator.AllowsVideoFileUploads(releaseType, releaseContentType)
+        )
+        {
+            throw new InvalidUploadSourceException(
+                "The content type must stay movie or TV show episode while the release template has video file upload config templates."
+            );
         }
 
         releaseTemplate.Name = name;

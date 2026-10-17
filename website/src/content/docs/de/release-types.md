@@ -43,6 +43,7 @@ Die Prüfungen des Releaseordners entfallen.
 Über das Aktionsmenü auf der Releasedetailseite wandelst du zwischen den Typen um.
 
 - **In Unmanaged umwandeln** setzt ein erstelltes Archiv für jede Archivkonfiguration voraus.
+  Solange das Release eine [Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) hat, ist es nicht möglich.
   Bearcat entfernt den gespeicherten Pfad zum Releaseordner. Archive und Uploads bleiben erhalten.
   Die Rohdateien kannst du danach selbst löschen.
 - **In Managed umwandeln** lässt dich einen Releaseordner mit den Rohdateien wählen. Archivkonfigurationen und Uploads bleiben erhalten.

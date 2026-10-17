@@ -49,6 +49,19 @@ FTP downloads.
   upload slots. Upload configuration templates with the upload source **Video file** have no collection slot fields.
 - The upload source is fixed after creation.
 
+## Release folder
+
+Video uploads read the main video from the release folder. While a release has a video upload
+configuration:
+
+- Bearcat keeps the release folder. [Automatic conversion to unmanaged](/Bearcat/advanced-configuration/#convert-releases-to-unmanaged-automatically)
+  and [raw file cleanup of remote downloads](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) skip the release.
+- **Convert to unmanaged** is rejected.
+- The content type must stay **Movie** or **TV show episode**.
+
+The content type of a release template with an upload configuration template with the upload source **Video file** must also stay
+**Movie** or **TV show episode**.
+
 ## Uploads, online checks and reuploads
 
 Video uploads skip archive creation and go straight to the upload queue. See

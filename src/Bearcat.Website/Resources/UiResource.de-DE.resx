@@ -455,7 +455,7 @@
   <data name="UnhandledError" xml:space="preserve"><value>Ein unbehandelter Fehler ist aufgetreten.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="UploadConfig" xml:space="preserve"><value>Uploadkonfig.</value></data>
-  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Wähle den Hoster und die Archivkonfiguration für diesen Upload.</value></data>
+  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Wähle Uploadziel und Quelle für diesen Upload.</value></data>
   <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Linkcrypter der Uploadkonfiguration</value></data>
     <data name="UploadConfigs" xml:space="preserve"><value>Upload Konfigs</value></data>
   <data name="UploadConfigurations" xml:space="preserve"><value>Uploadkonfigurationen</value></data>
@@ -696,7 +696,7 @@
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Releasetemplate auswählen</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Releasetemplate auswählen.</value></data>
   <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen des Accounts oder Accountpools zu verwenden.</value></data>
-    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Wähle den Hoster und die Archiveinstellungen für Releases aus dieser Vorlage.</value></data>
+    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Wähle Uploadziel und Quelle für Releases aus dieser Vorlage.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hosternamen verwenden</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Releasename als Archivname verwenden</value></data>
   <data name="AllFolders" xml:space="preserve"><value>Alle Ordner</value></data>
@@ -1922,4 +1922,9 @@
   <data name="VideoUploadConfigWithoutLinkCrypters" xml:space="preserve"><value>Videouploadkonfigurationen unterstützen keine Linkcrypter.</value></data>
   <data name="EmbedLink" xml:space="preserve"><value>Einbettungslink</value></data>
   <data name="CopyEmbedLink" xml:space="preserve"><value>Einbettungslink kopieren</value></data>
+  <data name="NoHosterAccountsYet" xml:space="preserve"><value>Noch keine Hosteraccounts.</value></data>
+  <data name="NoVideoHosterAccountsYet" xml:space="preserve"><value>Noch keine Videohosteraccounts.</value></data>
+  <data name="ConvertToUnmanagedBlockedByVideoUploadConfigs" xml:space="preserve"><value>Releases mit Videouploadkonfigurationen behalten ihren Releaseordner und können nicht in Unmanaged umgewandelt werden.</value></data>
+  <data name="ReleaseContentTypeLockedByVideoUploadConfigs" xml:space="preserve"><value>Der Inhaltstyp muss Film oder Serienfolge bleiben, solange das Release Videouploadkonfigurationen hat.</value></data>
+  <data name="ReleaseTemplateContentTypeLockedByVideoUploadConfigs" xml:space="preserve"><value>Der Inhaltstyp muss Film oder Serienfolge bleiben, solange die Vorlage Videouploadkonfigurationen hat.</value></data>
 </root>

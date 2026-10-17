@@ -581,6 +581,12 @@ public partial class ReleaseDetail(
                 service.GetUnmanagedConversionPreviewAsync(release.ReleaseId)
         );
 
+        if (preview.HasVideoUploadConfigs)
+        {
+            toastService.Error(L["ConvertToUnmanagedBlockedByVideoUploadConfigs"]);
+            return;
+        }
+
         if (!preview.CanConvert)
         {
             toastService.Error(L["ConvertToUnmanagedNotReady"]);

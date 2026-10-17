@@ -14,6 +14,7 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -126,6 +127,38 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
         var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
         result.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+    }
+
+    [Test]
+    public async Task UpdateAsync_VideoUploadConfigAndNonVideoContentType_ThrowsInvalidUploadSourceException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Content type group");
+        var release = await AddReleaseAsync(releaseGroup.Id);
+        await AddVideoUploadConfigAsync(release.Id);
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidUploadSourceException>(async () =>
+            await service.UpdateAsync(
+                release.Id,
+                "Bearcat.Release.001",
+                release.ReleaseFolderPath,
+                ReleaseContentType.Game,
+                releaseGroup.Id,
+                null,
+                false,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "The content type must stay movie or TV show episode while the release has video file upload configs."
+        );
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Releases.SingleAsync(r => r.Id == release.Id)).ReleaseContentType.ShouldBe(
+            release.ReleaseContentType
+        );
     }
 
     [Test]
@@ -862,6 +895,34 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ConvertToUnmanagedAsync_VideoUploadConfig_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var release = await AddManagedReleaseWithArchiveAsync(
+            releaseGroup.Id,
+            releaseFolderPath: "/data/releases/Bearcat.Release",
+            archiveFolderPath: "/data/archives/abc",
+            archiveState: ArchiveState.Created
+        );
+        await AddVideoUploadConfigAsync(release.Id);
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.ConvertToUnmanagedAsync(release.Id, CancellationToken.None)
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "Releases with video file upload configs cannot be converted to unmanaged because their video files are uploaded from the release folder."
+        );
+        DbContext.ChangeTracker.Clear();
+        var unchanged = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        unchanged.ReleaseType.ShouldBe(ReleaseType.Managed);
+        unchanged.ReleaseFolderPath.ShouldBe("/data/releases/Bearcat.Release");
+    }
+
+    [Test]
     public async Task ConvertToUnmanagedAsync_UnmanagedRelease_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -1470,6 +1531,27 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
 
         return release;
+    }
+
+    private async Task AddVideoUploadConfigAsync(int releaseId)
+    {
+        DbContext.UploadConfigs.Add(
+            new UploadConfig
+            {
+                ReleaseId = releaseId,
+                UploadSource = UploadSource.VideoFiles,
+                Name = "Video upload",
+                HosterRegistration = new HosterRegistration
+                {
+                    Name = "Video hoster",
+                    SerializedConfig = "{}",
+                    HosterClassName = "VideoHoster",
+                    IsActive = true,
+                },
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
     }
 
     private async Task<ReleaseGroup> AddReleaseGroupAsync(string name)

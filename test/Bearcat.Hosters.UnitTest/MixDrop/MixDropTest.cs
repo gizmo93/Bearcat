@@ -237,6 +237,59 @@ public class MixDropTest
         result.ErrorMessage.ShouldNotBeNull().ShouldContain("Invalid login");
     }
 
+    [Test]
+    public async Task CreateFolderAsync_FolderWithSameTitleOnSecondPage_ReturnsExistingFolderIdWithoutCreatingFolder()
+    {
+        // Arrange
+        httpMessageHandler.RespondWith(request =>
+            HttpUtility.ParseQueryString(request.RequestUri!.Query)["page"] == "1"
+                ? """{"success":true,"pages":2,"result":{"folders":[{"id":"1104215","title":"Other.Release"}],"files":[]}}"""
+                : """{"success":true,"pages":2,"result":{"folders":[{"id":"1104216","title":"Bearcat.Release"}],"files":[]}}"""
+        );
+
+        // Act
+        var result = await hoster.CreateFolderAsync(
+            "Bearcat.Release",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("1104216");
+        httpMessageHandler
+            .Requests.Select(request =>
+                $"{request.Uri.AbsolutePath}?page={HttpUtility.ParseQueryString(request.Uri.Query)["page"]}"
+            )
+            .ShouldBe(["/folderlist?page=1", "/folderlist?page=2"]);
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_EmptyAccountReturnsEmptyResultArray_CreatesFolder()
+    {
+        // Arrange
+        httpMessageHandler.RespondWith(request =>
+            request.RequestUri!.AbsolutePath == "/folderlist"
+                ? """{"success":true,"result":[]}"""
+                : """{"success":true,"result":{"id":"1104217"}}"""
+        );
+
+        // Act
+        var result = await hoster.CreateFolderAsync(
+            "Bearcat.Release",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("1104217");
+        httpMessageHandler
+            .Requests.Select(request => request.Uri.AbsolutePath)
+            .ShouldBe(["/folderlist", "/foldercreate"]);
+        HttpUtility
+            .ParseQueryString(httpMessageHandler.Requests.Last().Uri.Query)["title"]
+            .ShouldBe("Bearcat.Release");
+    }
+
     private sealed record RecordedRequest(HttpMethod Method, Uri Uri, string Body);
 
     private sealed class RecordingHttpMessageHandler : HttpMessageHandler

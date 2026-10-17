@@ -8,6 +8,7 @@ public interface IMixDropApi
     Task<MixDropResponse> GetFolderListAsync(
         [Query] [AliasAs("email")] string emailAddress,
         [Query] [AliasAs("key")] string apiKey,
+        [Query] [AliasAs("page")] int? page,
         CancellationToken cancellationToken
     );
 

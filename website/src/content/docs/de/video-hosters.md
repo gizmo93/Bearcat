@@ -49,6 +49,19 @@ Ordnerautomatisierungen oder FTP-Downloads.
   verwendet werden. Uploadkonfigurationstemplates mit der Uploadquelle **Videodatei** haben keine Felder für Collectionslots.
 - Die Uploadquelle ist nach dem Anlegen fest.
 
+## Releaseordner
+
+Videouploads lesen das Hauptvideo aus dem Releaseordner. Solange ein Release eine
+Videouploadkonfiguration hat:
+
+- Bearcat behält den Releaseordner. Die [automatische Umwandlung in Unmanaged](/Bearcat/de/advanced-configuration/#releases-automatisch-in-unmanaged-umwandeln)
+  und das [Löschen der Rohdateien von Remotedownloads](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) überspringen das Release.
+- **In Unmanaged umwandeln** wird abgelehnt.
+- Der Inhaltstyp muss **Film** oder **Serienfolge** bleiben.
+
+Der Inhaltstyp eines Releasetemplates mit einem Uploadkonfigurationstemplate mit der Uploadquelle **Videodatei** muss ebenfalls
+**Film** oder **Serienfolge** bleiben.
+
 ## Uploads, Onlineprüfungen und Reuploads
 
 Videouploads überspringen die Archiverstellung und kommen direkt in die Uploadwarteschlange. Siehe

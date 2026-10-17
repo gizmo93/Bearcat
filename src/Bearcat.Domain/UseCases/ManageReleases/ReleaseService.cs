@@ -9,6 +9,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -85,6 +86,19 @@ public class ReleaseService(
     )
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+
+        if (
+            HasVideoUploadConfigs(release)
+            && !UploadSourceValidator.AllowsVideoFileUploads(
+                release.ReleaseType,
+                releaseContentType
+            )
+        )
+        {
+            throw new InvalidUploadSourceException(
+                "The content type must stay movie or TV show episode while the release has video file upload configs."
+            );
+        }
 
         if (release.ReleaseType is ReleaseType.Managed)
         {
@@ -173,8 +187,11 @@ public class ReleaseService(
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
 
+        var hasVideoUploadConfigs = HasVideoUploadConfigs(release);
+
         var canConvert =
             release.ReleaseType is ReleaseType.Managed
+            && !hasVideoUploadConfigs
             && release.ArchiveConfigs.Count > 0
             && AllArchiveConfigsHaveCreatedArchive(release);
 
@@ -186,7 +203,8 @@ public class ReleaseService(
         return new UnmanagedConversionPreview(
             ReleaseFolderPath: release.ReleaseFolderPath,
             CanConvert: canConvert,
-            ArchivesInsideReleaseFolder: archivesInsideReleaseFolder
+            ArchivesInsideReleaseFolder: archivesInsideReleaseFolder,
+            HasVideoUploadConfigs: hasVideoUploadConfigs
         );
     }
 
@@ -201,6 +219,13 @@ public class ReleaseService(
         {
             throw new InvalidOperationException(
                 "Only managed releases can be converted to unmanaged."
+            );
+        }
+
+        if (HasVideoUploadConfigs(release))
+        {
+            throw new InvalidOperationException(
+                "Releases with video file upload configs cannot be converted to unmanaged because their video files are uploaded from the release folder."
             );
         }
 
@@ -357,6 +382,11 @@ public class ReleaseService(
                 release.ReleaseType is ReleaseType.Managed
                 && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath)
             );
+    }
+
+    private static bool HasVideoUploadConfigs(Release release)
+    {
+        return release.UploadConfigs.Any(config => config.UploadSource is UploadSource.VideoFiles);
     }
 
     private static bool AllArchiveConfigsHaveCreatedArchive(Release release)

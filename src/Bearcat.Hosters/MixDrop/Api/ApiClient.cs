@@ -86,6 +86,23 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        var existingFolderId = await GetExistingFolderIdAsync(
+            config,
+            folderName,
+            cancellationToken
+        );
+
+        if (existingFolderId is not null)
+        {
+            logger.LogInformation(
+                "Reusing existing MixDrop folder {FolderName} with id {FolderId}",
+                folderName,
+                existingFolderId
+            );
+
+            return existingFolderId.Value.ToString(CultureInfo.InvariantCulture);
+        }
+
         logger.LogInformation("Creating MixDrop folder {FolderName}", folderName);
 
         var response = await api.CreateFolderAsync(
@@ -194,6 +211,7 @@ public class ApiClient(
         var response = await api.GetFolderListAsync(
             emailAddress: config.EmailAddress,
             apiKey: config.ApiKey,
+            page: null,
             cancellationToken: cancellationToken
         );
 
@@ -210,6 +228,56 @@ public class ApiClient(
         var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
         return pathSegments is ["f" or "e", var fileReference, ..] ? fileReference : null;
+    }
+
+    private async Task<long?> GetExistingFolderIdAsync(
+        MixDropConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var page = 1;
+        var pageCount = 1;
+
+        while (page <= pageCount)
+        {
+            var response = await api.GetFolderListAsync(
+                emailAddress: config.EmailAddress,
+                apiKey: config.ApiKey,
+                page: page,
+                cancellationToken: cancellationToken
+            );
+
+            EnsureSuccess(response, "folder list");
+
+            var existingFolder = ReadListedFolders(response.Result)
+                .FirstOrDefault(folder =>
+                    string.Equals(folder.Title, folderName, StringComparison.OrdinalIgnoreCase)
+                );
+
+            if (existingFolder is not null)
+            {
+                return existingFolder.FolderId;
+            }
+
+            pageCount = response.Pages ?? pageCount;
+            page++;
+        }
+
+        return null;
+    }
+
+    private static List<ListedFolderResult> ReadListedFolders(JsonElement result)
+    {
+        if (
+            result.ValueKind != JsonValueKind.Object
+            || !result.TryGetProperty("folders", out var folders)
+        )
+        {
+            return [];
+        }
+
+        return folders.Deserialize<List<ListedFolderResult>>(JsonSerializerOptions) ?? [];
     }
 
     private static T ReadResult<T>(MixDropResponse response, string operationName)

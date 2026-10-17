@@ -1,4 +1,10 @@
 @using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto
+@using Bearcat.Domain.ValueObjects
+
+@{
+    var hosterRegistrations = Choices.GetSelectableHosterRegistrations(Value, UploadSource);
+    var hosterAccountPools = Choices.GetSelectableHosterAccountPools(UploadSource);
+}
 
 <BbFormFieldSelect TValue="UploadTarget"
                    Value="Value"
@@ -7,15 +13,18 @@
                    Label="@L["UploadTarget"]"
                    Placeholder="@L["SelectUploadTarget"]"
                    DisplayTextSelector="Choices.GetName">
-    <BbSelectGroup>
-        <BbSelectLabel>@L["UploadTargetHosterAccounts"]</BbSelectLabel>
-        @foreach (var hosterRegistration in Choices.GetSelectableHosterRegistrations(Value, UploadSource))
-        {
-            <BbSelectItem Value="UploadTarget.ForHosterRegistration(hosterRegistration.Id)"
-                          Text="@hosterRegistration.Name" />
-        }
-    </BbSelectGroup>
-    @if (Choices.GetSelectableHosterAccountPools(UploadSource) is { Count: > 0 } hosterAccountPools)
+    @if (hosterRegistrations.Count > 0)
+    {
+        <BbSelectGroup>
+            <BbSelectLabel>@L["UploadTargetHosterAccounts"]</BbSelectLabel>
+            @foreach (var hosterRegistration in hosterRegistrations)
+            {
+                <BbSelectItem Value="UploadTarget.ForHosterRegistration(hosterRegistration.Id)"
+                              Text="@hosterRegistration.Name" />
+            }
+        </BbSelectGroup>
+    }
+    @if (hosterAccountPools.Count > 0)
     {
         <BbSelectGroup>
             <BbSelectLabel>@L["HosterAccountPools"]</BbSelectLabel>
@@ -36,3 +45,10 @@
         </BbSelectGroup>
     }
 </BbFormFieldSelect>
+
+@if (hosterRegistrations.Count == 0 && hosterAccountPools.Count == 0)
+{
+    <p class="text-xs text-muted-foreground">
+        @(UploadSource is UploadSource.VideoFiles ? L["NoVideoHosterAccountsYet"] : L["NoHosterAccountsYet"])
+    </p>
+}
