@@ -42,7 +42,7 @@ unmanaged releases. Release folder checks are skipped.
 Use the actions menu on the release detail page to convert between types.
 
 - **Convert to unmanaged** requires a created archive for every archive configuration.
-  It is not possible while the release has a [video upload configuration](/Bearcat/video-hosters/#release-folder).
+  You cannot convert releases with a [video upload configuration](/Bearcat/video-hosters/#release-folder).
   Bearcat removes the stored release folder path. Archives and uploads are kept.
   You can then delete the raw files yourself.
 - **Convert to managed** lets you choose a release folder with the raw files. Archive configurations and uploads are kept.

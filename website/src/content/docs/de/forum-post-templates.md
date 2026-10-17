@@ -85,12 +85,12 @@ Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases de
 
 ### Videouploads
 
-Uploads zu einem [Videohoster](/Bearcat/de/video-hosters/) haben innerhalb von
-`{{~ for upload in uploads ~}}` zwei weitere Variablen:
+Für [Videouploads](/Bearcat/de/video-hosters/) kannst du in der Schleife
+`{{~ for upload in uploads ~}}` zwei weitere Variablen verwenden:
 
 - `upload.is_video_upload`: `true` bei einem Videoupload.
-- `upload.embed_links`: die Einbettungslinks, in derselben Reihenfolge wie `upload.links`. Ein Eintrag bei
-  einem Videoupload, leer bei Archivuploads.
+- `upload.embed_links`: eine Liste der Einbettungslinks in derselben Reihenfolge wie `upload.links`.
+  Sie enthält bei Videouploads einen Eintrag und ist bei Archivuploads leer.
 
 Bei Videouploads sind `upload.archive_format` und `upload.archive_password` leer.
 

@@ -168,5 +168,5 @@ the downloaded folder. Future reuploads use the existing archives or mirrors.
 Store archives outside the downloaded release folder. If it contains archives, Bearcat keeps
 the folder and notifies you. This option does not apply to unmanaged templates.
 
-Releases with a [video upload configuration](/Bearcat/video-hosters/#release-folder) keep the
-downloaded folder.
+For releases with a [video upload configuration](/Bearcat/video-hosters/#release-folder), Bearcat keeps
+the downloaded folder.

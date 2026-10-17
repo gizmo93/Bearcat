@@ -85,12 +85,12 @@ Collection templates work the same way. They loop over the collection's releases
 
 ### Video uploads
 
-Uploads to a [video hoster](/Bearcat/video-hosters/) provide two more variables inside
-`{{~ for upload in uploads ~}}`:
+For [video uploads](/Bearcat/video-hosters/), you can use two more variables inside the
+`{{~ for upload in uploads ~}}` loop:
 
 - `upload.is_video_upload`: `true` for a video upload.
-- `upload.embed_links`: the embed links, in the same order as `upload.links`. One entry for a video
-  upload, empty for archive uploads.
+- `upload.embed_links`: a list of embed links in the same order as `upload.links`. It contains one entry
+  for video uploads and is empty for archive uploads.
 
 For video uploads, `upload.archive_format` and `upload.archive_password` are empty.
 

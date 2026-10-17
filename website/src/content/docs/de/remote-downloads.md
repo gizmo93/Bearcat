@@ -169,5 +169,5 @@ den heruntergeladenen Ordner. Künftige Reuploads nutzen die vorhandenen Archive
 Speichere Archive ausserhalb des heruntergeladenen Releaseordners. Enthält er Archive, behält Bearcat
 den Ordner und benachrichtigt dich. Diese Option gilt nicht für Unmanaged Templates.
 
-Releases mit einer [Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) behalten den
-heruntergeladenen Ordner.
+Bei Releases mit einer [Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) behält Bearcat
+den heruntergeladenen Ordner.

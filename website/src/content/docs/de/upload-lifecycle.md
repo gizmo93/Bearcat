@@ -33,9 +33,9 @@ Optional wählst du Linkcrypterkonfigurationen dazu.
 Erstelle für jeden Hoster eine eigene Uploadkonfiguration. Mehrere Konfigurationen für denselben
 Hoster sind möglich, etwa mit unterschiedlichen Partgrössen.
 
-Eine Uploadkonfiguration mit der Uploadquelle **Videodatei** lädt die Hauptvideodatei zu einem
-[Videohoster](/Bearcat/de/video-hosters/) hoch. Ihre Uploads überspringen die Archivschritte: Es gibt keinen
-Status `WaitingForArchive` und keine Archiverstellung. Sie starten als `Pending`.
+Mit der Uploadquelle **Videodatei** lädt Bearcat das Hauptvideo direkt zu einem
+[Videohoster](/Bearcat/de/video-hosters/) hoch. Diese Uploads starten im Status `Pending` und überspringen
+`WaitingForArchive` und die Archiverstellung.
 
 ## 2. Der erste Upload
 

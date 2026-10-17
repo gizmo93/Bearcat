@@ -1,13 +1,13 @@
 ---
 title: "Videohoster"
-description: "Die Hauptvideodatei eines Releases zu einem Videohoster hochladen und einen Dateilink und einen Einbettungslink erhalten."
+description: "Videos direkt zu MixDrop, Playmate oder Vixeo hochladen, ohne sie vorher zu packen."
 ---
 
-Ein Videohoster nimmt eine einzelne Videodatei entgegen und liefert einen Dateilink und einen
-Einbettungslink. Über den Einbettungslink bindest du einen Player für das Video ein.
+Bearcat kann die Hauptvideodatei eines Releases direkt zu einem Videohoster hochladen, ohne sie vorher
+zu packen. Wähle dafür in der Uploadkonfiguration die Uploadquelle **Videodatei**.
 
-Mit der Uploadquelle **Videodatei** lädt eine Uploadkonfiguration die Hauptvideodatei des Releases direkt
-zu einem Videohoster hoch. Bearcat erstellt dabei keine Archivparts und lädt keine hoch.
+Nach dem Upload erhältst du einen Dateilink und einen Einbettungslink. Mit dem Einbettungslink kannst
+du den Videoplayer auf einer anderen Seite einbinden.
 
 ## Unterstützte Videohoster
 
@@ -17,96 +17,74 @@ zu einem Videohoster hoch. Bearcat erstellt dabei keine Archivparts und lädt ke
 
 ## Voraussetzungen
 
-- Nur [Managed Releases](/Bearcat/de/release-types/) mit dem Inhaltstyp **Film** oder **Serienfolge**.
-- Bei Releasetemplates: nur Managed Templates mit dem Inhaltstyp **Film** oder **Serienfolge**.
+Videouploads sind nur für [Managed Releases](/Bearcat/de/release-types/) mit dem Inhaltstyp **Film** oder
+**Serienfolge** möglich. Dasselbe gilt für Releasetemplates: Sie müssen managed sein und einen dieser
+Inhaltstypen haben.
 
 ## Hauptvideo
 
-Bearcat lädt nur das Hauptvideo hoch: die grösste Mediendatei mit einem Videostream, ermittelt aus den
-extrahierten Mediendaten. Wurden keine Mediendaten extrahiert oder hat keine Datei einen Videostream,
-schlägt der Upload mit einem Fehler fehl.
+Bearcat wählt anhand der extrahierten Mediendaten die grösste Datei mit einem Videostream und lädt nur
+diese hoch. Fehlen die Mediendaten oder hat keine Datei einen Videostream, schlägt der Upload fehl.
 
 ## Videouploadkonfiguration anlegen
 
 1. Öffne die Releasedetailseite und füge eine Uploadkonfiguration hinzu.
-2. Wähle unter **Uploadquelle** die Option **Videodatei**. Das Feld erscheint nur, wenn das Release
-   Videouploads erlaubt.
+2. Wähle unter **Uploadquelle** die Option **Videodatei**. Das Feld erscheint nur, wenn das Release die
+   Voraussetzungen für Videouploads erfüllt.
 3. Wähle als **Uploadziel** einen Account oder einen [Accountpool](/Bearcat/de/account-pools/) eines Videohosters.
 
-Eine Videouploadkonfiguration hat keine Archivkonfiguration. Bei **Videodatei** zeigt die Liste der
-Uploadziele nur Accounts und Pools von Videohostern. Bei **Archivdateien** zeigt sie nur die übrigen Hoster.
-Die Uploadquelle kannst du nach dem Anlegen nicht mehr ändern.
+Bei **Videodatei** brauchst du keine Archivkonfiguration. Als Uploadziele stehen nur Accounts und Pools
+von Videohostern zur Auswahl. Bei **Archivdateien** siehst du nur die übrigen Hoster.
+Die Uploadquelle kannst du später nicht mehr ändern.
 
 ## Releasetemplates
 
-Füge in einem [Releasetemplate](/Bearcat/de/release-templates-and-automations/) ein
-Uploadkonfigurationstemplate mit der Uploadquelle **Videodatei** hinzu. Releases aus diesem Template
-erhalten eine Videouploadkonfiguration. Das gilt für manuell erstellte Releases und für Releases aus
-Ordnerautomatisierungen oder FTP-Downloads.
+Füge im [Releasetemplate](/Bearcat/de/release-templates-and-automations/) ein Uploadkonfigurationstemplate
+hinzu und wähle als Uploadquelle **Videodatei**. Alle Releases aus diesem Template übernehmen die
+Videouploadkonfiguration, auch bei Ordnerautomatisierungen und FTP-Downloads.
 
 ## Einschränkungen
 
-- Videouploadkonfigurationen unterstützen keine Linkcrypter. Uploadkonfigurationstemplates mit der Uploadquelle **Videodatei** haben keine Linkcryptertemplates.
-- Videouploadkonfigurationen können nicht in Uploadslots von [Releasecollections](/Bearcat/de/release-collections/)
-  verwendet werden. Uploadkonfigurationstemplates mit der Uploadquelle **Videodatei** haben keine Felder für Collectionslots.
-- Die Uploadquelle ist nach dem Anlegen fest.
+- Videouploads unterstützen keine Linkcrypter. In Templates mit der Uploadquelle **Videodatei** kannst
+  du deshalb keine Linkcryptertemplates wählen.
+- Videouploadkonfigurationen lassen sich keinen Uploadslots von
+  [Releasecollections](/Bearcat/de/release-collections/) zuweisen. Die Felder für Collectionslots fehlen
+  deshalb auch in den Templates.
 
 ## Releaseordner
 
-Videouploads lesen das Hauptvideo aus dem Releaseordner. Solange ein Release eine
-Videouploadkonfiguration hat:
+Für Videouploads braucht Bearcat das Hauptvideo im Releaseordner. Solange das Release eine
+Videouploadkonfiguration hat, gilt:
 
-- Bearcat behält den Releaseordner. Die [automatische Umwandlung in Unmanaged](/Bearcat/de/advanced-configuration/#releases-automatisch-in-unmanaged-umwandeln)
-  und das [Löschen der Rohdateien von Remotedownloads](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) überspringen das Release.
-- **In Unmanaged umwandeln** wird abgelehnt.
+- Bearcat behält den Releaseordner. Das Release wird weder
+  [automatisch in Unmanaged umgewandelt](/Bearcat/de/advanced-configuration/#releases-automatisch-in-unmanaged-umwandeln)
+  noch werden seine [Rohdateien nach einem Remotedownload gelöscht](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen).
+- Du kannst das Release auch nicht manuell **in Unmanaged umwandeln**.
 - Der Inhaltstyp muss **Film** oder **Serienfolge** bleiben.
 
-Der Inhaltstyp eines Releasetemplates mit einem Uploadkonfigurationstemplate mit der Uploadquelle **Videodatei** muss ebenfalls
-**Film** oder **Serienfolge** bleiben.
+Auch Releasetemplates mit Videouploads müssen den Inhaltstyp **Film** oder **Serienfolge** behalten.
 
 ## Uploads, Onlineprüfungen und Reuploads
 
-Videouploads überspringen die Archiverstellung und kommen direkt in die Uploadwarteschlange. Siehe
-[Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/). Onlineprüfungen und Reuploads funktionieren wie bei
-Archivuploads.
+Videouploads kommen ohne Archiverstellung direkt in die Uploadwarteschlange. Onlineprüfungen und
+Reuploads funktionieren wie bei Archivuploads. Siehe [Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/).
 
 ## Links
 
-Die Releasedetailseite und der Dialog mit den Uploadlinks zeigen den Namen der Videodatei, den Link und den
-**Einbettungslink**. Beide Links kannst du kopieren. In der [REST-API](/Bearcat/de/rest-api/) enthält die
-Antwort zu Uploadlinks `hosterEmbedLink`.
+Auf der Releasedetailseite und im Dialog mit den Uploadlinks findest du den Dateinamen, den Dateilink
+und den **Einbettungslink**. Beide Links kannst du kopieren. Die [REST-API](/Bearcat/de/rest-api/) gibt den
+Einbettungslink im Feld `hosterEmbedLink` zurück.
 
-In der [Postwarteschlange](/Bearcat/de/post-queue/) erscheinen Videouploads unter dem Namen ihrer
-Uploadkonfiguration mit der Markierung **Video**.
+In der [Postwarteschlange](/Bearcat/de/post-queue/) stehen Videouploads unter dem Namen ihrer
+Uploadkonfiguration und sind mit **Video** markiert.
 
-[Forenpostvorlagen](/Bearcat/de/forum-post-templates/#videouploads) stellen `upload.is_video_upload` und
-`upload.embed_links` bereit.
-
-## MixDrop
-
-Lege einen MixDrop-Account mit diesen Feldern an:
-
-| Feld | Wert |
-| --- | --- |
-| **EmailAddress** | Die E-Mail-Adresse deines MixDrop-Accounts. |
-| **ApiKey** | Der API-Schlüssel aus den API-Einstellungen deines MixDrop-Accounts. |
+In [Forenpostvorlagen](/Bearcat/de/forum-post-templates/#videouploads) kannst du `upload.is_video_upload`
+und `upload.embed_links` verwenden.
 
 ## Playmate
 
-Lege einen Playmate-Account mit diesem Feld an:
-
-| Feld | Wert |
-| --- | --- |
-| **ApiKey** | Der API-Schlüssel deines Playmate-Accounts. |
-
-Playmate hat keine eigene Dateiseite. Link und Einbettungslink sind dieselbe Einbettungs-URL.
+Playmate hat keine eigene Dateiseite. Dateilink und Einbettungslink sind dieselbe URL zum Videoplayer.
 
 ## Vixeo
 
-Lege einen Vixeo-Account mit diesem Feld an:
-
-| Feld | Wert |
-| --- | --- |
-| **ApiKey** | Der API-Schlüssel deines Vixeo-Accounts. |
-
-Vixeo hat keine eigene Dateiseite. Link und Einbettungslink sind dieselbe Einbettungs-URL.
+Vixeo hat keine eigene Dateiseite. Dateilink und Einbettungslink sind dieselbe URL zum Videoplayer.
