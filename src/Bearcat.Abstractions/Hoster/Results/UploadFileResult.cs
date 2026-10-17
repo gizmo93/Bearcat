@@ -7,5 +7,6 @@ public record UploadFileResult(
     FileDto FileDto,
     IReadOnlyList<string> ErrorMessages,
     string? FileUrl,
-    string? ExternalId = null
+    string? ExternalId = null,
+    string? EmbedUrl = null
 );

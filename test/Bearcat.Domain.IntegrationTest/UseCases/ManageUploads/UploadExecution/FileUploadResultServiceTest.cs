@@ -24,8 +24,13 @@ public class FileUploadResultServiceTest
         );
         var result = new FileUploadCompleted(
             UploadId: 42,
-            ArchiveFileId: 100,
-            FullFileName: "/tmp/archive.part1.rar",
+            SourceFile: new UploadSourceFile(
+                TransferFileId: 100,
+                ArchiveFileId: 100,
+                VideoFileRelativePath: null,
+                FullFileName: "/tmp/archive.part1.rar",
+                Md5Hash: null
+            ),
             FileUrl: null,
             ExternalId: null,
             IsSuccess: false,

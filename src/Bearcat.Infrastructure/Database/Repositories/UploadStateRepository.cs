@@ -194,7 +194,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
 
     public async Task<Upload?> GetByIdAsync(int uploadId, CancellationToken cancellationToken)
     {
-        return await dbWrite.Uploads.FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
+        return await dbWrite
+            .Uploads.Include(u => u.UploadConfig)
+            .FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
     }
 
     public async Task<bool> HasUnresolvedNotificationForHosterRegistrationAsync(

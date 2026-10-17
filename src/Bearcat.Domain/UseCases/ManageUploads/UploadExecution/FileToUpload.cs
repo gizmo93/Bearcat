@@ -4,9 +4,7 @@ namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public record FileToUpload(
     int UploadId,
-    int ArchiveFileId,
-    string FullFileName,
-    string? Md5Hash,
+    UploadSourceFile SourceFile,
     string? FolderId,
     string HosterClassName,
     IHoster Hoster,

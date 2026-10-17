@@ -41,7 +41,16 @@ public class UploadCancellationRequestServiceTest(DatabaseProvider databaseProvi
         var upload = await AddUploadWithCancellationRequestAsync();
         var context = new UploadExecutionContext(
             upload,
-            totalFileCount: 1,
+            sourceFiles:
+            [
+                new UploadSourceFile(
+                    TransferFileId: 1,
+                    ArchiveFileId: 1,
+                    VideoFileRelativePath: null,
+                    FullFileName: "/tmp/archive.part1.rar",
+                    Md5Hash: null
+                ),
+            ],
             successfulFileCount: 0,
             failedFileCount: 0,
             plannedFiles: [],

@@ -6,7 +6,7 @@ namespace Bearcat.Domain.UseCases.ManageUploads.UploadExecution;
 
 public sealed class UploadExecutionContext(
     Upload upload,
-    int totalFileCount,
+    IReadOnlyList<UploadSourceFile> sourceFiles,
     int successfulFileCount,
     int failedFileCount,
     IReadOnlyList<TransferFile> plannedFiles,
@@ -17,7 +17,9 @@ public sealed class UploadExecutionContext(
 
     public int UploadId => Upload.Id;
 
-    public int TotalFileCount { get; } = totalFileCount;
+    public IReadOnlyList<UploadSourceFile> SourceFiles { get; } = sourceFiles;
+
+    public int TotalFileCount => SourceFiles.Count;
 
     public IReadOnlyList<TransferFile> PlannedFiles { get; } = plannedFiles;
 
@@ -41,12 +43,13 @@ public sealed class UploadExecutionContext(
 
     public long GetBytesOfFilesNotYetUploaded()
     {
-        var processedArchiveFileIds = Upload
-            .UploadedFiles.Select(uf => uf.ArchiveFileId)
+        var transferFileIdsWithoutUploadedFile = SourceFiles
+            .Where(sourceFile => !Upload.UploadedFiles.Any(sourceFile.IsSourceOf))
+            .Select(sourceFile => sourceFile.TransferFileId)
             .ToHashSet();
 
         return PlannedFiles
-            .Where(file => !processedArchiveFileIds.Contains(file.FileId))
+            .Where(file => transferFileIdsWithoutUploadedFile.Contains(file.FileId))
             .Sum(file => file.SizeBytes!.Value);
     }
 

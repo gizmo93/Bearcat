@@ -38,12 +38,12 @@ public class FileUploadExecutionService(
         try
         {
             var fileDto = new FileDto(
-                Id: fileToUpload.ArchiveFileId,
-                FullFileName: fileToUpload.FullFileName,
+                Id: fileToUpload.SourceFile.TransferFileId,
+                FullFileName: fileToUpload.SourceFile.FullFileName,
                 UploadId: fileToUpload.UploadId,
                 FolderId: fileToUpload.FolderId,
                 PremiumOnlyDownload: context.Upload.PremiumOnlyDownload,
-                Md5Hash: fileToUpload.Md5Hash
+                Md5Hash: fileToUpload.SourceFile.Md5Hash
             );
 
             using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
@@ -60,8 +60,8 @@ public class FileUploadExecutionService(
                 progress: new TransferProgressReporter(
                     tracker: progressTracker,
                     identifier: new TransferIdentifier(TransferType.Upload, fileToUpload.UploadId),
-                    fileId: fileToUpload.ArchiveFileId,
-                    fileName: Path.GetFileName(fileToUpload.FullFileName),
+                    fileId: fileToUpload.SourceFile.TransferFileId,
+                    fileName: Path.GetFileName(fileToUpload.SourceFile.FullFileName),
                     sourceName: context.Upload.HosterRegistration!.Name
                 ),
                 cancellationToken: fileUploadCancellationTokenSource.Token
@@ -70,13 +70,12 @@ public class FileUploadExecutionService(
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,
-                    ArchiveFileId: fileToUpload.ArchiveFileId,
-                    FullFileName: fileToUpload.FullFileName,
+                    SourceFile: fileToUpload.SourceFile,
                     FileUrl: result.FileUrl,
                     ExternalId: result.ExternalId,
                     IsSuccess: result.IsSuccess,
                     Errors: result.ErrorMessages,
-                    Md5Hash: fileToUpload.Md5Hash
+                    EmbedUrl: result.EmbedUrl
                 ),
                 processCancellationToken
             );
@@ -96,7 +95,7 @@ public class FileUploadExecutionService(
             logger.LogWarning(
                 ex,
                 "Upload for file {FilePath} for upload {UploadId} timed out after {Timeout} seconds",
-                fileToUpload.FullFileName,
+                fileToUpload.SourceFile.FullFileName,
                 fileToUpload.UploadId,
                 FileUploadTimeout.Seconds
             );
@@ -104,8 +103,7 @@ public class FileUploadExecutionService(
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,
-                    ArchiveFileId: fileToUpload.ArchiveFileId,
-                    FullFileName: fileToUpload.FullFileName,
+                    SourceFile: fileToUpload.SourceFile,
                     FileUrl: null,
                     ExternalId: null,
                     IsSuccess: false,
@@ -122,8 +120,7 @@ public class FileUploadExecutionService(
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,
-                    ArchiveFileId: fileToUpload.ArchiveFileId,
-                    FullFileName: fileToUpload.FullFileName,
+                    SourceFile: fileToUpload.SourceFile,
                     FileUrl: null,
                     ExternalId: null,
                     IsSuccess: false,
@@ -141,8 +138,7 @@ public class FileUploadExecutionService(
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,
-                    ArchiveFileId: fileToUpload.ArchiveFileId,
-                    FullFileName: fileToUpload.FullFileName,
+                    SourceFile: fileToUpload.SourceFile,
                     FileUrl: null,
                     ExternalId: null,
                     IsSuccess: false,
@@ -157,8 +153,7 @@ public class FileUploadExecutionService(
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,
-                    ArchiveFileId: fileToUpload.ArchiveFileId,
-                    FullFileName: fileToUpload.FullFileName,
+                    SourceFile: fileToUpload.SourceFile,
                     FileUrl: null,
                     ExternalId: null,
                     IsSuccess: false,
@@ -173,7 +168,7 @@ public class FileUploadExecutionService(
             logger.LogError(
                 ex,
                 "Upload for file {FilePath} for upload {UploadId} failed unexpectedly: {Message}",
-                fileToUpload.FullFileName,
+                fileToUpload.SourceFile.FullFileName,
                 fileToUpload.UploadId,
                 ex.Message
             );
@@ -181,8 +176,7 @@ public class FileUploadExecutionService(
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,
-                    ArchiveFileId: fileToUpload.ArchiveFileId,
-                    FullFileName: fileToUpload.FullFileName,
+                    SourceFile: fileToUpload.SourceFile,
                     FileUrl: null,
                     ExternalId: null,
                     IsSuccess: false,
