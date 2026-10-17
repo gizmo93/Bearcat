@@ -1,5 +1,7 @@
+using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 namespace Bearcat.Website.Pages.ManageArchives;
 
 public partial class ArchiveDetailDialog(
+    DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner
 ) : ComponentBase
@@ -20,6 +23,8 @@ public partial class ArchiveDetailDialog(
     private ArchiveReadModel Archive { get; set; } = null!;
 
     private bool isInitialized;
+
+    private bool CanDeleteArchive => Archive.ArchiveState is ArchiveState.CreationFailed;
 
     protected override async Task OnInitializedAsync()
     {
@@ -36,6 +41,33 @@ public partial class ArchiveDetailDialog(
 
         Archive = archive;
         isInitialized = true;
+    }
+
+    private async Task DeleteCreationFailedArchiveAsync()
+    {
+        var confirmation = await dialogService.ConfirmAsync(
+            L["DeleteCreationFailedArchive"],
+            L["DeleteCreationFailedArchiveConfirmation", Archive.ArchiveFolderPath],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!confirmation.Confirmed)
+        {
+            return;
+        }
+
+        await operationRunner.RunAsync(
+            (FailedArchiveCreationService service) =>
+                service.DeleteCreationFailedArchiveAsync(ArchiveId)
+        );
+
+        toastService.Success(L["CreationFailedArchiveDeleted"]);
+        await DialogRef.CloseAsync(DialogResult.Ok());
     }
 
     private async Task CloseAsync()

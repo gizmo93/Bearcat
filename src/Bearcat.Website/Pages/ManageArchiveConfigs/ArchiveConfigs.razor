@@ -127,7 +127,9 @@
                             </div>
                         </div>
                         <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
-                            <ArchiveConfigContent Config="config" ReleaseType="ReleaseType" />
+                            <ArchiveConfigContent Config="config"
+                                                  ReleaseType="ReleaseType"
+                                                  OnArchiveDeleted="ReloadAfterArchiveDeletionAsync" />
                         </BbCollapsibleContent>
                     </BbCollapsible>
                 }

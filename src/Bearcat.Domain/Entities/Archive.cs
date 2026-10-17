@@ -41,4 +41,21 @@ public class Archive
             upload.UploadState = UploadState.Pending;
         }
     }
+
+    public void MarkWaitingUploadsAsFailedAndRemoveThemFromArchive()
+    {
+        var waitingUploads = Uploads
+            .Where(u => u.UploadState == UploadState.WaitingForArchive)
+            .ToList();
+        var errorMessage = $"Archive creation failed: {string.Join(", ", ErrorMessages)}";
+
+        foreach (var upload in waitingUploads)
+        {
+            upload.UploadState = UploadState.Failed;
+            upload.ErrorMessages.Add(errorMessage);
+            upload.ArchiveId = null;
+            upload.Archive = null;
+            Uploads.Remove(upload);
+        }
+    }
 }

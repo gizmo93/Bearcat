@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
@@ -25,6 +26,7 @@ public class ArchiveCreationService(
     ITransferCancellationRegistry cancellationRegistry,
     UploadCancellationService uploadCancellationService,
     InterruptedArchiveRecoveryService interruptedArchiveRecoveryService,
+    FailedArchiveCreationService failedArchiveCreationService,
     ExistingArchiveAssignmentService existingArchiveAssignmentService,
     ArchivePackingSettingsService archivePackingSettingsService,
     ReleaseFolderPackingService releaseFolderPackingService,
@@ -34,6 +36,9 @@ public class ArchiveCreationService(
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await interruptedArchiveRecoveryService.RecoverOrDeleteInterruptedArchivesAsync(
+            cancellationToken
+        );
+        await failedArchiveCreationService.FailUploadsWaitingForCreationFailedArchivesAsync(
             cancellationToken
         );
         await AssignExistingOrCreateNewArchivesForUploadsWithoutArchiveAsync(cancellationToken);
@@ -246,10 +251,10 @@ public class ArchiveCreationService(
 
         if (!archiveResult.IsSuccess)
         {
-            await MarkArchiveCreationFailedAndNotifyAsync(
-                archive,
-                archiveResult.ErrorMessages ?? [],
-                cancellationToken
+            await failedArchiveCreationService.MarkArchiveCreationFailedAndFailWaitingUploadsAsync(
+                archive: archive,
+                errorMessages: archiveResult.ErrorMessages ?? [],
+                cancellationToken: cancellationToken
             );
 
             return;
@@ -272,31 +277,6 @@ public class ArchiveCreationService(
             archive.ArchiveConfig.Id,
             archive.ArchiveFiles.Count
         );
-    }
-
-    private async Task MarkArchiveCreationFailedAndNotifyAsync(
-        Archive archive,
-        IReadOnlyList<string> errorMessages,
-        CancellationToken cancellationToken
-    )
-    {
-        logger.LogError(
-            "Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
-            archive.ArchiveConfig.Id,
-            string.Join(",  ", errorMessages)
-        );
-
-        archive.ArchiveState = ArchiveState.CreationFailed;
-        archive.ErrorMessages.AddRange(errorMessages);
-
-        notificationService.Create(
-            kind: NotificationKind.ArchiveCreationFailed,
-            message: $"Failed to create archive: {string.Join(", ", errorMessages)}",
-            entity: archive,
-            selector: n => n.Archive
-        );
-
-        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
     }
 
     private async Task DeleteArchiveAndCancelWaitingUploadsAsync(

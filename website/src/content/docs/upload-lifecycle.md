@@ -79,8 +79,13 @@ Changing either option only affects archives created afterwards.
 You can also assign [additional archive contents](/Bearcat/additional-archive-contents/), such as
 a text file with a referral link, to include whenever Bearcat creates a new archive.
 
-After packing succeeds, the archive becomes `Created` and the upload moves to `Pending`. If packing
-fails, their states become `CreationFailed` and `Failed`.
+After packing succeeds, the archive becomes `Created` and the upload moves to `Pending`.
+
+If packing fails, the archive becomes `CreationFailed` and the upload moves to `Failed`.
+Bearcat deletes the partial archive files and saves the error on the upload.
+You can then create a manual reupload or delete the failed upload.
+
+To remove the archive entry, select **Delete failed archive** in the archive details.
 
 For reuploads, Bearcat may need to change the archive hashes or repack the files. See
 [Archive reuse and repackaging](#archive-reuse-and-repackaging) for the details.

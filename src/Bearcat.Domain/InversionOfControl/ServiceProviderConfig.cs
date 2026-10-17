@@ -34,6 +34,7 @@ using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
@@ -185,6 +186,7 @@ public static class ServiceProviderConfig
             );
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<InterruptedArchiveRecoveryService>();
+            services.AddScoped<FailedArchiveCreationService>();
             services.AddScoped<ExistingArchiveAssignmentService>();
             services.AddScoped<ArchivePackingSettingsService>();
             services.AddScoped<ReleaseFolderPackingService>();

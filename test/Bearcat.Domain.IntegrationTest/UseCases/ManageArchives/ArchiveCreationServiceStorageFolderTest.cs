@@ -10,6 +10,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
@@ -137,6 +138,12 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
                 archiveFileHashService
+            ),
+            new FailedArchiveCreationService(
+                repository,
+                Mock.Of<ILogger<FailedArchiveCreationService>>(),
+                fileSystemService,
+                notificationService
             ),
             new ExistingArchiveAssignmentService(
                 repository,

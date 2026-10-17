@@ -11,6 +11,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
@@ -125,6 +126,12 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
                 archiveFileHashService
+            ),
+            new FailedArchiveCreationService(
+                repository,
+                Mock.Of<ILogger<FailedArchiveCreationService>>(),
+                fileSystemService,
+                notificationService
             ),
             new ExistingArchiveAssignmentService(
                 repository,
@@ -1318,11 +1325,10 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_ArchiverFails_MarksArchiveAsCreationFailedAndCreatesNotification()
+    public async Task ProcessAsync_ArchiverFails_MarksArchiveAsCreationFailedAndFailsWaitingUploadsAndDeletesPartialFiles()
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
         archiverMock
             .Setup(a =>
                 a.ArchiveAsync(
@@ -1335,6 +1341,21 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<CancellationToken>()
                 )
             )
+            .Callback(
+                (
+                    string _,
+                    string destinationPath,
+                    string _,
+                    int _,
+                    string? _,
+                    ArchiveOptions _,
+                    CancellationToken _
+                ) =>
+                    File.WriteAllText(
+                        Path.Combine(destinationPath, "bearcat-release.part1.zip"),
+                        "partial"
+                    )
+            )
             .ReturnsAsync(new ArchiveResult(false, [], ["Could not create archive"]));
 
         // Act
@@ -1342,34 +1363,70 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         DbContext.ChangeTracker.Clear();
-        var result = await DbContext
+        var archive = await DbContext
             .Archives.Include(a => a.Uploads)
             .Include(a => a.Notifications)
             .SingleAsync();
+        var failedUpload = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
 
-        result.ShouldNotBeNull();
-        result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
-        result.ErrorMessages.ShouldBe(["Could not create archive"]);
-        result.Uploads.Single().Id.ShouldBe(upload.Id);
-        result.Uploads.Single().UploadState.ShouldBe(UploadState.WaitingForArchive);
-        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
-        result
-            .Notifications.Single()
+        archive.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
+        archive.ErrorMessages.ShouldBe(["Could not create archive"]);
+        archive.Uploads.ShouldBeEmpty();
+        archive
+            .Notifications.ShouldHaveSingleItem()
             .Message.ShouldBe("Failed to create archive: Could not create archive");
+        Directory.Exists(archive.ArchiveFolderPath).ShouldBeFalse();
+        failedUpload.UploadState.ShouldBe(UploadState.Failed);
+        failedUpload.ArchiveId.ShouldBeNull();
+        failedUpload.ErrorMessages.ShouldBe(["Archive creation failed: Could not create archive"]);
+        failedUpload.CanBeManuallyReuploaded().ShouldBeTrue();
         File.Exists(Path.Combine(releaseFolderPath, "__nonce.txt")).ShouldBeFalse();
-        archiverFactoryMock.Verify(f => f.GetByName("zip"), Times.Once);
+    }
+
+    [Test]
+    public async Task ProcessAsync_UploadStillWaitsForCreationFailedArchive_MarksUploadAsFailedWithoutPackingAgain()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var creationFailedArchive = new Archive
+        {
+            ArchiveConfigId = (
+                await DbContext.UploadConfigs.SingleAsync(c => c.Id == upload.UploadConfigId)
+            ).ArchiveConfigId,
+            ArchiveFolderPath = Path.Combine(archiveFilesBasePath, "failed"),
+            ArchiveState = ArchiveState.CreationFailed,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [],
+            Uploads = [upload],
+            ErrorMessages = ["Disk full"],
+        };
+        DbContext.Archives.Add(creationFailedArchive);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync();
+
+        result.UploadState.ShouldBe(UploadState.Failed);
+        result.ArchiveId.ShouldBeNull();
+        result.ErrorMessages.ShouldBe(["Archive creation failed: Disk full"]);
         archiverMock.Verify(
             a =>
                 a.ArchiveAsync(
-                    releaseFolderPath,
-                    It.Is<string>(p => p.StartsWith(archiveFilesBasePath)),
-                    "bearcat-release",
-                    512,
-                    "secret",
-                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
                     It.IsAny<CancellationToken>()
                 ),
-            Times.Once
+            Times.Never
         );
     }
 
@@ -1914,8 +1971,10 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             $"Cannot place additional archive content \"Premium text\" into the release folder because \"buy-premium.TXT\" already exists in \"{releaseFolderPath}\".",
         ]);
         result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
-        result.Uploads.Single().Id.ShouldBe(upload.Id);
-        result.Uploads.Single().UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result.Uploads.ShouldBeEmpty();
+        (await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id)).UploadState.ShouldBe(
+            UploadState.Failed
+        );
         result
             .Notifications.Single()
             .Message.ShouldBe($"Failed to create archive: {result.ErrorMessages.Single()}");
@@ -2068,8 +2127,10 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             "Cannot place additional archive content \"Premium link\" into the release folder as \"Buy-Premium.url\": Access denied",
         ]);
         result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
-        result.Uploads.Single().Id.ShouldBe(upload.Id);
-        result.Uploads.Single().UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result.Uploads.ShouldBeEmpty();
+        (await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id)).UploadState.ShouldBe(
+            UploadState.Failed
+        );
         result
             .Notifications.Single()
             .Message.ShouldBe($"Failed to create archive: {result.ErrorMessages.Single()}");

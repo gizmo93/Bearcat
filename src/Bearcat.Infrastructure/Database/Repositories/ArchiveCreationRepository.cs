@@ -134,6 +134,32 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Archive>> GetCreationFailedArchivesWithWaitingUploadsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Include(a =>
+                a.Uploads.Where(u => u.UploadState == UploadState.WaitingForArchive)
+            )
+            .Where(a =>
+                a.ArchiveState == ArchiveState.CreationFailed
+                && a.Uploads.Any(u => u.UploadState == UploadState.WaitingForArchive)
+            )
+            .OrderBy(a => a.Id)
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<Archive> GetArchiveWithUploadsAsync(
+        int archiveId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Include(a => a.Uploads)
+            .SingleAsync(a => a.Id == archiveId, cancellationToken: cancellationToken);
+    }
+
     public void Remove(Archive archive)
     {
         dbWrite.Remove(archive);

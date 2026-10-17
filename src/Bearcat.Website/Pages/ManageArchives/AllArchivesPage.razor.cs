@@ -168,7 +168,7 @@ public partial class AllArchivesPage(
             [nameof(ArchiveDetailDialog.ArchiveId)] = archiveId,
         };
 
-        await dialogService.OpenAsync<ArchiveDetailDialog>(
+        var dialog = await dialogService.OpenAsync<ArchiveDetailDialog>(
             parameters,
             new DialogOpenOptions
             {
@@ -178,5 +178,10 @@ public partial class AllArchivesPage(
                 ShowClose = true,
             }
         );
+
+        if (!dialog.Cancelled)
+        {
+            await RefreshArchivesAsync();
+        }
     }
 }

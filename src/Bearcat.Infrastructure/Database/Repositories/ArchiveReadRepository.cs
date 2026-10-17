@@ -19,6 +19,7 @@ public class ArchiveReadRepository(IBearcatReadDbContext dbRead) : IArchiveReadR
             .Archives.Where(a => a.Id == archiveId)
             .Select(a => new ArchiveReadModel(
                 a.Id,
+                a.ArchiveState,
                 a.ArchiveFolderPath,
                 a.ArchiveStorageFolder != null ? a.ArchiveStorageFolder.Name : null,
                 a.ArchiveStorageFolderId != null

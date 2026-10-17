@@ -199,6 +199,12 @@ public partial class ArchiveConfigs(
         await ApplyArchiveFolderAsync(archiveConfigId, folderPath, confirmContentChange: true);
     }
 
+    private async Task ReloadAfterArchiveDeletionAsync()
+    {
+        await LoadArchiveConfigsAsync();
+        await OnChangeAffectingOtherComponents.InvokeAsync(GetType().Name);
+    }
+
     private async Task LoadArchiveConfigsAsync()
     {
         archiveConfigs = await operationRunner.RunAsync(

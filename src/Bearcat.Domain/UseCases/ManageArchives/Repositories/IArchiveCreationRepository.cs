@@ -40,5 +40,11 @@ public interface IArchiveCreationRepository
 
     Task<IReadOnlyList<Archive>> GetInterruptedArchivesAsync(CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Archive>> GetCreationFailedArchivesWithWaitingUploadsAsync(
+        CancellationToken cancellationToken
+    );
+
+    Task<Archive> GetArchiveWithUploadsAsync(int archiveId, CancellationToken cancellationToken);
+
     void Remove(Archive archive);
 }

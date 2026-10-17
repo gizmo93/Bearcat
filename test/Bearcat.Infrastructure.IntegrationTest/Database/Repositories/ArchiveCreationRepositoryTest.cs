@@ -267,6 +267,82 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         upload.GetHosterClassName().ShouldBe("PoolHoster");
     }
 
+    [Test]
+    public async Task GetCreationFailedArchivesWithWaitingUploadsAsync_MixedArchivesAndUploads_ReturnsOnlyCreationFailedArchivesWithTheirWaitingUploads()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync("Main archive");
+        var creationFailedArchiveWithWaitingUpload = CreateArchive(
+            uploadConfig.ArchiveConfigId,
+            ArchiveState.CreationFailed,
+            storageFolder: null
+        );
+        var waitingUpload = CreateUploadOfArchive(
+            uploadConfig,
+            creationFailedArchiveWithWaitingUpload,
+            UploadState.WaitingForArchive
+        );
+        CreateUploadOfArchive(
+            uploadConfig,
+            creationFailedArchiveWithWaitingUpload,
+            UploadState.Failed
+        );
+        var creationFailedArchiveWithoutWaitingUpload = CreateArchive(
+            uploadConfig.ArchiveConfigId,
+            ArchiveState.CreationFailed,
+            storageFolder: null
+        );
+        CreateUploadOfArchive(
+            uploadConfig,
+            creationFailedArchiveWithoutWaitingUpload,
+            UploadState.Failed
+        );
+        var createdArchive = CreateArchive(
+            uploadConfig.ArchiveConfigId,
+            ArchiveState.Created,
+            storageFolder: null
+        );
+        CreateUploadOfArchive(uploadConfig, createdArchive, UploadState.WaitingForArchive);
+        DbContext.Archives.AddRange(
+            creationFailedArchiveWithWaitingUpload,
+            creationFailedArchiveWithoutWaitingUpload,
+            createdArchive
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetCreationFailedArchivesWithWaitingUploadsAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        var archive = result.ShouldHaveSingleItem();
+        archive.Id.ShouldBe(creationFailedArchiveWithWaitingUpload.Id);
+        archive.Uploads.ShouldHaveSingleItem().Id.ShouldBe(waitingUpload.Id);
+    }
+
+    private static Upload CreateUploadOfArchive(
+        UploadConfig uploadConfig,
+        Archive archive,
+        UploadState uploadState
+    )
+    {
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = uploadState,
+            OnlineState = OnlineState.Unknown,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
+        archive.Uploads.Add(upload);
+
+        return upload;
+    }
+
     private async Task<HosterRegistration> AddHosterRegistrationAsync(string hosterClassName)
     {
         var hosterRegistration = new HosterRegistration

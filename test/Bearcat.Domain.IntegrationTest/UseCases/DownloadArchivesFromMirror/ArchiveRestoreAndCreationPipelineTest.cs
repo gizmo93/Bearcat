@@ -18,6 +18,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
@@ -178,6 +179,12 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
                 archiveFileHashService
+            ),
+            new FailedArchiveCreationService(
+                repository,
+                NullLogger<FailedArchiveCreationService>.Instance,
+                fileSystemService,
+                notificationService
             ),
             new ExistingArchiveAssignmentService(
                 repository,

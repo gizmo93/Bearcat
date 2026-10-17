@@ -15,6 +15,9 @@ public partial class ArchiveConfigContent(DialogService dialogService)
     [Parameter]
     public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
 
+    [Parameter]
+    public EventCallback OnArchiveDeleted { get; set; }
+
     private async Task ShowArchiveDialogAsync(int archiveId)
     {
         var parameters = new Dictionary<string, object?>
@@ -22,7 +25,7 @@ public partial class ArchiveConfigContent(DialogService dialogService)
             [nameof(ArchiveDetailDialog.ArchiveId)] = archiveId,
         };
 
-        await dialogService.OpenAsync<ArchiveDetailDialog>(
+        var dialog = await dialogService.OpenAsync<ArchiveDetailDialog>(
             parameters,
             new DialogOpenOptions
             {
@@ -32,5 +35,10 @@ public partial class ArchiveConfigContent(DialogService dialogService)
                 ShowClose = true,
             }
         );
+
+        if (!dialog.Cancelled)
+        {
+            await OnArchiveDeleted.InvokeAsync();
+        }
     }
 }

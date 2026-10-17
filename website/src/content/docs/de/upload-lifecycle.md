@@ -81,7 +81,12 @@ Du kannst ausserdem [zusätzliche Archivinhalte](/Bearcat/de/additional-archive-
 eine Textdatei mit einem Empfehlungslink, die Bearcat in jedes neu erstellte Archiv aufnimmt.
 
 Nach dem Packen hat das Archiv den Status `Created` und der Upload `Pending`.
-Schlägt das Packen fehl, haben sie den Status `CreationFailed` und `Failed`.
+
+Schlägt das Packen fehl, erhält das Archiv den Status `CreationFailed` und der Upload `Failed`.
+Bearcat löscht die unvollständigen Archivdateien und speichert den Fehler beim Upload.
+Du kannst danach einen manuellen Reupload erstellen oder den fehlgeschlagenen Upload löschen.
+
+Den Archiveintrag löschst du in den Archivdetails über **Fehlgeschlagenes Archiv löschen**.
 
 Für Reuploads muss Bearcat eventuell die Archivhashes ändern oder die Dateien neu packen. Details unter
 [Archivwiederverwendung und Repackaging](#archivwiederverwendung-und-repackaging).

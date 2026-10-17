@@ -42,7 +42,14 @@
         </BbDataTable>
     </div>
 
-    <div class="bearcat-archive-dialog-footer">
+    <div class="bearcat-archive-dialog-footer gap-2">
+        @if (CanDeleteArchive)
+        {
+            <BbButton Variant="ButtonVariant.Destructive" OnClick="DeleteCreationFailedArchiveAsync">
+                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                @L["DeleteCreationFailedArchive"]
+            </BbButton>
+        }
         <BbButton Variant="ButtonVariant.Outline" OnClick="CloseAsync">
             @L["Close"]
         </BbButton>
