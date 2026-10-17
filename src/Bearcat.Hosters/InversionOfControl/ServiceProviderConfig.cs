@@ -28,6 +28,7 @@ using Bearcat.Hosters.Shared.CostAction.InversionOfControl;
 using Bearcat.Hosters.Turbobit.InversionOfControl;
 using Bearcat.Hosters.UploadG.InversionOfControl;
 using Bearcat.Hosters.Uploady.InversionOfControl;
+using Bearcat.Hosters.Vidara.InversionOfControl;
 using Bearcat.Hosters.Videro.InversionOfControl;
 using Bearcat.Hosters.Vixeo.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +63,7 @@ public static class ServiceProviderConfig
         services.AddPlaymate();
         services.AddDoodStream();
         services.AddVidero();
+        services.AddVidara();
         services.AddTurbobit();
         services.AddUploadG();
         services.AddUploady();

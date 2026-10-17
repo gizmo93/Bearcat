@@ -306,7 +306,7 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
 
         return new XVideoSharingResponse(
             (int)apiException.StatusCode,
-            apiException.Content,
+            apiException.Content?.Trim(),
             default
         );
     }
