@@ -12,6 +12,8 @@ zu einem Videohoster hoch. Bearcat erstellt dabei keine Archivparts und lädt ke
 ## Unterstützte Videohoster
 
 - MixDrop
+- Playmate
+- Vixeo
 
 ## Voraussetzungen
 
@@ -88,3 +90,23 @@ Lege einen MixDrop-Account mit diesen Feldern an:
 | --- | --- |
 | **EmailAddress** | Die E-Mail-Adresse deines MixDrop-Accounts. |
 | **ApiKey** | Der API-Schlüssel aus den API-Einstellungen deines MixDrop-Accounts. |
+
+## Playmate
+
+Lege einen Playmate-Account mit diesem Feld an:
+
+| Feld | Wert |
+| --- | --- |
+| **ApiKey** | Der API-Schlüssel deines Playmate-Accounts. |
+
+Playmate hat keine eigene Dateiseite. Link und Einbettungslink sind dieselbe Einbettungs-URL.
+
+## Vixeo
+
+Lege einen Vixeo-Account mit diesem Feld an:
+
+| Feld | Wert |
+| --- | --- |
+| **ApiKey** | Der API-Schlüssel deines Vixeo-Accounts. |
+
+Vixeo hat keine eigene Dateiseite. Link und Einbettungslink sind dieselbe Einbettungs-URL.

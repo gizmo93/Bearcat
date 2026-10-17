@@ -20,12 +20,14 @@ using Bearcat.Hosters.KrakenFiles.InversionOfControl;
 using Bearcat.Hosters.Mega4Upload.InversionOfControl;
 using Bearcat.Hosters.MixDrop.InversionOfControl;
 using Bearcat.Hosters.Nitroflare.InversionOfControl;
+using Bearcat.Hosters.Playmate.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.CostAction.InversionOfControl;
 using Bearcat.Hosters.Turbobit.InversionOfControl;
 using Bearcat.Hosters.UploadG.InversionOfControl;
 using Bearcat.Hosters.Uploady.InversionOfControl;
+using Bearcat.Hosters.Vixeo.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters.InversionOfControl;
@@ -55,9 +57,11 @@ public static class ServiceProviderConfig
         services.AddMega4Upload();
         services.AddMixDrop();
         services.AddNitroflare();
+        services.AddPlaymate();
         services.AddTurbobit();
         services.AddUploadG();
         services.AddUploady();
+        services.AddVixeo();
         services.AddCostAction();
 
         services.AddScoped<IHosterFactory, HosterFactory>();

@@ -12,6 +12,8 @@ directly to a video hoster. No archive parts are created or uploaded.
 ## Supported video hosters
 
 - MixDrop
+- Playmate
+- Vixeo
 
 ## Requirements
 
@@ -87,3 +89,23 @@ Add a MixDrop account with these fields:
 | --- | --- |
 | **EmailAddress** | The email address of your MixDrop account. |
 | **ApiKey** | The API key from the API settings of your MixDrop account. |
+
+## Playmate
+
+Add a Playmate account with this field:
+
+| Field | Value |
+| --- | --- |
+| **ApiKey** | The API key of your Playmate account. |
+
+Playmate has no separate file page. The link and the embed link are the same embed URL.
+
+## Vixeo
+
+Add a Vixeo account with this field:
+
+| Field | Value |
+| --- | --- |
+| **ApiKey** | The API key of your Vixeo account. |
+
+Vixeo has no separate file page. The link and the embed link are the same embed URL.
