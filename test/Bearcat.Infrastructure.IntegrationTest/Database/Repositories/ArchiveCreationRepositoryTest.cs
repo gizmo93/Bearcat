@@ -273,7 +273,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         // Arrange
         var uploadConfig = await AddUploadConfigAsync("Main archive");
         var creationFailedArchiveWithWaitingUpload = CreateArchive(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             ArchiveState.CreationFailed,
             storageFolder: null
         );
@@ -288,7 +288,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
             UploadState.Failed
         );
         var creationFailedArchiveWithoutWaitingUpload = CreateArchive(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             ArchiveState.CreationFailed,
             storageFolder: null
         );
@@ -298,7 +298,7 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
             UploadState.Failed
         );
         var createdArchive = CreateArchive(
-            uploadConfig.ArchiveConfigId,
+            uploadConfig.ArchiveConfigId!.Value,
             ArchiveState.Created,
             storageFolder: null
         );

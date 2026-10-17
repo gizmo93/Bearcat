@@ -25,6 +25,7 @@ using Bearcat.Hosters.Playmate.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.CostAction.InversionOfControl;
+using Bearcat.Hosters.Streamtape.InversionOfControl;
 using Bearcat.Hosters.Turbobit.InversionOfControl;
 using Bearcat.Hosters.UploadG.InversionOfControl;
 using Bearcat.Hosters.Uploady.InversionOfControl;
@@ -64,6 +65,7 @@ public static class ServiceProviderConfig
         services.AddDoodStream();
         services.AddVidero();
         services.AddVidara();
+        services.AddStreamtape();
         services.AddTurbobit();
         services.AddUploadG();
         services.AddUploady();

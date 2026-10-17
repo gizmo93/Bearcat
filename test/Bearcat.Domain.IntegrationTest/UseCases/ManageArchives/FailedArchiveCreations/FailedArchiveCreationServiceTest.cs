@@ -79,6 +79,7 @@ public class FailedArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     IsActive = true,
                 },
                 Name = "Default upload",
+                UploadSource = UploadSource.ArchiveFiles,
             },
             CreatedAt = DateTime.UtcNow,
             UploadState = UploadState.WaitingForArchive,

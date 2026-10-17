@@ -1,6 +1,6 @@
 ---
 title: "Videohoster"
-description: "Videos direkt zu DoodStream, MixDrop, Playmate, Vidara, Videro oder Vixeo hochladen, ohne sie vorher zu packen."
+description: "Videos direkt zu DoodStream, MixDrop, Playmate, Streamtape, Vidara, Videro oder Vixeo hochladen, ohne sie vorher zu packen."
 ---
 
 Bearcat kann die Hauptvideodatei eines Releases direkt zu einem Videohoster hochladen, ohne sie vorher
@@ -14,6 +14,7 @@ du den Videoplayer auf einer anderen Seite einbinden.
 - DoodStream
 - MixDrop
 - Playmate
+- Streamtape
 - Vidara
 - Videro
 - Vixeo
@@ -93,6 +94,12 @@ von DoodStream weitergeleitet. Bearcat verschiebt jeden Upload in einen eigenen 
 
 Playmate hat keine eigene Dateiseite. Dateilink und Einbettungslink sind dieselbe URL zum Videoplayer.
 Bearcat verschiebt jeden Upload in einen eigenen Ordner.
+
+## Streamtape
+
+Streamtape braucht das **API-Login** und den **API-Schlüssel** aus den Kontoeinstellungen von Streamtape. Trage
+sie in die Felder `ApiLogin` und `ApiKey` ein. Der Dateilink verwendet streamtape.com/v/…, der
+Einbettungslink streamtape.com/e/…. Bearcat lädt jeden Upload direkt in einen eigenen Ordner hoch.
 
 ## Vidara
 

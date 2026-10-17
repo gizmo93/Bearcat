@@ -1392,7 +1392,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         {
             ArchiveConfigId = (
                 await DbContext.UploadConfigs.SingleAsync(c => c.Id == upload.UploadConfigId)
-            ).ArchiveConfigId,
+            )
+                .ArchiveConfigId!
+                .Value,
             ArchiveFolderPath = Path.Combine(archiveFilesBasePath, "failed"),
             ArchiveState = ArchiveState.CreationFailed,
             ArchiveFileSizeMb = 512,
