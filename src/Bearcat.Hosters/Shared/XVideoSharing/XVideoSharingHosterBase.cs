@@ -76,7 +76,7 @@ public abstract class XVideoSharingHosterBase<TConfig>(
                     IsSuccess: true,
                     FileDto: fileDto,
                     ErrorMessages: [],
-                    FileUrl: uploadedFile.EmbedUrl,
+                    FileUrl: uploadedFile.FileUrl,
                     ExternalId: uploadedFile.FileCode,
                     EmbedUrl: uploadedFile.EmbedUrl
                 );

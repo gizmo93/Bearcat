@@ -12,7 +12,7 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
 {
     private const string MimeType = "application/octet-stream";
 
-    private const int SuccessStatus = 200;
+    protected const int SuccessStatus = 200;
 
     protected static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -23,6 +23,8 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
     protected abstract string HosterName { get; }
 
     protected virtual int MaxFileCodesPerFileInfoRequest => 50;
+
+    protected virtual TimeSpan FileInfoRequestInterval => TimeSpan.Zero;
 
     public async Task EnsureCredentialsAcceptedAsync(
         string apiKey,
@@ -58,7 +60,7 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
         multipartContent.Add(fileContent, uploadServer.FileFieldName, fileName);
 
         using var httpResponse = await httpClient.PostAsync(
-            uploadServer.UploadUrl,
+            BuildUploadUrl(uploadServer.UploadUrl, apiKey),
             multipartContent,
             cancellationToken
         );
@@ -96,14 +98,29 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
             StringComparer.Ordinal
         );
 
-        foreach (var fileCodeChunk in fileCodes.Chunk(MaxFileCodesPerFileInfoRequest))
+        foreach (
+            var (chunkIndex, fileCodeChunk) in fileCodes
+                .Chunk(MaxFileCodesPerFileInfoRequest)
+                .Index()
+        )
         {
-            var fileInfoResult = await ReadSuccessfulResultAsync(
-                RequestFileInfoAsync(apiKey, string.Join(',', fileCodeChunk), cancellationToken),
-                "file info"
+            if (chunkIndex > 0)
+            {
+                await Task.Delay(FileInfoRequestInterval, cancellationToken);
+            }
+
+            var fileInfoResponse = await ReadResponseAsync(
+                RequestFileInfoAsync(apiKey, string.Join(',', fileCodeChunk), cancellationToken)
             );
 
-            foreach (var fileStatus in ReadFileStatuses(fileInfoResult))
+            if (IsUnknownFileCodesResponse(fileInfoResponse))
+            {
+                continue;
+            }
+
+            EnsureSuccess(fileInfoResponse, "file info");
+
+            foreach (var fileStatus in ReadFileStatuses(fileInfoResponse.Result))
             {
                 isOnlinePerFileCode[fileStatus.FileCode] = fileStatus.IsOnline;
             }
@@ -178,23 +195,32 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
         CancellationToken cancellationToken
     );
 
-    protected abstract Task<ApiResponse<XVideoSharingResponse>> RequestFolderListAsync(
+    protected virtual Task<ApiResponse<XVideoSharingResponse>> RequestFolderListAsync(
         string apiKey,
         CancellationToken cancellationToken
-    );
+    )
+    {
+        throw CreateFoldersNotSupportedException();
+    }
 
-    protected abstract Task<ApiResponse<XVideoSharingResponse>> RequestFolderCreationAsync(
+    protected virtual Task<ApiResponse<XVideoSharingResponse>> RequestFolderCreationAsync(
         string apiKey,
         string folderName,
         CancellationToken cancellationToken
-    );
+    )
+    {
+        throw CreateFoldersNotSupportedException();
+    }
 
-    protected abstract Task<ApiResponse<XVideoSharingResponse>> RequestFileMoveAsync(
+    protected virtual Task<ApiResponse<XVideoSharingResponse>> RequestFileMoveAsync(
         string apiKey,
         string fileCode,
         string folderId,
         CancellationToken cancellationToken
-    );
+    )
+    {
+        throw CreateFoldersNotSupportedException();
+    }
 
     protected abstract XVideoSharingUploadServer ReadUploadServer(JsonElement result);
 
@@ -202,12 +228,23 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
 
     protected abstract IReadOnlyList<XVideoSharingFileStatus> ReadFileStatuses(JsonElement result);
 
-    protected abstract IReadOnlyList<XVideoSharingFolder> ReadFolders(JsonElement result);
+    protected virtual IReadOnlyList<XVideoSharingFolder> ReadFolders(JsonElement result)
+    {
+        throw CreateFoldersNotSupportedException();
+    }
 
-    protected abstract string ReadCreatedFolderId(JsonElement result);
+    protected virtual string ReadCreatedFolderId(JsonElement result)
+    {
+        throw CreateFoldersNotSupportedException();
+    }
+
+    protected virtual string BuildUploadUrl(string uploadServerUrl, string apiKey) =>
+        uploadServerUrl;
 
     protected virtual bool IsApiKeyRejected(XVideoSharingResponse response) =>
         response.Status is 401 or 403;
+
+    protected virtual bool IsUnknownFileCodesResponse(XVideoSharingResponse response) => false;
 
     protected T DeserializeResult<T>(JsonElement result)
     {
@@ -220,12 +257,20 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
         string operationName
     )
     {
-        using var apiResponse = await request;
-        var response = ReadResponse(apiResponse);
+        var response = await ReadResponseAsync(request);
 
         EnsureSuccess(response, operationName);
 
         return response.Result;
+    }
+
+    private async Task<XVideoSharingResponse> ReadResponseAsync(
+        Task<ApiResponse<XVideoSharingResponse>> request
+    )
+    {
+        using var apiResponse = await request;
+
+        return ReadResponse(apiResponse);
     }
 
     private XVideoSharingResponse ReadResponse(ApiResponse<XVideoSharingResponse> apiResponse)
@@ -303,5 +348,10 @@ public abstract class XVideoSharingApiClient(HttpClientProvider httpClientProvid
         throw new HttpRequestException(
             $"{HosterName} {operationName} request failed with status {response.Status}: {response.Msg}"
         );
+    }
+
+    private NotSupportedException CreateFoldersNotSupportedException()
+    {
+        return new NotSupportedException($"{HosterName} does not support folders");
     }
 }

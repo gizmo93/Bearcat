@@ -1,6 +1,6 @@
 ---
 title: "Video Hosters"
-description: "Upload videos directly to MixDrop, Playmate, or Vixeo without packing them first."
+description: "Upload videos directly to DoodStream, MixDrop, Playmate, Videro, or Vixeo without packing them first."
 ---
 
 Bearcat can upload a release's main video file directly to a video hoster without packing it first.
@@ -11,8 +11,10 @@ another page.
 
 ## Supported video hosters
 
+- DoodStream
 - MixDrop
 - Playmate
+- Videro
 - Vixeo
 
 ## Requirements
@@ -79,9 +81,19 @@ and are marked **Video**.
 Use `upload.is_video_upload` and `upload.embed_links` in
 [forum post templates](/Bearcat/forum-post-templates/#video-uploads).
 
+## DoodStream
+
+The file link and embed link use doodstream.com, which redirects to DoodStream's current player domain.
+Bearcat moves each upload into its own folder.
+
 ## Playmate
 
 Playmate has no separate file page. The file link and embed link use the same video player URL.
+Bearcat moves each upload into its own folder.
+
+## Videro
+
+The file link and embed link use videro.my. Videro has no folders, so uploads stay in the account root.
 
 ## Vixeo
 

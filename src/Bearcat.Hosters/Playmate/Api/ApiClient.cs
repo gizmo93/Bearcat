@@ -102,7 +102,11 @@ public class ApiClient(
             .AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries)
             .Last();
 
-        return new XVideoSharingUploadedFile(FileCode: fileCode, EmbedUrl: uploadedFile.EmbedUrl);
+        return new XVideoSharingUploadedFile(
+            FileCode: fileCode,
+            FileUrl: uploadedFile.EmbedUrl,
+            EmbedUrl: uploadedFile.EmbedUrl
+        );
     }
 
     protected override IReadOnlyList<XVideoSharingFileStatus> ReadFileStatuses(JsonElement result)

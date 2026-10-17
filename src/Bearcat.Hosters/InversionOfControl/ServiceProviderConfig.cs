@@ -5,6 +5,7 @@ using Bearcat.Hosters.ClicknUpload.InversionOfControl;
 using Bearcat.Hosters.CloudFam.InversionOfControl;
 using Bearcat.Hosters.DataVaults.InversionOfControl;
 using Bearcat.Hosters.DDownload.InversionOfControl;
+using Bearcat.Hosters.DoodStream.InversionOfControl;
 using Bearcat.Hosters.Fast2Share.InversionOfControl;
 using Bearcat.Hosters.Fichier.InversionOfControl;
 using Bearcat.Hosters.FileQ.InversionOfControl;
@@ -27,6 +28,7 @@ using Bearcat.Hosters.Shared.CostAction.InversionOfControl;
 using Bearcat.Hosters.Turbobit.InversionOfControl;
 using Bearcat.Hosters.UploadG.InversionOfControl;
 using Bearcat.Hosters.Uploady.InversionOfControl;
+using Bearcat.Hosters.Videro.InversionOfControl;
 using Bearcat.Hosters.Vixeo.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -58,6 +60,8 @@ public static class ServiceProviderConfig
         services.AddMixDrop();
         services.AddNitroflare();
         services.AddPlaymate();
+        services.AddDoodStream();
+        services.AddVidero();
         services.AddTurbobit();
         services.AddUploadG();
         services.AddUploady();
