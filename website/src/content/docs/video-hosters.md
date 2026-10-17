@@ -82,31 +82,3 @@ and are marked **Video**.
 
 Use `upload.is_video_upload` and `upload.embed_links` in
 [forum post templates](/Bearcat/forum-post-templates/#video-uploads).
-
-## DoodStream
-
-The file link and embed link use doodstream.com, which redirects to DoodStream's current player domain.
-Bearcat moves each upload into its own folder.
-
-## Playmate
-
-Playmate has no separate file page. The file link and embed link use the same video player URL.
-Bearcat moves each upload into its own folder.
-
-## Streamtape
-
-Streamtape needs the **API login** and **API key** from the Streamtape account settings. Enter them in
-the fields `ApiLogin` and `ApiKey`. The file link uses streamtape.com/v/…, the embed link uses
-streamtape.com/e/…. Bearcat uploads each file directly into its own folder.
-
-## Vidara
-
-The file link and embed link use vidara.to. Bearcat moves each upload into its own folder.
-
-## Videro
-
-The file link and embed link use videro.my. Videro has no folders, so uploads stay in the account root.
-
-## Vixeo
-
-Vixeo has no separate file page. The file link and embed link use the same video player URL.
