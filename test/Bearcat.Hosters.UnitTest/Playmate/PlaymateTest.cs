@@ -166,6 +166,96 @@ public class PlaymateTest
     }
 
     [Test]
+    public async Task UploadFileAsync_FolderIdSet_MovesUploadedFileIntoFolder()
+    {
+        // Arrange
+        httpMessageHandler.RespondWith(request =>
+            request.RequestUri!.AbsolutePath switch
+            {
+                "/upload/server" =>
+                    $$"""{"msg":"OK","result":{"file_field":"vsrc","key_field":"api_key","upload_url":"{{UploadUrl}}"},"status":200}""",
+                "/file/set_folder" => """{"msg":"OK","result":true,"status":200}""",
+                _ => """{"filecode":"https://playmate.to/embed/X2or9didXf81x"}""",
+            }
+        );
+
+        // Act
+        var result = await hoster.UploadFileAsync(
+            new FileDto(Id: 7, FullFileName: filePath, UploadId: 1, FolderId: "2073"),
+            config,
+            Mock.Of<ITransferProgress>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        var moveRequest = httpMessageHandler.Requests.Last();
+        moveRequest.Uri.AbsolutePath.ShouldBe("/file/set_folder");
+        var query = HttpUtility.ParseQueryString(moveRequest.Uri.Query);
+        query["key"].ShouldBe(ApiKey);
+        query["file_code"].ShouldBe("X2or9didXf81x");
+        query["fld_id"].ShouldBe("2073");
+    }
+
+    [Test]
+    public async Task UploadFileAsync_MovingIntoFolderFails_ReturnsSuccessWithoutUploadingAgain()
+    {
+        // Arrange
+        httpMessageHandler.RespondWith(request =>
+            request.RequestUri!.AbsolutePath switch
+            {
+                "/upload/server" =>
+                    $$"""{"msg":"OK","result":{"file_field":"vsrc","key_field":"api_key","upload_url":"{{UploadUrl}}"},"status":200}""",
+                "/file/set_folder" => """{"msg":"Folder not found","status":400}""",
+                _ => """{"filecode":"https://playmate.to/embed/X2or9didXf81x"}""",
+            }
+        );
+
+        // Act
+        var result = await hoster.UploadFileAsync(
+            new FileDto(Id: 7, FullFileName: filePath, UploadId: 1, FolderId: "2073"),
+            config,
+            Mock.Of<ITransferProgress>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.ExternalId.ShouldBe("X2or9didXf81x");
+        httpMessageHandler.Requests.Count(request => request.Method == HttpMethod.Post).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task CheckFilesExistAsync_FileCodeMissingFromFileInfo_MapsToOffline()
+    {
+        // Arrange
+        httpMessageHandler.RespondWith(_ =>
+            """{"msg":"OK","result":[{"file_code":"activecode","state":"active","status":200}],"status":200}"""
+        );
+
+        // Act
+        var result = await hoster.CheckFilesExistAsync(
+            config,
+            [
+                new FileUrlToCheckDto("https://playmate.to/embed/activecode", "activecode"),
+                new FileUrlToCheckDto("https://playmate.to/embed/missingcode", "missingcode"),
+            ],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.StatusPerFileUrl.ShouldBe(
+            new Dictionary<string, bool>
+            {
+                ["https://playmate.to/embed/activecode"] = true,
+                ["https://playmate.to/embed/missingcode"] = false,
+            },
+            ignoreOrder: true
+        );
+    }
+
+    [Test]
     public async Task CheckFilesExistAsync_MoreThanFiftyFiles_RequestsFileInfoInBatchesOfFifty()
     {
         // Arrange

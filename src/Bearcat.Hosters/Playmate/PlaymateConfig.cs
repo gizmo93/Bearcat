@@ -1,8 +1,8 @@
-using Bearcat.Abstractions.Hoster;
+using Bearcat.Hosters.Shared.XVideoSharing;
 
 namespace Bearcat.Hosters.Playmate;
 
-public record PlaymateConfig : IHosterConfig
+public record PlaymateConfig : IXVideoSharingHosterConfig
 {
     public string ApiKey { get; init; } = null!;
 

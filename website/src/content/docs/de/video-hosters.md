@@ -1,6 +1,6 @@
 ---
 title: "Videohoster"
-description: "Videos direkt zu MixDrop, Playmate oder Vixeo hochladen, ohne sie vorher zu packen."
+description: "Videos direkt zu DoodStream, MixDrop, Playmate, Streamtape, Vidara, Videro oder Vixeo hochladen, ohne sie vorher zu packen."
 ---
 
 Bearcat kann die Hauptvideodatei eines Releases direkt zu einem Videohoster hochladen, ohne sie vorher
@@ -11,8 +11,12 @@ du den Videoplayer auf einer anderen Seite einbinden.
 
 ## Unterstützte Videohoster
 
+- DoodStream
 - MixDrop
 - Playmate
+- Streamtape
+- Vidara
+- Videro
 - Vixeo
 
 ## Voraussetzungen
@@ -81,9 +85,31 @@ Uploadkonfiguration und sind mit **Video** markiert.
 In [Forenpostvorlagen](/Bearcat/de/forum-post-templates/#videouploads) kannst du `upload.is_video_upload`
 und `upload.embed_links` verwenden.
 
+## DoodStream
+
+Dateilink und Einbettungslink verwenden doodstream.com. Von dort wirst du auf die aktuelle Playerdomain
+von DoodStream weitergeleitet. Bearcat verschiebt jeden Upload in einen eigenen Ordner.
+
 ## Playmate
 
 Playmate hat keine eigene Dateiseite. Dateilink und Einbettungslink sind dieselbe URL zum Videoplayer.
+Bearcat verschiebt jeden Upload in einen eigenen Ordner.
+
+## Streamtape
+
+Streamtape braucht das **API-Login** und den **API-Schlüssel** aus den Kontoeinstellungen von Streamtape. Trage
+sie in die Felder `ApiLogin` und `ApiKey` ein. Der Dateilink verwendet streamtape.com/v/…, der
+Einbettungslink streamtape.com/e/…. Bearcat lädt jeden Upload direkt in einen eigenen Ordner hoch.
+
+## Vidara
+
+Dateilink und Einbettungslink verwenden vidara.to.
+Bearcat verschiebt jeden Upload in einen eigenen Ordner.
+
+## Videro
+
+Dateilink und Einbettungslink verwenden videro.my. Videro hat keine Ordner, Uploads bleiben deshalb im
+Stammverzeichnis des Accounts.
 
 ## Vixeo
 
