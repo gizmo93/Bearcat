@@ -83,6 +83,27 @@ Ein vollständiges Beispiel mit NFO und Links von Linkcryptern:
 Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases der Collection mit
 `{{~ for release in releases ~}}`.
 
+### Videouploads
+
+Uploads zu einem [Videohoster](/Bearcat/de/video-hosters/) haben innerhalb von
+`{{~ for upload in uploads ~}}` zwei weitere Variablen:
+
+- `upload.is_video_upload`: `true` bei einem Videoupload.
+- `upload.embed_links`: die Einbettungslinks, in derselben Reihenfolge wie `upload.links`. Ein Eintrag bei
+  einem Videoupload, leer bei Archivuploads.
+
+Bei Videouploads sind `upload.archive_format` und `upload.archive_password` leer.
+
+```text
+{{~ for upload in uploads ~}}
+{{~ if upload.is_video_upload ~}}
+{{~ for embed_link in upload.embed_links ~}}
+[URL]{{ embed_link }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+{{~ end ~}}
+```
+
 ## Post rendern
 
 Öffne ein Release oder eine Releasecollection und klicke im Pfeilmenü von **Im Forum posten** auf

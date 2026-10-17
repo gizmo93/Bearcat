@@ -5,6 +5,7 @@ using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -13,6 +14,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 public class ReleaseCollectionService(
     IReleaseCollectionWriteRepository writeRepository,
     ICollectionLinkCrypterContainerUpdater collectionContainerUpdater,
+    UploadSourceValidator uploadSourceValidator,
     TimeProvider timeProvider
 )
 {
@@ -164,11 +166,18 @@ public class ReleaseCollectionService(
     {
         await writeRepository.GetByIdAsync(releaseCollectionId, cancellationToken);
 
+        await uploadSourceValidator.ThrowIfUploadTargetDoesNotMatchAsync(
+            uploadSource: UploadSource.ArchiveFiles,
+            uploadTarget: uploadTarget,
+            cancellationToken: cancellationToken
+        );
+
         var (cleanedName, key) = await ResolveUniqueSlotKeyAsync(
             releaseCollectionId,
             name,
             cancellationToken
         );
+
         var archiveConfigTargets = await GetValidatedArchiveConfigTargetsAsync(
             releaseCollectionId,
             CleanRequired(archiveConfigName, nameof(archiveConfigName)),
@@ -257,13 +266,14 @@ public class ReleaseCollectionService(
     )
     {
         var releaseCount = await writeRepository.GetReleaseCountAsync(
-            releaseCollectionId,
-            cancellationToken
+            releaseCollectionId: releaseCollectionId,
+            cancellationToken: cancellationToken
         );
+
         var archiveConfigTargets = await writeRepository.GetArchiveConfigTargetsAsync(
-            releaseCollectionId,
-            archiveConfigName,
-            cancellationToken
+            releaseCollectionId: releaseCollectionId,
+            archiveConfigName: archiveConfigName,
+            cancellationToken: cancellationToken
         );
 
         var targetsByReleaseId = archiveConfigTargets
@@ -290,8 +300,8 @@ public class ReleaseCollectionService(
     )
     {
         var uploadSlot = await writeRepository.GetUploadSlotForDeleteAsync(
-            collectionUploadSlotId,
-            cancellationToken
+            collectionUploadSlotId: collectionUploadSlotId,
+            cancellationToken: cancellationToken
         );
 
         foreach (var uploadConfig in uploadSlot.UploadConfigs.ToList())
@@ -310,8 +320,8 @@ public class ReleaseCollectionService(
     )
     {
         var releaseCollection = await writeRepository.GetByIdWithSlotsAsync(
-            releaseCollectionId,
-            cancellationToken
+            releaseCollectionId: releaseCollectionId,
+            cancellationToken: cancellationToken
         );
 
         var release = await writeRepository.GetReleaseByIdAsync(releaseId, cancellationToken);
@@ -341,9 +351,9 @@ public class ReleaseCollectionService(
                 .ToList();
 
             var archiveConfigTargets = await writeRepository.GetArchiveConfigTargetsForReleaseAsync(
-                releaseId: releaseId,
-                archiveConfigNames: archiveConfigNames!,
-                cancellationToken: cancellationToken
+                releaseId,
+                archiveConfigNames!,
+                cancellationToken
             );
 
             var targetsByName = archiveConfigTargets.ToDictionary(

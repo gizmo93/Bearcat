@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -16,6 +17,17 @@ public class UploadConfigLinkCrypterWriteRepository(IBearcatWriteDbContext dbWri
             u => u.Id == id,
             cancellationToken
         );
+    }
+
+    public async Task<UploadSource> GetUploadSourceOfUploadConfigAsync(
+        int uploadConfigId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .UploadConfigs.Where(uploadConfig => uploadConfig.Id == uploadConfigId)
+            .Select(uploadConfig => uploadConfig.UploadSource)
+            .FirstAsync(cancellationToken);
     }
 
     public void Add(UploadConfigLinkCrypter uploadConfigLinkCrypter)

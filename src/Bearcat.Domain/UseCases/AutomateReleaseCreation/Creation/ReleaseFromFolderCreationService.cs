@@ -124,15 +124,16 @@ public class ReleaseFromFolderCreationService(
         {
             var uploadConfig = new UploadConfig
             {
-                UploadSource = UploadSource.ArchiveFiles,
+                UploadSource = template.UploadSource,
                 Name = template.Name.TrimOrNullWhenWhitespace() ?? template.GetUploadTargetName(),
                 HosterRegistrationId = template.HosterRegistrationId,
                 HosterAccountPoolId = template.HosterAccountPoolId,
                 PremiumOnlyDownload = template.PremiumOnlyDownload,
-                ArchiveConfig =
-                    releaseType is ReleaseType.Managed
-                        ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId!.Value]
-                        : unmanagedArchiveConfig!,
+                ArchiveConfig = GetArchiveConfigOrNull(
+                    template: template,
+                    archiveConfigsByTemplateId: archiveConfigsByTemplateId,
+                    unmanagedArchiveConfig: unmanagedArchiveConfig
+                ),
                 Uploads = [],
                 LinkCrypters = template
                     .LinkCrypterTemplates.Select(linkCrypter => new UploadConfigLinkCrypter
@@ -164,5 +165,20 @@ public class ReleaseFromFolderCreationService(
             .ToList();
 
         return new ReleaseFromTemplateData(release, uploadConfigMatches);
+    }
+
+    private static ArchiveConfig? GetArchiveConfigOrNull(
+        UploadConfigTemplate template,
+        Dictionary<int, ArchiveConfig> archiveConfigsByTemplateId,
+        ArchiveConfig? unmanagedArchiveConfig
+    )
+    {
+        if (template.UploadSource == UploadSource.VideoFiles)
+        {
+            return null;
+        }
+
+        return unmanagedArchiveConfig
+            ?? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId!.Value];
     }
 }

@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -50,6 +51,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
                 ),
                 NoOpSecretProtector.Instance
             ),
+            TestUploadSourceValidator.Create(DbContext),
             CreateTimeProvider()
         );
     }

@@ -277,6 +277,7 @@ public class ReleaseTemplateRepository(
                     u.Id,
                     u.Name,
                     string.IsNullOrWhiteSpace(u.Name) ? u.GetUploadTargetName() : u.Name,
+                    u.UploadSource,
                     u.HosterRegistrationId,
                     u.HosterRegistration?.Name,
                     u.HosterAccountPoolId,

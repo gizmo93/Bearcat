@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
@@ -103,7 +104,10 @@ public abstract class ReleaseTemplateIntegrationTest(DatabaseProvider databasePr
     protected async Task<ReleaseTemplateSeed> AddReleaseTemplateWithChildrenAsync()
     {
         var archiveConfigTemplateService = new ArchiveConfigTemplateService(CreateRepository());
-        var uploadConfigTemplateService = new UploadConfigTemplateService(CreateRepository());
+        var uploadConfigTemplateService = new UploadConfigTemplateService(
+            CreateRepository(),
+            TestUploadSourceValidator.Create(DbContext)
+        );
         var uploadConfigLinkCrypterTemplateService = new UploadConfigLinkCrypterTemplateService(
             CreateRepository()
         );
@@ -132,6 +136,7 @@ public abstract class ReleaseTemplateIntegrationTest(DatabaseProvider databasePr
             .Value;
         var uploadConfigTemplateId = await uploadConfigTemplateService.CreateAsync(
             releaseTemplate.Id,
+            UploadSource.ArchiveFiles,
             new UploadConfigTemplateSettings(
                 Name: null,
                 UploadTarget: UploadTarget.ForHosterRegistration(hosterRegistration.Id),
@@ -192,12 +197,16 @@ public abstract class ReleaseTemplateIntegrationTest(DatabaseProvider databasePr
         return releaseGroup;
     }
 
-    protected async Task<ReleaseTemplate> AddReleaseTemplateAsync(int releaseGroupId)
+    protected async Task<ReleaseTemplate> AddReleaseTemplateAsync(
+        int releaseGroupId,
+        ReleaseContentType releaseContentType = ReleaseContentType.Movie
+    )
     {
         var releaseTemplate = new ReleaseTemplate
         {
             Name = "Managed template",
             ReleaseType = ReleaseType.Managed,
+            ReleaseContentType = releaseContentType,
             ReleaseGroupId = releaseGroupId,
         };
 
@@ -208,14 +217,15 @@ public abstract class ReleaseTemplateIntegrationTest(DatabaseProvider databasePr
     }
 
     protected async Task<HosterRegistration> AddHosterRegistrationAsync(
-        string name = "Primary hoster"
+        string name = "Primary hoster",
+        string hosterClassName = "TestHoster"
     )
     {
         var hosterRegistration = new HosterRegistration
         {
             Name = name,
             SerializedConfig = "{}",
-            HosterClassName = "TestHoster",
+            HosterClassName = hosterClassName,
             IsActive = true,
         };
 

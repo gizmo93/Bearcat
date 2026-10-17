@@ -65,6 +65,7 @@ public class HosterConfigurationRepository(
                     hoster is IHosterWithCaptchaVerification,
                     hoster is IHosterWithStorageQuota,
                     hoster.SupportsPremiumOnlyDownloads,
+                    hoster is IVideoHoster,
                     hoster is IHosterWithFileSizeLimit fileSizeLimit
                         ? fileSizeLimit.MaxFileSizeMb
                         : null,

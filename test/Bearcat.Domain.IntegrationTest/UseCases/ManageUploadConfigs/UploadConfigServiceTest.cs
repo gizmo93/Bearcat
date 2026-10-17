@@ -1,7 +1,9 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -19,7 +21,10 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
     [SetUp]
     public void Setup()
     {
-        service = new UploadConfigService(new UploadConfigWriteRepository(DbContext));
+        service = new UploadConfigService(
+            new UploadConfigWriteRepository(DbContext),
+            TestUploadSourceValidator.Create(DbContext)
+        );
     }
 
     [Test]
@@ -33,6 +38,7 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
             seed.ReleaseId,
             "Default upload",
             UploadTarget.ForHosterRegistration(seed.HosterRegistrationId),
+            UploadSource.ArchiveFiles,
             seed.ArchiveConfigId,
             true,
             CancellationToken.None
@@ -49,6 +55,82 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         uploadConfig.ArchiveConfigId.ShouldBe(seed.ArchiveConfigId);
         uploadConfig.Name.ShouldBe("Default upload");
         uploadConfig.PremiumOnlyDownload.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CreateAsync_VideoFilesForManagedMovieWithVideoHoster_PersistsVideoUploadConfigWithoutArchiveConfig()
+    {
+        // Arrange
+        var seed = await AddUploadConfigDependenciesAsync(
+            hosterClassName: TestUploadSourceValidator.VideoHosterClassName
+        );
+
+        // Act
+        await service.CreateAsync(
+            seed.ReleaseId,
+            "Video upload",
+            UploadTarget.ForHosterRegistration(seed.HosterRegistrationId),
+            UploadSource.VideoFiles,
+            null,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync();
+
+        uploadConfig.UploadSource.ShouldBe(UploadSource.VideoFiles);
+        uploadConfig.ArchiveConfigId.ShouldBeNull();
+    }
+
+    [TestCase(
+        UploadSource.VideoFiles,
+        ReleaseType.Managed,
+        ReleaseContentType.Other,
+        TestUploadSourceValidator.VideoHosterClassName
+    )]
+    [TestCase(
+        UploadSource.VideoFiles,
+        ReleaseType.Unmanaged,
+        ReleaseContentType.Movie,
+        TestUploadSourceValidator.VideoHosterClassName
+    )]
+    [TestCase(UploadSource.VideoFiles, ReleaseType.Managed, ReleaseContentType.Movie, "TestHoster")]
+    [TestCase(
+        UploadSource.ArchiveFiles,
+        ReleaseType.Managed,
+        ReleaseContentType.Movie,
+        TestUploadSourceValidator.VideoHosterClassName
+    )]
+    public async Task CreateAsync_UploadSourceNotAllowedForReleaseOrHoster_ThrowsInvalidUploadSourceException(
+        UploadSource uploadSource,
+        ReleaseType releaseType,
+        ReleaseContentType releaseContentType,
+        string hosterClassName
+    )
+    {
+        // Arrange
+        var seed = await AddUploadConfigDependenciesAsync(
+            releaseType: releaseType,
+            releaseContentType: releaseContentType,
+            hosterClassName: hosterClassName
+        );
+
+        // Act
+        var action = () =>
+            service.CreateAsync(
+                seed.ReleaseId,
+                "Upload",
+                UploadTarget.ForHosterRegistration(seed.HosterRegistrationId),
+                uploadSource,
+                uploadSource == UploadSource.ArchiveFiles ? seed.ArchiveConfigId : null,
+                false,
+                CancellationToken.None
+            );
+
+        // Assert
+        await Should.ThrowAsync<InvalidUploadSourceException>(action);
+        (await DbContext.UploadConfigs.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -168,6 +250,7 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
             seed.ReleaseId,
             "Pool upload",
             UploadTarget.ForHosterAccountPool(hosterAccountPool.Id),
+            UploadSource.ArchiveFiles,
             seed.ArchiveConfigId,
             false,
             CancellationToken.None
@@ -590,7 +673,10 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
 
     private async Task<UploadConfigSeed> AddUploadConfigDependenciesAsync(
         string suffix = "First",
-        bool hosterIsActive = true
+        bool hosterIsActive = true,
+        ReleaseType releaseType = ReleaseType.Managed,
+        ReleaseContentType releaseContentType = ReleaseContentType.Movie,
+        string hosterClassName = "TestHoster"
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -602,7 +688,8 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         var release = new Release
         {
             Name = $"Bearcat.Release.{suffix}",
-            ReleaseType = ReleaseType.Managed,
+            ReleaseType = releaseType,
+            ReleaseContentType = releaseContentType,
             ReleaseFolderPath = $"/tmp/release-{suffix}",
             ReleaseGroup = releaseGroup,
         };
@@ -620,7 +707,7 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         {
             Name = $"{suffix} hoster",
             SerializedConfig = "{}",
-            HosterClassName = "TestHoster",
+            HosterClassName = hosterClassName,
             IsActive = hosterIsActive,
         };
 

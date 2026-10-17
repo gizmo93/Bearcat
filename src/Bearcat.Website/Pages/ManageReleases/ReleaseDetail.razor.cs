@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CreationFromRelease;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
@@ -85,6 +86,12 @@ public partial class ReleaseDetail(
         string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
 
     private string? CoverUrl => releaseMetadata?.CoverUrl;
+
+    private bool AllowsVideoFileUploads =>
+        UploadSourceValidator.AllowsVideoFileUploads(
+            release.ReleaseType,
+            release.ReleaseContentType
+        );
 
     private bool IsPostingToForumPending =>
         release.OnlineUploadConfigsCount > 0

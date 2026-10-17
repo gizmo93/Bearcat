@@ -6,6 +6,6 @@ public record ReleasePostQueueItemReadModel(
     int ReleaseId,
     string ReleaseName,
     DateTime LatestUploadedAt,
-    IReadOnlyList<ReleasePostQueueArchiveGroupReadModel> ArchiveGroups,
+    IReadOnlyList<ReleasePostQueueUploadGroupReadModel> UploadGroups,
     IReadOnlyList<PostQueueContainerReadModel> Containers
 );

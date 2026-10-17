@@ -7,6 +7,8 @@ public class UploadConfigTemplateFormModel
 {
     public string? Name { get; set; }
 
+    public UploadSource UploadSource { get; set; } = UploadSource.ArchiveFiles;
+
     public UploadTarget? UploadTarget { get; set; }
 
     public int? ArchiveConfigTemplateId { get; set; }

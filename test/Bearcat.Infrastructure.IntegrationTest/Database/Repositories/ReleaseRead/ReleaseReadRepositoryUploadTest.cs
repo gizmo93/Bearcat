@@ -654,7 +654,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_VideoUploadConfigWithoutArchiveConfig_ReturnsLinksWithoutArchiveFormatAndPassword()
+    public async Task GetForumPostUploadsAsync_VideoUploadConfigWithoutArchiveConfig_ReturnsVideoFlagLinksAndEmbedLinksWithoutArchiveFormatAndPassword()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.VideoForumPost.2026-GRP");
@@ -667,12 +667,14 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         testData.AddVideoUploadedFile(
             upload,
             "Bearcat.VideoForumPost.2026-GRP/sample.mkv",
-            "https://video.example/sample"
+            "https://video.example/sample",
+            "https://video.example/embed/sample"
         );
         testData.AddVideoUploadedFile(
             upload,
             "Bearcat.VideoForumPost.2026-GRP/main.mkv",
-            "https://video.example/main"
+            "https://video.example/main",
+            "https://video.example/embed/main"
         );
         await DbContext.SaveChangesAsync();
 
@@ -687,6 +689,11 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         videoUpload.ArchivePassword.ShouldBeNull();
         videoUpload.UploadedAt.ShouldBe(MidnightUtc.AddMinutes(5));
         videoUpload.Links.ShouldBe(["https://video.example/main", "https://video.example/sample"]);
+        videoUpload.IsVideoUpload.ShouldBeTrue();
+        videoUpload.EmbedLinks.ShouldBe([
+            "https://video.example/embed/main",
+            "https://video.example/embed/sample",
+        ]);
     }
 
     [Test]
@@ -715,8 +722,9 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
 
         // Assert
         var item = result.ShouldHaveSingleItem();
-        var group = item.ArchiveGroups.ShouldHaveSingleItem();
-        group.ArchiveConfigName.ShouldBe("Video");
+        var group = item.UploadGroups.ShouldHaveSingleItem();
+        group.GroupName.ShouldBe("Video");
+        group.IsVideoUploadGroup.ShouldBeTrue();
         group
             .Hosters.Select(hoster => (hoster.HosterAccountOrPoolName, hoster.LinkCount))
             .ShouldBe([("Video Hoster", 1)]);
@@ -819,8 +827,8 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         var item = result.ShouldHaveSingleItem();
         item.ReleaseId.ShouldBe(release.Id);
         item.LatestUploadedAt.ShouldBe(MidnightUtc.AddHours(1).AddMilliseconds(500));
-        var archiveGroup = item.ArchiveGroups.ShouldHaveSingleItem();
-        archiveGroup.ArchiveConfigName.ShouldBe("Archive");
+        var archiveGroup = item.UploadGroups.ShouldHaveSingleItem();
+        archiveGroup.GroupName.ShouldBe("Archive");
         archiveGroup
             .Hosters.Select(hoster => (hoster.HosterAccountOrPoolName, hoster.LinkCount))
             .ShouldBe([("Hoster A", 2), ("Hoster B", 1)]);

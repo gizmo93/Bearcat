@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
@@ -16,6 +17,18 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         CancellationToken cancellationToken = default
     )
     {
+        var uploadSource = await repository.GetUploadSourceOfUploadConfigAsync(
+            uploadConfigId,
+            cancellationToken
+        );
+
+        if (uploadSource == UploadSource.VideoFiles)
+        {
+            throw new InvalidUploadSourceException(
+                "Link crypters cannot be added to video upload configurations."
+            );
+        }
+
         var uploadConfigLinkCrypter = new UploadConfigLinkCrypter
         {
             UploadConfigId = uploadConfigId,

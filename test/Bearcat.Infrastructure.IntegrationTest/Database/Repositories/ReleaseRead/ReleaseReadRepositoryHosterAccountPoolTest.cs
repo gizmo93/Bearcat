@@ -89,7 +89,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         // Assert
         var item = result.ShouldHaveSingleItem();
         item.ReleaseId.ShouldBe(release.Id);
-        item.ArchiveGroups.ShouldHaveSingleItem()
+        item.UploadGroups.ShouldHaveSingleItem()
             .Hosters.Select(hoster => hoster.HosterAccountOrPoolName)
             .ShouldBe(["Pool", "Single account hoster"]);
     }

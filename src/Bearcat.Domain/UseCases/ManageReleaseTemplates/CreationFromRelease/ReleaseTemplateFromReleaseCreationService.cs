@@ -38,7 +38,9 @@ public class ReleaseTemplateFromReleaseCreationService(
                 .UploadConfigs.Select(uploadConfig =>
                     CreateUploadConfigTemplate(
                         uploadConfig,
-                        archiveConfigTemplatesByArchiveConfigId[uploadConfig.ArchiveConfigId!.Value]
+                        uploadConfig.ArchiveConfigId is { } archiveConfigId
+                            ? archiveConfigTemplatesByArchiveConfigId[archiveConfigId]
+                            : null
                     )
                 )
                 .ToList();
@@ -96,12 +98,12 @@ public class ReleaseTemplateFromReleaseCreationService(
 
     private static UploadConfigTemplate CreateUploadConfigTemplate(
         UploadConfig uploadConfig,
-        ArchiveConfigTemplate archiveConfigTemplate
+        ArchiveConfigTemplate? archiveConfigTemplate
     )
     {
         return new UploadConfigTemplate
         {
-            UploadSource = UploadSource.ArchiveFiles,
+            UploadSource = uploadConfig.UploadSource,
             ArchiveConfigTemplate = archiveConfigTemplate,
             HosterRegistrationId = uploadConfig.HosterRegistrationId,
             HosterAccountPoolId = uploadConfig.HosterAccountPoolId,

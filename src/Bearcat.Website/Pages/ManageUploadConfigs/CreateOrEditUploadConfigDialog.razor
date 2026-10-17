@@ -14,7 +14,15 @@
                               Label="@L["Name"]"
                               Placeholder="@L["NameUploadConfigPlaceholder"]" />
 
+            @if (ShowUploadSource)
+            {
+                <UploadSourceSelect @bind-Value="formModel.UploadSource"
+                                    @bind-Value:after="OnUploadSourceChanged"
+                                    Disabled="IsEdit" />
+            }
+
             <UploadTargetSelect Choices="uploadTargetChoices"
+                                UploadSource="formModel.UploadSource"
                                 @bind-Value="formModel.UploadTarget"
                                 @bind-Value:after="OnUploadTargetChanged" />
 
@@ -25,11 +33,14 @@
                                    HelperText="@L["PremiumOnlyDownloadHelp"]" />
             }
 
-            <BbFormFieldSelect TValue="int?"
-                               @bind-Value="formModel.ArchiveConfigId"
-                               Label="@L["ArchiveConfiguration"]"
-                               Placeholder="@L["SelectArchiveConfiguration"]"
-                               Options="archiveConfigOptions.OrderBy(config => config.Name).Select(config => new SelectOption<int?>(config.ArchiveConfigId, config.Name))" />
+            @if (UsesArchiveFiles)
+            {
+                <BbFormFieldSelect TValue="int?"
+                                   @bind-Value="formModel.ArchiveConfigId"
+                                   Label="@L["ArchiveConfiguration"]"
+                                   Placeholder="@L["SelectArchiveConfiguration"]"
+                                   Options="archiveConfigOptions.OrderBy(config => config.Name).Select(config => new SelectOption<int?>(config.ArchiveConfigId, config.Name))" />
+            }
         </div>
 
         <div class="flex justify-end gap-2">

@@ -10,8 +10,8 @@ public record RunningUploadReadModel(
     string? HosterRegistrationName,
     string? HosterAccountPoolName,
     UploadState UploadState,
-    IReadOnlyList<RunningUploadReadModel.ArchiveFileReadModel> ArchiveFiles
+    IReadOnlyList<RunningUploadReadModel.FileReadModel> Files
 )
 {
-    public record ArchiveFileReadModel(string FullFileName, OnlineState? UploadedFileOnlineState);
+    public record FileReadModel(string FilePath, OnlineState? UploadedFileOnlineState);
 }

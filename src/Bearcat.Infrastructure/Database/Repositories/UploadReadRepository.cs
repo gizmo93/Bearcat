@@ -124,6 +124,7 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                     {
                         uf.Id,
                         uf.ArchiveFileId,
+                        uf.VideoFileRelativePath,
                         uf.OnlineState,
                     })
                     .ToList(),
@@ -131,20 +132,14 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             .ToListAsync(cancellationToken);
 
         return uploads
-            .Select(upload => new RunningUploadReadModel(
-                upload.Id,
-                upload.ReleaseId,
-                upload.ReleaseName,
-                upload.UploadConfigName,
-                upload.HosterRegistrationName,
-                upload.HosterAccountPoolName,
-                upload.UploadState,
-                upload
+            .Select(upload =>
+            {
+                var archiveFiles = upload
                     .ArchiveFiles.OrderBy(
                         archiveFile => archiveFile.FullFileName,
                         StringComparer.Ordinal
                     )
-                    .Select(archiveFile => new RunningUploadReadModel.ArchiveFileReadModel(
+                    .Select(archiveFile => new RunningUploadReadModel.FileReadModel(
                         archiveFile.FullFileName,
                         upload
                             .UploadedFiles.Where(uploadedFile =>
@@ -153,9 +148,29 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                             .OrderBy(uploadedFile => uploadedFile.Id)
                             .Select(uploadedFile => (OnlineState?)uploadedFile.OnlineState)
                             .FirstOrDefault()
-                    ))
-                    .ToList()
-            ))
+                    ));
+                var videoFiles = upload
+                    .UploadedFiles.Where(uploadedFile =>
+                        uploadedFile.VideoFileRelativePath is not null
+                    )
+                    .OrderBy(uploadedFile => uploadedFile.Id)
+                    .GroupBy(uploadedFile => uploadedFile.VideoFileRelativePath!)
+                    .Select(group => new RunningUploadReadModel.FileReadModel(
+                        group.Key,
+                        group.First().OnlineState
+                    ));
+
+                return new RunningUploadReadModel(
+                    UploadId: upload.Id,
+                    ReleaseId: upload.ReleaseId,
+                    ReleaseName: upload.ReleaseName,
+                    UploadConfigName: upload.UploadConfigName,
+                    HosterRegistrationName: upload.HosterRegistrationName,
+                    HosterAccountPoolName: upload.HosterAccountPoolName,
+                    UploadState: upload.UploadState,
+                    Files: [.. archiveFiles, .. videoFiles]
+                );
+            })
             .ToList();
     }
 

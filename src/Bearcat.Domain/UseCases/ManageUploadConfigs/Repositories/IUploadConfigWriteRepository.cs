@@ -8,6 +8,7 @@ public interface IUploadConfigWriteRepository
         int uploadConfigId,
         CancellationToken cancellationToken = default
     );
+    Task<Release> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Upload>> GetWaitingOrPendingUploadsWithoutUploadedFilesAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default

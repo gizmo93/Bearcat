@@ -296,6 +296,42 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateFromTemplateAsync_TemplateWithVideoUploadConfigTemplate_CreatesVideoUploadConfigWithoutArchiveConfig()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        DbContext.UploadConfigTemplates.Add(
+            new UploadConfigTemplate
+            {
+                UploadSource = UploadSource.VideoFiles,
+                ReleaseTemplateId = seed.ReleaseTemplateId,
+                HosterRegistrationId = seed.HosterRegistrationId,
+                Name = "Video",
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Video");
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            releaseFolderPath,
+            null,
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        var videoUploadConfig = await DbContext.UploadConfigs.SingleAsync(uploadConfig =>
+            uploadConfig.ReleaseId == result && uploadConfig.UploadSource == UploadSource.VideoFiles
+        );
+
+        videoUploadConfig.Name.ShouldBe("Video");
+        videoUploadConfig.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
+        videoUploadConfig.ArchiveConfigId.ShouldBeNull();
+    }
+
+    [Test]
     public async Task CreateFromTemplateAsync_TemplateWithAdditionalArchiveContents_AssignsSameContentsToArchiveConfig()
     {
         // Arrange

@@ -6,6 +6,7 @@ public record HosterAccountPoolReadModel(
     string HosterClassName,
     string HosterName,
     bool SupportsPremiumOnlyDownloads,
+    bool IsVideoHoster,
     int? MaxFileSizeMb,
     long MinimumFreeSpaceBytes,
     IReadOnlyList<HosterAccountPoolMemberReadModel> MembersInPriorityOrder

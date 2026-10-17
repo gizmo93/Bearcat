@@ -199,7 +199,8 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
     public UploadedFile AddVideoUploadedFile(
         Upload upload,
         string videoFileRelativePath,
-        string hosterFileLink
+        string hosterFileLink,
+        string? hosterEmbedLink = null
     )
     {
         var uploadedFile = new UploadedFile
@@ -207,6 +208,7 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
             Upload = upload,
             VideoFileRelativePath = videoFileRelativePath,
             HosterFileLink = hosterFileLink,
+            HosterEmbedLink = hosterEmbedLink,
             OnlineState = OnlineState.Online,
             CreatedAt = upload.CreatedAt,
         };

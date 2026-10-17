@@ -6,6 +6,7 @@ public record UploadConfigTemplateReadModel(
     int UploadConfigTemplateId,
     string? Name,
     string DisplayName,
+    UploadSource UploadSource,
     int? HosterRegistrationId,
     string? HosterRegistrationName,
     int? HosterAccountPoolId,

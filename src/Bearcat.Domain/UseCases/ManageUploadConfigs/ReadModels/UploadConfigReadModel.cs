@@ -1,8 +1,11 @@
-﻿namespace Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
+﻿using Bearcat.Domain.ValueObjects;
+
+namespace Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 
 public record UploadConfigReadModel(
     int UploadConfigId,
     string Name,
+    UploadSource UploadSource,
     int? HosterRegistrationId,
     string? HosterRegistrationName,
     int? HosterAccountPoolId,

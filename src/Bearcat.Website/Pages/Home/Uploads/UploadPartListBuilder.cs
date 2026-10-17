@@ -7,24 +7,36 @@ namespace Bearcat.Website.Pages.Home.Uploads;
 public static class UploadPartListBuilder
 {
     public static IReadOnlyList<UploadPart> Build(
-        IReadOnlyList<RunningUploadReadModel.ArchiveFileReadModel> archiveFiles,
+        IReadOnlyList<RunningUploadReadModel.FileReadModel> files,
         TransferProgressSnapshot? snapshot
     )
     {
+        if (files.Count == 0 && snapshot is not null)
+        {
+            return snapshot
+                .Files.Select(progress => new UploadPart(
+                    FileName: progress.FileName,
+                    State: GetState(onlineState: null, progress),
+                    OnlineState: null,
+                    Progress: progress
+                ))
+                .ToList();
+        }
+
         var progressByFileName =
             snapshot?.Files.ToDictionary(file => file.FileName, StringComparer.Ordinal)
             ?? new Dictionary<string, TransferFileProgressSnapshot>(StringComparer.Ordinal);
 
-        return archiveFiles
-            .Select(archiveFile =>
+        return files
+            .Select(file =>
             {
-                var fileName = Path.GetFileName(archiveFile.FullFileName);
+                var fileName = Path.GetFileName(file.FilePath);
                 var progress = progressByFileName.GetValueOrDefault(fileName);
 
                 return new UploadPart(
                     FileName: fileName,
-                    State: GetState(archiveFile.UploadedFileOnlineState, progress),
-                    OnlineState: archiveFile.UploadedFileOnlineState,
+                    State: GetState(file.UploadedFileOnlineState, progress),
+                    OnlineState: file.UploadedFileOnlineState,
                     Progress: progress
                 );
             })

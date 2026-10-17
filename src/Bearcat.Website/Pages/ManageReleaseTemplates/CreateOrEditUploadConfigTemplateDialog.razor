@@ -15,7 +15,15 @@
                               Placeholder="@L["UseHosterNamePlaceholder"]"
                               HelperText="@L["UploadConfigTemplateNameHelp"]" />
 
+            @if (ShowUploadSource)
+            {
+                <UploadSourceSelect @bind-Value="FormModel.UploadSource"
+                                    @bind-Value:after="OnUploadSourceChanged"
+                                    Disabled="isEdit" />
+            }
+
             <UploadTargetSelect Choices="uploadTargetChoices"
+                                UploadSource="FormModel.UploadSource"
                                 @bind-Value="FormModel.UploadTarget"
                                 @bind-Value:after="OnUploadTargetChanged" />
 
@@ -26,7 +34,7 @@
                                    HelperText="@L["PremiumOnlyDownloadHelp"]" />
             }
 
-            @if (!isUnmanagedReleaseTemplate)
+            @if (!isUnmanagedReleaseTemplate && UsesArchiveFiles)
             {
                 <BbFormFieldSelect TValue="int?"
                                    @bind-Value="FormModel.ArchiveConfigTemplateId"
@@ -35,7 +43,7 @@
                                    Options="ArchiveConfigOptions" />
             }
 
-            @if (usesReleaseCollections)
+            @if (usesReleaseCollections && UsesArchiveFiles)
             {
                 <div class="space-y-4 rounded-md border border-border/70 p-4">
                     <div>

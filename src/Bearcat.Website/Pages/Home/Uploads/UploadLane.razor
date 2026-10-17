@@ -6,7 +6,7 @@
     @foreach (var upload in ActiveUploads)
     {
         var snapshot = UploadProgress.GetValueOrDefault(upload.UploadId);
-        var parts = UploadPartListBuilder.Build(upload.ArchiveFiles, snapshot);
+        var parts = UploadPartListBuilder.Build(upload.Files, snapshot);
         <ActivityCard @key="upload.UploadId"
                       IconName="upload"
                       IsActive="@(snapshot is not null)"

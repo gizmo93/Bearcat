@@ -1,24 +1,39 @@
 ﻿using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigs;
 
-public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
+public class UploadConfigService(
+    IUploadConfigWriteRepository writeRepository,
+    UploadSourceValidator uploadSourceValidator
+)
 {
     public async Task<int> CreateAsync(
         int releaseId,
         string name,
         UploadTarget uploadTarget,
-        int archiveConfigId,
+        UploadSource uploadSource,
+        int? archiveConfigId,
         bool premiumOnlyDownload,
         CancellationToken cancellationToken = default
     )
     {
+        var release = await writeRepository.GetReleaseAsync(releaseId, cancellationToken);
+
+        await uploadSourceValidator.ThrowIfInvalidAsync(
+            uploadSource: uploadSource,
+            releaseType: release.ReleaseType,
+            releaseContentType: release.ReleaseContentType,
+            uploadTarget: uploadTarget,
+            cancellationToken: cancellationToken
+        );
+
         var uploadConfig = new UploadConfig
         {
-            UploadSource = UploadSource.ArchiveFiles,
+            UploadSource = uploadSource,
             ReleaseId = releaseId,
             Name = name,
             HosterRegistrationId = uploadTarget.HosterRegistrationId,
@@ -37,12 +52,18 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         int uploadConfigId,
         string name,
         UploadTarget uploadTarget,
-        int archiveConfigId,
+        int? archiveConfigId,
         bool premiumOnlyDownload,
         CancellationToken cancellationToken = default
     )
     {
         var uploadConfig = await writeRepository.GetByIdAsync(uploadConfigId, cancellationToken);
+
+        await uploadSourceValidator.ThrowIfUploadTargetDoesNotMatchAsync(
+            uploadSource: uploadConfig.UploadSource,
+            uploadTarget: uploadTarget,
+            cancellationToken: cancellationToken
+        );
 
         if (
             uploadConfig.HosterRegistrationId != uploadTarget.HosterRegistrationId

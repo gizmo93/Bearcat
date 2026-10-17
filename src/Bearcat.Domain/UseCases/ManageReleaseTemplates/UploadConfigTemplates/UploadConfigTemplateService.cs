@@ -1,14 +1,19 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 
-public class UploadConfigTemplateService(IReleaseTemplateWriteRepository writeRepository)
+public class UploadConfigTemplateService(
+    IReleaseTemplateWriteRepository writeRepository,
+    UploadSourceValidator uploadSourceValidator
+)
 {
     public async Task<int> CreateAsync(
         int releaseTemplateId,
+        UploadSource uploadSource,
         UploadConfigTemplateSettings settings,
         CancellationToken cancellationToken = default
     )
@@ -18,13 +23,19 @@ public class UploadConfigTemplateService(IReleaseTemplateWriteRepository writeRe
             cancellationToken
         );
 
+        await uploadSourceValidator.ThrowIfInvalidAsync(
+            uploadSource,
+            releaseTemplate.ReleaseType,
+            releaseTemplate.ReleaseContentType,
+            settings.UploadTarget,
+            cancellationToken
+        );
+        ThrowIfVideoTemplateUsesCollectionUploadSlot(uploadSource, settings);
+
         var unmanagedArchiveConfigTemplate =
             UnmanagedArchiveConfigTemplates.GetForUnmanagedReleaseTemplateOrNull(releaseTemplate);
 
-        var uploadConfigTemplate = new UploadConfigTemplate
-        {
-            UploadSource = UploadSource.ArchiveFiles,
-        };
+        var uploadConfigTemplate = new UploadConfigTemplate { UploadSource = uploadSource };
         ApplySettings(uploadConfigTemplate, settings, unmanagedArchiveConfigTemplate);
 
         releaseTemplate.UploadConfigTemplates.Add(uploadConfigTemplate);
@@ -44,6 +55,13 @@ public class UploadConfigTemplateService(IReleaseTemplateWriteRepository writeRe
             uploadConfigTemplateId,
             cancellationToken
         );
+
+        await uploadSourceValidator.ThrowIfUploadTargetDoesNotMatchAsync(
+            uploadConfigTemplate.UploadSource,
+            settings.UploadTarget,
+            cancellationToken
+        );
+        ThrowIfVideoTemplateUsesCollectionUploadSlot(uploadConfigTemplate.UploadSource, settings);
 
         var unmanagedArchiveConfigTemplate =
             UnmanagedArchiveConfigTemplates.GetForUnmanagedReleaseTemplateOrNull(
@@ -67,6 +85,22 @@ public class UploadConfigTemplateService(IReleaseTemplateWriteRepository writeRe
 
         writeRepository.Remove(uploadConfigTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void ThrowIfVideoTemplateUsesCollectionUploadSlot(
+        UploadSource uploadSource,
+        UploadConfigTemplateSettings settings
+    )
+    {
+        if (
+            uploadSource == UploadSource.VideoFiles
+            && settings.CollectionUploadSlotKey.TrimOrNullWhenWhitespace() is not null
+        )
+        {
+            throw new InvalidUploadSourceException(
+                "Video upload configuration templates cannot use a collection upload slot."
+            );
+        }
     }
 
     private static void ApplySettings(

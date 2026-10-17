@@ -12,6 +12,11 @@ public sealed record ForumPostTemplateUploadModel
     [ForumPostTemplateVariable("Hoster registration name.")]
     public required string HosterName { get; init; }
 
+    [ForumPostTemplateVariable(
+        "True when the upload is a video upload (main video file on a video hoster instead of archive files)."
+    )]
+    public required bool IsVideoUpload { get; init; }
+
     [ForumPostTemplateVariable("Latest upload date.")]
     public required DateTime? UploadedAt { get; init; }
 
@@ -26,6 +31,12 @@ public sealed record ForumPostTemplateUploadModel
         LoopVariable = "link"
     )]
     public required IReadOnlyList<string> Links { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Loop over embed links of the latest upload, in the same order as the direct hoster links. Video uploads have one embed link, archive uploads have none.",
+        LoopVariable = "embed_link"
+    )]
+    public required IReadOnlyList<string> EmbedLinks { get; init; }
 
     [ForumPostTemplateVariable(
         "Loop over link crypter container links.",

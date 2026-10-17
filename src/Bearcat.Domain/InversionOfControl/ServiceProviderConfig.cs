@@ -82,6 +82,7 @@ using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
@@ -243,6 +244,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveConfigService>();
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();
+            services.AddScoped<UploadSourceValidator>();
             services.AddScoped<LinkCrypterService>();
             services.AddScoped<NfoDatabaseRegistrationService>();
             services.AddScoped<MediaDatabaseRegistrationService>();

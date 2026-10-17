@@ -67,6 +67,7 @@ public partial class UploadLinksDialog(IScopedOperationRunner operationRunner)
     {
         await RefreshAllUploadLinksAsync();
         await RefreshLinksAsync();
+        showFileColumn = links.Any(link => link.HosterEmbedLink is not null);
         isInitialized = true;
     }
 

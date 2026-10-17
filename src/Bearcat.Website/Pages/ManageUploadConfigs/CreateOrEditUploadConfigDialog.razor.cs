@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared.UploadTargets;
 using BlazorBlueprint.Components;
@@ -19,6 +20,9 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
     [Parameter]
     public int? UploadConfigId { get; set; }
 
+    [Parameter]
+    public bool AllowsVideoFileUploads { get; set; }
+
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
@@ -29,6 +33,11 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
     private UploadTargetChoices uploadTargetChoices = null!;
     private IReadOnlyList<ArchiveConfigOptionReadModel> archiveConfigOptions = [];
     private bool isInitialized;
+
+    private bool ShowUploadSource =>
+        AllowsVideoFileUploads || formModel.UploadSource is UploadSource.VideoFiles;
+
+    private bool UsesArchiveFiles => formModel.UploadSource is UploadSource.ArchiveFiles;
 
     private bool CanUsePremiumOnlyDownload =>
         uploadTargetChoices.SupportsPremiumOnlyDownloads(formModel.UploadTarget);
@@ -66,7 +75,7 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
                     uploadConfigId: UploadConfigId!.Value,
                     name: formModel.Name!,
                     uploadTarget: formModel.UploadTarget!,
-                    archiveConfigId: formModel.ArchiveConfigId!.Value,
+                    archiveConfigId: UsesArchiveFiles ? formModel.ArchiveConfigId : null,
                     premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
                 );
                 return;
@@ -76,7 +85,8 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
                 releaseId: ReleaseId,
                 name: formModel.Name!,
                 uploadTarget: formModel.UploadTarget!,
-                archiveConfigId: formModel.ArchiveConfigId!.Value,
+                uploadSource: formModel.UploadSource,
+                archiveConfigId: UsesArchiveFiles ? formModel.ArchiveConfigId : null,
                 premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
             );
         });
@@ -98,13 +108,14 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
             messageStore.Add(() => formModel.UploadTarget!, L["UploadTargetRequired"]);
         }
 
-        if (formModel.ArchiveConfigId is null)
+        if (UsesArchiveFiles && formModel.ArchiveConfigId is null)
         {
             messageStore.Add(() => formModel.ArchiveConfigId!, L["ArchiveConfigRequired"]);
         }
 
         if (
-            uploadTargetChoices.GetMaxFileSizeMb(formModel.UploadTarget) is { } maxFileSizeMb
+            UsesArchiveFiles
+            && uploadTargetChoices.GetMaxFileSizeMb(formModel.UploadTarget) is { } maxFileSizeMb
             && SelectedArchiveConfig is { } archiveConfig
             && archiveConfig.ArchiveFileSizeMb > maxFileSizeMb
         )
@@ -118,6 +129,19 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
                 ]
             );
         }
+    }
+
+    private void OnUploadSourceChanged()
+    {
+        if (
+            formModel.UploadTarget is { } uploadTarget
+            && !uploadTargetChoices.MatchesUploadSource(uploadTarget, formModel.UploadSource)
+        )
+        {
+            formModel.UploadTarget = null;
+        }
+
+        ResetPremiumOnlyDownloadIfUnsupported();
     }
 
     private void OnUploadTargetChanged()
@@ -149,6 +173,7 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
         formModel = new UploadConfigFormModel
         {
             Name = uploadConfig.Name,
+            UploadSource = uploadConfig.UploadSource,
             UploadTarget = UploadTarget.FromIds(
                 uploadConfig.HosterRegistrationId,
                 uploadConfig.HosterAccountPoolId

@@ -260,6 +260,7 @@ public class ReleaseOverviewSummaryServiceTest
             UploadConfigId: uploadConfigId,
             UploadConfigName: $"Config {uploadConfigId}",
             UploadTargetName: "Hoster",
+            UploadSource: UploadSource.ArchiveFiles,
             UploadId: uploadId,
             CreatedAt: createdAt,
             UploadedAt: uploadedAt,

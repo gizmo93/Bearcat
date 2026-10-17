@@ -19,6 +19,17 @@ public class UploadConfigWriteRepository(IBearcatWriteDbContext dbWrite)
         );
     }
 
+    public async Task<Release> GetReleaseAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.Releases.FirstAsync(
+            release => release.Id == releaseId,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task<IReadOnlyList<Upload>> GetWaitingOrPendingUploadsWithoutUploadedFilesAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default

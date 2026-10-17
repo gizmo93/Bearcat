@@ -1912,4 +1912,11 @@
   <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Creates forum post drafts on distribution sites.</value></data>
   <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
   <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Routes outbound connections through a proxy.</value></data>
+  <data name="UploadSource" xml:space="preserve"><value>Upload source</value></data>
+  <data name="UploadSourceHelp" xml:space="preserve"><value>Video file uploads the main video of the release to a video hoster instead of archive files. The upload source cannot be changed later.</value></data>
+  <data name="UploadSource.ArchiveFiles" xml:space="preserve"><value>Archive files</value></data>
+  <data name="UploadSource.VideoFiles" xml:space="preserve"><value>Video file</value></data>
+  <data name="VideoUploadConfigWithoutLinkCrypters" xml:space="preserve"><value>Video upload configurations do not support link crypters.</value></data>
+  <data name="EmbedLink" xml:space="preserve"><value>Embed link</value></data>
+  <data name="CopyEmbedLink" xml:space="preserve"><value>Copy embed link</value></data>
 </root>

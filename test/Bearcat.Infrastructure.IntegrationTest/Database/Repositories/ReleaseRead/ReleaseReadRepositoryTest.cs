@@ -576,8 +576,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var item = result.ShouldHaveSingleItem();
         item.ReleaseId.ShouldBe(openRelease.Release.Id);
 
-        var archiveGroup = item.ArchiveGroups.ShouldHaveSingleItem();
-        archiveGroup.ArchiveConfigName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
+        var archiveGroup = item.UploadGroups.ShouldHaveSingleItem();
+        archiveGroup.GroupName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
 
         var hoster = archiveGroup.Hosters.ShouldHaveSingleItem();
         hoster.HosterAccountOrPoolName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
@@ -651,7 +651,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Count.ShouldBe(queuedReleaseCount);
-        result.ShouldAllBe(item => item.ArchiveGroups.Count == 1);
+        result.ShouldAllBe(item => item.UploadGroups.Count == 1);
     }
 
     [Test]

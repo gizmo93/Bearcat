@@ -164,10 +164,14 @@
                             </div>
 
                             <div class="space-y-2">
-                                @foreach (var group in item.ArchiveGroups)
+                                @foreach (var group in item.UploadGroups)
                                 {
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="text-xs font-medium text-muted-foreground">@group.ArchiveConfigName</span>
+                                        <span class="text-xs font-medium text-muted-foreground">@group.GroupName</span>
+                                        @if (group.IsVideoUploadGroup)
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Outline">@L["Video"]</BbBadge>
+                                        }
                                         @foreach (var hoster in group.Hosters)
                                         {
                                             <BbBadge Variant="BadgeVariant.Secondary">

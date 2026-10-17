@@ -56,7 +56,9 @@ public static class ReleaseOverviewSummaryService
     )
     {
         var passwords = uploads
-            .Where(upload => upload.UploadId is not null)
+            .Where(upload =>
+                upload.UploadId is not null && upload.UploadSource is UploadSource.ArchiveFiles
+            )
             .Select(upload =>
                 string.IsNullOrWhiteSpace(upload.ArchivePassword) ? null : upload.ArchivePassword
             )

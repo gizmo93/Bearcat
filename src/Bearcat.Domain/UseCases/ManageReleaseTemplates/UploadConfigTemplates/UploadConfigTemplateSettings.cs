@@ -6,7 +6,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 public sealed record UploadConfigTemplateSettings(
     string? Name,
     UploadTarget UploadTarget,
-    int ArchiveConfigTemplateId,
+    int? ArchiveConfigTemplateId,
     bool PremiumOnlyDownload,
     string? CollectionUploadSlotKey = null,
     string? CollectionUploadSlotName = null,

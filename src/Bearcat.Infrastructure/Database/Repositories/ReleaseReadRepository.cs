@@ -271,6 +271,7 @@ public class ReleaseReadRepository(
                 UploadTargetName = c.HosterRegistrationId != null
                     ? c.HosterRegistration!.Name
                     : c.HosterAccountPool!.Name,
+                c.UploadSource,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -392,6 +393,7 @@ public class ReleaseReadRepository(
                     config.UploadConfigId,
                     config.UploadConfigName,
                     config.UploadTargetName,
+                    config.UploadSource,
                     upload?.UploadId,
                     upload?.CreatedAt,
                     upload?.UploadedAt,
@@ -444,9 +446,10 @@ public class ReleaseReadRepository(
                     .Select(u => new
                     {
                         u.UploadConfig.ReleaseId,
-                        ArchiveConfigName = u.UploadConfig.ArchiveConfig != null
+                        GroupName = u.UploadConfig.ArchiveConfig != null
                             ? u.UploadConfig.ArchiveConfig.Name
                             : u.UploadConfig.Name,
+                        IsVideoUploadGroup = u.UploadConfig.UploadSource == UploadSource.VideoFiles,
                         HosterAccountOrPoolName = u.HosterRegistrationId != null
                             ? u.HosterRegistration!.Name
                             : u.UploadConfig.HosterAccountPool!.Name,
@@ -472,17 +475,19 @@ public class ReleaseReadRepository(
             })
             .ToListAsync(cancellationToken);
 
-        var archiveGroupsByReleaseId = latestUploads
+        var uploadGroupsByReleaseId = latestUploads
             .GroupBy(u => u.ReleaseId)
             .ToDictionary(
                 releaseGroup => releaseGroup.Key,
                 releaseGroup =>
                     releaseGroup
-                        .GroupBy(u => u.ArchiveConfigName)
-                        .OrderBy(archiveGroup => archiveGroup.Key)
-                        .Select(archiveGroup => new ReleasePostQueueArchiveGroupReadModel(
-                            ArchiveConfigName: archiveGroup.Key,
-                            Hosters: archiveGroup
+                        .GroupBy(u => new { u.GroupName, u.IsVideoUploadGroup })
+                        .OrderBy(uploadGroup => uploadGroup.Key.GroupName)
+                        .ThenBy(uploadGroup => uploadGroup.Key.IsVideoUploadGroup)
+                        .Select(uploadGroup => new ReleasePostQueueUploadGroupReadModel(
+                            GroupName: uploadGroup.Key.GroupName,
+                            IsVideoUploadGroup: uploadGroup.Key.IsVideoUploadGroup,
+                            Hosters: uploadGroup
                                 .GroupBy(u => u.HosterAccountOrPoolName)
                                 .OrderBy(hosterGroup => hosterGroup.Key)
                                 .Select(hosterGroup => new PostQueueHosterReadModel(
@@ -516,7 +521,7 @@ public class ReleaseReadRepository(
                 ReleaseId: r.Id,
                 ReleaseName: r.Name,
                 LatestUploadedAt: r.LatestUploadedAt!.Value,
-                ArchiveGroups: archiveGroupsByReleaseId.GetValueOrDefault(r.Id, []),
+                UploadGroups: uploadGroupsByReleaseId.GetValueOrDefault(r.Id, []),
                 Containers: containersByReleaseId.GetValueOrDefault(r.Id, [])
             ))
             .ToList();
@@ -587,6 +592,7 @@ public class ReleaseReadRepository(
             {
                 UploadConfigId = c.Id,
                 UploadConfigName = c.Name,
+                c.UploadSource,
                 HosterRegistrationName = c.HosterRegistrationId != null
                     ? c.HosterRegistration!.Name
                     : null,
@@ -626,6 +632,7 @@ public class ReleaseReadRepository(
         var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
 
         var linksByUploadId = new Dictionary<int, IReadOnlyList<string>>();
+        var embedLinksByUploadId = new Dictionary<int, IReadOnlyList<string>>();
         var containers =
             new List<(
                 int UploadId,
@@ -645,7 +652,12 @@ public class ReleaseReadRepository(
                     f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath
                 )
                 .ThenBy(f => f.Id)
-                .Select(f => new { f.UploadId, f.HosterFileLink })
+                .Select(f => new
+                {
+                    f.UploadId,
+                    f.HosterFileLink,
+                    f.HosterEmbedLink,
+                })
                 .ToListAsync(cancellationToken: cancellationToken);
 
             linksByUploadId = directLinks
@@ -654,6 +666,14 @@ public class ReleaseReadRepository(
                     group => group.Key,
                     group =>
                         (IReadOnlyList<string>)group.Select(link => link.HosterFileLink).ToList()
+                );
+            embedLinksByUploadId = directLinks
+                .Where(link => link.HosterEmbedLink is not null)
+                .GroupBy(link => link.UploadId)
+                .ToDictionary(
+                    group => group.Key,
+                    group =>
+                        (IReadOnlyList<string>)group.Select(link => link.HosterEmbedLink!).ToList()
                 );
 
             var releaseContainers = await dbRead
@@ -727,6 +747,11 @@ public class ReleaseReadRepository(
                     upload is not null && linksByUploadId.TryGetValue(upload.UploadId, out var l)
                         ? l
                         : [];
+                IReadOnlyList<string> embedLinks =
+                    upload is not null
+                    && embedLinksByUploadId.TryGetValue(upload.UploadId, out var uploadEmbedLinks)
+                        ? uploadEmbedLinks
+                        : [];
 
                 var linkCrypters = config
                     .LinkCrypters.Select(linkCrypter =>
@@ -753,6 +778,7 @@ public class ReleaseReadRepository(
                     UploadConfigName: config.UploadConfigName,
                     HosterName: config.HosterRegistrationName
                         ?? hosterFactory.GetByName(config.HosterAccountPoolHosterClassName!).Name,
+                    IsVideoUpload: config.UploadSource == UploadSource.VideoFiles,
                     ArchiveFormat: config.ArchiverName is null
                         ? null
                         : archiverNamesByClassName.GetValueOrDefault(
@@ -762,6 +788,7 @@ public class ReleaseReadRepository(
                     ArchivePassword: config.ArchivePassword,
                     UploadedAt: upload?.UploadedAt,
                     Links: links,
+                    EmbedLinks: embedLinks,
                     LinkCrypters: linkCrypters
                 );
             })
@@ -1296,6 +1323,7 @@ public class ReleaseReadRepository(
             .Select(f => new ReleaseUploadLinkReadModel(
                 f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath!,
                 f.HosterFileLink,
+                f.HosterEmbedLink,
                 f.OnlineState,
                 f.CheckedAt,
                 f.ErrorMessages,

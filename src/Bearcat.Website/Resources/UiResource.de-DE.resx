@@ -1915,4 +1915,11 @@
   <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Erstellt Forenpostentwürfe auf Verteilungsseiten.</value></data>
   <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxyserver</value></data>
   <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Leitet ausgehende Verbindungen über einen Proxy.</value></data>
+  <data name="UploadSource" xml:space="preserve"><value>Uploadquelle</value></data>
+  <data name="UploadSourceHelp" xml:space="preserve"><value>Videodatei lädt das Hauptvideo des Releases statt Archivdateien zu einem Videohoster hoch. Die Uploadquelle kann später nicht geändert werden.</value></data>
+  <data name="UploadSource.ArchiveFiles" xml:space="preserve"><value>Archivdateien</value></data>
+  <data name="UploadSource.VideoFiles" xml:space="preserve"><value>Videodatei</value></data>
+  <data name="VideoUploadConfigWithoutLinkCrypters" xml:space="preserve"><value>Videouploadkonfigurationen unterstützen keine Linkcrypter.</value></data>
+  <data name="EmbedLink" xml:space="preserve"><value>Einbettungslink</value></data>
+  <data name="CopyEmbedLink" xml:space="preserve"><value>Einbettungslink kopieren</value></data>
 </root>

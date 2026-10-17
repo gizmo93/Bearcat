@@ -183,6 +183,10 @@
                                     {
                                         <p class="truncate text-xs text-muted-foreground" title="@upload.UploadTargetName">@upload.UploadTargetName</p>
                                     }
+                                    @if (upload.UploadSource is UploadSource.VideoFiles)
+                                    {
+                                        <p class="truncate text-xs text-muted-foreground">@L.Localize(upload.UploadSource)</p>
+                                    }
                                 </div>
                             </div>
 

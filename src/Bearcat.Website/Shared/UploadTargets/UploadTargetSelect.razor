@@ -9,17 +9,17 @@
                    DisplayTextSelector="Choices.GetName">
     <BbSelectGroup>
         <BbSelectLabel>@L["UploadTargetHosterAccounts"]</BbSelectLabel>
-        @foreach (var hosterRegistration in Choices.GetSelectableHosterRegistrations(Value))
+        @foreach (var hosterRegistration in Choices.GetSelectableHosterRegistrations(Value, UploadSource))
         {
             <BbSelectItem Value="UploadTarget.ForHosterRegistration(hosterRegistration.Id)"
                           Text="@hosterRegistration.Name" />
         }
     </BbSelectGroup>
-    @if (Choices.HosterAccountPools.Count > 0)
+    @if (Choices.GetSelectableHosterAccountPools(UploadSource) is { Count: > 0 } hosterAccountPools)
     {
         <BbSelectGroup>
             <BbSelectLabel>@L["HosterAccountPools"]</BbSelectLabel>
-            @foreach (var hosterAccountPool in Choices.HosterAccountPools)
+            @foreach (var hosterAccountPool in hosterAccountPools)
             {
                 <BbSelectItem Value="UploadTarget.ForHosterAccountPool(hosterAccountPool.Id)"
                               Text="@hosterAccountPool.Name">

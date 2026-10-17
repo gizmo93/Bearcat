@@ -452,12 +452,9 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         uploadingUpload.UploadConfigName.ShouldBe("Running upload");
         uploadingUpload.HosterRegistrationName.ShouldBe("Running hoster");
         uploadingUpload.UploadState.ShouldBe(UploadState.Uploading);
-        uploadingUpload.ArchiveFiles.ShouldBe([
-            new RunningUploadReadModel.ArchiveFileReadModel(
-                "running.part1.rar",
-                OnlineState.Online
-            ),
-            new RunningUploadReadModel.ArchiveFileReadModel(
+        uploadingUpload.Files.ShouldBe([
+            new RunningUploadReadModel.FileReadModel("running.part1.rar", OnlineState.Online),
+            new RunningUploadReadModel.FileReadModel(
                 "running.part2.rar",
                 UploadedFileOnlineState: null
             ),
@@ -478,7 +475,52 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
             item.UploadId == uploads.PendingUploadWithoutArchive.Id
         );
         pendingUpload.UploadState.ShouldBe(UploadState.Pending);
-        pendingUpload.ArchiveFiles.ShouldBeEmpty();
+        pendingUpload.Files.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetRunningUploadsAsync_VideoUploadWithRetriedUploadedFile_ReturnsVideoFileOnceWithStateOfFirstUploadedFile()
+    {
+        // Arrange
+        var uploadConfig = new UploadConfig
+        {
+            UploadSource = UploadSource.VideoFiles,
+            Release = CreateRelease("Bearcat.Video.2026-GRP"),
+            HosterRegistration = CreateHosterRegistration("Video hoster"),
+            Name = "Video upload",
+        };
+        var videoUpload = await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight,
+            uploadedAt: null,
+            UploadState.Uploading,
+            OnlineState.Unknown,
+            upload =>
+                upload.UploadedFiles = [
+                    CreateUploadedFileOfVideoFile(
+                        "Bearcat.Video.2026-GRP/main.mkv",
+                        OnlineState.Online
+                    ),
+                    CreateUploadedFileOfVideoFile(
+                        "Bearcat.Video.2026-GRP/main.mkv",
+                        OnlineState.Offline
+                    ),
+                ]
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        var runningUpload = result.ShouldHaveSingleItem();
+        runningUpload.UploadId.ShouldBe(videoUpload.Id);
+        runningUpload.Files.ShouldBe([
+            new RunningUploadReadModel.FileReadModel(
+                "Bearcat.Video.2026-GRP/main.mkv",
+                OnlineState.Online
+            ),
+        ]);
     }
 
     [Test]
@@ -632,6 +674,20 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
             pendingUploadWithoutArchive,
             cancellationRequestedUpload
         );
+    }
+
+    private static UploadedFile CreateUploadedFileOfVideoFile(
+        string videoFileRelativePath,
+        OnlineState onlineState
+    )
+    {
+        return new UploadedFile
+        {
+            VideoFileRelativePath = videoFileRelativePath,
+            HosterFileLink = $"https://video.test/{Guid.NewGuid()}",
+            OnlineState = onlineState,
+            CreatedAt = Midnight,
+        };
     }
 
     private static UploadedFile CreateUploadedFileOfArchiveFile(
