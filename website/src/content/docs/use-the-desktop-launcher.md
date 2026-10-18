@@ -1,5 +1,5 @@
 ---
-title: "Install Bearcat on Windows and macOS"
+title: "Install Bearcat on Windows, macOS, and Linux"
 description: "Install the desktop app, choose your release folder, and start Bearcat with SQLite."
 prev:
   label: "Choose an installation"
@@ -20,10 +20,11 @@ Bearcat needs both RAR and 7-Zip to start.
 | --- | --- |
 | Windows | [WinRAR](https://www.rarlab.com/download.htm) and [7-Zip](https://www.7-zip.org/download.html). |
 | macOS | [RAR for macOS ARM](https://www.rarlab.com/download.htm) and the [7-Zip console version for macOS](https://www.7-zip.org/download.html). Extract both into folders you will keep. |
+| Linux (x64) | [RAR for Linux x64](https://www.rarlab.com/download.htm) and the [7-Zip console version for Linux x64](https://www.7-zip.org/download.html). Extract both into folders you will keep. |
 
 In step 3, select the tools’ executable files. On Windows, these are usually
 `C:\Program Files\WinRAR\Rar.exe` and `C:\Program Files\7-Zip\7z.exe`.
-On macOS, select the extracted `rar` and `7zz` files.
+On macOS and Linux, select the extracted `rar` and `7zz` files.
 
 On macOS, you can also install [7-Zip via Homebrew](https://formulae.brew.sh/formula/sevenzip):
 
@@ -44,6 +45,7 @@ Download the Desktop package for your computer from [GitHub releases](https://gi
 
 - **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep all extracted files in the same folder.
 - **macOS (Apple Silicon):** extract `Bearcat.Desktop-macos-arm64.zip`, move **Bearcat Desktop.app** to **Applications**, and open it.
+- **Linux (x64):** extract `Bearcat.Desktop-linux-x64.tar.gz` into a folder you will keep and run `Bearcat.Desktop` from it.
 
 <details>
 <summary>macOS says the app is damaged or blocks it from opening</summary>
@@ -61,13 +63,13 @@ Open the app again.
 ## 3. Choose your folders and tools
 
 Create a folder for your releases, for example `C:\Bearcat\releases` on Windows or
-`~/Bearcat/releases` on macOS. In the Desktop app, fill in:
+`~/Bearcat/releases` on macOS and Linux. In the Desktop app, fill in:
 
 | Field | What to enter |
 | --- | --- |
 | **Working directories** | Click **Add...** and select your release folder. Bearcat must be able to read and write here. |
-| **RAR executable** | Click **Browse...** and select `Rar.exe` on Windows or `rar` on macOS. |
-| **7z executable** | Click **Browse...** and select `7z.exe` on Windows or `7zz` on macOS. |
+| **RAR executable** | Click **Browse...** and select `Rar.exe` on Windows or `rar` on macOS and Linux. |
+| **7z executable** | Click **Browse...** and select `7z.exe` on Windows or `7zz` on macOS and Linux. |
 
 Keep the defaults for **SQLite (recommended)**, **Database file**, **Bearcat Host**, **Web port**, and **API key**.
 
@@ -79,6 +81,7 @@ Click **Save**, then **Start Bearcat**. Once it is ready, click **Open Bearcat**
 **Next: [Set up Bearcat and upload your first release](/Bearcat/post-installation/).**
 
 Closing the settings window keeps Bearcat running. Use **Stop** or **Quit** to stop it.
+On GNOME, the tray icon needs the [AppIndicator extension](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu includes it.
 To run Bearcat on Windows without logging in, use the [Windows service](/Bearcat/use-the-windows-service/).
 
 ## Other settings
@@ -91,6 +94,7 @@ The default location is:
 ```text
 Windows: %APPDATA%\Bearcat\bearcat.db
 macOS: ~/Library/Application Support/Bearcat/bearcat.db
+Linux: ~/.config/Bearcat/bearcat.db
 ```
 
 To use PostgreSQL, [set up a PostgreSQL server](/Bearcat/install-postgresql-for-desktop/), select
@@ -119,12 +123,13 @@ The Desktop app saves its settings here:
 ```text
 Windows: %APPDATA%\Bearcat\Desktop\settings.json
 macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
+Linux: ~/.config/Bearcat/Desktop/settings.json
 ```
 
 It also contains any API key and PostgreSQL password you entered.
 
-Bearcat also creates `bearcat.key` in `%APPDATA%\Bearcat` on Windows or
-`~/Library/Application Support/Bearcat` on macOS. It uses this key to decrypt your saved credentials.
+Bearcat also creates `bearcat.key` in `%APPDATA%\Bearcat` on Windows,
+`~/Library/Application Support/Bearcat` on macOS, or `~/.config/Bearcat` on Linux. It uses this key to decrypt your saved credentials.
 
 For a backup, keep the database and `bearcat.key` together. Without the key, Bearcat cannot decrypt
 your credentials after a restore or a move to another computer.
@@ -136,7 +141,7 @@ Copy `bearcat.key` with either backup.
 
 ## If Bearcat does not start
 
-- **RAR or 7z was not found:** select the executable files with **Browse...**. On macOS, the official 7-Zip download names its executable `7zz`.
+- **RAR or 7z was not found:** select the executable files with **Browse...**. On macOS and Linux, the official 7-Zip download names its executable `7zz`.
 - **A folder is missing or not writable:** check your working directories and database file location.
 - **The web port is in use:** choose another port and start Bearcat again.
 - **Changes seem to have no effect on Windows:** check the tray for another running copy of Bearcat Desktop and quit it.
