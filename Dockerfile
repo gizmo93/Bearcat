@@ -11,7 +11,7 @@ RUN --mount=type=cache,id=bearcat-nuget,target=/root/.nuget/packages \
     dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 -o /App/out -p:Version=$BEARCAT_VERSION -p:RunAnalyzers=false
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.12-noble
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.13-noble
 
 ENV \
     ASPNETCORE_ENVIRONMENT=Production \
