@@ -744,6 +744,129 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateManualReuploadsForReleasesAsync_UploadsWithDifferentOnlineStates_CreatesReuploadsOnlyForNotFullyOnlineUploadsOfGivenReleases()
+    {
+        // Arrange
+        var partiallyOnlineUpload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: LocalNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        var onlineUpload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: LocalNow,
+            uploadedFileLinks: ["https://hoster.test/2"]
+        );
+        var offlineUploadOfOtherRelease = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: LocalNow,
+            uploadedFileLinks: ["https://hoster.test/3"]
+        );
+        var releaseIds = await DbContext
+            .UploadConfigs.Where(uc =>
+                uc.Id == partiallyOnlineUpload.UploadConfigId
+                || uc.Id == onlineUpload.UploadConfigId
+            )
+            .Select(uc => uc.ReleaseId)
+            .ToListAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateManualReuploadsForReleasesAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u =>
+            u.Id != partiallyOnlineUpload.Id
+            && u.Id != onlineUpload.Id
+            && u.Id != offlineUploadOfOtherRelease.Id
+        );
+
+        result.ShouldBe(1);
+        reupload.UploadConfigId.ShouldBe(partiallyOnlineUpload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadsForReleasesAsync_UploadConfigWithSeveralOfflineUploads_CreatesSingleReupload()
+    {
+        // Arrange
+        var olderUpload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: LocalNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        DbContext.Uploads.Add(
+            new Upload
+            {
+                UploadConfigId = olderUpload.UploadConfigId,
+                HosterRegistrationId = olderUpload.HosterRegistrationId,
+                CreatedAt = DateTime.UtcNow,
+                UploadState = UploadState.Completed,
+                OnlineState = OnlineState.Offline,
+                ErrorMessages = [],
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        var releaseId = await DbContext
+            .UploadConfigs.Where(uc => uc.Id == olderUpload.UploadConfigId)
+            .Select(uc => uc.ReleaseId)
+            .SingleAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateManualReuploadsForReleasesAsync(
+            [releaseId],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(1);
+        (await DbContext.Uploads.CountAsync()).ShouldBe(3);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadsForReleasesAsync_ReplacementUploadIsPending_CreatesNoReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: LocalNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        DbContext.Uploads.Add(
+            new Upload
+            {
+                UploadConfigId = upload.UploadConfigId,
+                HosterRegistrationId = upload.HosterRegistrationId,
+                CreatedAt = DateTime.UtcNow,
+                UploadState = UploadState.WaitingForArchive,
+                OnlineState = OnlineState.Unknown,
+                ErrorMessages = [],
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        var releaseId = await DbContext
+            .UploadConfigs.Where(uc => uc.Id == upload.UploadConfigId)
+            .Select(uc => uc.ReleaseId)
+            .SingleAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateManualReuploadsForReleasesAsync(
+            [releaseId],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(0);
+        (await DbContext.Uploads.CountAsync()).ShouldBe(2);
+    }
+
+    [Test]
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadHasNoUploadedFiles_DoesNotCreateReupload()
     {
         // Arrange

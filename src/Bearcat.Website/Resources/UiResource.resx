@@ -569,6 +569,11 @@
   <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0, which schedules immediately after files are confirmed offline.</value></data>
   <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Hours until reupload must be zero or greater.</value></data>
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manual reupload created for upload #{0}.</value></data>
+  <data name="ReuploadNotFullyOnlineHosters" xml:space="preserve"><value>Reupload hosters not fully online</value></data>
+  <data name="ReuploadNotFullyOnlineHostersOfReleaseConfirmation" xml:space="preserve"><value>Create a manual reupload for every hoster of this release that is offline, partially online, canceled, or failed?</value></data>
+  <data name="ReuploadNotFullyOnlineHostersOfReleasesConfirmation" xml:space="preserve"><value>Create a manual reupload for every hoster of the {0} selected releases that is offline, partially online, canceled, or failed?</value></data>
+  <data name="ManualReuploadsCreated" xml:space="preserve"><value>Manual reuploads created: {0}</value></data>
+  <data name="NoHosterNeedsReupload" xml:space="preserve"><value>No hoster needs a reupload.</value></data>
   <data name="UploadCancellationRequested" xml:space="preserve"><value>Cancellation requested for upload #{0}.</value></data>
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be canceled.</value></data>
   <data name="DownloadCancellationRequested" xml:space="preserve"><value>Cancellation requested for the mirror download of archive #{0}.</value></data>

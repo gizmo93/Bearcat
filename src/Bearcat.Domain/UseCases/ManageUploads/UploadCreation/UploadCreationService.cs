@@ -156,6 +156,33 @@ public class UploadCreationService(
         return newUpload.Id;
     }
 
+    public async Task<int> CreateManualReuploadsForReleasesAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var latestUploads =
+            await uploadStateRepository.GetLatestUploadOfEachUploadConfigOfReleasesForReuploadAsync(
+                releaseIds,
+                cancellationToken
+            );
+
+        var uploadsToReupload = latestUploads
+            .Where(upload =>
+                upload.CanBeManuallyReuploaded() && !upload.HasExistingOrPendingReplacementUpload()
+            )
+            .ToList();
+
+        foreach (var upload in uploadsToReupload)
+        {
+            AddReuploadOfUpload(upload);
+        }
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        return uploadsToReupload.Count;
+    }
+
     private InitialUploadCreationForReleaseResult CreateInitialUploadsForReleaseIfQualityGateIsSatisfied(
         Release release,
         IReadOnlyList<UploadConfig> uploadConfigsWithoutUploads,

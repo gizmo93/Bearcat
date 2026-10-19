@@ -1,5 +1,6 @@
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -9,7 +10,8 @@ namespace Bearcat.Website.Pages.ManageReleases.Results;
 
 public partial class ReleaseBulkActionBar(
     IScopedOperationRunner operationRunner,
-    ToastService toastService
+    ToastService toastService,
+    DialogService dialogService
 ) : ComponentBase
 {
     [Parameter]
@@ -71,6 +73,38 @@ public partial class ReleaseBulkActionBar(
         );
 
         toastService.Success(L["PrimaryLanguageChangedForReleases", releaseIds.Count]);
+        Selection.Clear();
+        await OnReleasesUpdated.InvokeAsync();
+    }
+
+    private async Task CreateManualReuploadsAsync()
+    {
+        var releaseIds = Selection.SelectedReleaseIds;
+
+        var result = await dialogService.ConfirmAsync(
+            L["ReuploadNotFullyOnlineHosters"],
+            L["ReuploadNotFullyOnlineHostersOfReleasesConfirmation", releaseIds.Count],
+            new ConfirmDialogOptions { ConfirmText = L["Reupload"], CancelText = L["Cancel"] }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var createdReuploadCount = await operationRunner.RunAsync(
+            (UploadCreationService service) =>
+                service.CreateManualReuploadsForReleasesAsync(releaseIds)
+        );
+
+        if (createdReuploadCount > 0)
+        {
+            toastService.Success(L["ManualReuploadsCreated", createdReuploadCount]);
+        }
+        else
+        {
+            toastService.Info(L["NoHosterNeedsReupload"]);
+        }
         Selection.Clear();
         await OnReleasesUpdated.InvokeAsync();
     }

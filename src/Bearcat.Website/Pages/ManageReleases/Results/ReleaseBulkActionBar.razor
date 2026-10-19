@@ -26,6 +26,15 @@
                                      Options="PrimaryLanguageOptions"
                                      OnSelect="ApplyPrimaryLanguageAsync" />
         <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Class="shrink-0"
+                  AriaLabel="@L["ReuploadNotFullyOnlineHosters"]"
+                  title="@L["ReuploadNotFullyOnlineHosters"]"
+                  OnClick="CreateManualReuploadsAsync">
+            <LucideIcon Name="upload" class="h-4 w-4" />
+            <span class="hidden sm:inline">@L["Reupload"]</span>
+        </BbButton>
+        <BbButton Variant="ButtonVariant.Ghost"
                   Size="ButtonSize.IconSmall"
                   Class="shrink-0"
                   AriaLabel="@L["DeselectAll"]"

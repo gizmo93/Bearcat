@@ -180,6 +180,31 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .FirstAsync(u => u.Id == uploadId, cancellationToken);
     }
 
+    public async Task<
+        IReadOnlyList<Upload>
+    > GetLatestUploadOfEachUploadConfigOfReleasesForReuploadAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Uploads.AsSplitQuery()
+            .Include(u => u.HosterRegistration)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Uploads)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.HosterAccountPool!)
+                    .ThenInclude(pool => pool.Members)
+            .Where(u =>
+                releaseIds.Contains(u.UploadConfig.ReleaseId)
+                && !dbWrite.Uploads.Any(newer =>
+                    newer.UploadConfigId == u.UploadConfigId && newer.Id > u.Id
+                )
+            )
+            .OrderBy(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Upload?> GetUploadForOnlineCheckAsync(
         int uploadId,
         CancellationToken cancellationToken

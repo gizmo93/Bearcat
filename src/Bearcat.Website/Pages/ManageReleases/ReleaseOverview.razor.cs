@@ -3,6 +3,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.Pages.ManageReleases.DetailTabs;
@@ -114,6 +115,36 @@ public partial class ReleaseOverview(
         isLoading = true;
         await OnRefreshRequested.InvokeAsync();
         await LoadImageUploadsAndNfoAsync();
+    }
+
+    private async Task CreateManualReuploadsAsync()
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["ReuploadNotFullyOnlineHosters"],
+            L["ReuploadNotFullyOnlineHostersOfReleaseConfirmation"],
+            new ConfirmDialogOptions { ConfirmText = L["Reupload"], CancelText = L["Cancel"] }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var createdReuploadCount = await operationRunner.RunAsync(
+            (UploadCreationService service) =>
+                service.CreateManualReuploadsForReleasesAsync([ReleaseId])
+        );
+
+        if (createdReuploadCount > 0)
+        {
+            toastService.Success(L["ManualReuploadsCreated", createdReuploadCount]);
+        }
+        else
+        {
+            toastService.Info(L["NoHosterNeedsReupload"]);
+        }
+
+        await RefreshAsync();
     }
 
     private async Task SaveNfoFileAsync()

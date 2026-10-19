@@ -68,6 +68,26 @@
                     </BbDropdownMenuContent>
                 </BbDropdownMenu>
 
+                <BbDropdownMenu>
+                    <BbDropdownMenuTrigger>
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.IconSmall"
+                                  Disabled="isLoading"
+                                  AriaLabel="@L["Actions"]"
+                                  title="@L["Actions"]">
+                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                        </BbButton>
+                    </BbDropdownMenuTrigger>
+                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                        <BbDropdownMenuItem Disabled="@(Uploads.Count == 0)" OnClick="CreateManualReuploadsAsync">
+                            <Icon>
+                                <LucideIcon Name="upload" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["ReuploadNotFullyOnlineHosters"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    </BbDropdownMenuContent>
+                </BbDropdownMenu>
+
                 <BbButton Variant="ButtonVariant.Outline"
                           Size="ButtonSize.IconSmall"
                           Disabled="isLoading"

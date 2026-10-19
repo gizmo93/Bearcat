@@ -572,6 +572,11 @@
     <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; lädt Offline Links so schnell wie möglich wieder hoch.</value></data>
     <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Stunden bis Reupload muss null oder grösser sein.</value></data>
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manueller Reupload für Upload #{0} erstellt.</value></data>
+  <data name="ReuploadNotFullyOnlineHosters" xml:space="preserve"><value>Nicht vollständig verfügbare Hoster neu hochladen</value></data>
+  <data name="ReuploadNotFullyOnlineHostersOfReleaseConfirmation" xml:space="preserve"><value>Für jeden Hoster dieses Releases, der offline, teilweise online, abgebrochen oder fehlgeschlagen ist, einen manuellen Reupload erstellen?</value></data>
+  <data name="ReuploadNotFullyOnlineHostersOfReleasesConfirmation" xml:space="preserve"><value>Für jeden Hoster der {0} ausgewählten Releases, der offline, teilweise online, abgebrochen oder fehlgeschlagen ist, einen manuellen Reupload erstellen?</value></data>
+  <data name="ManualReuploadsCreated" xml:space="preserve"><value>Manuelle Reuploads erstellt: {0}</value></data>
+  <data name="NoHosterNeedsReupload" xml:space="preserve"><value>Kein Hoster benötigt einen Reupload.</value></data>
   <data name="UploadCancellationRequested" xml:space="preserve"><value>Abbruch für Upload #{0} angefragt.</value></data>
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr abgebrochen werden.</value></data>
   <data name="DownloadCancellationRequested" xml:space="preserve"><value>Abbruch für den Mirrordownload von Archiv #{0} angefragt.</value></data>
