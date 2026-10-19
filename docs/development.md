@@ -163,7 +163,7 @@ The `Release Desktop Artifacts` GitHub workflow builds local desktop packages fo
 
 Each package contains the Avalonia launcher and a published `Bearcat.Host` next to it. The host is published with workstation garbage collection for desktop use, while the Docker image keeps the default server GC behavior.
 
-The Linux package is a `tar.gz` archive so the executable permissions survive extraction. The other packages are ZIP files. On published GitHub releases, the workflow uploads the packages as release assets. On manual workflow runs, they are available as workflow artifacts.
+For Linux, the workflow builds `.deb` and `.rpm` packages with [nfpm](https://nfpm.goreleaser.com/) from `packaging/linux/nfpm.yaml`, plus a `tar.gz` archive for other distributions. The packages install into `/opt/bearcat-desktop` and add a `.desktop` entry, so Bearcat appears in the app menu. The macOS and Windows packages are ZIP files. On published GitHub releases, the workflow uploads the packages as release assets. On manual workflow runs, they are available as workflow artifacts.
 
 Local desktop artifacts can be generated with:
 
@@ -175,6 +175,6 @@ scripts/publish-desktop.sh win-arm64
 Without arguments, the script publishes all desktop runtimes: `osx-arm64`, `linux-x64`, `win-x64`, and `win-arm64`. Pass one or more runtime identifiers to publish only those targets.
 
 The script deletes the target artifact folder, restores runtime-specific assets, publishes `Bearcat.Desktop` and `Bearcat.Host` into separate staging folders, then copies both into `artifacts/desktop/<runtime>`.
-For `linux-x64` and `osx-arm64`, it marks the native executables as executable. For `osx-arm64`, it also creates `artifacts/desktop/osx-arm64/Bearcat Desktop.app` and ad-hoc signs the app bundle.
+For `linux-x64` and `osx-arm64`, it marks the native executables as executable. The `linux-x64` output is the input for `nfpm package --config packaging/linux/nfpm.yaml`, which has to run from the repository root. For `osx-arm64`, it also creates `artifacts/desktop/osx-arm64/Bearcat Desktop.app` and ad-hoc signs the app bundle.
 
 Do not use the timestamp of `Bearcat.Desktop.exe` as the freshness check. For non-single-file .NET publishes, the `.exe` is the native app host stub; the application code is in `Bearcat.Desktop.dll`. MSBuild may preserve timestamps when copying files into the publish folder, so the local script refreshes final artifact timestamps after copying.

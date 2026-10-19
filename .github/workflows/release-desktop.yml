@@ -298,8 +298,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          package_root="$RUNNER_TEMP/Bearcat.Desktop-linux-x64"
-          artifact_path="$RUNNER_TEMP/Bearcat.Desktop-linux-x64.tar.gz"
+          package_root="artifacts/desktop/linux-x64"
 
           rm -rf "$package_root"
           mkdir -p "$package_root"
@@ -309,22 +308,53 @@ jobs:
 
           chmod +x "$package_root/Bearcat.Desktop" "$package_root/Bearcat.Host"
 
-          tar -czf "$artifact_path" -C "$RUNNER_TEMP" "Bearcat.Desktop-linux-x64"
+          tar -czf "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.tar.gz" \
+            -C artifacts/desktop \
+            --transform 's,^linux-x64,Bearcat.Desktop-linux-x64,' \
+            linux-x64
+
+      - name: Install nfpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="2.47.0"
+          archive="nfpm_${version}_Linux_x86_64.tar.gz"
+          download_dir="$RUNNER_TEMP/nfpm"
+          mkdir -p "$download_dir"
+          curl -sSL --fail -o "$download_dir/$archive" "https://github.com/goreleaser/nfpm/releases/download/v${version}/${archive}"
+          curl -sSL --fail -o "$download_dir/checksums.txt" "https://github.com/goreleaser/nfpm/releases/download/v${version}/checksums.txt"
+          (cd "$download_dir" && grep " ${archive}\$" checksums.txt | sha256sum --check --strict)
+          tar -xzf "$download_dir/$archive" -C "$download_dir" nfpm
+          echo "$download_dir" >> "$GITHUB_PATH"
+
+      - name: Build deb and rpm packages
+        shell: bash
+        env:
+          BEARCAT_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          nfpm package --config packaging/linux/nfpm.yaml --packager deb --target "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.deb"
+          nfpm package --config packaging/linux/nfpm.yaml --packager rpm --target "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.rpm"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: Bearcat.Desktop-linux-x64
-          path: ${{ runner.temp }}/Bearcat.Desktop-linux-x64.tar.gz
+          path: |
+            ${{ runner.temp }}/Bearcat.Desktop-linux-x64.tar.gz
+            ${{ runner.temp }}/Bearcat.Desktop-linux-x64.deb
+            ${{ runner.temp }}/Bearcat.Desktop-linux-x64.rpm
           if-no-files-found: error
 
-      - name: Attach artifact to GitHub release
+      - name: Attach artifacts to GitHub release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           gh release upload "${{ github.event.release.tag_name }}"
           "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.tar.gz"
+          "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.deb"
+          "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.rpm"
           --clobber
 
   package-windows:

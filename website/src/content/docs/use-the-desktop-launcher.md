@@ -45,7 +45,7 @@ Download the Desktop package for your computer from [GitHub releases](https://gi
 
 - **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep all extracted files in the same folder.
 - **macOS (Apple Silicon):** extract `Bearcat.Desktop-macos-arm64.zip`, move **Bearcat Desktop.app** to **Applications**, and open it.
-- **Linux (x64):** extract `Bearcat.Desktop-linux-x64.tar.gz` into a folder you will keep and run `Bearcat.Desktop` from it.
+- **Linux (x64):** open `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) or `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), install it, and start **Bearcat Desktop** from the app menu. In a terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` or `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. To update, install the newer package the same way. On other distributions, extract `Bearcat.Desktop-linux-x64.tar.gz` and run `Bearcat.Desktop` from a terminal.
 
 <details>
 <summary>macOS says the app is damaged or blocks it from opening</summary>
