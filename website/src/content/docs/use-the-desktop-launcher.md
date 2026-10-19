@@ -9,6 +9,10 @@ next:
   link: "/Bearcat/post-installation/"
 ---
 
+:::tip[Already installed Bearcat?]
+[Go to the update instructions](#updating-bearcat).
+:::
+
 The Desktop app starts Bearcat and opens its web interface in your browser.
 New installations use **SQLite**, which needs no database server.
 
@@ -45,7 +49,7 @@ Download the Desktop package for your computer from [GitHub releases](https://gi
 
 - **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep all extracted files in the same folder.
 - **macOS (Apple Silicon):** extract `Bearcat.Desktop-macos-arm64.zip`, move **Bearcat Desktop.app** to **Applications**, and open it.
-- **Linux (x64):** open `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) or `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), install it, and start **Bearcat Desktop** from the app menu. In a terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` or `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. To update, install the newer package the same way. On other distributions, extract `Bearcat.Desktop-linux-x64.tar.gz` and run `Bearcat.Desktop` from a terminal.
+- **Linux (x64):** open `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) or `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), install it, and start **Bearcat Desktop** from the app menu. In a terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` or `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. On other distributions, extract `Bearcat.Desktop-linux-x64.tar.gz` and run `Bearcat.Desktop` from a terminal.
 
 <details>
 <summary>macOS says the app is damaged or blocks it from opening</summary>
@@ -100,6 +104,28 @@ Click **Save**, then **Start Bearcat**. Once it is ready, click **Open Bearcat**
 Closing the settings window keeps Bearcat running. Use **Stop** or **Quit** to stop it.
 On GNOME, the tray icon needs the [AppIndicator extension](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu includes it.
 To run Bearcat on Windows without logging in, use the [Windows service](/Bearcat/use-the-windows-service/).
+
+## Updating Bearcat
+
+1. Exit the Desktop app with **Quit** or **Quit Bearcat** in the tray menu.
+   Closing the window is not enough; Bearcat keeps running.
+2. Download the new Desktop package for your system from [GitHub releases](https://github.com/gizmo93/Bearcat/releases)
+   and install it:
+
+| System | Update steps |
+| --- | --- |
+| Windows | Extract `Bearcat.Desktop-win-...zip` and replace all application files in the existing install folder, including DLLs and subfolders. |
+| macOS | Extract `Bearcat.Desktop-macos-arm64.zip` and replace **Bearcat Desktop.app** in **Applications**. |
+| Linux (DEB/RPM) | Install the new package with `sudo apt install ./Bearcat.Desktop-linux-x64.deb` or `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm`. |
+| Linux (TAR.GZ) | Extract `Bearcat.Desktop-linux-x64.tar.gz` and replace the application files in the existing install folder. |
+
+3. Open the Desktop app and click **Start Bearcat**. Reload the web interface and check the
+   version shown in the sidebar below the logo.
+
+Your settings and data stay in their existing locations. If you chose a database file inside the
+install folder, keep it when replacing the application files.
+If you set **Bearcat Host** manually, make sure it points to the host from the new package.
+Bearcat updates the database automatically on startup.
 
 ## Other settings
 

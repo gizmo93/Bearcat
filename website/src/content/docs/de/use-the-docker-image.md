@@ -9,6 +9,10 @@ next:
   link: "/Bearcat/de/post-installation/"
 ---
 
+:::tip[Bearcat ist bereits installiert?]
+[Direkt zur Updateanleitung](#bearcat-aktualisieren).
+:::
+
 Das Docker-Image enthält RAR und 7-Zip und verwendet **SQLite**. Du brauchst daher nur einen Container.
 Du brauchst Docker mit Docker Compose. Das Image unterstützt nur `linux/amd64`. Raspberry Pi wird nicht unterstützt.
 
@@ -90,6 +94,43 @@ docker compose up -d
 
 In Bearcats Ordnerauswahl erscheint dein Releaseordner als `/mnt/data/releases`.
 
+## Bearcat aktualisieren
+
+1. Öffne ein Terminal im Ordner deiner bestehenden Composedatei und führe aus:
+
+```bash
+docker compose pull bearcat
+docker compose up -d bearcat
+```
+
+2. Lade die Weboberfläche neu und prüfe die angezeigte Version in der Seitenleiste unter dem Logo.
+
+Mit `latest` lädt `pull` das aktuelle Image für Bearcat. Hast du in `.env` unter `BEARCAT_IMAGE` eine feste
+Version eingetragen, ändere zuerst den Versionstag auf die gewünschte Version.
+Ein Containerneustart allein lädt kein neues Image.
+
+Behalte deine Composedateien, `.env` und Datenordner. Bei PostgreSQL muss weiterhin dieselbe
+`docker-compose.postgres.yml` eingebunden sein. Der Pullbefehl lädt nur das Image für Bearcat.
+Bearcat aktualisiert die Datenbank beim Start automatisch.
+
+### Bestehende Installationen mit PostgreSQL
+
+Behalte deine bestehenden Compose-Dateien, um PostgreSQL weiterzuverwenden. Ersetzt du sie durch
+die aktuellen Dateien mit SQLite als Standard, füge diese Zeile in `.env` ein (Windows: `;` statt `:`):
+
+```text
+COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml
+```
+
+Oder starte mit beiden Dateien:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+```
+
+Ohne den Override startet Bearcat mit einer leeren SQLite-Datenbank. Deine PostgreSQL-Daten sind
+weiterhin vorhanden. Füge den Override hinzu und führe `docker compose up -d` erneut aus, um zurückzuwechseln.
+
 ## Datenbank
 
 Behalte SQLite oder richte mit den folgenden Schritten PostgreSQL ein.
@@ -110,36 +151,6 @@ Mit `docker compose up -d` startest du PostgreSQL in einem zweiten Container und
 PostgreSQL speichert seine Daten in `POSTGRES_DATA_DIR`, standardmässig `./postgres-data`.
 Bearcat braucht `BEARCAT_DATA_DIR` weiterhin für seinen Verschlüsselungsschlüssel.
 Ein Datenbankwechsel überträgt keine Daten; die neue Datenbank startet leer.
-
-## Bearcat aktualisieren
-
-Mit dem Standardtag `latest` aktualisierst du Bearcat mit diesen Befehlen im Ordner deiner Compose-Datei:
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-Docker erstellt den Container neu, wenn sich das Image geändert hat. Behalte die Datenordner auf
-deinem Host; sie enthalten die Datenbank und den Verschlüsselungsschlüssel.
-
-### Bestehende Docker-Installationen aktualisieren
-
-Behalte deine bestehenden Compose-Dateien, um PostgreSQL weiterzuverwenden. Ersetzt du sie durch
-die aktuellen Dateien mit SQLite als Standard, füge diese Zeile in `.env` ein (Windows: `;` statt `:`):
-
-```text
-COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml
-```
-
-Oder starte mit beiden Dateien:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
-```
-
-Ohne den Override startet Bearcat mit einer leeren SQLite-Datenbank. Deine PostgreSQL-Daten sind
-weiterhin vorhanden. Füge den Override hinzu und führe `docker compose up -d` erneut aus, um zurückzuwechseln.
 
 ## Backups
 

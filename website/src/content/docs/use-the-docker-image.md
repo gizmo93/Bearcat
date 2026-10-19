@@ -9,6 +9,10 @@ next:
   link: "/Bearcat/post-installation/"
 ---
 
+:::tip[Already installed Bearcat?]
+[Go to the update instructions](#updating-bearcat).
+:::
+
 The Docker image includes RAR and 7-Zip and uses **SQLite**, so you only need one container.
 You need Docker with Docker Compose. The image supports `linux/amd64` only. Raspberry Pi is not supported.
 
@@ -89,6 +93,44 @@ open `http://<server-address>:8080` instead. The first start may take a moment.
 
 In Bearcat's folder picker, your release folder appears as `/mnt/data/releases`.
 
+## Updating Bearcat
+
+1. Back up the database and `bearcat.key`. See [Backups](#backups).
+2. Open a terminal in your existing Compose folder and run:
+
+```bash
+docker compose pull bearcat
+docker compose up -d bearcat
+```
+
+3. Reload the web interface and check the version shown in the sidebar below the logo.
+
+With `latest`, `pull` downloads the current Bearcat image. If you pinned a version with
+`BEARCAT_IMAGE` in `.env`, change the tag to the version you want first.
+Restarting the container alone does not download a new image.
+
+Keep your Compose files, `.env`, and data folders. With PostgreSQL, keep using the same
+`docker-compose.postgres.yml` override. The pull command downloads only the Bearcat image.
+Bearcat updates the database automatically on startup.
+
+### Upgrading existing Docker installs
+
+Keep your existing Compose files to continue using PostgreSQL. If you replace them with the current
+files, which default to SQLite, add this line to `.env` (Windows: `;` instead of `:`):
+
+```text
+COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml
+```
+
+Or start with both files:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+```
+
+Without the override, Bearcat starts with an empty SQLite database. Your PostgreSQL data is still
+there. Add the override and run `docker compose up -d` again to switch back.
+
 ## Database
 
 Keep SQLite, or follow the steps below to use PostgreSQL.
@@ -109,36 +151,6 @@ Run `docker compose up -d` to start PostgreSQL in a second container and connect
 PostgreSQL stores its data in `POSTGRES_DATA_DIR`, which defaults to `./postgres-data`.
 Bearcat still needs `BEARCAT_DATA_DIR` for its encryption key.
 Switching databases does not transfer data; the new database starts empty.
-
-## Updating Bearcat
-
-With the default `latest` image tag, run these commands from your Compose folder to update Bearcat:
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-Docker recreates the container if the image has changed. Keep the data folders on your host;
-they contain the database and encryption key.
-
-### Upgrading existing Docker installs
-
-Keep your existing Compose files to continue using PostgreSQL. If you replace them with the current
-files, which default to SQLite, add this line to `.env` (Windows: `;` instead of `:`):
-
-```text
-COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml
-```
-
-Or start with both files:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
-```
-
-Without the override, Bearcat starts with an empty SQLite database. Your PostgreSQL data is still
-there. Add the override and run `docker compose up -d` again to switch back.
 
 ## Backups
 

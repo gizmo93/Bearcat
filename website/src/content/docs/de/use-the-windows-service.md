@@ -9,6 +9,10 @@ next:
   link: "/Bearcat/de/post-installation/"
 ---
 
+:::tip[Bearcat ist bereits installiert?]
+[Direkt zur Updateanleitung](#aktualisieren).
+:::
+
 Der Windows-Dienst startet Bearcat mit Windows und läuft auch ohne Anmeldung.
 Neue Installationen verwenden **SQLite** und brauchen keinen Datenbankserver.
 Um Bearcat selbst zu starten und zu beenden, verwende die [Desktopanwendung](/Bearcat/de/use-the-desktop-launcher/).
@@ -54,6 +58,33 @@ Das Setup speichert die Konfiguration, installiert den Dienst und startet Bearca
 Öffne [http://127.0.0.1:17208](http://127.0.0.1:17208) oder verwende den Port, den du im Setup gewählt hast.
 
 **Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
+
+## Aktualisieren
+
+1. Lade das neue Paket `Bearcat.Service-win-...zip` für deinen Rechner von
+   [GitHub Releases](https://github.com/gizmo93/Bearcat/releases) herunter und entpacke es in einen separaten Ordner.
+2. Öffne PowerShell **als Administrator** und stoppe den Dienst:
+
+```powershell
+sc.exe stop Bearcat
+sc.exe query Bearcat
+```
+
+Warte, bis `sc.exe query Bearcat` den Zustand `STOPPED` anzeigt, bevor du Dateien ersetzt.
+
+3. Ersetze alle Programmdateien im **bisherigen Installationsordner**, auch die DLLs und Unterordner,
+   durch die Dateien aus dem neuen Paket. Bewahre eine selbst gewählte Datenbankdatei in diesem Ordner auf.
+4. Starte den Dienst wieder:
+
+```powershell
+sc.exe start Bearcat
+```
+
+5. Lade die Weboberfläche neu und prüfe die angezeigte Version in der Seitenleiste unter dem Logo.
+
+Du brauchst weder `uninstall` noch `setup` auszuführen. Dienstregistrierung und Dienstkonto bleiben erhalten.
+Einstellungen, `bearcat.key` und die standardmässige SQLite-Datenbank bleiben in `%ProgramData%\Bearcat`.
+Bearcat aktualisiert die Datenbank beim Start automatisch.
 
 ## Setup später ändern
 
@@ -165,17 +196,6 @@ Bei PostgreSQL aktualisierst du das Datenbankpasswort mit diesem Befehl als Admi
 
 Der Befehl fragt nach dem neuen Passwort, testet die Verbindung, aktualisiert die Konfiguration und startet den Dienst neu.
 Bei SQLite bricht er mit einem Fehler ab und lässt die Konfiguration unverändert.
-
-## Aktualisieren
-
-Sichere deine Datenbank vor einem grösseren Update. Bearcat führt Datenbankmigrationen beim Start aus.
-
-1. Stoppe den Dienst mit `sc.exe stop Bearcat`, um die Programmdateien freizugeben.
-2. Ersetze alle Dateien im Installationsordner durch das neue Release, einschliesslich der DLLs.
-3. Starte den Dienst mit `sc.exe start Bearcat`.
-
-Einstellungen, `bearcat.key` und die standardmässige SQLite-Datenbank bleiben in `%ProgramData%\Bearcat`.
-Dienstregistrierung und Dienstkonto bleiben erhalten.
 
 ## Deinstallieren
 

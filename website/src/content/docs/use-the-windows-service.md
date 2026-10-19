@@ -9,6 +9,10 @@ next:
   link: "/Bearcat/post-installation/"
 ---
 
+:::tip[Already installed Bearcat?]
+[Go to the update instructions](#updating).
+:::
+
 The Windows service starts Bearcat with Windows and keeps it running when you are not logged in.
 New installations use **SQLite**, which needs no database server.
 To start and stop Bearcat yourself, use the [Desktop app](/Bearcat/use-the-desktop-launcher/).
@@ -54,6 +58,33 @@ Setup saves the configuration, installs the service, and starts Bearcat.
 Open [http://127.0.0.1:17208](http://127.0.0.1:17208), or use the port you chose during setup.
 
 **Next: [Set up Bearcat and upload your first release](/Bearcat/post-installation/).**
+
+## Updating
+
+1. Download the new `Bearcat.Service-win-...zip` package for your computer from
+   [GitHub releases](https://github.com/gizmo93/Bearcat/releases) and extract it into a separate folder.
+2. Open PowerShell **as Administrator** and stop the service:
+
+```powershell
+sc.exe stop Bearcat
+sc.exe query Bearcat
+```
+
+Wait until `sc.exe query Bearcat` shows `STOPPED` before replacing any files.
+
+3. Replace all application files in the **existing install folder**, including DLLs and subfolders,
+   with the files from the new package. Keep any database file you chose to store in this folder.
+4. Start the service again:
+
+```powershell
+sc.exe start Bearcat
+```
+
+5. Reload the web interface and check the version shown in the sidebar below the logo.
+
+You do not need to run `uninstall` or `setup`. The service registration and account are kept.
+Settings, `bearcat.key`, and the default SQLite database stay in `%ProgramData%\Bearcat`.
+Bearcat updates the database automatically on startup.
 
 ## Change the setup later
 
@@ -166,17 +197,6 @@ For PostgreSQL, update the database password with this command as Administrator:
 
 It prompts for the new password, tests the connection, updates the configuration, and restarts the service.
 With SQLite, it exits with an error and leaves the configuration unchanged.
-
-## Updating
-
-Back up your database before a major update. Bearcat applies database migrations on startup.
-
-1. Stop the service with `sc.exe stop Bearcat` to unlock the application files.
-2. Replace all files in the install folder with the new release, including the DLLs.
-3. Start the service with `sc.exe start Bearcat`.
-
-Settings, `bearcat.key`, and the default SQLite database stay in `%ProgramData%\Bearcat`.
-The service registration and account are kept.
 
 ## Uninstalling
 

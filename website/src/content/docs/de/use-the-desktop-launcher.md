@@ -9,6 +9,10 @@ next:
   link: "/Bearcat/de/post-installation/"
 ---
 
+:::tip[Bearcat ist bereits installiert?]
+[Direkt zur Updateanleitung](#bearcat-aktualisieren).
+:::
+
 Die Desktopanwendung startet Bearcat und öffnet die Weboberfläche im Browser.
 Neue Installationen verwenden **SQLite** und brauchen keinen Datenbankserver.
 
@@ -45,7 +49,7 @@ Lade das Desktoppaket für deinen Rechner von [GitHub Releases](https://github.c
 
 - **Windows:** Entpacke das Paket `Bearcat.Desktop-win-...zip` und öffne `Bearcat.Desktop.exe`. Lass alle entpackten Dateien im selben Ordner.
 - **macOS (Apple Silicon):** Entpacke `Bearcat.Desktop-macos-arm64.zip`, verschiebe **Bearcat Desktop.app** in den Ordner **Programme** und öffne die App.
-- **Linux (x64):** Öffne `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) oder `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), installiere das Paket und starte **Bearcat Desktop** aus dem App-Menü. Im Terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` oder `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. Für ein Update installierst du das neuere Paket auf dieselbe Weise. Unter anderen Distributionen entpackst du `Bearcat.Desktop-linux-x64.tar.gz` und startest `Bearcat.Desktop` aus einem Terminal.
+- **Linux (x64):** Öffne `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) oder `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), installiere das Paket und starte **Bearcat Desktop** aus dem App-Menü. Im Terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` oder `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. Unter anderen Distributionen entpackst du `Bearcat.Desktop-linux-x64.tar.gz` und startest `Bearcat.Desktop` aus einem Terminal.
 
 <details>
 <summary>macOS meldet, die App sei beschädigt, oder blockiert das Öffnen</summary>
@@ -100,6 +104,28 @@ Klicke auf **Save** und dann auf **Start Bearcat**. Sobald Bearcat bereit ist, k
 Schliesst du das Einstellungsfenster, läuft Bearcat weiter. Mit **Stop** oder **Quit** beendest du es.
 Unter GNOME braucht das Symbol im Infobereich die [AppIndicator-Erweiterung](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu bringt sie mit.
 Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Dienst](/Bearcat/de/use-the-windows-service/).
+
+## Bearcat aktualisieren
+
+1. Beende die Desktopanwendung mit **Quit** oder im Infobereich mit **Quit Bearcat**.
+   Das Schliessen des Fensters reicht nicht, Bearcat läuft dabei weiter.
+2. Lade das neue Desktoppaket für dein System von [GitHub Releases](https://github.com/gizmo93/Bearcat/releases)
+   herunter und installiere es:
+
+| System | Updateschritte |
+| --- | --- |
+| Windows | Entpacke `Bearcat.Desktop-win-...zip` und ersetze alle Programmdateien im bisherigen Installationsordner, auch die DLLs und Unterordner. |
+| macOS | Entpacke `Bearcat.Desktop-macos-arm64.zip` und ersetze **Bearcat Desktop.app** im Ordner **Programme**. |
+| Linux (DEB/RPM) | Installiere das neue Paket mit `sudo apt install ./Bearcat.Desktop-linux-x64.deb` oder `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm`. |
+| Linux (TAR.GZ) | Entpacke `Bearcat.Desktop-linux-x64.tar.gz` und ersetze die Programmdateien im bisherigen Installationsordner. |
+
+3. Öffne die Desktopanwendung und klicke auf **Start Bearcat**. Lade die Weboberfläche neu und
+   prüfe die angezeigte Version in der Seitenleiste unter dem Logo.
+
+Deine Einstellungen und Daten bleiben an ihren bisherigen Speicherorten. Bewahre eine selbst gewählte
+Datenbankdatei im Installationsordner beim Ersetzen der Programmdateien auf.
+Ist **Bearcat Host** manuell gesetzt, muss der Pfad auf den Host aus dem neuen Paket zeigen.
+Bearcat aktualisiert die Datenbank beim Start automatisch.
 
 ## Weitere Einstellungen
 
