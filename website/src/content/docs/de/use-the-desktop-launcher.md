@@ -73,6 +73,23 @@ Erstelle einen Ordner für deine Releases, zum Beispiel `C:\Bearcat\releases` un
 
 Behalte die Standardwerte für **SQLite (recommended)**, **Database file**, **Bearcat Host**, **Web port** und **API key**.
 
+<details>
+<summary>Screenshots der Desktopanwendung anzeigen</summary>
+
+**Windows**
+
+![Einstellungsfenster der Bearcat-Desktopanwendung unter Windows](../images/desktop-windows.png)
+
+**macOS**
+
+![Einstellungsfenster der Bearcat-Desktopanwendung unter macOS](../images/desktop-mac.png)
+
+**Linux**
+
+![Einstellungsfenster der Bearcat-Desktopanwendung unter Linux](../images/desktop-linux.png)
+
+</details>
+
 ## 4. Bearcat starten
 
 Klicke auf **Save** und dann auf **Start Bearcat**. Sobald Bearcat bereit ist, klicke auf **Open Bearcat** oder öffne
