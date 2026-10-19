@@ -1,5 +1,5 @@
 ---
-title: "Bearcat unter Windows und macOS installieren"
+title: "Bearcat unter Windows, macOS und Linux installieren"
 description: "Installiere die Desktopanwendung, wähle deinen Releaseordner und starte Bearcat mit SQLite."
 prev:
   label: "Installation wählen"
@@ -20,10 +20,11 @@ Bearcat braucht zum Starten sowohl RAR als auch 7-Zip.
 | --- | --- |
 | Windows | [WinRAR](https://www.rarlab.com/download.htm) und [7-Zip](https://www.7-zip.org/download.html). |
 | macOS | [RAR for macOS ARM](https://www.rarlab.com/download.htm) und die [7-Zip-Konsolenversion für macOS](https://www.7-zip.org/download.html). Entpacke beide in Ordner, die du behältst. |
+| Linux (x64) | [RAR for Linux x64](https://www.rarlab.com/download.htm) und die [7-Zip-Konsolenversion für Linux x64](https://www.7-zip.org/download.html). Entpacke beide in Ordner, die du behältst. |
 
 Wähle in Schritt 3 die Programmdateien aus. Unter Windows sind das meist
 `C:\Program Files\WinRAR\Rar.exe` und `C:\Program Files\7-Zip\7z.exe`.
-Unter macOS wählst du die entpackten Dateien `rar` und `7zz`.
+Unter macOS und Linux wählst du die entpackten Dateien `rar` und `7zz`.
 
 Unter macOS kannst du [7-Zip auch über Homebrew](https://formulae.brew.sh/formula/sevenzip) installieren:
 
@@ -44,6 +45,7 @@ Lade das Desktoppaket für deinen Rechner von [GitHub Releases](https://github.c
 
 - **Windows:** Entpacke das Paket `Bearcat.Desktop-win-...zip` und öffne `Bearcat.Desktop.exe`. Lass alle entpackten Dateien im selben Ordner.
 - **macOS (Apple Silicon):** Entpacke `Bearcat.Desktop-macos-arm64.zip`, verschiebe **Bearcat Desktop.app** in den Ordner **Programme** und öffne die App.
+- **Linux (x64):** Öffne `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) oder `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), installiere das Paket und starte **Bearcat Desktop** aus dem App-Menü. Im Terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` oder `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. Für ein Update installierst du das neuere Paket auf dieselbe Weise. Unter anderen Distributionen entpackst du `Bearcat.Desktop-linux-x64.tar.gz` und startest `Bearcat.Desktop` aus einem Terminal.
 
 <details>
 <summary>macOS meldet, die App sei beschädigt, oder blockiert das Öffnen</summary>
@@ -61,15 +63,32 @@ xattr -dr com.apple.quarantine "/Applications/Bearcat Desktop.app"
 ## 3. Ordner und Programme wählen
 
 Erstelle einen Ordner für deine Releases, zum Beispiel `C:\Bearcat\releases` unter Windows oder
-`~/Bearcat/releases` unter macOS. Fülle in der Desktopanwendung diese Felder aus:
+`~/Bearcat/releases` unter macOS und Linux. Fülle in der Desktopanwendung diese Felder aus:
 
 | Feld | Eingabe |
 | --- | --- |
 | **Working directories** | Klicke auf **Add...** und wähle deinen Releaseordner. Bearcat muss hier lesen und schreiben können. |
-| **RAR executable** | Klicke auf **Browse...** und wähle unter Windows `Rar.exe` oder unter macOS `rar`. |
-| **7z executable** | Klicke auf **Browse...** und wähle unter Windows `7z.exe` oder unter macOS `7zz`. |
+| **RAR executable** | Klicke auf **Browse...** und wähle unter Windows `Rar.exe` oder unter macOS und Linux `rar`. |
+| **7z executable** | Klicke auf **Browse...** und wähle unter Windows `7z.exe` oder unter macOS und Linux `7zz`. |
 
 Behalte die Standardwerte für **SQLite (recommended)**, **Database file**, **Bearcat Host**, **Web port** und **API key**.
+
+<details>
+<summary>Screenshots der Desktopanwendung anzeigen</summary>
+
+**Windows**
+
+![Einstellungsfenster der Bearcat-Desktopanwendung unter Windows](../images/desktop-windows.png)
+
+**macOS**
+
+![Einstellungsfenster der Bearcat-Desktopanwendung unter macOS](../images/desktop-mac.png)
+
+**Linux**
+
+![Einstellungsfenster der Bearcat-Desktopanwendung unter Linux](../images/desktop-linux.png)
+
+</details>
 
 ## 4. Bearcat starten
 
@@ -79,6 +98,7 @@ Klicke auf **Save** und dann auf **Start Bearcat**. Sobald Bearcat bereit ist, k
 **Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
 
 Schliesst du das Einstellungsfenster, läuft Bearcat weiter. Mit **Stop** oder **Quit** beendest du es.
+Unter GNOME braucht das Symbol im Infobereich die [AppIndicator-Erweiterung](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu bringt sie mit.
 Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Dienst](/Bearcat/de/use-the-windows-service/).
 
 ## Weitere Einstellungen
@@ -91,6 +111,7 @@ Der Standardspeicherort ist:
 ```text
 Windows: %APPDATA%\Bearcat\bearcat.db
 macOS: ~/Library/Application Support/Bearcat/bearcat.db
+Linux: ~/.config/Bearcat/bearcat.db
 ```
 
 Für PostgreSQL [richtest du einen PostgreSQL-Server ein](/Bearcat/de/install-postgresql-for-desktop/), wählst
@@ -119,12 +140,13 @@ Die Desktopanwendung speichert ihre Einstellungen hier:
 ```text
 Windows: %APPDATA%\Bearcat\Desktop\settings.json
 macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
+Linux: ~/.config/Bearcat/Desktop/settings.json
 ```
 
 Die Datei enthält auch einen API-Schlüssel und ein PostgreSQL-Passwort, falls du diese eingegeben hast.
 
-Bearcat erstellt ausserdem `bearcat.key` in `%APPDATA%\Bearcat` unter Windows bzw.
-`~/Library/Application Support/Bearcat` unter macOS. Damit entschlüsselt Bearcat deine gespeicherten Zugangsdaten.
+Bearcat erstellt ausserdem `bearcat.key` in `%APPDATA%\Bearcat` unter Windows,
+`~/Library/Application Support/Bearcat` unter macOS bzw. `~/.config/Bearcat` unter Linux. Damit entschlüsselt Bearcat deine gespeicherten Zugangsdaten.
 
 Bewahre die Datenbank und `bearcat.key` zusammen auf. Ohne den Schlüssel kann Bearcat nach einer
 Wiederherstellung oder einem Rechnerwechsel deine Zugangsdaten nicht entschlüsseln.
@@ -136,7 +158,7 @@ Kopiere bei beiden Varianten auch `bearcat.key`.
 
 ## Wenn Bearcat nicht startet
 
-- **RAR oder 7z wurde nicht gefunden:** Wähle die Programmdateien über **Browse...** aus. Unter macOS heisst die Programmdatei des offiziellen 7-Zip-Downloads `7zz`.
+- **RAR oder 7z wurde nicht gefunden:** Wähle die Programmdateien über **Browse...** aus. Unter macOS und Linux heisst die Programmdatei des offiziellen 7-Zip-Downloads `7zz`.
 - **Ein Ordner fehlt oder ist nicht beschreibbar:** Prüfe deine Arbeitsverzeichnisse und den Speicherort der Datenbankdatei.
 - **Der Webport ist belegt:** Wähle einen anderen Port und starte Bearcat erneut.
 - **Änderungen scheinen unter Windows keine Wirkung zu haben:** Prüfe im Infobereich der Taskleiste, ob eine weitere Instanz von Bearcat Desktop läuft, und beende sie.

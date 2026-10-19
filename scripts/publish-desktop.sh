@@ -6,7 +6,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 runtimes=("$@")
 
 if [ "${#runtimes[@]}" -eq 0 ]; then
-  runtimes=(osx-arm64 win-x64 win-arm64)
+  runtimes=(osx-arm64 linux-x64 win-x64 win-arm64)
 fi
 
 publish_runtime() {
@@ -15,10 +15,10 @@ publish_runtime() {
   local output_dir="$repo_root/artifacts/desktop/$runtime"
 
   case "$runtime" in
-    osx-arm64 | win-x64 | win-arm64) ;;
+    osx-arm64 | linux-x64 | win-x64 | win-arm64) ;;
     *)
       echo "Unsupported runtime: $runtime" >&2
-      echo "Supported runtimes: osx-arm64, win-x64, win-arm64" >&2
+      echo "Supported runtimes: osx-arm64, linux-x64, win-x64, win-arm64" >&2
       exit 1
       ;;
   esac
@@ -56,6 +56,10 @@ publish_runtime() {
   if [ "$runtime" = "osx-arm64" ]; then
     chmod +x "$output_dir/Bearcat.Desktop" "$output_dir/Bearcat.Host"
     package_macos_app "$staging_root" "$output_dir"
+  fi
+
+  if [ "$runtime" = "linux-x64" ]; then
+    chmod +x "$output_dir/Bearcat.Desktop" "$output_dir/Bearcat.Host"
   fi
 
   echo "Published desktop artifact to $output_dir"

@@ -213,6 +213,150 @@ jobs:
           "$RUNNER_TEMP/Bearcat.Desktop-macos-arm64.zip"
           --clobber
 
+  package-linux:
+    name: Package Linux x64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ -n "${RELEASE_TAG}" ]; then
+            version="${RELEASE_TAG#v}"
+          elif [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="0.0.0-dev"
+          fi
+          if [ -z "$version" ]; then
+            echo "::error::Could not resolve a version from the release tag or git ref."
+            exit 1
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore solution
+        run: dotnet restore Bearcat.slnx
+
+      - name: Restore desktop runtime projects
+        run: |
+          dotnet restore src/Bearcat.Host/Bearcat.Host.csproj --runtime linux-x64
+          dotnet restore src/Bearcat.Desktop/Bearcat.Desktop.csproj --runtime linux-x64
+
+      - name: Publish Bearcat.Host
+        run: >
+          dotnet publish src/Bearcat.Host/Bearcat.Host.csproj
+          --configuration "$CONFIGURATION"
+          --runtime linux-x64
+          --self-contained true
+          --no-restore
+          --output "$RUNNER_TEMP/bearcat-host"
+          -p:PublishSingleFile=false
+          -p:ServerGarbageCollection=false
+          -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Publish Bearcat.Desktop
+        run: >
+          dotnet publish src/Bearcat.Desktop/Bearcat.Desktop.csproj
+          --configuration "$CONFIGURATION"
+          --runtime linux-x64
+          --self-contained true
+          --no-restore
+          --output "$RUNNER_TEMP/bearcat-desktop"
+          -p:PublishSingleFile=false
+          -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Bundle MediaInfo
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="25.04"
+          url="https://mediaarea.net/download/binary/mediainfo/${version}/MediaInfo_CLI_${version}_Lambda_x86_64.zip"
+          zip="$RUNNER_TEMP/mediainfo.zip"
+          extract="$RUNNER_TEMP/mediainfo-cli"
+          curl -sSL --fail -o "$zip" "$url"
+          rm -rf "$extract"
+          unzip -q "$zip" -d "$extract"
+
+          target="$RUNNER_TEMP/bearcat-host/mediainfo"
+          mkdir -p "$target"
+          cp "$extract/bin/mediainfo" "$target/mediainfo"
+          chmod +x "$target/mediainfo"
+
+      - name: Build package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          package_root="artifacts/desktop/linux-x64"
+
+          rm -rf "$package_root"
+          mkdir -p "$package_root"
+
+          cp -a "$RUNNER_TEMP/bearcat-desktop/." "$package_root/"
+          cp -a "$RUNNER_TEMP/bearcat-host/." "$package_root/"
+
+          chmod +x "$package_root/Bearcat.Desktop" "$package_root/Bearcat.Host"
+
+          tar -czf "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.tar.gz" \
+            -C artifacts/desktop \
+            --transform 's,^linux-x64,Bearcat.Desktop-linux-x64,' \
+            linux-x64
+
+      - name: Install nfpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="2.47.0"
+          archive="nfpm_${version}_Linux_x86_64.tar.gz"
+          download_dir="$RUNNER_TEMP/nfpm"
+          mkdir -p "$download_dir"
+          curl -sSL --fail -o "$download_dir/$archive" "https://github.com/goreleaser/nfpm/releases/download/v${version}/${archive}"
+          curl -sSL --fail -o "$download_dir/checksums.txt" "https://github.com/goreleaser/nfpm/releases/download/v${version}/checksums.txt"
+          (cd "$download_dir" && grep " ${archive}\$" checksums.txt | sha256sum --check --strict)
+          tar -xzf "$download_dir/$archive" -C "$download_dir" nfpm
+          echo "$download_dir" >> "$GITHUB_PATH"
+
+      - name: Build deb and rpm packages
+        shell: bash
+        env:
+          BEARCAT_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          nfpm package --config packaging/linux/nfpm.yaml --packager deb --target "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.deb"
+          nfpm package --config packaging/linux/nfpm.yaml --packager rpm --target "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.rpm"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bearcat.Desktop-linux-x64
+          path: |
+            ${{ runner.temp }}/Bearcat.Desktop-linux-x64.tar.gz
+            ${{ runner.temp }}/Bearcat.Desktop-linux-x64.deb
+            ${{ runner.temp }}/Bearcat.Desktop-linux-x64.rpm
+          if-no-files-found: error
+
+      - name: Attach artifacts to GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release upload "${{ github.event.release.tag_name }}"
+          "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.tar.gz"
+          "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.deb"
+          "$RUNNER_TEMP/Bearcat.Desktop-linux-x64.rpm"
+          --clobber
+
   package-windows:
     name: Package Windows ${{ matrix.runtime }}
     runs-on: windows-latest
