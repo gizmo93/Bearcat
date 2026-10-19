@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Bearcat Desktop
+Comment=Start Bearcat and open its web interface
+Exec=/opt/bearcat-desktop/Bearcat.Desktop
+Icon=/opt/bearcat-desktop/Assets/bearcat-icon.png
+Terminal=false
+Categories=Network;FileTransfer;
+StartupWMClass=Bearcat.Desktop
