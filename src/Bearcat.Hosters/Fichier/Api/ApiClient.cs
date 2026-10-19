@@ -651,14 +651,23 @@ public class ApiClient(
             suffixBytes = Encoding.ASCII.GetBytes($"\r\n--{boundary}--\r\n");
         }
 
-        protected override async Task SerializeToStreamAsync(
+        protected override Task SerializeToStreamAsync(
             Stream targetStream,
             TransportContext? context
         )
         {
-            await targetStream.WriteAsync(prefixBytes);
-            await stream.CopyToAsync(targetStream);
-            await targetStream.WriteAsync(suffixBytes);
+            return SerializeToStreamAsync(targetStream, context, CancellationToken.None);
+        }
+
+        protected override async Task SerializeToStreamAsync(
+            Stream targetStream,
+            TransportContext? context,
+            CancellationToken cancellationToken
+        )
+        {
+            await targetStream.WriteAsync(prefixBytes, cancellationToken);
+            await stream.CopyToAsync(targetStream, cancellationToken);
+            await targetStream.WriteAsync(suffixBytes, cancellationToken);
         }
 
         protected override bool TryComputeLength(out long length)

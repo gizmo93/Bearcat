@@ -30,29 +30,8 @@ public sealed class ProgressReportingStream : Stream
         set => inner.Position = value;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (speedLimiters is null)
-        {
-            var bytesRead = inner.Read(buffer, offset, count);
-            Report(bytesRead);
-            return bytesRead;
-        }
-
-        var clampedCount = ClampToSmallestMaximumBytesPerAcquire(speedLimiters, count);
-        var limitedBytesRead = inner.Read(buffer, offset, clampedCount);
-
-        if (limitedBytesRead > 0)
-        {
-            AcquireBytesOnAllLimitersAsync(speedLimiters, limitedBytesRead, CancellationToken.None)
-                .AsTask()
-                .GetAwaiter()
-                .GetResult();
-        }
-
-        Report(limitedBytesRead);
-        return limitedBytesRead;
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 
     public override Task<int> ReadAsync(
         byte[] buffer,

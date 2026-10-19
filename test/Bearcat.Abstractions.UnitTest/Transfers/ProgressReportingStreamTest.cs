@@ -66,21 +66,6 @@ public class ProgressReportingStreamTest
     }
 
     [Test]
-    public void Read_SpeedLimitScope_ClampsReadToMaximumBytesPerAcquire()
-    {
-        // Arrange
-        using var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-        var stream = CreateStreamInScope([limiter]);
-        var buffer = new byte[4096];
-
-        // Act
-        var bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-        // Assert
-        bytesRead.ShouldBe(100);
-    }
-
-    [Test]
     public async Task ReadAsync_InnerStreamReturnsFewerBytes_AcquiresOnlyBytesActuallyRead()
     {
         // Arrange
@@ -93,28 +78,6 @@ public class ProgressReportingStreamTest
 
         // Act
         var bytesRead = await stream.ReadAsync(buffer);
-
-        // Assert
-        bytesRead.ShouldBe(10);
-        limiter
-            .AcquireAsync(90, CancellationToken.None)
-            .AsTask()
-            .IsCompletedSuccessfully.ShouldBeTrue();
-    }
-
-    [Test]
-    public void Read_InnerStreamReturnsFewerBytes_AcquiresOnlyBytesActuallyRead()
-    {
-        // Arrange
-        using var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-        var stream = CreateStreamInScope(
-            [limiter],
-            new ShortReadingStream(SourceBytes, maximumBytesPerRead: 10)
-        );
-        var buffer = new byte[4096];
-
-        // Act
-        var bytesRead = stream.Read(buffer, 0, buffer.Length);
 
         // Assert
         bytesRead.ShouldBe(10);
@@ -148,11 +111,6 @@ public class ProgressReportingStreamTest
     private sealed class ShortReadingStream(byte[] bytes, int maximumBytesPerRead)
         : MemoryStream(bytes)
     {
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return base.Read(buffer, offset, Math.Min(count, maximumBytesPerRead));
-        }
-
         public override ValueTask<int> ReadAsync(
             Memory<byte> buffer,
             CancellationToken cancellationToken = default
