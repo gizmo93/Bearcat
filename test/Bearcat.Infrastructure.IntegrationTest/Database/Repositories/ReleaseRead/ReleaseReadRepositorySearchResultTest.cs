@@ -161,7 +161,7 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
     }
 
     [Test]
-    public async Task SearchReleaseResultsAsync_SeveralUploadConfigs_ReturnsThemOrderedByHosterNameThenIdWithOnlineFlags()
+    public async Task SearchReleaseResultsAsync_SeveralUploadConfigs_ReturnsThemOrderedByHosterNameThenIdWithOnlineStates()
     {
         // Arrange
         var alphaHoster = testData.AddHosterRegistration("Alpha hoster");
@@ -193,6 +193,12 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
             "Alpha upload 2",
             alphaHoster
         );
+        testData.AddUpload(
+            secondAlphaUploadConfig,
+            MidnightUtc,
+            MidnightUtc,
+            onlineState: OnlineState.PartiallyOnline
+        );
         await DbContext.SaveChangesAsync();
 
         // Act
@@ -207,14 +213,18 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
             new ReleaseSearchResultUploadConfigReadModel(
                 firstAlphaUploadConfig.Id,
                 "Alpha hoster",
-                false
+                OnlineState.Offline
             ),
             new ReleaseSearchResultUploadConfigReadModel(
                 secondAlphaUploadConfig.Id,
                 "Alpha hoster",
-                false
+                OnlineState.PartiallyOnline
             ),
-            new ReleaseSearchResultUploadConfigReadModel(betaUploadConfig.Id, "Beta hoster", true),
+            new ReleaseSearchResultUploadConfigReadModel(
+                betaUploadConfig.Id,
+                "Beta hoster",
+                OnlineState.Online
+            ),
         ]);
         item.OnlineState.ShouldBe(OnlineState.PartiallyOnline);
     }

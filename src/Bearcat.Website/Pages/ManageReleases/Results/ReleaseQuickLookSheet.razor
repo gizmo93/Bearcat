@@ -46,7 +46,7 @@
                                 <li class="flex items-center gap-2.5 px-3 py-2 text-sm">
                                     <span class="@GetStatusDotClass(uploadConfig)" aria-hidden="true"></span>
                                     <span class="min-w-0 flex-1 truncate">@uploadConfig.UploadTargetName</span>
-                                    <span class="@GetStateTextClass(uploadConfig)">@L.Localize(GetOnlineState(uploadConfig))</span>
+                                    <span class="@GetStateTextClass(uploadConfig)">@L.Localize(uploadConfig.OnlineState)</span>
                                 </li>
                             }
                         </ul>

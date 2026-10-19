@@ -32,7 +32,7 @@ public record ReleaseSearchResultReadModel(
             }
 
             var onlineUploadConfigsCount = UploadConfigs.Count(uploadConfig =>
-                uploadConfig.IsOnline
+                uploadConfig.OnlineState == ValueObjects.OnlineState.Online
             );
 
             if (onlineUploadConfigsCount == UploadConfigs.Count)

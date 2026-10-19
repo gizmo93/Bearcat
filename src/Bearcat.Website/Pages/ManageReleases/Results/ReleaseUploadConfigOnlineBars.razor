@@ -22,7 +22,7 @@ else
                 {
                     <li class="flex items-center justify-between gap-4">
                         <span class="truncate">@uploadConfig.UploadTargetName</span>
-                        <span class="@(uploadConfig.IsOnline ? string.Empty : "font-medium")">@L.Localize(uploadConfig.IsOnline ? OnlineState.Online : OnlineState.Offline)</span>
+                        <span class="@GetStateTextClass(uploadConfig)">@L.Localize(uploadConfig.OnlineState)</span>
                     </li>
                 }
             </ul>

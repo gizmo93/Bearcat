@@ -121,14 +121,18 @@ public class ReleaseReadRepository(
                         UploadTargetName = uc.HosterRegistrationId != null
                             ? uc.HosterRegistration!.Name
                             : uc.HosterAccountPool!.Name,
-                        IsOnline = uc.Uploads.Any(u => u.OnlineState == OnlineState.Online),
+                        OnlineState = uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                            ? OnlineState.Online
+                        : uc.Uploads.Any(u => u.OnlineState == OnlineState.PartiallyOnline)
+                            ? OnlineState.PartiallyOnline
+                        : OnlineState.Offline,
                     })
                     .OrderBy(uc => uc.UploadTargetName)
                     .ThenBy(uc => uc.Id)
                     .Select(uc => new ReleaseSearchResultUploadConfigReadModel(
                         uc.Id,
                         uc.UploadTargetName,
-                        uc.IsOnline
+                        uc.OnlineState
                     ))
                     .ToList(),
             })

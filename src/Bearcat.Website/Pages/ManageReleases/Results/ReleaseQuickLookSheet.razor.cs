@@ -46,21 +46,20 @@ public partial class ReleaseQuickLookSheet(TimeProvider timeProvider) : Componen
             ? primaryLanguageCode.ToUpperInvariant()
             : L["NotSet"];
 
-    private static OnlineState GetOnlineState(
-        ReleaseSearchResultUploadConfigReadModel uploadConfig
-    ) => uploadConfig.IsOnline ? OnlineState.Online : OnlineState.Offline;
-
     private static string GetStatusDotClass(
         ReleaseSearchResultUploadConfigReadModel uploadConfig
     ) =>
-        uploadConfig.IsOnline
-            ? $"{StatusDotBaseClass} bg-muted-foreground/55"
-            : $"{StatusDotBaseClass} bg-destructive";
+        uploadConfig.OnlineState switch
+        {
+            OnlineState.Online => $"{StatusDotBaseClass} bg-muted-foreground/55",
+            OnlineState.PartiallyOnline => $"{StatusDotBaseClass} bg-destructive/45",
+            _ => $"{StatusDotBaseClass} bg-destructive",
+        };
 
     private static string GetStateTextClass(
         ReleaseSearchResultUploadConfigReadModel uploadConfig
     ) =>
-        uploadConfig.IsOnline
+        uploadConfig.OnlineState == OnlineState.Online
             ? "shrink-0 text-xs text-muted-foreground"
             : "shrink-0 text-xs font-medium text-destructive";
 

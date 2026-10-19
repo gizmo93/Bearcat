@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageReleases.Results;
 
@@ -12,5 +13,9 @@ public sealed record ReleaseMirrorOnlineCount(int OnlineCount, int TotalCount)
 
     public static ReleaseMirrorOnlineCount From(
         IReadOnlyList<ReleaseSearchResultUploadConfigReadModel> uploadConfigs
-    ) => new(uploadConfigs.Count(uploadConfig => uploadConfig.IsOnline), uploadConfigs.Count);
+    ) =>
+        new(
+            uploadConfigs.Count(uploadConfig => uploadConfig.OnlineState == OnlineState.Online),
+            uploadConfigs.Count
+        );
 }
