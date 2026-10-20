@@ -8,13 +8,6 @@ namespace Bearcat.Hosters.Fichier.Api;
 
 public interface IFichierApi
 {
-    [Post("/file/info.cgi")]
-    Task<ApiResponse<FileInfoResponse>> GetFileInfoAsync(
-        [Header("Authorization")] string authorization,
-        [Body] FileInfoRequest request,
-        CancellationToken cancellationToken
-    );
-
     [Post("/download/get_token.cgi")]
     Task<ApiResponse<DownloadTokenResponse>> GetDownloadTokenAsync(
         [Header("Authorization")] string authorization,

@@ -29,9 +29,11 @@ public class ApiClient(
 
     public const string UploadHttpClientName = "FichierUploadHttpClient";
 
-    private const int MaxParallelLinkChecks = 3;
+    public const string CheckLinksHttpClientName = "FichierCheckLinksHttpClient";
 
-    private const int MaxLinkCheckAttempts = 3;
+    private const string CheckLinksUrl = "https://1fichier.com/check_links.pl";
+
+    private const int MaxLinksPerCheckLinksRequest = 100;
 
     private const int MaxDownloadTokenAttempts = 5;
 
@@ -152,25 +154,9 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
+        var linkStatesByFileUrl = await GetLinkStatesByFileUrlAsync(fileUrls, cancellationToken);
 
-        var checkTasks = fileUrls
-            .Distinct()
-            .Select(fileUrl =>
-                CheckLinkAsync(
-                    config: config,
-                    fileUrl: fileUrl,
-                    semaphore: semaphore,
-                    cancellationToken: cancellationToken
-                )
-            )
-            .ToList();
-
-        var results = await Task.WhenAll(checkTasks);
-
-        return results
-            .Where(result => result.IsOnline.HasValue)
-            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
+        return linkStatesByFileUrl.ToDictionary(pair => pair.Key, pair => pair.Value.IsOnline);
     }
 
     public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
@@ -179,25 +165,11 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
+        var linkStatesByFileUrl = await GetLinkStatesByFileUrlAsync(fileUrls, cancellationToken);
 
-        var checkTasks = fileUrls
-            .Distinct()
-            .Select(fileUrl =>
-                CheckLinkAsync(
-                    config: config,
-                    fileUrl: fileUrl,
-                    semaphore: semaphore,
-                    cancellationToken: cancellationToken
-                )
-            )
-            .ToList();
-
-        var results = await Task.WhenAll(checkTasks);
-
-        return results
-            .Where(result => result.SizeBytes is > 0)
-            .ToDictionary(result => result.FileUrl, result => result.SizeBytes!.Value);
+        return linkStatesByFileUrl
+            .Where(pair => pair.Value.SizeBytes is > 0)
+            .ToDictionary(pair => pair.Key, pair => pair.Value.SizeBytes!.Value);
     }
 
     public async Task<UserInfoResponse> GetUserInfoAsync(
@@ -439,83 +411,97 @@ public class ApiClient(
         return endUploadResponse;
     }
 
-    private async Task<(string FileUrl, bool? IsOnline, long? SizeBytes)> CheckLinkAsync(
-        FichierConfig config,
-        string fileUrl,
-        SemaphoreSlim semaphore,
+    private async Task<Dictionary<string, LinkState>> GetLinkStatesByFileUrlAsync(
+        IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken
     )
     {
-        foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
+        var linkStatesByFileUrl = new Dictionary<string, LinkState>();
+
+        foreach (var fileUrlBatch in fileUrls.Distinct().Chunk(MaxLinksPerCheckLinksRequest))
         {
-            await semaphore.WaitAsync(cancellationToken);
+            var responseContent = await SendCheckLinksRequestAsync(fileUrlBatch, cancellationToken);
+            var linkStatesByFileId = ParseCheckLinksResponse(responseContent);
 
-            try
+            foreach (var fileUrl in fileUrlBatch)
             {
-                var response = await api.GetFileInfoAsync(
-                    GetAuthorizationHeader(config.ApiKey),
-                    new FileInfoRequest { Url = fileUrl },
-                    cancellationToken
-                );
-
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return (fileUrl, false, null);
-                }
-
-                if (response.StatusCode == HttpStatusCode.TooManyRequests)
-                {
-                    logger.LogInformation(
-                        "Rate limited by 1fichier API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
-                        fileUrl,
-                        attempt
+                linkStatesByFileUrl[fileUrl] = linkStatesByFileId.TryGetValue(
+                    GetFileId(fileUrl),
+                    out var linkState
+                )
+                    ? linkState
+                    : throw new HttpRequestException(
+                        $"1fichier link check returned no result for {fileUrl}. Response: {responseContent}"
                     );
-                }
-                else
-                {
-                    ThrowIfApiKeyRejected(
-                        response.StatusCode,
-                        (response.Error as ApiException)?.Content
-                    );
-
-                    var isOnline =
-                        response.IsSuccessStatusCode
-                        && response.Content is { Url: not null }
-                        && !string.Equals(
-                            response.Content.Status,
-                            "KO",
-                            StringComparison.OrdinalIgnoreCase
-                        );
-
-                    return (fileUrl, isOnline, isOnline ? response.Content?.Size : null);
-                }
-            }
-            catch (ApiException exception)
-                when (exception.StatusCode == HttpStatusCode.TooManyRequests)
-            {
-                logger.LogInformation(
-                    exception,
-                    "Rate limited by 1fichier API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
-                    fileUrl,
-                    attempt
-                );
-            }
-            catch (ApiException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
-            {
-                return (fileUrl, false, null);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
-
-            if (attempt < MaxLinkCheckAttempts)
-            {
-                await Task.Delay(RateLimitRetryDelay, cancellationToken);
             }
         }
 
-        return (fileUrl, null, null);
+        return linkStatesByFileUrl;
+    }
+
+    private async Task<string> SendCheckLinksRequestAsync(
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        using var httpClient = httpClientProvider.GetClient(CheckLinksHttpClientName);
+        using var content = new FormUrlEncodedContent(
+            fileUrls.Select(fileUrl => new KeyValuePair<string, string>("links[]", fileUrl))
+        );
+        using var response = await httpClient.PostAsync(CheckLinksUrl, content, cancellationToken);
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                $"1fichier link check failed with status code {response.StatusCode}: {responseContent}",
+                inner: null,
+                statusCode: response.StatusCode
+            );
+        }
+
+        return responseContent;
+    }
+
+    private static Dictionary<string, LinkState> ParseCheckLinksResponse(string responseContent)
+    {
+        return responseContent
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(line => line.Split(';'))
+            .ToDictionary(fields => GetFileId(fields[0]), ParseCheckLinksResponseFields);
+    }
+
+    private static LinkState ParseCheckLinksResponseFields(string[] fields)
+    {
+        if (fields.Length == 4 && fields[1].Length == 0 && fields[2].Length == 0)
+        {
+            return fields[3] switch
+            {
+                "NOT FOUND" or "BAD LINK" => new LinkState(IsOnline: false, SizeBytes: null),
+                "PRIVATE" => new LinkState(IsOnline: true, SizeBytes: null),
+                _ => throw new HttpRequestException(
+                    $"1fichier link check returned an unknown status: {string.Join(';', fields)}"
+                ),
+            };
+        }
+
+        if (fields.Length >= 3 && long.TryParse(fields.Last(), out var sizeBytes))
+        {
+            return new LinkState(IsOnline: true, SizeBytes: sizeBytes);
+        }
+
+        throw new HttpRequestException(
+            $"1fichier link check returned an unexpected line: {string.Join(';', fields)}"
+        );
+    }
+
+    private static string GetFileId(string fileUrl)
+    {
+        var query = fileUrl[(fileUrl.IndexOf('?') + 1)..];
+        var separatorIndex = query.IndexOf('&');
+
+        return separatorIndex < 0 ? query : query[..separatorIndex];
     }
 
     private static async Task<TResponse> SendApiRequestAsync<TResponse>(
@@ -621,6 +607,8 @@ public class ApiClient(
             && uploadId.Length <= 10
             && uploadId.All(char.IsLetterOrDigit);
     }
+
+    private sealed record LinkState(bool IsOnline, long? SizeBytes);
 
     private sealed class FichierUploadContent : HttpContent
     {

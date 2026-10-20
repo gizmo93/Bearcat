@@ -37,6 +37,10 @@ public class ApiClientTest
             .Returns(() => new HttpClient(httpMessageHandler, disposeHandler: false));
 
         httpClientFactoryMock
+            .Setup(x => x.CreateClient(ApiClient.CheckLinksHttpClientName))
+            .Returns(() => new HttpClient(httpMessageHandler, disposeHandler: false));
+
+        httpClientFactoryMock
             .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
             .Returns(() => new HttpClient(httpMessageHandler, disposeHandler: false));
 
@@ -316,60 +320,113 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task CheckLinksAsync_PersistentRateLimiting_OmitsLinkInsteadOfMarkingOffline()
+    public async Task CheckLinksAsync_CheckLinksResponse_MapsOnlineAndPrivateLinksOnlineAndDeletedAndInvalidLinksOffline()
     {
         // Arrange
         var config = new FichierConfig { ApiKey = "api-key" };
-        var fileUrl = "https://1fichier.com/?abc";
+        string[] fileUrls =
+        [
+            "https://1fichier.com/?online",
+            "https://1fichier.com/?deleted",
+            "https://1fichier.com/?invalid",
+            "https://1fichier.com/?private",
+        ];
+        var capturedRequestBody = string.Empty;
 
-        apiMock
-            .Setup(x =>
-                x.GetFileInfoAsync(
-                    It.IsAny<string>(),
-                    It.Is<FileInfoRequest>(request => request.Url == fileUrl),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                CreateApiResponse<FileInfoResponse>(HttpStatusCode.TooManyRequests, content: null)
-            );
+        httpMessageHandler.Enqueue(async request =>
+        {
+            request.Method.ShouldBe(HttpMethod.Post);
+            request.RequestUri!.ToString().ShouldBe("https://1fichier.com/check_links.pl");
+            capturedRequestBody = await request.Content!.ReadAsStringAsync();
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    https://1fichier.com/?private;;;PRIVATE
+                    https://1fichier.com/?deleted;;;NOT FOUND
+                    https://1fichier.com/?invalid;;;BAD LINK
+                    https://1fichier.com/?online;archive.part1.rar;1050673174
+
+                    """
+                ),
+            };
+        });
 
         // Act
-        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
+        var result = await apiClient.CheckLinksAsync(config, fileUrls, CancellationToken.None);
 
         // Assert
-        result.ShouldNotContainKey(fileUrl);
+        capturedRequestBody.ShouldBe(
+            string.Join(
+                '&',
+                fileUrls.Select(fileUrl => $"links%5B%5D={Uri.EscapeDataString(fileUrl)}")
+            )
+        );
+        result[fileUrls[0]].ShouldBeTrue();
+        result[fileUrls[1]].ShouldBeFalse();
+        result[fileUrls[2]].ShouldBeFalse();
+        result[fileUrls[3]].ShouldBeTrue();
+    }
+
+    [TestCase(HttpStatusCode.Forbidden, "<html><body>Access denied</body></html>")]
+    [TestCase(HttpStatusCode.OK, "<html><body>Flood detected</body></html>")]
+    [TestCase(HttpStatusCode.OK, "https://1fichier.com/?abc;;;LOCKED")]
+    [TestCase(HttpStatusCode.OK, "https://1fichier.com/?other;archive.part1.rar;1050673174")]
+    [TestCase(HttpStatusCode.OK, "")]
+    public async Task CheckLinksAsync_ResponseWithoutKnownStatusForLink_ThrowsInsteadOfMarkingOffline(
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                new HttpResponseMessage(statusCode) { Content = new StringContent(content) }
+            )
+        );
+
+        // Act & Assert
+        await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.CheckLinksAsync(config, ["https://1fichier.com/?abc"], CancellationToken.None)
+        );
     }
 
     [Test]
-    public async Task CheckLinksAsync_NoSuchUser_ThrowsHosterCredentialsRejected()
+    public async Task CheckLinksAsync_MoreLinksThanOneRequestAllows_SendsOneRequestPerHundredLinks()
     {
         // Arrange
         var config = new FichierConfig { ApiKey = "api-key" };
-        var fileUrl = "https://1fichier.com/?abc";
+        var fileUrls = Enumerable
+            .Range(1, 150)
+            .Select(index => $"https://1fichier.com/?file{index}")
+            .ToList();
 
-        apiMock
-            .Setup(x =>
-                x.GetFileInfoAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<FileInfoRequest>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                await CreateErrorApiResponseAsync<FileInfoResponse>(
-                    HttpStatusCode.Forbidden,
-                    """{"status":"KO","message":"No such user #133"}"""
+        foreach (var fileUrlBatch in fileUrls.Chunk(100))
+        {
+            httpMessageHandler.Enqueue(_ =>
+                Task.FromResult(
+                    new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(
+                            string.Join(
+                                '\n',
+                                fileUrlBatch.Select(fileUrl => $"{fileUrl};;;NOT FOUND")
+                            )
+                        ),
+                    }
                 )
             );
+        }
 
         // Act
-        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
-            apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None)
-        );
+        var result = await apiClient.CheckLinksAsync(config, fileUrls, CancellationToken.None);
 
         // Assert
-        exception.Message.ShouldBe("No such user #133");
+        result.Count.ShouldBe(150);
+        httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
     [Test]
@@ -403,81 +460,33 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task GetFileSizesAsync_FileInfoReportsSize_MapsItPerFileUrl()
+    public async Task GetFileSizesAsync_CheckLinksResponse_ReturnsSizesOfOnlineLinks()
     {
         // Arrange
         var config = new FichierConfig { ApiKey = "api-key" };
         var onlineFileUrl = "https://1fichier.com/?abc";
-        var offlineFileUrl = "https://1fichier.com/?def";
+        var deletedFileUrl = "https://1fichier.com/?def";
 
-        apiMock
-            .Setup(x =>
-                x.GetFileInfoAsync(
-                    It.IsAny<string>(),
-                    It.Is<FileInfoRequest>(request => request.Url == onlineFileUrl),
-                    It.IsAny<CancellationToken>()
-                )
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        $"{deletedFileUrl};;;NOT FOUND\n{onlineFileUrl};archive.part01.rar;104857600\n"
+                    ),
+                }
             )
-            .ReturnsAsync(
-                CreateApiResponse(
-                    HttpStatusCode.OK,
-                    new FileInfoResponse
-                    {
-                        Url = onlineFileUrl,
-                        Filename = "archive.part01.rar",
-                        Size = 104857600,
-                    }
-                )
-            );
-
-        apiMock
-            .Setup(x =>
-                x.GetFileInfoAsync(
-                    It.IsAny<string>(),
-                    It.Is<FileInfoRequest>(request => request.Url == offlineFileUrl),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                CreateApiResponse<FileInfoResponse>(HttpStatusCode.NotFound, content: null)
-            );
+        );
 
         // Act
         var result = await apiClient.GetFileSizesAsync(
             config,
-            [onlineFileUrl, offlineFileUrl],
+            [onlineFileUrl, deletedFileUrl],
             CancellationToken.None
         );
 
         // Assert
-        result[onlineFileUrl].ShouldBe(104857600);
-        result.ShouldNotContainKey(offlineFileUrl);
-    }
-
-    [Test]
-    public async Task GetFileSizesAsync_PersistentRateLimiting_OmitsFile()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-        var fileUrl = "https://1fichier.com/?abc";
-
-        apiMock
-            .Setup(x =>
-                x.GetFileInfoAsync(
-                    It.IsAny<string>(),
-                    It.Is<FileInfoRequest>(request => request.Url == fileUrl),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                CreateApiResponse<FileInfoResponse>(HttpStatusCode.TooManyRequests, content: null)
-            );
-
-        // Act
-        var result = await apiClient.GetFileSizesAsync(config, [fileUrl], CancellationToken.None);
-
-        // Assert
-        result.ShouldBeEmpty();
+        result.ShouldBe(new Dictionary<string, long> { [onlineFileUrl] = 104857600 });
     }
 
     [Test]

@@ -45,6 +45,16 @@ public static class ServiceProviderConfig
             )
             .UseProxyForCategory(ProxyCategory.HosterUploads);
 
+        services
+            .AddHttpClient(
+                name: ApiClient.CheckLinksHttpClientName,
+                configureClient: c =>
+                {
+                    c.Timeout = TimeSpan.FromMinutes(1);
+                }
+            )
+            .UseProxyForCategory(ProxyCategory.HosterUploads);
+
         services.AddScoped<IFichierApiClient, ApiClient>();
         services.AddKeyedScoped<IHoster, Fichier>(nameof(Fichier));
     }
