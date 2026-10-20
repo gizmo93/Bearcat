@@ -114,12 +114,12 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
 
     [TestCase(UploadState.Completed, OnlineState.Online, true)]
     [TestCase(UploadState.Completed, OnlineState.PartiallyOnline, true)]
-    [TestCase(UploadState.Completed, OnlineState.Offline, false)]
+    [TestCase(UploadState.Completed, OnlineState.Offline, true)]
     [TestCase(UploadState.Completed, OnlineState.Unknown, false)]
     [TestCase(UploadState.Failed, OnlineState.Online, false)]
     [TestCase(UploadState.Canceled, OnlineState.Online, false)]
     [TestCase(UploadState.CancellationRequested, OnlineState.Online, false)]
-    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_UploadInState_ReturnsOnlyOnlineOrPartiallyOnlineUploadsThatAreNotFailedOrCanceled(
+    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_UploadInState_ReturnsOnlyUploadsWithKnownOnlineStateThatAreNotFailedOrCanceled(
         UploadState uploadState,
         OnlineState onlineState,
         bool expectedToBeReturned
@@ -186,13 +186,20 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
             .ShouldBe([firstNeverCheckedUpload.Id, secondNeverCheckedUpload.Id]);
     }
 
-    [Test]
-    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_OlderUploadSupersededByNewerCompletedUpload_ReturnsOnlyNewerUpload()
+    [TestCase(OnlineState.Online)]
+    [TestCase(OnlineState.Offline)]
+    public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_OlderUploadSupersededByNewerCompletedUpload_ReturnsOnlyNewerUpload(
+        OnlineState onlineStateOfOlderUpload
+    )
     {
         // Arrange
         var registration = await AddHosterRegistrationAsync("Hoster", isActive: true);
         var uploadConfig = await AddUploadConfigAsync(registration);
-        await AddUploadAsync(uploadConfig, fileCheckedAts: [null]);
+        await AddUploadAsync(
+            uploadConfig,
+            fileCheckedAts: [null],
+            onlineState: onlineStateOfOlderUpload
+        );
         var newerUpload = await AddUploadAsync(uploadConfig, fileCheckedAts: [null]);
 
         // Act

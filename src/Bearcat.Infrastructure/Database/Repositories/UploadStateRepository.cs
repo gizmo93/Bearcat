@@ -39,6 +39,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                 && (
                     u.OnlineState == OnlineState.Online
                     || u.OnlineState == OnlineState.PartiallyOnline
+                    || u.OnlineState == OnlineState.Offline
                 )
                 && !uploadStatesToExclude.Contains(u.UploadState)
                 && !dbWrite.Uploads.Any(newer =>
