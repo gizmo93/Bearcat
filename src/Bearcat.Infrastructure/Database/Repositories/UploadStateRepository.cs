@@ -24,29 +24,11 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         CancellationToken cancellationToken
     )
     {
-        List<UploadState> uploadStatesToExclude =
-        [
-            UploadState.Canceled,
-            UploadState.CancellationRequested,
-            UploadState.Failed,
-        ];
-
         var lastCheckThreshold = localNow.AddMinutes(-30);
 
-        var uploadIds = await dbWrite
-            .Uploads.Where(u =>
+        var uploadIds = await BuildUploadsToCheckOnlineStateQuery()
+            .Where(u =>
                 u.HosterRegistrationId == hosterRegistrationId
-                && (
-                    u.OnlineState == OnlineState.Online
-                    || u.OnlineState == OnlineState.PartiallyOnline
-                    || u.OnlineState == OnlineState.Offline
-                )
-                && !uploadStatesToExclude.Contains(u.UploadState)
-                && !dbWrite.Uploads.Any(newer =>
-                    newer.UploadConfigId == u.UploadConfigId
-                    && newer.Id > u.Id
-                    && newer.UploadState == UploadState.Completed
-                )
                 && u.OldestUploadedFileCheckedAt < lastCheckThreshold
             )
             .OrderBy(u => u.OldestUploadedFileCheckedAt)
@@ -65,6 +47,48 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Where(u => uploadIds.Contains(u.Id))
             .OrderBy(u => u.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Upload>> GetUploadsOfReleasesToCheckOnlineStateAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken
+    )
+    {
+        return await BuildUploadsToCheckOnlineStateQuery()
+            .AsSplitQuery()
+            .Include(u => u.HosterRegistration)
+            .Include(u => u.UploadedFiles)
+            .Where(u =>
+                releaseIds.Contains(u.UploadConfig.ReleaseId)
+                && u.HosterRegistration!.IsActive
+                && u.UploadedFiles.Any()
+            )
+            .OrderBy(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<Upload> BuildUploadsToCheckOnlineStateQuery()
+    {
+        List<UploadState> uploadStatesToExclude =
+        [
+            UploadState.Canceled,
+            UploadState.CancellationRequested,
+            UploadState.Failed,
+        ];
+
+        return dbWrite.Uploads.Where(u =>
+            (
+                u.OnlineState == OnlineState.Online
+                || u.OnlineState == OnlineState.PartiallyOnline
+                || u.OnlineState == OnlineState.Offline
+            )
+            && !uploadStatesToExclude.Contains(u.UploadState)
+            && !dbWrite.Uploads.Any(newer =>
+                newer.UploadConfigId == u.UploadConfigId
+                && newer.Id > u.Id
+                && newer.UploadState == UploadState.Completed
+            )
+        );
     }
 
     public async Task<IReadOnlyList<Upload>> GetUploadsDueForAutomaticReuploadAsync(

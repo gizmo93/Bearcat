@@ -16,6 +16,11 @@ public interface IUploadStateRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<Upload>> GetUploadsOfReleasesToCheckOnlineStateAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(
         DateTime releaseCreatedBefore,
         CancellationToken cancellationToken

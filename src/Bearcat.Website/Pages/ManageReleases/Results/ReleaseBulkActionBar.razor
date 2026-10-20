@@ -35,6 +35,15 @@
             <span class="hidden sm:inline">@L["Reupload"]</span>
         </BbButton>
         <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Class="shrink-0"
+                  AriaLabel="@L["CheckOnlineStateNow"]"
+                  title="@L["CheckOnlineStateNow"]"
+                  OnClick="StartOnlineStateCheckAsync">
+            <LucideIcon Name="scan-search" class="h-4 w-4" />
+            <span class="hidden sm:inline">@L["CheckOnlineState"]</span>
+        </BbButton>
+        <BbButton Variant="ButtonVariant.Ghost"
                   Size="ButtonSize.IconSmall"
                   Class="shrink-0"
                   AriaLabel="@L["DeselectAll"]"

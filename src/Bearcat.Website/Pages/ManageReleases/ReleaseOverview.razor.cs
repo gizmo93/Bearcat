@@ -3,6 +3,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
@@ -145,6 +146,39 @@ public partial class ReleaseOverview(
         }
 
         await RefreshAsync();
+    }
+
+    private void StartOnlineStateCheck()
+    {
+        isLoading = true;
+        _ = CheckOnlineStateInBackgroundAsync();
+    }
+
+    private async Task CheckOnlineStateInBackgroundAsync()
+    {
+        try
+        {
+            var checkedUploadCount = await operationRunner.RunAsync(
+                (UploadOnlineCheckService service) =>
+                    service.CheckOnlineStateOfUploadsOfReleasesNowAsync([ReleaseId])
+            );
+
+            if (checkedUploadCount > 0)
+            {
+                toastService.Success(L["OnlineStateCheckedForUploads", checkedUploadCount]);
+            }
+            else
+            {
+                toastService.Info(L["NoUploadsToCheckOnlineState"]);
+            }
+
+            await RefreshAsync();
+            StateHasChanged();
+        }
+        catch (Exception exception)
+        {
+            await DispatchExceptionAsync(exception);
+        }
     }
 
     private async Task SaveNfoFileAsync()

@@ -1136,4 +1136,60 @@ public class UploadOnlineCheckServiceTest(DatabaseProvider databaseProvider)
         result.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
         result.Notifications.Single().Message.ShouldBe("All files are offline on the hoster");
     }
+
+    [Test]
+    public async Task CheckOnlineStateOfUploadsOfReleasesNowAsync_RecentlyCheckedOfflineUploadOfSelectedRelease_ChecksOnlyUploadOfSelectedReleaseAndMarksItOnline()
+    {
+        // Arrange
+        var recentlyCheckedAt = LocalNow.AddMinutes(-5);
+        var selectedUpload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: recentlyCheckedAt,
+            uploadedFileLinks: ["https://hoster.test/selected"]
+        );
+        var otherUpload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: recentlyCheckedAt,
+            uploadedFileLinks: ["https://hoster.test/other"]
+        );
+        HosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    HosterConfigMock.Object,
+                    It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
+                        files.Count == 1 && files[0].Url == "https://hoster.test/selected"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool> { ["https://hoster.test/selected"] = true }
+                )
+            );
+
+        // Act
+        var checkedUploadCount = await service.CheckOnlineStateOfUploadsOfReleasesNowAsync(
+            [selectedUpload.UploadConfig.ReleaseId],
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var selected = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == selectedUpload.Id);
+        var other = await DbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == otherUpload.Id);
+
+        checkedUploadCount.ShouldBe(1);
+        selected.OnlineState.ShouldBe(OnlineState.Online);
+        selected.FullyOfflineSince.ShouldBeNull();
+        other.OnlineState.ShouldBe(OnlineState.Offline);
+        other.UploadedFiles.Single().CheckedAt.ShouldBe(recentlyCheckedAt);
+        HosterMock.VerifyAll();
+    }
 }

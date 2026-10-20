@@ -263,6 +263,55 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldHaveSingleItem().UploadedFiles.Count.ShouldBe(2);
     }
 
+    [Test]
+    public async Task GetUploadsOfReleasesToCheckOnlineStateAsync_UploadsOfSelectedAndOtherReleases_ReturnsCheckableLatestUploadsOfSelectedReleasesWithHosterRegistrationAndFiles()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync("Hoster", isActive: true);
+        var inactiveRegistration = await AddHosterRegistrationAsync("Inactive", isActive: false);
+        var offlineUploadConfig = await AddUploadConfigAsync(registration);
+        var offlineUpload = await AddUploadAsync(
+            offlineUploadConfig,
+            fileCheckedAts: [LocalNow.AddMinutes(-1)],
+            onlineState: OnlineState.Offline
+        );
+        var supersedingUploadConfig = await AddUploadConfigAsync(registration);
+        await AddUploadAsync(supersedingUploadConfig, fileCheckedAts: [null]);
+        var supersedingUpload = await AddUploadAsync(
+            supersedingUploadConfig,
+            fileCheckedAts: [null]
+        );
+        var failedUploadConfig = await AddUploadConfigAsync(registration);
+        await AddUploadAsync(
+            failedUploadConfig,
+            fileCheckedAts: [null],
+            uploadState: UploadState.Failed
+        );
+        var inactiveRegistrationUploadConfig = await AddUploadConfigAsync(inactiveRegistration);
+        await AddUploadAsync(inactiveRegistrationUploadConfig, fileCheckedAts: [null]);
+        var withoutFilesUploadConfig = await AddUploadConfigAsync(registration);
+        await AddUploadAsync(withoutFilesUploadConfig, fileCheckedAts: []);
+        await AddUploadAsync(await AddUploadConfigAsync(registration), fileCheckedAts: [null]);
+
+        // Act
+        var result = await repository.GetUploadsOfReleasesToCheckOnlineStateAsync(
+            [
+                offlineUploadConfig.ReleaseId,
+                supersedingUploadConfig.ReleaseId,
+                failedUploadConfig.ReleaseId,
+                inactiveRegistrationUploadConfig.ReleaseId,
+                withoutFilesUploadConfig.ReleaseId,
+            ],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Select(upload => upload.Id).ShouldBe([offlineUpload.Id, supersedingUpload.Id]);
+        result.ShouldAllBe(upload =>
+            upload.HosterRegistration!.Name == "Hoster" && upload.UploadedFiles.Count == 1
+        );
+    }
+
     [TestCase(-25, true)]
     [TestCase(-24, true)]
     [TestCase(-23, false)]

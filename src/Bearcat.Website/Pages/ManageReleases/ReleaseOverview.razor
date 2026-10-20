@@ -85,6 +85,12 @@
                             </Icon>
                             <ChildContent>@L["ReuploadNotFullyOnlineHosters"]</ChildContent>
                         </BbDropdownMenuItem>
+                        <BbDropdownMenuItem Disabled="@(Uploads.Count == 0)" OnClick="StartOnlineStateCheck">
+                            <Icon>
+                                <LucideIcon Name="scan-search" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["CheckOnlineStateNow"]</ChildContent>
+                        </BbDropdownMenuItem>
                     </BbDropdownMenuContent>
                 </BbDropdownMenu>
 

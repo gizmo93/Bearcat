@@ -1,5 +1,6 @@
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -107,5 +108,41 @@ public partial class ReleaseBulkActionBar(
         }
         Selection.Clear();
         await OnReleasesUpdated.InvokeAsync();
+    }
+
+    private async Task StartOnlineStateCheckAsync()
+    {
+        var releaseIds = Selection.SelectedReleaseIds;
+        _ = CheckOnlineStateInBackgroundAsync(releaseIds);
+
+        toastService.Info(L["OnlineStateCheckStartedForReleases", releaseIds.Count]);
+        Selection.Clear();
+        await OnSelectionChanged.InvokeAsync();
+    }
+
+    private async Task CheckOnlineStateInBackgroundAsync(IReadOnlyList<int> releaseIds)
+    {
+        try
+        {
+            var checkedUploadCount = await operationRunner.RunAsync(
+                (UploadOnlineCheckService service) =>
+                    service.CheckOnlineStateOfUploadsOfReleasesNowAsync(releaseIds)
+            );
+
+            if (checkedUploadCount > 0)
+            {
+                toastService.Success(L["OnlineStateCheckedForUploads", checkedUploadCount]);
+            }
+            else
+            {
+                toastService.Info(L["NoUploadsToCheckOnlineState"]);
+            }
+
+            await OnReleasesUpdated.InvokeAsync();
+        }
+        catch (Exception exception)
+        {
+            await DispatchExceptionAsync(exception);
+        }
     }
 }

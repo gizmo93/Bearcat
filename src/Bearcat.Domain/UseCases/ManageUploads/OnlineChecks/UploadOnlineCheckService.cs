@@ -113,6 +113,38 @@ public class UploadOnlineCheckService(
         return true;
     }
 
+    public async Task<int> CheckOnlineStateOfUploadsOfReleasesNowAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uploads = await uploadStateRepository.GetUploadsOfReleasesToCheckOnlineStateAsync(
+            releaseIds,
+            cancellationToken
+        );
+
+        foreach (var uploadsOfRegistration in uploads.GroupBy(u => u.HosterRegistration!))
+        {
+            logger.LogInformation(
+                "Checking online status on demand for {UploadCount} uploads of {ReleaseCount} releases on hoster registration {HosterRegistration}",
+                uploadsOfRegistration.Count(),
+                releaseIds.Count,
+                uploadsOfRegistration.Key.Name
+            );
+
+            await CheckOnlineStateOfUploadsAsync(
+                registration: uploadsOfRegistration.Key,
+                uploads: uploadsOfRegistration.ToList(),
+                localNow: timeProvider.GetLocalNow(),
+                cancellationToken: cancellationToken
+            );
+
+            await uploadStateRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        return uploads.Count;
+    }
+
     private async Task CheckOnlineStateOfUploadsAsync(
         HosterRegistration registration,
         IReadOnlyList<Upload> uploads,

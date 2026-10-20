@@ -582,6 +582,10 @@
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} can not be resumed in its current state.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Online state checked for upload #{0}.</value></data>
   <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Upload #{0} has no links to check.</value></data>
+  <data name="CheckOnlineState" xml:space="preserve"><value>Check online state</value></data>
+  <data name="OnlineStateCheckStartedForReleases" xml:space="preserve"><value>Checking the online state of {0} releases in the background.</value></data>
+  <data name="OnlineStateCheckedForUploads" xml:space="preserve"><value>Online state checked for {0} uploads.</value></data>
+  <data name="NoUploadsToCheckOnlineState" xml:space="preserve"><value>No uploads with links to check.</value></data>
   <data name="SetUploadOffline" xml:space="preserve"><value>Set offline</value></data>
   <data name="SetUploadOfflineConfirmation" xml:space="preserve"><value>Mark upload #{0} and all of its links as offline? This lets you trigger a full reupload.</value></data>
   <data name="UploadSetOffline" xml:space="preserve"><value>Upload #{0} and all of its links marked as offline.</value></data>
