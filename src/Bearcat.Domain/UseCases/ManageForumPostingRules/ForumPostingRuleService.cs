@@ -147,14 +147,9 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
             );
         }
 
-        if (templateType != ForumPostTemplateType.Release)
-        {
-            throw new ArgumentException("The forum post template must be a release template.");
-        }
-
         var errors = RuleConditionSerializer.ValidateJson(
             input.ConditionJson,
-            RuleFieldCatalog.Fields
+            RuleFieldCatalog.GetFields(templateType.Value)
         );
 
         if (errors.Count > 0)

@@ -39,12 +39,17 @@ public class AutoForumPostingRepository(
                 registration.Name,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
-                EnabledRules = registration
-                    .PostingRules.Where(rule => rule.IsEnabled)
-                    .OrderBy(rule => rule.SortOrder)
-                    .ThenBy(rule => rule.Id)
-                    .ToList(),
             })
+            .ToListAsync(cancellationToken);
+
+        var registrationIds = registrations.Select(registration => registration.Id).ToList();
+        var enabledRules = await dbRead
+            .ForumPostingRules.Include(rule => rule.ForumPostTemplate)
+            .Where(rule =>
+                rule.IsEnabled && registrationIds.Contains(rule.DistributionSiteRegistrationId)
+            )
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id)
             .ToListAsync(cancellationToken);
 
         return registrations
@@ -53,7 +58,9 @@ public class AutoForumPostingRepository(
                 Name: registration.Name,
                 EnableAutomaticPosting: registration.EnableAutomaticPosting,
                 StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
-                EnabledRules: registration.EnabledRules
+                EnabledRules: enabledRules
+                    .Where(rule => rule.DistributionSiteRegistrationId == registration.Id)
+                    .ToList()
             ))
             .ToList();
     }

@@ -86,6 +86,11 @@ public static class AutoPostTestFactory
             TargetPathSnapshot = "Board › Movies › HD",
             ThreadPrefixId = threadPrefixId,
             ForumPostTemplateId = forumPostTemplateId,
+            ForumPostTemplate = new ForumPostTemplate
+            {
+                Id = forumPostTemplateId,
+                Type = ForumPostTemplateType.Release,
+            },
             PostMode = postMode,
             IsEnabled = isEnabled,
         };

@@ -114,7 +114,11 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         DateTime? latestUploadCompletedAt
     )
     {
-        var rule = ForumPostingRuleMatcher.FindFirstMatch(registration.EnabledRules, context);
+        var rule = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: registration.EnabledRules,
+            entityType: ForumPostTemplateType.Release,
+            context: context
+        );
 
         var match = rule is null
             ? null

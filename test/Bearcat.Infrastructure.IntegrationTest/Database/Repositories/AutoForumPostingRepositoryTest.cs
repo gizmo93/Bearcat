@@ -96,6 +96,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             .ShouldBe([secondForumFirstRule.Id, secondForumTiedRule.Id, secondForumLastRule.Id]);
         result[1].EnabledRules[0].ConditionJson.ShouldBe("{\"kind\":\"Café\"}");
         result[1].EnabledRules[0].ForumPostTemplateId.ShouldBe(template.Id);
+        result[1].EnabledRules[0].ForumPostTemplate.Type.ShouldBe(ForumPostTemplateType.Release);
     }
 
     [Test]

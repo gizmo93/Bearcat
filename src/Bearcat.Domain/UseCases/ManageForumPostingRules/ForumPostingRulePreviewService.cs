@@ -1,6 +1,7 @@
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageForumPostingRules;
 
@@ -28,7 +29,11 @@ public class ForumPostingRulePreviewService(IForumPostingRuleReadRepository read
         foreach (var release in releases)
         {
             var context = ReleaseRoutingContext.FromRelease(release);
-            var match = ForumPostingRuleMatcher.FindFirstMatch(rules, context);
+            var match = ForumPostingRuleMatcher.FindFirstMatch(
+                rules: rules,
+                entityType: ForumPostTemplateType.Release,
+                context: context
+            );
 
             results.Add(
                 new ForumPostingRulePreviewReadModel(

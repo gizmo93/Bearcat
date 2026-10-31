@@ -69,9 +69,8 @@ public class ForumPostingRuleRepository(
     )
     {
         return await dbRead
-            .ForumPostingRules.Where(rule =>
-                rule.DistributionSiteRegistrationId == distributionSiteRegistrationId
-            )
+            .ForumPostingRules.Include(rule => rule.ForumPostTemplate)
+            .Where(rule => rule.DistributionSiteRegistrationId == distributionSiteRegistrationId)
             .OrderBy(rule => rule.SortOrder)
             .ThenBy(rule => rule.Id)
             .ToListAsync(cancellationToken);

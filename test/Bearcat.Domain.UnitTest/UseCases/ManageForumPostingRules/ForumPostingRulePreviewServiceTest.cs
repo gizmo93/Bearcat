@@ -152,6 +152,11 @@ public class ForumPostingRulePreviewServiceTest
             TargetNodeId = "42",
             TargetPathSnapshot = "Board › Movies › HD",
             ForumPostTemplateId = 1,
+            ForumPostTemplate = new ForumPostTemplate
+            {
+                Id = 1,
+                Type = ForumPostTemplateType.Release,
+            },
             PostMode = ForumPostPostMode.AlwaysNewThread,
             IsEnabled = isEnabled,
         };

@@ -159,6 +159,7 @@ public class ForumPostingRuleRepositoryTest(DatabaseProvider databaseProvider)
         result[0].IsEnabled.ShouldBeFalse();
         result[0].ConditionJson.ShouldBe("{\"title\":\"Café\"}");
         result[0].ForumPostTemplateId.ShouldBe(template.Id);
+        result[0].ForumPostTemplate.Type.ShouldBe(ForumPostTemplateType.Release);
     }
 
     [Test]
