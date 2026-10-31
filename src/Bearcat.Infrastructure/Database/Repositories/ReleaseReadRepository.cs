@@ -1225,7 +1225,6 @@ public class ReleaseReadRepository(
             UploadState.Pending,
             UploadState.Uploading,
             UploadState.WaitingForArchive,
-            UploadState.Failed,
             UploadState.CancellationRequested,
         ];
 
@@ -1276,6 +1275,7 @@ public class ReleaseReadRepository(
                         && (
                             ru.OnlineState == OnlineState.Online
                             || reuploadBlockingStates.Contains(ru.UploadState)
+                            || (ru.Id > u.Id && ru.UploadState == UploadState.Failed)
                         )
                     ),
                 u.HosterRegistrationId != null && u.HosterRegistration!.HasUnreadableSecrets,
