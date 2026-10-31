@@ -70,11 +70,13 @@ public class CollectionLinkCrypterContainerService(
             collectionUploadSlotId,
             cancellationToken
         );
+
         var container = await GetCollectionContainerAsync(
             collectionUploadSlotId: collectionUploadSlotId,
             containerId: containerId,
             cancellationToken: cancellationToken
         );
+
         var linkCrypterConfig = GetActiveCollectionRegistrations(slot)[
             container.LinkCrypterRegistrationId
         ];

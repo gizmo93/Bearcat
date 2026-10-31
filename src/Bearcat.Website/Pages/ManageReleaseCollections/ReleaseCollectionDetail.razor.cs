@@ -454,6 +454,7 @@ public partial class ReleaseCollectionDetail(
                         CancellationToken.None
                     )
             );
+
             LinkCrypterContainerActionToasts.ShowForceUpdateResult(
                 toastService: toastService,
                 localizer: L,
