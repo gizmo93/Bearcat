@@ -9,6 +9,8 @@ public static class AutoPostTestFactory
 {
     public const string ReleaseName = "Some.Movie.2021.1080p.BluRay-GROUP";
 
+    public const string ReleaseCollectionName = "Some.Show.S01.1080p.WEB-GROUP";
+
     public static readonly DateTime PostedAt = new(2026, 9, 10, 20, 0, 0, DateTimeKind.Unspecified);
 
     public static readonly DateTime ReuploadedAt = new(
@@ -23,7 +25,7 @@ public static class AutoPostTestFactory
 
     public static AutoPostPostedLocation PostedLocation(
         int postedLocationId = 1,
-        int releaseId = 1,
+        int entityId = 1,
         int? distributionSiteRegistrationId = 5,
         int? forumPostTemplateId = null,
         string url = "https://forum.test/threads/1",
@@ -33,7 +35,7 @@ public static class AutoPostTestFactory
     {
         return new AutoPostPostedLocation(
             PostedLocationId: postedLocationId,
-            ReleaseId: releaseId,
+            EntityId: entityId,
             DistributionSiteRegistrationId: distributionSiteRegistrationId,
             ForumPostTemplateId: forumPostTemplateId,
             Url: url,
@@ -60,6 +62,17 @@ public static class AutoPostTestFactory
         };
     }
 
+    public static ReleaseCollection ReleaseCollection(int id = 4, params Release[] releases)
+    {
+        return new ReleaseCollection
+        {
+            Id = id,
+            Name = ReleaseCollectionName,
+            ReleaseGroup = new ReleaseGroup { Name = "GROUP" },
+            Releases = releases.Length == 0 ? [Release(id: 1), Release(id: 2)] : [.. releases],
+        };
+    }
+
     public static ForumPostingRule Rule(
         int id = 1,
         int sortOrder = 0,
@@ -67,7 +80,8 @@ public static class AutoPostTestFactory
         ForumPostPostMode postMode = ForumPostPostMode.AlwaysNewThread,
         string? threadPrefixId = null,
         int forumPostTemplateId = 7,
-        bool isEnabled = true
+        bool isEnabled = true,
+        ForumPostTemplateType templateType = ForumPostTemplateType.Release
     )
     {
         return new ForumPostingRule
@@ -77,9 +91,9 @@ public static class AutoPostTestFactory
             Name = $"Rule {id}",
             ConditionJson = RuleConditionSerializer.Serialize(
                 RuleCondition.CompareMany(
-                    RuleFieldCatalog.Resolution,
-                    RuleConditionOperator.In,
-                    resolutions ?? ["R1080p"]
+                    field: RuleFieldCatalog.Resolution,
+                    conditionOperator: RuleConditionOperator.In,
+                    values: resolutions ?? ["R1080p"]
                 )
             ),
             TargetNodeId = "42",
@@ -89,7 +103,7 @@ public static class AutoPostTestFactory
             ForumPostTemplate = new ForumPostTemplate
             {
                 Id = forumPostTemplateId,
-                Type = ForumPostTemplateType.Release,
+                Type = templateType,
             },
             PostMode = postMode,
             IsEnabled = isEnabled,
@@ -103,11 +117,11 @@ public static class AutoPostTestFactory
     )
     {
         return new AutoPostRegistration(
-            id,
-            name,
+            DistributionSiteRegistrationId: id,
+            Name: name,
             EnableAutomaticPosting: false,
             StripDotsForThreadSearch: true,
-            rules.Length == 0 ? [Rule()] : rules
+            EnabledRules: rules.Length == 0 ? [Rule()] : rules
         );
     }
 }

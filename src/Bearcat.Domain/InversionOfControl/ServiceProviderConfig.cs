@@ -174,7 +174,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ForumPostingRulePreviewService>();
             services.AddScoped<AutoForumPostingPlanService>();
-            services.AddScoped<ReleasePostedStatusService>();
+            services.AddScoped<UploadsPostedStatusService>();
             services.AddScoped<AutoForumPostCreationService>();
             services.AddScoped<AutoForumPostUpdateService>();
             services.AddScoped<AutoForumPostingRunner>();

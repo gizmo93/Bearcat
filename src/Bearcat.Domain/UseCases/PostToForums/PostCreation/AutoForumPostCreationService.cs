@@ -13,16 +13,17 @@ public class AutoForumPostCreationService(
     IForumPostContentRenderer contentRenderer,
     IForumPostSubmitter submitter,
     INotificationService notificationService,
-    ReleasePostedStatusService releasePostedStatusService
+    UploadsPostedStatusService uploadsPostedStatusService
 )
 {
-    public async Task<AutoPostExecutionResult> CreatePostForReleaseOnSiteAsync(
-        int releaseId,
+    public async Task<AutoPostExecutionResult> CreatePostOnSiteAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
         int distributionSiteRegistrationId,
         CancellationToken cancellationToken = default
     )
     {
-        var plan = await planService.GetPlanAsync(releaseId, cancellationToken);
+        var plan = await planService.GetPlanAsync(entityType, entityId, cancellationToken);
 
         if (plan.BlockedReason is not null)
         {
@@ -40,7 +41,7 @@ public class AutoForumPostCreationService(
     }
 
     public async Task<AutoPostExecutionResult> CreatePostForPlannedSiteAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken = default
     )
@@ -63,7 +64,8 @@ public class AutoForumPostCreationService(
         );
 
         await CreatePostResultNotificationAsync(
-            releaseName: plan.ReleaseName,
+            entityType: plan.EntityType,
+            entityName: plan.EntityName,
             distributionSiteRegistrationName: site.DistributionSiteRegistrationName,
             result: result,
             cancellationToken: cancellationToken
@@ -73,7 +75,7 @@ public class AutoForumPostCreationService(
     }
 
     private async Task<AutoPostExecutionResult> CreatePostOrReturnFailureAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         AutoPostRuleMatch match,
         CancellationToken cancellationToken
@@ -95,14 +97,14 @@ public class AutoForumPostCreationService(
     }
 
     private async Task<AutoPostExecutionResult> RenderSubmitAndRecordPostAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         AutoPostRuleMatch match,
         CancellationToken cancellationToken
     )
     {
         var rendered = await contentRenderer.RenderAsync(
-            entityId: plan.ReleaseId,
+            entityId: plan.EntityId,
             forumPostTemplateId: match.ForumPostTemplateId,
             cancellationToken: cancellationToken
         );
@@ -121,25 +123,27 @@ public class AutoForumPostCreationService(
         );
 
         await repository.RecordPostedLocationAsync(
-            releaseId: plan.ReleaseId,
+            entityType: plan.EntityType,
+            entityId: plan.EntityId,
             distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
             url: submittedPost.Url,
             forumPostTemplateId: match.ForumPostTemplateId,
             cancellationToken: cancellationToken
         );
 
-        var releaseMarkedPosted =
-            await releasePostedStatusService.MarkReleasePostedWhenNoSiteIsLeftAsync(
-                plan.ReleaseId,
-                cancellationToken
+        var uploadsMarkedPosted =
+            await uploadsPostedStatusService.MarkUploadsPostedWhenNoSiteIsLeftAsync(
+                entityType: plan.EntityType,
+                entityId: plan.EntityId,
+                cancellationToken: cancellationToken
             );
 
-        return AutoPostExecutionResult.Posted(submittedPost.Url, releaseMarkedPosted);
+        return AutoPostExecutionResult.Posted(submittedPost.Url, uploadsMarkedPosted);
     }
 
     private async Task<SubmittedPost> SubmitReplyToExistingThreadOrNewThreadAsync(
         AutoPostSiteEntry site,
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostRuleMatch match,
         string body,
         CancellationToken cancellationToken
@@ -147,8 +151,8 @@ public class AutoForumPostCreationService(
     {
         var postName = (
             site.StripDotsForThreadSearch
-                ? ReleaseNameFormatter.ToSpacedName(plan.ReleaseName)
-                : plan.ReleaseName
+                ? ReleaseNameFormatter.ToSpacedName(plan.EntityName)
+                : plan.EntityName
         ).Trim();
 
         if (match.PostMode == ForumPostPostMode.ReplyToExistingElseNewThread)
@@ -182,17 +186,21 @@ public class AutoForumPostCreationService(
     }
 
     private async Task CreatePostResultNotificationAsync(
-        string releaseName,
+        ForumPostTemplateType entityType,
+        string entityName,
         string distributionSiteRegistrationName,
         AutoPostExecutionResult result,
         CancellationToken cancellationToken
     )
     {
+        var entityLabel =
+            entityType == ForumPostTemplateType.Release ? "Release" : "Release collection";
+
         if (result.Status == AutoPostExecutionStatus.Posted)
         {
             await notificationService.CreateAsync(
                 kind: NotificationKind.AutomaticForumPostCreated,
-                message: $"Release '{releaseName}' was posted automatically to '{distributionSiteRegistrationName}': {result.PostedUrl}",
+                message: $"{entityLabel} '{entityName}' was posted automatically to '{distributionSiteRegistrationName}': {result.PostedUrl}",
                 cancellationToken: cancellationToken
             );
 
@@ -201,7 +209,7 @@ public class AutoForumPostCreationService(
 
         await notificationService.CreateAsync(
             kind: NotificationKind.AutomaticForumPostFailed,
-            message: $"Automatic posting of release '{releaseName}' to '{distributionSiteRegistrationName}' failed: {string.Join(" ", result.Errors)}",
+            message: $"Automatic posting of {entityLabel.ToLowerInvariant()} '{entityName}' to '{distributionSiteRegistrationName}' failed: {string.Join(" ", result.Errors)}",
             cancellationToken: cancellationToken
         );
     }

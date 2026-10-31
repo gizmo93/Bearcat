@@ -3,18 +3,18 @@ namespace Bearcat.Domain.UseCases.PostToForums.Models;
 public sealed record AutoPostExecutionResult(
     AutoPostExecutionStatus Status,
     string? PostedUrl,
-    bool ReleaseMarkedPosted,
+    bool UploadsMarkedPosted,
     AutoPostSkipReason? SkipReason,
     AutoPostBlockedReason? BlockedReason,
     IReadOnlyList<string> Errors
 )
 {
-    public static AutoPostExecutionResult Posted(string url, bool releaseMarkedPosted)
+    public static AutoPostExecutionResult Posted(string url, bool uploadsMarkedPosted)
     {
         return new AutoPostExecutionResult(
             Status: AutoPostExecutionStatus.Posted,
             PostedUrl: url,
-            ReleaseMarkedPosted: releaseMarkedPosted,
+            UploadsMarkedPosted: uploadsMarkedPosted,
             SkipReason: null,
             BlockedReason: null,
             Errors: []
@@ -29,7 +29,7 @@ public sealed record AutoPostExecutionResult(
         return new AutoPostExecutionResult(
             Status: AutoPostExecutionStatus.Skipped,
             PostedUrl: null,
-            ReleaseMarkedPosted: false,
+            UploadsMarkedPosted: false,
             SkipReason: reason,
             BlockedReason: blockedReason,
             Errors: []
@@ -41,7 +41,7 @@ public sealed record AutoPostExecutionResult(
         return new AutoPostExecutionResult(
             Status: AutoPostExecutionStatus.Failed,
             PostedUrl: null,
-            ReleaseMarkedPosted: false,
+            UploadsMarkedPosted: false,
             SkipReason: null,
             BlockedReason: null,
             Errors: errors

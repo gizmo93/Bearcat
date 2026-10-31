@@ -11,6 +11,7 @@ using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -30,7 +31,7 @@ public partial class PostQueuePage(
 {
     private IReadOnlyList<ReleasePostQueueItemReadModel> releaseItems = [];
     private IReadOnlyList<CollectionPostQueueItemReadModel> collectionItems = [];
-    private Dictionary<int, ReleaseAutoPostPlan> autoPostPlans = [];
+    private Dictionary<int, AutoPostPlan> autoPostPlans = [];
     private readonly HashSet<(int ReleaseId, int RegistrationId)> busySites = [];
     private readonly Dictionary<(int ReleaseId, int RegistrationId), string> siteErrors = [];
     private bool isLoading = true;
@@ -91,22 +92,24 @@ public partial class PostQueuePage(
         }
 
         var plans = await operationRunner.RunAsync(
-            (AutoForumPostingPlanService service) => service.GetPlansAsync(releaseIds)
+            (AutoForumPostingPlanService service) =>
+                service.GetPlansAsync(ForumPostTemplateType.Release, releaseIds)
         );
 
-        autoPostPlans = plans.ToDictionary(plan => plan.ReleaseId);
+        autoPostPlans = plans.ToDictionary(plan => plan.EntityId);
     }
 
     private async Task ReloadAutoPostPlanAsync(int releaseId)
     {
         var plan = await operationRunner.RunAsync(
-            (AutoForumPostingPlanService service) => service.GetPlanAsync(releaseId)
+            (AutoForumPostingPlanService service) =>
+                service.GetPlanAsync(ForumPostTemplateType.Release, releaseId)
         );
 
         autoPostPlans[releaseId] = plan;
     }
 
-    private ReleaseAutoPostPlan AutoPostPlanFor(int releaseId)
+    private AutoPostPlan AutoPostPlanFor(int releaseId)
     {
         return autoPostPlans[releaseId];
     }
@@ -140,18 +143,18 @@ public partial class PostQueuePage(
         }
     }
 
-    private async Task PostToAllMatchedSitesAsync(ReleaseAutoPostPlan plan)
+    private async Task PostToAllMatchedSitesAsync(AutoPostPlan plan)
     {
         var pendingSites = plan.PendingSites;
 
         foreach (var site in pendingSites)
         {
-            busySites.Add((plan.ReleaseId, site.DistributionSiteRegistrationId));
+            busySites.Add((plan.EntityId, site.DistributionSiteRegistrationId));
             StateHasChanged();
 
             try
             {
-                var succeeded = await ExecuteAndApplyAsync(plan.ReleaseId, site);
+                var succeeded = await ExecuteAndApplyAsync(plan.EntityId, site);
 
                 if (!succeeded)
                 {
@@ -160,10 +163,10 @@ public partial class PostQueuePage(
             }
             finally
             {
-                busySites.Remove((plan.ReleaseId, site.DistributionSiteRegistrationId));
+                busySites.Remove((plan.EntityId, site.DistributionSiteRegistrationId));
             }
 
-            if (!autoPostPlans.ContainsKey(plan.ReleaseId))
+            if (!autoPostPlans.ContainsKey(plan.EntityId))
             {
                 return;
             }
@@ -184,9 +187,10 @@ public partial class PostQueuePage(
         {
             var result = await operationRunner.RunAsync(
                 (AutoForumPostUpdateService service) =>
-                    service.UpdatePostOfReleaseOnSiteAsync(
-                        releaseId,
-                        site.DistributionSiteRegistrationId
+                    service.UpdatePostOnSiteAsync(
+                        entityType: ForumPostTemplateType.Release,
+                        entityId: releaseId,
+                        distributionSiteRegistrationId: site.DistributionSiteRegistrationId
                     )
             );
 
@@ -196,7 +200,7 @@ public partial class PostQueuePage(
                     L["AutoPostUpdateSucceeded", site.DistributionSiteRegistrationName]
                 );
 
-                if (result.ReleaseMarkedPosted)
+                if (result.UploadsMarkedPosted)
                 {
                     await LoadAsync();
                     return;
@@ -228,9 +232,10 @@ public partial class PostQueuePage(
 
         var result = await operationRunner.RunAsync(
             (AutoForumPostCreationService service) =>
-                service.CreatePostForReleaseOnSiteAsync(
-                    releaseId,
-                    site.DistributionSiteRegistrationId
+                service.CreatePostOnSiteAsync(
+                    entityType: ForumPostTemplateType.Release,
+                    entityId: releaseId,
+                    distributionSiteRegistrationId: site.DistributionSiteRegistrationId
                 )
         );
 
@@ -238,7 +243,7 @@ public partial class PostQueuePage(
         {
             toastService.Success(L["AutoPostSucceeded", site.DistributionSiteRegistrationName]);
 
-            if (result.ReleaseMarkedPosted)
+            if (result.UploadsMarkedPosted)
             {
                 await LoadAsync();
                 return true;

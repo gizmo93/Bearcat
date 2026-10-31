@@ -2,7 +2,7 @@ namespace Bearcat.Domain.UseCases.PostToForums.Models;
 
 public sealed record AutoPostPostedLocation(
     int PostedLocationId,
-    int ReleaseId,
+    int EntityId,
     int? DistributionSiteRegistrationId,
     int? ForumPostTemplateId,
     string Url,

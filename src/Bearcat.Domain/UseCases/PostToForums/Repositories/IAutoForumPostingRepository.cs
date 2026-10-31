@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.PostToForums.Repositories;
 
@@ -13,18 +14,29 @@ public interface IAutoForumPostingRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<int>> GetQueuedReleaseCollectionIdsAsync(
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<Release>> GetReleasesForRoutingAsync(
         IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ReleaseCollection>> GetReleaseCollectionsForRoutingAsync(
+        IReadOnlyList<int> releaseCollectionIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<AutoPostPostedLocation>> GetPostedLocationsAsync(
-        IReadOnlyList<int> releaseIds,
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
         CancellationToken cancellationToken = default
     );
 
     Task<IReadOnlyDictionary<int, DateTime>> GetLatestUploadCompletionTimesAsync(
-        IReadOnlyList<int> releaseIds,
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
         CancellationToken cancellationToken = default
     );
 
@@ -34,7 +46,8 @@ public interface IAutoForumPostingRepository
     );
 
     Task RecordPostedLocationAsync(
-        int releaseId,
+        ForumPostTemplateType entityType,
+        int entityId,
         int distributionSiteRegistrationId,
         string url,
         int forumPostTemplateId,
@@ -48,5 +61,9 @@ public interface IAutoForumPostingRepository
         CancellationToken cancellationToken = default
     );
 
-    Task MarkReleasePostedAsync(int releaseId, CancellationToken cancellationToken = default);
+    Task MarkUploadsPostedAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        CancellationToken cancellationToken = default
+    );
 }

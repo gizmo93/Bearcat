@@ -1,18 +1,20 @@
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.PostToForums;
 
-public class ReleasePostedStatusService(
+public class UploadsPostedStatusService(
     AutoForumPostingPlanService planService,
     IAutoForumPostingRepository repository
 )
 {
-    public async Task<bool> MarkReleasePostedWhenNoSiteIsLeftAsync(
-        int releaseId,
+    public async Task<bool> MarkUploadsPostedWhenNoSiteIsLeftAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
         CancellationToken cancellationToken
     )
     {
-        var currentPlan = await planService.GetPlanAsync(releaseId, cancellationToken);
+        var currentPlan = await planService.GetPlanAsync(entityType, entityId, cancellationToken);
 
         if (
             currentPlan.IsBlocked
@@ -23,7 +25,7 @@ public class ReleasePostedStatusService(
             return false;
         }
 
-        await repository.MarkReleasePostedAsync(releaseId, cancellationToken);
+        await repository.MarkUploadsPostedAsync(entityType, entityId, cancellationToken);
 
         return true;
     }
