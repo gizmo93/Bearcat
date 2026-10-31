@@ -1,26 +1,24 @@
-using Bearcat.LinkCrypters.ToLinkTo.Api.EditFolder;
 using Refit;
-using RequestBody = Bearcat.LinkCrypters.ToLinkTo.Api.Ping.RequestBody;
 
 namespace Bearcat.LinkCrypters.ToLinkTo.Api;
 
 public interface IToLinkToApi
 {
-    [Post("/api/v1/ping")]
-    Task<ApiResponse<string>> PingAsync(
-        [Body] ApiRequest<RequestBody> request,
+    [Get("/api/v2/ping")]
+    Task PingAsync([Authorize] string apiKey, CancellationToken cancellationToken);
+
+    [Post("/api/v2/folders")]
+    Task<CreateFolder.ResponseBody> CreateFolderAsync(
+        [Body] CreateFolder.RequestBody request,
+        [Authorize] string apiKey,
         CancellationToken cancellationToken
     );
 
-    [Post("/api/v1/folder/create")]
-    Task<ApiResponse<string>> CreateFolderAsync(
-        [Body] ApiRequest<CreateFolder.RequestBody> request,
-        CancellationToken cancellationToken
-    );
-
-    [Post("/api/v1/folder/edit")]
-    Task<ApiResponse<ResponseBody>> EditFolderAsync(
-        [Body] ApiRequest<EditFolder.RequestBody> request,
+    [Patch("/api/v2/folders/{folder}")]
+    Task<EditFolder.ResponseBody> EditFolderAsync(
+        string folder,
+        [Body] EditFolder.RequestBody request,
+        [Authorize] string apiKey,
         CancellationToken cancellationToken
     );
 }
