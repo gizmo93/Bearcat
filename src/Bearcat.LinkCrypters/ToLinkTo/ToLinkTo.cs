@@ -4,6 +4,7 @@ using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.Extensions;
 using Bearcat.LinkCrypters.ToLinkTo.Api;
 using Bearcat.LinkCrypters.ToLinkTo.Api.CreateFolder;
+using Refit;
 
 namespace Bearcat.LinkCrypters.ToLinkTo;
 
@@ -34,33 +35,27 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
 
         try
         {
-            var result = await api.CreateFolderAsync(
-                request: new ApiRequest<RequestBody>
+            var response = await api.CreateFolderAsync(
+                request: new RequestBody
                 {
-                    ApiKey = config.ApiKey,
-                    Body = new RequestBody
-                    {
-                        Title = containerName,
-                        Links = CreateLinksValue(links),
-                        Options = CreateFolderOptions(
-                            password,
-                            enableCaptcha,
-                            enableContainerDownload,
-                            enableClickAndLoad
-                        ),
-                    },
+                    Title = containerName,
+                    Links = CreateLinksValue(links),
+                    Options = CreateFolderOptions(
+                        password,
+                        enableCaptcha,
+                        enableContainerDownload,
+                        enableClickAndLoad
+                    ),
                 },
+                apiKey: config.ApiKey,
                 cancellationToken: cancellationToken
             );
 
-            var response = result.Response;
-            var success = IsSuccess(response) && !string.IsNullOrWhiteSpace(response.Body);
-
             return new CreateContainerResult(
-                IsSuccess: success,
-                ContainerLink: success ? response.Body : null,
-                ExternalReference: success ? GetFolderAlias(response.Body!) : null,
-                ErrorMessages: success ? [] : [GetErrorMessage(response)]
+                IsSuccess: true,
+                ContainerLink: response.Url,
+                ExternalReference: response.Folder,
+                ErrorMessages: []
             );
         }
         catch (Exception ex)
@@ -69,7 +64,7 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                 IsSuccess: false,
                 ContainerLink: null,
                 ExternalReference: null,
-                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+                ErrorMessages: [await GetErrorMessageAsync(ex)]
             );
         }
     }
@@ -94,39 +89,29 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                 ? externalReference
                 : GetFolderAlias(containerLink);
 
-            var result = await api.EditFolderAsync(
-                request: new ApiRequest<Api.EditFolder.RequestBody>
+            await api.EditFolderAsync(
+                folder: folder,
+                request: new Api.EditFolder.RequestBody
                 {
-                    ApiKey = config.ApiKey,
-                    Body = new Api.EditFolder.RequestBody
-                    {
-                        Folder = folder,
-                        Title = folder,
-                        Links = CreateLinksValue(links),
-                        Options = CreateFolderOptions(
-                            password: password,
-                            enableCaptcha: enableCaptcha,
-                            enableContainerDownload: enableContainerDownload,
-                            enableClickAndLoad: enableClickAndLoad
-                        ),
-                    },
+                    Links = CreateLinksValue(links),
+                    Options = CreateFolderOptions(
+                        password: password,
+                        enableCaptcha: enableCaptcha,
+                        enableContainerDownload: enableContainerDownload,
+                        enableClickAndLoad: enableClickAndLoad
+                    ),
                 },
+                apiKey: config.ApiKey,
                 cancellationToken: cancellationToken
             );
 
-            var response = result.Response;
-            var success = IsSuccess(response);
-
-            return new UpdateContainerResult(
-                IsSuccess: success,
-                ErrorMessage: success ? null : GetErrorMessage(response)
-            );
+            return new UpdateContainerResult(IsSuccess: true, ErrorMessage: null);
         }
         catch (Exception ex)
         {
             return new UpdateContainerResult(
                 IsSuccess: false,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+                ErrorMessage: await GetErrorMessageAsync(ex)
             );
         }
     }
@@ -150,28 +135,15 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
 
         try
         {
-            var result = await api.PingAsync(
-                request: new ApiRequest<Api.Ping.RequestBody>
-                {
-                    ApiKey = config.ApiKey,
-                    Body = new Api.Ping.RequestBody { Message = "Ping" },
-                },
-                cancellationToken: cancellationToken
-            );
+            await api.PingAsync(config.ApiKey, cancellationToken);
 
-            var response = result.Response;
-            var success = IsSuccess(response) && response.Body == "Pong";
-
-            return new TryLoginResult(
-                IsSuccess: success,
-                ErrorMessage: success ? null : GetErrorMessage(response)
-            );
+            return new TryLoginResult(IsSuccess: true, ErrorMessage: null);
         }
         catch (Exception ex)
         {
             return new TryLoginResult(
                 IsSuccess: false,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+                ErrorMessage: await GetErrorMessageAsync(ex)
             );
         }
     }
@@ -196,21 +168,31 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
 
     private static string CreateLinksValue(IReadOnlyList<string> links) => string.Join(';', links);
 
-    private static bool IsSuccess<TBody>(ApiResponseContent<TBody> response)
+    private static async Task<string> GetErrorMessageAsync(Exception exception)
     {
-        return response is { Status: "OK", ErrorCode: 0 };
-    }
-
-    private static string GetErrorMessage<TBody>(ApiResponseContent<TBody> response)
-    {
-        if (!string.IsNullOrWhiteSpace(response.ErrorMessage))
+        if (exception is not ApiException apiException)
         {
-            return response.ErrorMessage;
+            return exception.InnerException?.Message ?? exception.Message;
         }
 
-        return !string.IsNullOrWhiteSpace(response.Status)
-            ? $"ToLink.to returned status {response.Status} with error code {response.ErrorCode}"
-            : "Unknown error";
+        var errorMessage = await ReadErrorMessageAsync(apiException);
+
+        return !string.IsNullOrWhiteSpace(errorMessage)
+            ? $"ToLink.to returned {(int)apiException.StatusCode}: {errorMessage}"
+            : apiException.Message;
+    }
+
+    private static async Task<string?> ReadErrorMessageAsync(ApiException apiException)
+    {
+        try
+        {
+            var errorResponse = await apiException.GetContentAsAsync<ErrorResponseBody>();
+            return errorResponse?.Message;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static string GetFolderAlias(string folderLinkOrAlias)

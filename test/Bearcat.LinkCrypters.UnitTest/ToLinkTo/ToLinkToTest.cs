@@ -3,26 +3,37 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Bearcat.LinkCrypters.ToLinkTo;
 using Bearcat.LinkCrypters.ToLinkTo.Api;
-using Moq;
 using Refit;
 using Shouldly;
-using CreateFolderRequestBody = Bearcat.LinkCrypters.ToLinkTo.Api.CreateFolder.RequestBody;
-using EditFolderRequestBody = Bearcat.LinkCrypters.ToLinkTo.Api.EditFolder.RequestBody;
-using EditFolderResponseBody = Bearcat.LinkCrypters.ToLinkTo.Api.EditFolder.ResponseBody;
-using PingRequestBody = Bearcat.LinkCrypters.ToLinkTo.Api.Ping.RequestBody;
 
 namespace Bearcat.LinkCrypters.UnitTest.ToLinkTo;
 
 public class ToLinkToTest
 {
-    private Mock<IToLinkToApi> apiMock = null!;
+    private static readonly ToLinkToConfig Config = new() { ApiKey = "api-key" };
+
+    private TestHttpMessageHandler httpMessageHandler = null!;
     private LinkCrypters.ToLinkTo.ToLinkTo service = null!;
 
     [SetUp]
     public void SetUp()
     {
-        apiMock = new Mock<IToLinkToApi>(MockBehavior.Strict);
-        service = new LinkCrypters.ToLinkTo.ToLinkTo(apiMock.Object);
+        httpMessageHandler = new TestHttpMessageHandler();
+
+        var api = RestService.For<IToLinkToApi>(
+            new HttpClient(httpMessageHandler, disposeHandler: false)
+            {
+                BaseAddress = new Uri("https://tolink.to"),
+            }
+        );
+
+        service = new LinkCrypters.ToLinkTo.ToLinkTo(api);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        httpMessageHandler.Dispose();
     }
 
     [Test]
@@ -37,24 +48,29 @@ public class ToLinkToTest
     public async Task CreateContainerAsync_ApiCreatesFolder_ReturnsContainerLink()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
-        var links = new[] { "https://hoster.test/file-1", "https://hoster.test/file-2" };
+        var capturedBody = string.Empty;
 
-        apiMock
-            .Setup(x =>
-                x.CreateFolderAsync(
-                    It.IsAny<ApiRequest<CreateFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(CreateSuccessResponse("https://tolink.to/f/fo587f92cc4c213"));
+        httpMessageHandler.Enqueue(async request =>
+        {
+            request.Method.ShouldBe(HttpMethod.Post);
+            request.RequestUri!.ToString().ShouldBe("https://tolink.to/api/v2/folders");
+            request.Headers.Authorization!.ToString().ShouldBe("Bearer api-key");
+            capturedBody = await request.Content!.ReadAsStringAsync();
+
+            return CreateJsonResponse(
+                HttpStatusCode.Created,
+                """
+                {"url":"https:\/\/tolink.to\/f\/fo587f92cc4c213","folder":"fo587f92cc4c213","title":"container-name"}
+                """
+            );
+        });
 
         // Act
         var result = await service.CreateContainerAsync(
-            config,
+            Config,
             "container-name",
             "password",
-            links,
+            ["https://hoster.test/file-1", "https://hoster.test/file-2"],
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -62,203 +78,106 @@ public class ToLinkToTest
         );
 
         // Assert
-        result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ContainerLink.ShouldBe("https://tolink.to/f/fo587f92cc4c213");
         result.ExternalReference.ShouldBe("fo587f92cc4c213");
         result.ErrorMessages.ShouldBeEmpty();
 
-        apiMock.Verify(x =>
-            x.CreateFolderAsync(
-                It.Is<ApiRequest<CreateFolderRequestBody>>(request =>
-                    request.ApiKey == "api-key"
-                    && request.Body.Title == "container-name"
-                    && request.Body.Links == "https://hoster.test/file-1;https://hoster.test/file-2"
-                    && request.Body.Options.Web
-                    && request.Body.Options.Container
-                    && request.Body.Options.ClickAndLoad
-                    && request.Body.Options.Captcha
-                    && !request.Body.Options.CaptchaText
-                    && request.Body.Options.Password == "password"
-                ),
-                It.IsAny<CancellationToken>()
-            )
+        capturedBody.ShouldContain("\"title\":\"container-name\"");
+        capturedBody.ShouldContain(
+            "\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\""
         );
+        capturedBody.ShouldContain("\"web\":true");
+        capturedBody.ShouldContain("\"container\":true");
+        capturedBody.ShouldContain("\"cln\":true");
+        capturedBody.ShouldContain("\"captcha\":true");
+        capturedBody.ShouldContain("\"captcha_text\":false");
+        capturedBody.ShouldContain("\"password\":\"password\"");
+        httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
     [Test]
-    public async Task CreateContainerAsync_DisabledSettings_SendsDisabledFolderOptions()
+    public async Task CreateContainerAsync_ApiRejectsParameters_ReturnsErrorMessage()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.CreateFolderAsync(
-                    It.IsAny<ApiRequest<CreateFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                CreateJsonResponse(
+                    HttpStatusCode.UnprocessableEntity,
+                    """{"message":"Wrong param given"}"""
                 )
             )
-            .ReturnsAsync(CreateSuccessResponse("https://tolink.to/f/fo587f92cc4c213"));
+        );
 
         // Act
         var result = await service.CreateContainerAsync(
-            config,
+            Config,
             "container-name",
             null,
             ["https://hoster.test/file"],
-            enableCaptcha: false,
-            enableContainerDownload: false,
-            enableClickAndLoad: false,
             cancellationToken: CancellationToken.None
         );
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
-
-        apiMock.Verify(x =>
-            x.CreateFolderAsync(
-                It.Is<ApiRequest<CreateFolderRequestBody>>(request =>
-                    request.Body.Options.Web
-                    && !request.Body.Options.Container
-                    && !request.Body.Options.ClickAndLoad
-                    && !request.Body.Options.Captcha
-                    && !request.Body.Options.CaptchaText
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
-    }
-
-    [Test]
-    public async Task CreateContainerAsync_ApiReturnsError_ReturnsFailure()
-    {
-        // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.CreateFolderAsync(
-                    It.IsAny<ApiRequest<CreateFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(CreateErrorResponse<string>("invalid api key", errorCode: 401));
-
-        // Act
-        var result = await service.CreateContainerAsync(
-            config,
-            "container-name",
-            null,
-            ["https://hoster.test/file"],
-            enableCaptcha: true,
-            enableContainerDownload: true,
-            enableClickAndLoad: true,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ContainerLink.ShouldBeNull();
         result.ExternalReference.ShouldBeNull();
-        result.ErrorMessages.ShouldBe(["invalid api key"]);
-
-        apiMock.Verify(x =>
-            x.CreateFolderAsync(
-                It.Is<ApiRequest<CreateFolderRequestBody>>(request =>
-                    request.ApiKey == "api-key"
-                    && request.Body.Title == "container-name"
-                    && request.Body.Links == "https://hoster.test/file"
-                    && request.Body.Options.Password == string.Empty
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
+        result.ErrorMessages.ShouldBe(["ToLink.to returned 422: Wrong param given"]);
     }
 
     [Test]
-    public async Task UpdateContainerAsync_ApiEditsFolder_ReturnsSuccess()
+    public async Task CreateContainerAsync_ApiReturnsNonJsonError_ReturnsStatusMessage()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
-        var links = new[] { "https://hoster.test/file-1", "https://hoster.test/file-2" };
-
-        apiMock
-            .Setup(x =>
-                x.EditFolderAsync(
-                    It.IsAny<ApiRequest<EditFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.BadGateway)
+                {
+                    Content = new StringContent("<html>Bad gateway</html>"),
+                }
             )
-            .ReturnsAsync(
-                CreateSuccessResponse(
-                    new EditFolderResponseBody { Affected = 1, Folder = "folder-id" }
-                )
-            );
+        );
 
         // Act
-        var result = await service.UpdateContainerAsync(
-            config,
-            "https://tolink.to/f/fo587f92cc4c213",
-            "folder-id",
-            "password",
-            links,
-            enableCaptcha: true,
-            enableContainerDownload: true,
-            enableClickAndLoad: true,
+        var result = await service.CreateContainerAsync(
+            Config,
+            "container-name",
+            null,
+            ["https://hoster.test/file"],
             cancellationToken: CancellationToken.None
         );
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-
-        apiMock.Verify(x =>
-            x.EditFolderAsync(
-                It.Is<ApiRequest<EditFolderRequestBody>>(request =>
-                    request.ApiKey == "api-key"
-                    && request.Body.Folder == "folder-id"
-                    && request.Body.Title == "folder-id"
-                    && request.Body.Links == "https://hoster.test/file-1;https://hoster.test/file-2"
-                    && request.Body.Options.Container
-                    && request.Body.Options.ClickAndLoad
-                    && request.Body.Options.Captcha
-                    && !request.Body.Options.CaptchaText
-                    && request.Body.Options.Password == "password"
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessages.ShouldHaveSingleItem().ShouldContain("502");
     }
 
     [Test]
-    public async Task UpdateContainerAsync_DisabledSettings_SendsDisabledFolderOptions()
+    public async Task UpdateContainerAsync_ApiEditsFolder_PatchesLinksAndOptionsOnly()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
+        var capturedBody = string.Empty;
 
-        apiMock
-            .Setup(x =>
-                x.EditFolderAsync(
-                    It.IsAny<ApiRequest<EditFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                CreateSuccessResponse(
-                    new EditFolderResponseBody { Affected = 1, Folder = "folder-id" }
-                )
+        httpMessageHandler.Enqueue(async request =>
+        {
+            request.Method.ShouldBe(HttpMethod.Patch);
+            request.RequestUri!.ToString().ShouldBe("https://tolink.to/api/v2/folders/folder-id");
+            request.Headers.Authorization!.ToString().ShouldBe("Bearer api-key");
+            capturedBody = await request.Content!.ReadAsStringAsync();
+
+            return CreateJsonResponse(
+                HttpStatusCode.OK,
+                """{"folder":"folder-id","title":"container-name","affected":1}"""
             );
+        });
 
         // Act
         var result = await service.UpdateContainerAsync(
-            config,
+            Config,
             "https://tolink.to/f/fo587f92cc4c213",
             "folder-id",
             null,
-            ["https://hoster.test/file"],
+            ["https://hoster.test/file-1", "https://hoster.test/file-2"],
             enableCaptcha: false,
             enableContainerDownload: false,
             enableClickAndLoad: false,
@@ -267,149 +186,116 @@ public class ToLinkToTest
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
+        result.ErrorMessage.ShouldBeNull();
 
-        apiMock.Verify(x =>
-            x.EditFolderAsync(
-                It.Is<ApiRequest<EditFolderRequestBody>>(request =>
-                    request.Body.Options.Web
-                    && !request.Body.Options.Container
-                    && !request.Body.Options.ClickAndLoad
-                    && !request.Body.Options.Captcha
-                    && !request.Body.Options.CaptchaText
-                ),
-                It.IsAny<CancellationToken>()
-            )
+        capturedBody.ShouldNotContain("\"title\"");
+        capturedBody.ShouldContain(
+            "\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\""
         );
+        capturedBody.ShouldContain("\"web\":true");
+        capturedBody.ShouldContain("\"container\":false");
+        capturedBody.ShouldContain("\"cln\":false");
+        capturedBody.ShouldContain("\"captcha\":false");
+        capturedBody.ShouldContain("\"password\":\"\"");
+        httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
     [Test]
     public async Task UpdateContainerAsync_ExternalReferenceIsMissing_UsesFolderAliasFromLink()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
+        httpMessageHandler.Enqueue(request =>
+        {
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://tolink.to/api/v2/folders/fo587f92cc4c213");
 
-        apiMock
-            .Setup(x =>
-                x.EditFolderAsync(
-                    It.IsAny<ApiRequest<EditFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                CreateSuccessResponse(
-                    new EditFolderResponseBody { Affected = 1, Folder = "fo587f92cc4c213" }
+            return Task.FromResult(
+                CreateJsonResponse(
+                    HttpStatusCode.OK,
+                    """{"folder":"fo587f92cc4c213","title":"container-name","affected":1}"""
                 )
             );
+        });
 
         // Act
         var result = await service.UpdateContainerAsync(
-            config,
+            Config,
             "https://tolink.to/f/fo587f92cc4c213",
             null,
             null,
             ["https://hoster.test/file"],
-            enableCaptcha: true,
-            enableContainerDownload: true,
-            enableClickAndLoad: true,
             cancellationToken: CancellationToken.None
         );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-
-        apiMock.Verify(x =>
-            x.EditFolderAsync(
-                It.Is<ApiRequest<EditFolderRequestBody>>(request =>
-                    request.Body.Folder == "fo587f92cc4c213"
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
+        httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
     [Test]
-    public async Task UpdateContainerAsync_ApiReturnsError_ReturnsFailure()
+    public async Task UpdateContainerAsync_FolderNotFound_ReturnsErrorMessage()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.EditFolderAsync(
-                    It.IsAny<ApiRequest<EditFolderRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                CreateJsonResponse(HttpStatusCode.NotFound, """{"message":"Resource not found"}""")
             )
-            .ReturnsAsync(CreateErrorResponse<EditFolderResponseBody>("folder not found"));
+        );
 
         // Act
         var result = await service.UpdateContainerAsync(
-            config,
+            Config,
             "https://tolink.to/f/folder-id",
             null,
             null,
             ["https://hoster.test/file"],
-            enableCaptcha: true,
-            enableContainerDownload: true,
-            enableClickAndLoad: true,
             cancellationToken: CancellationToken.None
         );
 
         // Assert
-        result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("folder not found");
+        result.ErrorMessage.ShouldBe("ToLink.to returned 404: Resource not found");
     }
 
     [Test]
     public async Task TryLoginAsync_ApiKeyIsValid_ReturnsSuccess()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
+        httpMessageHandler.Enqueue(request =>
+        {
+            request.Method.ShouldBe(HttpMethod.Get);
+            request.RequestUri!.ToString().ShouldBe("https://tolink.to/api/v2/ping");
+            request.Headers.Authorization!.ToString().ShouldBe("Bearer api-key");
 
-        apiMock
-            .Setup(x =>
-                x.PingAsync(It.IsAny<ApiRequest<PingRequestBody>>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(CreateSuccessResponse("Pong"));
+            return Task.FromResult(CreateJsonResponse(HttpStatusCode.OK, """{"message":"Pong"}"""));
+        });
 
         // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
+        var result = await service.TryLoginAsync(Config, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
-
-        apiMock.Verify(x =>
-            x.PingAsync(
-                It.Is<ApiRequest<PingRequestBody>>(request =>
-                    request.ApiKey == "api-key" && request.Body.Message == "Ping"
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
+        httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
     [Test]
-    public async Task TryLoginAsync_ApiKeyIsInvalid_ReturnsFailure()
+    public async Task TryLoginAsync_ApiKeyIsInvalid_ReturnsErrorMessage()
     {
         // Arrange
-        var config = new ToLinkToConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.PingAsync(It.IsAny<ApiRequest<PingRequestBody>>(), It.IsAny<CancellationToken>())
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                CreateJsonResponse(HttpStatusCode.Unauthorized, """{"message":"Invalid API Key"}""")
             )
-            .ReturnsAsync(CreateErrorResponse<string>("invalid api key"));
+        );
 
         // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
+        var result = await service.TryLoginAsync(Config, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("invalid api key");
+        result.ErrorMessage.ShouldBe("ToLink.to returned 401: Invalid API Key");
     }
 
     [Test]
@@ -426,108 +312,9 @@ public class ToLinkToTest
         result.ShouldBeOfType<ToLinkToConfig>().ApiKey.ShouldBe("api-key");
     }
 
-    [Test]
-    public async Task CreateFolderAsync_RefitSendsJsonBody()
+    private static HttpResponseMessage CreateJsonResponse(HttpStatusCode statusCode, string content)
     {
-        // Arrange
-        using var httpMessageHandler = new TestHttpMessageHandler();
-        var capturedBody = string.Empty;
-        var capturedContentType = string.Empty;
-
-        httpMessageHandler.Enqueue(async request =>
-        {
-            request.Method.ShouldBe(HttpMethod.Post);
-            request.RequestUri!.ToString().ShouldBe("https://tolink.to/api/v1/folder/create");
-            request.Content.ShouldNotBeNull();
-
-            capturedContentType = request.Content!.Headers.ContentType!.ToString();
-            capturedBody = await request.Content.ReadAsStringAsync();
-
-            return CreateJsonResponse(
-                """
-                {"response":{"status":"OK","errorCode":0,"errorMsg":"","body":"https://tolink.to/f/folder-id"}}
-                """
-            );
-        });
-
-        var api = RestService.For<IToLinkToApi>(
-            new HttpClient(httpMessageHandler, disposeHandler: false)
-            {
-                BaseAddress = new Uri("https://tolink.to"),
-            }
-        );
-
-        var request = new ApiRequest<CreateFolderRequestBody>
-        {
-            ApiKey = "api-key",
-            Body = new CreateFolderRequestBody
-            {
-                Title = "container-name",
-                Links = "https://hoster.test/file-1;https://hoster.test/file-2",
-                Options = new FolderOptions
-                {
-                    Web = true,
-                    Container = false,
-                    ClickAndLoad = true,
-                    Captcha = false,
-                    CaptchaText = false,
-                    Password = "password",
-                },
-            },
-        };
-
-        // Act
-        var response = await api.CreateFolderAsync(request, CancellationToken.None);
-
-        // Assert
-        response.Response.Body.ShouldBe("https://tolink.to/f/folder-id");
-        capturedContentType.ShouldBe("application/json; charset=utf-8");
-        capturedBody.ShouldContain("\"apikey\":\"api-key\"");
-        capturedBody.ShouldContain(
-            "\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\""
-        );
-        capturedBody.ShouldContain("\"container\":false");
-        capturedBody.ShouldContain("\"cln\":true");
-        capturedBody.ShouldContain("\"captcha\":false");
-        capturedBody.ShouldContain("\"captcha_text\":false");
-        httpMessageHandler.PendingRequests.ShouldBe(0);
-    }
-
-    private static LinkCrypters.ToLinkTo.Api.ApiResponse<TBody> CreateSuccessResponse<TBody>(
-        TBody body
-    )
-    {
-        return new LinkCrypters.ToLinkTo.Api.ApiResponse<TBody>
-        {
-            Response = new ApiResponseContent<TBody>
-            {
-                Status = "OK",
-                ErrorCode = 0,
-                ErrorMessage = string.Empty,
-                Body = body,
-            },
-        };
-    }
-
-    private static LinkCrypters.ToLinkTo.Api.ApiResponse<TBody> CreateErrorResponse<TBody>(
-        string errorMessage,
-        int errorCode = 1
-    )
-    {
-        return new LinkCrypters.ToLinkTo.Api.ApiResponse<TBody>
-        {
-            Response = new ApiResponseContent<TBody>
-            {
-                Status = "ERROR",
-                ErrorCode = errorCode,
-                ErrorMessage = errorMessage,
-            },
-        };
-    }
-
-    private static HttpResponseMessage CreateJsonResponse(string content)
-    {
-        return new HttpResponseMessage(HttpStatusCode.OK)
+        return new HttpResponseMessage(statusCode)
         {
             Content = new StringContent(content)
             {
@@ -547,13 +334,15 @@ public class ToLinkToTest
             responses.Enqueue(response);
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
         )
         {
             responses.Count.ShouldBeGreaterThan(0);
-            return responses.Dequeue()(request);
+            var response = await responses.Dequeue()(request);
+            response.RequestMessage = request;
+            return response;
         }
     }
 }
