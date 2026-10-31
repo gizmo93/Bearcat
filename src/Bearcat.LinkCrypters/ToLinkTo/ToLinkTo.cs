@@ -172,7 +172,7 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
     {
         if (exception is not ApiException apiException)
         {
-            return exception.InnerException?.Message ?? exception.Message;
+            return exception.GetBaseException().Message;
         }
 
         var errorMessage = await ReadErrorMessageAsync(apiException);
