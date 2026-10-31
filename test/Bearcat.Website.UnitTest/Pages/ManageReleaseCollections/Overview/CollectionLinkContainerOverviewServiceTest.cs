@@ -79,7 +79,7 @@ public class CollectionLinkContainerOverviewServiceTest
     }
 
     [Test]
-    public void GroupCreatedContainerUrlsByLinkCrypter_ContainersOfSeveralSlots_ReturnsDistinctCreatedUrlsPerCrypter()
+    public void GroupContainerUrlsByLinkCrypter_ContainersOfSeveralSlots_ReturnsDistinctCreatedUrlsPerCrypter()
     {
         // Arrange
         var uploadSlots = new List<CollectionUploadSlotReadModel>
@@ -118,7 +118,7 @@ public class CollectionLinkContainerOverviewServiceTest
         };
 
         // Act
-        var result = CollectionLinkContainerOverviewService.GroupCreatedContainerUrlsByLinkCrypter(
+        var result = CollectionLinkContainerOverviewService.GroupContainerUrlsByLinkCrypter(
             uploadSlots
         );
 

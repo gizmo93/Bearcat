@@ -190,12 +190,16 @@ The same [replacement upload rules](#7-automatic-reuploads) apply.
 
 ## 9. Link crypter containers after a reupload
 
-Bearcat tries to update the existing container for the same upload configuration and link crypter
-configuration.
+Bearcat updates the existing container for the same upload configuration and link crypter
+configuration. Containers of release collections are updated the same way.
 If it succeeds, the URL stays the same and links in existing forum posts remain valid.
 
-If the provider cannot update containers or the update fails, Bearcat creates a new container.
-The container URL may change.
+If the update fails, the container keeps its URL and gets the state `Update failed`.
+Bearcat retries the update after 15 minutes. Until then, the container still holds the old links.
+
+If the provider reports that the container no longer exists, Bearcat creates a new container with a
+new URL and sends a notification. The release or release collection goes back into the [post queue](/Bearcat/post-queue/),
+so existing posts can be updated with the new URL.
 
 ## 10. Cleanup after a successful upload
 

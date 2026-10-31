@@ -30,9 +30,7 @@ public partial class ReleaseCollectionLinkContainers(
     protected override void OnParametersSet()
     {
         containerUrlsByLinkCrypter =
-            CollectionLinkContainerOverviewService.GroupCreatedContainerUrlsByLinkCrypter(
-                UploadSlots
-            );
+            CollectionLinkContainerOverviewService.GroupContainerUrlsByLinkCrypter(UploadSlots);
     }
 
     private static string GetCoverageText(

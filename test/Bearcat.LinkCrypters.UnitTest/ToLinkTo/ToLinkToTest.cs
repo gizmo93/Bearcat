@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.ToLinkTo;
 using Bearcat.LinkCrypters.ToLinkTo.Api;
 using Refit;
@@ -185,7 +186,7 @@ public class ToLinkToTest
         );
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
         result.ErrorMessage.ShouldBeNull();
 
         capturedBody.ShouldNotContain("\"title\"");
@@ -229,12 +230,12 @@ public class ToLinkToTest
         );
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
         httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
     [Test]
-    public async Task UpdateContainerAsync_FolderNotFound_ReturnsErrorMessage()
+    public async Task UpdateContainerAsync_FolderNotFound_ReturnsContainerNotFound()
     {
         // Arrange
         httpMessageHandler.Enqueue(_ =>
@@ -254,7 +255,7 @@ public class ToLinkToTest
         );
 
         // Assert
-        result.IsSuccess.ShouldBeFalse();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.ContainerNotFound);
         result.ErrorMessage.ShouldBe("ToLink.to returned 404: Resource not found");
     }
 

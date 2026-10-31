@@ -8,6 +8,8 @@ namespace Bearcat.LinkCrypters.FileCrypt;
 
 public class FileCrypt(IFileCryptApi api) : ILinkCrypter
 {
+    private const string ContainerNotAvailableError = "this container is not available";
+
     public string Name => "filecrypt.cc";
 
     public List<string> ConfigurationKeys => [nameof(FileCryptConfig.ApiKey)];
@@ -110,19 +112,26 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
                 cancellationToken
             );
 
-            var success = IsSuccess(response);
-            var container = response.Container?.FirstOrDefault();
+            if (IsSuccess(response))
+            {
+                return new UpdateContainerResult(
+                    Outcome: UpdateContainerOutcome.Success,
+                    ErrorMessage: null,
+                    StatusImageId: response.Container?.FirstOrDefault()?.StatusImgId
+                );
+            }
 
             return new UpdateContainerResult(
-                IsSuccess: success,
-                ErrorMessage: success ? null : GetErrorMessage(response),
-                StatusImageId: success ? container?.StatusImgId : null
+                Outcome: IsContainerNotAvailable(response)
+                    ? UpdateContainerOutcome.ContainerNotFound
+                    : UpdateContainerOutcome.Failed,
+                ErrorMessage: GetErrorMessage(response)
             );
         }
         catch (Exception ex)
         {
             return new UpdateContainerResult(
-                IsSuccess: false,
+                Outcome: UpdateContainerOutcome.Failed,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
@@ -266,6 +275,10 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
 
     private static bool IsSuccess(Response response) =>
         response.State == 1 && string.IsNullOrWhiteSpace(response.Error);
+
+    private static bool IsContainerNotAvailable(Response response) =>
+        response.State == 0
+        && string.Equals(response.Error, ContainerNotAvailableError, StringComparison.Ordinal);
 
     private static string GetErrorMessage(Response response)
     {

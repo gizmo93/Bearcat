@@ -102,6 +102,7 @@ public partial class UploadContainerLinksDialog(
         {
             LinkCrypterContainerState.Created => BadgeVariant.Default,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
+            LinkCrypterContainerState.UpdateFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
 

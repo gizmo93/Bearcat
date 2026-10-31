@@ -1,13 +1,17 @@
 using System.Text.Json;
+using System.Xml.Linq;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.Extensions;
 using Bearcat.LinkCrypters.KeepLinks.Api;
+using Bearcat.LinkCrypters.KeepLinks.Api.ProtectLinks;
 
 namespace Bearcat.LinkCrypters.KeepLinks;
 
 public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
 {
+    private const string ApiHashOrUrlIdNotValidError = "API hash or URL ID is not valid";
+
     public string Name => "keeplinks.org";
     public List<string> ConfigurationKeys => [nameof(KeepLinksConfig.ApiKey)];
 
@@ -120,30 +124,90 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
     {
         var config = linkCrypterConfig.As<KeepLinksConfig>();
 
+        var urlId = containerLink.Split('/').Last();
+
         try
         {
-            var response = await api.UpdateContainerAsync(
+            var responseBody = await api.UpdateContainerAsync(
                 request: CreateRequestContent(
                     apiKey: config.ApiKey,
                     links: links,
                     password: password,
-                    urlId: containerLink.Split('/').Last(),
+                    urlId: urlId,
                     enableCaptcha: enableCaptcha,
                     enableContainerDownload: enableContainerDownload
                 ),
                 cancellationToken: cancellationToken
             );
 
-            var success = response.ApiError is null;
+            var apiError = ReadUpdateApiError(responseBody);
 
-            return new UpdateContainerResult(IsSuccess: success, ErrorMessage: response.ApiError);
+            if (apiError is null)
+            {
+                return new UpdateContainerResult(
+                    Outcome: UpdateContainerOutcome.Success,
+                    ErrorMessage: null
+                );
+            }
+
+            var containerIsMissing =
+                apiError == ApiHashOrUrlIdNotValidError
+                && await IsContainerMissingAsync(
+                    apiKey: config.ApiKey,
+                    urlId: urlId,
+                    cancellationToken: cancellationToken
+                );
+
+            return new UpdateContainerResult(
+                Outcome: containerIsMissing
+                    ? UpdateContainerOutcome.ContainerNotFound
+                    : UpdateContainerOutcome.Failed,
+                ErrorMessage: apiError
+            );
         }
         catch (Exception ex)
         {
             return new UpdateContainerResult(
-                IsSuccess: false,
+                Outcome: UpdateContainerOutcome.Failed,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
+        }
+    }
+
+    private static string? ReadUpdateApiError(string responseBody)
+    {
+        if (!responseBody.TrimStart().StartsWith('<'))
+        {
+            return JsonSerializer.Deserialize<Response>(responseBody)!.ApiError;
+        }
+
+        var apiError = XDocument.Parse(responseBody).Descendants("api_error").FirstOrDefault();
+
+        return apiError?.Value ?? $"KeepLinks returned an unexpected XML response: {responseBody}";
+    }
+
+    private async Task<bool> IsContainerMissingAsync(
+        string apiKey,
+        string urlId,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var responseBody = await api.GetContainerAsync(
+                apiKey: apiKey,
+                urlId: urlId,
+                cancellationToken: cancellationToken
+            );
+
+            using var document = JsonDocument.Parse(responseBody);
+
+            return document.RootElement.ValueKind == JsonValueKind.Array
+                && document.RootElement.GetArrayLength() == 0;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 

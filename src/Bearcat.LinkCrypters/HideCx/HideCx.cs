@@ -1,9 +1,11 @@
+using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.Extensions;
 using Bearcat.LinkCrypters.HideCx.Api;
 using Bearcat.LinkCrypters.HideCx.Api.CreateContainer;
+using Refit;
 
 namespace Bearcat.LinkCrypters.HideCx;
 
@@ -126,17 +128,51 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
             );
 
             return new UpdateContainerResult(
-                IsSuccess: true,
+                Outcome: UpdateContainerOutcome.Success,
                 ErrorMessage: null,
                 StatusImageId: externalReference
             );
         }
         catch (Exception ex)
         {
+            var containerIsMissing = await IsContainerMissingAsync(
+                containerId: externalReference!,
+                apiKey: config.ApiKey,
+                cancellationToken: cancellationToken
+            );
+
             return new UpdateContainerResult(
-                IsSuccess: false,
+                Outcome: containerIsMissing
+                    ? UpdateContainerOutcome.ContainerNotFound
+                    : UpdateContainerOutcome.Failed,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
+        }
+    }
+
+    private async Task<bool> IsContainerMissingAsync(
+        string containerId,
+        string apiKey,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            await api.GetContainerAsync(
+                containerId: containerId,
+                apiToken: GetAuthToken(apiKey),
+                cancellationToken: cancellationToken
+            );
+
+            return false;
+        }
+        catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 

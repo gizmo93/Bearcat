@@ -24,6 +24,7 @@ public class LinkCrypterContainerConfiguration : IEntityTypeConfiguration<LinkCr
         builder.Property(l => l.EnableClickAndLoad).IsRequired();
         builder.Property(l => l.Errors).IsRequired();
         builder.Property(l => l.CreatedAt).IsRequired().HasPrecision(4);
+        builder.Property(l => l.UpdateFailedAt).IsRequired(false).HasPrecision(4);
 
         builder
             .HasOne(l => l.LinkCrypterRegistration)

@@ -21,5 +21,6 @@ public class LinkCrypterContainerBackgroundTask(
         var linkCrypterContainerService =
             serviceProvider.GetRequiredService<LinkCrypterContainerService>();
         await linkCrypterContainerService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
+        await linkCrypterContainerService.RetryFailedReleaseContainerUpdatesAsync(stoppingToken);
     }
 }

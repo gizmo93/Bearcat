@@ -30,7 +30,7 @@ public static class ReleaseOverviewSummaryService
         );
     }
 
-    public static IReadOnlyList<LinkCrypterContainerUrls> GroupCreatedContainerUrlsByLinkCrypter(
+    public static IReadOnlyList<LinkCrypterContainerUrls> GroupContainerUrlsByLinkCrypter(
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads
     )
     {
@@ -41,7 +41,9 @@ public static class ReleaseOverviewSummaryService
                 LinkCrypterRegistrationName: group.Key,
                 ContainerUrls: group
                     .Where(container =>
-                        container.State is LinkCrypterContainerState.Created
+                        container.State
+                            is LinkCrypterContainerState.Created
+                                or LinkCrypterContainerState.UpdateFailed
                         && !string.IsNullOrWhiteSpace(container.ContainerUrl)
                     )
                     .Select(container => container.ContainerUrl)

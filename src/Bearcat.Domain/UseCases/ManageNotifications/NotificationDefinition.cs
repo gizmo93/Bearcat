@@ -190,6 +190,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.LinkCrypterContainerUpdateFailed.Description"
         ),
         new(
+            Kind: NotificationKind.LinkCrypterContainerRecreated,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.LinkCrypters,
+            DisplayName: "NotificationKind.LinkCrypterContainerRecreated",
+            Description: "NotificationKind.LinkCrypterContainerRecreated.Description"
+        ),
+        new(
             Kind: NotificationKind.CollectionLinkCrypterContainerInvalid,
             Severity: NotificationSeverity.Error,
             Group: NotificationGroup.LinkCrypters,

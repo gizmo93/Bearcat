@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
@@ -105,12 +106,22 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                 cancellationToken: cancellationToken
             );
 
-            return new UpdateContainerResult(IsSuccess: true, ErrorMessage: null);
+            return new UpdateContainerResult(
+                Outcome: UpdateContainerOutcome.Success,
+                ErrorMessage: null
+            );
+        }
+        catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return new UpdateContainerResult(
+                Outcome: UpdateContainerOutcome.ContainerNotFound,
+                ErrorMessage: await GetErrorMessageAsync(ex)
+            );
         }
         catch (Exception ex)
         {
             return new UpdateContainerResult(
-                IsSuccess: false,
+                Outcome: UpdateContainerOutcome.Failed,
                 ErrorMessage: await GetErrorMessageAsync(ex)
             );
         }

@@ -46,6 +46,7 @@ public partial class LinkContainerChip : ComponentBase
         {
             LinkCrypterContainerState.Created => BadgeVariant.Secondary,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
+            LinkCrypterContainerState.UpdateFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
 }

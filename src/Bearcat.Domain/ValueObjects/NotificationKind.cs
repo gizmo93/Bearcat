@@ -36,4 +36,5 @@ public enum NotificationKind
     ArchiveCopyIntoLocalWorkingCopyFailed = 32,
     HosterAccountPoolFull = 33,
     HosterAccountPoolWithoutUsableAccount = 34,
+    LinkCrypterContainerRecreated = 35,
 }

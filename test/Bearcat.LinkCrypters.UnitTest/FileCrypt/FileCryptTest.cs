@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.FileCrypt;
 using Bearcat.LinkCrypters.FileCrypt.Api;
 using Moq;
@@ -226,7 +227,7 @@ public class FileCryptTest
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
         result.ErrorMessage.ShouldBeNull();
         result.StatusImageId.ShouldBe("87C8C585C1");
 
@@ -278,7 +279,7 @@ public class FileCryptTest
         );
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
 
         apiMock.Verify(x =>
             x.SendAsync(
@@ -319,7 +320,7 @@ public class FileCryptTest
         );
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
 
         apiMock.Verify(x =>
             x.SendAsync(
@@ -360,8 +361,35 @@ public class FileCryptTest
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Failed);
         result.ErrorMessage.ShouldBe("edit failed");
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_ContainerIsNotAvailable_ReturnsContainerNotFound()
+    {
+        // Arrange
+        var config = new FileCryptConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.SendAsync(It.IsAny<FormUrlEncodedContent>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(new Response { State = 0, Error = "this container is not available" });
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://filecrypt.cc/Container/60598C0844.html",
+            null,
+            null,
+            ["https://hoster.test/file"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.Outcome.ShouldBe(UpdateContainerOutcome.ContainerNotFound);
+        result.ErrorMessage.ShouldBe("this container is not available");
     }
 
     [Test]

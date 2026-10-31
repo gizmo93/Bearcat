@@ -65,8 +65,9 @@ public partial class ReleaseOverview(
     protected override async Task OnParametersSetAsync()
     {
         summary = ReleaseOverviewSummaryService.BuildReleaseOverviewSummary(Uploads);
-        containerUrlsByLinkCrypter =
-            ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(Uploads);
+        containerUrlsByLinkCrypter = ReleaseOverviewSummaryService.GroupContainerUrlsByLinkCrypter(
+            Uploads
+        );
 
         if (
             loadedReleaseId != ReleaseId
@@ -272,6 +273,7 @@ public partial class ReleaseOverview(
         {
             LinkCrypterContainerState.Created => BadgeVariant.Secondary,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
+            LinkCrypterContainerState.UpdateFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
 

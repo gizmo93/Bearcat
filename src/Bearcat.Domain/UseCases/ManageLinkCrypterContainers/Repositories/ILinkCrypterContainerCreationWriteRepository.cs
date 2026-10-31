@@ -8,6 +8,11 @@ public interface ILinkCrypterContainerCreationWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<LinkCrypterContainer>> GetReleaseContainersWithUpdateRetryDueAsync(
+        DateTime updateFailedBefore,
+        CancellationToken cancellationToken
+    );
+
     Task<CollectionUploadSlot> GetCollectionUploadSlotAsync(
         int collectionUploadSlotId,
         CancellationToken cancellationToken

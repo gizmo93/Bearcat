@@ -160,6 +160,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool LinkCrypterContainerUpdateFailed { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.LinkCrypterContainerRecreated",
+        "NotificationKind.LinkCrypterContainerRecreated.Description"
+    )]
+    public bool LinkCrypterContainerRecreated { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.CollectionLinkCrypterContainerInvalid",
         "NotificationKind.CollectionLinkCrypterContainerInvalid.Description"
     )]

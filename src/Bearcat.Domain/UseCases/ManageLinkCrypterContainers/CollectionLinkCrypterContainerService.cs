@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -20,6 +21,8 @@ public class CollectionLinkCrypterContainerService(
     ISecretProtector secretProtector
 ) : ICollectionLinkCrypterContainerUpdater
 {
+    private const int UpdateFailedRetryDelayInMinutes = 15;
+
     public async Task UpdateContainersAsync(
         int collectionUploadSlotId,
         CancellationToken cancellationToken = default
@@ -132,19 +135,241 @@ public class CollectionLinkCrypterContainerService(
         if (existingContainer is null)
         {
             await CreateContainerAsync(slot, uploads, linkCrypterConfig, cancellationToken);
+            return;
         }
-        else
+
+        if (existingContainer.State == LinkCrypterContainerState.CreationFailed)
         {
-            await UpdateContainerAsync(
-                existingContainer,
-                uploads,
-                linkCrypterConfig,
-                cancellationToken
+            await CreateContainerAtLinkCrypterAndApplyResultAsync(
+                slot: slot,
+                container: existingContainer,
+                uploads: uploads,
+                linkCrypterConfig: linkCrypterConfig,
+                cancellationToken: cancellationToken
+            );
+            await repository.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        if (IsWithinUpdateRetryDelay(existingContainer))
+        {
+            return;
+        }
+
+        await UpdateContainerAsync(
+            slot: slot,
+            container: existingContainer,
+            uploads: uploads,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private bool IsWithinUpdateRetryDelay(LinkCrypterContainer container)
+    {
+        return container.State == LinkCrypterContainerState.UpdateFailed
+            && container.UpdateFailedAt
+                > timeProvider.GetLocalNow().AddMinutes(-UpdateFailedRetryDelayInMinutes);
+    }
+
+    private async Task CreateContainerAsync(
+        CollectionUploadSlot slot,
+        IReadOnlyList<Upload> uploads,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var container = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.ReleaseCollection,
+            CollectionUploadSlotId = slot.Id,
+            LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
+        };
+
+        await CreateContainerAtLinkCrypterAndApplyResultAsync(
+            slot: slot,
+            container: container,
+            uploads: uploads,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        repository.Add(container);
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task CreateContainerAtLinkCrypterAndApplyResultAsync(
+        CollectionUploadSlot slot,
+        LinkCrypterContainer container,
+        IReadOnlyList<Upload> uploads,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await CreateContainerAtLinkCrypterAsync(
+            slot: slot,
+            uploads: uploads,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        container.CopySettingsFrom(linkCrypterConfig);
+        container.ApplyCreateContainerResult(result, timeProvider.GetLocalNow());
+        SyncSourceUploads(container, uploads);
+
+        if (!result.IsSuccess)
+        {
+            NotifyContainerCreationFailed(
+                slot: slot,
+                linkCrypterConfig: linkCrypterConfig,
+                container: container,
+                result: result
             );
         }
     }
 
-    private async Task CreateContainerAsync(
+    private async Task UpdateContainerAsync(
+        CollectionUploadSlot slot,
+        LinkCrypterContainer container,
+        IReadOnlyList<Upload> uploads,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await UpdateContainerAtLinkCrypterAsync(
+            container: container,
+            uploads: uploads,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        switch (result.Outcome)
+        {
+            case UpdateContainerOutcome.Success:
+                container.CopySettingsFrom(linkCrypterConfig);
+                container.MarkAsUpdated(result.StatusImageId);
+                SyncSourceUploads(container, uploads);
+                break;
+            case UpdateContainerOutcome.ContainerNotFound:
+                await RecreateContainerAsync(
+                    slot: slot,
+                    container: container,
+                    uploads: uploads,
+                    linkCrypterConfig: linkCrypterConfig,
+                    cancellationToken: cancellationToken
+                );
+                break;
+            case UpdateContainerOutcome.Failed:
+                MarkContainerAsUpdateFailed(
+                    container: container,
+                    linkCrypterConfig: linkCrypterConfig,
+                    errorMessage: result.ErrorMessage
+                );
+                break;
+            default:
+                throw new InvalidOperationException(
+                    $"Unknown update container outcome {result.Outcome}."
+                );
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private void MarkContainerAsUpdateFailed(
+        LinkCrypterContainer container,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        string? errorMessage
+    )
+    {
+        var wasAlreadyUpdateFailed = container.State == LinkCrypterContainerState.UpdateFailed;
+
+        container.MarkAsUpdateFailed(errorMessage, timeProvider.GetLocalNow());
+
+        logger.LogError(
+            "Failed to update collection link crypter container {ContainerId} using link crypter config Id {LinkCrypterId}. Errors: {Errors}",
+            container.Id,
+            linkCrypterConfig.Id,
+            errorMessage
+        );
+
+        if (wasAlreadyUpdateFailed)
+        {
+            return;
+        }
+
+        notificationService.Create(
+            kind: NotificationKind.LinkCrypterContainerUpdateFailed,
+            message: $"Failed to update collection link crypter container {container.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. The update is retried automatically. Errors: {errorMessage}",
+            entity: container,
+            selector: n => n.LinkCrypterContainer
+        );
+    }
+
+    private async Task RecreateContainerAsync(
+        CollectionUploadSlot slot,
+        LinkCrypterContainer container,
+        IReadOnlyList<Upload> uploads,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var previousContainerUrl = container.ContainerUrl;
+        var result = await CreateContainerAtLinkCrypterAsync(
+            slot: slot,
+            uploads: uploads,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        container.CopySettingsFrom(linkCrypterConfig);
+        container.ApplyCreateContainerResult(result, timeProvider.GetLocalNow());
+
+        if (!result.IsSuccess)
+        {
+            NotifyContainerCreationFailed(
+                slot: slot,
+                linkCrypterConfig: linkCrypterConfig,
+                container: container,
+                result: result
+            );
+            return;
+        }
+
+        SyncSourceUploads(container, uploads);
+        slot.ReleaseCollection.UploadsPostedAt = null;
+
+        logger.LogWarning(
+            "Collection link crypter container {ContainerId} for upload slot {SlotId} no longer existed and was recreated. Previous URL: {PreviousContainerUrl}, new URL: {ContainerUrl}",
+            container.Id,
+            slot.Id,
+            previousContainerUrl,
+            container.ContainerUrl
+        );
+
+        notificationService.Create(
+            kind: NotificationKind.LinkCrypterContainerRecreated,
+            message: $"Collection link crypter container {container.Id} for upload slot {slot.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name} no longer existed and was recreated. Previous URL: {previousContainerUrl}, new URL: {container.ContainerUrl}. Existing posts must be updated.",
+            entity: container,
+            selector: n => n.LinkCrypterContainer
+        );
+    }
+
+    private void NotifyContainerCreationFailed(
+        CollectionUploadSlot slot,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        LinkCrypterContainer container,
+        CreateContainerResult result
+    )
+    {
+        notificationService.Create(
+            kind: NotificationKind.LinkCrypterContainerCreationFailed,
+            message: $"Failed to create collection link crypter container for upload slot {slot.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
+            entity: container,
+            selector: n => n.LinkCrypterContainer
+        );
+    }
+
+    private async Task<CreateContainerResult> CreateContainerAtLinkCrypterAsync(
         CollectionUploadSlot slot,
         IReadOnlyList<Upload> uploads,
         UploadConfigLinkCrypter linkCrypterConfig,
@@ -158,7 +383,7 @@ public class CollectionLinkCrypterContainerService(
             linkCrypterConfig.LinkCrypterRegistration
         );
 
-        var result = await crypter.CreateContainerAsync(
+        return await crypter.CreateContainerAsync(
             linkCrypterConfig: config,
             containerName: slot.ReleaseCollection.Name,
             password: linkCrypterConfig.Password,
@@ -168,43 +393,9 @@ public class CollectionLinkCrypterContainerService(
             links: GetUploadLinks(uploads),
             cancellationToken: cancellationToken
         );
-
-        var container = new LinkCrypterContainer
-        {
-            Scope = LinkCrypterContainerScope.ReleaseCollection,
-            CollectionUploadSlotId = slot.Id,
-            LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
-            ExternalReference = result.ExternalReference,
-            StatusImageId = result.StatusImageId,
-            ContainerUrl = result.ContainerLink ?? string.Empty,
-            Password = linkCrypterConfig.Password,
-            EnableCaptcha = linkCrypterConfig.EnableCaptcha,
-            EnableContainerDownload = linkCrypterConfig.EnableContainerDownload,
-            EnableClickAndLoad = linkCrypterConfig.EnableClickAndLoad,
-            Errors = result.ErrorMessages.ToList(),
-            CreatedAt = timeProvider.GetLocalNow(),
-            State = result.IsSuccess
-                ? LinkCrypterContainerState.Created
-                : LinkCrypterContainerState.CreationFailed,
-        };
-
-        SyncSourceUploads(container, uploads);
-
-        if (!result.IsSuccess)
-        {
-            notificationService.Create(
-                kind: NotificationKind.LinkCrypterContainerCreationFailed,
-                message: $"Failed to create collection link crypter container for upload slot {slot.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
-                entity: container,
-                selector: n => n.LinkCrypterContainer
-            );
-        }
-
-        repository.Add(container);
-        await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task UpdateContainerAsync(
+    private async Task<UpdateContainerResult> UpdateContainerAtLinkCrypterAsync(
         LinkCrypterContainer container,
         IReadOnlyList<Upload> uploads,
         UploadConfigLinkCrypter linkCrypterConfig,
@@ -218,7 +409,7 @@ public class CollectionLinkCrypterContainerService(
             linkCrypterConfig.LinkCrypterRegistration
         );
 
-        var result = await crypter.UpdateContainerAsync(
+        return await crypter.UpdateContainerAsync(
             linkCrypterConfig: config,
             containerLink: container.ContainerUrl,
             externalReference: container.ExternalReference,
@@ -229,33 +420,6 @@ public class CollectionLinkCrypterContainerService(
             links: GetUploadLinks(uploads),
             cancellationToken: cancellationToken
         );
-
-        container.Password = linkCrypterConfig.Password;
-        container.EnableCaptcha = linkCrypterConfig.EnableCaptcha;
-        container.EnableContainerDownload = linkCrypterConfig.EnableContainerDownload;
-        container.EnableClickAndLoad = linkCrypterConfig.EnableClickAndLoad;
-        container.Errors = string.IsNullOrWhiteSpace(result.ErrorMessage)
-            ? []
-            : [result.ErrorMessage];
-        container.State = result.IsSuccess
-            ? LinkCrypterContainerState.Created
-            : LinkCrypterContainerState.CreationFailed;
-
-        if (!result.IsSuccess)
-        {
-            notificationService.Create(
-                kind: NotificationKind.LinkCrypterContainerUpdateFailed,
-                message: $"Failed to update collection link crypter container {container.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
-                entity: container,
-                selector: n => n.LinkCrypterContainer
-            );
-            await repository.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
-        container.StatusImageId = result.StatusImageId ?? container.StatusImageId;
-        SyncSourceUploads(container, uploads);
-        await repository.SaveChangesAsync(cancellationToken);
     }
 
     private ILinkCrypter GetCrypter(UploadConfigLinkCrypter linkCrypterConfig)
@@ -281,14 +445,23 @@ public class CollectionLinkCrypterContainerService(
         CancellationToken cancellationToken
     )
     {
+        var previousState = container.State;
+
         container.Errors = [errorMessage];
-        container.State = LinkCrypterContainerState.CreationFailed;
-        notificationService.Create(
-            kind: NotificationKind.CollectionLinkCrypterContainerInvalid,
-            message: $"Collection link crypter container {container.Id} is invalid: {errorMessage}",
-            entity: container,
-            selector: n => n.LinkCrypterContainer
-        );
+        container.State = container.HasContainerUrl()
+            ? LinkCrypterContainerState.UpdateFailed
+            : LinkCrypterContainerState.CreationFailed;
+
+        if (container.State != previousState)
+        {
+            notificationService.Create(
+                kind: NotificationKind.CollectionLinkCrypterContainerInvalid,
+                message: $"Collection link crypter container {container.Id} is invalid: {errorMessage}",
+                entity: container,
+                selector: n => n.LinkCrypterContainer
+            );
+        }
+
         await repository.SaveChangesAsync(cancellationToken);
     }
 
