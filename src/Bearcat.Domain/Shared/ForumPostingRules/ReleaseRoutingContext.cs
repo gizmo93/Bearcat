@@ -49,36 +49,42 @@ public sealed record ReleaseRoutingContext(
 
         return new ReleaseRoutingContext(
             ReleaseName: collection.Name,
-            Resolution: UniformValueOrDefault(
-                classifications.Select(classification => classification.Resolution).ToList(),
-                ReleaseResolution.Unknown
+            Resolution: GetValueOrFallback(
+                values: classifications
+                    .Select(classification => classification.Resolution)
+                    .ToList(),
+                fallbackValue: ReleaseResolution.Unknown
             ),
             PrimaryLanguage: ResolveCollectionLanguage(collection),
-            IsMultiLanguage: UniformValueOrDefault(
-                classifications.Select(classification => classification.IsMultiLanguage).ToList(),
-                false
+            IsMultiLanguage: GetValueOrFallback(
+                values: classifications
+                    .Select(classification => classification.IsMultiLanguage)
+                    .ToList(),
+                fallbackValue: false
             ),
             ContentType: ResolveCollectionContentType(collection),
-            Platform: UniformValueOrDefault(
-                classifications.Select(classification => classification.Platform).ToList(),
-                ReleasePlatform.Unknown
+            Platform: GetValueOrFallback(
+                values: classifications.Select(classification => classification.Platform).ToList(),
+                fallbackValue: ReleasePlatform.Unknown
             ),
-            Source: UniformValueOrDefault(
-                classifications.Select(classification => classification.Source).ToList(),
-                ReleaseSource.Unknown
+            Source: GetValueOrFallback(
+                values: classifications.Select(classification => classification.Source).ToList(),
+                fallbackValue: ReleaseSource.Unknown
             ),
             ReleaseGroupName: collection.ReleaseGroup.Name,
-            ReleaseGroupToken: UniformValueOrDefault(
-                classifications.Select(classification => classification.ReleaseGroupToken).ToList(),
-                null
+            ReleaseGroupToken: GetValueOrFallback(
+                values: classifications
+                    .Select(classification => classification.ReleaseGroupToken)
+                    .ToList(),
+                fallbackValue: null
             ),
-            Year: UniformValueOrDefault(
-                classifications.Select(classification => classification.Year).ToList(),
-                null
+            Year: GetValueOrFallback(
+                values: classifications.Select(classification => classification.Year).ToList(),
+                fallbackValue: null
             ),
-            Season: UniformValueOrDefault(
-                classifications.Select(classification => classification.Season).ToList(),
-                null
+            Season: GetValueOrFallback(
+                values: classifications.Select(classification => classification.Season).ToList(),
+                fallbackValue: null
             ),
             Episode: null,
             HasClassification: classifications.Count > 0
@@ -107,7 +113,7 @@ public sealed record ReleaseRoutingContext(
             .OfType<ReleaseContentType>()
             .ToList();
 
-        return UniformValueOrDefault(memberContentTypes, ReleaseContentType.Other);
+        return GetValueOrFallback(memberContentTypes, ReleaseContentType.Other);
     }
 
     private static string? ResolveCollectionLanguage(ReleaseCollection collection)
@@ -124,13 +130,13 @@ public sealed record ReleaseRoutingContext(
             .OfType<string>()
             .ToList();
 
-        return UniformValueOrDefault(memberLanguages, null);
+        return GetValueOrFallback(memberLanguages, null);
     }
 
-    private static TValue? UniformValueOrDefault<TValue>(List<TValue> values, TValue? defaultValue)
+    private static TValue? GetValueOrFallback<TValue>(List<TValue> values, TValue? fallbackValue)
     {
         var distinctValues = values.Distinct().ToList();
 
-        return distinctValues.Count == 1 ? distinctValues[0] : defaultValue;
+        return distinctValues.Count == 1 ? distinctValues[0] : fallbackValue;
     }
 }
