@@ -676,6 +676,43 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateManualReuploadAsync_OfflineUploadWithOlderFailedUpload_CreatesWaitingForArchiveUpload()
+    {
+        // Arrange
+        var olderFailedUpload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        olderFailedUpload.UploadState = UploadState.Failed;
+        await DbContext.SaveChangesAsync();
+        var offlineUpload = new Upload
+        {
+            UploadConfigId = olderFailedUpload.UploadConfigId,
+            HosterRegistrationId = olderFailedUpload.HosterRegistrationId,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+        };
+        DbContext.Uploads.Add(offlineUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(
+            offlineUpload.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
+
+        reupload.UploadConfigId.ShouldBe(olderFailedUpload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    [Test]
     public async Task CreateManualReuploadAsync_BlockingUploadExists_ThrowsInvalidUploadStateException()
     {
         // Arrange

@@ -423,7 +423,8 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
     [TestCase(UploadState.Completed, OnlineState.Online, true, false)]
     [TestCase(UploadState.Pending, OnlineState.Unknown, true, false)]
     [TestCase(UploadState.WaitingForArchive, OnlineState.Unknown, true, false)]
-    [TestCase(UploadState.Failed, OnlineState.Unknown, false, false)]
+    [TestCase(UploadState.Failed, OnlineState.Unknown, true, false)]
+    [TestCase(UploadState.Failed, OnlineState.Unknown, false, true)]
     [TestCase(UploadState.Canceled, OnlineState.Unknown, true, false)]
     [TestCase(UploadState.Canceled, OnlineState.Unknown, false, true)]
     public async Task GetUploadsDueForAutomaticReuploadAsync_OtherUploadOfSameUploadConfig_ReturnsUploadOnlyWithoutBlockingUpload(

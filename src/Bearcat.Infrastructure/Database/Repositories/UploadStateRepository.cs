@@ -102,7 +102,6 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             UploadState.Pending,
             UploadState.Uploading,
             UploadState.WaitingForArchive,
-            UploadState.Failed,
             UploadState.CancellationRequested,
         ];
 
@@ -124,6 +123,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                         ru.Id > u.Id
                         && (
                             ru.UploadState == UploadState.Canceled
+                            || ru.UploadState == UploadState.Failed
                             || (
                                 ru.UploadState == UploadState.Completed
                                 && (

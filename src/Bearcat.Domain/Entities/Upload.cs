@@ -109,8 +109,8 @@ public class Upload
                     is UploadState.Pending
                         or UploadState.Uploading
                         or UploadState.WaitingForArchive
-                        or UploadState.Failed
                         or UploadState.CancellationRequested
+                || (otherUpload.Id > Id && otherUpload.UploadState == UploadState.Failed)
             )
         );
     }

@@ -505,16 +505,49 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
             MidnightUtc,
             onlineState: OnlineState.Offline
         );
+
+        var olderFailedConfig = testData.AddUploadConfig(release, "Older failed");
+        var olderFailedUpload = testData.AddUpload(
+            olderFailedConfig,
+            MidnightUtc,
+            null,
+            UploadState.Failed,
+            OnlineState.Unknown
+        );
+        await DbContext.SaveChangesAsync();
+        var offlineNextToOlderFailed = testData.AddUpload(
+            olderFailedConfig,
+            MidnightUtc.AddHours(1),
+            MidnightUtc.AddHours(1),
+            onlineState: OnlineState.Offline
+        );
+        await DbContext.SaveChangesAsync();
+
+        var newerFailedConfig = testData.AddUploadConfig(release, "Newer failed");
+        var offlineBlockedByNewerFailed = testData.AddUpload(
+            newerFailedConfig,
+            MidnightUtc,
+            MidnightUtc,
+            onlineState: OnlineState.Offline
+        );
+        await DbContext.SaveChangesAsync();
+        var newerFailedUpload = testData.AddUpload(
+            newerFailedConfig,
+            MidnightUtc.AddHours(1),
+            null,
+            UploadState.Failed,
+            OnlineState.Unknown
+        );
         await DbContext.SaveChangesAsync();
 
         // Act
         var result = await repository.SearchUploadsAsync(
-            new ReleaseUploadSearchQuery(release.Id),
+            new ReleaseUploadSearchQuery(release.Id, PageSize: 20),
             CancellationToken.None
         );
 
         // Assert
-        result.TotalCount.ShouldBe(7);
+        result.TotalCount.ShouldBe(11);
         var canCreateReuploadById = result.Items.ToDictionary(
             upload => upload.UploadId,
             upload => upload.CanCreateReupload
@@ -526,6 +559,10 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         canCreateReuploadById[onlineUpload.Id].ShouldBeFalse();
         canCreateReuploadById[canceledUpload.Id].ShouldBeTrue();
         canCreateReuploadById[offlineNextToCanceled.Id].ShouldBeTrue();
+        canCreateReuploadById[olderFailedUpload.Id].ShouldBeTrue();
+        canCreateReuploadById[offlineNextToOlderFailed.Id].ShouldBeTrue();
+        canCreateReuploadById[offlineBlockedByNewerFailed.Id].ShouldBeFalse();
+        canCreateReuploadById[newerFailedUpload.Id].ShouldBeTrue();
     }
 
     [Test]
