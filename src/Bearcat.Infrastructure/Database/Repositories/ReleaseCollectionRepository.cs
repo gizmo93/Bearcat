@@ -264,6 +264,15 @@ public class ReleaseCollectionRepository(
                     container.State,
                     container.CreatedAt,
                     container.SourceUploads.Count,
+                    container.LinkCrypterRegistration.IsActive
+                        && container.CollectionUploadSlot!.UploadConfigs.Any(uploadConfig =>
+                            uploadConfig.LinkCrypters.Any(linkCrypter =>
+                                linkCrypter.ContainerScope
+                                    == LinkCrypterContainerScope.ReleaseCollection
+                                && linkCrypter.LinkCrypterRegistrationId
+                                    == container.LinkCrypterRegistrationId
+                            )
+                        ),
                     container.Errors
                 ),
             })

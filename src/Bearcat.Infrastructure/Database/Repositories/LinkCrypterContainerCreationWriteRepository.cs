@@ -63,15 +63,7 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
-            .LinkCrypterContainers.AsSplitQuery()
-            .Include(container => container.Upload!)
-                .ThenInclude(upload => upload.UploadedFiles)
-            .Include(container => container.Upload!)
-                .ThenInclude(upload => upload.UploadConfig)
-                    .ThenInclude(uploadConfig => uploadConfig.Release)
-            .Include(container => container.UploadConfigLinkCrypter!)
-                .ThenInclude(linkCrypter => linkCrypter.LinkCrypterRegistration)
+        return await QueryReleaseContainersWithUpload()
             .Where(container =>
                 container.Scope == LinkCrypterContainerScope.Release
                 && container.State == LinkCrypterContainerState.UpdateFailed
@@ -86,6 +78,33 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
             )
             .OrderBy(container => container.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<LinkCrypterContainer> GetReleaseContainerWithUploadAsync(
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await QueryReleaseContainersWithUpload()
+            .FirstAsync(
+                container =>
+                    container.Id == containerId
+                    && container.Scope == LinkCrypterContainerScope.Release,
+                cancellationToken
+            );
+    }
+
+    private IQueryable<LinkCrypterContainer> QueryReleaseContainersWithUpload()
+    {
+        return dbWrite
+            .LinkCrypterContainers.AsSplitQuery()
+            .Include(container => container.Upload!)
+                .ThenInclude(upload => upload.UploadedFiles)
+            .Include(container => container.Upload!)
+                .ThenInclude(upload => upload.UploadConfig)
+                    .ThenInclude(uploadConfig => uploadConfig.Release)
+            .Include(container => container.UploadConfigLinkCrypter!)
+                .ThenInclude(linkCrypter => linkCrypter.LinkCrypterRegistration);
     }
 
     public async Task<CollectionUploadSlot> GetCollectionUploadSlotAsync(

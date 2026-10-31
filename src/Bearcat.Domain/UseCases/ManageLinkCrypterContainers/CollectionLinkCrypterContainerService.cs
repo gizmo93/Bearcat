@@ -51,12 +51,114 @@ public class CollectionLinkCrypterContainerService(
         {
             containersByRegistrationId.TryGetValue(registrationId, out var container);
             await CreateOrUpdateContainerAsync(
-                slot,
-                container,
-                linkCrypterConfig,
-                cancellationToken
+                slot: slot,
+                existingContainer: container,
+                linkCrypterConfig: linkCrypterConfig,
+                ignoreUpdateRetryDelay: false,
+                cancellationToken: cancellationToken
             );
         }
+    }
+
+    public async Task<LinkCrypterContainer> ForceUpdateContainerAsync(
+        int collectionUploadSlotId,
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var slot = await repository.GetCollectionUploadSlotAsync(
+            collectionUploadSlotId,
+            cancellationToken
+        );
+        var container = await GetCollectionContainerAsync(
+            collectionUploadSlotId: collectionUploadSlotId,
+            containerId: containerId,
+            cancellationToken: cancellationToken
+        );
+        var linkCrypterConfig = GetActiveCollectionRegistrations(slot)[
+            container.LinkCrypterRegistrationId
+        ];
+
+        await CreateOrUpdateContainerAsync(
+            slot: slot,
+            existingContainer: container,
+            linkCrypterConfig: linkCrypterConfig,
+            ignoreUpdateRetryDelay: true,
+            cancellationToken: cancellationToken
+        );
+
+        return container;
+    }
+
+    public async Task<LinkCrypterContainer> RecreateContainerAsync(
+        int collectionUploadSlotId,
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var slot = await repository.GetCollectionUploadSlotAsync(
+            collectionUploadSlotId,
+            cancellationToken
+        );
+
+        var container = await GetCollectionContainerAsync(
+            collectionUploadSlotId: collectionUploadSlotId,
+            containerId: containerId,
+            cancellationToken: cancellationToken
+        );
+
+        var linkCrypterConfig = GetActiveCollectionRegistrations(slot)[
+            container.LinkCrypterRegistrationId
+        ];
+
+        var uploads = await GetUploadsWithValidCollectionSettingsAsync(
+            slot: slot,
+            existingContainer: container,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        if (uploads is null)
+        {
+            return container;
+        }
+
+        var result = await CreateNewContainerAndReplaceUrlAsync(
+            slot: slot,
+            container: container,
+            uploads: uploads,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        if (!result.IsSuccess)
+        {
+            var errorMessage = string.Join("; ", result.ErrorMessages);
+            container.MarkAsUpdateFailed(errorMessage, timeProvider.GetLocalNow());
+            logger.LogError(
+                "Failed to recreate collection link crypter container {ContainerId} for upload slot {SlotId}, keeping the previous container. Errors: {Errors}",
+                container.Id,
+                slot.Id,
+                errorMessage
+            );
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+        return container;
+    }
+
+    private async Task<LinkCrypterContainer> GetCollectionContainerAsync(
+        int collectionUploadSlotId,
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var containers = await repository.GetCollectionContainersAsync(
+            collectionUploadSlotId,
+            cancellationToken
+        );
+
+        return containers.Single(container => container.Id == containerId);
     }
 
     private async Task RemoveOrphanedContainersAsync(
@@ -100,35 +202,19 @@ public class CollectionLinkCrypterContainerService(
         CollectionUploadSlot slot,
         LinkCrypterContainer? existingContainer,
         UploadConfigLinkCrypter linkCrypterConfig,
+        bool ignoreUpdateRetryDelay,
         CancellationToken cancellationToken
     )
     {
-        var uploads = GetCompletedUploads(slot, linkCrypterConfig.LinkCrypterRegistrationId);
-        if (uploads.Count == 0)
-        {
-            return;
-        }
-
-        var allLinkCrypterConfigs = GetAllConfigsForRegistration(
-            slot,
-            linkCrypterConfig.LinkCrypterRegistrationId
+        var uploads = await GetUploadsWithValidCollectionSettingsAsync(
+            slot: slot,
+            existingContainer: existingContainer,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
         );
 
-        var problem = ValidateCollectionSettings(slot, uploads, allLinkCrypterConfigs);
-        if (problem is not null)
+        if (uploads is null)
         {
-            logger.LogWarning(
-                "Skipping collection container for slot {SlotId}, registration {RegistrationId}: {Reason}",
-                slot.Id,
-                linkCrypterConfig.LinkCrypterRegistrationId,
-                problem
-            );
-
-            if (existingContainer is not null)
-            {
-                await MarkContainerAsFailedAsync(existingContainer, problem, cancellationToken);
-            }
-
             return;
         }
 
@@ -151,7 +237,7 @@ public class CollectionLinkCrypterContainerService(
             return;
         }
 
-        if (IsWithinUpdateRetryDelay(existingContainer))
+        if (!ignoreUpdateRetryDelay && IsWithinUpdateRetryDelay(existingContainer))
         {
             return;
         }
@@ -163,6 +249,47 @@ public class CollectionLinkCrypterContainerService(
             linkCrypterConfig: linkCrypterConfig,
             cancellationToken: cancellationToken
         );
+    }
+
+    private async Task<IReadOnlyList<Upload>?> GetUploadsWithValidCollectionSettingsAsync(
+        CollectionUploadSlot slot,
+        LinkCrypterContainer? existingContainer,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var uploads = GetCompletedUploads(slot, linkCrypterConfig.LinkCrypterRegistrationId);
+
+        if (uploads.Count == 0)
+        {
+            return null;
+        }
+
+        var allLinkCrypterConfigs = GetAllConfigsForRegistration(
+            slot,
+            linkCrypterConfig.LinkCrypterRegistrationId
+        );
+
+        var problem = ValidateCollectionSettings(slot, uploads, allLinkCrypterConfigs);
+
+        if (problem is null)
+        {
+            return uploads;
+        }
+
+        logger.LogWarning(
+            "Skipping collection container for slot {SlotId}, registration {RegistrationId}: {Reason}",
+            slot.Id,
+            linkCrypterConfig.LinkCrypterRegistrationId,
+            problem
+        );
+
+        if (existingContainer is not null)
+        {
+            await MarkContainerAsFailedAsync(existingContainer, problem, cancellationToken);
+        }
+
+        return null;
     }
 
     private bool IsWithinUpdateRetryDelay(LinkCrypterContainer container)
@@ -251,14 +378,30 @@ public class CollectionLinkCrypterContainerService(
                 SyncSourceUploads(container, uploads);
                 break;
             case UpdateContainerOutcome.ContainerNotFound:
-                await RecreateContainerAsync(
+            {
+                var createResult = await CreateNewContainerAndReplaceUrlAsync(
                     slot: slot,
                     container: container,
                     uploads: uploads,
                     linkCrypterConfig: linkCrypterConfig,
                     cancellationToken: cancellationToken
                 );
+
+                if (!createResult.IsSuccess)
+                {
+                    container.CopySettingsFrom(linkCrypterConfig);
+                    container.ApplyCreateContainerResult(createResult, timeProvider.GetLocalNow());
+
+                    NotifyContainerCreationFailed(
+                        slot: slot,
+                        linkCrypterConfig: linkCrypterConfig,
+                        container: container,
+                        result: createResult
+                    );
+                }
+
                 break;
+            }
             case UpdateContainerOutcome.Failed:
                 MarkContainerAsUpdateFailed(
                     container: container,
@@ -305,7 +448,7 @@ public class CollectionLinkCrypterContainerService(
         );
     }
 
-    private async Task RecreateContainerAsync(
+    private async Task<CreateContainerResult> CreateNewContainerAndReplaceUrlAsync(
         CollectionUploadSlot slot,
         LinkCrypterContainer container,
         IReadOnlyList<Upload> uploads,
@@ -321,25 +464,18 @@ public class CollectionLinkCrypterContainerService(
             cancellationToken: cancellationToken
         );
 
-        container.CopySettingsFrom(linkCrypterConfig);
-        container.ApplyCreateContainerResult(result, timeProvider.GetLocalNow());
-
         if (!result.IsSuccess)
         {
-            NotifyContainerCreationFailed(
-                slot: slot,
-                linkCrypterConfig: linkCrypterConfig,
-                container: container,
-                result: result
-            );
-            return;
+            return result;
         }
 
+        container.CopySettingsFrom(linkCrypterConfig);
+        container.ApplyCreateContainerResult(result, timeProvider.GetLocalNow());
         SyncSourceUploads(container, uploads);
         slot.ReleaseCollection.UploadsPostedAt = null;
 
         logger.LogWarning(
-            "Collection link crypter container {ContainerId} for upload slot {SlotId} no longer existed and was recreated. Previous URL: {PreviousContainerUrl}, new URL: {ContainerUrl}",
+            "Collection link crypter container {ContainerId} for upload slot {SlotId} was recreated. Previous URL: {PreviousContainerUrl}, new URL: {ContainerUrl}",
             container.Id,
             slot.Id,
             previousContainerUrl,
@@ -348,10 +484,12 @@ public class CollectionLinkCrypterContainerService(
 
         notificationService.Create(
             kind: NotificationKind.LinkCrypterContainerRecreated,
-            message: $"Collection link crypter container {container.Id} for upload slot {slot.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name} no longer existed and was recreated. Previous URL: {previousContainerUrl}, new URL: {container.ContainerUrl}. Existing posts must be updated.",
+            message: $"Collection link crypter container {container.Id} for upload slot {slot.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name} was recreated. Previous URL: {previousContainerUrl}, new URL: {container.ContainerUrl}. Existing posts must be updated.",
             entity: container,
             selector: n => n.LinkCrypterContainer
         );
+
+        return result;
     }
 
     private void NotifyContainerCreationFailed(

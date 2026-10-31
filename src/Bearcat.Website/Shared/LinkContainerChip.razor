@@ -23,6 +23,31 @@
                         Variant="ButtonVariant.Ghost"
                         Class="bearcat-overview-chip-copy" />
         }
+        @if (IsForceUpdateButtonShown)
+        {
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.IconSmall"
+                      Class="bearcat-overview-chip-action"
+                      Disabled="IsActionRunning"
+                      AriaLabel="@L["ForceUpdateLinkCrypterContainer"]"
+                      title="@L["ForceUpdateLinkCrypterContainer"]"
+                      OnClick="OnForceUpdateRequested">
+                <LucideIcon Name="@(IsActionRunning ? "loader-circle" : "refresh-cw")"
+                            class="@(IsActionRunning ? "h-4 w-4 animate-spin" : "h-4 w-4")" />
+            </BbButton>
+        }
+        @if (IsRecreateButtonShown)
+        {
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.IconSmall"
+                      Class="bearcat-overview-chip-action"
+                      Disabled="IsActionRunning"
+                      AriaLabel="@L["RecreateLinkCrypterContainer"]"
+                      title="@L["RecreateLinkCrypterContainer"]"
+                      OnClick="OnRecreateRequested">
+                <LucideIcon Name="replace" class="h-4 w-4" />
+            </BbButton>
+        }
         @if (IsDeleteButtonShown)
         {
             <BbButton Variant="ButtonVariant.Ghost"

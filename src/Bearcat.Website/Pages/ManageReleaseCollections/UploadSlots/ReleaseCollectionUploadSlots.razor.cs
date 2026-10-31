@@ -36,6 +36,15 @@ public partial class ReleaseCollectionUploadSlots(
     [Parameter]
     public EventCallback<CollectionUploadSlotContainerReadModel> OnDeleteFailedContainerRequested { get; set; }
 
+    [Parameter]
+    public EventCallback<CollectionUploadSlotContainerReadModel> OnForceUpdateContainerRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<CollectionUploadSlotContainerReadModel> OnRecreateContainerRequested { get; set; }
+
+    [Parameter]
+    public IReadOnlySet<int> ContainerIdsWithRunningAction { get; set; } = new HashSet<int>();
+
     private readonly HashSet<int> knownUploadSlotIds = [];
     private readonly HashSet<int> expandedUploadSlotIds = [];
 

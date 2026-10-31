@@ -54,7 +54,11 @@
                                            Errors="container.Errors"
                                            CoverageText="@GetCoverageText(container, uploadSlot)"
                                            CoverageTitle="@GetCoverageTitle(container, uploadSlot)"
-                                           OnDeleteRequested="@(() => OnDeleteFailedContainerRequested.InvokeAsync(container))" />
+                                           OnDeleteRequested="@(() => OnDeleteFailedContainerRequested.InvokeAsync(container))"
+                                           HasActiveLinkCrypterConfig="container.HasActiveLinkCrypterConfig"
+                                           IsActionRunning="@ContainerIdsWithRunningAction.Contains(container.LinkCrypterContainerId)"
+                                           OnForceUpdateRequested="@(() => OnForceUpdateContainerRequested.InvokeAsync(container))"
+                                           OnRecreateRequested="@(() => OnRecreateContainerRequested.InvokeAsync(container))" />
                     }
                     @foreach (var linkCrypter in CollectionLinkContainerOverviewService.GetSharedLinkCryptersWithoutContainer(uploadSlot))
                     {

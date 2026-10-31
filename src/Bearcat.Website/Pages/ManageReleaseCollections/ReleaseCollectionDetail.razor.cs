@@ -14,6 +14,7 @@ using Bearcat.Website.Pages.ManageReleaseCollections.Overview;
 using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using Bearcat.Website.Shared.ProgressSteps;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -52,6 +53,7 @@ public partial class ReleaseCollectionDetail(
     private string? elementIdToScrollIntoView;
     private IJSObjectReference? stickyHeaderVisibilityTrackingHandle;
     private PostedLocations? postedLocations;
+    private readonly HashSet<int> containerIdsWithRunningAction = [];
     private bool hasActiveForumRegistration;
     private bool isInitialized;
     private bool isResolvingMetadata;
@@ -436,6 +438,73 @@ public partial class ReleaseCollectionDetail(
                     CancellationToken.None
                 )
         );
+        await LoadReleaseCollectionAsync();
+    }
+
+    private async Task ForceUpdateContainerAsync(CollectionUploadSlotContainerReadModel container)
+    {
+        containerIdsWithRunningAction.Add(container.LinkCrypterContainerId);
+
+        try
+        {
+            var updatedContainer = await operationRunner.RunAsync(
+                (LinkCrypterContainerService service) =>
+                    service.ForceUpdateContainerAsync(
+                        container.LinkCrypterContainerId,
+                        CancellationToken.None
+                    )
+            );
+            LinkCrypterContainerActionToasts.ShowForceUpdateResult(
+                toastService: toastService,
+                localizer: L,
+                previousContainerUrl: container.ContainerUrl,
+                container: updatedContainer
+            );
+        }
+        finally
+        {
+            containerIdsWithRunningAction.Remove(container.LinkCrypterContainerId);
+        }
+
+        await LoadReleaseCollectionAsync();
+    }
+
+    private async Task RecreateContainerAsync(CollectionUploadSlotContainerReadModel container)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["RecreateLinkCrypterContainer"],
+            L["RecreateLinkCrypterContainerConfirmation"],
+            new ConfirmDialogOptions { ConfirmText = L["Recreate"], CancelText = L["Cancel"] }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        containerIdsWithRunningAction.Add(container.LinkCrypterContainerId);
+        StateHasChanged();
+
+        try
+        {
+            var recreatedContainer = await operationRunner.RunAsync(
+                (LinkCrypterContainerService service) =>
+                    service.RecreateContainerAsync(
+                        container.LinkCrypterContainerId,
+                        CancellationToken.None
+                    )
+            );
+            LinkCrypterContainerActionToasts.ShowRecreateResult(
+                toastService: toastService,
+                localizer: L,
+                container: recreatedContainer
+            );
+        }
+        finally
+        {
+            containerIdsWithRunningAction.Remove(container.LinkCrypterContainerId);
+        }
+
         await LoadReleaseCollectionAsync();
     }
 

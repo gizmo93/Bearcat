@@ -1394,6 +1394,8 @@ public class ReleaseReadRepository(
                 c.EnableCaptcha,
                 c.EnableContainerDownload,
                 c.EnableClickAndLoad,
+                HasActiveLinkCrypterConfig = c.UploadConfigLinkCrypter != null
+                    && c.UploadConfigLinkCrypter.LinkCrypterRegistration.IsActive,
                 Errors = c.Errors,
             })
             .ToListAsync(cancellationToken: cancellationToken);
@@ -1423,6 +1425,19 @@ public class ReleaseReadRepository(
                 source.LinkCrypterContainer.EnableCaptcha,
                 source.LinkCrypterContainer.EnableContainerDownload,
                 source.LinkCrypterContainer.EnableClickAndLoad,
+                HasActiveLinkCrypterConfig = source
+                    .LinkCrypterContainer
+                    .LinkCrypterRegistration
+                    .IsActive
+                    && source.LinkCrypterContainer.CollectionUploadSlot!.UploadConfigs.Any(
+                        uploadConfig =>
+                            uploadConfig.LinkCrypters.Any(linkCrypter =>
+                                linkCrypter.ContainerScope
+                                    == LinkCrypterContainerScope.ReleaseCollection
+                                && linkCrypter.LinkCrypterRegistrationId
+                                    == source.LinkCrypterContainer.LinkCrypterRegistrationId
+                            )
+                    ),
                 Errors = source.LinkCrypterContainer.Errors,
             })
             .ToListAsync(cancellationToken: cancellationToken);
@@ -1452,6 +1467,7 @@ public class ReleaseReadRepository(
                 SupportsClickAndLoad: linkCryptersByClassName[
                     container.LinkCrypterClassName
                 ].SupportsClickAndLoad,
+                HasActiveLinkCrypterConfig: container.HasActiveLinkCrypterConfig,
                 Errors: container.Errors
             ))
             .ToList();

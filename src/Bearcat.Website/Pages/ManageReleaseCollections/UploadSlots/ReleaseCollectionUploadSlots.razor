@@ -226,6 +226,32 @@
                                                                     Variant="ButtonVariant.Ghost"
                                                                     Class="bearcat-overview-chip-copy" />
                                                     }
+                                                    @if (container.HasActiveLinkCrypterConfig && container.State is LinkCrypterContainerState.Created or LinkCrypterContainerState.UpdateFailed)
+                                                    {
+                                                        var isActionRunning = ContainerIdsWithRunningAction.Contains(container.LinkCrypterContainerId);
+                                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                                  Size="ButtonSize.IconSmall"
+                                                                  Class="bearcat-overview-chip-action"
+                                                                  Disabled="isActionRunning"
+                                                                  AriaLabel="@L["ForceUpdateLinkCrypterContainer"]"
+                                                                  title="@L["ForceUpdateLinkCrypterContainer"]"
+                                                                  OnClick="@(() => OnForceUpdateContainerRequested.InvokeAsync(container))">
+                                                            <LucideIcon Name="@(isActionRunning ? "loader-circle" : "refresh-cw")"
+                                                                        class="@(isActionRunning ? "h-4 w-4 animate-spin" : "h-4 w-4")" />
+                                                        </BbButton>
+                                                        @if (container.State is LinkCrypterContainerState.UpdateFailed)
+                                                        {
+                                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                                      Size="ButtonSize.IconSmall"
+                                                                      Class="bearcat-overview-chip-action"
+                                                                      Disabled="isActionRunning"
+                                                                      AriaLabel="@L["RecreateLinkCrypterContainer"]"
+                                                                      title="@L["RecreateLinkCrypterContainer"]"
+                                                                      OnClick="@(() => OnRecreateContainerRequested.InvokeAsync(container))">
+                                                                <LucideIcon Name="replace" class="h-4 w-4" />
+                                                            </BbButton>
+                                                        }
+                                                    }
                                                     @if (container.State is LinkCrypterContainerState.CreationFailed)
                                                     {
                                                         <BbButton Variant="ButtonVariant.Ghost"

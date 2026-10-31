@@ -201,6 +201,15 @@ If the provider reports that the container no longer exists, Bearcat creates a n
 new URL and sends a notification. The release or release collection goes back into the [post queue](/Bearcat/post-queue/),
 so existing posts can be updated with the new URL.
 
+You can also update or recreate a container manually:
+
+- **Update now** (`Created` or `Update failed`): updates the container immediately with the current links and
+  settings, skipping the retry delay. Bearcat also checks whether the container still exists and recreates it
+  if needed.
+- **Recreate** (`Update failed` only): creates a new container with a new URL and puts the release or
+  release collection back into the post queue. The old container stays with the link crypter.
+  If creation fails, Bearcat keeps using the old container and its URL.
+
 ## 10. Cleanup after a successful upload
 
 Under [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup), you can convert managed releases

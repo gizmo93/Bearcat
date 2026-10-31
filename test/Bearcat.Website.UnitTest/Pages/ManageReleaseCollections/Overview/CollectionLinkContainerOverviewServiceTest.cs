@@ -164,6 +164,7 @@ public class CollectionLinkContainerOverviewServiceTest
             state,
             new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
             1,
+            true,
             []
         );
 }

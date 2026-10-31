@@ -9,5 +9,6 @@ public record CollectionUploadSlotContainerReadModel(
     LinkCrypterContainerState State,
     DateTime CreatedAt,
     int SourceUploadCount,
+    bool HasActiveLinkCrypterConfig,
     IReadOnlyList<string> Errors
 );

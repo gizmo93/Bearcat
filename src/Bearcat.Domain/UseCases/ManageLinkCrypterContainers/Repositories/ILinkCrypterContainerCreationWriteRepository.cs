@@ -13,6 +13,11 @@ public interface ILinkCrypterContainerCreationWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<LinkCrypterContainer> GetReleaseContainerWithUploadAsync(
+        int containerId,
+        CancellationToken cancellationToken
+    );
+
     Task<CollectionUploadSlot> GetCollectionUploadSlotAsync(
         int collectionUploadSlotId,
         CancellationToken cancellationToken

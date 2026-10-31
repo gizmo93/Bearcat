@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -10,7 +11,8 @@ namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class UploadContainerLinksDialog(
     IScopedOperationRunner operationRunner,
-    DialogService dialogService
+    DialogService dialogService,
+    ToastService toastService
 )
 {
     [Parameter]
@@ -25,6 +27,7 @@ public partial class UploadContainerLinksDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
+    private readonly HashSet<int> containerIdsWithRunningAction = [];
     private IReadOnlyList<ReleaseUploadContainerLinkReadModel> containers = [];
     private bool isInitialized;
     private bool isLoading;
@@ -94,6 +97,83 @@ public partial class UploadContainerLinksDialog(
             (LinkCrypterContainerService service) =>
                 service.DeleteFailedContainerAsync(container.Id, CancellationToken.None)
         );
+        await LoadContainersAsync();
+    }
+
+    private static bool CanForceUpdate(ReleaseUploadContainerLinkReadModel container) =>
+        container
+            is {
+                State: LinkCrypterContainerState.Created or LinkCrypterContainerState.UpdateFailed,
+                Scope: LinkCrypterContainerScope.Release,
+                HasActiveLinkCrypterConfig: true,
+            };
+
+    private static bool CanRecreate(ReleaseUploadContainerLinkReadModel container) =>
+        container
+            is {
+                State: LinkCrypterContainerState.UpdateFailed,
+                Scope: LinkCrypterContainerScope.Release,
+                HasActiveLinkCrypterConfig: true,
+            };
+
+    private async Task ForceUpdateContainerAsync(ReleaseUploadContainerLinkReadModel container)
+    {
+        containerIdsWithRunningAction.Add(container.Id);
+
+        try
+        {
+            var updatedContainer = await operationRunner.RunAsync(
+                (LinkCrypterContainerService service) =>
+                    service.ForceUpdateContainerAsync(container.Id, CancellationToken.None)
+            );
+            LinkCrypterContainerActionToasts.ShowForceUpdateResult(
+                toastService: toastService,
+                localizer: L,
+                previousContainerUrl: container.ContainerUrl,
+                container: updatedContainer
+            );
+        }
+        finally
+        {
+            containerIdsWithRunningAction.Remove(container.Id);
+        }
+
+        await LoadContainersAsync();
+    }
+
+    private async Task RecreateContainerAsync(ReleaseUploadContainerLinkReadModel container)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["RecreateLinkCrypterContainer"],
+            L["RecreateLinkCrypterContainerConfirmation"],
+            new ConfirmDialogOptions { ConfirmText = L["Recreate"], CancelText = L["Cancel"] }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        containerIdsWithRunningAction.Add(container.Id);
+        StateHasChanged();
+
+        try
+        {
+            var recreatedContainer = await operationRunner.RunAsync(
+                (LinkCrypterContainerService service) =>
+                    service.RecreateContainerAsync(container.Id, CancellationToken.None)
+            );
+            LinkCrypterContainerActionToasts.ShowRecreateResult(
+                toastService: toastService,
+                localizer: L,
+                container: recreatedContainer
+            );
+        }
+        finally
+        {
+            containerIdsWithRunningAction.Remove(container.Id);
+        }
+
         await LoadContainersAsync();
     }
 

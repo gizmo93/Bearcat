@@ -1117,6 +1117,253 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         linkCrypterFactoryMock.Verify(f => f.Get(It.IsAny<string>()), Times.Never);
     }
 
+    [Test]
+    public async Task ForceUpdateContainerAsync_ReleaseContainerUpdateFailedWithinRetryDelay_UpdatesContainer()
+    {
+        // Arrange
+        var containerId = await AddContainerAsync(
+            LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: DateTime.UtcNow.AddMinutes(-1)
+        );
+
+        DbContext.ChangeTracker.Clear();
+        SetupUpdateContainerResult(new UpdateContainerResult(UpdateContainerOutcome.Success, null));
+
+        // Act
+        var result = await service.ForceUpdateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        result.State.ShouldBe(LinkCrypterContainerState.Created);
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext.LinkCrypterContainers.SingleAsync();
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        container.ContainerUrl.ShouldBe("https://crypter.test/existing");
+        container.UpdateFailedAt.ShouldBeNull();
+        linkCrypterMock.Verify(
+            c =>
+                c.UpdateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    "https://crypter.test/existing",
+                    "external-1",
+                    "container-secret",
+                    It.Is<IReadOnlyList<string>>(links => links.SequenceEqual(ExpectedLinksAAndB)),
+                    true,
+                    true,
+                    true,
+                    CancellationToken.None
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ForceUpdateContainerAsync_ReleaseContainerNotFound_RecreatesContainerInPlaceAndResetsPostQueue()
+    {
+        // Arrange
+        var containerId = await AddContainerAsync(LinkCrypterContainerState.Created);
+        var release = await DbContext.Releases.SingleAsync(r => r.Name == "Bearcat.Release.001");
+
+        release.UploadsPostedAt = DateTime.UtcNow;
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        SetupUpdateContainerResult(
+            new UpdateContainerResult(UpdateContainerOutcome.ContainerNotFound, "Not found")
+        );
+        SetupCreateContainerResult(
+            new CreateContainerResult(true, "https://crypter.test/recreated", "external-2", [])
+        );
+
+        // Act
+        await service.ForceUpdateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+
+        var container = await DbContext
+            .LinkCrypterContainers.Include(c => c.Notifications)
+            .SingleAsync();
+
+        container.Id.ShouldBe(containerId);
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        container.ContainerUrl.ShouldBe("https://crypter.test/recreated");
+
+        container
+            .Notifications.Single()
+            .NotificationKind.ShouldBe(NotificationKind.LinkCrypterContainerRecreated);
+        (
+            await DbContext.Releases.SingleAsync(r => r.Id == release.Id)
+        ).UploadsPostedAt.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task RecreateContainerAsync_ReleaseContainer_CreatesNewContainerInPlaceAndResetsPostQueue()
+    {
+        // Arrange
+        var containerId = await AddContainerAsync(
+            LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: DateTime.UtcNow.AddMinutes(-1)
+        );
+
+        var release = await DbContext.Releases.SingleAsync(r => r.Name == "Bearcat.Release.001");
+
+        release.UploadsPostedAt = DateTime.UtcNow;
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        SetupCreateContainerResult(
+            new CreateContainerResult(true, "https://crypter.test/recreated", "external-2", [])
+        );
+
+        // Act
+        var result = await service.RecreateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        result.ContainerUrl.ShouldBe("https://crypter.test/recreated");
+        DbContext.ChangeTracker.Clear();
+
+        var container = await DbContext
+            .LinkCrypterContainers.Include(c => c.Notifications)
+            .SingleAsync();
+
+        container.Id.ShouldBe(containerId);
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        container.ContainerUrl.ShouldBe("https://crypter.test/recreated");
+        container.ExternalReference.ShouldBe("external-2");
+        container.UpdateFailedAt.ShouldBeNull();
+
+        var notification = container.Notifications.Single();
+        notification.NotificationKind.ShouldBe(NotificationKind.LinkCrypterContainerRecreated);
+        notification.Message.ShouldContain("https://crypter.test/existing");
+
+        notification.Message.ShouldContain("https://crypter.test/recreated");
+        (
+            await DbContext.Releases.SingleAsync(r => r.Id == release.Id)
+        ).UploadsPostedAt.ShouldBeNull();
+
+        VerifyUpdateContainerWasNeverCalled();
+    }
+
+    [Test]
+    public async Task RecreateContainerAsync_CreationFails_KeepsPreviousContainer()
+    {
+        // Arrange
+        var containerId = await AddContainerAsync(
+            LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: DateTime.UtcNow.AddMinutes(-1)
+        );
+
+        DbContext.ChangeTracker.Clear();
+        SetupCreateContainerResult(
+            new CreateContainerResult(false, null, null, ["Crypter unavailable"])
+        );
+
+        // Act
+        await service.RecreateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+
+        var container = await DbContext.LinkCrypterContainers.SingleAsync();
+        container.State.ShouldBe(LinkCrypterContainerState.UpdateFailed);
+        container.ContainerUrl.ShouldBe("https://crypter.test/existing");
+        container.ExternalReference.ShouldBe("external-1");
+        container.Errors.ShouldBe(["Crypter unavailable"]);
+    }
+
+    [Test]
+    public async Task RecreateContainerAsync_ContainerCreated_Throws()
+    {
+        // Arrange
+        var containerId = await AddContainerAsync(LinkCrypterContainerState.Created);
+
+        // Act
+        var act = async () =>
+            await service.RecreateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidOperationException>();
+        VerifyCreateContainerWasNeverCalled();
+    }
+
+    [Test]
+    public async Task ForceUpdateContainerAsync_CollectionContainerUpdateFailedWithinRetryDelay_UpdatesContainer()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithMissingContainerAsync();
+        var containerId = await AddExistingCollectionContainerAsync(
+            seed,
+            [seed.UploadIds[0]],
+            state: LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: DateTime.UtcNow.AddMinutes(-1)
+        );
+        DbContext.ChangeTracker.Clear();
+        SetupUpdateContainerResult(new UpdateContainerResult(UpdateContainerOutcome.Success, null));
+
+        // Act
+        await service.ForceUpdateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+
+        var container = await DbContext
+            .LinkCrypterContainers.Include(c => c.SourceUploads)
+            .SingleAsync();
+
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        container.UpdateFailedAt.ShouldBeNull();
+        container.SourceUploads.Select(source => source.UploadId).Order().ShouldBe(seed.UploadIds);
+        VerifyCreateContainerWasNeverCalled();
+    }
+
+    [Test]
+    public async Task RecreateContainerAsync_CollectionContainer_CreatesNewContainerInPlaceAndResetsPostQueue()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithMissingContainerAsync();
+
+        var containerId = await AddExistingCollectionContainerAsync(
+            seed,
+            [seed.UploadIds[0]],
+            state: LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: DateTime.UtcNow.AddMinutes(-1)
+        );
+
+        var releaseCollection = await DbContext.ReleaseCollections.SingleAsync();
+        releaseCollection.UploadsPostedAt = DateTime.UtcNow;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        SetupCreateContainerResult(
+            new CreateContainerResult(true, "https://crypter.test/recreated", "collection-2", [])
+        );
+
+        // Act
+        await service.RecreateContainerAsync(containerId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+
+        var container = await DbContext
+            .LinkCrypterContainers.Include(c => c.SourceUploads)
+            .Include(c => c.Notifications)
+            .SingleAsync();
+
+        container.Id.ShouldBe(containerId);
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        container.ContainerUrl.ShouldBe("https://crypter.test/recreated");
+        container.SourceUploads.Select(source => source.UploadId).Order().ShouldBe(seed.UploadIds);
+
+        container
+            .Notifications.Single()
+            .NotificationKind.ShouldBe(NotificationKind.LinkCrypterContainerRecreated);
+
+        (await DbContext.ReleaseCollections.SingleAsync()).UploadsPostedAt.ShouldBeNull();
+        VerifyUpdateContainerWasNeverCalled();
+    }
+
     private void SetupUpdateContainerResult(UpdateContainerResult result)
     {
         linkCrypterMock
@@ -1582,7 +1829,10 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
         return new OnlyFailedContainerSeed(newUpload.Id, failedContainer.Id);
     }
 
-    private async Task<int> AddContainerAsync(LinkCrypterContainerState state)
+    private async Task<int> AddContainerAsync(
+        LinkCrypterContainerState state,
+        DateTime? updateFailedAt = null
+    )
     {
         var seed = await AddUploadWithMissingContainerAsync();
         var container = new LinkCrypterContainer
@@ -1597,6 +1847,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
             State = state,
             Errors = [],
             CreatedAt = DateTime.UtcNow,
+            UpdateFailedAt = updateFailedAt,
         };
 
         DbContext.LinkCrypterContainers.Add(container);

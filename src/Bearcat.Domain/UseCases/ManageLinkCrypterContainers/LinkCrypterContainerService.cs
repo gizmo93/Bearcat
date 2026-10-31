@@ -111,14 +111,7 @@ public class LinkCrypterContainerService(
         CancellationToken cancellationToken
     )
     {
-        var container = await repository.GetByIdAsync(containerId, cancellationToken);
-
-        if (container is null)
-        {
-            throw new InvalidOperationException(
-                $"Link crypter container {containerId} was not found."
-            );
-        }
+        var container = await GetExistingContainerAsync(containerId, cancellationToken);
 
         if (container.State != LinkCrypterContainerState.CreationFailed)
         {
@@ -129,6 +122,118 @@ public class LinkCrypterContainerService(
 
         repository.Remove(container);
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<LinkCrypterContainer> ForceUpdateContainerAsync(
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var container = await GetExistingContainerAsync(containerId, cancellationToken);
+
+        if (
+            container.State
+            is not (LinkCrypterContainerState.Created or LinkCrypterContainerState.UpdateFailed)
+        )
+        {
+            throw new InvalidOperationException(
+                "Only created link crypter containers or containers whose update failed can be updated."
+            );
+        }
+
+        if (container.Scope == LinkCrypterContainerScope.ReleaseCollection)
+        {
+            return await collectionContainerService.ForceUpdateContainerAsync(
+                collectionUploadSlotId: container.CollectionUploadSlotId!.Value,
+                containerId: container.Id,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        var releaseContainer = await repository.GetReleaseContainerWithUploadAsync(
+            containerId,
+            cancellationToken
+        );
+
+        await UpdateReleaseContainerAsync(
+            upload: releaseContainer.Upload!,
+            container: releaseContainer,
+            linkCrypterConfig: releaseContainer.UploadConfigLinkCrypter!,
+            cancellationToken: cancellationToken
+        );
+
+        return releaseContainer;
+    }
+
+    public async Task<LinkCrypterContainer> RecreateContainerAsync(
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var container = await GetExistingContainerAsync(containerId, cancellationToken);
+
+        if (container.State != LinkCrypterContainerState.UpdateFailed)
+        {
+            throw new InvalidOperationException(
+                "Only link crypter containers whose update failed can be recreated."
+            );
+        }
+
+        if (container.Scope == LinkCrypterContainerScope.ReleaseCollection)
+        {
+            return await collectionContainerService.RecreateContainerAsync(
+                collectionUploadSlotId: container.CollectionUploadSlotId!.Value,
+                containerId: container.Id,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        var releaseContainer = await repository.GetReleaseContainerWithUploadAsync(
+            containerId,
+            cancellationToken
+        );
+
+        var upload = releaseContainer.Upload!;
+        var linkCrypterConfig = releaseContainer.UploadConfigLinkCrypter!;
+
+        var result = await CreateNewContainerAndReplaceUrlAsync(
+            upload: upload,
+            container: releaseContainer,
+            linkCrypterConfig: linkCrypterConfig,
+            cancellationToken: cancellationToken
+        );
+
+        if (!result.IsSuccess)
+        {
+            var errorMessage = string.Join("; ", result.ErrorMessages);
+            releaseContainer.MarkAsUpdateFailed(errorMessage, timeProvider.GetLocalNow());
+            logger.LogError(
+                "Failed to recreate link crypter container {ContainerId} for upload {UploadId}, keeping the previous container. Errors: {Errors}",
+                releaseContainer.Id,
+                upload.Id,
+                errorMessage
+            );
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+        return releaseContainer;
+    }
+
+    private async Task<LinkCrypterContainer> GetExistingContainerAsync(
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var container = await repository.GetByIdAsync(containerId, cancellationToken);
+
+        if (container is null)
+        {
+            throw new InvalidOperationException(
+                $"Link crypter container {containerId} was not found."
+            );
+        }
+
+        return container;
     }
 
     private async Task CreateMissingReleaseContainersAsync(
@@ -214,13 +319,28 @@ public class LinkCrypterContainerService(
                 );
                 break;
             case UpdateContainerOutcome.ContainerNotFound:
-                await RecreateReleaseContainerAsync(
+            {
+                var createResult = await CreateNewContainerAndReplaceUrlAsync(
                     upload: upload,
                     container: container,
                     linkCrypterConfig: linkCrypterConfig,
                     cancellationToken: cancellationToken
                 );
+
+                if (!createResult.IsSuccess)
+                {
+                    container.CopySettingsFrom(linkCrypterConfig);
+                    container.ApplyCreateContainerResult(createResult, timeProvider.GetLocalNow());
+                    NotifyReleaseContainerCreationFailed(
+                        upload: upload,
+                        container: container,
+                        linkCrypterConfig: linkCrypterConfig,
+                        result: createResult
+                    );
+                }
+
                 break;
+            }
             case UpdateContainerOutcome.Failed:
                 MarkReleaseContainerAsUpdateFailed(
                     upload: upload,
@@ -270,7 +390,7 @@ public class LinkCrypterContainerService(
         );
     }
 
-    private async Task RecreateReleaseContainerAsync(
+    private async Task<CreateContainerResult> CreateNewContainerAndReplaceUrlAsync(
         Upload upload,
         LinkCrypterContainer container,
         UploadConfigLinkCrypter linkCrypterConfig,
@@ -284,24 +404,17 @@ public class LinkCrypterContainerService(
             cancellationToken: cancellationToken
         );
 
-        container.CopySettingsFrom(linkCrypterConfig);
-        container.ApplyCreateContainerResult(result, timeProvider.GetLocalNow());
-
         if (!result.IsSuccess)
         {
-            NotifyReleaseContainerCreationFailed(
-                upload: upload,
-                container: container,
-                linkCrypterConfig: linkCrypterConfig,
-                result: result
-            );
-            return;
+            return result;
         }
 
+        container.CopySettingsFrom(linkCrypterConfig);
+        container.ApplyCreateContainerResult(result, timeProvider.GetLocalNow());
         upload.UploadConfig.Release.UploadsPostedAt = null;
 
         logger.LogWarning(
-            "Link crypter container {ContainerId} for upload {UploadId} no longer existed and was recreated. Previous URL: {PreviousContainerUrl}, new URL: {ContainerUrl}",
+            "Link crypter container {ContainerId} for upload {UploadId} was recreated. Previous URL: {PreviousContainerUrl}, new URL: {ContainerUrl}",
             container.Id,
             upload.Id,
             previousContainerUrl,
@@ -310,10 +423,12 @@ public class LinkCrypterContainerService(
 
         notificationService.Create(
             kind: NotificationKind.LinkCrypterContainerRecreated,
-            message: $"Link crypter container for upload {upload.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name} no longer existed and was recreated. Previous URL: {previousContainerUrl}, new URL: {container.ContainerUrl}. Existing posts must be updated.",
+            message: $"Link crypter container for upload {upload.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name} was recreated. Previous URL: {previousContainerUrl}, new URL: {container.ContainerUrl}. Existing posts must be updated.",
             entity: container,
             selector: n => n.LinkCrypterContainer
         );
+
+        return result;
     }
 
     private async Task CreateReleaseContainerAsync(
