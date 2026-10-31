@@ -108,6 +108,8 @@
     <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration löschen</value></data>
     <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfiguration {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfigurationsvorlage {0} wirklich löschen?</value></data>
+  <data name="DeleteImageUpload" xml:space="preserve"><value>Bildupload löschen</value></data>
+  <data name="DeleteImageUploadConfirmation" xml:space="preserve"><value>Bildupload von {0} löschen? Das Cover wird danach automatisch erneut hochgeladen.</value></data>
   <data name="DeleteLink" xml:space="preserve"><value>Link löschen</value></data>
   <data name="DeleteCreationFailedArchive" xml:space="preserve"><value>Fehlgeschlagenes Archiv löschen</value></data>
   <data name="DeleteCreationFailedArchiveConfirmation" xml:space="preserve"><value>Dieses fehlgeschlagene Archiv und seine übrigen Dateien in {0} löschen? Uploads, die noch darauf warten, werden als fehlgeschlagen markiert und können manuell erneut hochgeladen werden.</value></data>

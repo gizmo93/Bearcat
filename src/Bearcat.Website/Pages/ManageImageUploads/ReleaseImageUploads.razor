@@ -20,16 +20,17 @@
         else
         {
             <div class="bearcat-config-list">
-                <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_110px]">
+                <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_110px_40px]">
                     <span>@L["ImageUploadConfig"]</span>
                     <span>@L["State"]</span>
                     <span>@L["UploadedAt"]</span>
                     <span>@L["Urls"]</span>
+                    <span></span>
                 </div>
                 @foreach (var upload in imageUploads)
                 {
                     <div class="bearcat-config-item">
-                        <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_110px]">
+                        <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_110px_40px]">
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-semibold">@upload.ImageUploadConfigName</p>
                                 <p class="truncate text-xs text-muted-foreground">@upload.ImageHosterRegistrationName</p>
@@ -55,6 +56,15 @@
                                           Disabled="@(upload.UrlCount == 0)"
                                           OnClick="@(() => ShowUrlsDialogAsync(upload))">
                                     @upload.UrlCount
+                                </BbButton>
+                            </div>
+                            <div class="flex lg:justify-end">
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          Class="text-destructive hover:text-destructive"
+                                          AriaLabel="@L["DeleteImageUpload"]"
+                                          OnClick="@(() => DeleteImageUploadAsync(upload))">
+                                    <LucideIcon Name="trash-2" class="h-4 w-4" />
                                 </BbButton>
                             </div>
                         </div>

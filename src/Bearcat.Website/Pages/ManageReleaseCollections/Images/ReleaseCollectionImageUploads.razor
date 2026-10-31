@@ -117,6 +117,16 @@
                                     </Icon>
                                     <ChildContent>@L["EditConfig"]</ChildContent>
                                 </BbDropdownMenuItem>
+                                @if (imageUpload.ImageUploadId is { } imageUploadId)
+                                {
+                                    <BbDropdownMenuItem Class="text-destructive focus:text-destructive"
+                                                        OnClick="@(() => DeleteImageUploadAsync(imageUpload, imageUploadId))">
+                                        <Icon>
+                                            <LucideIcon Name="image-off" class="h-4 w-4" />
+                                        </Icon>
+                                        <ChildContent>@L["DeleteImageUpload"]</ChildContent>
+                                    </BbDropdownMenuItem>
+                                }
                                 <BbDropdownMenuSeparator />
                                 <BbDropdownMenuItem Class="text-destructive focus:text-destructive"
                                                     OnClick="@(() => DeleteConfigAsync(imageUpload))">

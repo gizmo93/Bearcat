@@ -17,5 +17,12 @@ public interface IImageUploadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ImageUpload> GetByIdAsync(
+        int imageUploadId,
+        CancellationToken cancellationToken = default
+    );
+
+    void Remove(ImageUpload imageUpload);
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

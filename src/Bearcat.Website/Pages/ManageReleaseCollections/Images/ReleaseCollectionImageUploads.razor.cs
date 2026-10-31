@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
+using Bearcat.Domain.UseCases.ManageImageUploads;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
@@ -101,6 +102,34 @@ public partial class ReleaseCollectionImageUploads(
         await operationRunner.RunAsync(
             (ImageUploadConfigService service) =>
                 service.DeleteAsync(imageUpload.ImageUploadConfigId)
+        );
+
+        await OnImageUploadsChanged.InvokeAsync();
+    }
+
+    private async Task DeleteImageUploadAsync(
+        CollectionImageUploadReadModel imageUpload,
+        int imageUploadId
+    )
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteImageUpload"],
+            L["DeleteImageUploadConfirmation", imageUpload.Name],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        await operationRunner.RunAsync(
+            (ImageUploadService service) => service.DeleteAsync(imageUploadId)
         );
 
         await OnImageUploadsChanged.InvokeAsync();

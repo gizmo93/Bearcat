@@ -264,6 +264,40 @@ public class ImageUploadServiceTest(DatabaseProvider databaseProvider)
         imageUpload.ErrorMessages.ShouldBe(["inner cause"]);
     }
 
+    [Test]
+    public async Task DeleteAsync_CompletedCollectionUpload_IsUploadedAgainOnNextProcessing()
+    {
+        // Arrange
+        SetupSuccessfulUpload();
+        var collection = await AddCollectionWithImageConfigAsync(
+            "https://artworks.example/cover.jpg"
+        );
+        await service.ProcessAsync(CancellationToken.None);
+        var deletedUpload = await DbContext.ImageUploads.SingleAsync(upload =>
+            upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
+        );
+
+        // Act
+        await service.DeleteAsync(deletedUpload.Id);
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var imageUpload = await DbContext.ImageUploads.SingleAsync(upload =>
+            upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
+        );
+        imageUpload.Id.ShouldNotBe(deletedUpload.Id);
+        imageUpload.UploadState.ShouldBe(UploadState.Completed);
+        imageHosterMock.Verify(
+            hoster =>
+                hoster.UploadImageAsync(
+                    It.IsAny<ImageToUploadDto>(),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
+    }
+
     private async Task<ImageUpload> AddPendingUploadForReleaseWithoutCoverAsync()
     {
         var releaseGroup = new ReleaseGroup

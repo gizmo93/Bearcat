@@ -94,6 +94,22 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
         );
     }
 
+    public async Task<ImageUpload> GetByIdAsync(
+        int imageUploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.ImageUploads.FirstAsync(
+            upload => upload.Id == imageUploadId,
+            cancellationToken
+        );
+    }
+
+    public void Remove(ImageUpload imageUpload)
+    {
+        dbWrite.Remove(imageUpload);
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);

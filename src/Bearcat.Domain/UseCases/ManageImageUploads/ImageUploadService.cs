@@ -26,6 +26,14 @@ public class ImageUploadService(
         await ProcessPendingImageUploadsAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(int imageUploadId, CancellationToken cancellationToken = default)
+    {
+        var imageUpload = await repository.GetByIdAsync(imageUploadId, cancellationToken);
+
+        repository.Remove(imageUpload);
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
     private async Task ProcessPendingImageUploadsAsync(CancellationToken cancellationToken)
     {
         var pendingUploads = await repository.GetPendingImageUploadsAsync(cancellationToken);

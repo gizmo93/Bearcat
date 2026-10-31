@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageImageUploads;
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -59,6 +60,31 @@ public partial class ReleaseImageUploads(
                 ShowClose = true,
             }
         );
+    }
+
+    private async Task DeleteImageUploadAsync(ReleaseImageUploadReadModel upload)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteImageUpload"],
+            L["DeleteImageUploadConfirmation", upload.ImageUploadConfigName],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        await operationRunner.RunAsync(
+            (ImageUploadService service) => service.DeleteAsync(upload.ImageUploadId)
+        );
+
+        await RefreshImageUploadsAsync();
     }
 
     private static BadgeVariant GetUploadVariant(UploadState state)

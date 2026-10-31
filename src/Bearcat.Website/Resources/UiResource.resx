@@ -108,6 +108,8 @@
   <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Delete image upload config</value></data>
   <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete image upload config {0}?</value></data>
   <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Are you sure you want to delete image upload config template {0}?</value></data>
+  <data name="DeleteImageUpload" xml:space="preserve"><value>Delete image upload</value></data>
+  <data name="DeleteImageUploadConfirmation" xml:space="preserve"><value>Delete the image upload of {0}? The cover will be uploaded again automatically.</value></data>
   <data name="DeleteLink" xml:space="preserve"><value>Delete link</value></data>
   <data name="DeleteCreationFailedArchive" xml:space="preserve"><value>Delete failed archive</value></data>
   <data name="DeleteCreationFailedArchiveConfirmation" xml:space="preserve"><value>Delete this failed archive and its leftover files in {0}? Uploads that still wait for it are marked as failed and can be reuploaded manually.</value></data>
