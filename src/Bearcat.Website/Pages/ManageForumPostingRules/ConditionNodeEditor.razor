@@ -2,7 +2,7 @@
 
 @if (Node.Kind is RuleConditionKind.Comparison)
 {
-    <ConditionComparisonRow Node="Node" OnRemove="OnRemove" />
+    <ConditionComparisonRow Node="Node" TemplateType="TemplateType" OnRemove="OnRemove" />
 }
 else
 {
@@ -68,6 +68,7 @@ else
                     <ConditionNodeEditor @key="child"
                                          Node="child"
                                          Depth="Depth + 1"
+                                         TemplateType="TemplateType"
                                          OnRemove="@(() => RemoveChild(child))" />
                 }
             </div>
@@ -82,6 +83,9 @@ else
 
     [Parameter]
     public int Depth { get; set; }
+
+    [Parameter]
+    public ForumPostTemplateType TemplateType { get; set; }
 
     [Parameter]
     public EventCallback OnRemove { get; set; }

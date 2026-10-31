@@ -69,6 +69,24 @@ public static class ConditionModelMapper
         model.Values = [];
     }
 
+    public static void RemoveComparisonsWithUnsupportedFields(
+        ConditionNodeModel model,
+        IReadOnlyList<RuleFieldDescriptor> supportedFields
+    )
+    {
+        model.Children.RemoveAll(child =>
+            child.Kind is RuleConditionKind.Comparison
+            && supportedFields.All(field =>
+                !string.Equals(field.Name, child.Field, StringComparison.OrdinalIgnoreCase)
+            )
+        );
+
+        foreach (var child in model.Children)
+        {
+            RemoveComparisonsWithUnsupportedFields(child, supportedFields);
+        }
+    }
+
     public static bool IsMultiValue(RuleConditionOperator conditionOperator)
     {
         return conditionOperator is RuleConditionOperator.In or RuleConditionOperator.NotIn;

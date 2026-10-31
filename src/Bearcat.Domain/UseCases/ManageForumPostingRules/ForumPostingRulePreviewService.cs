@@ -1,3 +1,4 @@
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
@@ -7,11 +8,12 @@ namespace Bearcat.Domain.UseCases.ManageForumPostingRules;
 
 public class ForumPostingRulePreviewService(IForumPostingRuleReadRepository readRepository)
 {
-    public const int DefaultReleaseCount = 50;
+    public const int DefaultEntityCount = 50;
 
     public async Task<IReadOnlyList<ForumPostingRulePreviewReadModel>> PreviewAsync(
         int distributionSiteRegistrationId,
-        int releaseCount = DefaultReleaseCount,
+        ForumPostTemplateType entityType,
+        int entityCount = DefaultEntityCount,
         CancellationToken cancellationToken = default
     )
     {
@@ -19,32 +21,64 @@ public class ForumPostingRulePreviewService(IForumPostingRuleReadRepository read
             distributionSiteRegistrationId,
             cancellationToken
         );
-        var releases = await readRepository.GetRecentReleasesForPreviewAsync(
-            releaseCount,
+
+        if (entityType == ForumPostTemplateType.Release)
+        {
+            var releases = await readRepository.GetRecentReleasesForPreviewAsync(
+                entityCount,
+                cancellationToken
+            );
+
+            return releases
+                .Select(release =>
+                    CreatePreview(
+                        rules: rules,
+                        entityType: entityType,
+                        entityId: release.Id,
+                        entityName: release.Name,
+                        context: ReleaseRoutingContext.FromRelease(release)
+                    )
+                )
+                .ToList();
+        }
+
+        var collections = await readRepository.GetRecentReleaseCollectionsForPreviewAsync(
+            entityCount,
             cancellationToken
         );
 
-        var results = new List<ForumPostingRulePreviewReadModel>(releases.Count);
-
-        foreach (var release in releases)
-        {
-            var context = ReleaseRoutingContext.FromRelease(release);
-            var match = ForumPostingRuleMatcher.FindFirstMatch(
-                rules: rules,
-                entityType: ForumPostTemplateType.Release,
-                context: context
-            );
-
-            results.Add(
-                new ForumPostingRulePreviewReadModel(
-                    ReleaseId: release.Id,
-                    ReleaseName: release.Name,
-                    MatchedRuleName: match?.Name,
-                    TargetPathSnapshot: match?.TargetPathSnapshot
+        return collections
+            .Select(collection =>
+                CreatePreview(
+                    rules: rules,
+                    entityType: entityType,
+                    entityId: collection.Id,
+                    entityName: collection.Name,
+                    context: ReleaseRoutingContext.FromReleaseCollection(collection)
                 )
-            );
-        }
+            )
+            .ToList();
+    }
 
-        return results;
+    private static ForumPostingRulePreviewReadModel CreatePreview(
+        IReadOnlyList<ForumPostingRule> rules,
+        ForumPostTemplateType entityType,
+        int entityId,
+        string entityName,
+        ReleaseRoutingContext context
+    )
+    {
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: entityType,
+            context: context
+        );
+
+        return new ForumPostingRulePreviewReadModel(
+            EntityId: entityId,
+            EntityName: entityName,
+            MatchedRuleName: match?.Name,
+            TargetPathSnapshot: match?.TargetPathSnapshot
+        );
     }
 }

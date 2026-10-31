@@ -32,6 +32,7 @@ public class ForumPostingRuleRepository(
                 rule.ThreadPrefixId,
                 rule.ForumPostTemplateId,
                 rule.ForumPostTemplate.Name,
+                rule.ForumPostTemplate.Type,
                 rule.PostMode,
                 rule.IsEnabled,
                 rule.UpdatedAt
@@ -57,6 +58,7 @@ public class ForumPostingRuleRepository(
                 rule.ThreadPrefixId,
                 rule.ForumPostTemplateId,
                 rule.ForumPostTemplate.Name,
+                rule.ForumPostTemplate.Type,
                 rule.PostMode,
                 rule.IsEnabled
             ))
@@ -86,6 +88,21 @@ public class ForumPostingRuleRepository(
             .Include(release => release.ReleaseGroup)
             .OrderByDescending(release => release.CreatedAt)
             .ThenByDescending(release => release.Id)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ReleaseCollection>> GetRecentReleaseCollectionsForPreviewAsync(
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ReleaseCollections.Include(collection => collection.ReleaseGroup)
+            .Include(collection => collection.Releases)
+                .ThenInclude(release => release.Classification)
+            .OrderByDescending(collection => collection.CreatedAt)
+            .ThenByDescending(collection => collection.Id)
             .Take(count)
             .ToListAsync(cancellationToken);
     }

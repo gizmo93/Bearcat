@@ -1,3 +1,5 @@
+@using Bearcat.Website.Pages.ManageForumPostTemplates.Editor
+
 @if (!isInitialized)
 {
     return;
@@ -13,6 +15,32 @@
                 @errorMessage
             </div>
         }
+
+        <div class="space-y-2">
+            <label class="text-sm font-medium">@L["ForumPostingRuleAppliesTo"]</label>
+            <BbToggleGroup TValue="ForumPostTemplateType"
+                           Value="formModel.TemplateType"
+                           ValueChanged="ChangeTemplateType"
+                           Required="true"
+                           Variant="ToggleVariant.Outline"
+                           Size="ToggleSize.Small"
+                           Class="w-fit"
+                           aria-label="@L["ForumPostingRuleAppliesTo"]">
+                <BbToggleGroupItem Value="ForumPostTemplateType.Release">
+                    <span class="inline-flex items-center gap-2">
+                        <LucideIcon Name="upload" class="h-4 w-4" />
+                        @ForumPostTemplateTypeLabels.Get(L, ForumPostTemplateType.Release)
+                    </span>
+                </BbToggleGroupItem>
+                <BbToggleGroupItem Value="ForumPostTemplateType.ReleaseCollection">
+                    <span class="inline-flex items-center gap-2">
+                        <LucideIcon Name="boxes" class="h-4 w-4" />
+                        @ForumPostTemplateTypeLabels.Get(L, ForumPostTemplateType.ReleaseCollection)
+                    </span>
+                </BbToggleGroupItem>
+            </BbToggleGroup>
+            <p class="text-xs text-muted-foreground">@L["ForumPostingRuleAppliesToHelp"]</p>
+        </div>
 
         <BbFormFieldInput TValue="string"
                           @bind-Value="formModel.Name"
@@ -125,7 +153,7 @@
                 <p class="text-xs text-muted-foreground">@L["ForumPostingRuleConditionHelp"]</p>
             </div>
 
-            <ConditionNodeEditor Node="conditionRoot" />
+            <ConditionNodeEditor Node="conditionRoot" TemplateType="formModel.TemplateType" />
         </div>
 
         <div class="flex justify-end gap-2">
