@@ -18,7 +18,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -961,6 +961,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<string>("StatusImageId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdateFailedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
 
                     b.Property<int?>("UploadConfigLinkCrypterId")
                         .HasColumnType("integer");

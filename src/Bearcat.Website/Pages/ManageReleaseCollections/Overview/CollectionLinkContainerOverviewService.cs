@@ -25,7 +25,7 @@ public static class CollectionLinkContainerOverviewService
             .ToList();
     }
 
-    public static IReadOnlyList<LinkCrypterContainerUrls> GroupCreatedContainerUrlsByLinkCrypter(
+    public static IReadOnlyList<LinkCrypterContainerUrls> GroupContainerUrlsByLinkCrypter(
         IReadOnlyList<CollectionUploadSlotReadModel> uploadSlots
     )
     {
@@ -36,7 +36,9 @@ public static class CollectionLinkContainerOverviewService
                 LinkCrypterRegistrationName: group.Key,
                 ContainerUrls: group
                     .Where(container =>
-                        container.State is LinkCrypterContainerState.Created
+                        container.State
+                            is LinkCrypterContainerState.Created
+                                or LinkCrypterContainerState.UpdateFailed
                         && !string.IsNullOrWhiteSpace(container.ContainerUrl)
                     )
                     .Select(container => container.ContainerUrl)

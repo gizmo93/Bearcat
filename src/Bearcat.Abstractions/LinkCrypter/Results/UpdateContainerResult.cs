@@ -1,7 +1,7 @@
 namespace Bearcat.Abstractions.LinkCrypter.Results;
 
 public record UpdateContainerResult(
-    bool IsSuccess,
+    UpdateContainerOutcome Outcome,
     string? ErrorMessage,
     string? StatusImageId = null
 );

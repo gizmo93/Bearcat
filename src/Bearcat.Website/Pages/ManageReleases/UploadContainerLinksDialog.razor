@@ -136,19 +136,43 @@
                 <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
                                    Header=""
                                    Property="@(container => container.ContainerUrl)"
-                                   Width="64px">
+                                   Width="96px">
                     <CellTemplate Context="container">
-                        @if (CanDelete(container))
-                        {
-                            <div class="flex justify-end">
+                        <div class="flex justify-end gap-1">
+                            @if (CanForceUpdate(container))
+                            {
+                                var isActionRunning = containerIdsWithRunningAction.Contains(container.Id);
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          Disabled="isActionRunning"
+                                          AriaLabel="@L["ForceUpdateLinkCrypterContainer"]"
+                                          title="@L["ForceUpdateLinkCrypterContainer"]"
+                                          OnClick="@(async _ => await ForceUpdateContainerAsync(container))">
+                                    <LucideIcon Name="@(isActionRunning ? "loader-circle" : "refresh-cw")"
+                                                class="@(isActionRunning ? "h-4 w-4 animate-spin text-muted-foreground" : "h-4 w-4 text-muted-foreground")" />
+                                </BbButton>
+                                @if (CanRecreate(container))
+                                {
+                                    <BbButton Variant="ButtonVariant.Ghost"
+                                              Size="ButtonSize.IconSmall"
+                                              Disabled="isActionRunning"
+                                              AriaLabel="@L["RecreateLinkCrypterContainer"]"
+                                              title="@L["RecreateLinkCrypterContainer"]"
+                                              OnClick="@(async _ => await RecreateContainerAsync(container))">
+                                        <LucideIcon Name="replace" class="h-4 w-4 text-muted-foreground" />
+                                    </BbButton>
+                                }
+                            }
+                            @if (CanDelete(container))
+                            {
                                 <BbButton Variant="ButtonVariant.Ghost"
                                           Size="ButtonSize.IconSmall"
                                           AriaLabel="@L["DeleteLinkCrypterContainer"]"
                                           OnClick="@(async _ => await DeleteContainerAsync(container))">
                                     <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
                                 </BbButton>
-                            </div>
-                        }
+                            }
+                        </div>
                     </CellTemplate>
                 </BbDataTableColumn>
             </Columns>

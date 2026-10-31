@@ -91,7 +91,9 @@ public static class ReleaseCollectionProgressStepService
         }
 
         var failedContainerCount = containers.Count(container =>
-            container.State is LinkCrypterContainerState.CreationFailed
+            container.State
+                is LinkCrypterContainerState.CreationFailed
+                    or LinkCrypterContainerState.UpdateFailed
         );
 
         return failedContainerCount > 0

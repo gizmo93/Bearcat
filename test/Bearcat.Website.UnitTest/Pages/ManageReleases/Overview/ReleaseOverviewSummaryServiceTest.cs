@@ -167,7 +167,7 @@ public class ReleaseOverviewSummaryServiceTest
     }
 
     [Test]
-    public void GroupCreatedContainerUrlsByLinkCrypter_ReturnsCreatedUrlsPerCrypterInRowOrder()
+    public void GroupContainerUrlsByLinkCrypter_CreatedAndUpdateFailedContainers_ReturnsUrlsPerCrypterInRowOrder()
     {
         // Arrange
         var sharedContainer = CreateContainer(3, "Filecrypt", "https://filecrypt/shared");
@@ -189,6 +189,12 @@ public class ReleaseOverviewSummaryServiceTest
                 containers:
                 [
                     CreateContainer(4, "HideCx", "https://hidecx/2"),
+                    CreateContainer(
+                        7,
+                        "HideCx",
+                        "https://hidecx/stale",
+                        LinkCrypterContainerState.UpdateFailed
+                    ),
                     CreateContainer(5, "Filecrypt", "https://filecrypt/2"),
                     CreateContainer(
                         6,
@@ -202,7 +208,7 @@ public class ReleaseOverviewSummaryServiceTest
         ];
 
         // Act
-        var groups = ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(uploads);
+        var groups = ReleaseOverviewSummaryService.GroupContainerUrlsByLinkCrypter(uploads);
 
         // Assert
         groups.Count.ShouldBe(2);
@@ -214,11 +220,16 @@ public class ReleaseOverviewSummaryServiceTest
                 "https://filecrypt/2",
             ]);
         groups[1].LinkCrypterRegistrationName.ShouldBe("HideCx");
-        groups[1].ContainerUrls.ShouldBe(["https://hidecx/1", "https://hidecx/2"]);
+        groups[1]
+            .ContainerUrls.ShouldBe([
+                "https://hidecx/1",
+                "https://hidecx/2",
+                "https://hidecx/stale",
+            ]);
     }
 
     [Test]
-    public void GroupCreatedContainerUrlsByLinkCrypter_OnlyFailedContainers_ReturnsEmptyUrlList()
+    public void GroupContainerUrlsByLinkCrypter_OnlyFailedContainers_ReturnsEmptyUrlList()
     {
         // Arrange
         IReadOnlyList<ReleaseOverviewUploadReadModel> uploads =
@@ -239,7 +250,7 @@ public class ReleaseOverviewSummaryServiceTest
         ];
 
         // Act
-        var groups = ReleaseOverviewSummaryService.GroupCreatedContainerUrlsByLinkCrypter(uploads);
+        var groups = ReleaseOverviewSummaryService.GroupContainerUrlsByLinkCrypter(uploads);
 
         // Assert
         groups.Count.ShouldBe(1);

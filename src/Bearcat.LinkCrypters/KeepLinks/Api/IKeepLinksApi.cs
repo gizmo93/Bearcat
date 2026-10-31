@@ -17,8 +17,15 @@ public interface IKeepLinksApi
         CancellationToken cancellationToken = default
     );
 
+    [Get("/api.php?list=1&output=json")]
+    Task<string> GetContainerAsync(
+        [Query] [AliasAs("apihash")] string apiKey,
+        [Query] [AliasAs("url-id")] string urlId,
+        CancellationToken cancellationToken = default
+    );
+
     [Post("/api.php")]
-    Task<Response> UpdateContainerAsync(
+    Task<string> UpdateContainerAsync(
         [Body] MultipartFormDataContent request,
         CancellationToken cancellationToken = default
     );

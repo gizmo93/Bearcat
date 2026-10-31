@@ -34,6 +34,18 @@ public partial class LinkContainerChip : ComponentBase
     [Parameter]
     public EventCallback OnDeleteRequested { get; set; }
 
+    [Parameter]
+    public bool HasActiveLinkCrypterConfig { get; set; }
+
+    [Parameter]
+    public bool IsActionRunning { get; set; }
+
+    [Parameter]
+    public EventCallback OnForceUpdateRequested { get; set; }
+
+    [Parameter]
+    public EventCallback OnRecreateRequested { get; set; }
+
     private bool IsCreated => State is LinkCrypterContainerState.Created;
 
     private bool HasUrl => !string.IsNullOrWhiteSpace(ContainerUrl);
@@ -41,11 +53,22 @@ public partial class LinkContainerChip : ComponentBase
     private bool IsDeleteButtonShown =>
         State is LinkCrypterContainerState.CreationFailed && OnDeleteRequested.HasDelegate;
 
+    private bool IsForceUpdateButtonShown =>
+        State is LinkCrypterContainerState.Created or LinkCrypterContainerState.UpdateFailed
+        && HasActiveLinkCrypterConfig
+        && OnForceUpdateRequested.HasDelegate;
+
+    private bool IsRecreateButtonShown =>
+        State is LinkCrypterContainerState.UpdateFailed
+        && HasActiveLinkCrypterConfig
+        && OnRecreateRequested.HasDelegate;
+
     private BadgeVariant StateBadgeVariant =>
         State switch
         {
             LinkCrypterContainerState.Created => BadgeVariant.Secondary,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
+            LinkCrypterContainerState.UpdateFailed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
 }

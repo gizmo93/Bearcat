@@ -292,6 +292,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         filecryptContainer.CreatedAt.ShouldBe(LastSecondOfDay.AddMilliseconds(125));
         filecryptContainer.SourceUploadCount.ShouldBe(2);
         filecryptContainer.Errors.ShouldBe(["Captcha failed", "Retry later"]);
+        filecryptContainer.HasActiveLinkCrypterConfig.ShouldBeTrue();
 
         var keeplinksContainer = rapidgatorSlot.Containers[1];
         keeplinksContainer.LinkCrypterContainerId.ShouldBe(seed.KeeplinksContainerId);
@@ -299,6 +300,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         keeplinksContainer.State.ShouldBe(LinkCrypterContainerState.Created);
         keeplinksContainer.SourceUploadCount.ShouldBe(0);
         keeplinksContainer.Errors.ShouldBeEmpty();
+        keeplinksContainer.HasActiveLinkCrypterConfig.ShouldBeFalse();
     }
 
     [Test]

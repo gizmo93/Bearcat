@@ -1,7 +1,10 @@
+using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.HideCx;
 using Bearcat.LinkCrypters.HideCx.Api;
 using Moq;
+using Refit;
 using Shouldly;
 using CreateContainerRequest = Bearcat.LinkCrypters.HideCx.Api.CreateContainer.Request;
 using CreateContainerResponse = Bearcat.LinkCrypters.HideCx.Api.CreateContainer.Response;
@@ -143,13 +146,13 @@ public class HideCxTest
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
         result.ErrorMessage.ShouldBeNull();
         result.StatusImageId.ShouldBe("external-id");
     }
 
     [Test]
-    public async Task UpdateContainerAsync_ApiThrows_ReturnsFailure()
+    public async Task UpdateContainerAsync_PatchFailsAndContainerExists_ReturnsFailed()
     {
         // Arrange
         var config = new HideCxConfig { ApiKey = "api-key" };
@@ -164,6 +167,11 @@ public class HideCxTest
                 )
             )
             .ThrowsAsync(new InvalidOperationException("update failed"));
+        apiMock
+            .Setup(x =>
+                x.GetContainerAsync("external-id", "Bearer api-key", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("""{"id":"external-id"}""");
 
         // Act
         var result = await service.UpdateContainerAsync(
@@ -180,8 +188,56 @@ public class HideCxTest
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Failed);
         result.ErrorMessage.ShouldBe("update failed");
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_PatchFailsAndContainerIsNotFound_ReturnsContainerNotFound()
+    {
+        // Arrange
+        var config = new HideCxConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.UpdateContainerAsync(
+                    "external-id",
+                    It.IsAny<UpdateContainerRequest>(),
+                    "Bearer api-key",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                await CreateApiExceptionAsync(
+                    HttpMethod.Patch,
+                    HttpStatusCode.InternalServerError,
+                    """{"error":"internal server error"}"""
+                )
+            );
+        apiMock
+            .Setup(x =>
+                x.GetContainerAsync("external-id", "Bearer api-key", It.IsAny<CancellationToken>())
+            )
+            .ThrowsAsync(
+                await CreateApiExceptionAsync(
+                    HttpMethod.Get,
+                    HttpStatusCode.NotFound,
+                    """{"error":"container not found or invalid"}"""
+                )
+            );
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://hide.cx/container",
+            "external-id",
+            null,
+            ["https://hoster.test/file"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.Outcome.ShouldBe(UpdateContainerOutcome.ContainerNotFound);
     }
 
     [Test]
@@ -250,5 +306,19 @@ public class HideCxTest
         // Assert
         result.ShouldNotBeNull();
         result.ShouldBeOfType<HideCxConfig>().ApiKey.ShouldBe("api-key");
+    }
+
+    private static async Task<ApiException> CreateApiExceptionAsync(
+        HttpMethod method,
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        return await ApiException.Create(
+            new HttpRequestMessage(method, "https://hide.cx/containers/external-id"),
+            method,
+            new HttpResponseMessage(statusCode) { Content = new StringContent(content) },
+            new RefitSettings()
+        );
     }
 }

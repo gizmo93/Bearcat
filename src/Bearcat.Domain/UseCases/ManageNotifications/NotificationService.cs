@@ -149,6 +149,8 @@ public class NotificationService(
                 configuration.LinkCrypterContainerCreationFailed,
             NotificationKind.LinkCrypterContainerUpdateFailed =>
                 configuration.LinkCrypterContainerUpdateFailed,
+            NotificationKind.LinkCrypterContainerRecreated =>
+                configuration.LinkCrypterContainerRecreated,
             NotificationKind.CollectionLinkCrypterContainerInvalid =>
                 configuration.CollectionLinkCrypterContainerInvalid,
             NotificationKind.AutomaticForumPostCreated => configuration.AutomaticForumPostCreated,

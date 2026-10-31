@@ -116,6 +116,16 @@
   <data name="CreationFailedArchiveDeleted" xml:space="preserve"><value>Failed archive deleted</value></data>
   <data name="DeleteLinkCrypterContainer" xml:space="preserve"><value>Delete link crypter container</value></data>
   <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Are you sure you want to delete this failed link crypter container? A new one will be created automatically on the next run.</value></data>
+  <data name="ForceUpdateLinkCrypterContainer" xml:space="preserve"><value>Update link crypter container now</value></data>
+  <data name="RecreateLinkCrypterContainer" xml:space="preserve"><value>Recreate link crypter container</value></data>
+  <data name="RecreateLinkCrypterContainerConfirmation" xml:space="preserve"><value>A new container with a new URL is created at the link crypter. The release or collection is put back into the post queue and existing posts must be updated with the new URL. The old container is not deleted at the link crypter.</value></data>
+  <data name="Recreate" xml:space="preserve"><value>Recreate</value></data>
+  <data name="LinkCrypterContainerUpdated" xml:space="preserve"><value>Link crypter container updated.</value></data>
+  <data name="LinkCrypterContainerUpdateFailedWithErrors" xml:space="preserve"><value>Link crypter container could not be updated: {0}</value></data>
+  <data name="LinkCrypterContainerCreationFailedWithErrors" xml:space="preserve"><value>Link crypter container could not be created: {0}</value></data>
+  <data name="LinkCrypterContainerNoLongerExistedAndWasRecreated" xml:space="preserve"><value>The link crypter container no longer existed and was recreated. Existing posts must be updated: {0}</value></data>
+  <data name="LinkCrypterContainerRecreatedWithUrl" xml:space="preserve"><value>Link crypter container recreated. Existing posts must be updated: {0}</value></data>
+  <data name="LinkCrypterContainerRecreationFailed" xml:space="preserve"><value>Link crypter container could not be recreated, the previous container is kept: {0}</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Delete Link Crypter Container Config</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete this link crypter container config?</value></data>
   <data name="DeleteNamedItem" xml:space="preserve"><value>Delete {0}</value></data>
@@ -229,6 +239,7 @@
   <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Attach a link crypter to this upload configuration.</value></data>
   <data name="LinkCrypterContainerState.Created" xml:space="preserve"><value>Created</value></data>
   <data name="LinkCrypterContainerState.CreationFailed" xml:space="preserve"><value>Creation failed</value></data>
+  <data name="LinkCrypterContainerState.UpdateFailed" xml:space="preserve"><value>Update failed</value></data>
   <data name="ArchiveState.Created" xml:space="preserve"><value>Created</value></data>
   <data name="ArchiveState.Creating" xml:space="preserve"><value>Creating</value></data>
   <data name="ArchiveState.CreationFailed" xml:space="preserve"><value>Creation failed</value></data>
@@ -1063,7 +1074,7 @@
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Credentials rejected by hoster</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>A hoster rejected the credentials of a hoster registration. Bearcat deactivates the registration until you fix the credentials and activate it again.</value></data>
   <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Link crypter container creation failed</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>A link crypter container could not be created.</value></data>
-  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Link crypter container update failed</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>A link crypter container could not be updated.</value></data>
+  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Link crypter container update failed</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>A link crypter container could not be updated.</value></data><data name="NotificationKind.LinkCrypterContainerRecreated" xml:space="preserve"><value>Link crypter container recreated</value></data><data name="NotificationKind.LinkCrypterContainerRecreated.Description" xml:space="preserve"><value>A link crypter container was created again with a new URL because it no longer existed or was recreated manually. Existing posts must be updated.</value></data>
   <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Collection link crypter container invalid</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>A collection link crypter container is invalid.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatic forum post created</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>A release was posted automatically to a forum.</value></data>
   <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatic forum post failed</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>A release could not be posted automatically to a forum.</value></data>

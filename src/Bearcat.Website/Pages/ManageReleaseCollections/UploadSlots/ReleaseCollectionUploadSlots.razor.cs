@@ -36,6 +36,15 @@ public partial class ReleaseCollectionUploadSlots(
     [Parameter]
     public EventCallback<CollectionUploadSlotContainerReadModel> OnDeleteFailedContainerRequested { get; set; }
 
+    [Parameter]
+    public EventCallback<CollectionUploadSlotContainerReadModel> OnForceUpdateContainerRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<CollectionUploadSlotContainerReadModel> OnRecreateContainerRequested { get; set; }
+
+    [Parameter]
+    public IReadOnlySet<int> ContainerIdsWithRunningAction { get; set; } = new HashSet<int>();
+
     private readonly HashSet<int> knownUploadSlotIds = [];
     private readonly HashSet<int> expandedUploadSlotIds = [];
 
@@ -61,7 +70,9 @@ public partial class ReleaseCollectionUploadSlots(
 
     private static int GetFailedContainerCount(CollectionUploadSlotReadModel uploadSlot) =>
         uploadSlot.Containers.Count(container =>
-            container.State is LinkCrypterContainerState.CreationFailed
+            container.State
+                is LinkCrypterContainerState.CreationFailed
+                    or LinkCrypterContainerState.UpdateFailed
         );
 
     private static string GetHiddenLinkCrypterNames(CollectionUploadSlotReadModel uploadSlot) =>
@@ -77,6 +88,7 @@ public partial class ReleaseCollectionUploadSlots(
         {
             LinkCrypterContainerState.Created => BadgeVariant.Secondary,
             LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
+            LinkCrypterContainerState.UpdateFailed => BadgeVariant.Destructive,
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null),
         };
 

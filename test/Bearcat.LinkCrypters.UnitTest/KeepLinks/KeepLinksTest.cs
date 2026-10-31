@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.KeepLinks;
 using Bearcat.LinkCrypters.KeepLinks.Api;
 using Moq;
@@ -17,6 +18,10 @@ public class KeepLinksTest
     [
         "https://hoster.test/file-1,https://hoster.test/file-2",
     ];
+
+    private const string UrlIdNotValidXmlResponse = """
+        <?xml version="1.0" encoding="UTF-8"?><response><api_error>API hash or URL ID is not valid</api_error></response>
+        """;
 
     private Mock<IKeepLinksApi> apiMock = null!;
     private LinkCrypters.KeepLinks.KeepLinks service = null!;
@@ -197,7 +202,7 @@ public class KeepLinksTest
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(new ProtectLinksResponse());
+            .ReturnsAsync("""{"p_links":"https://keeplinks.org/p/container-id"}""");
 
         // Act
         var result = await service.UpdateContainerAsync(
@@ -214,7 +219,7 @@ public class KeepLinksTest
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
         result.ErrorMessage.ShouldBeNull();
 
         apiMock.Verify(x =>
@@ -248,7 +253,7 @@ public class KeepLinksTest
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(new ProtectLinksResponse());
+            .ReturnsAsync("""{"p_links":"https://keeplinks.org/p/container-id"}""");
 
         // Act
         var result = await service.UpdateContainerAsync(
@@ -264,7 +269,7 @@ public class KeepLinksTest
         );
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
 
         apiMock.Verify(x =>
             x.UpdateContainerAsync(
@@ -291,7 +296,7 @@ public class KeepLinksTest
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(new ProtectLinksResponse { ApiError = "update failed" });
+            .ReturnsAsync("""{"api_error":"update failed"}""");
 
         // Act
         var result = await service.UpdateContainerAsync(
@@ -308,7 +313,7 @@ public class KeepLinksTest
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Failed);
         result.ErrorMessage.ShouldBe("update failed");
 
         apiMock.Verify(x =>
@@ -322,6 +327,76 @@ public class KeepLinksTest
                 It.IsAny<CancellationToken>()
             )
         );
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_XmlUrlIdErrorAndListIsEmpty_ReturnsContainerNotFound()
+    {
+        // Arrange
+        var config = new KeepLinksConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.UpdateContainerAsync(
+                    It.IsAny<MultipartFormDataContent>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(UrlIdNotValidXmlResponse);
+        apiMock
+            .Setup(x =>
+                x.GetContainerAsync("api-key", "container-id", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("[]");
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://keeplinks.org/p/container-id",
+            null,
+            null,
+            ["https://hoster.test/file"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.Outcome.ShouldBe(UpdateContainerOutcome.ContainerNotFound);
+        result.ErrorMessage.ShouldBe("API hash or URL ID is not valid");
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_XmlUrlIdErrorAndListContainsContainer_ReturnsFailed()
+    {
+        // Arrange
+        var config = new KeepLinksConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.UpdateContainerAsync(
+                    It.IsAny<MultipartFormDataContent>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(UrlIdNotValidXmlResponse);
+        apiMock
+            .Setup(x =>
+                x.GetContainerAsync("api-key", "container-id", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("""[{"url_id":"container-id"}]""");
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://keeplinks.org/p/container-id",
+            null,
+            null,
+            ["https://hoster.test/file"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Failed);
+        result.ErrorMessage.ShouldBe("API hash or URL ID is not valid");
     }
 
     [Test]

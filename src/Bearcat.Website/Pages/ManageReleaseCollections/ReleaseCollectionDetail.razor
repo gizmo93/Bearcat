@@ -187,7 +187,10 @@
             {
                 <div id="@LinkContainersElementId" class="bearcat-collection-link-containers">
                     <ReleaseCollectionLinkContainers UploadSlots="releaseCollection.UploadSlots"
-                                                     OnDeleteFailedContainerRequested="DeleteFailedContainerAsync" />
+                                                     OnDeleteFailedContainerRequested="DeleteFailedContainerAsync"
+                                                     OnForceUpdateContainerRequested="ForceUpdateContainerAsync"
+                                                     OnRecreateContainerRequested="RecreateContainerAsync"
+                                                     ContainerIdsWithRunningAction="containerIdsWithRunningAction" />
                 </div>
             }
             <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations">
@@ -202,7 +205,10 @@
                                           UploadSlots="releaseCollection.UploadSlots"
                                           ReleaseCount="releaseCollection.Releases.Count"
                                           OnUploadSlotsChanged="LoadReleaseCollectionAsync"
-                                          OnDeleteFailedContainerRequested="DeleteFailedContainerAsync" />
+                                          OnDeleteFailedContainerRequested="DeleteFailedContainerAsync"
+                                          OnForceUpdateContainerRequested="ForceUpdateContainerAsync"
+                                          OnRecreateContainerRequested="RecreateContainerAsync"
+                                          ContainerIdsWithRunningAction="containerIdsWithRunningAction" />
         </BbTabsContent>
 
         <BbTabsContent Value="@ReleaseCollectionDetailTab.Images" Class="space-y-4">

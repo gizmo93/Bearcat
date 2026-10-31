@@ -116,6 +116,16 @@
   <data name="CreationFailedArchiveDeleted" xml:space="preserve"><value>Fehlgeschlagenes Archiv gelöscht</value></data>
   <data name="DeleteLinkCrypterContainer" xml:space="preserve"><value>Linkcryptercontainer löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Möchtest du diesen fehlgeschlagenen Linkcryptercontainer wirklich löschen? Beim nächsten Durchlauf wird automatisch ein neuer erstellt.</value></data>
+  <data name="ForceUpdateLinkCrypterContainer" xml:space="preserve"><value>Linkcryptercontainer jetzt aktualisieren</value></data>
+  <data name="RecreateLinkCrypterContainer" xml:space="preserve"><value>Linkcryptercontainer neu erstellen</value></data>
+  <data name="RecreateLinkCrypterContainerConfirmation" xml:space="preserve"><value>Beim Linkcrypter wird ein neuer Container mit einer neuen URL erstellt. Das Release bzw. die Collection kommt wieder in die Postwarteschlange und bestehende Posts müssen mit der neuen URL aktualisiert werden. Der alte Container wird beim Linkcrypter nicht gelöscht.</value></data>
+  <data name="Recreate" xml:space="preserve"><value>Neu erstellen</value></data>
+  <data name="LinkCrypterContainerUpdated" xml:space="preserve"><value>Linkcryptercontainer aktualisiert.</value></data>
+  <data name="LinkCrypterContainerUpdateFailedWithErrors" xml:space="preserve"><value>Linkcryptercontainer konnte nicht aktualisiert werden: {0}</value></data>
+  <data name="LinkCrypterContainerCreationFailedWithErrors" xml:space="preserve"><value>Linkcryptercontainer konnte nicht erstellt werden: {0}</value></data>
+  <data name="LinkCrypterContainerNoLongerExistedAndWasRecreated" xml:space="preserve"><value>Der Linkcryptercontainer existierte nicht mehr und wurde neu erstellt. Bestehende Posts müssen aktualisiert werden: {0}</value></data>
+  <data name="LinkCrypterContainerRecreatedWithUrl" xml:space="preserve"><value>Linkcryptercontainer neu erstellt. Bestehende Posts müssen aktualisiert werden: {0}</value></data>
+  <data name="LinkCrypterContainerRecreationFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht neu erstellt werden, der bisherige Container bleibt erhalten: {0}</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Linkcryptercontainerkonfiguration löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Linkcryptercontainerkonfiguration wirklich löschen?</value></data>
   <data name="DeleteNamedItem" xml:space="preserve"><value>{0} löschen</value></data>
@@ -229,6 +239,7 @@
   <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Hänge einen Linkcrypter an diese Uploadkonfiguration an.</value></data>
   <data name="LinkCrypterContainerState.Created" xml:space="preserve"><value>Erstellt</value></data>
   <data name="LinkCrypterContainerState.CreationFailed" xml:space="preserve"><value>Erstellung fehlgeschlagen</value></data>
+  <data name="LinkCrypterContainerState.UpdateFailed" xml:space="preserve"><value>Aktualisierung fehlgeschlagen</value></data>
   <data name="ArchiveState.Created" xml:space="preserve"><value>Erstellt</value></data>
   <data name="ArchiveState.Creating" xml:space="preserve"><value>Wird erstellt</value></data>
   <data name="ArchiveState.CreationFailed" xml:space="preserve"><value>Erstellung fehlgeschlagen</value></data>
@@ -1066,7 +1077,7 @@
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Zugangsdaten vom Hoster abgelehnt</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>Ein Hoster hat die Zugangsdaten einer Hosterregistrierung abgelehnt. Bearcat deaktiviert die Registrierung, bis du die Zugangsdaten korrigierst und sie wieder aktivierst.</value></data>
   <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht erstellt werden</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht erstellt werden.</value></data>
-  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht aktualisiert werden</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht aktualisiert werden.</value></data>
+  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht aktualisiert werden</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht aktualisiert werden.</value></data><data name="NotificationKind.LinkCrypterContainerRecreated" xml:space="preserve"><value>Linkcryptercontainer neu erstellt</value></data><data name="NotificationKind.LinkCrypterContainerRecreated.Description" xml:space="preserve"><value>Ein Linkcryptercontainer wurde mit einer neuen URL neu erstellt, weil er nicht mehr existierte oder manuell neu erstellt wurde. Bestehende Posts müssen aktualisiert werden.</value></data>
   <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Linkcryptercontainer der Collection ist ungültig</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>Ein Linkcryptercontainer der Collection ist ungültig.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatischer Forenpost erstellt</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>Ein Release wurde automatisch in einem Forum gepostet.</value></data>
   <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Ein Release konnte nicht automatisch in einem Forum gepostet werden.</value></data>

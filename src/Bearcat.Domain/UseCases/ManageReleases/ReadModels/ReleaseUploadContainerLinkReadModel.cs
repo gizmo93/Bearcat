@@ -17,5 +17,6 @@ public record ReleaseUploadContainerLinkReadModel(
     bool SupportsCaptcha,
     bool SupportsContainerDownload,
     bool SupportsClickAndLoad,
+    bool HasActiveLinkCrypterConfig,
     IReadOnlyList<string> Errors
 );

@@ -192,12 +192,25 @@ Auch hier darf es keinen [blockierenden Ersatzupload](#7-automatische-reuploads)
 
 ## 9. Linkcryptercontainer nach einem Reupload
 
-Bearcat versucht, den bestehenden Container für dieselbe Uploadkonfiguration und Linkcrypterkonfiguration
-zu aktualisieren.
+Bearcat aktualisiert den bestehenden Container für dieselbe Uploadkonfiguration und Linkcrypterkonfiguration.
+Container von Releasecollections werden genauso aktualisiert.
 Gelingt das, bleibt die URL gleich. Die Links in deinen Forenposts bleiben gültig.
 
-Kann der Anbieter Container nicht aktualisieren oder schlägt die Aktualisierung fehl, erstellt Bearcat einen neuen Container.
-Dadurch kann sich die Container-URL ändern.
+Schlägt die Aktualisierung fehl, behält der Container seine URL und bekommt den Status `Aktualisierung fehlgeschlagen`.
+Bearcat versucht die Aktualisierung nach 15 Minuten erneut. Bis dahin enthält der Container noch die alten Links.
+
+Meldet der Anbieter, dass der Container nicht mehr existiert, erstellt Bearcat einen neuen Container mit
+neuer URL und schickt eine Benachrichtigung. Das Release oder die Releasecollection kommt zurück in die [Postwarteschlange](/Bearcat/de/post-queue/),
+damit bestehende Posts mit der neuen URL aktualisiert werden können.
+
+Du kannst einen Container auch manuell aktualisieren oder neu erstellen:
+
+- **Jetzt aktualisieren** (`Erstellt` oder `Aktualisierung fehlgeschlagen`): aktualisiert den Container sofort
+  mit den aktuellen Links und Einstellungen. Die Wartezeit entfällt. Dabei prüft Bearcat auch, ob der Container
+  noch existiert, und erstellt ihn bei Bedarf neu.
+- **Neu erstellen** (nur `Aktualisierung fehlgeschlagen`): erstellt einen neuen Container mit neuer URL und
+  legt das Release oder die Releasecollection wieder in die Postwarteschlange. Der alte Container bleibt beim
+  Linkcrypter bestehen. Schlägt die Erstellung fehl, verwendet Bearcat weiterhin den alten Container und seine URL.
 
 ## 10. Aufräumen nach erfolgreichem Upload
 

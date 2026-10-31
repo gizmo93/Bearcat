@@ -19,6 +19,13 @@ public interface IHideCxApi
         CancellationToken cancellationToken
     );
 
+    [Get("/containers/{containerId}")]
+    Task<string> GetContainerAsync(
+        string containerId,
+        [Header("Authorization")] string apiToken,
+        CancellationToken cancellationToken
+    );
+
     [Patch("/containers/{containerId}")]
     Task<string?> UpdateContainerAsync(
         string containerId,
