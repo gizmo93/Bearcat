@@ -1,8 +1,8 @@
 namespace Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels;
 
 public record ForumPostingRulePreviewReadModel(
-    int ReleaseId,
-    string ReleaseName,
+    int EntityId,
+    string EntityName,
     string? MatchedRuleName,
     string? TargetPathSnapshot
 );

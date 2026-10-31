@@ -8,48 +8,55 @@ namespace Bearcat.Domain.UseCases.PostToForums;
 
 public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
 {
-    public async Task<ReleaseAutoPostPlan> GetPlanAsync(
-        int releaseId,
+    public async Task<AutoPostPlan> GetPlanAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
         CancellationToken cancellationToken = default
     )
     {
-        var plans = await GetPlansAsync([releaseId], cancellationToken);
+        var plans = await GetPlansAsync(entityType, [entityId], cancellationToken);
 
         return plans[0];
     }
 
-    public async Task<IReadOnlyList<ReleaseAutoPostPlan>> GetPlansAsync(
-        IReadOnlyList<int> releaseIds,
+    public async Task<IReadOnlyList<AutoPostPlan>> GetPlansAsync(
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
         CancellationToken cancellationToken = default
     )
     {
-        var releases = await repository.GetReleasesForRoutingAsync(releaseIds, cancellationToken);
-        var releasesById = releases.ToDictionary(release => release.Id);
+        var entitiesToPlanById =
+            entityType == ForumPostTemplateType.Release
+                ? await GetReleasesToPlanAsync(entityIds, cancellationToken)
+                : await GetReleaseCollectionsToPlanAsync(entityIds, cancellationToken);
 
         var registrations = await repository.GetForumRegistrationsWithEnabledRulesAsync(
             cancellationToken
         );
 
         var postedLocations = await repository.GetPostedLocationsAsync(
-            releaseIds,
-            cancellationToken
+            entityType: entityType,
+            entityIds: entityIds,
+            cancellationToken: cancellationToken
         );
 
         var latestUploadTimes = await repository.GetLatestUploadCompletionTimesAsync(
-            releaseIds,
-            cancellationToken
+            entityType: entityType,
+            entityIds: entityIds,
+            cancellationToken: cancellationToken
         );
 
-        return releaseIds
-            .Select(releaseId =>
+        return entityIds
+            .Select(entityId =>
                 BuildPlan(
-                    release: releasesById[releaseId],
+                    entityType: entityType,
+                    entityToPlan: entitiesToPlanById[entityId],
                     registrations: registrations,
                     postedLocations: postedLocations
-                        .Where(location => location.ReleaseId == releaseId)
+                        .Where(location => location.EntityId == entityId)
                         .ToList(),
                     latestUploadCompletedAt: latestUploadTimes.TryGetValue(
-                        releaseId,
+                        entityId,
                         out var latestUploadCompletedAt
                     )
                         ? latestUploadCompletedAt
@@ -59,36 +66,80 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             .ToList();
     }
 
-    private static ReleaseAutoPostPlan BuildPlan(
-        Release release,
+    private async Task<Dictionary<int, EntityToPlan>> GetReleasesToPlanAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var releases = await repository.GetReleasesForRoutingAsync(releaseIds, cancellationToken);
+
+        return releases.ToDictionary(
+            release => release.Id,
+            release => new EntityToPlan(
+                Id: release.Id,
+                Name: release.Name,
+                BlockedReason: FindBlockedReason(release),
+                RoutingContext: ReleaseRoutingContext.FromRelease(release)
+            )
+        );
+    }
+
+    private async Task<Dictionary<int, EntityToPlan>> GetReleaseCollectionsToPlanAsync(
+        IReadOnlyList<int> releaseCollectionIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var collections = await repository.GetReleaseCollectionsForRoutingAsync(
+            releaseCollectionIds,
+            cancellationToken
+        );
+
+        return collections.ToDictionary(
+            collection => collection.Id,
+            collection => new EntityToPlan(
+                Id: collection.Id,
+                Name: collection.Name,
+                BlockedReason: FindBlockedReason(collection),
+                RoutingContext: ReleaseRoutingContext.FromReleaseCollection(collection)
+            )
+        );
+    }
+
+    private static AutoPostPlan BuildPlan(
+        ForumPostTemplateType entityType,
+        EntityToPlan entityToPlan,
         IReadOnlyList<AutoPostRegistration> registrations,
         IReadOnlyList<AutoPostPostedLocation> postedLocations,
         DateTime? latestUploadCompletedAt
     )
     {
-        var blockedReason = FindBlockedReason(release);
-
-        if (blockedReason is not null)
+        if (entityToPlan.BlockedReason is not null)
         {
-            return new ReleaseAutoPostPlan(
-                ReleaseId: release.Id,
-                ReleaseName: release.Name,
-                BlockedReason: blockedReason,
+            return new AutoPostPlan(
+                EntityType: entityType,
+                EntityId: entityToPlan.Id,
+                EntityName: entityToPlan.Name,
+                BlockedReason: entityToPlan.BlockedReason,
                 Sites: []
             );
         }
 
-        var context = ReleaseRoutingContext.FromRelease(release);
-
         var sites = registrations
             .Select(registration =>
-                BuildSiteEntry(registration, context, postedLocations, latestUploadCompletedAt)
+                BuildSiteEntry(
+                    registration: registration,
+                    entityType: entityType,
+                    context: entityToPlan.RoutingContext,
+                    postedLocations: postedLocations,
+                    latestUploadCompletedAt: latestUploadCompletedAt
+                )
             )
             .ToList();
 
-        return new ReleaseAutoPostPlan(
-            ReleaseId: release.Id,
-            ReleaseName: release.Name,
+        return new AutoPostPlan(
+            EntityType: entityType,
+            EntityId: entityToPlan.Id,
+            EntityName: entityToPlan.Name,
             BlockedReason: null,
             Sites: sites
         );
@@ -96,10 +147,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
 
     private static AutoPostBlockedReason? FindBlockedReason(Release release)
     {
-        if (
-            release.QualityGateState
-            is not (QualityGateState.Passed or QualityGateState.ManuallyApproved)
-        )
+        if (!HasPassedQualityGate(release))
         {
             return AutoPostBlockedReason.QualityGateNotPassed;
         }
@@ -107,14 +155,38 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         return release.Classification is null ? AutoPostBlockedReason.ClassificationMissing : null;
     }
 
+    private static AutoPostBlockedReason? FindBlockedReason(ReleaseCollection collection)
+    {
+        if (!collection.Releases.All(HasPassedQualityGate))
+        {
+            return AutoPostBlockedReason.QualityGateNotPassed;
+        }
+
+        return collection.Releases.Any(release => release.Classification is not null)
+            ? null
+            : AutoPostBlockedReason.ClassificationMissing;
+    }
+
+    private static bool HasPassedQualityGate(Release release)
+    {
+        return release.QualityGateState
+            is QualityGateState.Passed
+                or QualityGateState.ManuallyApproved;
+    }
+
     private static AutoPostSiteEntry BuildSiteEntry(
         AutoPostRegistration registration,
+        ForumPostTemplateType entityType,
         ReleaseRoutingContext context,
         IReadOnlyList<AutoPostPostedLocation> postedLocations,
         DateTime? latestUploadCompletedAt
     )
     {
-        var rule = ForumPostingRuleMatcher.FindFirstMatch(registration.EnabledRules, context);
+        var rule = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: registration.EnabledRules,
+            entityType: entityType,
+            context: context
+        );
 
         var match = rule is null
             ? null
@@ -170,4 +242,11 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         return latestUploadCompletedAt is { } uploadedAt
             && (postedLocation.ContentUpdatedAt ?? postedLocation.CreatedAt) < uploadedAt;
     }
+
+    private sealed record EntityToPlan(
+        int Id,
+        string Name,
+        AutoPostBlockedReason? BlockedReason,
+        ReleaseRoutingContext RoutingContext
+    );
 }

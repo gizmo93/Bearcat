@@ -1,3 +1,4 @@
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
@@ -19,7 +20,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.BlockedReason.ShouldBe(AutoPostBlockedReason.QualityGateNotPassed);
@@ -41,7 +42,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.IsBlocked.ShouldBeFalse();
@@ -60,7 +61,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.BlockedReason.ShouldBe(AutoPostBlockedReason.ClassificationMissing);
@@ -80,7 +81,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
@@ -105,7 +106,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
@@ -129,7 +130,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.Sites.ShouldHaveSingleItem().ResolvedForumPostTemplateId.ShouldBe(7);
@@ -149,7 +150,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.Sites.ShouldHaveSingleItem().NeedsContentUpdate.ShouldBeTrue();
@@ -175,7 +176,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.Sites.ShouldHaveSingleItem().NeedsContentUpdate.ShouldBeFalse();
@@ -195,7 +196,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.Sites.ShouldHaveSingleItem().NeedsContentUpdate.ShouldBeFalse();
@@ -216,7 +217,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.UpdatableSites.ShouldHaveSingleItem();
@@ -242,7 +243,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.Sites.ShouldHaveSingleItem().Status.ShouldBe(AutoPostSiteStatus.Matched);
@@ -260,7 +261,7 @@ public class AutoForumPostingPlanServiceTest
                 AutoPostTestFactory.Registration(
                     id: 5,
                     name: "Board",
-                    AutoPostTestFactory.Rule(
+                    rules: AutoPostTestFactory.Rule(
                         id: 3,
                         threadPrefixId: "11",
                         postMode: ForumPostPostMode.ReplyToExistingElseNewThread
@@ -271,7 +272,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
@@ -300,7 +301,7 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
@@ -320,15 +321,18 @@ public class AutoForumPostingPlanServiceTest
                 AutoPostTestFactory.Registration(
                     id: 5,
                     name: "Board",
-                    AutoPostTestFactory.Rule(id: 1, sortOrder: 2),
-                    AutoPostTestFactory.Rule(id: 2, sortOrder: 1)
+                    rules:
+                    [
+                        AutoPostTestFactory.Rule(id: 1, sortOrder: 2),
+                        AutoPostTestFactory.Rule(id: 2, sortOrder: 1),
+                    ]
                 ),
             ],
         };
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plan = await service.GetPlanAsync(releaseId: 1);
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
         plan.Sites.ShouldHaveSingleItem().Match.ShouldNotBeNull().ForumPostingRuleId.ShouldBe(2);
@@ -350,11 +354,178 @@ public class AutoForumPostingPlanServiceTest
         var service = new AutoForumPostingPlanService(repository);
 
         // Act
-        var plans = await service.GetPlansAsync([2, 1]);
+        var plans = await service.GetPlansAsync(ForumPostTemplateType.Release, [2, 1]);
 
         // Assert
-        plans.Select(plan => plan.ReleaseId).ShouldBe([2, 1]);
+        plans.Select(plan => plan.EntityId).ShouldBe([2, 1]);
         plans[0].Sites.ShouldHaveSingleItem().Status.ShouldBe(AutoPostSiteStatus.NoMatch);
         plans[1].Sites.ShouldHaveSingleItem().Status.ShouldBe(AutoPostSiteStatus.Matched);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_CollectionWithOneMemberFailingTheQualityGate_IsBlocked()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            ReleaseCollections =
+            [
+                AutoPostTestFactory.ReleaseCollection(
+                    id: 4,
+                    releases:
+                    [
+                        AutoPostTestFactory.Release(id: 1),
+                        AutoPostTestFactory.Release(
+                            id: 2,
+                            qualityGateState: QualityGateState.Failed
+                        ),
+                    ]
+                ),
+            ],
+            Registrations = [AutoPostTestFactory.Registration(rules: CollectionRule())],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, 4);
+
+        // Assert
+        plan.BlockedReason.ShouldBe(AutoPostBlockedReason.QualityGateNotPassed);
+        plan.Sites.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPlanAsync_CollectionWithoutClassifiedMembers_IsBlockedByMissingClassification()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            ReleaseCollections =
+            [
+                AutoPostTestFactory.ReleaseCollection(
+                    id: 4,
+                    releases:
+                    [
+                        AutoPostTestFactory.Release(id: 1, withClassification: false),
+                        AutoPostTestFactory.Release(id: 2, withClassification: false),
+                    ]
+                ),
+            ],
+            Registrations = [AutoPostTestFactory.Registration(rules: CollectionRule())],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, 4);
+
+        // Assert
+        plan.BlockedReason.ShouldBe(AutoPostBlockedReason.ClassificationMissing);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_CollectionWithOneClassifiedMember_IsNotBlocked()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            ReleaseCollections =
+            [
+                AutoPostTestFactory.ReleaseCollection(
+                    id: 4,
+                    releases:
+                    [
+                        AutoPostTestFactory.Release(id: 1),
+                        AutoPostTestFactory.Release(id: 2, withClassification: false),
+                    ]
+                ),
+            ],
+            Registrations = [AutoPostTestFactory.Registration(rules: CollectionRule())],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, 4);
+
+        // Assert
+        plan.IsBlocked.ShouldBeFalse();
+        plan.EntityType.ShouldBe(ForumPostTemplateType.ReleaseCollection);
+        plan.EntityName.ShouldBe(AutoPostTestFactory.ReleaseCollectionName);
+        plan.Sites.ShouldHaveSingleItem().Status.ShouldBe(AutoPostSiteStatus.Matched);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_RulesForBothEntityTypes_EachPlanMatchesOnlyRulesOfItsEntityType()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release(id: 1)],
+            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
+            Registrations =
+            [
+                AutoPostTestFactory.Registration(
+                    id: 5,
+                    name: "Board",
+                    rules:
+                    [
+                        AutoPostTestFactory.Rule(id: 1, sortOrder: 0),
+                        CollectionRule(id: 2, sortOrder: 1),
+                    ]
+                ),
+            ],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var releasePlan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
+        var collectionPlan = await service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, 4);
+
+        // Assert
+        releasePlan
+            .Sites.ShouldHaveSingleItem()
+            .Match.ShouldNotBeNull()
+            .ForumPostingRuleId.ShouldBe(1);
+        collectionPlan
+            .Sites.ShouldHaveSingleItem()
+            .Match.ShouldNotBeNull()
+            .ForumPostingRuleId.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_CollectionUploadNewerThanThePost_NeedsContentUpdate()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
+            Registrations = [AutoPostTestFactory.Registration(id: 5, rules: CollectionRule())],
+            ReleaseCollectionPostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(postedLocationId: 9, entityId: 4),
+            ],
+            ReleaseCollectionLatestUploadCompletionTimes =
+            {
+                [4] = AutoPostTestFactory.ReuploadedAt,
+            },
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, 4);
+
+        // Assert
+        var site = plan.Sites.ShouldHaveSingleItem();
+        site.Status.ShouldBe(AutoPostSiteStatus.AlreadyPosted);
+        site.NeedsContentUpdate.ShouldBeTrue();
+        plan.UpdatableSites.ShouldHaveSingleItem().PostedLocationId.ShouldBe(9);
+    }
+
+    private static ForumPostingRule CollectionRule(int id = 1, int sortOrder = 0)
+    {
+        return AutoPostTestFactory.Rule(
+            id: id,
+            sortOrder: sortOrder,
+            templateType: ForumPostTemplateType.ReleaseCollection
+        );
     }
 }

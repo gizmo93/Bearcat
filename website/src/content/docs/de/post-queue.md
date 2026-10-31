@@ -33,14 +33,19 @@ Wie Collections und ihre Uploadslots funktionieren, steht unter [Releasecollecti
 ## Aus der Warteschlange in ein Forum posten
 
 Mit eingerichteten [Postingregeln](/Bearcat/de/automatic-forum-posting/) zeigt der Bereich **Automatisches Posten**
-bei Einzelreleases die passende Regel und das Zielunterforum pro Forum.
+bei Einzelreleases und Collections die passende Regel und das Zielunterforum pro Forum.
 
 Mit **Posten** sendest du den Post ab. **In alle passenden Foren posten** arbeitet alle offenen Foren ab.
 Das Badge **Auto** zeigt, dass Bearcat in diesem Forum automatisch postet.
 
+Nach einem Reupload oder dem Upload einer neuen Folge in einer Collection steht bei bestehenden Posts
+**Postinhalt ist veraltet**. Mit **Post aktualisieren** ersetzt du den Post.
+Ist automatisches Posten blockiert, zeigt der Abschnitt den Grund statt der Forenliste.
+
 ![posting-from-post-queue.png](../images/posting-from-post-queue.png)
 
-Sobald alle passenden Foren erledigt sind, markiert Bearcat das Release als gepostet und entfernt es aus der Warteschlange.
+Sobald alle Posts in den passenden Foren erstellt oder aktualisiert sind, markiert Bearcat das Release oder die Collection
+als gepostet und entfernt den Eintrag aus der Warteschlange.
 
 ## Als gepostet markieren
 

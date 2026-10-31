@@ -14,6 +14,8 @@ public sealed class ForumPostingRuleFormModel
 
     public string ThreadPrefixId { get; set; } = string.Empty;
 
+    public ForumPostTemplateType TemplateType { get; set; } = ForumPostTemplateType.Release;
+
     public int ForumPostTemplateId { get; set; }
 
     public ForumPostPostMode PostMode { get; set; } =

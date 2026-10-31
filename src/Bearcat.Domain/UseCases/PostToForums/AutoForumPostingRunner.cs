@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.PostToForums;
 
@@ -12,19 +13,50 @@ public class AutoForumPostingRunner(
     AutoForumPostUpdateService postUpdateService
 )
 {
-    private const int ReleaseBatchSize = 500;
+    private const int EntityBatchSize = 500;
 
     public async Task<AutoPostRunResult> RunAsync(CancellationToken cancellationToken = default)
     {
         var releaseIds = await repository.GetQueuedReleaseIdsAsync(cancellationToken);
+        var releaseResult = await ProcessQueueAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityIds: releaseIds,
+            cancellationToken: cancellationToken
+        );
 
+        var releaseCollectionIds = await repository.GetQueuedReleaseCollectionIdsAsync(
+            cancellationToken
+        );
+        var releaseCollectionResult = await ProcessQueueAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityIds: releaseCollectionIds,
+            cancellationToken: cancellationToken
+        );
+
+        return new AutoPostRunResult(
+            PostedCount: releaseResult.PostedCount + releaseCollectionResult.PostedCount,
+            UpdatedCount: releaseResult.UpdatedCount + releaseCollectionResult.UpdatedCount,
+            Failures: [.. releaseResult.Failures, .. releaseCollectionResult.Failures]
+        );
+    }
+
+    private async Task<AutoPostRunResult> ProcessQueueAsync(
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
+        CancellationToken cancellationToken
+    )
+    {
         var postedCount = 0;
         var updatedCount = 0;
         var failures = new List<AutoPostRunFailure>();
 
-        foreach (var releaseIdBatch in releaseIds.Chunk(ReleaseBatchSize))
+        foreach (var entityIdBatch in entityIds.Chunk(EntityBatchSize))
         {
-            var plans = await planService.GetPlansAsync(releaseIdBatch, cancellationToken);
+            var plans = await planService.GetPlansAsync(
+                entityType: entityType,
+                entityIds: entityIdBatch,
+                cancellationToken: cancellationToken
+            );
 
             foreach (var plan in plans.Where(plan => !plan.IsBlocked))
             {
@@ -40,7 +72,7 @@ public class AutoForumPostingRunner(
     }
 
     private async Task<AutoPostRunResult> ProcessPlanAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         CancellationToken cancellationToken
     )
     {
@@ -84,14 +116,15 @@ public class AutoForumPostingRunner(
     }
 
     private static AutoPostRunFailure Failure(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         IReadOnlyList<string> messages
     )
     {
         return new AutoPostRunFailure(
-            ReleaseId: plan.ReleaseId,
-            ReleaseName: plan.ReleaseName,
+            EntityType: plan.EntityType,
+            EntityId: plan.EntityId,
+            EntityName: plan.EntityName,
             DistributionSiteRegistrationId: site.DistributionSiteRegistrationId,
             DistributionSiteRegistrationName: site.DistributionSiteRegistrationName,
             Messages: messages
@@ -99,7 +132,7 @@ public class AutoForumPostingRunner(
     }
 
     private async Task<AutoPostExecutionResult> CreatePostForSiteAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken
     )
@@ -123,7 +156,7 @@ public class AutoForumPostingRunner(
     }
 
     private async Task<AutoPostUpdateResult> UpdatePostOfSiteAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken
     )

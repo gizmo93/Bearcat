@@ -135,6 +135,9 @@
     public ConditionNodeModel Node { get; set; } = null!;
 
     [Parameter]
+    public ForumPostTemplateType TemplateType { get; set; }
+
+    [Parameter]
     public EventCallback OnRemove { get; set; }
 
     private string? pendingValue;
@@ -144,7 +147,8 @@
 
     private IReadOnlyList<SelectOption<string>> FieldOptions =>
         RuleFieldCatalog
-            .Fields.Select(catalogField => new SelectOption<string>(
+            .GetFields(TemplateType)
+            .Select(catalogField => new SelectOption<string>(
                 catalogField.Name,
                 L.LocalizeRuleField(catalogField.Name)
             ))

@@ -13,6 +13,7 @@ public record ForumPostingRuleDetailReadModel(
     string? ThreadPrefixId,
     int ForumPostTemplateId,
     string ForumPostTemplateName,
+    ForumPostTemplateType ForumPostTemplateType,
     ForumPostPostMode PostMode,
     bool IsEnabled
 );

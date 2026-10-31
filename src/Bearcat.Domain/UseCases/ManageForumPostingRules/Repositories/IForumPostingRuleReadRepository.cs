@@ -24,4 +24,9 @@ public interface IForumPostingRuleReadRepository
         int count,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<ReleaseCollection>> GetRecentReleaseCollectionsForPreviewAsync(
+        int count,
+        CancellationToken cancellationToken = default
+    );
 }

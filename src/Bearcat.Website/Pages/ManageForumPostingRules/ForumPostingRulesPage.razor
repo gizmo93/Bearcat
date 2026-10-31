@@ -1,5 +1,6 @@
 @page "/distribution-site-registrations/{DistributionSiteRegistrationId:int}/posting-rules"
 @using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels
+@using Bearcat.Website.Pages.ManageForumPostTemplates.Editor
 
 @if (!isInitialized)
 {
@@ -116,7 +117,12 @@
 
                         <div class="min-w-0">
                             <p class="bearcat-mobile-label">@L["Template"]</p>
-                            <p class="truncate text-sm" title="@rule.ForumPostTemplateName">@rule.ForumPostTemplateName</p>
+                            <div class="min-w-0 space-y-1">
+                                <p class="truncate text-sm" title="@rule.ForumPostTemplateName">@rule.ForumPostTemplateName</p>
+                                <BbBadge Variant="BadgeVariant.Outline" Class="text-muted-foreground">
+                                    @ForumPostTemplateTypeLabels.Get(L, rule.ForumPostTemplateType)
+                                </BbBadge>
+                            </div>
                         </div>
 
                         <div class="min-w-0">
@@ -164,13 +170,25 @@
                         <BbCardDescription>@L["ForumPostingRulePreviewDescription"]</BbCardDescription>
                     </div>
                 </div>
-                <BbButton Variant="ButtonVariant.Secondary"
-                          Size="ButtonSize.Small"
-                          Disabled="isPreviewing"
-                          OnClick="RunPreviewAsync">
-                    <LucideIcon Name="play" class="@($"h-4 w-4 {(isPreviewing ? "animate-pulse" : string.Empty)}")" />
-                    @L["Preview"]
-                </BbButton>
+                <div class="flex flex-wrap items-center gap-2">
+                    <BbToggleGroup TValue="ForumPostTemplateType"
+                                   Value="previewEntityType"
+                                   ValueChanged="ChangePreviewEntityType"
+                                   Required="true"
+                                   Variant="ToggleVariant.Outline"
+                                   Size="ToggleSize.Small"
+                                   aria-label="@L["ForumPostingRuleAppliesTo"]">
+                        <BbToggleGroupItem Value="ForumPostTemplateType.Release">@L["Releases"]</BbToggleGroupItem>
+                        <BbToggleGroupItem Value="ForumPostTemplateType.ReleaseCollection">@L["Collections"]</BbToggleGroupItem>
+                    </BbToggleGroup>
+                    <BbButton Variant="ButtonVariant.Secondary"
+                              Size="ButtonSize.Small"
+                              Disabled="isPreviewing"
+                              OnClick="RunPreviewAsync">
+                        <LucideIcon Name="play" class="@($"h-4 w-4 {(isPreviewing ? "animate-pulse" : string.Empty)}")" />
+                        @L["Preview"]
+                    </BbButton>
+                </div>
             </div>
         </BbCardHeader>
         <BbCardContent>
@@ -182,22 +200,24 @@
             {
                 <div class="bearcat-release-empty">
                     <LucideIcon Name="inbox" class="h-5 w-5" />
-                    <span>@L["NoReleasesFound"]</span>
+                    <span>@(previewEntityType == ForumPostTemplateType.Release ? L["NoReleasesFound"] : L["NoReleaseCollectionsFound"])</span>
                 </div>
             }
             else
             {
                 <div class="space-y-2">
                     <p class="text-xs text-muted-foreground">
-                        @L["ForumPostingRulePreviewSummary", MatchedCount, previewResults.Count]
+                        @(previewEntityType == ForumPostTemplateType.Release
+                            ? L["ForumPostingRulePreviewSummary", MatchedCount, previewResults.Count]
+                            : L["ForumPostingRulePreviewSummaryCollections", MatchedCount, previewResults.Count])
                     </p>
 
                     <div class="divide-y divide-border/70 overflow-hidden rounded-lg border border-border/70">
                         @foreach (var result in previewResults)
                         {
                             <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-                                <p class="min-w-0 flex-1 truncate text-sm" title="@result.ReleaseName">
-                                    @result.ReleaseName
+                                <p class="min-w-0 flex-1 truncate text-sm" title="@result.EntityName">
+                                    @result.EntityName
                                 </p>
 
                                 @if (result.MatchedRuleName is null)

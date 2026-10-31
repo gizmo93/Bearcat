@@ -4,6 +4,7 @@ using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
 using Microsoft.Extensions.Localization;
@@ -156,6 +157,24 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         AdditionalArchiveContentType type
     ) => localizer[$"AdditionalArchiveContentType.{type}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        AutoPostBlockedReason blockedReason,
+        ForumPostTemplateType entityType
+    )
+    {
+        return (blockedReason, entityType) switch
+        {
+            (AutoPostBlockedReason.QualityGateNotPassed, ForumPostTemplateType.Release) =>
+                localizer["AutoPostBlockedQualityGate"],
+            (AutoPostBlockedReason.QualityGateNotPassed, _) => localizer[
+                "AutoPostBlockedCollectionQualityGate"
+            ],
+            (_, ForumPostTemplateType.Release) => localizer["AutoPostBlockedClassification"],
+            _ => localizer["AutoPostBlockedCollectionClassification"],
+        };
+    }
 
     public static string LocalizeRuleField(
         this IStringLocalizer<UiResource> localizer,

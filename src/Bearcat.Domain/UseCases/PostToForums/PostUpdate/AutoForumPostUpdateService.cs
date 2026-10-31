@@ -12,17 +12,18 @@ public class AutoForumPostUpdateService(
     IForumPostContentRenderer contentRenderer,
     IForumPostSubmitter submitter,
     INotificationService notificationService,
-    ReleasePostedStatusService releasePostedStatusService
+    UploadsPostedStatusService uploadsPostedStatusService
 )
 {
-    public async Task<AutoPostUpdateResult> UpdatePostOfReleaseOnSiteAsync(
-        int releaseId,
+    public async Task<AutoPostUpdateResult> UpdatePostOnSiteAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
         int distributionSiteRegistrationId,
         int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
     )
     {
-        var plan = await planService.GetPlanAsync(releaseId, cancellationToken);
+        var plan = await planService.GetPlanAsync(entityType, entityId, cancellationToken);
 
         if (plan.BlockedReason is not null)
         {
@@ -40,15 +41,15 @@ public class AutoForumPostUpdateService(
         }
 
         return await UpdatePostOfPlannedSiteAsync(
-            plan,
-            site,
-            forumPostTemplateIdOverride,
-            cancellationToken
+            plan: plan,
+            site: site,
+            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
+            cancellationToken: cancellationToken
         );
     }
 
     public async Task<AutoPostUpdateResult> UpdatePostOfPlannedSiteAsync(
-        ReleaseAutoPostPlan plan,
+        AutoPostPlan plan,
         AutoPostSiteEntry site,
         int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
@@ -61,9 +62,9 @@ public class AutoForumPostUpdateService(
 
         var target = new AutoPostUpdateTarget(
             PostedLocationId: site.PostedLocationId.Value,
-            EntityId: plan.ReleaseId,
-            EntityName: plan.ReleaseName,
-            ReleaseId: plan.ReleaseId,
+            EntityType: plan.EntityType,
+            EntityId: plan.EntityId,
+            EntityName: plan.EntityName,
             DistributionSiteRegistrationId: site.DistributionSiteRegistrationId,
             DistributionSiteRegistrationName: site.DistributionSiteRegistrationName,
             PostedUrl: site.PostedUrl!,
@@ -71,9 +72,9 @@ public class AutoForumPostUpdateService(
         );
 
         return await UpdatePostAndNotifyAsync(
-            target,
-            forumPostTemplateIdOverride,
-            cancellationToken
+            target: target,
+            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
+            cancellationToken: cancellationToken
         );
     }
 
@@ -86,9 +87,9 @@ public class AutoForumPostUpdateService(
         var target = await repository.GetUpdateTargetAsync(postedLocationId, cancellationToken);
 
         return await UpdatePostAndNotifyAsync(
-            target,
-            forumPostTemplateIdOverride,
-            cancellationToken
+            target: target,
+            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
+            cancellationToken: cancellationToken
         );
     }
 
@@ -169,14 +170,14 @@ public class AutoForumPostUpdateService(
             cancellationToken: cancellationToken
         );
 
-        var releaseMarkedPosted =
-            target.ReleaseId is { } releaseId
-            && await releasePostedStatusService.MarkReleasePostedWhenNoSiteIsLeftAsync(
-                releaseId,
-                cancellationToken
+        var uploadsMarkedPosted =
+            await uploadsPostedStatusService.MarkUploadsPostedWhenNoSiteIsLeftAsync(
+                entityType: target.EntityType,
+                entityId: target.EntityId,
+                cancellationToken: cancellationToken
             );
 
-        return AutoPostUpdateResult.Updated(editedPost.Url, releaseMarkedPosted);
+        return AutoPostUpdateResult.Updated(editedPost.Url, uploadsMarkedPosted);
     }
 
     private async Task CreateUpdateResultNotificationAsync(

@@ -11,7 +11,7 @@ namespace Bearcat.Domain.UnitTest.UseCases.PostToForums.PostCreation;
 public class AutoForumPostCreationServiceTest
 {
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_ReplyModeWithExistingThread_RepliesToFirstThread()
+    public async Task CreatePostOnSiteAsync_ReplyModeWithExistingThread_RepliesToFirstThread()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -28,8 +28,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -48,7 +49,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_ReplyModeWithoutExistingThread_StartsNewThread()
+    public async Task CreatePostOnSiteAsync_ReplyModeWithoutExistingThread_StartsNewThread()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -61,8 +62,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -78,7 +80,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_AlwaysNewThread_DoesNotSearchForExistingThreads()
+    public async Task CreatePostOnSiteAsync_AlwaysNewThread_DoesNotSearchForExistingThreads()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -91,8 +93,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -103,7 +106,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_SuccessfulPost_RecordsPostedLocation()
+    public async Task CreatePostOnSiteAsync_SuccessfulPost_RecordsPostedLocation()
     {
         // Arrange
         var repository = RepositoryWith(AutoPostTestFactory.Rule());
@@ -111,38 +114,40 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
         // Assert
         var postedLocation = repository.RecordedPostedLocations.ShouldHaveSingleItem();
-        postedLocation.ReleaseId.ShouldBe(1);
+        postedLocation.EntityId.ShouldBe(1);
         postedLocation.DistributionSiteRegistrationId.ShouldBe(5);
         postedLocation.Url.ShouldBe(submitter.NewThreadUrl);
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_LastPendingSite_MarksReleasePosted()
+    public async Task CreatePostOnSiteAsync_LastPendingSite_MarksReleasePosted()
     {
         // Arrange
         var repository = RepositoryWith(AutoPostTestFactory.Rule());
         var service = ServiceWith(repository, new FakeForumPostSubmitter());
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
         // Assert
-        result.ReleaseMarkedPosted.ShouldBeTrue();
+        result.UploadsMarkedPosted.ShouldBeTrue();
         repository.MarkedReleaseIds.ShouldHaveSingleItem().ShouldBe(1);
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_AnotherSiteStillPending_DoesNotMarkReleasePosted()
+    public async Task CreatePostOnSiteAsync_AnotherSiteStillPending_DoesNotMarkReleasePosted()
     {
         // Arrange
         var repository = new FakeAutoForumPostingRepository
@@ -157,32 +162,34 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, new FakeForumPostSubmitter());
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
         // Assert
         result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
-        result.ReleaseMarkedPosted.ShouldBeFalse();
+        result.UploadsMarkedPosted.ShouldBeFalse();
         repository.MarkedReleaseIds.ShouldBeEmpty();
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_RenderErrors_FailsWithoutSubmitting()
+    public async Task CreatePostOnSiteAsync_RenderErrors_FailsWithoutSubmitting()
     {
         // Arrange
         var repository = RepositoryWith(AutoPostTestFactory.Rule());
         var submitter = new FakeForumPostSubmitter();
         var service = ServiceWith(
-            repository,
-            submitter,
-            new FakeForumPostContentRenderer { Errors = ["Unknown variable"] }
+            repository: repository,
+            submitter: submitter,
+            contentRenderer: new FakeForumPostContentRenderer { Errors = ["Unknown variable"] }
         );
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -195,7 +202,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_SubmitterThrows_FailsWithExceptionMessage()
+    public async Task CreatePostOnSiteAsync_SubmitterThrows_FailsWithExceptionMessage()
     {
         // Arrange
         var repository = RepositoryWith(AutoPostTestFactory.Rule());
@@ -206,8 +213,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -219,7 +227,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_AlreadyPosted_IsSkipped()
+    public async Task CreatePostOnSiteAsync_AlreadyPosted_IsSkipped()
     {
         // Arrange
         var repository = RepositoryWith(AutoPostTestFactory.Rule());
@@ -228,8 +236,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -240,7 +249,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_NoMatchingRule_IsSkipped()
+    public async Task CreatePostOnSiteAsync_NoMatchingRule_IsSkipped()
     {
         // Arrange
         var repository = new FakeAutoForumPostingRepository
@@ -251,8 +260,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, new FakeForumPostSubmitter());
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -262,7 +272,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_BlockedRelease_IsSkippedWithBlockedReason()
+    public async Task CreatePostOnSiteAsync_BlockedRelease_IsSkippedWithBlockedReason()
     {
         // Arrange
         var repository = new FakeAutoForumPostingRepository
@@ -273,8 +283,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, new FakeForumPostSubmitter());
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -285,15 +296,16 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_UnknownRegistration_IsSkipped()
+    public async Task CreatePostOnSiteAsync_UnknownRegistration_IsSkipped()
     {
         // Arrange
         var repository = RepositoryWith(AutoPostTestFactory.Rule());
         var service = ServiceWith(repository, new FakeForumPostSubmitter());
 
         // Act
-        var result = await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 99
         );
 
@@ -303,7 +315,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_StripDotsDisabled_SearchesWithTheRawReleaseName()
+    public async Task CreatePostOnSiteAsync_StripDotsDisabled_SearchesWithTheRawReleaseName()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -314,8 +326,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -326,7 +339,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_StripDotsEnabled_UsesTheSearchedNameAsNewThreadTitle()
+    public async Task CreatePostOnSiteAsync_StripDotsEnabled_UsesTheSearchedNameAsNewThreadTitle()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -336,8 +349,9 @@ public class AutoForumPostCreationServiceTest
         var service = ServiceWith(repository, submitter);
 
         // Act
-        await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
@@ -351,7 +365,7 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostForReleaseOnSiteAsync_SkippedRelease_CreatesNoNotification()
+    public async Task CreatePostOnSiteAsync_SkippedRelease_CreatesNoNotification()
     {
         // Arrange
         var repository = new FakeAutoForumPostingRepository
@@ -361,19 +375,85 @@ public class AutoForumPostCreationServiceTest
         };
         var notificationService = new FakeNotificationService();
         var service = ServiceWith(
-            repository,
-            new FakeForumPostSubmitter(),
+            repository: repository,
+            submitter: new FakeForumPostSubmitter(),
             notificationService: notificationService
         );
 
         // Act
-        await service.CreatePostForReleaseOnSiteAsync(
-            releaseId: 1,
+        await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
             distributionSiteRegistrationId: 5
         );
 
         // Assert
         notificationService.Created.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_Collection_UsesTheCollectionNameAndRecordsACollectionPostedLocation()
+    {
+        // Arrange
+        var repository = CollectionRepository();
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityId: 4,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.UploadsMarkedPosted.ShouldBeTrue();
+        submitter
+            .NewThreads.ShouldHaveSingleItem()
+            .Title.ShouldBe("Some Show S01 1080p WEB - GROUP");
+        repository.ReleaseCollectionPostedLocations.ShouldHaveSingleItem().EntityId.ShouldBe(4);
+        repository.PostedLocations.ShouldBeEmpty();
+        repository.MarkedReleaseCollectionIds.ShouldBe([4]);
+        repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_Collection_NamesTheReleaseCollectionInTheNotifications()
+    {
+        // Arrange
+        var notificationService = new FakeNotificationService();
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(
+            repository: CollectionRepository(),
+            submitter: submitter,
+            notificationService: notificationService
+        );
+        var failingService = ServiceWith(
+            repository: CollectionRepository(),
+            submitter: new FakeForumPostSubmitter { FailingRegistrationIds = [5] },
+            notificationService: notificationService
+        );
+
+        // Act
+        await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityId: 4,
+            distributionSiteRegistrationId: 5
+        );
+        await failingService.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityId: 4,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        notificationService
+            .Created.Select(notification => notification.Message)
+            .ShouldBe([
+                $"Release collection '{AutoPostTestFactory.ReleaseCollectionName}' was posted automatically to 'Board': {submitter.NewThreadUrl}",
+                $"Automatic posting of release collection '{AutoPostTestFactory.ReleaseCollectionName}' to 'Board' failed: Submit to 5 failed",
+            ]);
     }
 
     private static FakeAutoForumPostingRepository RepositoryWith(
@@ -394,6 +474,24 @@ public class AutoForumPostCreationServiceTest
         };
     }
 
+    private static FakeAutoForumPostingRepository CollectionRepository()
+    {
+        return new FakeAutoForumPostingRepository
+        {
+            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
+            Registrations =
+            [
+                AutoPostTestFactory.Registration(
+                    id: 5,
+                    name: "Board",
+                    rules: AutoPostTestFactory.Rule(
+                        templateType: ForumPostTemplateType.ReleaseCollection
+                    )
+                ),
+            ],
+        };
+    }
+
     private static AutoForumPostCreationService ServiceWith(
         FakeAutoForumPostingRepository repository,
         FakeForumPostSubmitter submitter,
@@ -404,12 +502,12 @@ public class AutoForumPostCreationServiceTest
         var planService = new AutoForumPostingPlanService(repository);
 
         return new AutoForumPostCreationService(
-            planService,
-            repository,
-            contentRenderer ?? new FakeForumPostContentRenderer(),
-            submitter,
-            notificationService ?? new FakeNotificationService(),
-            new ReleasePostedStatusService(planService, repository)
+            planService: planService,
+            repository: repository,
+            contentRenderer: contentRenderer ?? new FakeForumPostContentRenderer(),
+            submitter: submitter,
+            notificationService: notificationService ?? new FakeNotificationService(),
+            uploadsPostedStatusService: new UploadsPostedStatusService(planService, repository)
         );
     }
 }

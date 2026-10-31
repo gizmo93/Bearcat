@@ -1,8 +1,11 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.UseCases.PostToForums.Models;
 
-public sealed record ReleaseAutoPostPlan(
-    int ReleaseId,
-    string ReleaseName,
+public sealed record AutoPostPlan(
+    ForumPostTemplateType EntityType,
+    int EntityId,
+    string EntityName,
     AutoPostBlockedReason? BlockedReason,
     IReadOnlyList<AutoPostSiteEntry> Sites
 )

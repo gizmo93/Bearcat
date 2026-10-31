@@ -10,6 +10,9 @@ Eine Releasecollection fasst zusammengehörige Releases zusammen, zum Beispiel d
 Lege Hoster, Archiveinstellungen und Passwortrichtlinien für die ganze Collection fest und sammle
 ihre Downloadlinks in einem Linkcryptercontainer.
 
+Mit [Postingregeln für Collections](/Bearcat/de/automatic-forum-posting/) postet Bearcat ganze Collections automatisch.
+Lädst du eine neue Folge hoch, aktualisiert Bearcat den bestehenden Forenpost.
+
 ## Wie eine Collection entsteht
 
 Aktiviere **Collectionerkennung** in einem Releasetemplate, damit Collections automatisch erstellt werden.

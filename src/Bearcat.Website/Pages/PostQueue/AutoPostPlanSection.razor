@@ -1,0 +1,148 @@
+<div class="space-y-2 border-t border-border/60 pt-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+            <LucideIcon Name="send" class="h-4 w-4 text-muted-foreground" />
+            <span class="text-xs font-medium text-muted-foreground">@L["AutoPost"]</span>
+        </div>
+
+        @if (Plan.PendingSites.Count > 1)
+        {
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="IsAnySiteBusy"
+                      OnClick="OnPostToAllMatchedSites">
+                <LucideIcon Name="send-horizontal" class="h-4 w-4" />
+                @L["AutoPostAllMatchedSites"]
+            </BbButton>
+        }
+    </div>
+
+    @if (Plan.BlockedReason is { } blockedReason)
+    {
+        <p class="text-xs text-muted-foreground">@L.Localize(blockedReason, Plan.EntityType)</p>
+    }
+    else if (Plan.Sites.Count == 0)
+    {
+        <p class="text-xs text-muted-foreground">@L["AutoPostNoSitesConfigured"]</p>
+    }
+    else
+    {
+        @foreach (var site in Plan.Sites)
+        {
+            <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
+                <div class="min-w-0 space-y-0.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm font-medium">@site.DistributionSiteRegistrationName</span>
+
+                        @if (site.AutomaticPostingEnabled)
+                        {
+                            <BbBadge Variant="BadgeVariant.Outline">@L["AutomaticPostingBadge"]</BbBadge>
+                        }
+                    </div>
+
+                    @if (site.Status == AutoPostSiteStatus.AlreadyPosted)
+                    {
+                        <a href="@site.PostedUrl"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="block truncate text-xs text-muted-foreground hover:underline"
+                           title="@site.PostedUrl">
+                            @site.PostedUrl
+                        </a>
+
+                        @if (site.NeedsContentUpdate)
+                        {
+                            <p class="flex items-center gap-1 text-xs text-muted-foreground">
+                                <LucideIcon Name="triangle-alert" class="h-3 w-3" />
+                                @L["AutoPostContentOutdated"]
+                            </p>
+                        }
+                    }
+                    else if (site.Match is { } match)
+                    {
+                        <p class="text-xs text-muted-foreground">
+                            @match.RuleName · @match.TargetPathSnapshot
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-xs text-muted-foreground">@L["AutoPostNoMatchingRule"]</p>
+                    }
+
+                    @if (SiteErrors.GetValueOrDefault(site.DistributionSiteRegistrationId) is { } error)
+                    {
+                        <p class="text-xs text-destructive">@error</p>
+                    }
+                </div>
+
+                @if (site.Status == AutoPostSiteStatus.AlreadyPosted)
+                {
+                    <div class="flex items-center gap-2">
+                        <BbBadge Variant="BadgeVariant.Secondary">
+                            <LucideIcon Name="check" class="mr-1 h-3 w-3" />
+                            @L["AutoPostAlreadyPosted"]
+                        </BbBadge>
+
+                        @if (CanUpdatePost(site))
+                        {
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      Disabled="IsAnySiteBusy"
+                                      OnClick="@(() => OnUpdatePost.InvokeAsync(site))">
+                                <LucideIcon Name="@(IsSiteBusy(site) ? "loader-circle" : "file-pen")"
+                                            class="@($"h-4 w-4 {(IsSiteBusy(site) ? "animate-spin" : string.Empty)}")" />
+                                @L["AutoPostUpdatePost"]
+                            </BbButton>
+                        }
+                    </div>
+                }
+                else if (site.Status == AutoPostSiteStatus.Matched)
+                {
+                    <BbButton Size="ButtonSize.Small"
+                              Disabled="IsAnySiteBusy"
+                              OnClick="@(() => OnPostToSite.InvokeAsync(site))">
+                        <LucideIcon Name="@(IsSiteBusy(site) ? "loader-circle" : "send")"
+                                    class="@($"h-4 w-4 {(IsSiteBusy(site) ? "animate-spin" : string.Empty)}")" />
+                        @L["AutoPostNow"]
+                    </BbButton>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    [EditorRequired]
+    public AutoPostPlan Plan { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlySet<int> BusyRegistrationIds { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyDictionary<int, string> SiteErrors { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<AutoPostSiteEntry> OnPostToSite { get; set; }
+
+    [Parameter]
+    public EventCallback OnPostToAllMatchedSites { get; set; }
+
+    [Parameter]
+    public EventCallback<AutoPostSiteEntry> OnUpdatePost { get; set; }
+
+    private bool IsAnySiteBusy => BusyRegistrationIds.Count > 0;
+
+    private bool IsSiteBusy(AutoPostSiteEntry site)
+    {
+        return BusyRegistrationIds.Contains(site.DistributionSiteRegistrationId);
+    }
+
+    private static bool CanUpdatePost(AutoPostSiteEntry site)
+    {
+        return site.PostedLocationId is not null && site.ResolvedForumPostTemplateId is not null;
+    }
+}

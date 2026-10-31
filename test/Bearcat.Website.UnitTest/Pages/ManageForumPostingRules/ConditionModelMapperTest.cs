@@ -1,4 +1,5 @@
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostingRules;
 using Shouldly;
 
@@ -208,6 +209,45 @@ public class ConditionModelMapperTest
 
         // Assert
         model.Value.ShouldBe("R1080p");
+    }
+
+    [Test]
+    public void RemoveComparisonsWithUnsupportedFields_NestedUnsupportedField_RemovesOnlyThoseComparisons()
+    {
+        // Arrange
+        var root = new ConditionNodeModel
+        {
+            Kind = RuleConditionKind.All,
+            Children =
+            [
+                Comparison(RuleFieldCatalog.Episode, RuleConditionOperator.Equals, "1"),
+                Comparison(RuleFieldCatalog.Season, RuleConditionOperator.Equals, "1"),
+                new ConditionNodeModel
+                {
+                    Kind = RuleConditionKind.Not,
+                    Children =
+                    [
+                        Comparison(
+                            RuleFieldCatalog.Episode,
+                            RuleConditionOperator.IsSet,
+                            value: null
+                        ),
+                    ],
+                },
+            ],
+        };
+
+        // Act
+        ConditionModelMapper.RemoveComparisonsWithUnsupportedFields(
+            root,
+            RuleFieldCatalog.GetFields(ForumPostTemplateType.ReleaseCollection)
+        );
+
+        // Assert
+        root.Children.Count.ShouldBe(2);
+        root.Children[0].Field.ShouldBe(RuleFieldCatalog.Season);
+        root.Children[1].Kind.ShouldBe(RuleConditionKind.Not);
+        root.Children[1].Children.ShouldBeEmpty();
     }
 
     private static ConditionNodeModel Comparison(

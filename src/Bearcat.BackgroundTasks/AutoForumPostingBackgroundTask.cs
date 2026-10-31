@@ -24,8 +24,9 @@ public class AutoForumPostingBackgroundTask(
         foreach (var failure in result.Failures)
         {
             logger.LogWarning(
-                "Automatic forum posting of release {ReleaseName} to {DistributionSiteRegistrationName} failed: {Message}",
-                failure.ReleaseName,
+                "Automatic forum posting of {EntityType} {EntityName} to {DistributionSiteRegistrationName} failed: {Message}",
+                failure.EntityType,
+                failure.EntityName,
                 failure.DistributionSiteRegistrationName,
                 string.Join(" ", failure.Messages)
             );

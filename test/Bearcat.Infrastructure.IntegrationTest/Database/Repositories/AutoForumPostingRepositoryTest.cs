@@ -32,19 +32,19 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             .Setup(factory => factory.GetDistributionSites())
             .Returns([
                 new DistributionSiteDto(
-                    "Test forum",
-                    ForumClassName,
-                    DistributionSiteKind.Forum,
-                    []
+                    Name: "Test forum",
+                    ClassName: ForumClassName,
+                    Kind: DistributionSiteKind.Forum,
+                    ConfigurationFields: []
                 ),
                 new DistributionSiteDto("Test blog", BlogClassName, DistributionSiteKind.Blog, []),
             ]);
 
         repository = new AutoForumPostingRepository(
-            readDbContext,
-            CreateDbContext(),
-            distributionSiteFactoryMock.Object,
-            new ControllableTimeProvider(Now)
+            dbRead: readDbContext,
+            dbWrite: CreateDbContext(),
+            distributionSiteFactory: distributionSiteFactoryMock.Object,
+            timeProvider: new ControllableTimeProvider(Now)
         );
     }
 
@@ -57,9 +57,9 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         var secondForumLastRule = AddRule(secondForum, template, "Last", sortOrder: 2);
         AddRule(secondForum, template, "Disabled", sortOrder: 1, isEnabled: false);
         var secondForumFirstRule = AddRule(
-            secondForum,
-            template,
-            "First",
+            registration: secondForum,
+            template: template,
+            name: "First",
             sortOrder: 0,
             conditionJson: "{\"kind\":\"Café\"}"
         );
@@ -96,6 +96,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             .ShouldBe([secondForumFirstRule.Id, secondForumTiedRule.Id, secondForumLastRule.Id]);
         result[1].EnabledRules[0].ConditionJson.ShouldBe("{\"kind\":\"Café\"}");
         result[1].EnabledRules[0].ForumPostTemplateId.ShouldBe(template.Id);
+        result[1].EnabledRules[0].ForumPostTemplate.Type.ShouldBe(ForumPostTemplateType.Release);
     }
 
     [Test]
@@ -131,7 +132,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             new DateTime(2026, 9, 1, 9, 0, 0, DateTimeKind.Utc)
         );
         AddUpload(
-            latestUploadPendingUploadConfig,
+            uploadConfig: latestUploadPendingUploadConfig,
             uploadedAt: null,
             uploadState: UploadState.Pending,
             createdAt: new DateTime(2026, 9, 1, 9, 0, 0, 1, DateTimeKind.Utc)
@@ -193,7 +194,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         var otherRelease = AddRelease("Bearcat.Release.003");
         var collection = AddReleaseCollection("Bearcat.Collection");
         var forumLocation = AddPostedLocation(
-            "https://forum.example/threads/1",
+            url: "https://forum.example/threads/1",
             release: release,
             registration: registration,
             template: template,
@@ -201,7 +202,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             contentUpdatedAt: new DateTime(2026, 9, 2, 0, 0, 0, 1, DateTimeKind.Utc)
         );
         var manualLocation = AddPostedLocation(
-            "https://blog.example/post/1",
+            url: "https://blog.example/post/1",
             release: release,
             createdAt: new DateTime(2026, 9, 2, 10, 0, 0, DateTimeKind.Utc)
         );
@@ -211,29 +212,30 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.GetPostedLocationsAsync(
-            [release.Id, releaseWithoutLocations.Id],
-            CancellationToken.None
+            entityType: ForumPostTemplateType.Release,
+            entityIds: [release.Id, releaseWithoutLocations.Id],
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
         result.ShouldBe([
             new AutoPostPostedLocation(
-                forumLocation.Id,
-                release.Id,
-                registration.Id,
-                template.Id,
-                "https://forum.example/threads/1",
-                new DateTime(2026, 9, 1, 23, 59, 59, 999, DateTimeKind.Utc),
-                new DateTime(2026, 9, 2, 0, 0, 0, 1, DateTimeKind.Utc)
+                PostedLocationId: forumLocation.Id,
+                EntityId: release.Id,
+                DistributionSiteRegistrationId: registration.Id,
+                ForumPostTemplateId: template.Id,
+                Url: "https://forum.example/threads/1",
+                CreatedAt: new DateTime(2026, 9, 1, 23, 59, 59, 999, DateTimeKind.Utc),
+                ContentUpdatedAt: new DateTime(2026, 9, 2, 0, 0, 0, 1, DateTimeKind.Utc)
             ),
             new AutoPostPostedLocation(
-                manualLocation.Id,
-                release.Id,
-                null,
-                null,
-                "https://blog.example/post/1",
-                new DateTime(2026, 9, 2, 10, 0, 0, DateTimeKind.Utc),
-                null
+                PostedLocationId: manualLocation.Id,
+                EntityId: release.Id,
+                DistributionSiteRegistrationId: null,
+                ForumPostTemplateId: null,
+                Url: "https://blog.example/post/1",
+                CreatedAt: new DateTime(2026, 9, 2, 10, 0, 0, DateTimeKind.Utc),
+                ContentUpdatedAt: null
             ),
         ]);
     }
@@ -264,8 +266,8 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             new DateTime(2026, 8, 30, 12, 0, 0, DateTimeKind.Utc)
         );
         AddUpload(
-            firstReleaseMainUploadConfig,
-            new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc),
+            uploadConfig: firstReleaseMainUploadConfig,
+            uploadedAt: new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc),
             uploadState: UploadState.Failed
         );
         AddUpload(
@@ -293,7 +295,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         AddUpload(secondReleaseUploadConfig, new DateTime(2026, 9, 2, 10, 0, 0, DateTimeKind.Utc));
         var pendingRelease = AddRelease("Bearcat.Release.003");
         AddUpload(
-            AddUploadConfig(pendingRelease, activeHoster),
+            uploadConfig: AddUploadConfig(pendingRelease, activeHoster),
             uploadedAt: null,
             uploadState: UploadState.Pending
         );
@@ -306,8 +308,9 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await repository.GetLatestUploadCompletionTimesAsync(
-            [firstRelease.Id, secondRelease.Id, pendingRelease.Id],
-            CancellationToken.None
+            entityType: ForumPostTemplateType.Release,
+            entityIds: [firstRelease.Id, secondRelease.Id, pendingRelease.Id],
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -329,7 +332,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         var registration = AddRegistration("Forum A");
         var release = AddRelease("Bearcat.Release.001");
         var postedLocation = AddPostedLocation(
-            "https://forum.example/threads/1",
+            url: "https://forum.example/threads/1",
             release: release,
             registration: registration,
             template: template
@@ -345,14 +348,14 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldBe(
             new AutoPostUpdateTarget(
-                postedLocation.Id,
-                release.Id,
-                "Bearcat.Release.001",
-                release.Id,
-                registration.Id,
-                "Forum A",
-                "https://forum.example/threads/1",
-                template.Id
+                PostedLocationId: postedLocation.Id,
+                EntityType: ForumPostTemplateType.Release,
+                EntityId: release.Id,
+                EntityName: "Bearcat.Release.001",
+                DistributionSiteRegistrationId: registration.Id,
+                DistributionSiteRegistrationName: "Forum A",
+                PostedUrl: "https://forum.example/threads/1",
+                ForumPostTemplateId: template.Id
             )
         );
     }
@@ -364,7 +367,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         var registration = AddRegistration("Forum A");
         var collection = AddReleaseCollection("Bearcat.Collection");
         var postedLocation = AddPostedLocation(
-            "https://forum.example/threads/1",
+            url: "https://forum.example/threads/1",
             collection: collection,
             registration: registration
         );
@@ -379,14 +382,14 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldBe(
             new AutoPostUpdateTarget(
-                postedLocation.Id,
-                collection.Id,
-                "Bearcat.Collection",
-                null,
-                registration.Id,
-                "Forum A",
-                "https://forum.example/threads/1",
-                null
+                PostedLocationId: postedLocation.Id,
+                EntityType: ForumPostTemplateType.ReleaseCollection,
+                EntityId: collection.Id,
+                EntityName: "Bearcat.Collection",
+                DistributionSiteRegistrationId: registration.Id,
+                DistributionSiteRegistrationName: "Forum A",
+                PostedUrl: "https://forum.example/threads/1",
+                ForumPostTemplateId: null
             )
         );
     }
@@ -418,11 +421,12 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         await repository.RecordPostedLocationAsync(
-            release.Id,
-            registration.Id,
-            "  https://forum.example/threads/1 ",
-            template.Id,
-            CancellationToken.None
+            entityType: ForumPostTemplateType.Release,
+            entityId: release.Id,
+            distributionSiteRegistrationId: registration.Id,
+            url: "  https://forum.example/threads/1 ",
+            forumPostTemplateId: template.Id,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -438,6 +442,212 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetQueuedReleaseCollectionIdsAsync_CollectionsWithDifferentUploadProgress_ReturnsCollectionsWithSlotUploadsNewerThanLastPost()
+    {
+        // Arrange
+        var hoster = CreateHosterRegistration("Alpha", isActive: true);
+        var neverPostedCollection = AddReleaseCollection("Bearcat.Collection.001");
+        AddUpload(
+            AddCollectionSlotUploadConfig(neverPostedCollection, hoster),
+            new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
+        );
+        var postedAfterUploadCollection = AddReleaseCollection(
+            "Bearcat.Collection.002",
+            uploadsPostedAt: new DateTime(2026, 9, 1, 10, 0, 0, DateTimeKind.Utc)
+        );
+        AddUpload(
+            AddCollectionSlotUploadConfig(postedAfterUploadCollection, hoster),
+            new DateTime(2026, 9, 1, 9, 0, 0, DateTimeKind.Utc)
+        );
+        var newEpisodeAfterPostCollection = AddReleaseCollection(
+            "Bearcat.Collection.003",
+            uploadsPostedAt: new DateTime(2026, 9, 1, 10, 0, 0, DateTimeKind.Utc)
+        );
+        AddUpload(
+            AddCollectionSlotUploadConfig(newEpisodeAfterPostCollection, hoster),
+            new DateTime(2026, 9, 1, 9, 0, 0, DateTimeKind.Utc)
+        );
+        AddUpload(
+            AddCollectionSlotUploadConfig(newEpisodeAfterPostCollection, hoster),
+            new DateTime(2026, 9, 2, 9, 0, 0, DateTimeKind.Utc)
+        );
+        var collectionWithOnlyReleaseUploads = AddReleaseCollection("Bearcat.Collection.004");
+        var memberRelease = AddRelease("Bearcat.Collection.004.E01");
+        memberRelease.ReleaseCollection = collectionWithOnlyReleaseUploads;
+        AddUpload(
+            AddUploadConfig(memberRelease, hoster),
+            new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetQueuedReleaseCollectionIdsAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([neverPostedCollection.Id, newEpisodeAfterPostCollection.Id]);
+    }
+
+    [Test]
+    public async Task GetReleaseCollectionsForRoutingAsync_RequestedCollection_ReturnsCollectionWithMemberClassificationsAndReleaseGroup()
+    {
+        // Arrange
+        var collection = AddReleaseCollection("Bearcat.Collection");
+        var classifiedRelease = AddRelease("Bearcat.Collection.E01");
+        classifiedRelease.ReleaseCollection = collection;
+        classifiedRelease.Classification = new ReleaseClassification
+        {
+            Title = "Bearcat Collection",
+            Season = 1,
+            ContentType = ReleaseContentType.TvShowEpisode,
+            ClassifiedAt = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
+        };
+        var unclassifiedRelease = AddRelease("Bearcat.Collection.E02");
+        unclassifiedRelease.ReleaseCollection = collection;
+        AddReleaseCollection("Bearcat.Other.Collection");
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetReleaseCollectionsForRoutingAsync(
+            [collection.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        var loadedCollection = result.ShouldHaveSingleItem();
+        loadedCollection.ReleaseGroup.Name.ShouldBe("Bearcat.Collection group");
+        var releasesById = loadedCollection.Releases.ToDictionary(release => release.Id);
+        releasesById.Keys.ShouldBe(
+            [classifiedRelease.Id, unclassifiedRelease.Id],
+            ignoreOrder: true
+        );
+        releasesById[classifiedRelease.Id].Classification.ShouldNotBeNull().Season.ShouldBe(1);
+        releasesById[unclassifiedRelease.Id].Classification.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetPostedLocationsAsync_RequestedCollections_ReturnsOnlyCollectionPostedLocations()
+    {
+        // Arrange
+        var registration = AddRegistration("Forum A");
+        var collection = AddReleaseCollection("Bearcat.Collection.001");
+        var otherCollection = AddReleaseCollection("Bearcat.Collection.002");
+        var release = AddRelease("Bearcat.Release.001");
+        var collectionLocation = AddPostedLocation(
+            url: "https://forum.example/threads/1",
+            collection: collection,
+            registration: registration,
+            createdAt: new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
+        );
+        AddPostedLocation("https://forum.example/threads/2", collection: otherCollection);
+        AddPostedLocation("https://forum.example/threads/3", release: release);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetPostedLocationsAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityIds: [collection.Id, release.Id],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new AutoPostPostedLocation(
+                PostedLocationId: collectionLocation.Id,
+                EntityId: collection.Id,
+                DistributionSiteRegistrationId: registration.Id,
+                ForumPostTemplateId: null,
+                Url: "https://forum.example/threads/1",
+                CreatedAt: new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc),
+                ContentUpdatedAt: null
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetLatestUploadCompletionTimesAsync_CollectionSlotUploads_ReturnsLatestCountedCompletionPerCollection()
+    {
+        // Arrange
+        var activeHoster = CreateHosterRegistration("Alpha", isActive: true);
+        var inactiveHoster = CreateHosterRegistration("Beta", isActive: false);
+        var firstCollection = AddReleaseCollection("Bearcat.Collection.001");
+        var firstEpisodeUploadConfig = AddCollectionSlotUploadConfig(firstCollection, activeHoster);
+        AddUpload(firstEpisodeUploadConfig, new DateTime(2026, 9, 3, 12, 0, 0, DateTimeKind.Utc));
+        AddUpload(
+            AddCollectionSlotUploadConfig(firstCollection, activeHoster),
+            new DateTime(2026, 9, 4, 12, 0, 0, 1, DateTimeKind.Utc)
+        );
+        AddUpload(
+            uploadConfig: firstEpisodeUploadConfig,
+            uploadedAt: new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc),
+            uploadState: UploadState.Failed
+        );
+        AddUpload(
+            AddCollectionSlotUploadConfig(firstCollection, inactiveHoster),
+            new DateTime(2026, 9, 11, 0, 0, 0, DateTimeKind.Utc)
+        );
+        var memberRelease = AddRelease("Bearcat.Collection.001.E01");
+        memberRelease.ReleaseCollection = firstCollection;
+        AddUpload(
+            AddUploadConfig(memberRelease, activeHoster),
+            new DateTime(2026, 9, 12, 0, 0, 0, DateTimeKind.Utc)
+        );
+        var secondCollection = AddReleaseCollection("Bearcat.Collection.002");
+        AddUpload(
+            AddCollectionSlotUploadConfig(secondCollection, activeHoster),
+            new DateTime(2026, 9, 2, 10, 0, 0, DateTimeKind.Utc)
+        );
+        var notRequestedCollection = AddReleaseCollection("Bearcat.Collection.003");
+        AddUpload(
+            AddCollectionSlotUploadConfig(notRequestedCollection, activeHoster),
+            new DateTime(2026, 9, 20, 0, 0, 0, DateTimeKind.Utc)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetLatestUploadCompletionTimesAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityIds: [firstCollection.Id, secondCollection.Id],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new Dictionary<int, DateTime>
+            {
+                [firstCollection.Id] = new DateTime(2026, 9, 4, 12, 0, 0, 1, DateTimeKind.Utc),
+                [secondCollection.Id] = new DateTime(2026, 9, 2, 10, 0, 0, DateTimeKind.Utc),
+            },
+            ignoreOrder: true
+        );
+    }
+
+    [Test]
+    public async Task RecordPostedLocationAsync_ReleaseCollection_StoresTheCollectionAsPostedEntity()
+    {
+        // Arrange
+        var template = AddForumPostTemplate("Collection post");
+        var registration = AddRegistration("Forum A");
+        var collection = AddReleaseCollection("Bearcat.Collection");
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await repository.RecordPostedLocationAsync(
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityId: collection.Id,
+            distributionSiteRegistrationId: registration.Id,
+            url: "https://forum.example/threads/1",
+            forumPostTemplateId: template.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var postedLocation = await DbContext.PostedLocations.SingleAsync();
+        postedLocation.ReleaseCollectionId.ShouldBe(collection.Id);
+        postedLocation.ReleaseId.ShouldBeNull();
+    }
+
+    [Test]
     public async Task MarkPostedLocationUpdatedAsync_PostedLocationExists_UpdatesUrlTemplateAndContentUpdatedAt()
     {
         // Arrange
@@ -447,7 +657,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         var release = AddRelease("Bearcat.Release.001");
         var createdAt = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc);
         var postedLocation = AddPostedLocation(
-            "https://forum.example/threads/1",
+            url: "https://forum.example/threads/1",
             release: release,
             registration: registration,
             template: oldTemplate,
@@ -455,7 +665,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             contentUpdatedAt: createdAt
         );
         var otherPostedLocation = AddPostedLocation(
-            "https://forum.example/threads/2",
+            url: "https://forum.example/threads/2",
             release: release,
             registration: registration,
             template: oldTemplate,
@@ -466,10 +676,10 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
 
         // Act
         await repository.MarkPostedLocationUpdatedAsync(
-            postedLocation.Id,
-            " https://forum.example/threads/1-renamed ",
-            newTemplate.Id,
-            CancellationToken.None
+            postedLocationId: postedLocation.Id,
+            url: " https://forum.example/threads/1-renamed ",
+            forumPostTemplateId: newTemplate.Id,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -489,7 +699,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task MarkReleasePostedAsync_ReleaseExists_SetsUploadsPostedAtOfReleaseOnly()
+    public async Task MarkUploadsPostedAsync_Release_SetsUploadsPostedAtOfReleaseOnly()
     {
         // Arrange
         var release = AddRelease("Bearcat.Release.001");
@@ -497,7 +707,11 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        await repository.MarkReleasePostedAsync(release.Id, CancellationToken.None);
+        await repository.MarkUploadsPostedAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: release.Id,
+            cancellationToken: CancellationToken.None
+        );
 
         // Assert
         DbContext.ChangeTracker.Clear();
@@ -598,7 +812,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         return release;
     }
 
-    private ReleaseCollection AddReleaseCollection(string name)
+    private ReleaseCollection AddReleaseCollection(string name, DateTime? uploadsPostedAt = null)
     {
         var collection = new ReleaseCollection
         {
@@ -611,6 +825,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             Key = name.ToLowerInvariant(),
             Name = name,
             CreatedAt = DateTime.UtcNow,
+            UploadsPostedAt = uploadsPostedAt,
         };
 
         DbContext.ReleaseCollections.Add(collection);
@@ -674,6 +889,25 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         };
 
         DbContext.UploadConfigs.Add(uploadConfig);
+
+        return uploadConfig;
+    }
+
+    private UploadConfig AddCollectionSlotUploadConfig(
+        ReleaseCollection collection,
+        HosterRegistration hosterRegistration
+    )
+    {
+        var memberRelease = AddRelease($"{collection.Name}.E{collection.Releases.Count + 1:00}");
+        collection.Releases.Add(memberRelease);
+
+        var uploadConfig = AddUploadConfig(memberRelease, hosterRegistration);
+        uploadConfig.CollectionUploadSlot = new CollectionUploadSlot
+        {
+            ReleaseCollection = collection,
+            Key = $"slot-{collection.Releases.Count}",
+            Name = $"Slot {collection.Releases.Count}",
+        };
 
         return uploadConfig;
     }

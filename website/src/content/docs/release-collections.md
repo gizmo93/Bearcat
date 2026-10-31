@@ -10,6 +10,9 @@ A release collection groups related releases, such as episodes of a TV season.
 Set hosters, archive settings, and password policies for the whole collection, and gather its
 download links in one link crypter container.
 
+With [posting rules for collections](/Bearcat/automatic-forum-posting/), Bearcat posts whole collections automatically.
+When you upload a new episode, Bearcat updates the existing forum post.
+
 ## How a collection is created
 
 Enable **Collection detection** on a release template to create collections automatically.

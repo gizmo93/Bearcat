@@ -84,8 +84,9 @@ public class AutoForumPostingRunnerTest
         submitter.NewThreads.ShouldHaveSingleItem().RegistrationId.ShouldBe(6);
 
         var failure = result.Failures.ShouldHaveSingleItem();
-        failure.ReleaseId.ShouldBe(1);
-        failure.ReleaseName.ShouldBe(AutoPostTestFactory.ReleaseName);
+        failure.EntityType.ShouldBe(ForumPostTemplateType.Release);
+        failure.EntityId.ShouldBe(1);
+        failure.EntityName.ShouldBe(AutoPostTestFactory.ReleaseName);
         failure.DistributionSiteRegistrationId.ShouldBe(5);
         failure.DistributionSiteRegistrationName.ShouldBe("Broken");
         failure.Messages.ShouldBe(["Submit to 5 failed"]);
@@ -327,6 +328,87 @@ public class AutoForumPostingRunnerTest
         repository.MarkedReleaseIds.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task RunAsync_QueuedReleaseAndCollection_PostsBothWithTheirOwnRules()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release(id: 1)],
+            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
+            Registrations =
+            [
+                AutoPostTestFactory.Registration(
+                    id: 5,
+                    name: "Automatic",
+                    rules:
+                    [
+                        AutoPostTestFactory.Rule(id: 1, forumPostTemplateId: 7),
+                        AutoPostTestFactory.Rule(
+                            id: 2,
+                            forumPostTemplateId: 8,
+                            templateType: ForumPostTemplateType.ReleaseCollection
+                        ),
+                    ]
+                ) with
+                {
+                    EnableAutomaticPosting = true,
+                },
+            ],
+        };
+        var submitter = new FakeForumPostSubmitter();
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.PostedCount.ShouldBe(2);
+        result.FailedCount.ShouldBe(0);
+        submitter
+            .NewThreads.Select(thread => thread.Title)
+            .ShouldBe(["Some Movie 2021 1080p BluRay - GROUP", "Some Show S01 1080p WEB - GROUP"]);
+        repository.PostedLocations.ShouldHaveSingleItem().ForumPostTemplateId.ShouldBe(7);
+        repository
+            .ReleaseCollectionPostedLocations.ShouldHaveSingleItem()
+            .ForumPostTemplateId.ShouldBe(8);
+        repository.MarkedReleaseIds.ShouldBe([1]);
+        repository.MarkedReleaseCollectionIds.ShouldBe([4]);
+    }
+
+    [Test]
+    public async Task RunAsync_FailingCollectionPost_ReportsTheCollectionInTheFailure()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
+            Registrations =
+            [
+                AutomaticRegistration(
+                    id: 5,
+                    name: "Broken",
+                    rule: AutoPostTestFactory.Rule(
+                        templateType: ForumPostTemplateType.ReleaseCollection
+                    )
+                ),
+            ],
+        };
+        var submitter = new FakeForumPostSubmitter { FailingRegistrationIds = [5] };
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        var failure = result.Failures.ShouldHaveSingleItem();
+        failure.EntityType.ShouldBe(ForumPostTemplateType.ReleaseCollection);
+        failure.EntityId.ShouldBe(4);
+        failure.EntityName.ShouldBe(AutoPostTestFactory.ReleaseCollectionName);
+        failure.DistributionSiteRegistrationName.ShouldBe("Broken");
+        repository.MarkedReleaseCollectionIds.ShouldBeEmpty();
+    }
+
     private static AutoPostRegistration AutomaticRegistration(
         int id,
         string name,
@@ -348,26 +430,26 @@ public class AutoForumPostingRunnerTest
         var planService = new AutoForumPostingPlanService(repository);
         var contentRenderer = new FakeForumPostContentRenderer();
         notificationService ??= new FakeNotificationService();
-        var releasePostedStatusService = new ReleasePostedStatusService(planService, repository);
+        var uploadsPostedStatusService = new UploadsPostedStatusService(planService, repository);
 
         return new AutoForumPostingRunner(
-            repository,
-            planService,
-            new AutoForumPostCreationService(
-                planService,
-                repository,
-                contentRenderer,
-                submitter,
-                notificationService,
-                releasePostedStatusService
+            repository: repository,
+            planService: planService,
+            postCreationService: new AutoForumPostCreationService(
+                planService: planService,
+                repository: repository,
+                contentRenderer: contentRenderer,
+                submitter: submitter,
+                notificationService: notificationService,
+                uploadsPostedStatusService: uploadsPostedStatusService
             ),
-            new AutoForumPostUpdateService(
-                planService,
-                repository,
-                contentRenderer,
-                submitter,
-                notificationService,
-                releasePostedStatusService
+            postUpdateService: new AutoForumPostUpdateService(
+                planService: planService,
+                repository: repository,
+                contentRenderer: contentRenderer,
+                submitter: submitter,
+                notificationService: notificationService,
+                uploadsPostedStatusService: uploadsPostedStatusService
             )
         );
     }

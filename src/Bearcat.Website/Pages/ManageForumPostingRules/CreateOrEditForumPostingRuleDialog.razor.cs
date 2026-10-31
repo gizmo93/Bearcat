@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Dto;
@@ -54,6 +55,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
 
     private IReadOnlyList<SelectOption<int>> TemplateOptions =>
         templates
+            .Where(template => template.Type == formModel.TemplateType)
             .Select(template => new SelectOption<int>(template.ForumPostTemplateId, template.Name))
             .ToList();
 
@@ -100,10 +102,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     {
         templates = await operationRunner.RunAsync(
             (IForumPostTemplateReadRepository repository) =>
-                repository.GetAllAsync(
-                    ForumPostTemplateType.Release,
-                    outputFormat: ForumPostTemplateOutputFormat.BBCode
-                )
+                repository.GetAllAsync(outputFormat: ForumPostTemplateOutputFormat.BBCode)
         );
 
         await InitializeFormModelAsync();
@@ -118,10 +117,8 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     {
         if (ForumPostingRuleId is null)
         {
-            formModel = new ForumPostingRuleFormModel
-            {
-                ForumPostTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0,
-            };
+            formModel = new ForumPostingRuleFormModel();
+            formModel.ForumPostTemplateId = TemplateOptions.FirstOrDefault()?.Value ?? 0;
             conditionRoot = ConditionModelMapper.CreateDefaultRoot();
 
             return;
@@ -146,11 +143,27 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             TargetNodeId = detail.TargetNodeId,
             TargetPathSnapshot = detail.TargetPathSnapshot,
             ThreadPrefixId = detail.ThreadPrefixId ?? NoThreadPrefixValue,
+            TemplateType = detail.ForumPostTemplateType,
             ForumPostTemplateId = detail.ForumPostTemplateId,
             PostMode = detail.PostMode,
             IsEnabled = detail.IsEnabled,
         };
         conditionRoot = ConditionModelMapper.FromJson(detail.ConditionJson);
+    }
+
+    private void ChangeTemplateType(ForumPostTemplateType templateType)
+    {
+        formModel.TemplateType = templateType;
+
+        if (TemplateOptions.All(option => option.Value != formModel.ForumPostTemplateId))
+        {
+            formModel.ForumPostTemplateId = TemplateOptions.FirstOrDefault()?.Value ?? 0;
+        }
+
+        ConditionModelMapper.RemoveComparisonsWithUnsupportedFields(
+            conditionRoot,
+            RuleFieldCatalog.GetFields(templateType)
+        );
     }
 
     private async Task LoadTargetsAsync()

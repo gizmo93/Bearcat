@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -28,6 +29,7 @@ public partial class ForumPostingRulesPage(
     private DistributionSiteRegistrationReadModel registration = null!;
     private List<ForumPostingRuleSummaryReadModel> rules = [];
     private IReadOnlyList<ForumPostingRulePreviewReadModel>? previewResults;
+    private ForumPostTemplateType previewEntityType = ForumPostTemplateType.Release;
     private bool isInitialized;
     private bool isPreviewing;
 
@@ -207,6 +209,12 @@ public partial class ForumPostingRulesPage(
         previewResults = null;
     }
 
+    private void ChangePreviewEntityType(ForumPostTemplateType entityType)
+    {
+        previewEntityType = entityType;
+        previewResults = null;
+    }
+
     private async Task RunPreviewAsync()
     {
         isPreviewing = true;
@@ -215,7 +223,7 @@ public partial class ForumPostingRulesPage(
         {
             previewResults = await operationRunner.RunAsync(
                 (ForumPostingRulePreviewService service) =>
-                    service.PreviewAsync(DistributionSiteRegistrationId)
+                    service.PreviewAsync(DistributionSiteRegistrationId, previewEntityType)
             );
         }
         finally

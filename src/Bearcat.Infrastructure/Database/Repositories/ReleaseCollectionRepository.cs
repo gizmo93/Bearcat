@@ -19,44 +19,49 @@ public class ReleaseCollectionRepository(
 {
     private const int MaximumIdsPerQuery = 1000;
 
-    private readonly Expression<Func<ReleaseCollection, bool>> isReadyForPostQueue = c =>
-        c.Releases.Any(r =>
-            r.UploadConfigs.AsQueryable()
-                .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-                .Any(uc =>
-                    uc.CollectionUploadSlotId != null
-                    && uc.Uploads.Any(u =>
-                        u.UploadState == UploadState.Completed
-                        && u.UploadedAt != null
-                        && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+    internal static Expression<Func<ReleaseCollection, bool>> IsReadyForPostQueue(
+        IBearcatReadDbContext dbRead
+    )
+    {
+        return c =>
+            c.Releases.Any(r =>
+                r.UploadConfigs.AsQueryable()
+                    .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+                    .Any(uc =>
+                        uc.CollectionUploadSlotId != null
+                        && uc.Uploads.Any(u =>
+                            u.UploadState == UploadState.Completed
+                            && u.UploadedAt != null
+                            && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+                        )
                     )
-                )
-        )
-        && c.Releases.All(r =>
-            r.UploadConfigs.AsQueryable()
-                .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-                .Where(uc => uc.CollectionUploadSlotId != null)
-                .All(uc =>
-                    uc.Uploads.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
-                        .ThenByDescending(u => u.Id)
-                        .Select(u => u.UploadState)
-                        .FirstOrDefault() == UploadState.Completed
-                    && uc.LinkCrypters.Where(lc =>
-                            lc.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-                            && lc.LinkCrypterRegistration.IsActive
-                        )
-                        .All(lc =>
-                            dbRead.LinkCrypterContainers.Any(container =>
-                                container.Scope == LinkCrypterContainerScope.ReleaseCollection
-                                && container.CollectionUploadSlotId == uc.CollectionUploadSlotId
-                                && container.LinkCrypterRegistrationId
-                                    == lc.LinkCrypterRegistrationId
+            )
+            && c.Releases.All(r =>
+                r.UploadConfigs.AsQueryable()
+                    .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+                    .Where(uc => uc.CollectionUploadSlotId != null)
+                    .All(uc =>
+                        uc.Uploads.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                            .ThenByDescending(u => u.Id)
+                            .Select(u => u.UploadState)
+                            .FirstOrDefault() == UploadState.Completed
+                        && uc.LinkCrypters.Where(lc =>
+                                lc.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+                                && lc.LinkCrypterRegistration.IsActive
                             )
-                        )
-                )
-        )
-        && c.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
-            .All(ic => ic.ImageUploads.Any());
+                            .All(lc =>
+                                dbRead.LinkCrypterContainers.Any(container =>
+                                    container.Scope == LinkCrypterContainerScope.ReleaseCollection
+                                    && container.CollectionUploadSlotId == uc.CollectionUploadSlotId
+                                    && container.LinkCrypterRegistrationId
+                                        == lc.LinkCrypterRegistrationId
+                                )
+                            )
+                    )
+            )
+            && c.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
+                .All(ic => ic.ImageUploads.Any());
+    }
 
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
         int releaseGroupId,
@@ -434,7 +439,7 @@ public class ReleaseCollectionRepository(
     )
     {
         var openCollections = await dbRead
-            .ReleaseCollections.Where(isReadyForPostQueue)
+            .ReleaseCollections.Where(IsReadyForPostQueue(dbRead))
             .Select(c => new
             {
                 c.Id,
@@ -587,7 +592,10 @@ public class ReleaseCollectionRepository(
 
     public async Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default)
     {
-        return await dbRead.ReleaseCollections.CountAsync(isReadyForPostQueue, cancellationToken);
+        return await dbRead.ReleaseCollections.CountAsync(
+            IsReadyForPostQueue(dbRead),
+            cancellationToken
+        );
     }
 
     private string GetMetadataDatabaseName(string metadataDatabaseClassName)

@@ -22,12 +22,15 @@ public class ForumPostingRulePreviewServiceTest
         var service = new ForumPostingRulePreviewService(repository);
 
         // Act
-        var results = await service.PreviewAsync(distributionSiteRegistrationId: 3);
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.Release
+        );
 
         // Assert
         var result = results.ShouldHaveSingleItem();
-        result.ReleaseId.ShouldBe(7);
-        result.ReleaseName.ShouldBe("Movie.1080p");
+        result.EntityId.ShouldBe(7);
+        result.EntityName.ShouldBe("Movie.1080p");
         result.MatchedRuleName.ShouldBe("Rule 1");
         result.TargetPathSnapshot.ShouldBe("Board › Movies › HD");
     }
@@ -44,7 +47,10 @@ public class ForumPostingRulePreviewServiceTest
         var service = new ForumPostingRulePreviewService(repository);
 
         // Act
-        var results = await service.PreviewAsync(distributionSiteRegistrationId: 3);
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.Release
+        );
 
         // Assert
         var result = results.ShouldHaveSingleItem();
@@ -68,7 +74,10 @@ public class ForumPostingRulePreviewServiceTest
         var service = new ForumPostingRulePreviewService(repository);
 
         // Act
-        var results = await service.PreviewAsync(distributionSiteRegistrationId: 3);
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.Release
+        );
 
         // Assert
         results.ShouldHaveSingleItem().MatchedRuleName.ShouldBe("Rule 2");
@@ -86,7 +95,10 @@ public class ForumPostingRulePreviewServiceTest
         var service = new ForumPostingRulePreviewService(repository);
 
         // Act
-        var results = await service.PreviewAsync(distributionSiteRegistrationId: 3);
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.Release
+        );
 
         // Assert
         results.ShouldHaveSingleItem().MatchedRuleName.ShouldBeNull();
@@ -100,11 +112,15 @@ public class ForumPostingRulePreviewServiceTest
         var service = new ForumPostingRulePreviewService(repository);
 
         // Act
-        await service.PreviewAsync(distributionSiteRegistrationId: 42, releaseCount: 12);
+        await service.PreviewAsync(
+            distributionSiteRegistrationId: 42,
+            entityType: ForumPostTemplateType.Release,
+            entityCount: 12
+        );
 
         // Assert
         repository.RequestedDistributionSiteRegistrationId.ShouldBe(42);
-        repository.RequestedReleaseCount.ShouldBe(12);
+        repository.RequestedEntityCount.ShouldBe(12);
     }
 
     [Test]
@@ -124,17 +140,95 @@ public class ForumPostingRulePreviewServiceTest
         var service = new ForumPostingRulePreviewService(repository);
 
         // Act
-        var results = await service.PreviewAsync(distributionSiteRegistrationId: 3);
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.Release
+        );
 
         // Assert
-        results.Select(result => result.ReleaseId).ShouldBe([3, 2, 1]);
+        results.Select(result => result.EntityId).ShouldBe([3, 2, 1]);
+    }
+
+    [Test]
+    public async Task PreviewAsync_ReleaseCollection_MatchesCollectionRuleAgainstMemberClassifications()
+    {
+        // Arrange
+        var repository = new FakeForumPostingRuleReadRepository
+        {
+            Rules =
+            [
+                RuleWith(id: 1, sortOrder: 0, resolutions: ["R1080p"]),
+                RuleWith(
+                    id: 2,
+                    sortOrder: 1,
+                    resolutions: ["R1080p"],
+                    templateType: ForumPostTemplateType.ReleaseCollection
+                ),
+            ],
+            ReleaseCollections =
+            [
+                ReleaseCollectionWith(
+                    id: 5,
+                    name: "Show.S01.1080p",
+                    ReleaseWith(id: 11, name: "Show.S01E01.1080p", ReleaseResolution.R1080p),
+                    ReleaseWith(id: 12, name: "Show.S01E02.1080p", ReleaseResolution.R1080p)
+                ),
+            ],
+        };
+        var service = new ForumPostingRulePreviewService(repository);
+
+        // Act
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            entityCount: 8
+        );
+
+        // Assert
+        var result = results.ShouldHaveSingleItem();
+        result.EntityId.ShouldBe(5);
+        result.EntityName.ShouldBe("Show.S01.1080p");
+        result.MatchedRuleName.ShouldBe("Rule 2");
+        repository.RequestedEntityCount.ShouldBe(8);
+    }
+
+    [Test]
+    public async Task PreviewAsync_ReleaseCollectionWithOnlyReleaseRules_ReportsCollectionWithoutMatch()
+    {
+        // Arrange
+        var repository = new FakeForumPostingRuleReadRepository
+        {
+            Rules = [RuleWith(id: 1, sortOrder: 0, resolutions: ["R1080p"])],
+            Releases = [ReleaseWith(id: 7, name: "Movie.1080p", ReleaseResolution.R1080p)],
+            ReleaseCollections =
+            [
+                ReleaseCollectionWith(
+                    id: 5,
+                    name: "Show.S01.1080p",
+                    ReleaseWith(id: 11, name: "Show.S01E01.1080p", ReleaseResolution.R1080p)
+                ),
+            ],
+        };
+        var service = new ForumPostingRulePreviewService(repository);
+
+        // Act
+        var results = await service.PreviewAsync(
+            distributionSiteRegistrationId: 3,
+            entityType: ForumPostTemplateType.ReleaseCollection
+        );
+
+        // Assert
+        var result = results.ShouldHaveSingleItem();
+        result.EntityId.ShouldBe(5);
+        result.MatchedRuleName.ShouldBeNull();
     }
 
     private static ForumPostingRule RuleWith(
         int id,
         int sortOrder,
         string[] resolutions,
-        bool isEnabled = true
+        bool isEnabled = true,
+        ForumPostTemplateType templateType = ForumPostTemplateType.Release
     )
     {
         return new ForumPostingRule
@@ -152,6 +246,7 @@ public class ForumPostingRulePreviewServiceTest
             TargetNodeId = "42",
             TargetPathSnapshot = "Board › Movies › HD",
             ForumPostTemplateId = 1,
+            ForumPostTemplate = new ForumPostTemplate { Id = 1, Type = templateType },
             PostMode = ForumPostPostMode.AlwaysNewThread,
             IsEnabled = isEnabled,
         };
@@ -167,15 +262,32 @@ public class ForumPostingRulePreviewServiceTest
         };
     }
 
+    private static ReleaseCollection ReleaseCollectionWith(
+        int id,
+        string name,
+        params Release[] releases
+    )
+    {
+        return new ReleaseCollection
+        {
+            Id = id,
+            Name = name,
+            ReleaseGroup = new ReleaseGroup { Name = "Group" },
+            Releases = [.. releases],
+        };
+    }
+
     private sealed class FakeForumPostingRuleReadRepository : IForumPostingRuleReadRepository
     {
         public IReadOnlyList<ForumPostingRule> Rules { get; init; } = [];
 
         public IReadOnlyList<Release> Releases { get; init; } = [];
 
+        public IReadOnlyList<ReleaseCollection> ReleaseCollections { get; init; } = [];
+
         public int? RequestedDistributionSiteRegistrationId { get; private set; }
 
-        public int? RequestedReleaseCount { get; private set; }
+        public int? RequestedEntityCount { get; private set; }
 
         public Task<IReadOnlyList<ForumPostingRuleSummaryReadModel>> GetAllAsync(
             int distributionSiteRegistrationId,
@@ -208,9 +320,19 @@ public class ForumPostingRulePreviewServiceTest
             CancellationToken cancellationToken = default
         )
         {
-            RequestedReleaseCount = count;
+            RequestedEntityCount = count;
 
             return Task.FromResult(Releases);
+        }
+
+        public Task<IReadOnlyList<ReleaseCollection>> GetRecentReleaseCollectionsForPreviewAsync(
+            int count,
+            CancellationToken cancellationToken = default
+        )
+        {
+            RequestedEntityCount = count;
+
+            return Task.FromResult(ReleaseCollections);
         }
     }
 }

@@ -31,8 +31,9 @@ public static class RuleFieldCatalog
     private static readonly IReadOnlyList<RuleFieldDescriptor> AllFields =
     [
         new RuleFieldDescriptor(
-            ReleaseName,
-            RuleFieldValueKind.Text,
+            Name: ReleaseName,
+            ValueKind: RuleFieldValueKind.Text,
+            AllowedOperators:
             [
                 RuleConditionOperator.Equals,
                 RuleConditionOperator.NotEquals,
@@ -40,12 +41,14 @@ public static class RuleFieldCatalog
                 RuleConditionOperator.NotLike,
                 RuleConditionOperator.Regex,
             ],
-            [],
-            context => context.ReleaseName
+            Options: [],
+            ValueAccessor: context => context.ReleaseName,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Resolution,
-            RuleFieldValueKind.Enumeration,
+            Name: Resolution,
+            ValueKind: RuleFieldValueKind.Enumeration,
+            AllowedOperators:
             [
                 RuleConditionOperator.Equals,
                 RuleConditionOperator.NotEquals,
@@ -54,12 +57,14 @@ public static class RuleFieldCatalog
                 RuleConditionOperator.GreaterOrEqual,
                 RuleConditionOperator.LessOrEqual,
             ],
-            Enum.GetNames<ReleaseResolution>(),
-            context => context.Resolution
+            Options: Enum.GetNames<ReleaseResolution>(),
+            ValueAccessor: context => context.Resolution,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            PrimaryLanguage,
-            RuleFieldValueKind.Text,
+            Name: PrimaryLanguage,
+            ValueKind: RuleFieldValueKind.Text,
+            AllowedOperators:
             [
                 RuleConditionOperator.Equals,
                 RuleConditionOperator.NotEquals,
@@ -68,86 +73,99 @@ public static class RuleFieldCatalog
                 RuleConditionOperator.IsSet,
                 RuleConditionOperator.IsNotSet,
             ],
-            [],
-            context => context.PrimaryLanguage
+            Options: [],
+            ValueAccessor: context => context.PrimaryLanguage,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            IsMultiLanguage,
-            RuleFieldValueKind.Boolean,
-            [RuleConditionOperator.Equals],
-            [],
-            context => context.IsMultiLanguage
+            Name: IsMultiLanguage,
+            ValueKind: RuleFieldValueKind.Boolean,
+            AllowedOperators: [RuleConditionOperator.Equals],
+            Options: [],
+            ValueAccessor: context => context.IsMultiLanguage,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            ContentType,
-            RuleFieldValueKind.Enumeration,
+            Name: ContentType,
+            ValueKind: RuleFieldValueKind.Enumeration,
+            AllowedOperators:
             [
                 RuleConditionOperator.Equals,
                 RuleConditionOperator.NotEquals,
                 RuleConditionOperator.In,
                 RuleConditionOperator.NotIn,
             ],
-            Enum.GetNames<ReleaseContentType>(),
-            context => context.ContentType
+            Options: Enum.GetNames<ReleaseContentType>(),
+            ValueAccessor: context => context.ContentType,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Platform,
-            RuleFieldValueKind.Enumeration,
+            Name: Platform,
+            ValueKind: RuleFieldValueKind.Enumeration,
+            AllowedOperators:
             [
                 RuleConditionOperator.Equals,
                 RuleConditionOperator.NotEquals,
                 RuleConditionOperator.In,
                 RuleConditionOperator.NotIn,
             ],
-            Enum.GetNames<ReleasePlatform>(),
-            context => context.Platform
+            Options: Enum.GetNames<ReleasePlatform>(),
+            ValueAccessor: context => context.Platform,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Source,
-            RuleFieldValueKind.Enumeration,
+            Name: Source,
+            ValueKind: RuleFieldValueKind.Enumeration,
+            AllowedOperators:
             [
                 RuleConditionOperator.Equals,
                 RuleConditionOperator.NotEquals,
                 RuleConditionOperator.In,
                 RuleConditionOperator.NotIn,
             ],
-            Enum.GetNames<ReleaseSource>(),
-            context => context.Source
+            Options: Enum.GetNames<ReleaseSource>(),
+            ValueAccessor: context => context.Source,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            ReleaseGroupName,
-            RuleFieldValueKind.Text,
-            TextIdentityOperators,
-            [],
-            context => context.ReleaseGroupName
+            Name: ReleaseGroupName,
+            ValueKind: RuleFieldValueKind.Text,
+            AllowedOperators: TextIdentityOperators,
+            Options: [],
+            ValueAccessor: context => context.ReleaseGroupName,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            ReleaseGroupToken,
-            RuleFieldValueKind.Text,
-            TextIdentityOperators,
-            [],
-            context => context.ReleaseGroupToken
+            Name: ReleaseGroupToken,
+            ValueKind: RuleFieldValueKind.Text,
+            AllowedOperators: TextIdentityOperators,
+            Options: [],
+            ValueAccessor: context => context.ReleaseGroupToken,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Year,
-            RuleFieldValueKind.Integer,
-            NumberOperators,
-            [],
-            context => context.Year
+            Name: Year,
+            ValueKind: RuleFieldValueKind.Integer,
+            AllowedOperators: NumberOperators,
+            Options: [],
+            ValueAccessor: context => context.Year,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Season,
-            RuleFieldValueKind.Integer,
-            NumberOperators,
-            [],
-            context => context.Season
+            Name: Season,
+            ValueKind: RuleFieldValueKind.Integer,
+            AllowedOperators: NumberOperators,
+            Options: [],
+            ValueAccessor: context => context.Season,
+            SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Episode,
-            RuleFieldValueKind.Integer,
-            NumberOperators,
-            [],
-            context => context.Episode
+            Name: Episode,
+            ValueKind: RuleFieldValueKind.Integer,
+            AllowedOperators: NumberOperators,
+            Options: [],
+            ValueAccessor: context => context.Episode,
+            SupportedEntityTypes: ReleaseOnlyEntityTypes
         ),
     ];
 
@@ -155,6 +173,11 @@ public static class RuleFieldCatalog
         AllFields.ToDictionary(field => field.Name, StringComparer.OrdinalIgnoreCase);
 
     public static IReadOnlyList<RuleFieldDescriptor> Fields => AllFields;
+
+    public static IReadOnlyList<RuleFieldDescriptor> GetFields(ForumPostTemplateType entityType)
+    {
+        return AllFields.Where(field => field.SupportedEntityTypes.Contains(entityType)).ToList();
+    }
 
     public static bool TryGet(string? name, out RuleFieldDescriptor descriptor)
     {
@@ -189,4 +212,10 @@ public static class RuleFieldCatalog
             RuleConditionOperator.IsSet,
             RuleConditionOperator.IsNotSet,
         ];
+
+    private static IReadOnlyList<ForumPostTemplateType> AllEntityTypes =>
+        [ForumPostTemplateType.Release, ForumPostTemplateType.ReleaseCollection];
+
+    private static IReadOnlyList<ForumPostTemplateType> ReleaseOnlyEntityTypes =>
+        [ForumPostTemplateType.Release];
 }

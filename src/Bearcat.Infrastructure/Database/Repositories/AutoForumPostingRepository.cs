@@ -39,12 +39,17 @@ public class AutoForumPostingRepository(
                 registration.Name,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
-                EnabledRules = registration
-                    .PostingRules.Where(rule => rule.IsEnabled)
-                    .OrderBy(rule => rule.SortOrder)
-                    .ThenBy(rule => rule.Id)
-                    .ToList(),
             })
+            .ToListAsync(cancellationToken);
+
+        var registrationIds = registrations.Select(registration => registration.Id).ToList();
+        var enabledRules = await dbRead
+            .ForumPostingRules.Include(rule => rule.ForumPostTemplate)
+            .Where(rule =>
+                rule.IsEnabled && registrationIds.Contains(rule.DistributionSiteRegistrationId)
+            )
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id)
             .ToListAsync(cancellationToken);
 
         return registrations
@@ -53,7 +58,9 @@ public class AutoForumPostingRepository(
                 Name: registration.Name,
                 EnableAutomaticPosting: registration.EnableAutomaticPosting,
                 StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
-                EnabledRules: registration.EnabledRules
+                EnabledRules: enabledRules
+                    .Where(rule => rule.DistributionSiteRegistrationId == registration.Id)
+                    .ToList()
             ))
             .ToList();
     }
@@ -69,6 +76,17 @@ public class AutoForumPostingRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<int>> GetQueuedReleaseCollectionIdsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ReleaseCollections.Where(ReleaseCollectionRepository.IsReadyForPostQueue(dbRead))
+            .OrderBy(collection => collection.Id)
+            .Select(collection => collection.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Release>> GetReleasesForRoutingAsync(
         IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
@@ -81,50 +99,89 @@ public class AutoForumPostingRepository(
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<AutoPostPostedLocation>> GetPostedLocationsAsync(
-        IReadOnlyList<int> releaseIds,
+    public async Task<IReadOnlyList<ReleaseCollection>> GetReleaseCollectionsForRoutingAsync(
+        IReadOnlyList<int> releaseCollectionIds,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
-            .PostedLocations.Where(location =>
-                location.ReleaseId != null && releaseIds.Contains(location.ReleaseId.Value)
-            )
+            .ReleaseCollections.Where(collection => releaseCollectionIds.Contains(collection.Id))
+            .Include(collection => collection.ReleaseGroup)
+            .Include(collection => collection.Releases)
+                .ThenInclude(release => release.Classification)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AutoPostPostedLocation>> GetPostedLocationsAsync(
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var postedLocations =
+            entityType == ForumPostTemplateType.Release
+                ? dbRead.PostedLocations.Where(location =>
+                    location.ReleaseId != null && entityIds.Contains(location.ReleaseId.Value)
+                )
+                : dbRead.PostedLocations.Where(location =>
+                    location.ReleaseCollectionId != null
+                    && entityIds.Contains(location.ReleaseCollectionId.Value)
+                );
+
+        return await postedLocations
             .OrderBy(location => location.Id)
             .Select(location => new AutoPostPostedLocation(
-                location.Id,
-                location.ReleaseId!.Value,
-                location.DistributionSiteRegistrationId,
-                location.ForumPostTemplateId,
-                location.Url,
-                location.CreatedAt,
-                location.ContentUpdatedAt
+                PostedLocationId: location.Id,
+                EntityId: location.ReleaseId ?? location.ReleaseCollectionId!.Value,
+                DistributionSiteRegistrationId: location.DistributionSiteRegistrationId,
+                ForumPostTemplateId: location.ForumPostTemplateId,
+                Url: location.Url,
+                CreatedAt: location.CreatedAt,
+                ContentUpdatedAt: location.ContentUpdatedAt
             ))
             .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<int, DateTime>> GetLatestUploadCompletionTimesAsync(
-        IReadOnlyList<int> releaseIds,
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
         CancellationToken cancellationToken = default
     )
     {
-        var completionTimes = await dbRead
-            .Uploads.Where(upload =>
-                releaseIds.Contains(upload.UploadConfig.ReleaseId)
-                && upload.UploadConfig.CollectionUploadSlotId == null
-                && upload.HosterRegistration!.IsActive
-                && upload.UploadState == UploadState.Completed
-                && upload.UploadedAt != null
-            )
-            .GroupBy(upload => upload.UploadConfig.ReleaseId)
+        var completedUploads = dbRead.Uploads.Where(upload =>
+            upload.HosterRegistration!.IsActive
+            && upload.UploadState == UploadState.Completed
+            && upload.UploadedAt != null
+        );
+
+        var uploadsByEntityId =
+            entityType == ForumPostTemplateType.Release
+                ? completedUploads
+                    .Where(upload =>
+                        upload.UploadConfig.CollectionUploadSlotId == null
+                        && entityIds.Contains(upload.UploadConfig.ReleaseId)
+                    )
+                    .GroupBy(upload => upload.UploadConfig.ReleaseId)
+                : completedUploads
+                    .Where(upload =>
+                        upload.UploadConfig.CollectionUploadSlotId != null
+                        && entityIds.Contains(
+                            upload.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId
+                        )
+                    )
+                    .GroupBy(upload =>
+                        upload.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId
+                    );
+
+        var completionTimes = await uploadsByEntityId
             .Select(group => new
             {
-                ReleaseId = group.Key,
+                EntityId = group.Key,
                 UploadedAt = group.Max(upload => upload.UploadedAt!.Value),
             })
             .ToListAsync(cancellationToken);
 
-        return completionTimes.ToDictionary(entry => entry.ReleaseId, entry => entry.UploadedAt);
+        return completionTimes.ToDictionary(entry => entry.EntityId, entry => entry.UploadedAt);
     }
 
     public async Task<AutoPostUpdateTarget> GetUpdateTargetAsync(
@@ -137,22 +194,25 @@ public class AutoForumPostingRepository(
                 location.Id == postedLocationId && location.DistributionSiteRegistrationId != null
             )
             .Select(location => new AutoPostUpdateTarget(
-                location.Id,
-                location.ReleaseId ?? location.ReleaseCollectionId!.Value,
-                location.ReleaseId != null
+                PostedLocationId: location.Id,
+                EntityType: location.ReleaseId != null
+                    ? ForumPostTemplateType.Release
+                    : ForumPostTemplateType.ReleaseCollection,
+                EntityId: location.ReleaseId ?? location.ReleaseCollectionId!.Value,
+                EntityName: location.ReleaseId != null
                     ? location.Release!.Name
                     : location.ReleaseCollection!.Name,
-                location.ReleaseId,
-                location.DistributionSiteRegistrationId!.Value,
-                location.DistributionSiteRegistration!.Name,
-                location.Url,
-                location.ForumPostTemplateId
+                DistributionSiteRegistrationId: location.DistributionSiteRegistrationId!.Value,
+                DistributionSiteRegistrationName: location.DistributionSiteRegistration!.Name,
+                PostedUrl: location.Url,
+                ForumPostTemplateId: location.ForumPostTemplateId
             ))
             .FirstAsync(cancellationToken);
     }
 
     public async Task RecordPostedLocationAsync(
-        int releaseId,
+        ForumPostTemplateType entityType,
+        int entityId,
         int distributionSiteRegistrationId,
         string url,
         int forumPostTemplateId,
@@ -165,7 +225,9 @@ public class AutoForumPostingRepository(
         dbWrite.Add(
             new PostedLocation
             {
-                ReleaseId = releaseId,
+                ReleaseId = entityType == ForumPostTemplateType.Release ? entityId : null,
+                ReleaseCollectionId =
+                    entityType == ForumPostTemplateType.ReleaseCollection ? entityId : null,
                 DistributionSiteRegistrationId = distributionSiteRegistrationId,
                 ForumPostTemplateId = forumPostTemplateId,
                 Url = trimmedUrl,
@@ -196,17 +258,30 @@ public class AutoForumPostingRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task MarkReleasePostedAsync(
-        int releaseId,
+    public async Task MarkUploadsPostedAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
         CancellationToken cancellationToken = default
     )
     {
-        var release = await dbWrite.Releases.FirstAsync(
-            candidate => candidate.Id == releaseId,
-            cancellationToken
-        );
+        var now = timeProvider.GetLocalNow();
 
-        release.UploadsPostedAt = timeProvider.GetLocalNow();
+        if (entityType == ForumPostTemplateType.Release)
+        {
+            var release = await dbWrite.Releases.FirstAsync(
+                candidate => candidate.Id == entityId,
+                cancellationToken
+            );
+            release.UploadsPostedAt = now;
+        }
+        else
+        {
+            var collection = await dbWrite.ReleaseCollections.FirstAsync(
+                candidate => candidate.Id == entityId,
+                cancellationToken
+            );
+            collection.UploadsPostedAt = now;
+        }
 
         await dbWrite.SaveChangesAsync(cancellationToken);
     }

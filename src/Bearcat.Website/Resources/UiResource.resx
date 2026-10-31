@@ -1069,20 +1069,23 @@
   <data name="NotificationKindFilter" xml:space="preserve"><value>Notification type</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>All notification types</value></data>
   <data name="ForumPostingRules" xml:space="preserve"><value>Posting rules</value></data>
-  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules decide in which subforum a release is posted. The first matching rule wins, so order them from specific to general.</value></data>
+  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules decide in which subforum a release or collection is posted. The first matching rule wins, so order them from specific to general.</value></data>
   <data name="NewForumPostingRule" xml:space="preserve"><value>New posting rule</value></data>
-  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to route releases to a subforum automatically.</value></data>
-  <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Define when the rule applies and where the release is posted.</value></data>
+  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to route releases and collections to a subforum automatically.</value></data>
+  <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Define when the rule applies and where the release or collection is posted.</value></data>
+  <data name="ForumPostingRuleAppliesTo" xml:space="preserve"><value>Applies to</value></data>
+  <data name="ForumPostingRuleAppliesToHelp" xml:space="preserve"><value>Release rules route single releases, collection rules route release collections. Switching removes conditions on fields the other type does not support, such as the episode.</value></data>
   <data name="ForumPostingRuleNamePlaceholder" xml:space="preserve"><value>For example: German movies 1080p</value></data>
   <data name="DeleteForumPostingRuleConfirmation" xml:space="preserve"><value>Are you sure you want to delete the posting rule {0}?</value></data>
   <data name="ForumPostingRuleEnabled" xml:space="preserve"><value>Posting rule {0} enabled</value></data>
   <data name="ForumPostingRuleDisabled" xml:space="preserve"><value>Posting rule {0} disabled</value></data>
   <data name="ForumPostingRuleEnabledHelp" xml:space="preserve"><value>Disabled rules are skipped while matching.</value></data>
-  <data name="ForumPostingRuleConditionHelp" xml:space="preserve"><value>The rule applies to a release when this condition matches.</value></data>
+  <data name="ForumPostingRuleConditionHelp" xml:space="preserve"><value>The rule applies when this condition matches.</value></data>
   <data name="ForumPostingRulePreview" xml:space="preserve"><value>Dry run</value></data>
-  <data name="ForumPostingRulePreviewDescription" xml:space="preserve"><value>Match the saved rules against the most recent releases without posting anything.</value></data>
-  <data name="ForumPostingRulePreviewHint" xml:space="preserve"><value>Start the dry run to see which rule would take each release.</value></data>
+  <data name="ForumPostingRulePreviewDescription" xml:space="preserve"><value>Match the saved rules against the most recent releases or collections without posting anything.</value></data>
+  <data name="ForumPostingRulePreviewHint" xml:space="preserve"><value>Start the dry run to see which rule would take each release or collection.</value></data>
   <data name="ForumPostingRulePreviewSummary" xml:space="preserve"><value>{0} of {1} releases matched a rule</value></data>
+  <data name="ForumPostingRulePreviewSummaryCollections" xml:space="preserve"><value>{0} of {1} collections matched a rule</value></data>
   <data name="ForumPostingRuleNoMatch" xml:space="preserve"><value>No match</value></data>
   <data name="DragToReorder" xml:space="preserve"><value>Drag to reorder</value></data>
   <data name="ForumPostPostMode" xml:space="preserve"><value>Posting mode</value></data>
@@ -1155,9 +1158,12 @@
   <data name="AutoPostSucceeded" xml:space="preserve"><value>Posted to {0}</value></data>
   <data name="AutoPostFailed" xml:space="preserve"><value>Posting to {0} failed</value></data>
   <data name="AutoPostSkippedAlreadyPosted" xml:space="preserve"><value>This release has already been posted to this forum.</value></data>
+  <data name="AutoPostSkippedCollectionAlreadyPosted" xml:space="preserve"><value>This collection has already been posted to this forum.</value></data>
   <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>This forum no longer takes part in automatic posting.</value></data>
   <data name="AutoPostBlockedQualityGate" xml:space="preserve"><value>Automatic posting is blocked: the quality gate has not passed.</value></data>
   <data name="AutoPostBlockedClassification" xml:space="preserve"><value>Automatic posting is blocked: the release has no classification.</value></data>
+  <data name="AutoPostBlockedCollectionQualityGate" xml:space="preserve"><value>Automatic posting is blocked: not every release in this collection has passed the quality gate.</value></data>
+  <data name="AutoPostBlockedCollectionClassification" xml:space="preserve"><value>Automatic posting is blocked: no release in this collection has a classification.</value></data>
   <data name="AutomaticPosting" xml:space="preserve"><value>Automatic posting</value></data>
   <data name="AutomaticPostingHelp" xml:space="preserve"><value>When enabled, releases are posted to this forum automatically as soon as a posting rule matches.</value></data>
   <data name="AutomaticPostingEnabled" xml:space="preserve"><value>Automatic posting enabled for {0}</value></data>
@@ -1172,6 +1178,7 @@
   <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} updated</value></data>
   <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Updating the post in {0} failed</value></data>
   <data name="AutoPostUpdateNotPosted" xml:space="preserve"><value>This release has not been posted to this forum yet.</value></data>
+  <data name="AutoPostUpdateCollectionNotPosted" xml:space="preserve"><value>This collection has not been posted to this forum yet.</value></data>
   <data name="UpdatePostedLocationTitle" xml:space="preserve"><value>Update forum post</value></data>
   <data name="UpdatePostedLocationDescription" xml:space="preserve"><value>Renders the template again and replaces the content of the existing post.</value></data>
   <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>The content of this post is replaced completely. Manual changes in the forum are lost.</value></data>

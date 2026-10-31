@@ -19,7 +19,11 @@ public class ForumPostingRuleMatcherTest
         };
 
         // Act
-        var match = ForumPostingRuleMatcher.FindFirstMatch(rules, Context());
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
 
         // Assert
         match.ShouldNotBeNull().Id.ShouldBe(2);
@@ -36,7 +40,11 @@ public class ForumPostingRuleMatcherTest
         };
 
         // Act
-        var match = ForumPostingRuleMatcher.FindFirstMatch(rules, Context());
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
 
         // Assert
         match.ShouldNotBeNull().Id.ShouldBe(2);
@@ -53,7 +61,11 @@ public class ForumPostingRuleMatcherTest
         };
 
         // Act
-        var match = ForumPostingRuleMatcher.FindFirstMatch(rules, Context());
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
 
         // Assert
         match.ShouldNotBeNull().Id.ShouldBe(2);
@@ -70,7 +82,11 @@ public class ForumPostingRuleMatcherTest
         };
 
         // Act
-        var match = ForumPostingRuleMatcher.FindFirstMatch(rules, Context());
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
 
         // Assert
         match.ShouldBeNull();
@@ -80,10 +96,56 @@ public class ForumPostingRuleMatcherTest
     public void FindFirstMatch_NoRules_ReturnsNull()
     {
         // Act
-        var match = ForumPostingRuleMatcher.FindFirstMatch([], Context());
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: [],
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
 
         // Assert
         match.ShouldBeNull();
+    }
+
+    [Test]
+    public void FindFirstMatch_ReleaseEntityType_SkipsCollectionRules()
+    {
+        // Arrange
+        var rules = new List<ForumPostingRule>
+        {
+            RuleWith(id: 1, sortOrder: 0, templateType: ForumPostTemplateType.ReleaseCollection),
+            RuleWith(id: 2, sortOrder: 1, templateType: ForumPostTemplateType.Release),
+        };
+
+        // Act
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
+
+        // Assert
+        match.ShouldNotBeNull().Id.ShouldBe(2);
+    }
+
+    [Test]
+    public void FindFirstMatch_ReleaseCollectionEntityType_SkipsReleaseRules()
+    {
+        // Arrange
+        var rules = new List<ForumPostingRule>
+        {
+            RuleWith(id: 1, sortOrder: 0, templateType: ForumPostTemplateType.Release),
+            RuleWith(id: 2, sortOrder: 1, templateType: ForumPostTemplateType.ReleaseCollection),
+        };
+
+        // Act
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.ReleaseCollection,
+            context: Context()
+        );
+
+        // Assert
+        match.ShouldNotBeNull().Id.ShouldBe(2);
     }
 
     private static RuleCondition ResolutionIn(params string[] resolutions)
@@ -100,7 +162,8 @@ public class ForumPostingRuleMatcherTest
         int sortOrder,
         RuleCondition? condition = null,
         string? conditionJson = null,
-        bool isEnabled = true
+        bool isEnabled = true,
+        ForumPostTemplateType templateType = ForumPostTemplateType.Release
     )
     {
         return new ForumPostingRule
@@ -114,6 +177,7 @@ public class ForumPostingRuleMatcherTest
             TargetNodeId = "42",
             TargetPathSnapshot = "Board > Movies > HD",
             ForumPostTemplateId = 1,
+            ForumPostTemplate = new ForumPostTemplate { Id = 1, Type = templateType },
             PostMode = ForumPostPostMode.AlwaysNewThread,
             IsEnabled = isEnabled,
         };
