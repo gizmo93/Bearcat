@@ -33,14 +33,19 @@ See [Release Collections](/Bearcat/release-collections/) for how collections and
 ## Posting to a forum from the queue
 
 With [posting rules](/Bearcat/automatic-forum-posting/) configured, the **Automatic posting** section
-for single releases shows the matching rule and target subforum for each forum.
+for single releases and collections shows the matching rule and target subforum for each forum.
 
 Click **Post** to submit the post. **Post to all matched sites** handles all remaining forums.
 The **Auto** badge shows that Bearcat posts to this forum automatically.
 
+After a reupload or the upload of a new episode to a collection, existing posts show
+**Post content is outdated**. Click **Update post** to replace the post. If automatic posting is blocked,
+the section shows the reason instead of the forum list.
+
 ![posting-from-post-queue.png](images/posting-from-post-queue.png)
 
-Once all matching forums are handled, Bearcat marks the release as posted and removes it from the queue.
+Once all posts in the matching forums are created or updated, Bearcat marks the release or collection as posted
+and removes it from the queue.
 
 ## Marking something as posted
 
