@@ -12,19 +12,19 @@
         <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
         <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
         <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.12" />
-        <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.14" />
         <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.13" />
-        <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.14" />
         <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.8" />
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
         <PackageVersion
             Include="Microsoft.Extensions.DependencyInjection.Abstractions"
-            Version="10.0.13"
+            Version="10.0.14"
         />
         <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.2" />
-        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
         <PackageVersion Include="System.IO.Hashing" Version="10.0.13" />
-        <PackageVersion Include="System.Threading.RateLimiting" Version="10.0.13" />
+        <PackageVersion Include="System.Threading.RateLimiting" Version="10.0.14" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.8" />
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
         <PackageVersion Include="Scalar.AspNetCore" Version="2.17.14" />
