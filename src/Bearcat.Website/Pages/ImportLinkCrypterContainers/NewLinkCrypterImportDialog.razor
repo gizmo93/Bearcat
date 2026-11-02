@@ -1,0 +1,72 @@
+<div class="space-y-6">
+    @if (isLoaded && linkCrypterRegistrations.Count == 0)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+            <span>@L["NoLinkCrypterRegistrationsWithContainerReading"]</span>
+        </div>
+    }
+
+    <div class="space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div class="flex min-w-0 flex-col gap-2">
+                <label class="text-sm font-medium">@L["Crypter"]</label>
+                <BbSelect TValue="int?"
+                          @bind-Value="linkCrypterRegistrationId"
+                          Options="LinkCrypterRegistrationOptions"
+                          Placeholder="@L["SelectLinkCrypterRegistration"]"
+                          Class="w-full" />
+            </div>
+
+            <div class="flex min-w-0 flex-col gap-2">
+                <label class="text-sm font-medium">@L["ReleaseTemplate"]</label>
+                <BbSelect TValue="int?"
+                          @bind-Value="releaseTemplateId"
+                          Options="ReleaseTemplateOptions"
+                          Placeholder="@L["SelectReleaseTemplate"]"
+                          Class="w-full" />
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <label class="text-sm font-medium">@L["ArchiveFilesBasePathForReleasesWithoutLocalFiles"]</label>
+            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <BbInput @bind-Value="archiveFilesBasePath" class="sm:flex-1" />
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Class="justify-center whitespace-nowrap"
+                          AriaLabel="@L["BrowseArchiveFolders"]"
+                          OnClick="OpenFolderDialogAsync">
+                    <LucideIcon Name="folder-open" class="h-4 w-4" />
+                    @L["Browse"]
+                </BbButton>
+            </div>
+            <p class="text-xs text-muted-foreground">@L["ArchiveFilesBasePathForReleasesWithoutLocalFilesHelp"]</p>
+        </div>
+
+        <BbFormFieldCombobox TValue="string"
+                             @bind-Value="primaryLanguageCode"
+                             Label="@L["PrimaryLanguage"]"
+                             SearchPlaceholder="@L["SearchLanguage"]"
+                             EmptyMessage="@L["NoLanguagesFound"]"
+                             HelperText="@L["LinkCrypterImportPrimaryLanguageHelp"]"
+                             InputClass="w-full"
+                             MatchTriggerWidth="true"
+                             Options="LanguageOptions" />
+
+        @if (errorMessage is not null)
+        {
+            <p class="text-sm text-destructive [overflow-wrap:anywhere]">@errorMessage</p>
+        }
+    </div>
+
+    <div class="flex justify-end gap-2">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Disabled="@(isStarting || linkCrypterRegistrationId is null || releaseTemplateId is null)"
+                  OnClick="StartAsync">
+            @L["ReadLinkCrypterFolders"]
+        </BbButton>
+    </div>
+</div>

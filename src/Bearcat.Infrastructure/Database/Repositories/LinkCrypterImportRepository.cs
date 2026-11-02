@@ -97,7 +97,7 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
             .ToHashSetAsync(cancellationToken);
     }
 
-    public async Task<HashSet<string>> GetExistingReleaseNamesAsync(
+    public async Task<IReadOnlyList<Release>> GetReleasesByNameAsync(
         IReadOnlyList<string> releaseNames,
         CancellationToken cancellationToken
     )
@@ -106,27 +106,50 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
             .Select(releaseName => releaseName.ToLowerInvariant())
             .ToList();
 
-        var existingReleaseNames = await dbWrite
-            .Releases.Where(release =>
-                EF.Parameter(lowerReleaseNames).Contains(release.Name.ToLower())
-            )
-            .Select(release => release.Name)
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.HosterRegistration)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.HosterAccountPool)
+            .Where(release => EF.Parameter(lowerReleaseNames).Contains(release.Name.ToLower()))
+            .OrderBy(release => release.Id)
             .ToListAsync(cancellationToken);
-
-        return existingReleaseNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task<bool> ReleaseWithNameExistsAsync(
+    public async Task<Release?> GetReleaseForImportByNameOrDefaultAsync(
         string releaseName,
         CancellationToken cancellationToken
     )
     {
         var lowerReleaseName = releaseName.ToLowerInvariant();
 
-        return await dbWrite.Releases.AnyAsync(
-            release => release.Name.ToLower() == lowerReleaseName,
-            cancellationToken
-        );
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(release => release.LinkCrypterContainers)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.HosterRegistration)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.HosterAccountPool)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig =>
+                    uploadConfig.Uploads.Where(upload =>
+                        upload.UploadState == UploadState.Completed
+                    )
+                )
+                    .ThenInclude(upload => upload.UploadedFiles)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.ArchiveConfig)
+                    .ThenInclude(archiveConfig => archiveConfig!.Archives)
+                        .ThenInclude(archive => archive.ArchiveFiles)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+                    .ThenInclude(linkCrypter => linkCrypter.LinkCrypterContainers)
+            .OrderBy(release => release.Id)
+            .FirstOrDefaultAsync(
+                release => release.Name.ToLower() == lowerReleaseName,
+                cancellationToken
+            );
     }
 
     public async Task<IReadOnlyList<int>> GetIdsOfSelectedImportableContainersAsync(

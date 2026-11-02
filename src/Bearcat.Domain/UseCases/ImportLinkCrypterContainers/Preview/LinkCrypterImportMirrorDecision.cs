@@ -5,5 +5,5 @@ public enum LinkCrypterImportMirrorDecision
     Adopt = 1,
     UploadByBearcat = 2,
     UnsupportedHoster = 3,
-    NotInReleaseTemplate = 4,
+    HosterNotInRelease = 4,
 }

@@ -37,6 +37,7 @@ public class ReleaseFromFolderCreationService(
                     createdAt: localNow
                 ),
             primaryLanguageCode: primaryLanguageCode,
+            resolveReleaseInfo: true,
             localNow: localNow,
             cancellationToken: cancellationToken
         );
@@ -51,6 +52,7 @@ public class ReleaseFromFolderCreationService(
         string? releaseFolderPath,
         Func<Release, ArchiveConfig>? createUnmanagedArchiveConfig,
         string? primaryLanguageCode,
+        bool resolveReleaseInfo,
         DateTime localNow,
         CancellationToken cancellationToken
     )
@@ -74,7 +76,10 @@ public class ReleaseFromFolderCreationService(
             cancellationToken: cancellationToken
         );
 
-        await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
+        if (resolveReleaseInfo)
+        {
+            await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
+        }
 
         await mediaMetadataService.TryExtractAsync(release, cancellationToken);
 

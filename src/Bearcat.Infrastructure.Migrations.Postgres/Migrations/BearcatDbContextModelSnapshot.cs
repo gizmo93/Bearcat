@@ -1031,6 +1031,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("LinkCrypterRegistrationId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
                     b.Property<int>("ProcessedContainerCount")
                         .HasColumnType("integer");
 

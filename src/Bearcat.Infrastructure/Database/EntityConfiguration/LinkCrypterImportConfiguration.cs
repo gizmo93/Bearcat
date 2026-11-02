@@ -16,6 +16,7 @@ public class LinkCrypterImportConfiguration : IEntityTypeConfiguration<LinkCrypt
             .Property(import => import.ArchiveFilesBasePathForReleasesWithoutLocalFiles)
             .IsRequired(false)
             .HasMaxLength(300);
+        builder.Property(import => import.PrimaryLanguageCode).HasMaxLength(2).IsRequired(false);
         builder.Property(import => import.State).IsRequired();
         builder.Property(import => import.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(import => import.UpdatedAt).IsRequired().HasPrecision(4);

@@ -59,7 +59,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
         result
             .Items.Single(container => container.ContainerName == "Alpha")
             .NotImportableReason.ShouldBe(
-                LinkCrypterImportNotImportableReason.NoMirrorForReleaseTemplateHoster
+                LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster
             );
         result
             .Items.Single(container => container.ContainerName == "Bravo")
@@ -159,12 +159,14 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                 IsSelected = status is LinkCrypterImportContainerStatus.Importable,
                 NotImportableReason =
                     status is LinkCrypterImportContainerStatus.NotImportable
-                        ? LinkCrypterImportNotImportableReason.NoMirrorForReleaseTemplateHoster
+                        ? LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster
                         : null,
                 ErrorMessages = [],
                 PreviewJson = new LinkCrypterImportContainerPreview(
                     Mirrors: [],
-                    ReleaseFolderPath: $"/releases/{containerName}"
+                    ReleaseFolderPath: $"/releases/{containerName}",
+                    ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
+                    ExistingReleaseId: null
                 ).ToJson(),
             }
         );

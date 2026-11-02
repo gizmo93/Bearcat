@@ -5,6 +5,5 @@ public sealed record LinkCrypterImportMirror(
     string? HosterClassName,
     IReadOnlyList<LinkCrypterImportMirrorFile> Files,
     LinkCrypterImportMirrorDecision? Decision,
-    LinkCrypterImportUploadByBearcatReason? UploadByBearcatReason,
-    int? UploadConfigTemplateId
+    LinkCrypterImportUploadByBearcatReason? UploadByBearcatReason
 );

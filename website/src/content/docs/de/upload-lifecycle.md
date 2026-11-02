@@ -132,6 +132,9 @@ in einem gemeinsamen Container, etwa für eine TV-Staffel.
 | **Release (alle Hoster als Mirrors)** | Ein Container pro Release und Linkcrypter. Jede Uploadkonfiguration mit dieser Einstellung fügt ihren neuesten abgeschlossenen Upload als Mirror hinzu. |
 | **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/Bearcat/de/release-collections/). |
 
+Releases aus bestehenden FileCrypt- oder Hide.cx-Ordnern legst du mit
+[Bestehende Linkcrypterordner importieren](/Bearcat/de/import-link-crypter-folders/) an.
+
 Bei **Release (alle Hoster als Mirrors)** müssen Passwort, Captcha, Containerdownload und Click'n'Load in allen
 Uploadkonfigurationen des Release gleich sein. Sonst markiert Bearcat den Container als fehlgeschlagen und
 schickt eine Benachrichtigung. Mirrors unterstützen FileCrypt und Hide.cx. ToLink und KeepLinks bekommen alle

@@ -9,6 +9,7 @@ public sealed record LinkCrypterImportDetailReadModel(
     int ReleaseTemplateId,
     string ReleaseTemplateName,
     string? ArchiveFilesBasePathForReleasesWithoutLocalFiles,
+    string? PrimaryLanguageCode,
     LinkCrypterImportState State,
     DateTime CreatedAt,
     DateTime UpdatedAt,

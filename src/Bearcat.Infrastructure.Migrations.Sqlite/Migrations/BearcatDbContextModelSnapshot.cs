@@ -979,6 +979,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("LinkCrypterRegistrationId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("ProcessedContainerCount")
                         .HasColumnType("INTEGER");
 

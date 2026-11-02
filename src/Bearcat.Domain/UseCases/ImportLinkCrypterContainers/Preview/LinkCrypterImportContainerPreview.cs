@@ -5,7 +5,9 @@ namespace Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 
 public sealed record LinkCrypterImportContainerPreview(
     IReadOnlyList<LinkCrypterImportMirror> Mirrors,
-    string? ReleaseFolderPath
+    string? ReleaseFolderPath,
+    LinkCrypterImportReleaseAction? ReleaseAction,
+    int? ExistingReleaseId
 )
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new(

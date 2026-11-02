@@ -38,12 +38,15 @@ public interface ILinkCrypterImportRepository
         CancellationToken cancellationToken
     );
 
-    Task<HashSet<string>> GetExistingReleaseNamesAsync(
+    Task<IReadOnlyList<Release>> GetReleasesByNameAsync(
         IReadOnlyList<string> releaseNames,
         CancellationToken cancellationToken
     );
 
-    Task<bool> ReleaseWithNameExistsAsync(string releaseName, CancellationToken cancellationToken);
+    Task<Release?> GetReleaseForImportByNameOrDefaultAsync(
+        string releaseName,
+        CancellationToken cancellationToken
+    );
 
     Task<IReadOnlyList<int>> GetIdsOfSelectedImportableContainersAsync(
         int linkCrypterImportId,

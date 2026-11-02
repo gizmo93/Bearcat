@@ -1,0 +1,152 @@
+<div class="space-y-4">
+    <div class="flex flex-wrap items-center gap-2" role="group" aria-label="@L["Status"]">
+        <BbButton Variant="@(selectedStatus is null ? ButtonVariant.Default : ButtonVariant.Outline)"
+                  Size="ButtonSize.Small"
+                  OnClick="@(() => SelectStatusAsync(null))">
+            @L["All"] <span class="tabular-nums">@Detail.ContainerCountsByStatus.Sum(count => count.Count)</span>
+        </BbButton>
+        @foreach (var statusCount in Detail.ContainerCountsByStatus)
+        {
+            <BbButton Variant="@(selectedStatus == statusCount.Status ? ButtonVariant.Default : ButtonVariant.Outline)"
+                      Size="ButtonSize.Small"
+                      OnClick="@(() => SelectStatusAsync(statusCount.Status))">
+                @L.Localize(statusCount.Status) <span class="tabular-nums">@statusCount.Count</span>
+            </BbButton>
+        }
+
+        @if (CanChangeSelection && ImportableContainerCount > 0)
+        {
+            <div class="flex items-center gap-2 sm:ml-auto">
+                <BbCheckbox Id="link-crypter-import-select-all-importable"
+                            Checked="AreAllImportableContainersSelected"
+                            Indeterminate="AreSomeImportableContainersSelected"
+                            CheckedChanged="SetSelectionOfAllImportableContainersAsync" />
+                <label for="link-crypter-import-select-all-importable" class="text-sm font-medium">
+                    @L["SelectAllImportableContainers"]
+                </label>
+            </div>
+        }
+    </div>
+
+    @if (containers.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoLinkCrypterImportContainersFound"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="@($"bearcat-config-header {ContainerGridClass}")">
+                <span>@L["Container"]</span>
+                <span>@L["Status"]</span>
+                <span>@L["Mirrors"]</span>
+            </div>
+            @foreach (var container in containers)
+            {
+                var checkboxId = $"link-crypter-import-container-{container.Id}";
+
+                <div class="bearcat-config-item">
+                    <div class="@($"bearcat-config-row {ContainerGridClass}")">
+                        <div class="flex min-w-0 items-start gap-3">
+                            @if (CanChangeSelection && container.Status is LinkCrypterImportContainerStatus.Importable)
+                            {
+                                <BbCheckbox Id="@checkboxId"
+                                            Class="mt-0.5"
+                                            Checked="container.IsSelected"
+                                            CheckedChanged="@(isSelected => SetSelectionAsync(container, isSelected))"
+                                            AriaLabel="@container.ContainerName" />
+                            }
+                            <div class="min-w-0 space-y-1">
+                                <label for="@checkboxId" class="block text-sm font-semibold [overflow-wrap:anywhere]">@container.ContainerName</label>
+                                <a href="@container.ContainerUrl"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                    <LucideIcon Name="external-link" class="h-3.5 w-3.5 shrink-0" />
+                                    @L["OpenCrypterFolder"]
+                                </a>
+                                @if (container.ImportedReleaseId is { } importedReleaseId)
+                                {
+                                    <a href="@($"/releases/{importedReleaseId}")"
+                                       class="flex items-center gap-1 text-xs text-primary hover:underline">
+                                        <LucideIcon Name="package" class="h-3.5 w-3.5 shrink-0" />
+                                        @L["OpenImportedRelease"]
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["Status"]</p>
+                            <BbBadge Variant="@GetStatusBadgeVariant(container.Status)">@L.Localize(container.Status)</BbBadge>
+                            @if (container.Preview.ReleaseAction is { } releaseAction)
+                            {
+                                @if (container.Preview.ExistingReleaseId is { } existingReleaseId)
+                                {
+                                    <a href="@($"/releases/{existingReleaseId}")"
+                                       class="flex items-center gap-1 text-xs text-primary hover:underline">
+                                        <LucideIcon Name="package" class="h-3.5 w-3.5 shrink-0" />
+                                        @L.Localize(releaseAction)
+                                    </a>
+                                }
+                                else
+                                {
+                                    <p class="text-xs text-muted-foreground">@L.Localize(releaseAction)</p>
+                                }
+                            }
+                            @if (container.NotImportableReason is { } notImportableReason)
+                            {
+                                <p class="text-xs text-muted-foreground">@L.Localize(notImportableReason)</p>
+                            }
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["Mirrors"]</p>
+                            @foreach (var mirror in container.Preview.Mirrors)
+                            {
+                                <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                                    <span class="font-medium text-foreground">@L["MirrorNumber", mirror.MirrorNumber]</span>
+                                    · @GetHosterName(mirror.HosterClassName)
+                                    @if (mirror.Decision is { } decision)
+                                    {
+                                        <span> · @L.Localize(decision)</span>
+                                    }
+                                    @if (mirror.UploadByBearcatReason is { } uploadByBearcatReason)
+                                    {
+                                        <span> (@L.Localize(uploadByBearcatReason))</span>
+                                    }
+                                </p>
+                            }
+                            @if (container.Preview.Mirrors.Any(mirror => mirror.Decision is not null))
+                            {
+                                <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                                    @(container.Preview.ReleaseFolderPath is { } releaseFolderPath
+                                        ? L["LinkCrypterImportReleaseFolder", releaseFolderPath]
+                                        : L["LinkCrypterImportNoLocalFiles"])
+                                </p>
+                            }
+                        </div>
+                    </div>
+
+                    @if (container.ErrorMessages.Count > 0)
+                    {
+                        <p class="border-t border-border/70 px-4 py-2 text-xs whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">
+                            @string.Join(Environment.NewLine, container.ErrorMessages)
+                        </p>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["LinkCrypterImportContainerResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        <PageNavigation CurrentPage="CurrentPage"
+                        TotalPages="TotalPages"
+                        OnPageSelected="GoToPageAsync" />
+    </div>
+</div>

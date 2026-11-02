@@ -147,7 +147,9 @@ public class LinkCrypterImportContainerReadingService(
         );
         var emptyPreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: [],
-            ReleaseFolderPath: null
+            ReleaseFolderPath: null,
+            ReleaseAction: null,
+            ExistingReleaseId: null
         ).ToJson();
 
         foreach (var listedContainer in listedContainers)
@@ -221,7 +223,9 @@ public class LinkCrypterImportContainerReadingService(
         container.Status = LinkCrypterImportContainerStatus.WaitingForFileCheck;
         container.PreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: mirrors,
-            ReleaseFolderPath: null
+            ReleaseFolderPath: null,
+            ReleaseAction: null,
+            ExistingReleaseId: null
         ).ToJson();
     }
 
@@ -252,8 +256,7 @@ public class LinkCrypterImportContainerReadingService(
                 ))
                 .ToList(),
             Decision: null,
-            UploadByBearcatReason: null,
-            UploadConfigTemplateId: null
+            UploadByBearcatReason: null
         );
     }
 

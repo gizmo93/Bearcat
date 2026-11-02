@@ -1,0 +1,93 @@
+@page "/link-crypter-imports"
+@using Bearcat.Website.Formatting
+
+<PageTitle>@L["LinkCrypterImports"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["LinkCrypterImports"]</h1>
+            <p class="text-sm text-muted-foreground">@L["LinkCrypterImportsIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowNewImportDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewLinkCrypterImport"]
+        </BbButton>
+    </div>
+
+    @if (imports.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoLinkCrypterImportsYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="@($"bearcat-config-header {ImportGridClass}")">
+                <span>@L["Crypter"]</span>
+                <span>@L["ReleaseTemplate"]</span>
+                <span>@L["State"]</span>
+                <span>@L["Timeline"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var import in imports)
+            {
+                <div class="bearcat-config-item">
+                    <div class="@($"bearcat-config-row {ImportGridClass}")">
+                        <div class="min-w-0 space-y-1">
+                            <a class="block truncate text-sm font-semibold hover:underline"
+                               href="@($"/link-crypter-imports/{import.Id}")"
+                               title="@import.LinkCrypterRegistrationName">
+                                @import.LinkCrypterRegistrationName
+                            </a>
+                            <p class="text-xs text-muted-foreground">@L["LinkCrypterImportContainerCount", import.ContainerCount]</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["ReleaseTemplate"]</p>
+                            <p class="truncate text-sm" title="@import.ReleaseTemplateName">@import.ReleaseTemplateName</p>
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["State"]</p>
+                            <LinkCrypterImportStateBadge State="import.State" />
+                            @if (HasBackgroundWork(import.State))
+                            {
+                                <p class="text-xs tabular-nums text-muted-foreground">
+                                    @L["LinkCrypterImportProgress", import.ProcessedContainerCount, import.ContainerCountToProcess]
+                                </p>
+                            }
+                        </div>
+
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="bearcat-mobile-label">@L["Timeline"]</p>
+                            <p class="text-xs text-muted-foreground" title="@import.CreatedAt.ToString("g")">
+                                @L["Created"]: <span class="text-foreground">@timeProvider.Humanize(import.CreatedAt)</span>
+                            </p>
+                            <p class="text-xs text-muted-foreground" title="@import.UpdatedAt.ToString("g")">
+                                @L["Updated"]: <span class="text-foreground">@timeProvider.Humanize(import.UpdatedAt)</span>
+                            </p>
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      OnClick="@(() => OpenImport(import))">
+                                @L["Open"]
+                            </BbButton>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["Delete"]"
+                                      Disabled="@HasBackgroundWork(import.State)"
+                                      OnClick="@(() => DeleteAsync(import))">
+                                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                            </BbButton>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

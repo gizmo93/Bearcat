@@ -21,6 +21,7 @@ public class LinkCrypterImportService(
         int linkCrypterRegistrationId,
         int releaseTemplateId,
         string? archiveFilesBasePathForReleasesWithoutLocalFiles,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -40,10 +41,7 @@ public class LinkCrypterImportService(
             );
         }
 
-        if (
-            linkCrypterFactory.Get(registration.LinkCrypterClassName)
-            is not ILinkCrypterWithContainerReading
-        )
+        if (!CanReadContainers(registration.LinkCrypterClassName))
         {
             throw new InvalidLinkCrypterImportException(
                 $"The link crypter of registration {registration.Name} cannot read existing containers."
@@ -78,6 +76,9 @@ public class LinkCrypterImportService(
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
             ReleaseTemplateId = releaseTemplateId,
             ArchiveFilesBasePathForReleasesWithoutLocalFiles = archiveFilesBasePath,
+            PrimaryLanguageCode = primaryLanguageCode
+                .TrimOrNullWhenWhitespace()
+                ?.ToLowerInvariant(),
             State = LinkCrypterImportState.ReadingContainers,
             CreatedAt = localNow,
             UpdatedAt = localNow,
@@ -88,6 +89,11 @@ public class LinkCrypterImportService(
         await repository.SaveChangesAsync(cancellationToken);
 
         return linkCrypterImport.Id;
+    }
+
+    public bool CanReadContainers(string linkCrypterClassName)
+    {
+        return linkCrypterFactory.Get(linkCrypterClassName) is ILinkCrypterWithContainerReading;
     }
 
     public async Task SetHosterRegistrationsAsync(
@@ -224,10 +230,15 @@ public class LinkCrypterImportService(
             cancellationToken
         );
 
-        if (linkCrypterImport.State is LinkCrypterImportState.Importing)
+        if (
+            linkCrypterImport.State
+            is LinkCrypterImportState.ReadingContainers
+                or LinkCrypterImportState.CheckingFiles
+                or LinkCrypterImportState.Importing
+        )
         {
             throw new InvalidLinkCrypterImportException(
-                "A link crypter import cannot be deleted while its containers are imported."
+                "A link crypter import cannot be deleted while it is processed in the background."
             );
         }
 

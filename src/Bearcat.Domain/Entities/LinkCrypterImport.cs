@@ -16,6 +16,8 @@ public class LinkCrypterImport
 
     public string? ArchiveFilesBasePathForReleasesWithoutLocalFiles { get; set; }
 
+    public string? PrimaryLanguageCode { get; set; }
+
     public LinkCrypterImportState State { get; set; }
 
     public DateTime CreatedAt { get; set; }

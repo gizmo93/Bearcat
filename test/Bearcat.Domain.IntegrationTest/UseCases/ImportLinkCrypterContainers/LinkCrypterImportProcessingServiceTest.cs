@@ -281,7 +281,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                     LinkCrypterImportUploadByBearcatReason.SomeFilesOffline
                 ),
                 (LinkCrypterImportMirrorDecision.UnsupportedHoster, null),
-                (LinkCrypterImportMirrorDecision.NotInReleaseTemplate, null),
+                (LinkCrypterImportMirrorDecision.HosterNotInRelease, null),
             ]);
         GetMirrorDecisions(containers[1])
             .ShouldBe([
@@ -331,48 +331,180 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     }
 
     [Test]
-    public async Task ProcessAsync_ReleaseExistsOrNameRepeats_ContainersAreNotImportable()
+    public async Task ProcessAsync_TwoContainersWithSameNameForDifferentHosters_ImportsBothIntoOneRelease()
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
-        await AddReleaseAsync(seed, ReleaseName.ToUpperInvariant());
-        AddListedContainer(
-            "https://crypter.test/existing-release",
-            ReleaseName,
-            [OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName)]
-        );
         AddListedContainer(
             "https://crypter.test/first",
-            OtherReleaseName,
-            [OnlineArchiveLink("https://first.test/b1", FirstArchiveFileName)]
+            ReleaseName,
+            [
+                OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName),
+                OnlineArchiveLink("https://first.test/a2", SecondArchiveFileName),
+            ]
         );
         AddListedContainer(
             "https://crypter.test/second",
-            $" {OtherReleaseName.ToLowerInvariant()} ",
-            [OnlineArchiveLink("https://second.test/c1", FirstArchiveFileName)]
+            $" {ReleaseName.ToLowerInvariant()} ",
+            [
+                OnlineArchiveLink("https://second.test/b1", FirstArchiveFileName),
+                OnlineArchiveLink("https://second.test/b2", SecondArchiveFileName),
+            ]
         );
-        var linkCrypterImportId = await StartImportAsync(seed);
-        await ProcessAsync();
-        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
 
         // Act
-        await ProcessAsync();
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
 
         // Assert
-        (await LoadImportAsync(linkCrypterImportId))
+        var release = await LoadReleaseAsync(ReleaseName);
+        var containers = (await LoadImportAsync(linkCrypterImportId))
             .Containers.OrderBy(container => container.Id)
-            .Select(container => (container.Status, container.NotImportableReason))
+            .ToList();
+        containers
+            .Select(container =>
+                (
+                    container.Status,
+                    container.ImportedReleaseId,
+                    LinkCrypterImportContainerPreview.FromJson(container.PreviewJson).ReleaseAction
+                )
+            )
             .ShouldBe([
                 (
-                    LinkCrypterImportContainerStatus.NotImportable,
-                    LinkCrypterImportNotImportableReason.ReleaseAlreadyExists
+                    LinkCrypterImportContainerStatus.Imported,
+                    release.Id,
+                    LinkCrypterImportReleaseAction.CreateRelease
                 ),
-                (LinkCrypterImportContainerStatus.Importable, null),
                 (
-                    LinkCrypterImportContainerStatus.NotImportable,
-                    LinkCrypterImportNotImportableReason.SameNameAsEarlierContainer
+                    LinkCrypterImportContainerStatus.Imported,
+                    release.Id,
+                    LinkCrypterImportReleaseAction.AttachToReleaseOfEarlierContainer
                 ),
             ]);
+        var archive = release.ArchiveConfigs.ShouldHaveSingleItem().Archives.ShouldHaveSingleItem();
+        release.UploadConfigs.Count.ShouldBe(2);
+        foreach (var uploadConfig in release.UploadConfigs)
+        {
+            var upload = uploadConfig.Uploads.ShouldHaveSingleItem();
+            upload.ArchiveId.ShouldBe(archive.Id);
+            var linkCrypter = uploadConfig.LinkCrypters.ShouldHaveSingleItem();
+            linkCrypter.ContainerScope.ShouldBe(LinkCrypterContainerScope.Release);
+            linkCrypter.LinkCrypterContainers.ShouldHaveSingleItem().UploadId.ShouldBe(upload.Id);
+        }
+        release.LinkCrypterContainers.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ContainerOfSecondCrypterForExistingRelease_LinksUploadWithSameLinksAndAddsOtherHosterWithoutSourceUpload()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        AddListedContainer(
+            "https://crypter.test/first",
+            ReleaseName,
+            [
+                OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName),
+                OnlineArchiveLink("https://first.test/a2", SecondArchiveFileName),
+            ],
+            [
+                OnlineArchiveLink("https://second.test/b1", FirstArchiveFileName),
+                OnlineArchiveLink("https://second.test/b2", SecondArchiveFileName),
+            ]
+        );
+        await RunWholeImportAsync(seed);
+        var secondLinkCrypterRegistrationId = await AddLinkCrypterRegistrationAsync();
+        listedContainers.Clear();
+        AddListedContainer(
+            "https://crypter.test/second-crypter",
+            ReleaseName,
+            ["https://first.test/a1", "https://first.test/a2"],
+            [
+                OnlineArchiveLink("https://second.test/c1", FirstArchiveFileName),
+                OnlineArchiveLink("https://second.test/c2", SecondArchiveFileName),
+            ]
+        );
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed, secondLinkCrypterRegistrationId);
+
+        // Assert
+        var release = await LoadReleaseAsync(ReleaseName);
+        var importContainer = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        importContainer.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
+        importContainer.ImportedReleaseId.ShouldBe(release.Id);
+        LinkCrypterImportContainerPreview
+            .FromJson(importContainer.PreviewJson)
+            .ReleaseAction.ShouldBe(LinkCrypterImportReleaseAction.AttachToExistingRelease);
+        var firstUpload = release
+            .UploadConfigs.Single(uploadConfig =>
+                uploadConfig.HosterRegistrationId == seed.FirstHosterRegistrationId
+            )
+            .Uploads.ShouldHaveSingleItem();
+        release.UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads).Count().ShouldBe(2);
+        release
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.LinkCrypters)
+            .Where(linkCrypter =>
+                linkCrypter.LinkCrypterRegistrationId == secondLinkCrypterRegistrationId
+            )
+            .Select(linkCrypter => linkCrypter.ContainerScope)
+            .ShouldBe([
+                LinkCrypterContainerScope.ReleaseAllHosters,
+                LinkCrypterContainerScope.ReleaseAllHosters,
+            ]);
+        var container = release.LinkCrypterContainers.Single(container =>
+            container.LinkCrypterRegistrationId == secondLinkCrypterRegistrationId
+        );
+        container.ContainerUrl.ShouldBe("https://crypter.test/second-crypter");
+        container.SourceUploads.Select(source => source.UploadId).ShouldBe([firstUpload.Id]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReleaseHasContainerOfSameCrypterForHoster_FailsThatContainerAndImportsTheOthers()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        AddListedContainer(
+            "https://crypter.test/first",
+            ReleaseName,
+            [OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName)]
+        );
+        await RunWholeImportAsync(seed);
+        listedContainers.Clear();
+        AddListedContainer(
+            "https://crypter.test/again",
+            ReleaseName,
+            [OnlineArchiveLink("https://first.test/b1", FirstArchiveFileName)]
+        );
+        AddListedContainer(
+            "https://crypter.test/other",
+            OtherReleaseName,
+            [OnlineArchiveLink("https://second.test/c1", FirstArchiveFileName)]
+        );
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var containers = (await LoadImportAsync(linkCrypterImportId))
+            .Containers.OrderBy(container => container.Id)
+            .ToList();
+        containers
+            .Select(container => container.Status)
+            .ShouldBe([
+                LinkCrypterImportContainerStatus.ImportFailed,
+                LinkCrypterImportContainerStatus.Imported,
+            ]);
+        containers[0].ErrorMessages.ShouldHaveSingleItem().ShouldContain(ReleaseName);
+        var release = await LoadReleaseAsync(ReleaseName);
+        release
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads)
+            .ShouldHaveSingleItem()
+            .UploadedFiles.ShouldHaveSingleItem()
+            .HosterFileLink.ShouldBe("https://first.test/a1");
+        release
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.LinkCrypters)
+            .SelectMany(linkCrypter => linkCrypter.LinkCrypterContainers)
+            .ShouldHaveSingleItem()
+            .ContainerUrl.ShouldBe("https://crypter.test/first");
     }
 
     [Test]
@@ -393,7 +525,10 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         );
 
         // Act
-        var linkCrypterImportId = await RunWholeImportAsync(seed);
+        var linkCrypterImportId = await RunWholeImportAsync(
+            seed: seed,
+            primaryLanguageCode: " DE "
+        );
 
         // Assert
         var linkCrypterImport = await LoadImportAsync(linkCrypterImportId);
@@ -405,6 +540,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         var release = await LoadReleaseAsync(ReleaseName);
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
         release.ReleaseFolderPath.ShouldBe(releaseFolderPath);
+        release.PrimaryLanguageCode.ShouldBe("de");
         release.UploadsPostedAt.ShouldBe(StartTime);
         var archive = release.ArchiveConfigs.ShouldHaveSingleItem().Archives.ShouldHaveSingleItem();
         archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
@@ -414,6 +550,8 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         );
         var upload = firstUploadConfig.Uploads.ShouldHaveSingleItem();
         upload.UploadState.ShouldBe(UploadState.Completed);
+        upload.OnlineState.ShouldBe(OnlineState.Online);
+        upload.UploadedFiles.ShouldAllBe(file => file.OnlineState == OnlineState.Online);
         upload.UploadedAt.ShouldBe(StartTime);
         upload.HosterRegistrationId.ShouldBe(seed.FirstHosterRegistrationId);
         upload.ArchiveId.ShouldBe(archive.Id);
@@ -446,6 +584,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        await AddThirdHosterUploadConfigTemplateAsync(seed);
         AddListedContainer(
             "https://crypter.test/container",
             ReleaseName,
@@ -466,6 +605,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         var release = await LoadReleaseAsync(ReleaseName);
         release.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
         release.ReleaseFolderPath.ShouldBeNull();
+        release.ReleaseInfoCheckedAt.ShouldBeNull();
         var archiveConfig = release.ArchiveConfigs.ShouldHaveSingleItem();
         archiveConfig.ArchiveFilesBasePath.ShouldBe(archiveFilesBasePath);
         var archive = archiveConfig.Archives.ShouldHaveSingleItem();
@@ -486,6 +626,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
             .ShouldBe(
                 [
                     (LinkCrypterContainerScope.ReleaseAllHosters, "template-secret"),
+                    (LinkCrypterContainerScope.ReleaseAllHosters, null),
                     (LinkCrypterContainerScope.ReleaseAllHosters, null),
                 ],
                 ignoreOrder: true
@@ -546,7 +687,9 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
             ]);
         containers[0].ErrorMessages.ShouldHaveSingleItem();
         containers[1]
-            .ErrorMessages.ShouldBe([$"A release named {OtherReleaseName} already exists."]);
+            .ErrorMessages.ShouldBe([
+                $"No mirror of the container belongs to a hoster of release {OtherReleaseName}.",
+            ]);
         containers[2].ImportedReleaseId.ShouldBe((await LoadReleaseAsync(ThirdReleaseName)).Id);
         (
             await CreateDbContext().Releases.CountAsync(release => release.Name == ReleaseName)
@@ -558,9 +701,17 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         ).NotificationKind.ShouldBe(NotificationKind.LinkCrypterImportFailed);
     }
 
-    private async Task<int> RunWholeImportAsync(TemplateSeed seed)
+    private async Task<int> RunWholeImportAsync(
+        TemplateSeed seed,
+        int? linkCrypterRegistrationId = null,
+        string? primaryLanguageCode = null
+    )
     {
-        var linkCrypterImportId = await StartImportAsync(seed);
+        var linkCrypterImportId = await StartImportAsync(
+            seed: seed,
+            linkCrypterRegistrationId: linkCrypterRegistrationId,
+            primaryLanguageCode: primaryLanguageCode
+        );
         await ProcessAsync();
         await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
         await ProcessAsync();
@@ -571,13 +722,19 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         return linkCrypterImportId;
     }
 
-    private async Task<int> StartImportAsync(TemplateSeed seed)
+    private async Task<int> StartImportAsync(
+        TemplateSeed seed,
+        int? linkCrypterRegistrationId = null,
+        string? primaryLanguageCode = null
+    )
     {
         return await CreateLinkCrypterImportService(CreateDbContext())
             .StartAsync(
-                linkCrypterRegistrationId: seed.LinkCrypterRegistrationId,
+                linkCrypterRegistrationId: linkCrypterRegistrationId
+                    ?? seed.LinkCrypterRegistrationId,
                 releaseTemplateId: seed.ReleaseTemplateId,
-                archiveFilesBasePathForReleasesWithoutLocalFiles: archiveFilesBasePath
+                archiveFilesBasePathForReleasesWithoutLocalFiles: archiveFilesBasePath,
+                primaryLanguageCode: primaryLanguageCode
             );
     }
 
@@ -883,6 +1040,22 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         await dbContext.SaveChangesAsync();
     }
 
+    private async Task<int> AddLinkCrypterRegistrationAsync()
+    {
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = "Second crypter",
+            LinkCrypterClassName = LinkCrypterClassName,
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+        var dbContext = CreateDbContext();
+        dbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        return linkCrypterRegistration.Id;
+    }
+
     private async Task AddReleaseAsync(TemplateSeed seed, string releaseName)
     {
         var dbContext = CreateDbContext();
@@ -997,6 +1170,27 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
             FirstHosterRegistrationId: firstHosterRegistration.Id,
             SecondHosterRegistrationId: secondHosterRegistration.Id
         );
+    }
+
+    private async Task AddThirdHosterUploadConfigTemplateAsync(TemplateSeed seed)
+    {
+        var dbContext = CreateDbContext();
+        var releaseTemplate = await dbContext
+            .ReleaseTemplates.Include(template => template.ArchiveConfigTemplates)
+            .SingleAsync(template => template.Id == seed.ReleaseTemplateId);
+        var thirdHosterRegistration = await dbContext.HosterRegistrations.SingleAsync(
+            registration => registration.HosterClassName == ThirdHosterClassName
+        );
+        dbContext.UploadConfigTemplates.Add(
+            new UploadConfigTemplate
+            {
+                ReleaseTemplate = releaseTemplate,
+                UploadSource = UploadSource.ArchiveFiles,
+                ArchiveConfigTemplate = releaseTemplate.ArchiveConfigTemplates.Single(),
+                HosterRegistration = thirdHosterRegistration,
+            }
+        );
+        await dbContext.SaveChangesAsync();
     }
 
     private static HosterRegistration CreateHosterRegistration(string name, string hosterClassName)
