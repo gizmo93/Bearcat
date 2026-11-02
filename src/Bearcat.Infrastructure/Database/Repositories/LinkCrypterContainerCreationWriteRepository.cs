@@ -21,11 +21,11 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.LinkCrypters)
                     .ThenInclude(l => l.LinkCrypterRegistration)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.LinkCrypters)
+                    .ThenInclude(l => l.LinkCrypterContainers)
             .Include(u => u.LinkCrypterContainers)
             .Include(u => u.UploadedFiles)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.Uploads)
-                    .ThenInclude(u => u.LinkCrypterContainers)
             .Where(u =>
                 u.UploadState == UploadState.Completed
                 && u.OnlineState == OnlineState.Online

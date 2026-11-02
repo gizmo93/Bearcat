@@ -273,6 +273,83 @@ public class ReleaseAllHostersLinkCrypterContainerServiceTest(DatabaseProvider d
         notification.Message.ShouldContain("https://crypter.test/recreated");
     }
 
+    [Test]
+    public async Task UpdateOutdatedContainersAsync_ImportedContainerWhoseSourceUploadsAreTheOnlyCompletedUploads_DoesNotCallLinkCrypter()
+    {
+        // Arrange
+        var seed = await AddReleaseWithFirstMemberUploadOnlyAsync();
+        await AddExistingContainerAsync(seed, [seed.FirstUploadId]);
+
+        // Act
+        await service.UpdateOutdatedContainersAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext
+            .LinkCrypterContainers.Include(c => c.SourceUploads)
+            .SingleAsync();
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        container.SourceUploads.Select(source => source.UploadId).ShouldBe([seed.FirstUploadId]);
+        linkCrypterMock.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task UpdateOutdatedContainersAsync_FirstUploadOfNotImportedMemberCompleted_UpdatesImportedContainerKeepingUrl()
+    {
+        // Arrange
+        var seed = await AddReleaseWithFirstMemberUploadOnlyAsync();
+        var containerId = await AddExistingContainerAsync(seed, [seed.FirstUploadId]);
+        var secondUploadId = await AddCompletedUploadAsync(
+            seed.SecondUploadConfigId,
+            "https://second.test/a"
+        );
+        linkCrypterMock
+            .Setup(c =>
+                c.UpdateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    "https://crypter.test/existing",
+                    "existing-reference",
+                    "container-secret",
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 2
+                        && linksPerMirrorNumber[2].SequenceEqual(ExpectedLinksOfSecondUpload)
+                    ),
+                    true,
+                    true,
+                    true,
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new UpdateContainerResult(UpdateContainerOutcome.Success, null));
+
+        // Act
+        await service.UpdateOutdatedContainersAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext
+            .LinkCrypterContainers.Include(c => c.SourceUploads)
+            .SingleAsync();
+        container.Id.ShouldBe(containerId);
+        container.ContainerUrl.ShouldBe("https://crypter.test/existing");
+        container
+            .SourceUploads.Select(source => source.UploadId)
+            .Order()
+            .ShouldBe(new[] { seed.FirstUploadId, secondUploadId }.Order());
+    }
+
+    private async Task<ReleaseSeed> AddReleaseWithFirstMemberUploadOnlyAsync()
+    {
+        var seed = await AddReleaseWithTwoMemberUploadConfigsAsync();
+        var secondUpload = await DbContext
+            .Uploads.Include(upload => upload.UploadedFiles)
+            .SingleAsync(upload => upload.Id == seed.SecondUploadId);
+        DbContext.Uploads.Remove(secondUpload);
+        await DbContext.SaveChangesAsync();
+
+        return seed;
+    }
+
     private async Task<ReleaseSeed> AddReleaseWithTwoMemberUploadConfigsAsync()
     {
         var release = new Release

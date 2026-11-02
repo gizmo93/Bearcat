@@ -211,6 +211,27 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid.Description"
         ),
         new(
+            Kind: NotificationKind.LinkCrypterImportReadyForReview,
+            Severity: NotificationSeverity.Info,
+            Group: NotificationGroup.LinkCrypters,
+            DisplayName: "NotificationKind.LinkCrypterImportReadyForReview",
+            Description: "NotificationKind.LinkCrypterImportReadyForReview.Description"
+        ),
+        new(
+            Kind: NotificationKind.LinkCrypterImportCompleted,
+            Severity: NotificationSeverity.Info,
+            Group: NotificationGroup.LinkCrypters,
+            DisplayName: "NotificationKind.LinkCrypterImportCompleted",
+            Description: "NotificationKind.LinkCrypterImportCompleted.Description"
+        ),
+        new(
+            Kind: NotificationKind.LinkCrypterImportFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.LinkCrypters,
+            DisplayName: "NotificationKind.LinkCrypterImportFailed",
+            Description: "NotificationKind.LinkCrypterImportFailed.Description"
+        ),
+        new(
             Kind: NotificationKind.AutomaticForumPostCreated,
             Severity: NotificationSeverity.Info,
             Group: NotificationGroup.DistributionSites,

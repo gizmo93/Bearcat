@@ -20,6 +20,8 @@ public interface INotificationService
     Task ResolveAllAsync(CancellationToken cancellationToken = default);
     Task ResolveAllOfKindAsync(NotificationKind kind, CancellationToken cancellationToken);
 
+    void Create(NotificationKind kind, string message);
+
     void Create<TEntity>(
         NotificationKind kind,
         string message,

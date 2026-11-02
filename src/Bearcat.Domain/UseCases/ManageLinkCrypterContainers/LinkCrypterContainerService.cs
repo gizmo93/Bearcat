@@ -160,8 +160,15 @@ public class LinkCrypterContainerService(
             cancellationToken
         );
 
+        if (releaseContainer.Upload is null)
+        {
+            throw new InvalidOperationException(
+                "The link crypter container has no completed upload whose links could be sent to the link crypter yet."
+            );
+        }
+
         await UpdateReleaseContainerAsync(
-            upload: releaseContainer.Upload!,
+            upload: releaseContainer.Upload,
             container: releaseContainer,
             linkCrypterConfig: releaseContainer.UploadConfigLinkCrypter!,
             cancellationToken: cancellationToken
@@ -288,11 +295,9 @@ public class LinkCrypterContainerService(
         UploadConfigLinkCrypter linkCrypterConfig
     )
     {
-        return upload
-            .UploadConfig.Uploads.Where(u => u.Id < upload.Id)
-            .SelectMany(u => u.LinkCrypterContainers)
-            .Where(l =>
-                l.UploadConfigLinkCrypterId == linkCrypterConfig.Id
+        return linkCrypterConfig
+            .LinkCrypterContainers.Where(l =>
+                (l.UploadId is null || l.UploadId < upload.Id)
                 && l.State
                     is LinkCrypterContainerState.Created
                         or LinkCrypterContainerState.UpdateFailed

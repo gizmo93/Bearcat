@@ -28,6 +28,10 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.Status;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reading;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -260,6 +264,11 @@ public static class ServiceProviderConfig
                 provider.GetRequiredService<CollectionLinkCrypterContainerService>()
             );
             services.AddScoped<LinkCrypterContainerService>();
+            services.AddScoped<LinkCrypterImportService>();
+            services.AddScoped<LinkCrypterImportProcessingService>();
+            services.AddScoped<LinkCrypterImportContainerReadingService>();
+            services.AddScoped<LinkCrypterImportPreviewService>();
+            services.AddScoped<LinkCrypterImportContainerImportService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();

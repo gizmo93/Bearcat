@@ -955,6 +955,141 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.ToTable("LinkCrypterContainerSourceUploads");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ArchiveFilesBasePathForReleasesWithoutLocalFiles")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ContainerCountToProcess")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("ErrorMessages")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LinkCrypterRegistrationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessedContainerCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LinkCrypterRegistrationId");
+
+                    b.HasIndex("ReleaseTemplateId");
+
+                    b.HasIndex("State");
+
+                    b.ToTable("LinkCrypterImports");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportContainer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContainerId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContainerName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContainerUrl")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("ErrorMessages")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalReference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("HasBackupLinks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ImportedReleaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LinkCrypterImportId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("NotImportableReason")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PreviewJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportedReleaseId");
+
+                    b.HasIndex("LinkCrypterImportId", "Status");
+
+                    b.ToTable("LinkCrypterImportContainers");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportHosterRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("HosterClassName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("HosterRegistrationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LinkCrypterImportId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HosterRegistrationId");
+
+                    b.HasIndex("LinkCrypterImportId", "HosterClassName")
+                        .IsUnique();
+
+                    b.ToTable("LinkCrypterImportHosterRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -2805,6 +2940,61 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("Upload");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImport", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterRegistration", "LinkCrypterRegistration")
+                        .WithMany()
+                        .HasForeignKey("LinkCrypterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LinkCrypterRegistration");
+
+                    b.Navigation("ReleaseTemplate");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportContainer", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "ImportedRelease")
+                        .WithMany()
+                        .HasForeignKey("ImportedReleaseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterImport", "LinkCrypterImport")
+                        .WithMany("Containers")
+                        .HasForeignKey("LinkCrypterImportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportedRelease");
+
+                    b.Navigation("LinkCrypterImport");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportHosterRegistration", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
+                        .WithMany()
+                        .HasForeignKey("HosterRegistrationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterImport", "LinkCrypterImport")
+                        .WithMany("HosterRegistrations")
+                        .HasForeignKey("LinkCrypterImportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HosterRegistration");
+
+                    b.Navigation("LinkCrypterImport");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterRegistration", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ProxyServer", null)
@@ -3395,6 +3585,13 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("Notifications");
 
                     b.Navigation("SourceUploads");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImport", b =>
+                {
+                    b.Navigation("Containers");
+
+                    b.Navigation("HosterRegistrations");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.QualityProfile", b =>

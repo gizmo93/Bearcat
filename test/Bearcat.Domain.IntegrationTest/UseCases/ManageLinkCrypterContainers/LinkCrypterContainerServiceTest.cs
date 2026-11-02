@@ -267,6 +267,74 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateMissingLinkCrypterContainersAsync_ImportedContainerWithoutUpload_UpdatesImportedContainerKeepingUrl()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigWithLinkCrypterAsync(isActive: true);
+        var linkCrypterConfig = uploadConfig.LinkCrypters.Single();
+        var importedContainer = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.Release,
+            UploadConfigLinkCrypterId = linkCrypterConfig.Id,
+            LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
+            ContainerUrl = "https://crypter.test/imported",
+            ExternalReference = "imported-reference",
+            Password = "container-secret",
+            State = LinkCrypterContainerState.Created,
+            Errors = [],
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+        };
+        var firstUpload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles =
+            [
+                CreateUploadedFile("https://hoster.test/new-b"),
+                CreateUploadedFile("https://hoster.test/new-a"),
+            ],
+            ErrorMessages = [],
+        };
+        DbContext.LinkCrypterContainers.Add(importedContainer);
+        DbContext.Uploads.Add(firstUpload);
+        await DbContext.SaveChangesAsync();
+        linkCrypterMock
+            .Setup(c =>
+                c.UpdateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    "https://crypter.test/imported",
+                    "imported-reference",
+                    "container-secret",
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksNewAAndNewB)
+                    ),
+                    true,
+                    true,
+                    true,
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new UpdateContainerResult(UpdateContainerOutcome.Success, null));
+
+        // Act
+        await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext.LinkCrypterContainers.SingleAsync();
+        container.Id.ShouldBe(importedContainer.Id);
+        container.UploadId.ShouldBe(firstUpload.Id);
+        container.ContainerUrl.ShouldBe("https://crypter.test/imported");
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        VerifyCreateContainerWasNeverCalled();
+    }
+
+    [Test]
     public async Task CreateMissingLinkCrypterContainersAsync_MultiplePreviousContainers_UpdatesMostRecentContainer()
     {
         // Arrange

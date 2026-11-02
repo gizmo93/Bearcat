@@ -12,6 +12,7 @@ using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.FirstStartSetup.Repositories;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -269,6 +270,8 @@ public static class ServiceProviderConfig
                 ILinkCrypterContainerCreationWriteRepository,
                 LinkCrypterContainerCreationWriteRepository
             >();
+            services.AddScoped<ILinkCrypterImportRepository, LinkCrypterImportRepository>();
+            services.AddScoped<ILinkCrypterImportReadRepository, LinkCrypterImportReadRepository>();
             services.AddScoped<
                 IUploadConfigLinkCrypterReadRepository,
                 UploadConfigLinkCrypterReadRepository

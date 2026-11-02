@@ -48,6 +48,11 @@ public sealed class FakeNotificationService : INotificationService
         return Task.CompletedTask;
     }
 
+    public void Create(NotificationKind kind, string message)
+    {
+        Created.Add(new CreatedNotification(kind, message));
+    }
+
     public void Create<TEntity>(
         NotificationKind kind,
         string message,

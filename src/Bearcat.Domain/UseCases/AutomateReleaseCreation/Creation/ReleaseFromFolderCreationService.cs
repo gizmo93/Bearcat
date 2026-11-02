@@ -24,11 +24,43 @@ public class ReleaseFromFolderCreationService(
         CancellationToken cancellationToken
     )
     {
+        var releaseData = await CreateWithReleaseTypeAsync(
+            releaseTemplate: releaseTemplate,
+            releaseType: releaseTemplate.ReleaseType,
+            releaseName: name.TrimOrNullWhenWhitespace()
+                ?? FolderPathHelper.GetFolderName(folderPath),
+            releaseFolderPath: folderPath,
+            createUnmanagedArchiveConfig: release =>
+                unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
+                    release: release,
+                    archiveFolderPath: folderPath,
+                    createdAt: localNow
+                ),
+            primaryLanguageCode: primaryLanguageCode,
+            localNow: localNow,
+            cancellationToken: cancellationToken
+        );
+
+        return releaseData.Release;
+    }
+
+    public async Task<ReleaseFromTemplateData> CreateWithReleaseTypeAsync(
+        ReleaseTemplate releaseTemplate,
+        ReleaseType releaseType,
+        string releaseName,
+        string? releaseFolderPath,
+        Func<Release, ArchiveConfig>? createUnmanagedArchiveConfig,
+        string? primaryLanguageCode,
+        DateTime localNow,
+        CancellationToken cancellationToken
+    )
+    {
         var releaseData = CreateReleaseFromTemplate(
             releaseTemplate: releaseTemplate,
-            releaseFolderPath: folderPath,
-            name: name,
-            localNow: localNow
+            releaseType: releaseType,
+            releaseName: releaseName,
+            releaseFolderPath: releaseFolderPath,
+            createUnmanagedArchiveConfig: createUnmanagedArchiveConfig
         );
         var release = releaseData.Release;
 
@@ -46,19 +78,17 @@ public class ReleaseFromFolderCreationService(
 
         await mediaMetadataService.TryExtractAsync(release, cancellationToken);
 
-        return release;
+        return releaseData;
     }
 
-    private ReleaseFromTemplateData CreateReleaseFromTemplate(
+    private static ReleaseFromTemplateData CreateReleaseFromTemplate(
         ReleaseTemplate releaseTemplate,
-        string releaseFolderPath,
-        string? name,
-        DateTime localNow
+        ReleaseType releaseType,
+        string releaseName,
+        string? releaseFolderPath,
+        Func<Release, ArchiveConfig>? createUnmanagedArchiveConfig
     )
     {
-        var releaseType = releaseTemplate.ReleaseType;
-        var releaseName =
-            name.TrimOrNullWhenWhitespace() ?? FolderPathHelper.GetFolderName(releaseFolderPath);
         var isUnmanaged = releaseType is ReleaseType.Unmanaged;
 
         var release = new Release
@@ -104,17 +134,15 @@ public class ReleaseFromFolderCreationService(
         }
         else
         {
-            unmanagedArchiveConfig =
-                unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
-                    release: release,
-                    archiveFolderPath: releaseFolderPath,
-                    createdAt: localNow
-                );
+            unmanagedArchiveConfig = createUnmanagedArchiveConfig!(release);
             release.ArchiveConfigs.Add(unmanagedArchiveConfig);
         }
 
         var uploadConfigTemplates = releaseTemplate
-            .UploadConfigTemplates.OrderBy(template => template.Id)
+            .UploadConfigTemplates.Where(template =>
+                !isUnmanaged || template.UploadSource is not UploadSource.VideoFiles
+            )
+            .OrderBy(template => template.Id)
             .ToList();
 
         var uploadConfigMatches = new List<ReleaseUploadConfigMatch>(uploadConfigTemplates.Count);

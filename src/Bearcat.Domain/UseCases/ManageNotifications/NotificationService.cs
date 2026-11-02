@@ -22,10 +22,7 @@ public class NotificationService(
         CancellationToken cancellationToken
     )
     {
-        if (IsEnabled(kind))
-        {
-            repository.Add(CreateNotification(kind, message));
-        }
+        Create(kind, message);
 
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -70,6 +67,14 @@ public class NotificationService(
             resolvedAt: timeProvider.GetLocalNow(),
             cancellationToken: cancellationToken
         );
+    }
+
+    public void Create(NotificationKind kind, string message)
+    {
+        if (IsEnabled(kind))
+        {
+            repository.Add(CreateNotification(kind, message));
+        }
     }
 
     public void Create<TEntity>(
@@ -155,6 +160,10 @@ public class NotificationService(
                 configuration.CollectionLinkCrypterContainerInvalid,
             NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid =>
                 configuration.ReleaseAllHostersLinkCrypterContainerInvalid,
+            NotificationKind.LinkCrypterImportReadyForReview =>
+                configuration.LinkCrypterImportReadyForReview,
+            NotificationKind.LinkCrypterImportCompleted => configuration.LinkCrypterImportCompleted,
+            NotificationKind.LinkCrypterImportFailed => configuration.LinkCrypterImportFailed,
             NotificationKind.AutomaticForumPostCreated => configuration.AutomaticForumPostCreated,
             NotificationKind.AutomaticForumPostFailed => configuration.AutomaticForumPostFailed,
             NotificationKind.AutomaticForumPostUpdated => configuration.AutomaticForumPostUpdated,

@@ -41,6 +41,9 @@ public interface IBearcatReadDbContext
     public DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; }
     public DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; }
     public DbSet<LinkCrypterContainerSourceUpload> LinkCrypterContainerSourceUploads { get; set; }
+    public DbSet<LinkCrypterImport> LinkCrypterImports { get; set; }
+    public DbSet<LinkCrypterImportHosterRegistration> LinkCrypterImportHosterRegistrations { get; set; }
+    public DbSet<LinkCrypterImportContainer> LinkCrypterImportContainers { get; set; }
     public DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; }
     public DbSet<NfoDatabaseRegistration> NfoDatabaseRegistrations { get; set; }
     public DbSet<ReleaseInfo> ReleaseInfos { get; set; }
