@@ -9,4 +9,10 @@ public interface IFileCryptApi
         [Body] FormUrlEncodedContent request,
         CancellationToken cancellationToken = default
     );
+
+    [Post("/api.php")]
+    Task<ContainerInfoResponse> GetContainerInfoAsync(
+        [Body] FormUrlEncodedContent request,
+        CancellationToken cancellationToken = default
+    );
 }

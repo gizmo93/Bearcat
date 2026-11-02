@@ -744,6 +744,27 @@ public class RapidgatorTest
         );
     }
 
+    [TestCase(
+        "https://rg.to/file/36520a0eb66e18c296421874a50bd30b/archive.part5.rar.html",
+        "https://rapidgator.net/file/36520a0eb66e18c296421874a50bd30b"
+    )]
+    [TestCase(
+        "https://www.rapidgator.net/file/fd90f309156dca5c7b83359483451bba",
+        "https://rapidgator.net/file/fd90f309156dca5c7b83359483451bba"
+    )]
+    [TestCase("https://rapidgator.net/folder/123/name.html", null)]
+    public void ConvertToOwnFileLinkFormat_RapidgatorLinkVariants_ReturnsRapidgatorNetLinkWithoutFileName(
+        string fileLink,
+        string? expectedFileLink
+    )
+    {
+        // Act
+        var result = service.ConvertToOwnFileLinkFormat(fileLink);
+
+        // Assert
+        result.ShouldBe(expectedFileLink);
+    }
+
     private static LoginResponse.ResponseObject CreateLoginResponse(
         int uploadPipes,
         int remoteUploadJobs = 0

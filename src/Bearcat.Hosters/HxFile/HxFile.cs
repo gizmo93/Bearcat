@@ -11,6 +11,8 @@ public class HxFile(IHxFileApiClient apiClient, ILogger<HxFile> logger)
 {
     public override string Name => "hxfile.co";
 
+    public override IReadOnlyList<string> FileLinkHostNames => ["hxfile.co"];
+
     protected override string FileUrlFormat => "https://hxfile.co/{0}.html";
 
     public override bool SupportsPremiumOnlyDownloads => false;

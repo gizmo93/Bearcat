@@ -9,6 +9,9 @@ public class FreeDlink(IFreeDlinkApiClient apiClient, ILogger<FreeDlink> logger)
 {
     public override string Name => "freedl.ink";
 
+    public override IReadOnlyList<string> FileLinkHostNames =>
+        ["freedl.ink", "frdl.to", "frdl.io", "frdl.is", "frdl.my"];
+
     protected override string FileUrlFormat => "https://freedl.ink/{0}.html";
 
     public override bool SupportsPremiumOnlyDownloads => false;

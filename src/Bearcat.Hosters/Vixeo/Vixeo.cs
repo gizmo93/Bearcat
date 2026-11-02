@@ -19,6 +19,8 @@ public class Vixeo(ApiClient apiClient, ILogger<Vixeo> logger) : IVideoHoster
 
     public string Name => "Vixeo";
 
+    public IReadOnlyList<string> FileLinkHostNames => ["vixeo.io", "vidsonic.net"];
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(VixeoConfig.ApiKey)];

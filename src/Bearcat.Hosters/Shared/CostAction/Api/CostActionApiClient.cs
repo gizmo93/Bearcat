@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -128,6 +129,45 @@ public class CostActionApiClient(
         }
 
         return statusPerFileId;
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        string apiKey,
+        string appType,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileInfoPerFileId = new Dictionary<string, HostedFileInfo>(StringComparer.Ordinal);
+
+        foreach (var chunk in fileIds.Distinct(StringComparer.Ordinal).Chunk(MaxFileIdsPerRequest))
+        {
+            var response = await SendAsync(
+                request: () =>
+                    api.GetFilesInfoAsync(
+                        apiKey: apiKey,
+                        properties: DownloadCountProperty,
+                        perPage: MaxFileIdsPerRequest,
+                        request: new FilesInfoRequest(appType, chunk),
+                        cancellationToken: cancellationToken
+                    ),
+                operationName: "Files info request",
+                cancellationToken: cancellationToken
+            );
+
+            foreach (var file in (response.Files ?? []).Where(file => file.Id is not null))
+            {
+                fileInfoPerFileId[file.Id!] = file.IsDeleted
+                    ? new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null)
+                    : new HostedFileInfo(
+                        IsOnline: true,
+                        FileName: file.Name,
+                        SizeBytes: file.SizeInBytes
+                    );
+            }
+        }
+
+        return fileInfoPerFileId;
     }
 
     public async Task<string> CreateFolderAsync(

@@ -10,4 +10,6 @@ public class Playmate(ApiClient apiClient, ILogger<Playmate> logger)
         IHosterWithFolders
 {
     public override string Name => "Playmate";
+
+    public override IReadOnlyList<string> FileLinkHostNames => ["playmate.to"];
 }

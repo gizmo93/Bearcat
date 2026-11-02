@@ -19,9 +19,13 @@ namespace Bearcat.Hosters.Rapidgator;
 public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logger)
     : IHosterWithFolders,
         IHosterWithDownload,
-        IHosterWithStorageQuota
+        IHosterWithStorageQuota,
+        IHosterWithFileInfo
 {
     public string Name => "Rapidgator";
+
+    public IReadOnlyList<string> FileLinkHostNames =>
+        ["rapidgator.net", "rapidgator.asia", "rg.to"];
 
     public bool SupportsPremiumOnlyDownloads => true;
 
@@ -149,6 +153,58 @@ public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logg
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<RapidgatorConfig>();
+
+        var ownFileLinkPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ConvertToOwnFileLinkFormat
+        );
+
+        try
+        {
+            var fileInfoPerOwnFileLink = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileUrls: ownFileLinkPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(
+                ownFileLinkPerFileLink,
+                fileInfoPerOwnFileLink
+            );
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return
+            FileLinkHostMatching.GetPathSegments(fileLinkUri) is ["file", var fileId, ..]
+            && fileId.All(char.IsAsciiLetterOrDigit)
+            ? $"https://rapidgator.net/file/{fileId}"
+            : null;
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)

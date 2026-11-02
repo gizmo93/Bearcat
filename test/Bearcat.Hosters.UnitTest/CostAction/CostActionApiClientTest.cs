@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.CostAction.Api;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
@@ -516,6 +517,65 @@ public class CostActionApiClientTest
 
         // Assert
         exception.Message.ShouldContain("fd2 user does not exist");
+    }
+
+    [Test]
+    public async Task GetFileInfosAsync_OnlineDeletedAndMissingFiles_ReturnsInfoOnlyForReturnedFiles()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.GetFilesInfoAsync(
+                    ApiKey,
+                    "download_count",
+                    100,
+                    It.Is<FilesInfoRequest>(request =>
+                        request.AppType == AppType
+                        && request.FileIds.SequenceEqual(ExpectedFileIdsOnlineDeletedMissing)
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateResponse(
+                    new FilesInfoResponse(
+                        Status: "success",
+                        Message: null,
+                        Files:
+                        [
+                            new FileInfoResponse(
+                                Id: "online",
+                                Name: "a.rar",
+                                IsDeleted: false,
+                                DownloadCount: 7,
+                                SizeInBytes: 1049624576
+                            ),
+                            new FileInfoResponse(
+                                Id: "deleted",
+                                Name: "b.rar",
+                                IsDeleted: true,
+                                DownloadCount: 0,
+                                SizeInBytes: 106954756
+                            ),
+                        ]
+                    )
+                )
+            );
+
+        // Act
+        var result = await apiClient.GetFileInfosAsync(
+            apiKey: ApiKey,
+            appType: AppType,
+            fileIds: ["online", "deleted", "missing"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result["online"]
+            .ShouldBe(new HostedFileInfo(IsOnline: true, FileName: "a.rar", SizeBytes: 1049624576));
+        result["deleted"]
+            .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
+        result.ShouldNotContainKey("missing");
     }
 
     private void SetupUploadUrl()

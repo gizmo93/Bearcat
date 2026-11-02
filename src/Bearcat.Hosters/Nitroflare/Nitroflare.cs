@@ -12,9 +12,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Nitroflare;
 
-public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logger) : IHoster
+public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logger)
+    : IHosterWithFileInfo
 {
     public string Name => "Nitroflare";
+
+    public IReadOnlyList<string> FileLinkHostNames =>
+        ["nitroflare.com", "nitroflare.net", "nitro.download"];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -113,6 +117,59 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
         }
     }
 
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            fileLink =>
+                ConvertToOwnFileLinkFormat(fileLink) is { } ownFileLink
+                    ? ExtractFileIdFromOwnFileLink(ownFileLink)
+                    : null
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                fileIdPerFileLink.Values.ToList(),
+                cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return FileLinkHostMatching.GetPathSegments(fileLinkUri) switch
+        {
+            ["view" or "watch", var fileId, var fileName, ..]
+                when fileId.All(char.IsAsciiLetterOrDigit) =>
+                $"https://nitroflare.com/view/{fileId}/{fileName}",
+            ["view" or "watch", var fileId] when fileId.All(char.IsAsciiLetterOrDigit) =>
+                $"https://nitroflare.com/view/{fileId}",
+            _ => null,
+        };
+    }
+
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
         var config = JsonSerializer.Deserialize<NitroflareConfig>(serializedConfig);
@@ -169,5 +226,10 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    private static string ExtractFileIdFromOwnFileLink(string ownFileLink)
+    {
+        return FileLinkHostMatching.GetPathSegments(new Uri(ownFileLink))[1];
     }
 }

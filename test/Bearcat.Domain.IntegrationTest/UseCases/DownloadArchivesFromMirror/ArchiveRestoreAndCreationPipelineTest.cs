@@ -758,6 +758,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
 
         public string Name => "Mirror";
 
+        public IReadOnlyList<string> FileLinkHostNames => [];
+
         public bool SupportsPremiumOnlyDownloads => false;
 
         public bool DownloadRequiresPremium => false;

@@ -14,11 +14,14 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.KrakenFiles;
 
 public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> logger)
-    : IHosterWithFolders
+    : IHosterWithFolders,
+        IHosterWithFileInfo
 {
     private const int MaxParallelUploads = 10;
 
     public string Name => "KrakenFiles";
+
+    public IReadOnlyList<string> FileLinkHostNames => ["krakenfiles.com"];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -126,6 +129,43 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
         }
     }
 
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<KrakenFilesConfig>();
+
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ExtractFileIdFromFileLink
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileIds: fileIdPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        return ExtractFileIdFromFileLink(fileLink) is { } fileId
+            ? $"https://krakenfiles.com/view/{fileId}/file.html"
+            : null;
+    }
+
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
         var config = JsonSerializer.Deserialize<KrakenFilesConfig>(serializedConfig);
@@ -201,5 +241,24 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    private string? ExtractFileIdFromFileLink(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return
+            FileLinkHostMatching.GetPathSegments(fileLinkUri) is ["view", var fileId, ..]
+            && fileId.All(char.IsAsciiLetterOrDigit)
+            ? fileId
+            : null;
     }
 }

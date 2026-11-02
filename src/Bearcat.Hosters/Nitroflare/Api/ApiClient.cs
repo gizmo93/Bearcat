@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Nitroflare.Api.File;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,12 @@ public class ApiClient(
     private const int MaxFileIdsPerFileInfoRequest = 100;
 
     private const string WrongUserHashResponse = "Invalid User - Wrong hash";
+
+    private const string SuccessType = "success";
+
+    private const string OnlineStatus = "online";
+
+    private const string OfflineStatus = "offline";
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -92,6 +99,71 @@ public class ApiClient(
             fileName: testFileName,
             cancellationToken: cancellationToken
         );
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileInfoPerFileId = new Dictionary<string, HostedFileInfo>(
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        foreach (
+            var fileIdsBatch in fileIds
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Chunk(MaxFileIdsPerFileInfoRequest)
+        )
+        {
+            var response = await api.GetFileInfoAsync(
+                files: string.Join(',', fileIdsBatch),
+                cancellationToken: cancellationToken
+            );
+
+            if (
+                !response.IsSuccessStatusCode
+                || response.Content is null
+                || !string.Equals(
+                    response.Content.Type,
+                    SuccessType,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                throw new HttpRequestException(
+                    $"Nitroflare file info request failed with status code {response.StatusCode}: {response.Content?.Message}"
+                );
+            }
+
+            foreach (
+                var (fileId, file) in response.Content.Result?.Files
+                    ?? new Dictionary<string, NitroflareFile>()
+            )
+            {
+                var fileInfo = file.Status switch
+                {
+                    OnlineStatus => new HostedFileInfo(
+                        IsOnline: true,
+                        FileName: file.Name,
+                        SizeBytes: file.Size
+                    ),
+                    OfflineStatus => new HostedFileInfo(
+                        IsOnline: false,
+                        FileName: null,
+                        SizeBytes: null
+                    ),
+                    _ => null,
+                };
+
+                if (fileInfo is not null)
+                {
+                    fileInfoPerFileId[fileId] = fileInfo;
+                }
+            }
+        }
+
+        return fileInfoPerFileId;
     }
 
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(

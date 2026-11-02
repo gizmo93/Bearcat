@@ -65,6 +65,8 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
 
     public string Name => "FakeDownloadHoster";
 
+    public IReadOnlyList<string> FileLinkHostNames => [];
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public bool DownloadRequiresPremium => false;

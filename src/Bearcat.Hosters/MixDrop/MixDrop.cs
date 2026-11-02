@@ -21,6 +21,44 @@ public class MixDrop(ApiClient apiClient, ILogger<MixDrop> logger)
 
     public string Name => "MixDrop";
 
+    public IReadOnlyList<string> FileLinkHostNames =>
+        [
+            "mixdrop.ag",
+            "mixdrop.co",
+            "mixdrop.to",
+            "mixdrop.club",
+            "mixdrop.sx",
+            "mixdrop.bz",
+            "mixdroop.bz",
+            "mixdrop.vc",
+            "mdy48tn97.com",
+            "mdbekjwqa.pw",
+            "mdfx9dc8n.net",
+            "mdzsmutpcvykb.net",
+            "mixdrop.ms",
+            "mixdrop.is",
+            "mixdrop.si",
+            "mixdrop.ps",
+            "mixdrop.my",
+            "mixdrop.sn",
+            "mixdrop.cfd",
+            "mixdrop.cv",
+            "mixdrop23.net",
+            "mxdrop.to",
+            "mxdrop.sx",
+            "mixdrop.top",
+            "m1xdrop.net",
+            "m1xdrop.com",
+            "m1xdrop.bz",
+            "m1xdrop.click",
+            "mixdrp.click",
+            "miixdrop.net",
+            "miiixdrop.net",
+            "miiiixdrop.net",
+            "miixdrop.com",
+            "miixdrop.top",
+        ];
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public IReadOnlyList<string> ConfigurationKeys =>

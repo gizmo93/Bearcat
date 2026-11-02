@@ -9,6 +9,17 @@ public class Katfile(IKatfileApiClient apiClient, ILogger<Katfile> logger)
 {
     public override string Name => "katfile.com";
 
+    public override IReadOnlyList<string> FileLinkHostNames =>
+        [
+            "katfile.com",
+            "katfile.biz",
+            "katfile.space",
+            "katfile.ws",
+            "katfile.vip",
+            "katfile.online",
+            "katfile.cloud",
+        ];
+
     protected override string FileUrlFormat => "https://katfile.com/{0}.html";
 
     public override bool SupportsPremiumOnlyDownloads => false;

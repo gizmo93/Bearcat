@@ -16,11 +16,15 @@ namespace Bearcat.Hosters.Keep2Share;
 public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logger)
     : IHosterWithCaptchaVerification,
         IHosterWithFolders,
-        IHosterWithDownload
+        IHosterWithDownload,
+        IHosterWithFileInfo
 {
     private const int MaxParallelUploads = 10;
 
     public string Name => "Keep2Share";
+
+    public IReadOnlyList<string> FileLinkHostNames =>
+        ["k2s.cc", "keep2share.cc", "k2share.cc", "keep2s.cc", "keep2.cc"];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -142,6 +146,43 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Keep2ShareConfig>();
+
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ExtractFileIdFromFileLink
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileIds: fileIdPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        return ExtractFileIdFromFileLink(fileLink) is { } fileId
+            ? $"https://k2s.cc/file/{fileId}"
+            : null;
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
@@ -340,5 +381,24 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
         );
+    }
+
+    private string? ExtractFileIdFromFileLink(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return
+            FileLinkHostMatching.GetPathSegments(fileLinkUri) is ["file", var fileId, ..]
+            && fileId.All(char.IsAsciiLetterOrDigit)
+            ? fileId
+            : null;
     }
 }

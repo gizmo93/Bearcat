@@ -18,9 +18,12 @@ namespace Bearcat.Hosters.Alfafile;
 public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
     : IHosterWithFolders,
         IHosterWithDownload,
-        IHosterWithStorageQuota
+        IHosterWithStorageQuota,
+        IHosterWithFileInfo
 {
     public string Name => "Alfafile";
+
+    public IReadOnlyList<string> FileLinkHostNames => ["alfafile.net"];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -115,6 +118,43 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<AlfafileConfig>();
+
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ExtractFileIdFromFileLink
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileIds: fileIdPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        return ExtractFileIdFromFileLink(fileLink) is { } fileId
+            ? $"https://alfafile.net/file/{fileId}"
+            : null;
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
@@ -384,5 +424,24 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
             ErrorMessages: errors,
             FileUrl: fileUrl
         );
+    }
+
+    private string? ExtractFileIdFromFileLink(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return
+            FileLinkHostMatching.GetPathSegments(fileLinkUri) is ["file", var fileId, ..]
+            && fileId.All(char.IsAsciiLetterOrDigit)
+            ? fileId
+            : null;
     }
 }

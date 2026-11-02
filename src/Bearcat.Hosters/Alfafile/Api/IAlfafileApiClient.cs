@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
@@ -46,6 +47,12 @@ public interface IAlfafileApiClient
     Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         AlfafileConfig config,
         IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        AlfafileConfig config,
+        IReadOnlyList<string> fileIds,
         CancellationToken cancellationToken
     );
 

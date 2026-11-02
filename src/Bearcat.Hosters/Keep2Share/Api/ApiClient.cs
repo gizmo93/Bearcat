@@ -361,6 +361,52 @@ public class ApiClient(
         return statusPerFileUrl;
     }
 
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        Keep2ShareConfig config,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var fileInfoPerFileId = new Dictionary<string, HostedFileInfo>();
+
+        foreach (var fileIdBatch in fileIds.Distinct().Chunk(MaxFilesInfoBatchSize))
+        {
+            var response = await GetFilesInfoAsync(token, fileIdBatch, cancellationToken);
+
+            if (response.Status != "success")
+            {
+                ThrowIfCaptchaVerificationRequired(
+                    code: response.Code,
+                    errorCode: response.ErrorCode,
+                    message: response.Message
+                );
+
+                throw new HttpRequestException(
+                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString(CultureInfo.InvariantCulture) ?? "null"}, message={response.Message ?? "null"}"
+                );
+            }
+
+            foreach (
+                var file in response.Files.Where(file =>
+                    file.Id is not null && file.IsAvailable is not null
+                )
+            )
+            {
+                fileInfoPerFileId[file.Id] =
+                    file.IsAvailable == true
+                        ? new HostedFileInfo(
+                            IsOnline: true,
+                            FileName: file.Name,
+                            SizeBytes: file.Size
+                        )
+                        : new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null);
+            }
+        }
+
+        return fileInfoPerFileId;
+    }
+
     public async Task DownloadFileAsync(
         Keep2ShareConfig config,
         string fileUrl,

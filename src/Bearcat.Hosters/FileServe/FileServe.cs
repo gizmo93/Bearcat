@@ -9,6 +9,8 @@ public class FileServe(IFileServeApiClient apiClient, ILogger<FileServe> logger)
 {
     public override string Name => "fileserve.com";
 
+    public override IReadOnlyList<string> FileLinkHostNames => ["fileserve.com"];
+
     protected override string FileUrlFormat => "https://fileserve.com/{0}";
 
     public override bool SupportsPremiumOnlyDownloads => false;

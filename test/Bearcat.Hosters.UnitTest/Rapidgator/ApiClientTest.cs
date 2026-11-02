@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
@@ -824,6 +825,71 @@ public class ApiClientTest
 
         // Assert
         exception.Message.ShouldBe("Error: Session not exist");
+    }
+
+    [Test]
+    public async Task GetFileInfosAsync_AccessNoAccessAndUnknownStatus_ReturnsInfoOnlyForRecognizedStatuses()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var onlineUrl = "https://rapidgator.net/file/d48ea1c1ff2eedbb09a8568201c30769";
+        var deletedUrl = "https://rapidgator.net/file/9c453ed110765c15f302d46705337dbb";
+        var unknownUrl = "https://rapidgator.net/file/325dbb69ef9ddad74e917f6f151c4eba";
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.CheckLinkAsync("token", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new CheckLinksResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Responses =
+                        [
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = onlineUrl,
+                                Filename = "archive.part7.rar",
+                                Size = 1000000002,
+                                Status = "ACCESS",
+                            },
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = deletedUrl,
+                                Status = "NO ACCESS",
+                            },
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = unknownUrl,
+                                Status = "DELETED",
+                            },
+                        ],
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.GetFileInfosAsync(
+            config: config,
+            fileUrls: [onlineUrl, deletedUrl, unknownUrl],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result[onlineUrl]
+            .ShouldBe(
+                new HostedFileInfo(
+                    IsOnline: true,
+                    FileName: "archive.part7.rar",
+                    SizeBytes: 1000000002
+                )
+            );
+        result[deletedUrl]
+            .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
+        result.ShouldNotContainKey(unknownUrl);
     }
 
     private void SetupLogin()

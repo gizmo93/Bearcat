@@ -23,6 +23,28 @@ public class Streamtape(ApiClient apiClient, ILogger<Streamtape> logger)
 
     public string Name => "Streamtape";
 
+    public IReadOnlyList<string> FileLinkHostNames =>
+        [
+            "streamtape.com",
+            "streamtape.cc",
+            "streamtape.net",
+            "streamtape.to",
+            "tapecontent.net",
+            "strtape.tech",
+            "strcloud.in",
+            "strcloud.club",
+            "strcloud.link",
+            "shavetape.cash",
+            "streamta.pe",
+            "strtpe.link",
+            "streamadblocker.xyz",
+            "strtape.cloud",
+            "tapeadvertisement.com",
+            "streamta.site",
+            "streamtape.xyz",
+            "watchadsontape.com",
+        ];
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public IReadOnlyList<string> ConfigurationKeys =>

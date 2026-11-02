@@ -9,5 +9,9 @@ public class Hitfile(ICostActionApiClient apiClient, ILogger<Hitfile> logger)
 {
     public override string Name => "hitfile.net";
 
+    public override IReadOnlyList<string> FileLinkHostNames => ["hitfile.net", "htfl.net"];
+
     protected override string AppType => "fd2";
+
+    protected override string OwnFileLinkFormat => "https://htfl.net/{0}";
 }

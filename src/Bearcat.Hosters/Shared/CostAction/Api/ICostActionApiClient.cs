@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
 
 namespace Bearcat.Hosters.Shared.CostAction.Api;
@@ -15,6 +16,13 @@ public interface ICostActionApiClient
     );
 
     Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckFilesAsync(
+        string apiKey,
+        string appType,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
         string apiKey,
         string appType,
         IReadOnlyList<string> fileIds,

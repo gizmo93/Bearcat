@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier.Api.Upload;
 using Bearcat.Hosters.Fichier.Api.User;
@@ -29,6 +30,12 @@ public interface IFichierApiClient
     );
 
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+        FichierConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
         FichierConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken

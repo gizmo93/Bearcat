@@ -308,6 +308,93 @@ public class HideCxTest
         result.ShouldBeOfType<HideCxConfig>().ApiKey.ShouldBe("api-key");
     }
 
+    [Test]
+    public async Task ListContainersAsync_SearchReturnsContainers_ReturnsContainersExceptDeleted()
+    {
+        // Arrange
+        var config = new HideCxConfig { ApiKey = "api-key" };
+        var response = JsonSerializer.Deserialize<SearchContainersResponse>(
+            """
+            {"containers":[
+              {"id":"6b4205c5-a07b-407a-9c93-aae361b1135f","name":"First.Release","access_status":"online","links":[],"canonical_url":"https://hide.cx/container/6b4205c5-a07b-407a-9c93-aae361b1135f"},
+              {"id":"c679078e-485d-46f1-8758-e04b27dfc17c","name":"Deleted.Release","access_status":"deleted","links":[],"canonical_url":"https://hide.cx/container/c679078e-485d-46f1-8758-e04b27dfc17c"}
+            ],"total":2}
+            """
+        )!;
+
+        apiMock
+            .Setup(x =>
+                x.SearchContainersAsync(
+                    It.Is<SearchContainersRequest>(request =>
+                        request.Offset == 0
+                        && request.Limit == 500
+                        && request.AccessStatus == null
+                        && request.OrderBy == "created_at"
+                        && request.OrderType == "asc"
+                    ),
+                    "Bearer api-key",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(response);
+
+        // Act
+        var result = await service.ListContainersAsync(config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Containers.Count.ShouldBe(1);
+        result.Containers[0].ContainerId.ShouldBe("6b4205c5-a07b-407a-9c93-aae361b1135f");
+        result
+            .Containers[0]
+            .ContainerUrl.ShouldBe(
+                "https://hide.cx/container/6b4205c5-a07b-407a-9c93-aae361b1135f"
+            );
+        result.Containers[0].ContainerName.ShouldBe("First.Release");
+        result.Containers[0].ExternalReference.ShouldBe("6b4205c5-a07b-407a-9c93-aae361b1135f");
+    }
+
+    [Test]
+    public async Task ReadContainerLinksAsync_ContainerHasLinksOfTwoMirrors_ReturnsHosterUrlsGroupedPerMirror()
+    {
+        // Arrange
+        var config = new HideCxConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.GetContainerAsync("external-id", "Bearer api-key", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                """
+                {"id":"external-id","name":"Release","links":[
+                  {"id":"1","host":"rapidgator.net","link_type":"mirror_2","link_status":"online","link_size":1,"file":"a","name":"a.rar","hoster_url":"https://rapidgator.net/file/a"},
+                  {"id":"2","host":"nitroflare.com","link_type":"mirror_1","link_status":"online","link_size":1,"file":"b","name":"b.part1.rar","hoster_url":"https://nitroflare.com/view/B1/b.part1.rar"},
+                  {"id":"3","host":"nitroflare.com","link_type":"mirror_1","link_status":"unknown","link_size":null,"file":"c","name":"b.part2.rar","hoster_url":"https://nitroflare.com/view/B2/b.part2.rar"}
+                ]}
+                """
+            );
+
+        // Act
+        var result = await service.ReadContainerLinksAsync(
+            linkCrypterConfig: config,
+            containerUrl: "https://hide.cx/container/external-id",
+            externalReference: "external-id",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.LinksPerMirror.Count.ShouldBe(2);
+        result
+            .LinksPerMirror[0]
+            .ShouldBe([
+                "https://nitroflare.com/view/B1/b.part1.rar",
+                "https://nitroflare.com/view/B2/b.part2.rar",
+            ]);
+        result.LinksPerMirror[1].ShouldBe(["https://rapidgator.net/file/a"]);
+        result.HasBackupLinks.ShouldBeFalse();
+    }
+
     private static async Task<ApiException> CreateApiExceptionAsync(
         HttpMethod method,
         HttpStatusCode statusCode,

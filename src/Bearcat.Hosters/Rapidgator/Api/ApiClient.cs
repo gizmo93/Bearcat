@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Api.File;
@@ -22,6 +23,10 @@ public class ApiClient(
 ) : IRapidgatorApiClient
 {
     private const int CheckLinkBatchSize = 25;
+
+    private const string AccessStatus = "ACCESS";
+
+    private const string NoAccessStatus = "NO ACCESS";
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -306,6 +311,60 @@ public class ApiClient(
         }
 
         return sizePerFileUrl;
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var fileInfoPerFileUrl = new Dictionary<string, HostedFileInfo>();
+
+        foreach (var linksBatch in fileUrls.Distinct().Chunk(CheckLinkBatchSize))
+        {
+            var response = await api.CheckLinkAsync(
+                token: token,
+                links: string.Join(',', linksBatch),
+                cancellationToken: cancellationToken
+            );
+
+            if (
+                !response.IsSuccessStatusCode
+                || response.Content is not { Status: (int)HttpStatusCode.OK, Responses: not null }
+            )
+            {
+                throw new HttpRequestException(
+                    $"Rapidgator link check failed with status code {response.StatusCode}: {response.Content?.Details}"
+                );
+            }
+
+            foreach (var file in response.Content.Responses)
+            {
+                var fileInfo = file.Status switch
+                {
+                    AccessStatus => new HostedFileInfo(
+                        IsOnline: true,
+                        FileName: file.Filename,
+                        SizeBytes: file.Size
+                    ),
+                    NoAccessStatus => new HostedFileInfo(
+                        IsOnline: false,
+                        FileName: null,
+                        SizeBytes: null
+                    ),
+                    _ => null,
+                };
+
+                if (fileInfo is not null)
+                {
+                    fileInfoPerFileUrl[file.Url] = fileInfo;
+                }
+            }
+        }
+
+        return fileInfoPerFileUrl;
     }
 
     public async Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(

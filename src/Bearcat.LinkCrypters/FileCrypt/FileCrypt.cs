@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
@@ -6,9 +7,15 @@ using Bearcat.LinkCrypters.FileCrypt.Api;
 
 namespace Bearcat.LinkCrypters.FileCrypt;
 
-public class FileCrypt(IFileCryptApi api) : ILinkCrypter
+public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
 {
     private const string ContainerNotAvailableError = "this container is not available";
+
+    private const string NoContainersMatchingError = "there are no folders matching your request";
+
+    private const int ListContainersPageSize = 500;
+
+    private const string MirrorKeyPrefix = "mirror_";
 
     public string Name => "filecrypt.cc";
 
@@ -133,6 +140,115 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
             return new UpdateContainerResult(
                 Outcome: UpdateContainerOutcome.Failed,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
+        }
+    }
+
+    public async Task<ListContainersResult> ListContainersAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = linkCrypterConfig.As<FileCryptConfig>();
+        var containers = new List<ListedContainer>();
+
+        try
+        {
+            var offset = 0;
+            int pageCount;
+
+            do
+            {
+                var response = await api.SendAsync(
+                    CreateListContainersRequestContent(config.ApiKey, offset),
+                    cancellationToken
+                );
+
+                if (IsNoContainersMatching(response))
+                {
+                    break;
+                }
+
+                if (!IsSuccess(response))
+                {
+                    return new ListContainersResult(
+                        IsSuccess: false,
+                        Containers: [],
+                        ErrorMessages: [GetErrorMessage(response)]
+                    );
+                }
+
+                var page = response.Container ?? [];
+                containers.AddRange(page.Select(CreateListedContainer));
+
+                pageCount = page.Count;
+                offset += ListContainersPageSize;
+            } while (pageCount == ListContainersPageSize);
+
+            return new ListContainersResult(
+                IsSuccess: true,
+                Containers: containers,
+                ErrorMessages: []
+            );
+        }
+        catch (Exception ex)
+        {
+            return new ListContainersResult(
+                IsSuccess: false,
+                Containers: [],
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+            );
+        }
+    }
+
+    public async Task<ReadContainerLinksResult> ReadContainerLinksAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        string containerUrl,
+        string? externalReference,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = linkCrypterConfig.As<FileCryptConfig>();
+        var reference = DeserializeExternalReference(externalReference, containerUrl);
+
+        try
+        {
+            var response = await api.GetContainerInfoAsync(
+                CreateContainerInfoRequestContent(config.ApiKey, reference.ContainerId),
+                cancellationToken
+            );
+
+            if (!string.IsNullOrWhiteSpace(response.Error) || response.Container is null)
+            {
+                return new ReadContainerLinksResult(
+                    IsSuccess: false,
+                    LinksPerMirror: [],
+                    HasBackupLinks: false,
+                    ErrorMessages: [response.Error ?? "FileCrypt returned no container"]
+                );
+            }
+
+            var mirrors = response
+                .Container.OrderBy(mirror => GetMirrorNumber(mirror.Key))
+                .Select(mirror => mirror.Value)
+                .ToList();
+
+            return new ReadContainerLinksResult(
+                IsSuccess: true,
+                LinksPerMirror: mirrors.Select(mirror => mirror.Links).ToList(),
+                HasBackupLinks: mirrors.Any(mirror =>
+                    mirror.Backup.Any(backupLinks => backupLinks.Count > 0)
+                ),
+                ErrorMessages: []
+            );
+        }
+        catch (Exception ex)
+        {
+            return new ReadContainerLinksResult(
+                IsSuccess: false,
+                LinksPerMirror: [],
+                HasBackupLinks: false,
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
             );
         }
     }
@@ -262,6 +378,60 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
         return values;
     }
 
+    private static FormUrlEncodedContent CreateListContainersRequestContent(
+        string apiKey,
+        int offset
+    )
+    {
+        return new FormUrlEncodedContent([
+            new KeyValuePair<string, string>("api_key", apiKey),
+            new KeyValuePair<string, string>("fn", "containerV2"),
+            new KeyValuePair<string, string>("sub", "listV3"),
+            new KeyValuePair<string, string>(
+                "offset",
+                offset.ToString(CultureInfo.InvariantCulture)
+            ),
+            new KeyValuePair<string, string>(
+                "limit",
+                ListContainersPageSize.ToString(CultureInfo.InvariantCulture)
+            ),
+            new KeyValuePair<string, string>("sort", "created"),
+            new KeyValuePair<string, string>("sort_mode", "ASC"),
+        ]);
+    }
+
+    private static FormUrlEncodedContent CreateContainerInfoRequestContent(
+        string apiKey,
+        string containerId
+    )
+    {
+        return new FormUrlEncodedContent([
+            new KeyValuePair<string, string>("api_key", apiKey),
+            new KeyValuePair<string, string>("fn", "containerV2"),
+            new KeyValuePair<string, string>("sub", "info"),
+            new KeyValuePair<string, string>("container_id", containerId),
+        ]);
+    }
+
+    private static ListedContainer CreateListedContainer(ContainerResponse container)
+    {
+        var containerId = GetContainerId(container);
+
+        return new ListedContainer(
+            ContainerId: containerId,
+            ContainerUrl: container.Link!,
+            ContainerName: container.Name!,
+            ExternalReference: SerializeExternalReference(
+                new ExternalReference(ContainerId: containerId, Name: container.Name)
+            )
+        );
+    }
+
+    private static int GetMirrorNumber(string mirrorKey)
+    {
+        return int.Parse(mirrorKey[MirrorKeyPrefix.Length..], CultureInfo.InvariantCulture);
+    }
+
     private static string ToApiBool(bool value) => value ? "1" : "0";
 
     private static FormUrlEncodedContent CreateApiKeyRequestContent(string apiKey)
@@ -275,6 +445,10 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
 
     private static bool IsSuccess(Response response) =>
         response.State == 1 && string.IsNullOrWhiteSpace(response.Error);
+
+    private static bool IsNoContainersMatching(Response response) =>
+        response.State == 0
+        && string.Equals(response.Error, NoContainersMatchingError, StringComparison.Ordinal);
 
     private static bool IsContainerNotAvailable(Response response) =>
         response.State == 0

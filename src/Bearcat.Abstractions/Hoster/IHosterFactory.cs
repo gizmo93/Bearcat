@@ -7,4 +7,5 @@ public interface IHosterFactory
     IHoster GetByName(string name);
     IReadOnlyList<HosterDto> GetHosterReadModels();
     IReadOnlyDictionary<string, IHoster> GetHostersByName();
+    IHoster? FindHosterByFileLink(string fileLink);
 }

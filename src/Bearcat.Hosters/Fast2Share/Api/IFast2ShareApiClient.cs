@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared;
 
@@ -28,6 +29,12 @@ public interface IFast2ShareApiClient
         string fileUrl,
         string? externalId,
         string folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        Fast2ShareConfig config,
+        IReadOnlyList<string> fileIds,
         CancellationToken cancellationToken
     );
 

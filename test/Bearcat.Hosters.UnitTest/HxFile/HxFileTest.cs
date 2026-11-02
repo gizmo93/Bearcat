@@ -21,4 +21,27 @@ public class HxFileTest
         // Assert
         requiresPremium.ShouldBeTrue();
     }
+
+    [TestCase(
+        "https://hxfile.co/abcdefghijkl/archive.part1.rar.html",
+        "https://hxfile.co/abcdefghijkl.html"
+    )]
+    [TestCase("https://www.hxfile.co/abcdefghijkl", "https://hxfile.co/abcdefghijkl.html")]
+    [TestCase("https://otherhoster.test/abcdefghijkl.html", null)]
+    public void ConvertToOwnFileLinkFormat_FileLinkVariants_ReturnsOwnFormatWithFileCode(
+        string fileLink,
+        string? expectedFileLink
+    )
+    {
+        // Arrange
+        var apiClientMock = new Mock<IHxFileApiClient>(MockBehavior.Strict);
+        var loggerMock = new Mock<ILogger<Hosters.HxFile.HxFile>>();
+        var service = new Hosters.HxFile.HxFile(apiClientMock.Object, loggerMock.Object);
+
+        // Act
+        var result = service.ConvertToOwnFileLinkFormat(fileLink);
+
+        // Assert
+        result.ShouldBe(expectedFileLink);
+    }
 }
