@@ -123,7 +123,7 @@ crypter configuration. If this fails, the error appears on the container and in 
 A [release collection](/Bearcat/release-collections/) gathers links from several releases in a shared
 container, for example for a TV season.
 
-**Create container for** in a link crypter configuration decides what goes into a container:
+In the link crypter configuration, use **Create container for** to choose which links the container holds:
 
 | Create container for | Container content |
 | --- | --- |
@@ -136,8 +136,7 @@ To create releases from existing FileCrypt or Hide.cx folders, see
 
 For **Release (all hosters as mirrors)**, the password, captcha, container download and Click'n'Load settings
 must be the same in all upload configurations of the release. Otherwise Bearcat marks the container as failed
-and sends a notification. Mirrors are supported by FileCrypt and Hide.cx. ToLink and KeepLinks get all links
-in one list.
+and sends a notification. FileCrypt and Hide.cx support mirrors. ToLink and KeepLinks list all links together.
 
 ## 6. Online checks
 
@@ -207,8 +206,8 @@ The same [replacement upload rules](#7-automatic-reuploads) apply.
 ## 9. Link crypter containers after a reupload
 
 Bearcat updates the existing container for the same upload configuration and link crypter
-configuration. Containers of release collections and **Release (all hosters as mirrors)** containers are
-updated the same way. The reupload replaces the mirror of its upload configuration.
+configuration. This also applies to release collection containers and **Release (all hosters as mirrors)**.
+In shared containers, the reupload replaces the mirror for its upload configuration.
 If it succeeds, the URL stays the same and links in existing forum posts remain valid.
 
 If the update fails, the container keeps its URL and gets the state `Update failed`.

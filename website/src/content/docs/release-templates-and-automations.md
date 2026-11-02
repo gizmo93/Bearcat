@@ -9,8 +9,10 @@ Use it to create more releases manually or automatically from new folders.
 ## Setting up release templates
 
 A release template contains the release group and settings for archives, uploads, images, and link crypters.
-**Create container for** in a link crypter decides whether each hoster gets its own container or all hosters of
-a release share one container as mirrors, see [link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containers).
+
+Use **Create container for** in the link crypter configuration to give each hoster its own container
+or group all hosters of a release as mirrors in one container.
+See [link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containers).
 
 - Open **Release templates**, click **New release template**, and add the configurations.
 - Open a configured release and choose **Save as template** from its action menu.

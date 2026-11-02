@@ -3,8 +3,8 @@ title: "Bestehende Linkcrypterordner importieren"
 description: "Releases aus bestehenden FileCrypt- oder Hide.cx-Ordnern anlegen und ihre Links behalten."
 ---
 
-Bearcat liest die Ordner eines Linkcrypteraccounts und legt pro Releasename ein Release an.
-Mirrors mit brauchbaren Links übernimmt Bearcat als abgeschlossene Uploads. Die übrigen Hoster des Releasetemplates lädt Bearcat selbst hoch.
+Bearcat liest die Ordner deines Linkcrypteraccounts und legt für jeden Releasenamen ein Release an.
+Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads. Zu den übrigen Hostern des Releasetemplates lädt Bearcat die Dateien selbst hoch.
 
 ## Unterstützte Linkcrypter
 
@@ -15,35 +15,38 @@ Mirrors mit brauchbaren Links übernimmt Bearcat als abgeschlossene Uploads. Die
 
 1. Öffne **Crypter** > **Linkcrypterimporte** und klicke auf **Neuer Import**.
 2. Wähle die Crypterregistrierung und das Releasetemplate. Das Template legt Hoster, Archiveinstellungen und Linkcryptereinstellungen der neuen Releases fest.
-3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Du brauchst ihn für Releases ohne lokalen Releaseordner: Bearcat stellt ihre Archive dort aus den importierten Mirrors wieder her.
-4. Bearcat liest alle Ordner und ihre Links im Hintergrund. Ordner, deren URL Bearcat schon kennt, überspringt es.
+3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Dort stellt Bearcat die Archive aus den importierten Mirrors wieder her, wenn kein lokaler Releaseordner vorhanden ist.
+4. Bearcat liest alle Ordner und ihre Links im Hintergrund. Ordner mit bereits bekannter URL überspringt es.
 5. Wähle pro Hoster einen Hosteraccount und klicke auf **Dateien prüfen**. Bearcat prüft die Dateien nur mit diesem Account.
-6. Prüfe die Releases, wähle die zu importierenden aus und klicke auf **Import starten**.
+6. Prüfe die Releases, wähle die gewünschten aus und klicke auf **Import starten**.
 
 ## Prüfung
 
-Ordner mit demselben Releasenamen zeigt Bearcat als ein Release an und wählt sie gemeinsam aus.
-Der Releasename ist der Ordnername. Stimmt er nicht, korrigiere ihn vor dem Import mit dem Bearbeitenknopf.
-Benennst du ein Release in den Namen eines anderen Releases um, werden beide zusammengeführt.
+Bearcat fasst Ordner mit demselben Releasenamen zu einem Eintrag zusammen. Du wählst sie gemeinsam aus.
+Als Releasename dient der Ordnername. Stimmt er nicht, korrigiere ihn vor dem Import mit dem Button zum Bearbeiten.
+Gibst du zwei Releases denselben Namen, führt Bearcat sie zusammen.
 
-## So entscheidet Bearcat über Mirrors
+## Welche Mirrors Bearcat übernimmt
 
-Jeder Mirror wird einer Uploadkonfiguration mit demselben Hoster zugeordnet: bei einem neuen Release aus dem Template, bei einem bestehenden Release aus dem Release.
+Bearcat ordnet jeden Mirror einer Uploadkonfiguration mit demselben Hoster zu.
+Bei neuen Releases stammen die Konfigurationen aus dem Template. Bei bestehenden Releases gelten deren Konfigurationen.
 
 | Entscheidung | Wann |
 | --- | --- |
-| **Wird übernommen** | Alle Dateien sind online und sind Archivteile (`.rar`, `.r00`, `.7z`, `.7z.001`). Jeder weitere übernommene Mirror braucht dieselben Dateinamen wie der erste übernommene Mirror. |
-| **Bearcat lädt diesen Hoster selbst hoch** | Der Hoster ist im Release, aber eine Bedingung oben ist nicht erfüllt. |
+| **Wird übernommen** | Alle Dateien sind online und haben ein unterstütztes Archivformat (`.rar`, `.r00`, `.7z`, `.7z.001`). Weitere Mirrors müssen dieselben Dateinamen wie der erste übernommene Mirror haben. |
+| **Bearcat lädt diesen Hoster selbst hoch** | Der Hoster ist im Release konfiguriert, aber der Mirror erfüllt nicht alle Bedingungen oben. |
 | **Nicht unterstützter Hoster** | Bearcat kennt den Hoster der Links nicht. |
 | **Hoster nicht im Release** | Das Release hat keine weitere Uploadkonfiguration für diesen Hoster. |
 
 Bei einem verwalteten Template sucht Bearcat in den Arbeitsverzeichnissen und den Basispfaden der
-Ordnerautomatisierungen einen unbenutzten Ordner mit dem Releasenamen. Findet es einen, wird das Release mit
-diesem Ordner verwaltet. Sonst wird es unverwaltet und Bearcat stellt sein Archiv bei Bedarf aus den Mirrors wieder her.
+Ordnerautomatisierungen nach einem noch nicht verwendeten Ordner mit dem Releasenamen. Findet es einen,
+verwendet es ihn als Releaseordner und verwaltet das Release. Sonst bleibt das Release unverwaltet.
+Bearcat stellt sein Archiv dann bei Bedarf aus den Mirrors wieder her.
 
-Bearcat sucht außerdem ein vorhandenes Archiv: einen Ordner mit genau den Dateinamen des ersten übernommenen Mirrors
-in den Archivspeicherordnern, den Arbeitsverzeichnissen oder dem Archivbasisordner oder in einem ihrer direkten Unterordner.
-Ein gefundenes Archiv wird unverändert genutzt und nichts wird heruntergeladen. Ohne Releaseordner wird das Release mit diesem Archiv unverwaltet.
+Bearcat sucht ausserdem nach einem vorhandenen Archiv in den Archivspeicherordnern, Arbeitsverzeichnissen,
+dem Archivbasisordner und deren direkten Unterordnern. Die Dateinamen müssen genau mit denen des ersten
+übernommenen Mirrors übereinstimmen. Findet Bearcat ein passendes Archiv, verwendet es dieses unverändert
+und lädt nichts herunter. Ohne Releaseordner bleibt das Release auch mit vorhandenem Archiv unverwaltet.
 
 ## Ordner, die sich nicht importieren lassen
 
@@ -51,27 +54,28 @@ Ein gefundenes Archiv wird unverändert genutzt und nichts wird heruntergeladen.
 - Kein Mirror kann übernommen werden und es gibt keinen Releaseordner.
 - Es gibt keinen Releaseordner, kein vorhandenes Archiv und du hast keinen Archivbasisordner gewählt.
 
-Die letzten beiden gelten nur für Ordner, die ein neues Release anlegen.
+Die letzten beiden Bedingungen gelten nur, wenn beim Import ein neues Release entsteht.
 
 ## Bestehende Releases
 
-Der Ordnername ist der Releasename, außer du hast ihn bei der Prüfung korrigiert (Groß- und Kleinschreibung zählt nicht).
+Bearcat erkennt bestehende Releases am Namen, unabhängig von der Gross- und Kleinschreibung.
+Es verwendet den Ordnernamen oder den Namen, den du bei der Prüfung eingegeben hast.
 
-- Ordner mit demselben Releasenamen landen in einem Release. Ein Ordner pro Hoster funktioniert.
-- Ein Ordner, dessen Release es schon gibt, wird an dieses Release angehängt, zum Beispiel der Ordner eines zweiten Crypters.
+- Ordner mit demselben Releasenamen gehören zu einem Release. Du kannst also pro Hoster einen eigenen Ordner importieren.
+- Gibt es das Release bereits, fügt Bearcat den Ordner diesem Release hinzu, zum Beispiel den Ordner eines zweiten Crypters.
 - Ein Mirror mit denselben Links wie ein bestehender Upload wird mit diesem Upload verknüpft.
-- Ein Hoster, der schon einen neueren Upload hat, bekommt die aktuellen Links beim nächsten Containerupdate.
-- Ein Ordner schlägt fehl, wenn das Release für einen seiner Hoster schon einen Container desselben Crypteraccounts hat.
+- Gibt es für einen Hoster schon einen neueren Upload, übernimmt der Container dessen Links beim nächsten Update.
+- Der Import eines Ordners schlägt fehl, wenn das Release für einen seiner Hoster schon einen Container desselben Crypteraccounts hat.
 
 ## Linkcryptercontainer
 
-- Ein Ordner mit einem Mirror eines Releasehosters wird ein Container dieser Uploadkonfiguration (**Jedes Release einzeln**).
-- Ein Ordner mit mehreren Mirrors wird ein Container **Release (alle Hoster als Mirrors)**. Legt der Ordner das Release an, kommen Hoster, die im Ordner fehlen, nach ihrem Upload in diesen Container.
+- Ein Ordner mit einem einzelnen Mirror für einen Hoster des Releases wird zum Container der passenden Uploadkonfiguration (**Jedes Release einzeln**).
+- Ein Ordner mit mehreren Mirrors wird zum Container **Release (alle Hoster als Mirrors)**. Entsteht beim Import ein neues Release, ergänzt Bearcat die Links der übrigen Hoster nach deren Upload.
 
 Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontainer).
 
 ## Nach dem Import
 
-- Neue Releases bekommen die **Primärsprache** des Imports. Bearcat nutzt sie für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
-- Releaseinformationen (xrel, PreDB, NFO) ruft Bearcat beim Import nicht ab. Die Hintergrundaufgabe für Releaseinformationen holt sie danach ab.
+- Neue Releases übernehmen die **Primärsprache** des Imports für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
+- Releaseinformationen (xrel, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
 - Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/).

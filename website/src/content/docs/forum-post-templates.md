@@ -85,9 +85,9 @@ Collection templates work the same way. They loop over the collection's releases
 
 ### One link for all hosters
 
-`link_crypters` lists the containers created for **Release (all hosters as mirrors)**, one per
-link crypter. It has the same fields as `upload.link_crypters`. These containers also appear in
-`upload.link_crypters` of every upload they contain.
+Use `link_crypters` to access the containers for **Release (all hosters as mirrors)**.
+The list contains one container per link crypter, with the same fields as `upload.link_crypters`.
+Each upload included in a shared container also lists it in `upload.link_crypters`.
 
 ```text
 {{~ for crypter in link_crypters ~}}

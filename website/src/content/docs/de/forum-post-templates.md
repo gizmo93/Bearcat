@@ -85,9 +85,9 @@ Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases de
 
 ### Ein Link für alle Hoster
 
-`link_crypters` listet die Container, die für **Release (alle Hoster als Mirrors)** erstellt wurden, einen pro
-Linkcrypter. Die Felder sind dieselben wie bei `upload.link_crypters`. Diese Container erscheinen auch in
-`upload.link_crypters` jedes Uploads, den sie enthalten.
+Mit `link_crypters` greifst du auf die Container für **Release (alle Hoster als Mirrors)** zu.
+Die Liste enthält einen Container pro Linkcrypter, mit denselben Feldern wie `upload.link_crypters`.
+Jeder beteiligte Upload enthält den gemeinsamen Container auch in seiner Liste `upload.link_crypters`.
 
 ```text
 {{~ for crypter in link_crypters ~}}
