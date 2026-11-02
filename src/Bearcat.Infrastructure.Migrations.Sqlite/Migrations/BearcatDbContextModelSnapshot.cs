@@ -1055,6 +1055,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ReleaseName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 

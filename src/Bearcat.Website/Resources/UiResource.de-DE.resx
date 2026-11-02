@@ -1991,17 +1991,21 @@
   <data name="CheckFiles" xml:space="preserve"><value>Dateien prüfen</value></data>
   <data name="LinkCrypterImportReleaseInfoHint" xml:space="preserve"><value>Releaseinformationen (xrel, PreDB, NFO) werden beim Import nicht abgerufen. Die Hintergrundaufgabe holt sie danach ab.</value></data>
   <data name="SelectAllImportableContainers" xml:space="preserve"><value>Alle importierbaren</value></data>
-  <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Import starten ({0})</value></data>
+  <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Import starten ({0} Releases)</value></data>
+  <data name="StartLinkCrypterImportWithOneRelease" xml:space="preserve"><value>Import starten (1 Release)</value></data>
   <data name="StartLinkCrypterImport" xml:space="preserve"><value>Import starten</value></data>
-  <data name="StartLinkCrypterImportConfirmation" xml:space="preserve"><value>{0} ausgewählte Container importieren? Bearcat legt pro Releasename ein Release an oder hängt den Container an das bestehende Release an.</value></data>
-  <data name="NoLinkCrypterImportContainersFound" xml:space="preserve"><value>Keine Container gefunden.</value></data>
-  <data name="Container" xml:space="preserve"><value>Container</value></data>
+  <data name="StartLinkCrypterImportConfirmation" xml:space="preserve"><value>{0} ausgewählte Releases mit {1} Containern importieren? Bearcat legt jedes Release an oder hängt die Container an das bestehende Release an.</value></data>
   <data name="OpenCrypterFolder" xml:space="preserve"><value>Crypterordner öffnen</value></data>
   <data name="OpenImportedRelease" xml:space="preserve"><value>Importiertes Release öffnen</value></data>
   <data name="MirrorNumber" xml:space="preserve"><value>Mirror {0}</value></data>
   <data name="LinkCrypterImportReleaseFolder" xml:space="preserve"><value>Releaseordner: {0}</value></data>
+  <data name="LinkCrypterImportArchiveFolder" xml:space="preserve"><value>Archivordner: {0}</value></data>
   <data name="LinkCrypterImportNoLocalFiles" xml:space="preserve"><value>Keine lokalen Dateien, das Archiv wird aus den Mirrors wiederhergestellt.</value></data>
-  <data name="LinkCrypterImportContainerResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Containern</value></data>
+  <data name="NoLinkCrypterImportReleasesFound" xml:space="preserve"><value>Keine Releases gefunden.</value></data>
+  <data name="ReleaseAction" xml:space="preserve"><value>Releaseaktion</value></data>
+  <data name="LocalFiles" xml:space="preserve"><value>Lokale Dateien</value></data>
+  <data name="RenameRelease" xml:space="preserve"><value>Release umbenennen</value></data>
+  <data name="LinkCrypterImportReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
   <data name="UnknownHoster" xml:space="preserve"><value>Unbekannter Hoster</value></data>
   <data name="LinkCrypterImportState.ReadingContainers" xml:space="preserve"><value>Liest Ordner</value></data>
   <data name="LinkCrypterImportState.WaitingForHosterRegistrations" xml:space="preserve"><value>Wartet auf Hosteraccounts</value></data>
@@ -2020,7 +2024,7 @@
   <data name="LinkCrypterImportContainerStatus.ImportFailed" xml:space="preserve"><value>Import fehlgeschlagen</value></data>
   <data name="LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster" xml:space="preserve"><value>Kein Mirror gehört zu einem Hoster des Releases.</value></data>
   <data name="LinkCrypterImportNotImportableReason.NoAdoptedMirrorAndNoReleaseFolder" xml:space="preserve"><value>Kein Mirror kann übernommen werden und es gibt keinen lokalen Releaseordner.</value></data>
-  <data name="LinkCrypterImportNotImportableReason.ArchiveFilesBasePathMissing" xml:space="preserve"><value>Kein lokaler Releaseordner und kein Archivbasisordner für Releases ohne lokale Dateien.</value></data>
+  <data name="LinkCrypterImportNotImportableReason.ArchiveFilesBasePathMissing" xml:space="preserve"><value>Kein lokaler Releaseordner, kein vorhandenes Archiv und kein Archivbasisordner für Releases ohne lokale Dateien.</value></data>
   <data name="LinkCrypterImportMirrorDecision.Adopt" xml:space="preserve"><value>Wird übernommen</value></data>
   <data name="LinkCrypterImportMirrorDecision.UploadByBearcat" xml:space="preserve"><value>Bearcat lädt diesen Hoster selbst hoch</value></data>
   <data name="LinkCrypterImportMirrorDecision.UnsupportedHoster" xml:space="preserve"><value>Nicht unterstützter Hoster</value></data>

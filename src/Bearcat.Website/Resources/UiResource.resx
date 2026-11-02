@@ -1988,17 +1988,21 @@
   <data name="CheckFiles" xml:space="preserve"><value>Check files</value></data>
   <data name="LinkCrypterImportReleaseInfoHint" xml:space="preserve"><value>Release information (xrel, PreDB, NFO) is not fetched during the import. The background task fetches it afterwards.</value></data>
   <data name="SelectAllImportableContainers" xml:space="preserve"><value>All importable</value></data>
-  <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Start import ({0})</value></data>
+  <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Start import ({0} releases)</value></data>
+  <data name="StartLinkCrypterImportWithOneRelease" xml:space="preserve"><value>Start import (1 release)</value></data>
   <data name="StartLinkCrypterImport" xml:space="preserve"><value>Start import</value></data>
-  <data name="StartLinkCrypterImportConfirmation" xml:space="preserve"><value>Import {0} selected containers? Bearcat creates a release per release name or attaches the container to the existing release.</value></data>
-  <data name="NoLinkCrypterImportContainersFound" xml:space="preserve"><value>No containers found.</value></data>
-  <data name="Container" xml:space="preserve"><value>Container</value></data>
+  <data name="StartLinkCrypterImportConfirmation" xml:space="preserve"><value>Import {0} selected releases with {1} containers? Bearcat creates each release or attaches the containers to the existing release.</value></data>
   <data name="OpenCrypterFolder" xml:space="preserve"><value>Open crypter folder</value></data>
   <data name="OpenImportedRelease" xml:space="preserve"><value>Open imported release</value></data>
   <data name="MirrorNumber" xml:space="preserve"><value>Mirror {0}</value></data>
   <data name="LinkCrypterImportReleaseFolder" xml:space="preserve"><value>Release folder: {0}</value></data>
+  <data name="LinkCrypterImportArchiveFolder" xml:space="preserve"><value>Archive folder: {0}</value></data>
   <data name="LinkCrypterImportNoLocalFiles" xml:space="preserve"><value>No local files, the archive is restored from the mirrors.</value></data>
-  <data name="LinkCrypterImportContainerResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} containers</value></data>
+  <data name="NoLinkCrypterImportReleasesFound" xml:space="preserve"><value>No releases found.</value></data>
+  <data name="ReleaseAction" xml:space="preserve"><value>Release action</value></data>
+  <data name="LocalFiles" xml:space="preserve"><value>Local files</value></data>
+  <data name="RenameRelease" xml:space="preserve"><value>Rename release</value></data>
+  <data name="LinkCrypterImportReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
   <data name="UnknownHoster" xml:space="preserve"><value>Unknown hoster</value></data>
   <data name="LinkCrypterImportState.ReadingContainers" xml:space="preserve"><value>Reading folders</value></data>
   <data name="LinkCrypterImportState.WaitingForHosterRegistrations" xml:space="preserve"><value>Waiting for hoster accounts</value></data>
@@ -2017,7 +2021,7 @@
   <data name="LinkCrypterImportContainerStatus.ImportFailed" xml:space="preserve"><value>Import failed</value></data>
   <data name="LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster" xml:space="preserve"><value>No mirror belongs to a hoster of the release.</value></data>
   <data name="LinkCrypterImportNotImportableReason.NoAdoptedMirrorAndNoReleaseFolder" xml:space="preserve"><value>No mirror can be adopted and there is no local release folder.</value></data>
-  <data name="LinkCrypterImportNotImportableReason.ArchiveFilesBasePathMissing" xml:space="preserve"><value>No local release folder and no archive base folder for releases without local files.</value></data>
+  <data name="LinkCrypterImportNotImportableReason.ArchiveFilesBasePathMissing" xml:space="preserve"><value>No local release folder, no existing archive and no archive base folder for releases without local files.</value></data>
   <data name="LinkCrypterImportMirrorDecision.Adopt" xml:space="preserve"><value>Adopted</value></data>
   <data name="LinkCrypterImportMirrorDecision.UploadByBearcat" xml:space="preserve"><value>Bearcat uploads this hoster itself</value></data>
   <data name="LinkCrypterImportMirrorDecision.UnsupportedHoster" xml:space="preserve"><value>Unsupported hoster</value></data>

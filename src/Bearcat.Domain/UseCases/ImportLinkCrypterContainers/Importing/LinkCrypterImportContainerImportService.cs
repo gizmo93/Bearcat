@@ -1,3 +1,4 @@
+using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.UnmanagedReleases;
@@ -17,6 +18,7 @@ public class LinkCrypterImportContainerImportService(
     IReleaseWriteRepository releaseWriteRepository,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     UnmanagedReleaseArchiveInitializationService unmanagedReleaseArchiveInitializationService,
+    IFileSystemService fileSystemService,
     INotificationService notificationService,
     TimeProvider timeProvider,
     ILogger<LinkCrypterImportContainerImportService> logger
@@ -85,12 +87,16 @@ public class LinkCrypterImportContainerImportService(
         CancellationToken cancellationToken
     )
     {
-        var releaseName = container.ContainerName.Trim();
+        var releaseName = container.ReleaseName;
         var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
         var localNow = timeProvider.GetLocalNow();
 
         var existingRelease = await repository.GetReleaseForImportByNameOrDefaultAsync(
             releaseName,
+            cancellationToken
+        );
+
+        var archiveStorageFolders = await repository.GetArchiveStorageFoldersAsync(
             cancellationToken
         );
 
@@ -100,6 +106,7 @@ public class LinkCrypterImportContainerImportService(
                 linkCrypterImport: container.LinkCrypterImport,
                 releaseName: releaseName,
                 preview: preview,
+                archiveStorageFolders: archiveStorageFolders,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
@@ -117,6 +124,8 @@ public class LinkCrypterImportContainerImportService(
             release: release,
             mirrorsWithUploadConfigs: mirrorsWithUploadConfigs,
             isNewRelease: existingRelease is null,
+            archiveFolderPath: preview.ArchiveFolderPath,
+            archiveStorageFolders: archiveStorageFolders,
             localNow: localNow
         );
 
@@ -137,6 +146,7 @@ public class LinkCrypterImportContainerImportService(
         LinkCrypterImport linkCrypterImport,
         string releaseName,
         LinkCrypterImportContainerPreview preview,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow,
         CancellationToken cancellationToken
     )
@@ -148,6 +158,7 @@ public class LinkCrypterImportContainerImportService(
 
         if (
             !isManaged
+            && preview.ArchiveFolderPath is null
             && (
                 !hasAdoptedMirror
                 || linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles is null
@@ -155,7 +166,7 @@ public class LinkCrypterImportContainerImportService(
         )
         {
             throw new InvalidLinkCrypterImportException(
-                $"Release {releaseName} cannot be created: there is no local release folder and no adopted mirror with an archive base folder."
+                $"Release {releaseName} cannot be created: there is no local release folder, no existing archive folder and no adopted mirror with an archive base folder."
             );
         }
 
@@ -176,10 +187,11 @@ public class LinkCrypterImportContainerImportService(
             createUnmanagedArchiveConfig: isManaged
                 ? null
                 : release =>
-                    CreateArchiveConfigWithDeletedArchive(
+                    CreateUnmanagedArchiveConfig(
                         release: release,
-                        archiveFilesBasePath: linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles!,
+                        linkCrypterImport: linkCrypterImport,
                         preview: preview,
+                        archiveStorageFolders: archiveStorageFolders,
                         localNow: localNow
                     ),
             primaryLanguageCode: linkCrypterImport.PrimaryLanguageCode,
@@ -192,6 +204,38 @@ public class LinkCrypterImportContainerImportService(
         releaseWriteRepository.Add(releaseData.Release);
 
         return releaseData.Release;
+    }
+
+    private ArchiveConfig CreateUnmanagedArchiveConfig(
+        Release release,
+        LinkCrypterImport linkCrypterImport,
+        LinkCrypterImportContainerPreview preview,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
+        DateTime localNow
+    )
+    {
+        if (preview.ArchiveFolderPath is not null)
+        {
+            var archiveConfig = unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
+                release: release,
+                archiveFolderPath: preview.ArchiveFolderPath,
+                createdAt: localNow
+            );
+
+            UnmanagedReleaseArchiveInitializationService.AssignArchiveStorageFolderContainingArchiveFolder(
+                archiveConfig.Archives.Single(),
+                archiveStorageFolders
+            );
+
+            return archiveConfig;
+        }
+
+        return CreateArchiveConfigWithDeletedArchive(
+            release: release,
+            archiveFilesBasePath: linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles!,
+            preview: preview,
+            localNow: localNow
+        );
     }
 
     private ArchiveConfig CreateArchiveConfigWithDeletedArchive(
@@ -298,11 +342,13 @@ public class LinkCrypterImportContainerImportService(
         }
     }
 
-    private static void AddImportedUploadsAndLinkCrypterContainer(
+    private void AddImportedUploadsAndLinkCrypterContainer(
         LinkCrypterImportContainer container,
         Release release,
         List<(LinkCrypterImportMirror Mirror, UploadConfig UploadConfig)> mirrorsWithUploadConfigs,
         bool isNewRelease,
+        string? archiveFolderPath,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow
     )
     {
@@ -317,8 +363,11 @@ public class LinkCrypterImportContainerImportService(
             .Select(mirrorWithUploadConfig =>
                 GetOrAddSourceUploadOrDefault(
                     linkCrypterImport: linkCrypterImport,
+                    release: release,
                     mirror: mirrorWithUploadConfig.Mirror,
                     uploadConfig: mirrorWithUploadConfig.UploadConfig,
+                    archiveFolderPath: archiveFolderPath,
+                    archiveStorageFolders: archiveStorageFolders,
                     localNow: localNow
                 )
             )
@@ -361,10 +410,13 @@ public class LinkCrypterImportContainerImportService(
         );
     }
 
-    private static Upload? GetOrAddSourceUploadOrDefault(
+    private Upload? GetOrAddSourceUploadOrDefault(
         LinkCrypterImport linkCrypterImport,
+        Release release,
         LinkCrypterImportMirror mirror,
         UploadConfig uploadConfig,
+        string? archiveFolderPath,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow
     )
     {
@@ -392,6 +444,13 @@ public class LinkCrypterImportContainerImportService(
         var archive = GetOrAddArchiveWithFileNamesOrDefault(
             archiveConfig: uploadConfig.ArchiveConfig!,
             fileNames: GetFileNames(mirror),
+            existingArchiveFolderPath: IsArchiveFolderUsedByArchiveOfRelease(
+                release,
+                archiveFolderPath
+            )
+                ? null
+                : archiveFolderPath,
+            archiveStorageFolders: archiveStorageFolders,
             localNow: localNow
         );
 
@@ -538,9 +597,23 @@ public class LinkCrypterImportContainerImportService(
         return upload;
     }
 
-    private static Archive? GetOrAddArchiveWithFileNamesOrDefault(
+    private static bool IsArchiveFolderUsedByArchiveOfRelease(
+        Release release,
+        string? archiveFolderPath
+    )
+    {
+        return release
+            .UploadConfigs.Select(uploadConfig => uploadConfig.ArchiveConfig)
+            .OfType<ArchiveConfig>()
+            .SelectMany(archiveConfig => archiveConfig.Archives)
+            .Any(archive => archive.ArchiveFolderPath == archiveFolderPath);
+    }
+
+    private Archive? GetOrAddArchiveWithFileNamesOrDefault(
         ArchiveConfig archiveConfig,
         List<string> fileNames,
+        string? existingArchiveFolderPath,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow
     )
     {
@@ -551,15 +624,54 @@ public class LinkCrypterImportContainerImportService(
             return HasFileNames(latestArchive, fileNames) ? latestArchive : null;
         }
 
-        var archive = UnmanagedReleaseArchiveInitializationService.BuildDeletedArchive(
-            archiveFolderPath: archiveConfig.ArchiveFilesBasePath,
-            archiveFileNames: fileNames,
-            archiveFileSizeMb: archiveConfig.ArchiveFileSizeMb,
-            createdAt: localNow
-        );
+        var archive = existingArchiveFolderPath is null
+            ? UnmanagedReleaseArchiveInitializationService.BuildDeletedArchive(
+                archiveFolderPath: archiveConfig.ArchiveFilesBasePath,
+                archiveFileNames: fileNames,
+                archiveFileSizeMb: archiveConfig.ArchiveFileSizeMb,
+                createdAt: localNow
+            )
+            : BuildArchiveInExistingArchiveFolder(
+                existingArchiveFolderPath: existingArchiveFolderPath,
+                fileNames: fileNames,
+                archiveStorageFolders: archiveStorageFolders,
+                localNow: localNow
+            );
         archiveConfig.Archives.Add(archive);
 
         return archive;
+    }
+
+    private Archive BuildArchiveInExistingArchiveFolder(
+        string existingArchiveFolderPath,
+        List<string> fileNames,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
+        DateTime localNow
+    )
+    {
+        var archive = UnmanagedReleaseArchiveInitializationService.BuildArchive(
+            archiveFolderPath: existingArchiveFolderPath,
+            archiveFilePaths: GetFilePathsWithFileNames(existingArchiveFolderPath, fileNames),
+            createdAt: localNow
+        );
+
+        UnmanagedReleaseArchiveInitializationService.AssignArchiveStorageFolderContainingArchiveFolder(
+            archive,
+            archiveStorageFolders
+        );
+
+        return archive;
+    }
+
+    private List<string> GetFilePathsWithFileNames(string folderPath, List<string> fileNames)
+    {
+        return fileSystemService
+            .GetFilesInPath(folderPath, recursive: false)
+            .Where(filePath =>
+                fileNames.Contains(Path.GetFileName(filePath), StringComparer.OrdinalIgnoreCase)
+            )
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static bool HasFileNames(Archive archive, List<string> fileNames)

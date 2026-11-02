@@ -15,6 +15,7 @@ public class LinkCrypterImportContainerConfiguration
         builder.Property(container => container.ContainerId).IsRequired().HasMaxLength(200);
         builder.Property(container => container.ContainerUrl).IsRequired().HasMaxLength(200);
         builder.Property(container => container.ContainerName).IsRequired().HasMaxLength(500);
+        builder.Property(container => container.ReleaseName).IsRequired().HasMaxLength(500);
         builder
             .Property(container => container.ExternalReference)
             .IsRequired()

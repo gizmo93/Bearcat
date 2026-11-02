@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -12,11 +13,14 @@ namespace Bearcat.Domain.UseCases.ImportLinkCrypterContainers;
 
 public class LinkCrypterImportService(
     ILinkCrypterImportRepository repository,
+    LinkCrypterImportPreviewService previewService,
     ILinkCrypterFactory linkCrypterFactory,
     IFileSystemService fileSystemService,
     TimeProvider timeProvider
 )
 {
+    private const int ReleaseNameMaxLength = 500;
+
     public async Task<int> StartAsync(
         int linkCrypterRegistrationId,
         int releaseTemplateId,
@@ -151,9 +155,50 @@ public class LinkCrypterImportService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SetContainerSelectionAsync(
+    public async Task RenameReleaseAsync(
         int linkCrypterImportId,
-        IReadOnlyList<int> containerIds,
+        string currentReleaseName,
+        string newReleaseName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var linkCrypterImport = await repository.GetWithContainersAsync(
+            linkCrypterImportId,
+            cancellationToken
+        );
+
+        EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
+
+        var releaseName = newReleaseName.Trim();
+
+        if (releaseName.Length == 0)
+        {
+            throw new InvalidLinkCrypterImportException("The release name must not be empty.");
+        }
+
+        if (releaseName.Length > ReleaseNameMaxLength)
+        {
+            throw new InvalidLinkCrypterImportException(
+                $"The release name must not be longer than {ReleaseNameMaxLength} characters."
+            );
+        }
+
+        foreach (var container in GetContainersOfRelease(linkCrypterImport, currentReleaseName))
+        {
+            container.ReleaseName = releaseName;
+            container.IsSelected =
+                container.Status
+                    is LinkCrypterImportContainerStatus.Importable
+                        or LinkCrypterImportContainerStatus.NotImportable;
+        }
+
+        await previewService.CreatePreviewsAsync(linkCrypterImport, cancellationToken);
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetReleaseSelectionAsync(
+        int linkCrypterImportId,
+        string releaseName,
         bool isSelected,
         CancellationToken cancellationToken = default
     )
@@ -165,11 +210,9 @@ public class LinkCrypterImportService(
 
         EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
 
-        var selectedContainerIds = containerIds.ToHashSet();
-
         foreach (
-            var container in GetImportableContainers(linkCrypterImport)
-                .Where(container => selectedContainerIds.Contains(container.Id))
+            var container in GetContainersOfRelease(linkCrypterImport, releaseName)
+                .Where(container => container.Status is LinkCrypterImportContainerStatus.Importable)
         )
         {
             container.IsSelected = isSelected;
@@ -253,6 +296,22 @@ public class LinkCrypterImportService(
         return linkCrypterImport
             .Containers.Where(container =>
                 container.Status is LinkCrypterImportContainerStatus.Importable
+            )
+            .ToList();
+    }
+
+    private static List<LinkCrypterImportContainer> GetContainersOfRelease(
+        LinkCrypterImport linkCrypterImport,
+        string releaseName
+    )
+    {
+        return linkCrypterImport
+            .Containers.Where(container =>
+                string.Equals(
+                    container.ReleaseName,
+                    releaseName,
+                    StringComparison.OrdinalIgnoreCase
+                )
             )
             .ToList();
     }

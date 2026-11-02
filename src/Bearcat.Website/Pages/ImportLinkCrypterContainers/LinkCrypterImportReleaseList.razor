@@ -1,0 +1,199 @@
+<div class="space-y-4">
+    <div class="flex flex-wrap items-center gap-2" role="group" aria-label="@L["Status"]">
+        <BbButton Variant="@(selectedStatus is null ? ButtonVariant.Default : ButtonVariant.Outline)"
+                  Size="ButtonSize.Small"
+                  OnClick="@(() => SelectStatusAsync(null))">
+            @L["All"] <span class="tabular-nums">@Detail.ContainerCountsByStatus.Sum(count => count.Count)</span>
+        </BbButton>
+        @foreach (var statusCount in Detail.ContainerCountsByStatus)
+        {
+            <BbButton Variant="@(selectedStatus == statusCount.Status ? ButtonVariant.Default : ButtonVariant.Outline)"
+                      Size="ButtonSize.Small"
+                      OnClick="@(() => SelectStatusAsync(statusCount.Status))">
+                @L.Localize(statusCount.Status) <span class="tabular-nums">@statusCount.Count</span>
+            </BbButton>
+        }
+
+        @if (CanChangeReleases && ImportableContainerCount > 0)
+        {
+            <div class="flex items-center gap-2 sm:ml-auto">
+                <BbCheckbox Id="link-crypter-import-select-all-importable"
+                            Checked="AreAllImportableContainersSelected"
+                            Indeterminate="AreSomeImportableContainersSelected"
+                            CheckedChanged="SetSelectionOfAllImportableContainersAsync" />
+                <label for="link-crypter-import-select-all-importable" class="text-sm font-medium">
+                    @L["SelectAllImportableContainers"]
+                </label>
+            </div>
+        }
+    </div>
+
+    @if (releases.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoLinkCrypterImportReleasesFound"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="@($"bearcat-config-header {ReleaseGridClass}")">
+                <span>@L["Release"]</span>
+                <span>@L["ReleaseAction"]</span>
+                <span>@L["LocalFiles"]</span>
+            </div>
+            @foreach (var (release, releaseNumber) in releases.Select((release, position) => (release, position)))
+            {
+                var checkboxId = $"link-crypter-import-release-{releaseNumber}";
+
+                <div class="bearcat-config-item">
+                    <div class="@($"bearcat-config-row {ReleaseGridClass}")">
+                        <div class="flex min-w-0 items-start gap-3">
+                            @if (CanChangeReleases && release.HasImportableContainers)
+                            {
+                                <BbCheckbox Id="@checkboxId"
+                                            Class="mt-0.5"
+                                            Checked="release.IsSelected"
+                                            Indeterminate="IsReleasePartlySelected(release)"
+                                            CheckedChanged="@(isSelected => SetReleaseSelectionAsync(release, isSelected))"
+                                            AriaLabel="@release.ReleaseName" />
+                            }
+                            @if (release.ReleaseName == releaseNameBeingEdited)
+                            {
+                                <form class="flex min-w-0 flex-1 flex-wrap items-center gap-2" @onsubmit="RenameReleaseAsync">
+                                    <BbInput @bind-Value="editedReleaseName"
+                                             UpdateTiming="UpdateTiming.Immediate"
+                                             AriaLabel="@L["ReleaseName"]"
+                                             autocomplete="off"
+                                             spellcheck="false"
+                                             data-autofocus
+                                             class="min-w-48 flex-1" />
+                                    <BbButton Type="ButtonType.Submit"
+                                              Size="ButtonSize.Small"
+                                              Disabled="@(isRenaming || string.IsNullOrWhiteSpace(editedReleaseName))">
+                                        @L["Save"]
+                                    </BbButton>
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              Disabled="isRenaming"
+                                              OnClick="CancelRenaming">
+                                        @L["Cancel"]
+                                    </BbButton>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="flex min-w-0 items-start gap-1">
+                                    <label for="@checkboxId" class="block text-sm font-semibold [overflow-wrap:anywhere]">@release.ReleaseName</label>
+                                    @if (CanChangeReleases)
+                                    {
+                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                  Size="ButtonSize.IconSmall"
+                                                  Class="-my-1 shrink-0"
+                                                  AriaLabel="@L["RenameRelease"]"
+                                                  title="@L["RenameRelease"]"
+                                                  OnClick="@(() => StartRenaming(release))">
+                                            <LucideIcon Name="pencil" class="h-3.5 w-3.5" />
+                                        </BbButton>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["ReleaseAction"]</p>
+                            @if (release.ReleaseAction is { } releaseAction)
+                            {
+                                @if (release.ExistingReleaseId is { } existingReleaseId)
+                                {
+                                    <a href="@($"/releases/{existingReleaseId}")"
+                                       class="flex items-center gap-1 text-sm text-primary hover:underline">
+                                        <LucideIcon Name="package" class="h-3.5 w-3.5 shrink-0" />
+                                        @L.Localize(releaseAction)
+                                    </a>
+                                }
+                                else
+                                {
+                                    <p class="text-sm">@L.Localize(releaseAction)</p>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-sm text-muted-foreground">-</p>
+                            }
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["LocalFiles"]</p>
+                            <p class="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                                @GetLocalFilesText(release)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 border-t border-border/70 bg-muted/20 px-4 py-2">
+                        @foreach (var container in release.Containers)
+                        {
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                    <BbBadge Variant="@GetStatusBadgeVariant(container.Status)">@L.Localize(container.Status)</BbBadge>
+                                    <a href="@container.ContainerUrl"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       title="@L["OpenCrypterFolder"]"
+                                       class="inline-flex min-w-0 items-center gap-1 text-primary hover:underline [overflow-wrap:anywhere]">
+                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5 shrink-0" />
+                                        @container.ContainerName
+                                    </a>
+                                    @if (container.NotImportableReason is { } notImportableReason)
+                                    {
+                                        <span>@L.Localize(notImportableReason)</span>
+                                    }
+                                    @foreach (var mirror in container.Preview.Mirrors)
+                                    {
+                                        <span class="[overflow-wrap:anywhere]">
+                                            <span class="font-medium text-foreground">@L["MirrorNumber", mirror.MirrorNumber]</span>
+                                            · @GetHosterName(mirror.HosterClassName)
+                                            @if (mirror.Decision is { } decision)
+                                            {
+                                                <span> · @L.Localize(decision)</span>
+                                            }
+                                            @if (mirror.UploadByBearcatReason is { } uploadByBearcatReason)
+                                            {
+                                                <span> (@L.Localize(uploadByBearcatReason))</span>
+                                            }
+                                        </span>
+                                    }
+                                    @if (container.ImportedReleaseId is { } importedReleaseId)
+                                    {
+                                        <a href="@($"/releases/{importedReleaseId}")"
+                                           class="inline-flex items-center gap-1 text-primary hover:underline">
+                                            <LucideIcon Name="package" class="h-3.5 w-3.5 shrink-0" />
+                                            @L["OpenImportedRelease"]
+                                        </a>
+                                    }
+                                </div>
+                                @if (container.ErrorMessages.Count > 0)
+                                {
+                                    <p class="text-xs whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">
+                                        @string.Join(Environment.NewLine, container.ErrorMessages)
+                                    </p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["LinkCrypterImportReleaseResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        <PageNavigation CurrentPage="CurrentPage"
+                        TotalPages="TotalPages"
+                        OnPageSelected="GoToPageAsync" />
+    </div>
+</div>

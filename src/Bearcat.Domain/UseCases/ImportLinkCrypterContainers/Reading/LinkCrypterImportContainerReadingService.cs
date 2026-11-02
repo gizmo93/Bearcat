@@ -148,6 +148,7 @@ public class LinkCrypterImportContainerReadingService(
         var emptyPreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: [],
             ReleaseFolderPath: null,
+            ArchiveFolderPath: null,
             ReleaseAction: null,
             ExistingReleaseId: null
         ).ToJson();
@@ -160,6 +161,7 @@ public class LinkCrypterImportContainerReadingService(
                     ContainerId = listedContainer.ContainerId,
                     ContainerUrl = listedContainer.ContainerUrl,
                     ContainerName = listedContainer.ContainerName,
+                    ReleaseName = listedContainer.ContainerName.Trim(),
                     ExternalReference = listedContainer.ExternalReference,
                     Status = existingContainerUrls.Contains(listedContainer.ContainerUrl)
                         ? LinkCrypterImportContainerStatus.AlreadyInBearcat
@@ -224,6 +226,7 @@ public class LinkCrypterImportContainerReadingService(
         container.PreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: mirrors,
             ReleaseFolderPath: null,
+            ArchiveFolderPath: null,
             ReleaseAction: null,
             ExistingReleaseId: null
         ).ToJson();

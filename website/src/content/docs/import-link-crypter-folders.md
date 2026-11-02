@@ -18,7 +18,13 @@ Mirrors with usable links are adopted as completed uploads. Bearcat uploads the 
 3. Optional: select an **archive base folder for releases without local files**. It is needed for releases without a local release folder: Bearcat restores their archives there from the imported mirrors.
 4. Bearcat reads all folders and their links in the background. Folders whose URL Bearcat already knows are skipped.
 5. Select one hoster account per hoster and click **Check files**. Bearcat checks the files with this account only.
-6. Review the folders, select the ones to import and click **Start import**.
+6. Review the releases, select the ones to import and click **Start import**.
+
+## Review
+
+Folders with the same release name are shown and selected together as one release.
+The release name is the folder name. If it is wrong, correct it with the edit button before the import.
+Renaming a release to the name of another release combines them.
 
 ## How mirrors are decided
 
@@ -35,17 +41,21 @@ With a managed template, Bearcat looks for an unused folder with the release nam
 the base paths of the folder automations. If it finds one, the release becomes managed with this folder.
 Otherwise the release becomes unmanaged and Bearcat restores its archive from the mirrors when it is needed.
 
+Bearcat also looks for an existing archive: a folder with exactly the file names of the first adopted mirror in the
+archive storage folders, the working directories or the archive base folder, or in one of their direct subfolders.
+A found archive is used as is and nothing is downloaded. Without a release folder, the release becomes unmanaged with this archive.
+
 ## Folders that cannot be imported
 
 - No mirror belongs to a hoster of the release.
 - No mirror can be adopted and there is no release folder.
-- There is no release folder and no archive base folder was selected.
+- There is no release folder, no existing archive and no archive base folder was selected.
 
 The last two only apply to folders that create a new release.
 
 ## Existing releases
 
-The folder name is the release name (case is ignored).
+The folder name is the release name unless you corrected it in the review (case is ignored).
 
 - Folders with the same release name are combined into one release. One folder per hoster works.
 - A folder whose release already exists is attached to this release, for example the folder of a second crypter.

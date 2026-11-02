@@ -16,6 +16,7 @@ public sealed record LinkCrypterImportDetailReadModel(
     int ProcessedContainerCount,
     int ContainerCountToProcess,
     int SelectedContainerCount,
+    int SelectedReleaseCount,
     IReadOnlyList<string> ErrorMessages,
     IReadOnlyList<LinkCrypterImportContainerStatusCountReadModel> ContainerCountsByStatus,
     IReadOnlyList<LinkCrypterImportHosterRegistrationReadModel> HosterRegistrations

@@ -137,16 +137,14 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         var archiveFiles = FindArchiveFilesOfArchiver(archiveConfig, archiveFolderPath);
         var currentArchive = GetCurrentArchive(archiveConfig);
 
-        var archiveStorageFolder = FindArchiveStorageFolderContainingPath(
-            archiveStorageFolders,
-            archiveFolderPath
-        );
-
         if (currentArchive is not null && ArchiveFileNamesMatch(currentArchive, archiveFiles))
         {
             archiveConfig.ArchiveFilesBasePath = archiveFolderPath;
             RepointArchive(currentArchive, archiveFolderPath);
-            AssignArchiveStorageFolder(currentArchive, archiveStorageFolder);
+            AssignArchiveStorageFolderContainingArchiveFolder(
+                currentArchive,
+                archiveStorageFolders
+            );
             return ArchiveFolderChangeResult.Relocated;
         }
 
@@ -167,10 +165,21 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         }
 
         var reimportedArchive = BuildArchive(archiveFolderPath, archiveFiles, createdAt);
-        AssignArchiveStorageFolder(reimportedArchive, archiveStorageFolder);
+        AssignArchiveStorageFolderContainingArchiveFolder(reimportedArchive, archiveStorageFolders);
         archiveConfig.Archives.Add(reimportedArchive);
 
         return ArchiveFolderChangeResult.Reimported;
+    }
+
+    public static void AssignArchiveStorageFolderContainingArchiveFolder(
+        Archive archive,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders
+    )
+    {
+        AssignArchiveStorageFolder(
+            archive,
+            FindArchiveStorageFolderContainingPath(archiveStorageFolders, archive.ArchiveFolderPath)
+        );
     }
 
     private static ArchiveStorageFolder? FindArchiveStorageFolderContainingPath(
@@ -201,9 +210,9 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         }
     }
 
-    private static Archive BuildArchive(
+    public static Archive BuildArchive(
         string archiveFolderPath,
-        List<string> archiveFilePaths,
+        IReadOnlyList<string> archiveFilePaths,
         DateTime createdAt
     )
     {

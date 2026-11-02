@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.ReadModels;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -10,19 +11,22 @@ using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ImportLinkCrypterContainers;
 
-public partial class LinkCrypterImportContainerList(
+public partial class LinkCrypterImportReleaseList(
     ToastService toastService,
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
     private const int PageSize = 25;
 
-    private const string ContainerGridClass =
-        "lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,2fr)]";
+    private const string ReleaseGridClass =
+        "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.4fr)]";
 
-    private IReadOnlyList<LinkCrypterImportContainerReadModel> containers = [];
+    private IReadOnlyList<LinkCrypterImportReleaseReadModel> releases = [];
     private LinkCrypterImportDetailReadModel? loadedDetail;
     private LinkCrypterImportContainerStatus? selectedStatus;
+    private string? releaseNameBeingEdited;
+    private string editedReleaseName = "";
+    private bool isRenaming;
     private int totalCount;
     private int pageIndex;
 
@@ -35,9 +39,9 @@ public partial class LinkCrypterImportContainerList(
     public IReadOnlyDictionary<string, string> HosterNamesByClassName { get; set; } = null!;
 
     [Parameter]
-    public EventCallback OnSelectionChanged { get; set; }
+    public EventCallback OnReleasesChanged { get; set; }
 
-    private bool CanChangeSelection => Detail.State is LinkCrypterImportState.ReadyForReview;
+    private bool CanChangeReleases => Detail.State is LinkCrypterImportState.ReadyForReview;
 
     private int ImportableContainerCount => GetImportableContainerCount();
 
@@ -60,15 +64,15 @@ public partial class LinkCrypterImportContainerList(
         }
 
         loadedDetail = Detail;
-        await LoadContainersAsync();
+        await LoadReleasesAsync();
     }
 
-    private async Task LoadContainersAsync()
+    private async Task LoadReleasesAsync()
     {
         var result = await operationRunner.RunAsync(
             (ILinkCrypterImportReadRepository repository) =>
-                repository.SearchContainersAsync(
-                    new LinkCrypterImportContainerSearchQuery(
+                repository.SearchReleasesAsync(
+                    new LinkCrypterImportReleaseSearchQuery(
                         LinkCrypterImportId: Detail.Id,
                         Statuses: selectedStatus is { } status ? [status] : [],
                         PageIndex: pageIndex,
@@ -77,7 +81,7 @@ public partial class LinkCrypterImportContainerList(
                 )
         );
 
-        containers = result.Items;
+        releases = result.Items;
         totalCount = result.TotalCount;
         pageIndex = result.PageIndex;
     }
@@ -86,17 +90,55 @@ public partial class LinkCrypterImportContainerList(
     {
         selectedStatus = status;
         pageIndex = 0;
-        await LoadContainersAsync();
+        await LoadReleasesAsync();
     }
 
     private async Task GoToPageAsync(int page)
     {
         pageIndex = page - 1;
-        await LoadContainersAsync();
+        await LoadReleasesAsync();
     }
 
-    private async Task SetSelectionAsync(
-        LinkCrypterImportContainerReadModel container,
+    private void StartRenaming(LinkCrypterImportReleaseReadModel release)
+    {
+        releaseNameBeingEdited = release.ReleaseName;
+        editedReleaseName = release.ReleaseName;
+    }
+
+    private void CancelRenaming()
+    {
+        releaseNameBeingEdited = null;
+        editedReleaseName = "";
+    }
+
+    private async Task RenameReleaseAsync()
+    {
+        var currentReleaseName = releaseNameBeingEdited!;
+        isRenaming = true;
+
+        try
+        {
+            await operationRunner.RunAsync(
+                (LinkCrypterImportService service) =>
+                    service.RenameReleaseAsync(Detail.Id, currentReleaseName, editedReleaseName)
+            );
+            CancelRenaming();
+        }
+        catch (InvalidLinkCrypterImportException exception)
+        {
+            toastService.Error(exception.Message);
+            return;
+        }
+        finally
+        {
+            isRenaming = false;
+        }
+
+        await OnReleasesChanged.InvokeAsync();
+    }
+
+    private async Task SetReleaseSelectionAsync(
+        LinkCrypterImportReleaseReadModel release,
         bool isSelected
     )
     {
@@ -104,7 +146,7 @@ public partial class LinkCrypterImportContainerList(
         {
             await operationRunner.RunAsync(
                 (LinkCrypterImportService service) =>
-                    service.SetContainerSelectionAsync(Detail.Id, [container.Id], isSelected)
+                    service.SetReleaseSelectionAsync(Detail.Id, release.ReleaseName, isSelected)
             );
         }
         catch (InvalidLinkCrypterImportException exception)
@@ -112,7 +154,7 @@ public partial class LinkCrypterImportContainerList(
             toastService.Error(exception.Message);
         }
 
-        await OnSelectionChanged.InvokeAsync();
+        await OnReleasesChanged.InvokeAsync();
     }
 
     private async Task SetSelectionOfAllImportableContainersAsync(bool isSelected)
@@ -129,7 +171,16 @@ public partial class LinkCrypterImportContainerList(
             toastService.Error(exception.Message);
         }
 
-        await OnSelectionChanged.InvokeAsync();
+        await OnReleasesChanged.InvokeAsync();
+    }
+
+    private static bool IsReleasePartlySelected(LinkCrypterImportReleaseReadModel release)
+    {
+        return !release.IsSelected
+            && release.Containers.Any(container =>
+                container.Status is LinkCrypterImportContainerStatus.Importable
+                && container.IsSelected
+            );
     }
 
     private int GetImportableContainerCount()
@@ -139,6 +190,30 @@ public partial class LinkCrypterImportContainerList(
                 count.Status is LinkCrypterImportContainerStatus.Importable
             )
             .Sum(count => count.Count);
+    }
+
+    private string GetLocalFilesText(LinkCrypterImportReleaseReadModel release)
+    {
+        if (release.ReleaseAction is not LinkCrypterImportReleaseAction.CreateRelease)
+        {
+            return "-";
+        }
+
+        List<string> localFolderTexts = [];
+
+        if (release.ReleaseFolderPath is { } releaseFolderPath)
+        {
+            localFolderTexts.Add(L["LinkCrypterImportReleaseFolder", releaseFolderPath]);
+        }
+
+        if (release.ArchiveFolderPath is { } archiveFolderPath)
+        {
+            localFolderTexts.Add(L["LinkCrypterImportArchiveFolder", archiveFolderPath]);
+        }
+
+        return localFolderTexts.Count == 0
+            ? L["LinkCrypterImportNoLocalFiles"]
+            : string.Join("; ", localFolderTexts);
     }
 
     private string GetHosterName(string? hosterClassName)

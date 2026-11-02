@@ -16,6 +16,8 @@ public class LinkCrypterImportContainer
 
     public string ContainerName { get; set; } = null!;
 
+    public string ReleaseName { get; set; } = null!;
+
     public string ExternalReference { get; set; } = null!;
 
     public bool HasBackupLinks { get; set; }

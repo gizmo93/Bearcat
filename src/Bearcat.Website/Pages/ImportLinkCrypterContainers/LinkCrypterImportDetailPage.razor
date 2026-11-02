@@ -99,16 +99,16 @@
             <div class="flex flex-wrap items-center gap-2">
                 <BbButton Class="sm:ml-auto" Disabled="@(isSubmitting || detail.SelectedContainerCount == 0)" OnClick="StartImportAsync">
                     <LucideIcon Name="download" class="h-4 w-4" />
-                    @L["StartLinkCrypterImportWithCount", detail.SelectedContainerCount]
+                    @(detail.SelectedReleaseCount == 1 ? L["StartLinkCrypterImportWithOneRelease"] : L["StartLinkCrypterImportWithCount", detail.SelectedReleaseCount])
                 </BbButton>
             </div>
         }
 
-        @if (ShowsContainers)
+        @if (ShowsReleases)
         {
-            <LinkCrypterImportContainerList Detail="detail"
-                                            HosterNamesByClassName="hosterNamesByClassName"
-                                            OnSelectionChanged="LoadDetailAsync" />
+            <LinkCrypterImportReleaseList Detail="detail"
+                                          HosterNamesByClassName="hosterNamesByClassName"
+                                          OnReleasesChanged="LoadDetailAsync" />
         }
     }
 </section>

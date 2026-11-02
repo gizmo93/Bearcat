@@ -192,6 +192,15 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ArchiveStorageFolder>> GetArchiveStorageFoldersAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .ArchiveStorageFolders.OrderBy(storageFolder => storageFolder.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public void Add(LinkCrypterImport linkCrypterImport)
     {
         dbWrite.Add(linkCrypterImport);

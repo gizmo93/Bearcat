@@ -62,6 +62,10 @@ public interface ILinkCrypterImportRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<ArchiveStorageFolder>> GetArchiveStorageFoldersAsync(
+        CancellationToken cancellationToken
+    );
+
     void Add(LinkCrypterImport linkCrypterImport);
 
     void Remove(LinkCrypterImport linkCrypterImport);

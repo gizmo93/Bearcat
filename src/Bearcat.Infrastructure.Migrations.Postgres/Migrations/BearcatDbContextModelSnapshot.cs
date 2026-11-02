@@ -1109,6 +1109,11 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ReleaseName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 

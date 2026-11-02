@@ -38,7 +38,7 @@ public partial class LinkCrypterImportDetailPage(
                 or LinkCrypterImportState.CheckingFiles
                 or LinkCrypterImportState.Importing;
 
-    private bool ShowsContainers =>
+    private bool ShowsReleases =>
         detail?.State
             is LinkCrypterImportState.ReadyForReview
                 or LinkCrypterImportState.Importing
@@ -164,7 +164,7 @@ public partial class LinkCrypterImportDetailPage(
     {
         var confirmation = await dialogService.ConfirmAsync(
             L["StartLinkCrypterImport"],
-            $"{L["StartLinkCrypterImportConfirmation", detail!.SelectedContainerCount]} {L["LinkCrypterImportReleaseInfoHint"]}",
+            $"{L["StartLinkCrypterImportConfirmation", detail!.SelectedReleaseCount, detail.SelectedContainerCount]} {L["LinkCrypterImportReleaseInfoHint"]}",
             new ConfirmDialogOptions
             {
                 ConfirmText = L["StartLinkCrypterImport"],

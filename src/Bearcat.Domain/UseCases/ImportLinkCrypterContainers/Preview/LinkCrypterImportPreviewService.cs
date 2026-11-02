@@ -40,9 +40,116 @@ public class LinkCrypterImportPreviewService(
             .OrderBy(container => container.Id)
             .ToList();
 
-        if (await CheckFilesAsync(linkCrypterImport, containers, cancellationToken))
+        if (!await CheckFilesAsync(linkCrypterImport, containers, cancellationToken))
         {
-            await CreatePreviewsAsync(linkCrypterImport, containers, cancellationToken);
+            return;
+        }
+
+        linkCrypterImport.StartProgress(containers.Count);
+        await repository.SaveChangesAsync(cancellationToken);
+
+        await CreatePreviewsAsync(linkCrypterImport, cancellationToken);
+
+        linkCrypterImport.ProcessedContainerCount = containers.Count;
+
+        var importableContainerCount = linkCrypterImport.Containers.Count(container =>
+            container.Status is LinkCrypterImportContainerStatus.Importable
+        );
+
+        linkCrypterImport.ChangeState(
+            LinkCrypterImportState.ReadyForReview,
+            timeProvider.GetLocalNow()
+        );
+
+        notificationService.Create(
+            kind: NotificationKind.LinkCrypterImportReadyForReview,
+            message: $"Link crypter import {linkCrypterImport.Id} is ready for review: {importableContainerCount} of {linkCrypterImport.Containers.Count} containers can be imported."
+        );
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task CreatePreviewsAsync(
+        LinkCrypterImport linkCrypterImport,
+        CancellationToken cancellationToken
+    )
+    {
+        var containers = linkCrypterImport
+            .Containers.Where(container =>
+                container.Status
+                    is LinkCrypterImportContainerStatus.WaitingForFileCheck
+                        or LinkCrypterImportContainerStatus.Importable
+                        or LinkCrypterImportContainerStatus.NotImportable
+            )
+            .OrderBy(container => container.Id)
+            .ToList();
+
+        var releaseTemplate =
+            await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
+                linkCrypterImport.ReleaseTemplateId,
+                cancellationToken
+            )
+            ?? throw new InvalidOperationException(
+                $"Release template {linkCrypterImport.ReleaseTemplateId} of link crypter import {linkCrypterImport.Id} was not found."
+            );
+
+        var templateHosterClassNames = releaseTemplate
+            .UploadConfigTemplates.Where(template =>
+                template.UploadSource is UploadSource.ArchiveFiles
+            )
+            .OrderBy(template => template.Id)
+            .Select(template => template.GetHosterClassName())
+            .ToList();
+
+        var releaseFolderBasePaths =
+            releaseTemplate.ReleaseType is ReleaseType.Managed
+                ? await GetReleaseFolderBasePathsAsync(cancellationToken)
+                : [];
+
+        var existingReleasesByName = await GetExistingReleasesByNameAsync(
+            containers,
+            cancellationToken
+        );
+
+        var archivePartFileNamesByFolderPath = await GetArchivePartFileNamesByFolderPathAsync(
+            linkCrypterImport,
+            cancellationToken
+        );
+
+        var releaseNamesOfEarlierContainers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var releaseNamesByChosenArchiveFolderPath = new Dictionary<string, string>(
+            StringComparer.Ordinal
+        );
+
+        foreach (var container in containers)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var notImportableReason = await CreatePreviewAsync(
+                container: container,
+                existingRelease: existingReleasesByName.GetValueOrDefault(container.ReleaseName),
+                isNameOfEarlierContainer: releaseNamesOfEarlierContainers.Contains(
+                    container.ReleaseName
+                ),
+                templateHosterClassNames: templateHosterClassNames,
+                releaseFolderBasePaths: releaseFolderBasePaths,
+                archivePartFileNamesByFolderPath: archivePartFileNamesByFolderPath,
+                releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                cancellationToken: cancellationToken
+            );
+
+            releaseNamesOfEarlierContainers.Add(container.ReleaseName);
+
+            container.IsSelected =
+                notImportableReason is null
+                && (
+                    container.Status is LinkCrypterImportContainerStatus.WaitingForFileCheck
+                    || container.IsSelected
+                );
+            container.NotImportableReason = notImportableReason;
+
+            container.Status = notImportableReason is null
+                ? LinkCrypterImportContainerStatus.Importable
+                : LinkCrypterImportContainerStatus.NotImportable;
         }
     }
 
@@ -220,96 +327,13 @@ public class LinkCrypterImportPreviewService(
         );
     }
 
-    private async Task CreatePreviewsAsync(
-        LinkCrypterImport linkCrypterImport,
-        List<LinkCrypterImportContainer> containers,
-        CancellationToken cancellationToken
-    )
-    {
-        var releaseTemplate =
-            await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
-                linkCrypterImport.ReleaseTemplateId,
-                cancellationToken
-            )
-            ?? throw new InvalidOperationException(
-                $"Release template {linkCrypterImport.ReleaseTemplateId} of link crypter import {linkCrypterImport.Id} was not found."
-            );
-
-        var templateHosterClassNames = releaseTemplate
-            .UploadConfigTemplates.Where(template =>
-                template.UploadSource is UploadSource.ArchiveFiles
-            )
-            .OrderBy(template => template.Id)
-            .Select(template => template.GetHosterClassName())
-            .ToList();
-
-        var releaseFolderBasePaths =
-            releaseTemplate.ReleaseType is ReleaseType.Managed
-                ? await GetReleaseFolderBasePathsAsync(cancellationToken)
-                : [];
-
-        var existingReleasesByName = await GetExistingReleasesByNameAsync(
-            containers,
-            cancellationToken
-        );
-
-        var releaseNamesOfEarlierContainers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        linkCrypterImport.StartProgress(containers.Count);
-        await repository.SaveChangesAsync(cancellationToken);
-
-        foreach (var container in containers)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var releaseName = container.ContainerName.Trim();
-
-            var notImportableReason = await CreatePreviewAsync(
-                container: container,
-                releaseName: releaseName,
-                existingRelease: existingReleasesByName.GetValueOrDefault(releaseName),
-                isNameOfEarlierContainer: releaseNamesOfEarlierContainers.Contains(releaseName),
-                templateHosterClassNames: templateHosterClassNames,
-                releaseFolderBasePaths: releaseFolderBasePaths,
-                cancellationToken: cancellationToken
-            );
-
-            releaseNamesOfEarlierContainers.Add(releaseName);
-            container.NotImportableReason = notImportableReason;
-
-            container.Status = notImportableReason is null
-                ? LinkCrypterImportContainerStatus.Importable
-                : LinkCrypterImportContainerStatus.NotImportable;
-
-            container.IsSelected = notImportableReason is null;
-            linkCrypterImport.ProcessedContainerCount++;
-
-            await repository.SaveChangesAsync(cancellationToken);
-        }
-
-        var importableContainerCount = containers.Count(container =>
-            container.Status is LinkCrypterImportContainerStatus.Importable
-        );
-
-        linkCrypterImport.ChangeState(
-            LinkCrypterImportState.ReadyForReview,
-            timeProvider.GetLocalNow()
-        );
-
-        notificationService.Create(
-            kind: NotificationKind.LinkCrypterImportReadyForReview,
-            message: $"Link crypter import {linkCrypterImport.Id} is ready for review: {importableContainerCount} of {linkCrypterImport.Containers.Count} containers can be imported."
-        );
-        await repository.SaveChangesAsync(cancellationToken);
-    }
-
     private async Task<Dictionary<string, Release>> GetExistingReleasesByNameAsync(
         List<LinkCrypterImportContainer> containers,
         CancellationToken cancellationToken
     )
     {
         var releases = await repository.GetReleasesByNameAsync(
-            containers.Select(container => container.ContainerName.Trim()).ToList(),
+            containers.Select(container => container.ReleaseName).Distinct().ToList(),
             cancellationToken
         );
 
@@ -336,11 +360,12 @@ public class LinkCrypterImportPreviewService(
 
     private async Task<LinkCrypterImportNotImportableReason?> CreatePreviewAsync(
         LinkCrypterImportContainer container,
-        string releaseName,
         Release? existingRelease,
         bool isNameOfEarlierContainer,
         List<string> templateHosterClassNames,
         List<string> releaseFolderBasePaths,
+        Dictionary<string, HashSet<string>> archivePartFileNamesByFolderPath,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
         CancellationToken cancellationToken
     )
     {
@@ -355,15 +380,36 @@ public class LinkCrypterImportPreviewService(
 
         var releaseFolderPath = existingRelease is null
             ? await FindUnusedReleaseFolderPathAsync(
-                releaseName,
+                container.ReleaseName,
                 releaseFolderBasePaths,
                 cancellationToken
             )
             : null;
 
+        var archiveFolderPath = existingRelease is null
+            ? await FindUnusedArchiveFolderPathAsync(
+                releaseName: container.ReleaseName,
+                mirrors: mirrors,
+                archivePartFileNamesByFolderPath: archivePartFileNamesByFolderPath,
+                releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                cancellationToken: cancellationToken
+            )
+            : null;
+
+        if (archiveFolderPath is not null)
+        {
+            releaseNamesByChosenArchiveFolderPath.TryAdd(archiveFolderPath, container.ReleaseName);
+        }
+
+        if (archiveFolderPath is not null && archiveFolderPath == releaseFolderPath)
+        {
+            releaseFolderPath = null;
+        }
+
         container.PreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: mirrors,
             ReleaseFolderPath: releaseFolderPath,
+            ArchiveFolderPath: archiveFolderPath,
             ReleaseAction: releaseAction,
             ExistingReleaseId: existingRelease?.Id
         ).ToJson();
@@ -372,6 +418,7 @@ public class LinkCrypterImportPreviewService(
             mirrors: mirrors,
             releaseAction: releaseAction,
             releaseFolderPath: releaseFolderPath,
+            archiveFolderPath: archiveFolderPath,
             archiveFilesBasePath: container
                 .LinkCrypterImport
                 .ArchiveFilesBasePathForReleasesWithoutLocalFiles
@@ -431,6 +478,119 @@ public class LinkCrypterImportPreviewService(
         );
     }
 
+    private async Task<
+        Dictionary<string, HashSet<string>>
+    > GetArchivePartFileNamesByFolderPathAsync(
+        LinkCrypterImport linkCrypterImport,
+        CancellationToken cancellationToken
+    )
+    {
+        var archiveStorageFolders = await repository.GetArchiveStorageFoldersAsync(
+            cancellationToken
+        );
+
+        List<string?> searchFolderPathCandidates =
+        [
+            .. archiveStorageFolders.Select(storageFolder => storageFolder.Path),
+            .. workingDirectoriesConfig.Value.GetWorkingDirectories(),
+            linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles,
+        ];
+
+        var searchFolderPaths = searchFolderPathCandidates
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => Path.TrimEndingDirectorySeparator(path!))
+            .Distinct(StringComparer.Ordinal)
+            .Where(fileSystemService.DirectoryExists)
+            .ToList();
+
+        var folderPaths = searchFolderPaths
+            .SelectMany(searchFolderPath =>
+                fileSystemService.GetFoldersInPath(searchFolderPath).Prepend(searchFolderPath)
+            )
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var archivePartFileNamesByFolderPath = new Dictionary<string, HashSet<string>>(
+            StringComparer.Ordinal
+        );
+
+        foreach (var folderPath in folderPaths)
+        {
+            var archivePartFileNames = fileSystemService
+                .GetFilesInPath(folderPath, recursive: false)
+                .Select(filePath => Path.GetFileName(filePath))
+                .Where(ArchivePartFileNames.IsArchivePart)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (archivePartFileNames.Count > 0)
+            {
+                archivePartFileNamesByFolderPath[folderPath] = archivePartFileNames;
+            }
+        }
+
+        return archivePartFileNamesByFolderPath;
+    }
+
+    private async Task<string?> FindUnusedArchiveFolderPathAsync(
+        string releaseName,
+        List<LinkCrypterImportMirror> mirrors,
+        Dictionary<string, HashSet<string>> archivePartFileNamesByFolderPath,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        CancellationToken cancellationToken
+    )
+    {
+        var firstAdoptedMirror = mirrors.FirstOrDefault(mirror =>
+            mirror.Decision is LinkCrypterImportMirrorDecision.Adopt
+        );
+
+        if (firstAdoptedMirror is null)
+        {
+            return null;
+        }
+
+        var fileNames = firstAdoptedMirror.Files.Select(file => file.FileName!).ToList();
+
+        var folderPathsWithSameArchiveParts = archivePartFileNamesByFolderPath
+            .Where(entry => entry.Value.SetEquals(fileNames))
+            .Select(entry => entry.Key)
+            .Where(folderPath =>
+                !IsArchiveFolderChosenForOtherRelease(
+                    folderPath: folderPath,
+                    releaseName: releaseName,
+                    releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath
+                )
+            )
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+        if (folderPathsWithSameArchiveParts.Count == 0)
+        {
+            return null;
+        }
+
+        var usedFolderPaths =
+            await releaseFolderUsageRepository.GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
+                folderPathsWithSameArchiveParts,
+                cancellationToken
+            );
+
+        return folderPathsWithSameArchiveParts.FirstOrDefault(folderPath =>
+            !usedFolderPaths.Contains(folderPath)
+        );
+    }
+
+    private static bool IsArchiveFolderChosenForOtherRelease(
+        string folderPath,
+        string releaseName,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath
+    )
+    {
+        var chosenReleaseName = releaseNamesByChosenArchiveFolderPath.GetValueOrDefault(folderPath);
+
+        return chosenReleaseName is not null
+            && !string.Equals(chosenReleaseName, releaseName, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static List<LinkCrypterImportMirror> DecideMirrors(
         IReadOnlyList<LinkCrypterImportMirror> mirrors,
         List<string> hosterClassNames
@@ -447,6 +607,7 @@ public class LinkCrypterImportPreviewService(
                     mirror with
                     {
                         Decision = LinkCrypterImportMirrorDecision.UnsupportedHoster,
+                        UploadByBearcatReason = null,
                     }
                 );
                 continue;
@@ -458,6 +619,7 @@ public class LinkCrypterImportPreviewService(
                     mirror with
                     {
                         Decision = LinkCrypterImportMirrorDecision.HosterNotInRelease,
+                        UploadByBearcatReason = null,
                     }
                 );
                 continue;
@@ -531,6 +693,7 @@ public class LinkCrypterImportPreviewService(
         List<LinkCrypterImportMirror> mirrors,
         LinkCrypterImportReleaseAction releaseAction,
         string? releaseFolderPath,
+        string? archiveFolderPath,
         string? archiveFilesBasePath
     )
     {
@@ -548,6 +711,7 @@ public class LinkCrypterImportPreviewService(
         if (
             releaseAction is not LinkCrypterImportReleaseAction.CreateRelease
             || releaseFolderPath is not null
+            || archiveFolderPath is not null
         )
         {
             return null;

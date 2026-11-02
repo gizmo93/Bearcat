@@ -18,7 +18,13 @@ Mirrors mit brauchbaren Links übernimmt Bearcat als abgeschlossene Uploads. Die
 3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Du brauchst ihn für Releases ohne lokalen Releaseordner: Bearcat stellt ihre Archive dort aus den importierten Mirrors wieder her.
 4. Bearcat liest alle Ordner und ihre Links im Hintergrund. Ordner, deren URL Bearcat schon kennt, überspringt es.
 5. Wähle pro Hoster einen Hosteraccount und klicke auf **Dateien prüfen**. Bearcat prüft die Dateien nur mit diesem Account.
-6. Prüfe die Ordner, wähle die zu importierenden aus und klicke auf **Import starten**.
+6. Prüfe die Releases, wähle die zu importierenden aus und klicke auf **Import starten**.
+
+## Prüfung
+
+Ordner mit demselben Releasenamen zeigt Bearcat als ein Release an und wählt sie gemeinsam aus.
+Der Releasename ist der Ordnername. Stimmt er nicht, korrigiere ihn vor dem Import mit dem Bearbeitenknopf.
+Benennst du ein Release in den Namen eines anderen Releases um, werden beide zusammengeführt.
 
 ## So entscheidet Bearcat über Mirrors
 
@@ -35,17 +41,21 @@ Bei einem verwalteten Template sucht Bearcat in den Arbeitsverzeichnissen und de
 Ordnerautomatisierungen einen unbenutzten Ordner mit dem Releasenamen. Findet es einen, wird das Release mit
 diesem Ordner verwaltet. Sonst wird es unverwaltet und Bearcat stellt sein Archiv bei Bedarf aus den Mirrors wieder her.
 
+Bearcat sucht außerdem ein vorhandenes Archiv: einen Ordner mit genau den Dateinamen des ersten übernommenen Mirrors
+in den Archivspeicherordnern, den Arbeitsverzeichnissen oder dem Archivbasisordner oder in einem ihrer direkten Unterordner.
+Ein gefundenes Archiv wird unverändert genutzt und nichts wird heruntergeladen. Ohne Releaseordner wird das Release mit diesem Archiv unverwaltet.
+
 ## Ordner, die sich nicht importieren lassen
 
 - Kein Mirror gehört zu einem Hoster des Releases.
 - Kein Mirror kann übernommen werden und es gibt keinen Releaseordner.
-- Es gibt keinen Releaseordner und du hast keinen Archivbasisordner gewählt.
+- Es gibt keinen Releaseordner, kein vorhandenes Archiv und du hast keinen Archivbasisordner gewählt.
 
 Die letzten beiden gelten nur für Ordner, die ein neues Release anlegen.
 
 ## Bestehende Releases
 
-Der Ordnername ist der Releasename (Groß- und Kleinschreibung zählt nicht).
+Der Ordnername ist der Releasename, außer du hast ihn bei der Prüfung korrigiert (Groß- und Kleinschreibung zählt nicht).
 
 - Ordner mit demselben Releasenamen landen in einem Release. Ein Ordner pro Hoster funktioniert.
 - Ein Ordner, dessen Release es schon gibt, wird an dieses Release angehängt, zum Beispiel der Ordner eines zweiten Crypters.

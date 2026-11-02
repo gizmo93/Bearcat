@@ -95,7 +95,47 @@ public class ReleaseFolderUsageRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldBe(["/archives/Managed", "/archives/Template"], ignoreOrder: true);
     }
 
-    private void AddRelease(
+    [Test]
+    public async Task GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync_PathsAreFoldersOfArchives_ReturnsOnlyFoldersOfArchivesThatAreNotDeleted()
+    {
+        // Arrange
+        var archiveConfig = AddRelease(
+            name: "Managed",
+            releaseType: ReleaseType.Managed,
+            releaseFolderPath: "/releases/Managed",
+            archiveFilesBasePath: "/archives/Managed"
+        );
+        archiveConfig.Archives.Add(CreateArchive("/storage/Managed", ArchiveState.Created));
+        archiveConfig.Archives.Add(CreateArchive("/archives/Managed/Old", ArchiveState.Deleted));
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
+            ["/storage/Managed", "/archives/Managed/Old"],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(["/storage/Managed"]);
+    }
+
+    private static Archive CreateArchive(string archiveFolderPath, ArchiveState archiveState)
+    {
+        return new Archive
+        {
+            ArchiveFolderPath = archiveFolderPath,
+            CreatedAt = new DateTime(2026, 9, 23, 12, 0, 0, DateTimeKind.Unspecified),
+            ArchiveState = archiveState,
+            ArchiveFileSizeMb = 0,
+            ArchiveFiles = [],
+            Uploads = [],
+            ErrorMessages = [],
+            Notifications = [],
+        };
+    }
+
+    private ArchiveConfig AddRelease(
         string name,
         ReleaseType releaseType,
         string? releaseFolderPath,
@@ -115,20 +155,21 @@ public class ReleaseFolderUsageRepositoryTest(DatabaseProvider databaseProvider)
             },
         };
 
-        DbContext.ArchiveConfigs.Add(
-            new ArchiveConfig
-            {
-                Release = release,
-                Name = "Main archive",
-                ArchiveFilesBasePath = archiveFilesBasePath,
-                ArchiverName = "zip",
-                ArchiveNamePrefix = name,
-                ArchivePassword = "secret",
-                ArchiveFileSizeMb = 512,
-                Archives = [],
-                UploadConfigs = [],
-            }
-        );
+        var archiveConfig = new ArchiveConfig
+        {
+            Release = release,
+            Name = "Main archive",
+            ArchiveFilesBasePath = archiveFilesBasePath,
+            ArchiverName = "zip",
+            ArchiveNamePrefix = name,
+            ArchivePassword = "secret",
+            ArchiveFileSizeMb = 512,
+            Archives = [],
+            UploadConfigs = [],
+        };
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+
+        return archiveConfig;
     }
 
     private void AddRemoteDownload(string localFolderPath)

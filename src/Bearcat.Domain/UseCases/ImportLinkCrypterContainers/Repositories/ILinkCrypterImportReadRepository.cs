@@ -15,8 +15,8 @@ public interface ILinkCrypterImportReadRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<PagedResult<LinkCrypterImportContainerReadModel>> SearchContainersAsync(
-        LinkCrypterImportContainerSearchQuery query,
+    Task<PagedResult<LinkCrypterImportReleaseReadModel>> SearchReleasesAsync(
+        LinkCrypterImportReleaseSearchQuery query,
         CancellationToken cancellationToken = default
     );
 }
