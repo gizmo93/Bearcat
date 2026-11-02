@@ -163,8 +163,19 @@ public class ReleaseService(
 
     public async Task DeleteAsync(int releaseId, CancellationToken cancellationToken = default)
     {
-        var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
-        writeRepository.Remove(release);
+        await DeleteAsync([releaseId], cancellationToken);
+    }
+
+    public async Task DeleteAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        foreach (var releaseId in releaseIds)
+        {
+            var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+            writeRepository.Remove(release);
+        }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

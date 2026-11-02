@@ -137,6 +137,9 @@
   <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Releaseinfos und Metadaten für {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
   <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
+  <data name="DeleteSelectedReleases" xml:space="preserve"><value>Ausgewählte Releases löschen</value></data>
+  <data name="DeleteSelectedReleasesConfirmation" xml:space="preserve"><value>Möchtest du wirklich {0} Release(s) löschen?</value></data>
+  <data name="ReleasesDeleted" xml:space="preserve"><value>{0} Release(s) gelöscht.</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Uploadkonfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Uploadkonfiguration {0} wirklich löschen?</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Cover herunterladen</value></data>

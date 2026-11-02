@@ -137,6 +137,9 @@
   <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Delete release info and metadata for {0}? The background task can fetch them again.</value></data>
   <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Delete release info and metadata</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
+  <data name="DeleteSelectedReleases" xml:space="preserve"><value>Delete selected releases</value></data>
+  <data name="DeleteSelectedReleasesConfirmation" xml:space="preserve"><value>Are you sure you want to delete {0} release(s)?</value></data>
+  <data name="ReleasesDeleted" xml:space="preserve"><value>{0} release(s) deleted.</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Download cover</value></data>
