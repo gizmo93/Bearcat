@@ -16,6 +16,18 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
         return uploads.Select(ToUploadModel).ToList();
     }
 
+    public async Task<
+        IReadOnlyList<ForumPostTemplateLinkCrypterModel>
+    > BuildAllHostersLinkCryptersAsync(int releaseId, CancellationToken cancellationToken = default)
+    {
+        var linkCrypters = await repository.GetForumPostAllHostersLinkCryptersAsync(
+            releaseId,
+            cancellationToken
+        );
+
+        return linkCrypters.Select(ToLinkCrypterModel).ToList();
+    }
+
     private static ForumPostTemplateUploadModel ToUploadModel(
         ReleaseForumPostUploadReadModel upload
     )
@@ -30,16 +42,21 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
             ArchivePassword = upload.ArchivePassword ?? string.Empty,
             Links = upload.Links,
             EmbedLinks = upload.EmbedLinks,
-            LinkCrypters = upload
-                .LinkCrypters.Select(linkCrypter => new ForumPostTemplateLinkCrypterModel
-                {
-                    Name = linkCrypter.Name,
-                    Password = linkCrypter.Password ?? string.Empty,
-                    ContainerLink = linkCrypter.ContainerUrl,
-                    StatusImageId = linkCrypter.StatusImageId ?? string.Empty,
-                    CreatedAt = linkCrypter.CreatedAt,
-                })
-                .ToList(),
+            LinkCrypters = upload.LinkCrypters.Select(ToLinkCrypterModel).ToList(),
+        };
+    }
+
+    private static ForumPostTemplateLinkCrypterModel ToLinkCrypterModel(
+        ReleaseForumPostLinkCrypterReadModel linkCrypter
+    )
+    {
+        return new ForumPostTemplateLinkCrypterModel
+        {
+            Name = linkCrypter.Name,
+            Password = linkCrypter.Password ?? string.Empty,
+            ContainerLink = linkCrypter.ContainerUrl,
+            StatusImageId = linkCrypter.StatusImageId ?? string.Empty,
+            CreatedAt = linkCrypter.CreatedAt,
         };
     }
 }

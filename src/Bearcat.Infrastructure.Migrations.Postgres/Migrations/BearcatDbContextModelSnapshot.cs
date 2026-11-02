@@ -18,7 +18,7 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -952,6 +952,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Scope")
                         .HasColumnType("integer");
 
@@ -981,6 +984,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasIndex("UploadConfigLinkCrypterId");
 
                     b.HasIndex("UploadId");
+
+                    b.HasIndex("ReleaseId", "LinkCrypterRegistrationId");
 
                     b.ToTable("LinkCrypterContainers");
                 });
@@ -2875,6 +2880,11 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("LinkCrypterContainers")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Bearcat.Domain.Entities.UploadConfigLinkCrypter", "UploadConfigLinkCrypter")
                         .WithMany("LinkCrypterContainers")
                         .HasForeignKey("UploadConfigLinkCrypterId")
@@ -2888,6 +2898,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("CollectionUploadSlot");
 
                     b.Navigation("LinkCrypterRegistration");
+
+                    b.Navigation("Release");
 
                     b.Navigation("Upload");
 
@@ -3521,6 +3533,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("ExternalIdentifiers");
 
                     b.Navigation("ImageUploadConfigs");
+
+                    b.Navigation("LinkCrypterContainers");
 
                     b.Navigation("MediaFiles");
 

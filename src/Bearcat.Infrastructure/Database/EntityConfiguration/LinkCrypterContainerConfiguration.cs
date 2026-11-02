@@ -13,6 +13,7 @@ public class LinkCrypterContainerConfiguration : IEntityTypeConfiguration<LinkCr
         builder.Property(l => l.UploadConfigLinkCrypterId).IsRequired(false);
         builder.Property(l => l.UploadId).IsRequired(false);
         builder.Property(l => l.CollectionUploadSlotId).IsRequired(false);
+        builder.Property(l => l.ReleaseId).IsRequired(false);
         builder.Property(l => l.LinkCrypterRegistrationId).IsRequired();
         builder.Property(l => l.ExternalReference).IsRequired(false);
         builder.Property(l => l.StatusImageId).IsRequired(false).HasMaxLength(100);
@@ -41,5 +42,15 @@ public class LinkCrypterContainerConfiguration : IEntityTypeConfiguration<LinkCr
             .HasPrincipalKey(s => s.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(l => l.Release)
+            .WithMany(r => r.LinkCrypterContainers)
+            .HasForeignKey(l => l.ReleaseId)
+            .HasPrincipalKey(r => r.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(l => new { l.ReleaseId, l.LinkCrypterRegistrationId });
     }
 }

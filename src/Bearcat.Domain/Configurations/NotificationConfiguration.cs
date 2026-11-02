@@ -172,6 +172,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool CollectionLinkCrypterContainerInvalid { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid",
+        "NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid.Description"
+    )]
+    public bool ReleaseAllHostersLinkCrypterContainerInvalid { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.AutomaticForumPostCreated",
         "NotificationKind.AutomaticForumPostCreated.Description"
     )]

@@ -821,6 +821,7 @@
   <data name="CollectionUploadGroupName" xml:space="preserve"><value>Gruppenname</value></data>
   <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Der Gruppenname ist erforderlich.</value></data>
   <data name="CollectionContainer" xml:space="preserve"><value>Collectioncontainer</value></data>
+  <data name="AllHostersContainer" xml:space="preserve"><value>Container mit allen Hostern</value></data>
   <data name="CollectionUploadSlot" xml:space="preserve"><value>Collectioncontainer</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Das erwartete Archivpasswort ist für diese Passwortregel nötig.</value></data>
   <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Teilt passende Uploads aus derselben Releasecollection.</value></data>
@@ -840,6 +841,7 @@
   <data name="ExpectedArchivePassword" xml:space="preserve"><value>Erwartetes Archivpasswort</value></data>
   <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Jedes Release einzeln</value></data>
   <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Die ganze Releasecollection</value></data>
+  <data name="LinkCrypterContainerScope.ReleaseAllHosters" xml:space="preserve"><value>Release (alle Hoster als Mirrors)</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Releasecollections gefunden</value></data>
   <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>Keine Uploadslots gefunden</value></data>
   <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Erstellt pro Release eine neue Uploadkonfiguration mit dem gewählten Hoster.</value></data>
@@ -1079,6 +1081,7 @@
   <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht erstellt werden</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht erstellt werden.</value></data>
   <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht aktualisiert werden</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht aktualisiert werden.</value></data><data name="NotificationKind.LinkCrypterContainerRecreated" xml:space="preserve"><value>Linkcryptercontainer neu erstellt</value></data><data name="NotificationKind.LinkCrypterContainerRecreated.Description" xml:space="preserve"><value>Ein Linkcryptercontainer wurde mit einer neuen URL neu erstellt, weil er nicht mehr existierte oder manuell neu erstellt wurde. Bestehende Posts müssen aktualisiert werden.</value></data>
   <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Linkcryptercontainer der Collection ist ungültig</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>Ein Linkcryptercontainer der Collection ist ungültig.</value></data>
+  <data name="NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid" xml:space="preserve"><value>Linkcryptercontainer mit allen Hostern ist ungültig</value></data><data name="NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>Ein Linkcryptercontainer, der alle Hoster eines Release als Mirrors enthält, ist ungültig.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatischer Forenpost erstellt</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>Ein Release wurde automatisch in einem Forum gepostet.</value></data>
   <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Ein Release konnte nicht automatisch in einem Forum gepostet werden.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Schweregrad</value></data>

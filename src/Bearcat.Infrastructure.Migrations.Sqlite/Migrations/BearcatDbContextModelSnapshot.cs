@@ -15,7 +15,7 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
             modelBuilder.Entity("ArchiveConfigAdditionalArchiveContents", b =>
                 {
@@ -902,6 +902,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Scope")
                         .HasColumnType("INTEGER");
 
@@ -931,6 +934,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("UploadConfigLinkCrypterId");
 
                     b.HasIndex("UploadId");
+
+                    b.HasIndex("ReleaseId", "LinkCrypterRegistrationId");
 
                     b.ToTable("LinkCrypterContainers");
                 });
@@ -2755,6 +2760,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("LinkCrypterContainers")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Bearcat.Domain.Entities.UploadConfigLinkCrypter", "UploadConfigLinkCrypter")
                         .WithMany("LinkCrypterContainers")
                         .HasForeignKey("UploadConfigLinkCrypterId")
@@ -2768,6 +2778,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("CollectionUploadSlot");
 
                     b.Navigation("LinkCrypterRegistration");
+
+                    b.Navigation("Release");
 
                     b.Navigation("Upload");
 
@@ -3401,6 +3413,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("ExternalIdentifiers");
 
                     b.Navigation("ImageUploadConfigs");
+
+                    b.Navigation("LinkCrypterContainers");
 
                     b.Navigation("MediaFiles");
 

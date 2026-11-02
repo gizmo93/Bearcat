@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.ReleaseAllHosters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -21,6 +22,9 @@ public class LinkCrypterContainerBackgroundTask(
         var linkCrypterContainerService =
             serviceProvider.GetRequiredService<LinkCrypterContainerService>();
         await linkCrypterContainerService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
+        await serviceProvider
+            .GetRequiredService<ReleaseAllHostersLinkCrypterContainerService>()
+            .UpdateOutdatedContainersAsync(stoppingToken);
         await linkCrypterContainerService.RetryFailedReleaseContainerUpdatesAsync(stoppingToken);
     }
 }

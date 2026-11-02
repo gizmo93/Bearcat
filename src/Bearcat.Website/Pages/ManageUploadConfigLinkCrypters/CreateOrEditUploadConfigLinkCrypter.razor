@@ -21,6 +21,11 @@
                                        option.LinkCrypterRegistrationId,
                                        option.Name))" />
 
+            <BbFormFieldSelect TValue="LinkCrypterContainerScope"
+                               @bind-Value="formModel.ContainerScope"
+                               Label="@L["ContainerScope"]"
+                               Options="ContainerScopeOptions" />
+
             <BbFormFieldInput TValue="string"
                               @bind-Value="formModel.Password"
                               Label="@L["ContainerPassword"]"

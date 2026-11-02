@@ -124,6 +124,19 @@ Container mit den Downloadlinks. Schlägt das fehl, erscheint der Fehler am Cont
 Mit einer [Releasecollection](/Bearcat/de/release-collections/) sammelst du Links mehrerer Releases
 in einem gemeinsamen Container, etwa für eine TV-Staffel.
 
+**Container erstellen für** in einer Linkcrypterkonfiguration legt fest, was in einen Container kommt:
+
+| Container erstellen für | Inhalt des Containers |
+| --- | --- |
+| **Jedes Release einzeln** | Ein Container pro Uploadkonfiguration mit den Links ihres neuesten Uploads. |
+| **Release (alle Hoster als Mirrors)** | Ein Container pro Release und Linkcrypter. Jede Uploadkonfiguration mit dieser Einstellung fügt ihren neuesten abgeschlossenen Upload als Mirror hinzu. |
+| **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/Bearcat/de/release-collections/). |
+
+Bei **Release (alle Hoster als Mirrors)** müssen Passwort, Captcha, Containerdownload und Click'n'Load in allen
+Uploadkonfigurationen des Release gleich sein. Sonst markiert Bearcat den Container als fehlgeschlagen und
+schickt eine Benachrichtigung. Mirrors unterstützen FileCrypt und Hide.cx. ToLink und KeepLinks bekommen alle
+Links in einer Liste.
+
 ## 6. Onlineprüfungen
 
 Bearcat prüft die hochgeladenen Dateien regelmässig, frühestens alle 30 Minuten.
@@ -193,7 +206,8 @@ Auch hier darf es keinen [blockierenden Ersatzupload](#7-automatische-reuploads)
 ## 9. Linkcryptercontainer nach einem Reupload
 
 Bearcat aktualisiert den bestehenden Container für dieselbe Uploadkonfiguration und Linkcrypterkonfiguration.
-Container von Releasecollections werden genauso aktualisiert.
+Container von Releasecollections und Container mit **Release (alle Hoster als Mirrors)** werden genauso
+aktualisiert. Der Reupload ersetzt den Mirror seiner Uploadkonfiguration.
 Gelingt das, bleibt die URL gleich. Die Links in deinen Forenposts bleiben gültig.
 
 Schlägt die Aktualisierung fehl, behält der Container seine URL und bekommt den Status `Aktualisierung fehlgeschlagen`.

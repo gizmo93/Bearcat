@@ -59,7 +59,7 @@ public class HideCxTest
             config,
             "container-name",
             "password",
-            links,
+            new Dictionary<int, IReadOnlyList<string>> { [1] = links },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -96,7 +96,7 @@ public class HideCxTest
             config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -137,7 +137,7 @@ public class HideCxTest
             "https://hide.cx/container",
             "external-id",
             null,
-            links,
+            new Dictionary<int, IReadOnlyList<string>> { [1] = links },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -149,6 +149,52 @@ public class HideCxTest
         result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
         result.ErrorMessage.ShouldBeNull();
         result.StatusImageId.ShouldBe("external-id");
+    }
+
+    [Test]
+    public async Task CreateContainerAsync_TwoMirrors_SendsOneLinkArrayPerMirror()
+    {
+        // Arrange
+        var config = new HideCxConfig { ApiKey = "api-key" };
+        CreateContainerRequest? sentRequest = null;
+
+        apiMock
+            .Setup(x =>
+                x.CreateContainerAsync(
+                    It.IsAny<CreateContainerRequest>(),
+                    "Bearer api-key",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<CreateContainerRequest, string, CancellationToken>(
+                (request, _, _) => sentRequest = request
+            )
+            .ReturnsAsync(
+                new CreateContainerResponse
+                {
+                    Id = "external-id",
+                    CanonicalUrl = "https://hide.cx/container/external-id",
+                }
+            );
+
+        // Act
+        var result = await service.CreateContainerAsync(
+            config,
+            "container-name",
+            null,
+            new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = ["https://first.test/a", "https://first.test/b"],
+                [2] = ["https://second.test/a"],
+            },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        sentRequest!.Mirrors.Length.ShouldBe(2);
+        sentRequest.Mirrors[0].ShouldBe(["https://first.test/a", "https://first.test/b"]);
+        sentRequest.Mirrors[1].ShouldBe(["https://second.test/a"]);
     }
 
     [Test]
@@ -179,7 +225,7 @@ public class HideCxTest
             "https://hide.cx/container",
             "external-id",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -232,7 +278,7 @@ public class HideCxTest
             "https://hide.cx/container",
             "external-id",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 
@@ -384,14 +430,14 @@ public class HideCxTest
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        result.LinksPerMirror.Count.ShouldBe(2);
+        result.LinksPerMirrorNumber.Count.ShouldBe(2);
         result
-            .LinksPerMirror[0]
+            .LinksPerMirrorNumber[1]
             .ShouldBe([
                 "https://nitroflare.com/view/B1/b.part1.rar",
                 "https://nitroflare.com/view/B2/b.part2.rar",
             ]);
-        result.LinksPerMirror[1].ShouldBe(["https://rapidgator.net/file/a"]);
+        result.LinksPerMirrorNumber[2].ShouldBe(["https://rapidgator.net/file/a"]);
         result.HasBackupLinks.ShouldBeFalse();
     }
 

@@ -5,6 +5,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.MultiUploadContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
@@ -42,14 +43,20 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             new CollectionLinkCrypterContainerService(
                 new LinkCrypterContainerCreationWriteRepository(DbContext),
                 NullLogger<CollectionLinkCrypterContainerService>.Instance,
-                new Mock<ILinkCrypterFactory>().Object,
-                CreateTimeProvider(),
-                new NotificationService(
-                    repository: new NotificationRepository(DbContext),
-                    timeProvider: CreateTimeProvider(),
-                    configurationProvider: CreateNotificationConfigurationProvider()
-                ),
-                NoOpSecretProtector.Instance
+                new MultiUploadLinkCrypterContainerService(
+                    new LinkCrypterContainerCreationWriteRepository(DbContext),
+                    new LinkCrypterCallService(
+                        new Mock<ILinkCrypterFactory>().Object,
+                        NoOpSecretProtector.Instance
+                    ),
+                    CreateTimeProvider(),
+                    new NotificationService(
+                        repository: new NotificationRepository(DbContext),
+                        timeProvider: CreateTimeProvider(),
+                        configurationProvider: CreateNotificationConfigurationProvider()
+                    ),
+                    NullLogger<MultiUploadLinkCrypterContainerService>.Instance
+                )
             ),
             TestUploadSourceValidator.Create(DbContext),
             CreateTimeProvider()

@@ -2,7 +2,7 @@ namespace Bearcat.Abstractions.LinkCrypter.Results;
 
 public record ReadContainerLinksResult(
     bool IsSuccess,
-    IReadOnlyList<IReadOnlyList<string>> LinksPerMirror,
+    IReadOnlyDictionary<int, IReadOnlyList<string>> LinksPerMirrorNumber,
     bool HasBackupLinks,
     IReadOnlyList<string> ErrorMessages
 );

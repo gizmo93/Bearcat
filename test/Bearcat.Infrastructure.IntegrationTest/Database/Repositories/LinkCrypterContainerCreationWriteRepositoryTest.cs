@@ -82,6 +82,168 @@ public class LinkCrypterContainerCreationWriteRepositoryTest(DatabaseProvider da
         first.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name.ShouldBe("Crypter Active");
     }
 
+    [Test]
+    public async Task GetReleaseIdsWithOutdatedAllHostersContainersAsync_MixedReleases_ReturnsReleasesWithMissingLatestUploadRemovedMemberOrDueRetry()
+    {
+        // Arrange
+        var withoutContainer = CreateUploadConfigWithLinkCrypter(
+            "WithoutContainer",
+            isActive: true,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        AddCompletedUpload(withoutContainer.UploadConfig, Now.AddHours(-1));
+
+        var inSync = CreateUploadConfigWithLinkCrypter(
+            "InSync",
+            isActive: true,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        AddAllHostersContainer(
+            inSync,
+            [AddCompletedUpload(inSync.UploadConfig, Now.AddHours(-1))],
+            LinkCrypterContainerState.Created,
+            updateFailedAt: null
+        );
+
+        var reuploaded = CreateUploadConfigWithLinkCrypter(
+            "Reuploaded",
+            isActive: true,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        AddAllHostersContainer(
+            reuploaded,
+            [AddCompletedUpload(reuploaded.UploadConfig, Now.AddHours(-2))],
+            LinkCrypterContainerState.Created,
+            updateFailedAt: null
+        );
+        AddCompletedUpload(reuploaded.UploadConfig, Now.AddHours(-1));
+
+        var memberRemoved = CreateUploadConfigWithLinkCrypter(
+            "MemberRemoved",
+            isActive: true,
+            LinkCrypterContainerScope.Release
+        );
+        AddAllHostersContainer(
+            memberRemoved,
+            [AddCompletedUpload(memberRemoved.UploadConfig, Now.AddHours(-1))],
+            LinkCrypterContainerState.Created,
+            updateFailedAt: null
+        );
+
+        var retryDue = CreateUploadConfigWithLinkCrypter(
+            "RetryDue",
+            isActive: true,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        AddAllHostersContainer(
+            retryDue,
+            [AddCompletedUpload(retryDue.UploadConfig, Now.AddHours(-1))],
+            LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: Now.AddMinutes(-20)
+        );
+
+        var retryNotDue = CreateUploadConfigWithLinkCrypter(
+            "RetryNotDue",
+            isActive: true,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        AddAllHostersContainer(
+            retryNotDue,
+            [AddCompletedUpload(retryNotDue.UploadConfig, Now.AddHours(-1))],
+            LinkCrypterContainerState.UpdateFailed,
+            updateFailedAt: Now.AddMinutes(-5)
+        );
+
+        var inactive = CreateUploadConfigWithLinkCrypter(
+            "Inactive",
+            isActive: false,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        AddCompletedUpload(inactive.UploadConfig, Now.AddHours(-1));
+
+        DbContext.UploadConfigLinkCrypters.AddRange(
+            withoutContainer,
+            inSync,
+            reuploaded,
+            memberRemoved,
+            retryDue,
+            retryNotDue,
+            inactive
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetReleaseIdsWithOutdatedAllHostersContainersAsync(
+            updateFailedBefore: Now.AddMinutes(-15),
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new[]
+            {
+                withoutContainer.UploadConfig.ReleaseId,
+                reuploaded.UploadConfig.ReleaseId,
+                memberRemoved.UploadConfig.ReleaseId,
+                retryDue.UploadConfig.ReleaseId,
+            }.Order()
+        );
+    }
+
+    private Upload AddCompletedUpload(UploadConfig uploadConfig, DateTime uploadedAt)
+    {
+        var upload = new Upload
+        {
+            UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
+            CreatedAt = uploadedAt,
+            UploadedAt = uploadedAt,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    VideoFileRelativePath = "main.mkv",
+                    HosterFileLink = $"https://hoster.test/{Guid.NewGuid():N}",
+                    ErrorMessages = [],
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = uploadedAt,
+                },
+            ],
+            ErrorMessages = [],
+        };
+        DbContext.Uploads.Add(upload);
+
+        return upload;
+    }
+
+    private void AddAllHostersContainer(
+        UploadConfigLinkCrypter linkCrypterConfig,
+        IReadOnlyList<Upload> sourceUploads,
+        LinkCrypterContainerState state,
+        DateTime? updateFailedAt
+    )
+    {
+        DbContext.LinkCrypterContainers.Add(
+            new LinkCrypterContainer
+            {
+                Scope = LinkCrypterContainerScope.ReleaseAllHosters,
+                Release = linkCrypterConfig.UploadConfig.Release,
+                LinkCrypterRegistration = linkCrypterConfig.LinkCrypterRegistration,
+                ContainerUrl = "https://crypter.test/all-hosters",
+                State = state,
+                Errors = [],
+                CreatedAt = Now.AddHours(-1),
+                UpdateFailedAt = updateFailedAt,
+                SourceUploads = sourceUploads
+                    .Select(upload => new LinkCrypterContainerSourceUpload { Upload = upload })
+                    .ToList(),
+            }
+        );
+    }
+
     private LinkCrypterContainer AddContainer(
         UploadConfigLinkCrypter linkCrypterConfig,
         LinkCrypterContainerState state,
@@ -130,7 +292,8 @@ public class LinkCrypterContainerCreationWriteRepositoryTest(DatabaseProvider da
 
     private static UploadConfigLinkCrypter CreateUploadConfigWithLinkCrypter(
         string name,
-        bool isActive
+        bool isActive,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release
     )
     {
         var uploadConfig = new UploadConfig
@@ -160,6 +323,7 @@ public class LinkCrypterContainerCreationWriteRepositoryTest(DatabaseProvider da
         var linkCrypterConfig = new UploadConfigLinkCrypter
         {
             UploadConfig = uploadConfig,
+            ContainerScope = containerScope,
             LinkCrypterRegistration = new LinkCrypterRegistration
             {
                 Name = $"Crypter {name}",

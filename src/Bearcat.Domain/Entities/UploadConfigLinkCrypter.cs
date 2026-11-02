@@ -26,4 +26,12 @@ public class UploadConfigLinkCrypter
     public bool EnableClickAndLoad { get; set; } = true;
 
     public List<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
+
+    public bool HasSameContainerSettingsAs(UploadConfigLinkCrypter other)
+    {
+        return string.Equals(Password, other.Password, StringComparison.Ordinal)
+            && EnableCaptcha == other.EnableCaptcha
+            && EnableContainerDownload == other.EnableContainerDownload
+            && EnableClickAndLoad == other.EnableClickAndLoad;
+    }
 }

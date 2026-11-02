@@ -21,6 +21,10 @@ public class LinkCrypterContainer
 
     public CollectionUploadSlot? CollectionUploadSlot { get; set; }
 
+    public int? ReleaseId { get; set; }
+
+    public Release? Release { get; set; }
+
     public int LinkCrypterRegistrationId { get; set; }
 
     public LinkCrypterRegistration LinkCrypterRegistration { get; set; } = null!;
@@ -88,4 +92,31 @@ public class LinkCrypterContainer
     }
 
     public bool HasContainerUrl() => !string.IsNullOrWhiteSpace(ContainerUrl);
+
+    public void ReplaceSourceUploads(IReadOnlyList<Upload> uploads)
+    {
+        var currentUploadIds = uploads.Select(upload => upload.Id).ToHashSet();
+
+        var staleSourceUploads = SourceUploads
+            .Where(source => !currentUploadIds.Contains(source.UploadId))
+            .ToList();
+
+        foreach (var source in staleSourceUploads)
+        {
+            SourceUploads.Remove(source);
+        }
+
+        var existingUploadIds = SourceUploads.Select(source => source.UploadId).ToHashSet();
+
+        foreach (var upload in uploads.Where(upload => !existingUploadIds.Contains(upload.Id)))
+        {
+            SourceUploads.Add(
+                new LinkCrypterContainerSourceUpload
+                {
+                    LinkCrypterContainer = this,
+                    UploadId = upload.Id,
+                }
+            );
+        }
+    }
 }

@@ -111,7 +111,14 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         previewData.ShouldNotBeNull();
         previewData
             .DataNodes.Select(node => node.Name)
-            .ShouldBe(["release", "release_info", "classification", "uploads", "imagelinks"]);
+            .ShouldBe([
+                "release",
+                "release_info",
+                "classification",
+                "uploads",
+                "link_crypters",
+                "imagelinks",
+            ]);
         previewData
             .DataNodes.Single(node => node.Name == "release")
             .Children.Single(node => node.Name == "name")

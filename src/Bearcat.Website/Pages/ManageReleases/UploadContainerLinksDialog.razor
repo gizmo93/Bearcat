@@ -56,6 +56,12 @@
                                         @L["CollectionContainer"]
                                     </BbBadge>
                                 }
+                                @if (container.Scope is LinkCrypterContainerScope.ReleaseAllHosters)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Secondary">
+                                        @L["AllHostersContainer"]
+                                    </BbBadge>
+                                }
                                 <ErrorMessagesTooltip Messages="container.Errors" />
                             </div>
                         </div>

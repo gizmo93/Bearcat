@@ -691,6 +691,106 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetForumPostUploadsAsync_AllHostersContainer_ReturnsSameContainerForEveryMemberUploadAndAsReleaseLinkCrypter()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.AllHosters.2026-GRP");
+        var archiveConfig = testData.AddArchiveConfig(release, "Archive");
+        var allHostersRegistration = testData.AddLinkCrypterRegistration("Crypter All");
+        var releaseRegistration = testData.AddLinkCrypterRegistration("Crypter Release");
+        var failedRegistration = testData.AddLinkCrypterRegistration("Crypter Failed");
+
+        var firstConfig = testData.AddUploadConfig(
+            release,
+            "Config A",
+            testData.AddHosterRegistration("Hoster A"),
+            archiveConfig
+        );
+        testData.AddUploadConfigLinkCrypter(
+            firstConfig,
+            allHostersRegistration,
+            LinkCrypterContainerScope.ReleaseAllHosters,
+            password: "crypter-secret"
+        );
+        testData.AddUploadConfigLinkCrypter(firstConfig, releaseRegistration);
+        var firstUpload = testData.AddUpload(firstConfig, MidnightUtc, MidnightUtc);
+        testData.AddUploadedFile(firstUpload, "a.part01.rar", "https://hoster-a.example/1");
+        testData.AddReleaseContainer(
+            firstUpload,
+            releaseRegistration,
+            "https://crypter.example/release-a",
+            MidnightUtc
+        );
+
+        var secondConfig = testData.AddUploadConfig(
+            release,
+            "Config B",
+            testData.AddHosterRegistration("Hoster B"),
+            archiveConfig
+        );
+        testData.AddUploadConfigLinkCrypter(
+            secondConfig,
+            allHostersRegistration,
+            LinkCrypterContainerScope.ReleaseAllHosters,
+            password: "crypter-secret"
+        );
+        var secondUpload = testData.AddUpload(secondConfig, MidnightUtc, MidnightUtc);
+        testData.AddUploadedFile(secondUpload, "b.part01.rar", "https://hoster-b.example/1");
+
+        var allHostersContainer = testData.AddAllHostersContainer(
+            release,
+            [firstUpload, secondUpload],
+            allHostersRegistration,
+            "https://crypter.example/all",
+            MidnightUtc.AddHours(1)
+        );
+        allHostersContainer.Password = "crypter-secret";
+        allHostersContainer.StatusImageId = "status-all";
+        var failedContainer = testData.AddAllHostersContainer(
+            release,
+            [firstUpload],
+            failedRegistration,
+            string.Empty,
+            MidnightUtc.AddHours(1)
+        );
+        failedContainer.State = LinkCrypterContainerState.CreationFailed;
+        var otherRelease = testData.AddRelease("Bearcat.Other.2026-GRP");
+        testData.AddAllHostersContainer(
+            otherRelease,
+            [],
+            allHostersRegistration,
+            "https://crypter.example/other",
+            MidnightUtc
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var uploads = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var releaseLinkCrypters = await repository.GetForumPostAllHostersLinkCryptersAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        uploads.Select(upload => upload.UploadConfigName).ShouldBe(["Config A", "Config B"]);
+        uploads[0]
+            .LinkCrypters.Single(crypter => crypter.Name == "Crypter All")
+            .ContainerUrl.ShouldBe("https://crypter.example/all");
+        uploads[0]
+            .LinkCrypters.Single(crypter => crypter.Name == "Crypter Release")
+            .ContainerUrl.ShouldBe("https://crypter.example/release-a");
+        uploads[1]
+            .LinkCrypters.ShouldHaveSingleItem()
+            .ContainerUrl.ShouldBe("https://crypter.example/all");
+        var releaseLinkCrypter = releaseLinkCrypters.ShouldHaveSingleItem();
+        releaseLinkCrypter.Name.ShouldBe("Crypter All");
+        releaseLinkCrypter.Password.ShouldBe("crypter-secret");
+        releaseLinkCrypter.ContainerUrl.ShouldBe("https://crypter.example/all");
+        releaseLinkCrypter.StatusImageId.ShouldBe("status-all");
+        releaseLinkCrypter.CreatedAt.ShouldBe(MidnightUtc.AddHours(1));
+    }
+
+    [Test]
     public async Task GetForumPostUploadsAsync_VideoUploadConfigWithoutArchiveConfig_ReturnsVideoFlagLinksAndEmbedLinksWithoutArchiveFormatAndPassword()
     {
         // Arrange

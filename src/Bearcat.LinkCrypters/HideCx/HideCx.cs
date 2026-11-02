@@ -32,7 +32,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -47,7 +47,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
             {
                 Name = containerName,
                 Password = password,
-                Mirrors = [links.ToArray()],
+                Mirrors = CreateMirrors(linksPerMirrorNumber),
             };
 
             var result = await api.CreateContainerAsync(
@@ -116,7 +116,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
         string containerLink,
         string? externalReference,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -129,7 +129,10 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
         {
             await api.UpdateContainerAsync(
                 containerId: externalReference!,
-                request: new Api.UpdateContainer.Request { Mirrors = [links.ToArray()] },
+                request: new Api.UpdateContainer.Request
+                {
+                    Mirrors = CreateMirrors(linksPerMirrorNumber),
+                },
                 apiToken: GetAuthToken(config.ApiKey),
                 cancellationToken: cancellationToken
             );
@@ -246,7 +249,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
             {
                 return new ReadContainerLinksResult(
                     IsSuccess: false,
-                    LinksPerMirror: [],
+                    LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
                     HasBackupLinks: false,
                     ErrorMessages:
                     [
@@ -255,15 +258,17 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
                 );
             }
 
-            var linksPerMirror = container
+            var linksPerMirrorNumber = container
                 .Links.GroupBy(link => link.LinkType)
-                .OrderBy(mirror => GetMirrorNumber(mirror.Key))
-                .Select(mirror => mirror.Select(link => link.HosterUrl!).ToList())
-                .ToList();
+                .ToDictionary(
+                    mirror => GetMirrorNumber(mirror.Key),
+                    IReadOnlyList<string> (mirror) =>
+                        mirror.Select(link => link.HosterUrl!).ToList()
+                );
 
             return new ReadContainerLinksResult(
                 IsSuccess: true,
-                LinksPerMirror: linksPerMirror,
+                LinksPerMirrorNumber: linksPerMirrorNumber,
                 HasBackupLinks: false,
                 ErrorMessages: []
             );
@@ -272,7 +277,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
         {
             return new ReadContainerLinksResult(
                 IsSuccess: false,
-                LinksPerMirror: [],
+                LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
                 HasBackupLinks: false,
                 ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
             );
@@ -318,6 +323,16 @@ public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
     private static int GetMirrorNumber(string linkType)
     {
         return int.Parse(linkType[MirrorLinkTypePrefix.Length..], CultureInfo.InvariantCulture);
+    }
+
+    private static string[][] CreateMirrors(
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber
+    )
+    {
+        return linksPerMirrorNumber
+            .OrderBy(mirror => mirror.Key)
+            .Select(mirror => mirror.Value.ToArray())
+            .ToArray();
     }
 
     private static string GetAuthToken(string apiKey) => $"Bearer {apiKey}";

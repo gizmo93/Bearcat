@@ -324,6 +324,32 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
         return container;
     }
 
+    public LinkCrypterContainer AddAllHostersContainer(
+        Release release,
+        IReadOnlyList<Upload> sourceUploads,
+        LinkCrypterRegistration linkCrypterRegistration,
+        string containerUrl,
+        DateTime createdAt
+    )
+    {
+        var container = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.ReleaseAllHosters,
+            Release = release,
+            LinkCrypterRegistration = linkCrypterRegistration,
+            ContainerUrl = containerUrl,
+            State = LinkCrypterContainerState.Created,
+            CreatedAt = createdAt,
+            SourceUploads = sourceUploads
+                .Select(upload => new LinkCrypterContainerSourceUpload { Upload = upload })
+                .ToList(),
+            Notifications = [],
+        };
+        dbContext.LinkCrypterContainers.Add(container);
+
+        return container;
+    }
+
     public ImageUploadConfig AddImageUploadConfig(
         string name,
         Release? release = null,

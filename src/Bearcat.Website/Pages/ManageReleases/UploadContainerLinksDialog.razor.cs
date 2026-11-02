@@ -67,7 +67,8 @@ public partial class UploadContainerLinksDialog(
         container
             is {
                 State: LinkCrypterContainerState.CreationFailed,
-                Scope: LinkCrypterContainerScope.Release,
+                Scope: LinkCrypterContainerScope.Release
+                    or LinkCrypterContainerScope.ReleaseAllHosters,
             };
 
     private async Task DeleteContainerAsync(ReleaseUploadContainerLinkReadModel container)
@@ -104,7 +105,8 @@ public partial class UploadContainerLinksDialog(
         container
             is {
                 State: LinkCrypterContainerState.Created or LinkCrypterContainerState.UpdateFailed,
-                Scope: LinkCrypterContainerScope.Release,
+                Scope: LinkCrypterContainerScope.Release
+                    or LinkCrypterContainerScope.ReleaseAllHosters,
                 HasActiveLinkCrypterConfig: true,
             };
 
@@ -112,7 +114,8 @@ public partial class UploadContainerLinksDialog(
         container
             is {
                 State: LinkCrypterContainerState.UpdateFailed,
-                Scope: LinkCrypterContainerScope.Release,
+                Scope: LinkCrypterContainerScope.Release
+                    or LinkCrypterContainerScope.ReleaseAllHosters,
                 HasActiveLinkCrypterConfig: true,
             };
 

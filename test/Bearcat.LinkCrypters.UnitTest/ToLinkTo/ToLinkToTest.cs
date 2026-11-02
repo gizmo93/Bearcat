@@ -71,7 +71,10 @@ public class ToLinkToTest
             Config,
             "container-name",
             "password",
-            ["https://hoster.test/file-1", "https://hoster.test/file-2"],
+            new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = ["https://hoster.test/file-1", "https://hoster.test/file-2"],
+            },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -98,6 +101,44 @@ public class ToLinkToTest
     }
 
     [Test]
+    public async Task CreateContainerAsync_TwoMirrors_SendsLinksOfAllMirrorsInOneList()
+    {
+        // Arrange
+        var capturedBody = string.Empty;
+
+        httpMessageHandler.Enqueue(async request =>
+        {
+            capturedBody = await request.Content!.ReadAsStringAsync();
+
+            return CreateJsonResponse(
+                HttpStatusCode.Created,
+                """
+                {"url":"https:\/\/tolink.to\/f\/fo587f92cc4c213","folder":"fo587f92cc4c213","title":"container-name"}
+                """
+            );
+        });
+
+        // Act
+        var result = await service.CreateContainerAsync(
+            Config,
+            "container-name",
+            null,
+            new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = ["https://hoster.test/file-1"],
+                [2] = ["https://hoster.test/file-2"],
+            },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        capturedBody.ShouldContain(
+            "\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\""
+        );
+    }
+
+    [Test]
     public async Task CreateContainerAsync_ApiRejectsParameters_ReturnsErrorMessage()
     {
         // Arrange
@@ -115,7 +156,7 @@ public class ToLinkToTest
             Config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 
@@ -144,7 +185,7 @@ public class ToLinkToTest
             Config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 
@@ -178,7 +219,10 @@ public class ToLinkToTest
             "https://tolink.to/f/fo587f92cc4c213",
             "folder-id",
             null,
-            ["https://hoster.test/file-1", "https://hoster.test/file-2"],
+            new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = ["https://hoster.test/file-1", "https://hoster.test/file-2"],
+            },
             enableCaptcha: false,
             enableContainerDownload: false,
             enableClickAndLoad: false,
@@ -225,7 +269,7 @@ public class ToLinkToTest
             "https://tolink.to/f/fo587f92cc4c213",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 
@@ -250,7 +294,7 @@ public class ToLinkToTest
             "https://tolink.to/f/folder-id",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 

@@ -1,9 +1,7 @@
-using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
-using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.Proxies;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.ReleaseAllHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -14,11 +12,11 @@ namespace Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 public class LinkCrypterContainerService(
     ILinkCrypterContainerCreationWriteRepository repository,
     ILogger<LinkCrypterContainerService> logger,
-    ILinkCrypterFactory linkCrypterFactory,
+    LinkCrypterCallService linkCrypterCallService,
     TimeProvider timeProvider,
     INotificationService notificationService,
-    ISecretProtector secretProtector,
-    CollectionLinkCrypterContainerService collectionContainerService
+    CollectionLinkCrypterContainerService collectionContainerService,
+    ReleaseAllHostersLinkCrypterContainerService releaseAllHostersContainerService
 )
 {
     private const int UpdateFailedRetryDelayInMinutes = 15;
@@ -141,13 +139,20 @@ public class LinkCrypterContainerService(
             );
         }
 
-        if (container.Scope == LinkCrypterContainerScope.ReleaseCollection)
+        switch (container.Scope)
         {
-            return await collectionContainerService.ForceUpdateContainerAsync(
-                collectionUploadSlotId: container.CollectionUploadSlotId!.Value,
-                containerId: container.Id,
-                cancellationToken: cancellationToken
-            );
+            case LinkCrypterContainerScope.ReleaseCollection:
+                return await collectionContainerService.ForceUpdateContainerAsync(
+                    collectionUploadSlotId: container.CollectionUploadSlotId!.Value,
+                    containerId: container.Id,
+                    cancellationToken: cancellationToken
+                );
+            case LinkCrypterContainerScope.ReleaseAllHosters:
+                return await releaseAllHostersContainerService.ForceUpdateContainerAsync(
+                    releaseId: container.ReleaseId!.Value,
+                    containerId: container.Id,
+                    cancellationToken: cancellationToken
+                );
         }
 
         var releaseContainer = await repository.GetReleaseContainerWithUploadAsync(
@@ -179,13 +184,20 @@ public class LinkCrypterContainerService(
             );
         }
 
-        if (container.Scope == LinkCrypterContainerScope.ReleaseCollection)
+        switch (container.Scope)
         {
-            return await collectionContainerService.RecreateContainerAsync(
-                collectionUploadSlotId: container.CollectionUploadSlotId!.Value,
-                containerId: container.Id,
-                cancellationToken: cancellationToken
-            );
+            case LinkCrypterContainerScope.ReleaseCollection:
+                return await collectionContainerService.RecreateContainerAsync(
+                    collectionUploadSlotId: container.CollectionUploadSlotId!.Value,
+                    containerId: container.Id,
+                    cancellationToken: cancellationToken
+                );
+            case LinkCrypterContainerScope.ReleaseAllHosters:
+                return await releaseAllHostersContainerService.RecreateContainerAsync(
+                    releaseId: container.ReleaseId!.Value,
+                    containerId: container.Id,
+                    cancellationToken: cancellationToken
+                );
         }
 
         var releaseContainer = await repository.GetReleaseContainerWithUploadAsync(
@@ -504,22 +516,13 @@ public class LinkCrypterContainerService(
         CancellationToken cancellationToken
     )
     {
-        var crypter = GetCrypter(linkCrypterConfig);
-        var config = GetCrypterConfig(crypter, linkCrypterConfig);
-
-        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
-            linkCrypterConfig.LinkCrypterRegistration
-        );
-
-        return await crypter.UpdateContainerAsync(
-            linkCrypterConfig: config,
-            containerLink: container.ContainerUrl,
-            externalReference: container.ExternalReference,
-            password: linkCrypterConfig.Password,
-            enableCaptcha: linkCrypterConfig.EnableCaptcha,
-            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
-            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
-            links: GetUploadLinks(upload),
+        return await linkCrypterCallService.SendUpdateContainerRequestAsync(
+            linkCrypterConfig: linkCrypterConfig,
+            container: container,
+            linksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = GetUploadLinks(upload),
+            },
             cancellationToken: cancellationToken
         );
     }
@@ -530,39 +533,14 @@ public class LinkCrypterContainerService(
         CancellationToken cancellationToken
     )
     {
-        var crypter = GetCrypter(linkCrypterConfig);
-        var config = GetCrypterConfig(crypter, linkCrypterConfig);
-
-        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
-            linkCrypterConfig.LinkCrypterRegistration
-        );
-
-        return await crypter.CreateContainerAsync(
-            linkCrypterConfig: config,
+        return await linkCrypterCallService.SendCreateContainerRequestAsync(
+            linkCrypterConfig: linkCrypterConfig,
             containerName: upload.UploadConfig.Release.Name,
-            password: linkCrypterConfig.Password,
-            enableCaptcha: linkCrypterConfig.EnableCaptcha,
-            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
-            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
-            links: GetUploadLinks(upload),
+            linksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = GetUploadLinks(upload),
+            },
             cancellationToken: cancellationToken
-        );
-    }
-
-    private ILinkCrypter GetCrypter(UploadConfigLinkCrypter linkCrypterConfig)
-    {
-        return linkCrypterFactory.Get(
-            linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
-        );
-    }
-
-    private ILinkCrypterConfig GetCrypterConfig(
-        ILinkCrypter crypter,
-        UploadConfigLinkCrypter linkCrypterConfig
-    )
-    {
-        return crypter.DeserializeConfig(
-            secretProtector.Unprotect(linkCrypterConfig.LinkCrypterRegistration.SerializedConfig)
         );
     }
 

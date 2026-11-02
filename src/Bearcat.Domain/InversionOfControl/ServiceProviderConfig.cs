@@ -53,6 +53,8 @@ using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageImageUploads;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.MultiUploadContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.ReleaseAllHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageMediaDatabases;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
@@ -250,6 +252,9 @@ public static class ServiceProviderConfig
             services.AddScoped<LinkCrypterService>();
             services.AddScoped<NfoDatabaseRegistrationService>();
             services.AddScoped<MediaDatabaseRegistrationService>();
+            services.AddScoped<LinkCrypterCallService>();
+            services.AddScoped<MultiUploadLinkCrypterContainerService>();
+            services.AddScoped<ReleaseAllHostersLinkCrypterContainerService>();
             services.AddScoped<CollectionLinkCrypterContainerService>();
             services.AddScoped<ICollectionLinkCrypterContainerUpdater>(provider =>
                 provider.GetRequiredService<CollectionLinkCrypterContainerService>()

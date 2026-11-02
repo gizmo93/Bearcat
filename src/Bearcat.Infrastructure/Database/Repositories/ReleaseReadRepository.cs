@@ -47,6 +47,16 @@ public class ReleaseReadRepository(
                         && lc.LinkCrypterRegistration.IsActive
                     )
                     .All(lc => lc.LinkCrypterContainers.Any())
+                && uc.LinkCrypters.Where(lc =>
+                        lc.ContainerScope == LinkCrypterContainerScope.ReleaseAllHosters
+                        && lc.LinkCrypterRegistration.IsActive
+                    )
+                    .All(lc =>
+                        r.LinkCrypterContainers.Any(c =>
+                            c.Scope == LinkCrypterContainerScope.ReleaseAllHosters
+                            && c.LinkCrypterRegistrationId == lc.LinkCrypterRegistrationId
+                        )
+                    )
             )
         && r.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
             .All(ic => ic.ImageUploads.Any());
@@ -334,8 +344,12 @@ public class ReleaseReadRepository(
                 .LinkCrypterContainerSourceUploads.Where(source =>
                     uploadIds.Contains(source.UploadId)
                     && source.Upload.UploadConfig.ReleaseId == releaseId
-                    && source.LinkCrypterContainer.Scope
-                        == LinkCrypterContainerScope.ReleaseCollection
+                    && (
+                        source.LinkCrypterContainer.Scope
+                            == LinkCrypterContainerScope.ReleaseCollection
+                        || source.LinkCrypterContainer.Scope
+                            == LinkCrypterContainerScope.ReleaseAllHosters
+                    )
                 )
                 .Select(source => new
                 {
@@ -468,13 +482,22 @@ public class ReleaseReadRepository(
 
         var containerRows = await dbRead
             .LinkCrypterContainers.Where(c =>
-                c.Scope == LinkCrypterContainerScope.Release
-                && c.UploadId != null
-                && EF.Parameter(uploadIds).Contains(c.UploadId.Value)
+                (
+                    c.Scope == LinkCrypterContainerScope.Release
+                    && c.UploadId != null
+                    && EF.Parameter(uploadIds).Contains(c.UploadId.Value)
+                )
+                || (
+                    c.Scope == LinkCrypterContainerScope.ReleaseAllHosters
+                    && c.ReleaseId != null
+                    && EF.Parameter(openReleaseIds).Contains(c.ReleaseId.Value)
+                )
             )
             .Select(c => new
             {
-                ReleaseId = c.Upload!.UploadConfig.ReleaseId,
+                ReleaseId = c.Scope == LinkCrypterContainerScope.ReleaseAllHosters
+                    ? c.ReleaseId!.Value
+                    : c.Upload!.UploadConfig.ReleaseId,
                 LinkCrypterRegistrationName = c.LinkCrypterRegistration.Name,
             })
             .ToListAsync(cancellationToken);
@@ -609,6 +632,7 @@ public class ReleaseReadRepository(
                     .LinkCrypters.Select(linkCrypter => new
                     {
                         linkCrypter.LinkCrypterRegistrationId,
+                        linkCrypter.ContainerScope,
                         Name = linkCrypter.LinkCrypterRegistration.Name,
                         linkCrypter.Password,
                     })
@@ -641,6 +665,7 @@ public class ReleaseReadRepository(
             new List<(
                 int UploadId,
                 int LinkCrypterRegistrationId,
+                LinkCrypterContainerScope Scope,
                 string ContainerUrl,
                 string? StatusImageId,
                 DateTime CreatedAt
@@ -691,6 +716,7 @@ public class ReleaseReadRepository(
                 {
                     UploadId = c.UploadId!.Value,
                     c.LinkCrypterRegistrationId,
+                    c.Scope,
                     c.ContainerUrl,
                     c.StatusImageId,
                     c.CreatedAt,
@@ -701,13 +727,18 @@ public class ReleaseReadRepository(
                 .LinkCrypterContainerSourceUploads.Where(source =>
                     uploadIds.Contains(source.UploadId)
                     && source.Upload.UploadConfig.ReleaseId == releaseId
-                    && source.LinkCrypterContainer.Scope
-                        == LinkCrypterContainerScope.ReleaseCollection
+                    && (
+                        source.LinkCrypterContainer.Scope
+                            == LinkCrypterContainerScope.ReleaseCollection
+                        || source.LinkCrypterContainer.Scope
+                            == LinkCrypterContainerScope.ReleaseAllHosters
+                    )
                 )
                 .Select(source => new
                 {
                     source.UploadId,
                     source.LinkCrypterContainer.LinkCrypterRegistrationId,
+                    source.LinkCrypterContainer.Scope,
                     source.LinkCrypterContainer.ContainerUrl,
                     source.LinkCrypterContainer.StatusImageId,
                     source.LinkCrypterContainer.CreatedAt,
@@ -719,6 +750,7 @@ public class ReleaseReadRepository(
                     (
                         c.UploadId,
                         c.LinkCrypterRegistrationId,
+                        c.Scope,
                         c.ContainerUrl,
                         c.StatusImageId,
                         c.CreatedAt
@@ -730,6 +762,7 @@ public class ReleaseReadRepository(
                     (
                         c.UploadId,
                         c.LinkCrypterRegistrationId,
+                        c.Scope,
                         c.ContainerUrl,
                         c.StatusImageId,
                         c.CreatedAt
@@ -760,12 +793,17 @@ public class ReleaseReadRepository(
                 var linkCrypters = config
                     .LinkCrypters.Select(linkCrypter =>
                     {
+                        var isAllHostersLinkCrypter =
+                            linkCrypter.ContainerScope
+                            == LinkCrypterContainerScope.ReleaseAllHosters;
                         var container = upload is null
                             ? default
                             : containers.FirstOrDefault(c =>
                                 c.UploadId == upload.UploadId
                                 && c.LinkCrypterRegistrationId
                                     == linkCrypter.LinkCrypterRegistrationId
+                                && (c.Scope == LinkCrypterContainerScope.ReleaseAllHosters)
+                                    == isAllHostersLinkCrypter
                             );
 
                         return new ReleaseForumPostLinkCrypterReadModel(
@@ -797,6 +835,31 @@ public class ReleaseReadRepository(
                 );
             })
             .ToList();
+    }
+
+    public async Task<
+        IReadOnlyList<ReleaseForumPostLinkCrypterReadModel>
+    > GetForumPostAllHostersLinkCryptersAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .LinkCrypterContainers.Where(c =>
+                c.Scope == LinkCrypterContainerScope.ReleaseAllHosters
+                && c.ReleaseId == releaseId
+                && c.ContainerUrl != string.Empty
+            )
+            .OrderBy(c => c.LinkCrypterRegistration.Name)
+            .ThenBy(c => c.Id)
+            .Select(c => new ReleaseForumPostLinkCrypterReadModel(
+                c.LinkCrypterRegistration.Name,
+                c.Password,
+                c.ContainerUrl,
+                c.StatusImageId,
+                c.CreatedAt
+            ))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<
@@ -1261,8 +1324,12 @@ public class ReleaseReadRepository(
                 u.LinkCrypterContainers.Count
                     + dbRead.LinkCrypterContainerSourceUploads.Count(source =>
                         source.UploadId == u.Id
-                        && source.LinkCrypterContainer.Scope
-                            == LinkCrypterContainerScope.ReleaseCollection
+                        && (
+                            source.LinkCrypterContainer.Scope
+                                == LinkCrypterContainerScope.ReleaseCollection
+                            || source.LinkCrypterContainer.Scope
+                                == LinkCrypterContainerScope.ReleaseAllHosters
+                        )
                     ),
                 (
                     u.UploadState == UploadState.Canceled
@@ -1404,7 +1471,11 @@ public class ReleaseReadRepository(
             .LinkCrypterContainerSourceUploads.Where(source =>
                 source.UploadId == uploadId
                 && source.Upload.UploadConfig.ReleaseId == releaseId
-                && source.LinkCrypterContainer.Scope == LinkCrypterContainerScope.ReleaseCollection
+                && (
+                    source.LinkCrypterContainer.Scope == LinkCrypterContainerScope.ReleaseCollection
+                    || source.LinkCrypterContainer.Scope
+                        == LinkCrypterContainerScope.ReleaseAllHosters
+                )
             )
             .Select(source => new
             {
@@ -1429,13 +1500,25 @@ public class ReleaseReadRepository(
                     .LinkCrypterContainer
                     .LinkCrypterRegistration
                     .IsActive
-                    && source.LinkCrypterContainer.CollectionUploadSlot!.UploadConfigs.Any(
-                        uploadConfig =>
-                            uploadConfig.LinkCrypters.Any(linkCrypter =>
-                                linkCrypter.ContainerScope
-                                    == LinkCrypterContainerScope.ReleaseCollection
-                                && linkCrypter.LinkCrypterRegistrationId
-                                    == source.LinkCrypterContainer.LinkCrypterRegistrationId
+                    && (
+                        source.LinkCrypterContainer.Scope
+                        == LinkCrypterContainerScope.ReleaseCollection
+                            ? source.LinkCrypterContainer.CollectionUploadSlot!.UploadConfigs.Any(
+                                uploadConfig =>
+                                    uploadConfig.LinkCrypters.Any(linkCrypter =>
+                                        linkCrypter.ContainerScope
+                                            == LinkCrypterContainerScope.ReleaseCollection
+                                        && linkCrypter.LinkCrypterRegistrationId
+                                            == source.LinkCrypterContainer.LinkCrypterRegistrationId
+                                    )
+                            )
+                            : source.LinkCrypterContainer.Release!.UploadConfigs.Any(uploadConfig =>
+                                uploadConfig.LinkCrypters.Any(linkCrypter =>
+                                    linkCrypter.ContainerScope
+                                        == LinkCrypterContainerScope.ReleaseAllHosters
+                                    && linkCrypter.LinkCrypterRegistrationId
+                                        == source.LinkCrypterContainer.LinkCrypterRegistrationId
+                                )
                             )
                     ),
                 Errors = source.LinkCrypterContainer.Errors,

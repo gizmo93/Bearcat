@@ -31,7 +31,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -50,7 +50,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
                     enableCaptcha,
                     enableContainerDownload,
                     enableClickAndLoad,
-                    links
+                    linksPerMirrorNumber
                 ),
                 cancellationToken
             );
@@ -93,7 +93,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         string containerLink,
         string? externalReference,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -114,7 +114,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
                     enableCaptcha: enableCaptcha,
                     enableContainerDownload: enableContainerDownload,
                     enableClickAndLoad: enableClickAndLoad,
-                    links: links
+                    linksPerMirrorNumber: linksPerMirrorNumber
                 ),
                 cancellationToken
             );
@@ -222,21 +222,19 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
             {
                 return new ReadContainerLinksResult(
                     IsSuccess: false,
-                    LinksPerMirror: [],
+                    LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
                     HasBackupLinks: false,
                     ErrorMessages: [response.Error ?? "FileCrypt returned no container"]
                 );
             }
 
-            var mirrors = response
-                .Container.OrderBy(mirror => GetMirrorNumber(mirror.Key))
-                .Select(mirror => mirror.Value)
-                .ToList();
-
             return new ReadContainerLinksResult(
                 IsSuccess: true,
-                LinksPerMirror: mirrors.Select(mirror => mirror.Links).ToList(),
-                HasBackupLinks: mirrors.Any(mirror =>
+                LinksPerMirrorNumber: response.Container.ToDictionary(
+                    mirror => GetMirrorNumber(mirror.Key),
+                    IReadOnlyList<string> (mirror) => mirror.Value.Links
+                ),
+                HasBackupLinks: response.Container.Values.Any(mirror =>
                     mirror.Backup.Any(backupLinks => backupLinks.Count > 0)
                 ),
                 ErrorMessages: []
@@ -246,7 +244,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         {
             return new ReadContainerLinksResult(
                 IsSuccess: false,
-                LinksPerMirror: [],
+                LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
                 HasBackupLinks: false,
                 ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
             );
@@ -300,7 +298,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
-        IReadOnlyList<string> links
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber
     )
     {
         var values = CreateContainerValues(
@@ -311,7 +309,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
             enableCaptcha: enableCaptcha,
             enableContainerDownload: enableContainerDownload,
             enableClickAndLoad: enableClickAndLoad,
-            links: links
+            linksPerMirrorNumber: linksPerMirrorNumber
         );
 
         return new FormUrlEncodedContent(values);
@@ -325,7 +323,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
-        IReadOnlyList<string> links
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber
     )
     {
         var values = CreateContainerValues(
@@ -336,7 +334,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
             enableCaptcha: enableCaptcha,
             enableContainerDownload: enableContainerDownload,
             enableClickAndLoad: enableClickAndLoad,
-            links: links
+            linksPerMirrorNumber: linksPerMirrorNumber
         );
         values.Add(new KeyValuePair<string, string>("container_id", containerId));
 
@@ -351,7 +349,7 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
-        IReadOnlyList<string> links
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber
     )
     {
         var values = new List<KeyValuePair<string, string>>
@@ -372,7 +370,17 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypterWithContainerReading
         }
 
         values.AddRange(
-            links.Select((t, i) => new KeyValuePair<string, string>($"mirror_1[0][{i}]", t))
+            linksPerMirrorNumber
+                .OrderBy(mirror => mirror.Key)
+                .SelectMany(mirror =>
+                    mirror.Value.Select(
+                        (link, linkIndex) =>
+                            new KeyValuePair<string, string>(
+                                $"{MirrorKeyPrefix}{mirror.Key}[0][{linkIndex}]",
+                                link
+                            )
+                    )
+                )
         );
 
         return values;

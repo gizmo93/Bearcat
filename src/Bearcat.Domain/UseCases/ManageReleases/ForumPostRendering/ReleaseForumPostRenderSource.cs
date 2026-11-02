@@ -47,6 +47,10 @@ public class ReleaseForumPostRenderSource(
         )?.Content;
 
         var uploads = await uploadBuilder.BuildAsync(entityId, cancellationToken);
+        var allHostersLinkCrypters = await uploadBuilder.BuildAllHostersLinkCryptersAsync(
+            entityId,
+            cancellationToken
+        );
 
         var mediaFiles = await releaseReadRepository.GetMediaFilesAsync(
             entityId,
@@ -74,6 +78,7 @@ public class ReleaseForumPostRenderSource(
                 ? ForumPostTemplateClassificationModel.Empty
                 : ToClassificationModel(classification),
             Uploads = uploads,
+            LinkCrypters = allHostersLinkCrypters,
         };
 
         var scriptObject = new ScriptObject();
