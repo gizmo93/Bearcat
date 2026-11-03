@@ -16,11 +16,22 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 1. Open **Crypters** > **Link crypter imports** and click **New import**.
 2. Select the crypter registration and the release template. The template defines the hosters, archive settings and link crypter settings of the new releases.
 3. Optional: select an **archive base folder for releases without local files**. Bearcat restores archives there from the imported mirrors when there is no local release folder.
+
+   ![New import dialog](images/link-crypter-import-new-import-dialog.png)
+
 4. Bearcat reads all folders and their links in the background, skipping folders with URLs it already knows.
+
+   ![Import reading the crypter folders](images/link-crypter-import-reading-folders.png)
+
 5. Select one hoster account per hoster and click **Check files**. Bearcat checks the files with this account only.
+
+   ![Hoster accounts for the file check](images/link-crypter-import-hoster-accounts-for-file-check.png)
+
 6. Review the releases, select the ones to import and click **Start import**.
 
 ## Review
+
+![Review of the releases to import](images/link-crypter-import-review.png)
 
 Bearcat groups folders with the same release name into one entry. You select them together.
 The release name defaults to the folder name. If it is wrong, correct it with the edit button before importing.

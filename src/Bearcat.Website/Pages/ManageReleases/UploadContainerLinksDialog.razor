@@ -46,19 +46,19 @@
                             <p class="truncate text-xs text-muted-foreground" title="@container.LinkCrypterClassName">
                                 @container.LinkCrypterClassName
                             </p>
-                            <div class="flex items-center gap-2">
-                                <BbBadge Variant="@GetContainerVariant(container.State)">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <BbBadge Variant="@GetContainerVariant(container.State)" Class="whitespace-nowrap">
                                     @L.Localize(container.State)
                                 </BbBadge>
                                 @if (container.Scope is LinkCrypterContainerScope.ReleaseCollection)
                                 {
-                                    <BbBadge Variant="BadgeVariant.Secondary">
+                                    <BbBadge Variant="BadgeVariant.Secondary" Class="whitespace-nowrap">
                                         @L["CollectionContainer"]
                                     </BbBadge>
                                 }
                                 @if (container.Scope is LinkCrypterContainerScope.ReleaseAllHosters)
                                 {
-                                    <BbBadge Variant="BadgeVariant.Secondary">
+                                    <BbBadge Variant="BadgeVariant.Secondary" Class="whitespace-nowrap">
                                         @L["AllHostersContainer"]
                                     </BbBadge>
                                 }

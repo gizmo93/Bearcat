@@ -132,13 +132,21 @@ In der Linkcrypterkonfiguration wählst du unter **Container erstellen für**, w
 | **Release (alle Hoster als Mirrors)** | Ein Container pro Release und Linkcrypter. Jede Uploadkonfiguration mit dieser Einstellung fügt ihren neuesten abgeschlossenen Upload als Mirror hinzu. |
 | **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/Bearcat/de/release-collections/). |
 
+![Container erstellen für in der Linkcrypterkonfiguration](../images/add-link-crypter-container-dialog.png)
+
 Du kannst auch [bestehende Linkcrypterordner importieren](/Bearcat/de/import-link-crypter-folders/),
 um Releases aus FileCrypt- oder Hide.cx-Ordnern anzulegen.
 
 Bei **Release (alle Hoster als Mirrors)** müssen Passwort, Captcha, Containerdownload und Click'n'Load in allen
 Uploadkonfigurationen des Releases gleich sein. Sonst markiert Bearcat den Container als fehlgeschlagen und
-schickt eine Benachrichtigung. FileCrypt und Hide.cx unterstützen Mirrors. Bei ToLink und KeepLinks stehen
-alle Links in einer Liste.
+schickt eine Benachrichtigung. FileCrypt und Hide.cx unterstützen Mirrors. ToLink gruppiert die Links nach den Hostern, die es erkennt,
+und zeigt andere Hoster als `unknown`. Bei KeepLinks stehen alle Links in einer Liste.
+
+![Container für alle Hoster auf der Releasedetailseite](../images/release-all-hosters-link-containers.png)
+
+![Container für alle Hoster auf FileCrypt mit einem Mirror pro Hoster](../images/filecrypt-all-hosters-container.png)
+
+![Container für alle Hoster auf ToLink mit einem Tab pro erkanntem Hoster](../images/tolink-all-hosters-container.png)
 
 ## 6. Onlineprüfungen
 

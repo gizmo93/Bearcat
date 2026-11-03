@@ -16,11 +16,22 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 1. Öffne **Crypter** > **Linkcrypterimporte** und klicke auf **Neuer Import**.
 2. Wähle die Crypterregistrierung und das Releasetemplate. Das Template legt Hoster, Archiveinstellungen und Linkcryptereinstellungen der neuen Releases fest.
 3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Dort stellt Bearcat die Archive aus den importierten Mirrors wieder her, wenn kein lokaler Releaseordner vorhanden ist.
+
+   ![Dialog für einen neuen Import](../images/link-crypter-import-new-import-dialog.png)
+
 4. Bearcat liest alle Ordner und ihre Links im Hintergrund. Ordner mit bereits bekannter URL überspringt es.
+
+   ![Import liest die Crypterordner](../images/link-crypter-import-reading-folders.png)
+
 5. Wähle pro Hoster einen Hosteraccount und klicke auf **Dateien prüfen**. Bearcat prüft die Dateien nur mit diesem Account.
+
+   ![Hosteraccounts für die Dateiprüfung](../images/link-crypter-import-hoster-accounts-for-file-check.png)
+
 6. Prüfe die Releases, wähle die gewünschten aus und klicke auf **Import starten**.
 
 ## Prüfung
+
+![Prüfung der zu importierenden Releases](../images/link-crypter-import-review.png)
 
 Bearcat fasst Ordner mit demselben Releasenamen zu einem Eintrag zusammen. Du wählst sie gemeinsam aus.
 Als Releasename dient der Ordnername. Stimmt er nicht, korrigiere ihn vor dem Import mit dem Button zum Bearbeiten.
