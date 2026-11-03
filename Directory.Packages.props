@@ -30,6 +30,7 @@
         <PackageVersion Include="Scalar.AspNetCore" Version="2.17.14" />
         <PackageVersion Include="BlazorBlueprint.Components" Version="4.1.0" />
         <PackageVersion Include="Humanizer" Version="3.0.10" />
+        <PackageVersion Include="CsvHelper" Version="34.0.0" />
         <PackageVersion Include="FluentFTP" Version="55.0.0" />
         <PackageVersion Include="FluentFTP.BouncyCastle" Version="1.0.0" />
         <PackageVersion Include="BlazorBlueprint.Icons.Lucide" Version="2.0.2" />

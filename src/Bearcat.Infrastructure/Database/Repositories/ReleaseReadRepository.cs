@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.LinkCrypter;
@@ -1428,6 +1429,60 @@ public class ReleaseReadRepository(
             .ThenBy(f => f.Id)
             .Select(f => f.HosterFileLink)
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async IAsyncEnumerable<ReleaseLinkExportReadModel> StreamLinksForExportAsync(
+        OnlineState? uploadOnlineState,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        var linksQuery = dbRead.UploadedFiles.Where(f =>
+            f.Upload.UploadState == UploadState.Completed
+            && !string.IsNullOrWhiteSpace(f.HosterFileLink)
+        );
+
+        if (uploadOnlineState is not null)
+        {
+            linksQuery = linksQuery.Where(f => f.Upload.OnlineState == uploadOnlineState.Value);
+        }
+
+        var links = linksQuery
+            .OrderBy(f => f.Upload.UploadConfig.Release.Name)
+            .ThenBy(f => f.UploadId)
+            .ThenBy(f =>
+                f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath
+            )
+            .ThenBy(f => f.Id)
+            .Select(f => new ReleaseLinkExportReadModel(
+                ReleaseName: f.Upload.UploadConfig.Release.Name,
+                ReleaseGroupName: f.Upload.UploadConfig.Release.ReleaseGroup.Name,
+                HosterName: f.Upload.HosterRegistration != null ? f.Upload.HosterRegistration.Name
+                    : f.Upload.UploadConfig.HosterRegistration != null
+                        ? f.Upload.UploadConfig.HosterRegistration.Name
+                    : f.Upload.UploadConfig.HosterAccountPool!.Name,
+                UploadId: f.UploadId,
+                UploadOnlineState: f.Upload.OnlineState,
+                FileName: f.ArchiveFile != null
+                    ? f.ArchiveFile.FullFileName
+                    : f.VideoFileRelativePath!,
+                Link: f.HosterFileLink,
+                EmbedLink: f.HosterEmbedLink,
+                LinkOnlineState: f.OnlineState,
+                CheckedAt: f.CheckedAt,
+                ArchivePassword: f.Upload.Archive != null
+                    ? f.Upload.Archive.ArchiveConfig.ArchivePassword
+                    : null
+            ))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var link in links)
+        {
+            yield return link with
+            {
+                FileName = Path.GetFileName(link.FileName),
+            };
+        }
     }
 
     public async Task<

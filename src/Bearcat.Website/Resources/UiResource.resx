@@ -45,6 +45,8 @@
   <data name="AnyHosterConfig" xml:space="preserve"><value>Any hoster config</value></data>
   <data name="AnyReleaseGroup" xml:space="preserve"><value>Any release group</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Any online state</value></data>
+  <data name="ExportLinks" xml:space="preserve"><value>Export links</value></data>
+  <data name="AllLinks" xml:space="preserve"><value>All links</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>All upload configs</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Base path is required</value></data>
   <data name="Browse" xml:space="preserve"><value>Browse</value></data>
