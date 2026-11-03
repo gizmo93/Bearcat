@@ -112,6 +112,7 @@ export default defineConfig({
 						{ label: 'Video hosters', translations: { de: 'Videohoster' }, slug: 'video-hosters' },
 						{ label: 'Upload lifecycle', translations: { de: 'Ablauf eines Uploads' }, slug: 'upload-lifecycle' },
 						{ label: 'Import link crypter folders', translations: { de: 'Linkcrypterordner importieren' }, slug: 'import-link-crypter-folders' },
+						{ label: 'Export links', translations: { de: 'Links exportieren' }, slug: 'export-links' },
 						{ label: 'Release collections', translations: { de: 'Releasecollections' }, slug: 'release-collections' },
 						{ label: 'Metadata and cover images', translations: { de: 'Metadaten und Coverbilder' }, slug: 'release-information-and-metadata' },
 						{ label: 'Additional archive contents', translations: { de: 'Zusätzliche Archivinhalte' }, slug: 'additional-archive-contents' },
