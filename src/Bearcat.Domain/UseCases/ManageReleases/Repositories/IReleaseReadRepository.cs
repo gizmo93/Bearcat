@@ -116,6 +116,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    IAsyncEnumerable<ReleaseLinkExportReadModel> StreamLinksForExportAsync(
+        OnlineState? uploadOnlineState,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ReleaseUploadContainerLinkReadModel>> GetUploadContainerLinksAsync(
         int releaseId,
         int uploadId,

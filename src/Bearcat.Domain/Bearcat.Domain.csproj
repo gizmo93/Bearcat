@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="CsvHelper" />
         <PackageReference Include="EntityFrameworkCore.Exceptions.Common" />
         <PackageReference Include="Humanizer" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" />

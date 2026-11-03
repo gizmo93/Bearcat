@@ -1,0 +1,22 @@
+<BbDropdownMenu>
+    <BbDropdownMenuTrigger>
+        <BbButton Variant="ButtonVariant.Secondary" Class="bearcat-page-action">
+            <LucideIcon Name="download" class="h-4 w-4" />
+            @L["ExportLinks"]
+        </BbButton>
+    </BbDropdownMenuTrigger>
+    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+        <BbDropdownMenuItem Href="@GetDownloadUrl(null)" download="@GetFileName(null)">
+            <ChildContent>@L["AllLinks"]</ChildContent>
+        </BbDropdownMenuItem>
+        <BbDropdownMenuItem Href="@GetDownloadUrl(OnlineState.Online)" download="@GetFileName(OnlineState.Online)">
+            <ChildContent>@L.Localize(OnlineState.Online)</ChildContent>
+        </BbDropdownMenuItem>
+        <BbDropdownMenuItem Href="@GetDownloadUrl(OnlineState.PartiallyOnline)" download="@GetFileName(OnlineState.PartiallyOnline)">
+            <ChildContent>@L.Localize(OnlineState.PartiallyOnline)</ChildContent>
+        </BbDropdownMenuItem>
+        <BbDropdownMenuItem Href="@GetDownloadUrl(OnlineState.Offline)" download="@GetFileName(OnlineState.Offline)">
+            <ChildContent>@L.Localize(OnlineState.Offline)</ChildContent>
+        </BbDropdownMenuItem>
+    </BbDropdownMenuContent>
+</BbDropdownMenu>
