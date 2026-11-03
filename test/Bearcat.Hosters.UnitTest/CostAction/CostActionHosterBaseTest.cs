@@ -353,6 +353,28 @@ public class CostActionHosterBaseTest
         fileId.ShouldBe(expected);
     }
 
+    [TestCase("https://trbt.cc/zrt4rcrv6w5l.html", "https://trbt.cc/zrt4rcrv6w5l.html")]
+    [TestCase(
+        "https://turbobit.net/kyqfoz5qneex/archive.part02.rar.html",
+        "https://trbt.cc/kyqfoz5qneex.html"
+    )]
+    [TestCase(
+        "https://turbobit.net/download/free/l2xopr9ic94h",
+        "https://trbt.cc/l2xopr9ic94h.html"
+    )]
+    [TestCase("https://hitfile.net/l2xopr9ic94h", null)]
+    public void ConvertToOwnFileLinkFormat_TurbobitLinkVariants_ReturnsTrbtCcLink(
+        string fileLink,
+        string? expectedFileLink
+    )
+    {
+        // Act
+        var result = turbobit.ConvertToOwnFileLinkFormat(fileLink);
+
+        // Assert
+        result.ShouldBe(expectedFileLink);
+    }
+
     private void SetupUpload(string appType, string? folderId, CostActionUploadResult result)
     {
         apiClientMock

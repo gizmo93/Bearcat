@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.CloudFam.Api;
@@ -25,6 +26,12 @@ public interface ICloudFamApiClient
         string fileUrl,
         string? externalId,
         string folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        CloudFamConfig config,
+        IReadOnlyList<string> fileIds,
         CancellationToken cancellationToken
     );
 

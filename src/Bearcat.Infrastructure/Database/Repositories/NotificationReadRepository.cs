@@ -135,14 +135,15 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
                 ? null
                 : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.Name,
-            n.LinkCrypterContainerId == null
-            || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
-                ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.ReleaseId,
-            n.LinkCrypterContainerId == null
-            || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
-                ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.Release.Name,
+            n.LinkCrypterContainerId == null ? null
+                : n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
+                    ? n.LinkCrypterContainer.ReleaseId
+                : n.LinkCrypterContainer.UploadConfigLinkCrypter!.UploadConfig.ReleaseId,
+            n.LinkCrypterContainerId == null ? null
+                : n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
+                    ? n.LinkCrypterContainer.ReleaseId == null ? null
+                        : n.LinkCrypterContainer.Release!.Name
+                : n.LinkCrypterContainer.UploadConfigLinkCrypter!.UploadConfig.Release.Name,
             n.LinkCrypterContainerId == null
                 ? null
                 : n.LinkCrypterContainer!.LinkCrypterRegistration.Name,
@@ -216,6 +217,21 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
                     notification.LinkCrypterName
                 ),
                 TargetUrl: $"/releases/{notification.LinkReleaseId}?tab=uploads&view=configuration&uploadConfigId={notification.LinkUploadConfigId}"
+            );
+        }
+
+        if (
+            notification.LinkCrypterContainerId is not null
+            && notification.LinkReleaseId is not null
+        )
+        {
+            return new NotificationRelatedEntityReadModel(
+                EntityType: "LinkCrypterContainer",
+                DisplayName: JoinDisplayName(
+                    notification.LinkReleaseName,
+                    notification.LinkCrypterName
+                ),
+                TargetUrl: $"/releases/{notification.LinkReleaseId}"
             );
         }
 

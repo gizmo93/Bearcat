@@ -124,6 +124,30 @@ Container mit den Downloadlinks. Schlägt das fehl, erscheint der Fehler am Cont
 Mit einer [Releasecollection](/Bearcat/de/release-collections/) sammelst du Links mehrerer Releases
 in einem gemeinsamen Container, etwa für eine TV-Staffel.
 
+In der Linkcrypterkonfiguration wählst du unter **Container erstellen für**, welche Links der Container enthält:
+
+| Container erstellen für | Inhalt des Containers |
+| --- | --- |
+| **Jedes Release einzeln** | Ein Container pro Uploadkonfiguration mit den Links ihres neuesten Uploads. |
+| **Release (alle Hoster als Mirrors)** | Ein Container pro Release und Linkcrypter. Jede Uploadkonfiguration mit dieser Einstellung fügt ihren neuesten abgeschlossenen Upload als Mirror hinzu. |
+| **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/Bearcat/de/release-collections/). |
+
+![Container erstellen für in der Linkcrypterkonfiguration](../images/add-link-crypter-container-dialog.png)
+
+Du kannst auch [bestehende Linkcrypterordner importieren](/Bearcat/de/import-link-crypter-folders/),
+um Releases aus FileCrypt- oder Hide.cx-Ordnern anzulegen.
+
+Bei **Release (alle Hoster als Mirrors)** müssen Passwort, Captcha, Containerdownload und Click'n'Load in allen
+Uploadkonfigurationen des Releases gleich sein. Sonst markiert Bearcat den Container als fehlgeschlagen und
+schickt eine Benachrichtigung. FileCrypt und Hide.cx unterstützen Mirrors. ToLink gruppiert die Links nach den Hostern, die es erkennt,
+und zeigt andere Hoster als `unknown`. Bei KeepLinks stehen alle Links in einer Liste.
+
+![Container für alle Hoster auf der Releasedetailseite](../images/release-all-hosters-link-containers.png)
+
+![Container für alle Hoster auf FileCrypt mit einem Mirror pro Hoster](../images/filecrypt-all-hosters-container.png)
+
+![Container für alle Hoster auf ToLink mit einem Tab pro erkanntem Hoster](../images/tolink-all-hosters-container.png)
+
 ## 6. Onlineprüfungen
 
 Bearcat prüft die hochgeladenen Dateien regelmässig, frühestens alle 30 Minuten.
@@ -193,7 +217,8 @@ Auch hier darf es keinen [blockierenden Ersatzupload](#7-automatische-reuploads)
 ## 9. Linkcryptercontainer nach einem Reupload
 
 Bearcat aktualisiert den bestehenden Container für dieselbe Uploadkonfiguration und Linkcrypterkonfiguration.
-Container von Releasecollections werden genauso aktualisiert.
+Das gilt auch für Container von Releasecollections und für **Release (alle Hoster als Mirrors)**.
+Bei gemeinsamen Containern ersetzt der Reupload den Mirror seiner Uploadkonfiguration.
 Gelingt das, bleibt die URL gleich. Die Links in deinen Forenposts bleiben gültig.
 
 Schlägt die Aktualisierung fehl, behält der Container seine URL und bekommt den Status `Aktualisierung fehlgeschlagen`.

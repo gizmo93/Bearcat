@@ -10,6 +10,10 @@ Damit erstellst du weitere Releases von Hand oder automatisch aus neuen Ordnern.
 
 Ein Releasetemplate enthält die Releasegruppe sowie die Einstellungen für Archive, Uploads, Bilder und Linkcrypter.
 
+Mit **Container erstellen für** wählst du in der Linkcrypterkonfiguration, ob jeder Hoster einen eigenen
+Container bekommt oder alle Hoster eines Releases als Mirrors in einem Container erscheinen.
+Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontainer).
+
 - Öffne **Releasetemplates**, klicke auf **Neues Releasetemplate** und füge die Konfigurationen hinzu.
 - Öffne ein konfiguriertes Release und wähle im Aktionsmenü **Als Template speichern**.
 

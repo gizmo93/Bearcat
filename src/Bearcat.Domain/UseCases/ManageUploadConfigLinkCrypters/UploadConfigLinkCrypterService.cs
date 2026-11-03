@@ -14,9 +14,12 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release,
         CancellationToken cancellationToken = default
     )
     {
+        EnsureScopeCanBeManagedFromUploadConfig(containerScope);
+
         var uploadSource = await repository.GetUploadSourceOfUploadConfigAsync(
             uploadConfigId,
             cancellationToken
@@ -37,6 +40,7 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
             EnableCaptcha = enableCaptcha,
             EnableContainerDownload = enableContainerDownload,
             EnableClickAndLoad = enableClickAndLoad,
+            ContainerScope = containerScope,
         };
 
         repository.Add(uploadConfigLinkCrypter);
@@ -46,7 +50,7 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
-        EnsureCanManageFromUploadConfig(uploadConfigLinkCrypter);
+        EnsureScopeCanBeManagedFromUploadConfig(uploadConfigLinkCrypter.ContainerScope);
         repository.Remove(uploadConfigLinkCrypter);
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -57,11 +61,14 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release,
         CancellationToken cancellationToken = default
     )
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
-        EnsureCanManageFromUploadConfig(uploadConfigLinkCrypter);
+        EnsureScopeCanBeManagedFromUploadConfig(uploadConfigLinkCrypter.ContainerScope);
+        EnsureScopeCanBeManagedFromUploadConfig(containerScope);
+        uploadConfigLinkCrypter.ContainerScope = containerScope;
         uploadConfigLinkCrypter.Password = CleanPassword(password);
         uploadConfigLinkCrypter.EnableCaptcha = enableCaptcha;
         uploadConfigLinkCrypter.EnableContainerDownload = enableContainerDownload;
@@ -74,11 +81,11 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         return string.IsNullOrWhiteSpace(password) ? null : password;
     }
 
-    private static void EnsureCanManageFromUploadConfig(
-        UploadConfigLinkCrypter uploadConfigLinkCrypter
+    private static void EnsureScopeCanBeManagedFromUploadConfig(
+        LinkCrypterContainerScope containerScope
     )
     {
-        if (uploadConfigLinkCrypter.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
+        if (containerScope is LinkCrypterContainerScope.ReleaseCollection)
         {
             throw new InvalidOperationException(
                 "Collection scoped link crypters are managed through release templates."

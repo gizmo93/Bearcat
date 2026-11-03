@@ -37,4 +37,8 @@ public enum NotificationKind
     HosterAccountPoolFull = 33,
     HosterAccountPoolWithoutUsableAccount = 34,
     LinkCrypterContainerRecreated = 35,
+    ReleaseAllHostersLinkCrypterContainerInvalid = 36,
+    LinkCrypterImportReadyForReview = 37,
+    LinkCrypterImportCompleted = 38,
+    LinkCrypterImportFailed = 39,
 }

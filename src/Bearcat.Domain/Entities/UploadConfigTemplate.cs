@@ -43,4 +43,9 @@ public class UploadConfigTemplate
 
     public string GetUploadTargetName() =>
         HosterAccountPoolId is null ? HosterRegistration!.Name : HosterAccountPool!.Name;
+
+    public string GetHosterClassName() =>
+        HosterAccountPoolId is null
+            ? HosterRegistration!.HosterClassName
+            : HosterAccountPool!.HosterClassName;
 }

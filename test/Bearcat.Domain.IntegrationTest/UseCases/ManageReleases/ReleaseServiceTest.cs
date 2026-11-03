@@ -279,6 +279,32 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task DeleteAsync_MultipleReleaseIds_RemovesOnlyThoseReleasesWithTheirUploads()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Managed releases");
+        var releaseWithUploads = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        var releaseToDelete = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.Delete");
+        var releaseToKeep = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.Keep");
+
+        // Act
+        await service.DeleteAsync(
+            [releaseWithUploads.Id, releaseToDelete.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        var remainingReleaseIds = await DbContext.Releases.Select(r => r.Id).ToListAsync();
+        var remainingUploadCount = await DbContext.Uploads.CountAsync();
+
+        remainingReleaseIds.ShouldBe([releaseToKeep.Id]);
+        remainingUploadCount.ShouldBe(0);
+    }
+
+    [Test]
     public async Task CreateFromTemplateAsync_ValidTemplate_PersistsReleaseWithConfigs()
     {
         // Arrange

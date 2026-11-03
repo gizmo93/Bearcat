@@ -14,34 +14,108 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         DateTime createdAt
     )
     {
+        EnsureReleaseIsUnmanaged(release);
+
+        var archiverWithArchiveFiles = FindSingleArchiverWithArchiveFiles(archiveFolderPath);
+
+        return CreateArchiveConfig(
+            release: release,
+            archiveFilesBasePath: archiveFolderPath,
+            archiver: archiverWithArchiveFiles.Archiver,
+            archive: BuildArchive(
+                archiveFolderPath,
+                archiverWithArchiveFiles.ArchiveFilePaths,
+                createdAt
+            )
+        );
+    }
+
+    public ArchiveConfig CreateArchiveConfigWithDeletedArchive(
+        Release release,
+        string archiveFilesBasePath,
+        IReadOnlyList<string> archiveFileNames,
+        string archiverFileExtension,
+        DateTime createdAt
+    )
+    {
+        EnsureReleaseIsUnmanaged(release);
+
+        var archiver = archiverFactory
+            .GetArchivers()
+            .Single(archiver =>
+                string.Equals(
+                    archiver.FileExtension,
+                    archiverFileExtension,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+        return CreateArchiveConfig(
+            release: release,
+            archiveFilesBasePath: archiveFilesBasePath,
+            archiver: archiver,
+            archive: BuildDeletedArchive(
+                archiveFolderPath: archiveFilesBasePath,
+                archiveFileNames: archiveFileNames,
+                archiveFileSizeMb: 0,
+                createdAt: createdAt
+            )
+        );
+    }
+
+    public static Archive BuildDeletedArchive(
+        string archiveFolderPath,
+        IReadOnlyList<string> archiveFileNames,
+        int archiveFileSizeMb,
+        DateTime createdAt
+    )
+    {
+        return new Archive
+        {
+            ArchiveFolderPath = archiveFolderPath,
+            CreatedAt = createdAt,
+            ArchiveState = ArchiveState.Deleted,
+            ArchiveFileSizeMb = archiveFileSizeMb,
+            ArchiveFiles = archiveFileNames
+                .Select(fileName => new ArchiveFile
+                {
+                    FullFileName = Path.Combine(archiveFolderPath, fileName),
+                })
+                .ToList(),
+            Uploads = [],
+            ErrorMessages = [],
+            Notifications = [],
+        };
+    }
+
+    private static void EnsureReleaseIsUnmanaged(Release release)
+    {
         if (release.ReleaseType is not ReleaseType.Unmanaged)
         {
             throw new InvalidOperationException(
                 "Initial unmanaged archive configs can only be created for unmanaged releases."
             );
         }
+    }
 
-        var archiverWithArchiveFiles = FindSingleArchiverWithArchiveFiles(archiveFolderPath);
-        var archiver = archiverWithArchiveFiles.Archiver;
-
+    private static ArchiveConfig CreateArchiveConfig(
+        Release release,
+        string archiveFilesBasePath,
+        ArchiverDto archiver,
+        Archive archive
+    )
+    {
         return new ArchiveConfig
         {
             Release = release,
             Name = archiver.Name,
-            ArchiveFilesBasePath = archiveFolderPath,
+            ArchiveFilesBasePath = archiveFilesBasePath,
             ArchiverName = archiver.ClassName,
             ArchiveNamePrefix = null,
             ArchivePassword = null,
             ArchiveFileSizeMb = 0,
             UploadConfigs = [],
-            Archives =
-            [
-                BuildArchive(
-                    archiveFolderPath,
-                    archiverWithArchiveFiles.ArchiveFilePaths,
-                    createdAt
-                ),
-            ],
+            Archives = [archive],
         };
     }
 
@@ -63,16 +137,14 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         var archiveFiles = FindArchiveFilesOfArchiver(archiveConfig, archiveFolderPath);
         var currentArchive = GetCurrentArchive(archiveConfig);
 
-        var archiveStorageFolder = FindArchiveStorageFolderContainingPath(
-            archiveStorageFolders,
-            archiveFolderPath
-        );
-
         if (currentArchive is not null && ArchiveFileNamesMatch(currentArchive, archiveFiles))
         {
             archiveConfig.ArchiveFilesBasePath = archiveFolderPath;
             RepointArchive(currentArchive, archiveFolderPath);
-            AssignArchiveStorageFolder(currentArchive, archiveStorageFolder);
+            AssignArchiveStorageFolderContainingArchiveFolder(
+                currentArchive,
+                archiveStorageFolders
+            );
             return ArchiveFolderChangeResult.Relocated;
         }
 
@@ -93,10 +165,21 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         }
 
         var reimportedArchive = BuildArchive(archiveFolderPath, archiveFiles, createdAt);
-        AssignArchiveStorageFolder(reimportedArchive, archiveStorageFolder);
+        AssignArchiveStorageFolderContainingArchiveFolder(reimportedArchive, archiveStorageFolders);
         archiveConfig.Archives.Add(reimportedArchive);
 
         return ArchiveFolderChangeResult.Reimported;
+    }
+
+    public static void AssignArchiveStorageFolderContainingArchiveFolder(
+        Archive archive,
+        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders
+    )
+    {
+        AssignArchiveStorageFolder(
+            archive,
+            FindArchiveStorageFolderContainingPath(archiveStorageFolders, archive.ArchiveFolderPath)
+        );
     }
 
     private static ArchiveStorageFolder? FindArchiveStorageFolderContainingPath(
@@ -127,9 +210,9 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         }
     }
 
-    private static Archive BuildArchive(
+    public static Archive BuildArchive(
         string archiveFolderPath,
-        List<string> archiveFilePaths,
+        IReadOnlyList<string> archiveFilePaths,
         DateTime createdAt
     )
     {

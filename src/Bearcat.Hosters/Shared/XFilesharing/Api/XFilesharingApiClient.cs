@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Refit;
@@ -52,6 +53,56 @@ public abstract class XFilesharingApiClient<TApi>(
                     Exists: file.Status == (int)HttpStatusCode.OK,
                     DownloadCount: ParseDownloadCount(file.Downloads ?? file.Download)
                 );
+            }
+        }
+
+        return result;
+    }
+
+    public async Task<Dictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        string apiKey,
+        IReadOnlySet<string> fileCodes,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = new Dictionary<string, HostedFileInfo>();
+
+        foreach (var batch in fileCodes.Chunk(50))
+        {
+            var response = await SendApiRequestAsync(() =>
+                api.GetFileInfoAsync(apiKey, string.Join(',', batch), cancellationToken)
+            );
+
+            if (response.Status != (int)HttpStatusCode.OK)
+            {
+                XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
+                throw new HttpRequestException(
+                    $"XFilesharing file info request failed with status {response.Status}: {response.Msg}"
+                );
+            }
+
+            foreach (var file in response.Results.Where(file => file.FileCode is not null))
+            {
+                var fileInfo = file.Status switch
+                {
+                    (int)HttpStatusCode.OK => new HostedFileInfo(
+                        IsOnline: true,
+                        FileName: file.Name,
+                        SizeBytes: ParseSize(file.Size)
+                    ),
+                    (int)HttpStatusCode.NotFound => new HostedFileInfo(
+                        IsOnline: false,
+                        FileName: null,
+                        SizeBytes: null
+                    ),
+                    _ => null,
+                };
+
+                if (fileInfo is not null)
+                {
+                    result[file.FileCode!] = fileInfo;
+                }
             }
         }
 

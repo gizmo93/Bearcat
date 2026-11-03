@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.KrakenFiles.Api;
@@ -22,6 +23,12 @@ public interface IKrakenFilesApiClient
         KrakenFilesConfig config,
         string fileUrl,
         string folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        KrakenFilesConfig config,
+        IReadOnlyList<string> fileIds,
         CancellationToken cancellationToken
     );
 

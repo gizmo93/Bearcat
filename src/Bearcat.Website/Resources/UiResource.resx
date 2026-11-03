@@ -137,6 +137,9 @@
   <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Delete release info and metadata for {0}? The background task can fetch them again.</value></data>
   <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Delete release info and metadata</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
+  <data name="DeleteSelectedReleases" xml:space="preserve"><value>Delete selected releases</value></data>
+  <data name="DeleteSelectedReleasesConfirmation" xml:space="preserve"><value>Are you sure you want to delete {0} release(s)?</value></data>
+  <data name="ReleasesDeleted" xml:space="preserve"><value>{0} release(s) deleted.</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Download cover</value></data>
@@ -818,6 +821,7 @@
   <data name="CollectionUploadGroupName" xml:space="preserve"><value>Group name</value></data>
   <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Group name is required.</value></data>
   <data name="CollectionContainer" xml:space="preserve"><value>Collection container</value></data>
+  <data name="AllHostersContainer" xml:space="preserve"><value>All hosters container</value></data>
   <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection container</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Expected archive password is required for this password policy.</value></data>
   <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Share matching uploads from the same release collection.</value></data>
@@ -837,6 +841,7 @@
   <data name="ExpectedArchivePassword" xml:space="preserve"><value>Expected archive password</value></data>
   <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Each release separately</value></data>
   <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>The whole release collection</value></data>
+  <data name="LinkCrypterContainerScope.ReleaseAllHosters" xml:space="preserve"><value>Release (all hosters as mirrors)</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>No release collections found</value></data>
   <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>No upload slots found</value></data>
   <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Create one upload configuration per release with the selected hoster.</value></data>
@@ -1076,6 +1081,10 @@
   <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Link crypter container creation failed</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>A link crypter container could not be created.</value></data>
   <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Link crypter container update failed</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>A link crypter container could not be updated.</value></data><data name="NotificationKind.LinkCrypterContainerRecreated" xml:space="preserve"><value>Link crypter container recreated</value></data><data name="NotificationKind.LinkCrypterContainerRecreated.Description" xml:space="preserve"><value>A link crypter container was created again with a new URL because it no longer existed or was recreated manually. Existing posts must be updated.</value></data>
   <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Collection link crypter container invalid</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>A collection link crypter container is invalid.</value></data>
+  <data name="NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid" xml:space="preserve"><value>All hosters link crypter container invalid</value></data><data name="NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>A link crypter container that contains all hosters of a release as mirrors is invalid.</value></data>
+  <data name="NotificationKind.LinkCrypterImportReadyForReview" xml:space="preserve"><value>Link crypter import ready for review</value></data><data name="NotificationKind.LinkCrypterImportReadyForReview.Description" xml:space="preserve"><value>The containers of a link crypter import were read and checked and can be reviewed now.</value></data>
+  <data name="NotificationKind.LinkCrypterImportCompleted" xml:space="preserve"><value>Link crypter import completed</value></data><data name="NotificationKind.LinkCrypterImportCompleted.Description" xml:space="preserve"><value>All selected containers of a link crypter import were imported.</value></data>
+  <data name="NotificationKind.LinkCrypterImportFailed" xml:space="preserve"><value>Link crypter import failed</value></data><data name="NotificationKind.LinkCrypterImportFailed.Description" xml:space="preserve"><value>A link crypter import failed or some of its containers could not be imported.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatic forum post created</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>A release was posted automatically to a forum.</value></data>
   <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatic forum post failed</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>A release could not be posted automatically to a forum.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Severity</value></data>
@@ -1956,4 +1965,75 @@
   <data name="ConvertToUnmanagedBlockedByVideoUploadConfigs" xml:space="preserve"><value>Releases with video upload configurations keep their release folder and cannot be converted to unmanaged.</value></data>
   <data name="ReleaseContentTypeLockedByVideoUploadConfigs" xml:space="preserve"><value>The content type must stay movie or TV show episode while the release has video upload configurations.</value></data>
   <data name="ReleaseTemplateContentTypeLockedByVideoUploadConfigs" xml:space="preserve"><value>The content type must stay movie or TV show episode while the template has video upload configurations.</value></data>
+  <data name="LinkCrypterImports" xml:space="preserve"><value>Link crypter imports</value></data>
+  <data name="LinkCrypterImport" xml:space="preserve"><value>Link crypter import</value></data>
+  <data name="LinkCrypterImportsIntro" xml:space="preserve"><value>Import existing crypter folders as releases. Bearcat reads the folders, checks the files and creates releases for the containers you select.</value></data>
+  <data name="NewLinkCrypterImport" xml:space="preserve"><value>New import</value></data>
+  <data name="NewLinkCrypterImportDescription" xml:space="preserve"><value>Bearcat reads all folders of the crypter account in the background.</value></data>
+  <data name="NoLinkCrypterImportsYet" xml:space="preserve"><value>No link crypter imports yet.</value></data>
+  <data name="LinkCrypterImportContainerCount" xml:space="preserve"><value>{0} containers</value></data>
+  <data name="LinkCrypterImportProgress" xml:space="preserve"><value>{0} of {1} containers processed</value></data>
+  <data name="Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Updated" xml:space="preserve"><value>Updated</value></data>
+  <data name="DeleteLinkCrypterImport" xml:space="preserve"><value>Delete import</value></data>
+  <data name="DeleteLinkCrypterImportConfirmation" xml:space="preserve"><value>Delete the import of {0}? Releases that were already imported stay in Bearcat.</value></data>
+  <data name="LinkCrypterImportDeleted" xml:space="preserve"><value>Import deleted.</value></data>
+  <data name="NoLinkCrypterRegistrationsWithContainerReading" xml:space="preserve"><value>No active crypter registration can read existing folders. Supported crypters: FileCrypt, Hide.cx.</value></data>
+  <data name="SelectLinkCrypterRegistration" xml:space="preserve"><value>Select crypter</value></data>
+  <data name="ArchiveFilesBasePathForReleasesWithoutLocalFiles" xml:space="preserve"><value>Archive base folder for releases without local files</value></data>
+  <data name="ArchiveFilesBasePathForReleasesWithoutLocalFilesHelp" xml:space="preserve"><value>Optional. Needed for releases without a local release folder: Bearcat restores their archives there from the imported mirrors.</value></data>
+  <data name="LinkCrypterImportPrimaryLanguageHelp" xml:space="preserve"><value>Used for the release information of new releases. Existing releases keep their language.</value></data>
+  <data name="ReadLinkCrypterFolders" xml:space="preserve"><value>Read crypter folders</value></data>
+  <data name="LinkCrypterImportNotFound" xml:space="preserve"><value>This import does not exist.</value></data>
+  <data name="LinkCrypterImportHosterAccounts" xml:space="preserve"><value>Hoster accounts for the file check</value></data>
+  <data name="LinkCrypterImportHosterAccountsHelp" xml:space="preserve"><value>Bearcat checks the files with this account only.</value></data>
+  <data name="SelectHosterAccount" xml:space="preserve"><value>Select hoster account</value></data>
+  <data name="CheckFiles" xml:space="preserve"><value>Check files</value></data>
+  <data name="LinkCrypterImportReleaseInfoHint" xml:space="preserve"><value>Release information (xrel, PreDB, NFO) is not fetched during the import. The background task fetches it afterwards.</value></data>
+  <data name="SelectAllImportableContainers" xml:space="preserve"><value>All importable</value></data>
+  <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Start import ({0} releases)</value></data>
+  <data name="StartLinkCrypterImportWithOneRelease" xml:space="preserve"><value>Start import (1 release)</value></data>
+  <data name="StartLinkCrypterImport" xml:space="preserve"><value>Start import</value></data>
+  <data name="StartLinkCrypterImportConfirmation" xml:space="preserve"><value>Import {0} selected releases with {1} containers? Bearcat creates each release or attaches the containers to the existing release.</value></data>
+  <data name="OpenCrypterFolder" xml:space="preserve"><value>Open crypter folder</value></data>
+  <data name="OpenImportedRelease" xml:space="preserve"><value>Open imported release</value></data>
+  <data name="MirrorNumber" xml:space="preserve"><value>Mirror {0}</value></data>
+  <data name="LinkCrypterImportReleaseFolder" xml:space="preserve"><value>Release folder: {0}</value></data>
+  <data name="LinkCrypterImportArchiveFolder" xml:space="preserve"><value>Archive folder: {0}</value></data>
+  <data name="LinkCrypterImportNoLocalFiles" xml:space="preserve"><value>No local files, the archive is restored from the mirrors.</value></data>
+  <data name="NoLinkCrypterImportReleasesFound" xml:space="preserve"><value>No releases found.</value></data>
+  <data name="ReleaseAction" xml:space="preserve"><value>Release action</value></data>
+  <data name="LocalFiles" xml:space="preserve"><value>Local files</value></data>
+  <data name="RenameRelease" xml:space="preserve"><value>Rename release</value></data>
+  <data name="LinkCrypterImportReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
+  <data name="UnknownHoster" xml:space="preserve"><value>Unknown hoster</value></data>
+  <data name="LinkCrypterImportState.ReadingContainers" xml:space="preserve"><value>Reading folders</value></data>
+  <data name="LinkCrypterImportState.WaitingForHosterRegistrations" xml:space="preserve"><value>Waiting for hoster accounts</value></data>
+  <data name="LinkCrypterImportState.CheckingFiles" xml:space="preserve"><value>Checking files</value></data>
+  <data name="LinkCrypterImportState.ReadyForReview" xml:space="preserve"><value>Ready for review</value></data>
+  <data name="LinkCrypterImportState.Importing" xml:space="preserve"><value>Importing</value></data>
+  <data name="LinkCrypterImportState.Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="LinkCrypterImportState.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="LinkCrypterImportContainerStatus.AlreadyInBearcat" xml:space="preserve"><value>Already in Bearcat</value></data>
+  <data name="LinkCrypterImportContainerStatus.WaitingForLinks" xml:space="preserve"><value>Waiting for links</value></data>
+  <data name="LinkCrypterImportContainerStatus.ReadingLinksFailed" xml:space="preserve"><value>Reading links failed</value></data>
+  <data name="LinkCrypterImportContainerStatus.WaitingForFileCheck" xml:space="preserve"><value>Waiting for file check</value></data>
+  <data name="LinkCrypterImportContainerStatus.Importable" xml:space="preserve"><value>Importable</value></data>
+  <data name="LinkCrypterImportContainerStatus.NotImportable" xml:space="preserve"><value>Not importable</value></data>
+  <data name="LinkCrypterImportContainerStatus.Imported" xml:space="preserve"><value>Imported</value></data>
+  <data name="LinkCrypterImportContainerStatus.ImportFailed" xml:space="preserve"><value>Import failed</value></data>
+  <data name="LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster" xml:space="preserve"><value>No mirror belongs to a hoster of the release.</value></data>
+  <data name="LinkCrypterImportNotImportableReason.NoAdoptedMirrorAndNoReleaseFolder" xml:space="preserve"><value>No mirror can be adopted and there is no local release folder.</value></data>
+  <data name="LinkCrypterImportNotImportableReason.ArchiveFilesBasePathMissing" xml:space="preserve"><value>No local release folder, no existing archive and no archive base folder for releases without local files.</value></data>
+  <data name="LinkCrypterImportMirrorDecision.Adopt" xml:space="preserve"><value>Adopted</value></data>
+  <data name="LinkCrypterImportMirrorDecision.UploadByBearcat" xml:space="preserve"><value>Bearcat uploads this hoster itself</value></data>
+  <data name="LinkCrypterImportMirrorDecision.UnsupportedHoster" xml:space="preserve"><value>Unsupported hoster</value></data>
+  <data name="LinkCrypterImportMirrorDecision.HosterNotInRelease" xml:space="preserve"><value>Hoster not in the release</value></data>
+  <data name="LinkCrypterImportReleaseAction.CreateRelease" xml:space="preserve"><value>New release</value></data>
+  <data name="LinkCrypterImportReleaseAction.AttachToExistingRelease" xml:space="preserve"><value>Attached to existing release</value></data>
+  <data name="LinkCrypterImportReleaseAction.AttachToReleaseOfEarlierContainer" xml:space="preserve"><value>Attached to the release of an earlier container</value></data>
+  <data name="LinkCrypterImportUploadByBearcatReason.SomeFilesOffline" xml:space="preserve"><value>some files are offline</value></data>
+  <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>file states unknown</value></data>
+  <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>files are no archive parts</value></data>
+  <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>file names differ from the first adopted mirror</value></data>
 </root>

@@ -83,6 +83,18 @@ Ein vollständiges Beispiel mit NFO und Links von Linkcryptern:
 Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases der Collection mit
 `{{~ for release in releases ~}}`.
 
+### Ein Link für alle Hoster
+
+Mit `link_crypters` greifst du auf die Container für **Release (alle Hoster als Mirrors)** zu.
+Die Liste enthält einen Container pro Linkcrypter, mit denselben Feldern wie `upload.link_crypters`.
+Jeder beteiligte Upload enthält den gemeinsamen Container auch in seiner Liste `upload.link_crypters`.
+
+```text
+{{~ for crypter in link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+```
+
 ### Videouploads
 
 Für [Videouploads](/Bearcat/de/video-hosters/) kannst du in der Schleife

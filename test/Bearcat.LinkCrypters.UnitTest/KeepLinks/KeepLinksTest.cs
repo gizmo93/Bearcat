@@ -64,7 +64,7 @@ public class KeepLinksTest
             config,
             "container-name",
             "password",
-            links,
+            new Dictionary<int, IReadOnlyList<string>> { [1] = links },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -97,6 +97,49 @@ public class KeepLinksTest
     }
 
     [Test]
+    public async Task CreateContainerAsync_TwoMirrors_ProtectsLinksOfAllMirrorsInOneList()
+    {
+        // Arrange
+        var config = new KeepLinksConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.ProtectLinkAsync(
+                    It.IsAny<MultipartFormDataContent>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new ProtectLinksResponse { ContainerLink = "https://keeplinks.org/p/abc" }
+            );
+
+        // Act
+        var result = await service.CreateContainerAsync(
+            config,
+            "container-name",
+            null,
+            new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = ["https://hoster.test/file-1"],
+                [2] = ["https://hoster.test/file-2"],
+            },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiMock.Verify(x =>
+            x.ProtectLinkAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    FormValues(content, "link-to-protect")
+                        .SequenceEqual(ExpectedCommaSeparatedLinksToProtect)
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
     public async Task CreateContainerAsync_DisabledSettings_OmitsOptionalKeepLinksFields()
     {
         // Arrange
@@ -118,7 +161,7 @@ public class KeepLinksTest
             config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: false,
             enableContainerDownload: false,
             enableClickAndLoad: false,
@@ -160,7 +203,7 @@ public class KeepLinksTest
             config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -210,7 +253,7 @@ public class KeepLinksTest
             "https://keeplinks.org/p/container-id",
             null,
             "password",
-            links,
+            new Dictionary<int, IReadOnlyList<string>> { [1] = links },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -261,7 +304,7 @@ public class KeepLinksTest
             "https://keeplinks.org/p/container-id",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: false,
             enableContainerDownload: false,
             enableClickAndLoad: false,
@@ -304,7 +347,7 @@ public class KeepLinksTest
             "https://keeplinks.org/p/container-id",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -355,7 +398,7 @@ public class KeepLinksTest
             "https://keeplinks.org/p/container-id",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 
@@ -390,7 +433,7 @@ public class KeepLinksTest
             "https://keeplinks.org/p/container-id",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 

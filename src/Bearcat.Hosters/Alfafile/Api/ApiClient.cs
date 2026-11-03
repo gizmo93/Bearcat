@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
@@ -235,6 +237,30 @@ public class ApiClient(
                         : null
                 )
             );
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        AlfafileConfig config,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileInfoPerFileId = new ConcurrentDictionary<string, HostedFileInfo>();
+
+        await Parallel.ForEachAsync(
+            fileIds.Distinct(),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = MaxParallelLinkChecks,
+                CancellationToken = cancellationToken,
+            },
+            async (fileId, token) =>
+            {
+                fileInfoPerFileId[fileId] = await GetFileInfoAsync(config, fileId, token);
+            }
+        );
+
+        return fileInfoPerFileId;
     }
 
     public async Task DownloadFileAsync(
@@ -595,5 +621,59 @@ public class ApiClient(
         return fileSegmentIndex >= 0 && fileSegmentIndex + 1 < segments.Length
             ? segments[fileSegmentIndex + 1]
             : null;
+    }
+
+    private async Task<HostedFileInfo> GetFileInfoAsync(
+        AlfafileConfig config,
+        string fileId,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
+        {
+            var response = await SendWithAuthTokenAsync(
+                config: config,
+                sendRequestAsync: token => api.GetFileInfoAsync(token, fileId, cancellationToken),
+                cancellationToken: cancellationToken
+            );
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                if (attempt < MaxLinkCheckAttempts)
+                {
+                    await Task.Delay(RateLimitRetryDelay, cancellationToken);
+                }
+
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode || response.Content is null)
+            {
+                throw new HttpRequestException(
+                    $"Alfafile file info request for {fileId} failed with status code {response.StatusCode}"
+                );
+            }
+
+            return response.Content switch
+            {
+                { Status: (int)HttpStatusCode.OK, Response.File: { } file } => new HostedFileInfo(
+                    IsOnline: true,
+                    FileName: file.Name,
+                    SizeBytes: file.Size
+                ),
+                { Status: (int)HttpStatusCode.NotFound } => new HostedFileInfo(
+                    IsOnline: false,
+                    FileName: null,
+                    SizeBytes: null
+                ),
+                _ => throw new HttpRequestException(
+                    $"Alfafile file info request for {fileId} returned status {response.Content.Status}: {response.Content.Details}"
+                ),
+            };
+        }
+
+        throw new HttpRequestException(
+            $"Alfafile file info request for {fileId} was still rate limited after {MaxLinkCheckAttempts} attempts"
+        );
     }
 }

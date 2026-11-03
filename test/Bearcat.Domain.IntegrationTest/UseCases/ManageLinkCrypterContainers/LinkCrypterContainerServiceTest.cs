@@ -3,6 +3,8 @@ using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.MultiUploadContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.ReleaseAllHosters;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -69,23 +71,37 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
+        var linkCrypterCallService = new LinkCrypterCallService(
+            linkCrypterFactoryMock.Object,
+            NoOpSecretProtector.Instance
+        );
+        var multiUploadContainerService = new MultiUploadLinkCrypterContainerService(
+            repository,
+            linkCrypterCallService,
+            CreateTimeProvider(),
+            notificationService,
+            Mock.Of<ILogger<MultiUploadLinkCrypterContainerService>>()
+        );
+
         collectionContainerService = new CollectionLinkCrypterContainerService(
             repository,
             Mock.Of<ILogger<CollectionLinkCrypterContainerService>>(),
-            linkCrypterFactoryMock.Object,
-            CreateTimeProvider(),
-            notificationService,
-            NoOpSecretProtector.Instance
+            multiUploadContainerService
         );
 
         service = new LinkCrypterContainerService(
             repository,
             Mock.Of<ILogger<LinkCrypterContainerService>>(),
-            linkCrypterFactoryMock.Object,
+            linkCrypterCallService,
             CreateTimeProvider(),
             notificationService,
-            NoOpSecretProtector.Instance,
-            collectionContainerService
+            collectionContainerService,
+            new ReleaseAllHostersLinkCrypterContainerService(
+                repository,
+                Mock.Of<ILogger<ReleaseAllHostersLinkCrypterContainerService>>(),
+                CreateTimeProvider(),
+                multiUploadContainerService
+            )
         );
     }
 
@@ -100,7 +116,10 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     "Bearcat.Release.001",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links => links.SequenceEqual(ExpectedLinksAAndB)),
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksAAndB)
+                    ),
                     true,
                     true,
                     true,
@@ -143,7 +162,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     It.IsAny<string>(),
                     "container-secret",
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     true,
                     true,
                     true,
@@ -220,8 +239,9 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/existing",
                     "external-1",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -247,6 +267,74 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateMissingLinkCrypterContainersAsync_ImportedContainerWithoutUpload_UpdatesImportedContainerKeepingUrl()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigWithLinkCrypterAsync(isActive: true);
+        var linkCrypterConfig = uploadConfig.LinkCrypters.Single();
+        var importedContainer = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.Release,
+            UploadConfigLinkCrypterId = linkCrypterConfig.Id,
+            LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
+            ContainerUrl = "https://crypter.test/imported",
+            ExternalReference = "imported-reference",
+            Password = "container-secret",
+            State = LinkCrypterContainerState.Created,
+            Errors = [],
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+        };
+        var firstUpload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = uploadConfig.HosterRegistrationId,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles =
+            [
+                CreateUploadedFile("https://hoster.test/new-b"),
+                CreateUploadedFile("https://hoster.test/new-a"),
+            ],
+            ErrorMessages = [],
+        };
+        DbContext.LinkCrypterContainers.Add(importedContainer);
+        DbContext.Uploads.Add(firstUpload);
+        await DbContext.SaveChangesAsync();
+        linkCrypterMock
+            .Setup(c =>
+                c.UpdateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    "https://crypter.test/imported",
+                    "imported-reference",
+                    "container-secret",
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksNewAAndNewB)
+                    ),
+                    true,
+                    true,
+                    true,
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new UpdateContainerResult(UpdateContainerOutcome.Success, null));
+
+        // Act
+        await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext.LinkCrypterContainers.SingleAsync();
+        container.Id.ShouldBe(importedContainer.Id);
+        container.UploadId.ShouldBe(firstUpload.Id);
+        container.ContainerUrl.ShouldBe("https://crypter.test/imported");
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        VerifyCreateContainerWasNeverCalled();
+    }
+
+    [Test]
     public async Task CreateMissingLinkCrypterContainersAsync_MultiplePreviousContainers_UpdatesMostRecentContainer()
     {
         // Arrange
@@ -258,8 +346,9 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/recent",
                     "external-recent",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -294,8 +383,9 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/created",
                     "external-created",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -394,8 +484,9 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     "Bearcat.Release.001",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksNewAAndNewB)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksNewAAndNewB)
                     ),
                     true,
                     true,
@@ -424,7 +515,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
@@ -445,8 +536,10 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     "Hostage S01",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksOfFirstAndSecondEpisode)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1]
+                            .SequenceEqual(ExpectedLinksOfFirstAndSecondEpisode)
                     ),
                     true,
                     true,
@@ -515,8 +608,10 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/existing-collection",
                     "collection-existing",
                     "changed-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksOfFirstAndSecondEpisode)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1]
+                            .SequenceEqual(ExpectedLinksOfFirstAndSecondEpisode)
                     ),
                     false,
                     false,
@@ -620,8 +715,9 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/existing-collection",
                     "collection-existing",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links =>
-                        links.SequenceEqual(ExpectedLinksOfSecondEpisode)
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksOfSecondEpisode)
                     ),
                     true,
                     true,
@@ -661,7 +757,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     It.IsAny<string>(),
                     "container-secret",
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     true,
                     true,
                     true,
@@ -970,7 +1066,10 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/existing",
                     "external-1",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links => links.SequenceEqual(ExpectedLinksAAndB)),
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksAAndB)
+                    ),
                     true,
                     true,
                     true,
@@ -1146,7 +1245,10 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     "https://crypter.test/existing",
                     "external-1",
                     "container-secret",
-                    It.Is<IReadOnlyList<string>>(links => links.SequenceEqual(ExpectedLinksAAndB)),
+                    It.Is<IReadOnlyDictionary<int, IReadOnlyList<string>>>(linksPerMirrorNumber =>
+                        linksPerMirrorNumber.Count == 1
+                        && linksPerMirrorNumber[1].SequenceEqual(ExpectedLinksAAndB)
+                    ),
                     true,
                     true,
                     true,
@@ -1373,7 +1475,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
@@ -1391,7 +1493,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
@@ -1409,7 +1511,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<ILinkCrypterConfig>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
@@ -1428,7 +1530,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
@@ -1476,7 +1578,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     linkCrypterConfigMock.Object,
                     It.IsAny<string>(),
                     It.IsAny<string?>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
@@ -1500,7 +1602,7 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
                     It.IsAny<string>(),
                     It.IsAny<string?>(),
                     It.IsAny<string?>(),
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyDictionary<int, IReadOnlyList<string>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),

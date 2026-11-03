@@ -11,6 +11,19 @@ public class FileUpload(IFileUploadApiClient apiClient, ILogger<FileUpload> logg
 {
     public override string Name => "file-upload.org";
 
+    public override IReadOnlyList<string> FileLinkHostNames =>
+        [
+            "file-upload.org",
+            "file-up.org",
+            "file-up.io",
+            "file-up.cc",
+            "file-up.com",
+            "file-upload.io",
+            "file-upload.cc",
+            "file-upload.com",
+            "file-upload.download",
+        ];
+
     protected override string FileUrlFormat => "https://file-upload.org/{0}";
 
     public override bool SupportsPremiumOnlyDownloads => false;

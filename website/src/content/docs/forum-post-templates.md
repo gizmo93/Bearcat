@@ -83,6 +83,18 @@ A complete example with NFO and link crypter links:
 Collection templates work the same way. They loop over the collection's releases with
 `{{~ for release in releases ~}}`.
 
+### One link for all hosters
+
+Use `link_crypters` to access the containers for **Release (all hosters as mirrors)**.
+The list contains one container per link crypter, with the same fields as `upload.link_crypters`.
+Each upload included in a shared container also lists it in `upload.link_crypters`.
+
+```text
+{{~ for crypter in link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+```
+
 ### Video uploads
 
 For [video uploads](/Bearcat/video-hosters/), you can use two more variables inside the

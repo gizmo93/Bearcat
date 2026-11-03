@@ -11,6 +11,9 @@ public class Mega4Upload(IMega4UploadApiClient apiClient, ILogger<Mega4Upload> l
 {
     public override string Name => "mega4upload.net";
 
+    public override IReadOnlyList<string> FileLinkHostNames =>
+        ["mega4upload.net", "mega4upload.com", "mega4up.org", "mega4up.com"];
+
     protected override string FileUrlFormat => "https://mega4upload.net/{0}.html";
 
     public override bool SupportsPremiumOnlyDownloads => false;

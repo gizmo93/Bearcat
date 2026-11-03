@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters;
@@ -35,5 +36,19 @@ public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
     {
         var hosters = serviceProvider.GetKeyedServices<IHoster>(KeyedService.AnyKey);
         return hosters.ToDictionary(h => h.GetType().Name);
+    }
+
+    public IHoster? FindHosterByFileLink(string fileLink)
+    {
+        if (!Uri.TryCreate(fileLink.Trim(), UriKind.Absolute, out var uri))
+        {
+            return null;
+        }
+
+        var hosters = serviceProvider.GetKeyedServices<IHoster>(KeyedService.AnyKey);
+
+        return hosters.FirstOrDefault(hoster =>
+            FileLinkHostMatching.HostMatchesAnyHostName(uri.Host, hoster.FileLinkHostNames)
+        );
     }
 }

@@ -23,7 +23,7 @@ public partial class LinkContainerChip : ComponentBase
     public IReadOnlyList<string> Errors { get; set; } = [];
 
     [Parameter]
-    public bool IsCollectionContainer { get; set; }
+    public LinkCrypterContainerScope Scope { get; set; } = LinkCrypterContainerScope.Release;
 
     [Parameter]
     public string? CoverageText { get; set; }

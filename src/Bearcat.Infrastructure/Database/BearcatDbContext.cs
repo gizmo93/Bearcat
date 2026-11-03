@@ -81,6 +81,13 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
     public DbSet<LinkCrypterContainerSourceUpload> LinkCrypterContainerSourceUploads { get; set; } =
         null!;
 
+    public DbSet<LinkCrypterImport> LinkCrypterImports { get; set; } = null!;
+
+    public DbSet<LinkCrypterImportHosterRegistration> LinkCrypterImportHosterRegistrations { get; set; } =
+        null!;
+
+    public DbSet<LinkCrypterImportContainer> LinkCrypterImportContainers { get; set; } = null!;
+
     public DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; } =
         null!;
 

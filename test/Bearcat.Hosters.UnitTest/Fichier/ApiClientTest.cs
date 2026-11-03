@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
@@ -646,6 +647,44 @@ public class ApiClientTest
         exception.Message.ShouldContain("Resource not found");
         File.Exists(targetFilePath).ShouldBeFalse();
         File.Exists(targetFilePath + ".part").ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetFileInfosAsync_CheckLinksResponse_ReturnsFileNameAndSizeOfOnlineLinksAndOfflineForDeleted()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        string[] fileUrls = ["https://1fichier.com/?online", "https://1fichier.com/?deleted"];
+
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        https://1fichier.com/?deleted;;;NOT FOUND
+                        https://1fichier.com/?online;archive;v2.part1.rar;1050673174
+
+                        """
+                    ),
+                }
+            )
+        );
+
+        // Act
+        var result = await apiClient.GetFileInfosAsync(config, fileUrls, CancellationToken.None);
+
+        // Assert
+        result[fileUrls[0]]
+            .ShouldBe(
+                new HostedFileInfo(
+                    IsOnline: true,
+                    FileName: "archive;v2.part1.rar",
+                    SizeBytes: 1050673174
+                )
+            );
+        result[fileUrls[1]]
+            .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content)

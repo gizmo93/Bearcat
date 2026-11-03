@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Refit;
 using Shouldly;
+using HostedFileInfo = Bearcat.Abstractions.Hoster.Results.HostedFileInfo;
 
 namespace Bearcat.Hosters.UnitTest.Nitroflare;
 
@@ -165,6 +166,60 @@ public class ApiClientTest
 
         // Assert
         exception.Message.ShouldBe("Invalid User - Wrong hash");
+    }
+
+    [Test]
+    public async Task GetFileInfosAsync_ApiReturnsOnlineAndOfflineFiles_ReturnsNameAndSizeOfOnlineFiles()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.GetFileInfoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateResponse(
+                    HttpStatusCode.OK,
+                    new FileInfoResponse
+                    {
+                        Type = "success",
+                        Result = new FileInfoResult
+                        {
+                            Files = new Dictionary<string, NitroflareFile>
+                            {
+                                ["C6AAA81564F4BE7"] = new NitroflareFile
+                                {
+                                    Status = "online",
+                                    Name = "archive.part01.rar",
+                                    Size = 1049624579,
+                                },
+                                ["22B25DB30AA33C3"] = new NitroflareFile
+                                {
+                                    Status = "offline",
+                                    Name = "archive.part48.rar",
+                                    Size = 106954758,
+                                },
+                            },
+                        },
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.GetFileInfosAsync(
+            ["C6AAA81564F4BE7", "22B25DB30AA33C3", "AAAAAAAAAAAAAAA"],
+            CancellationToken.None
+        );
+
+        // Assert
+        result["C6AAA81564F4BE7"]
+            .ShouldBe(
+                new HostedFileInfo(
+                    IsOnline: true,
+                    FileName: "archive.part01.rar",
+                    SizeBytes: 1049624579
+                )
+            );
+        result["22B25DB30AA33C3"]
+            .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
+        result.ShouldNotContainKey("AAAAAAAAAAAAAAA");
     }
 
     private static ApiResponse<FileInfoResponse> CreateSuccessResponse(

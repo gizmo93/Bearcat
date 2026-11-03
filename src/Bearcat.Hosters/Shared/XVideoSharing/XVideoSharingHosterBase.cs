@@ -21,6 +21,8 @@ public abstract class XVideoSharingHosterBase<TConfig>(
 
     public abstract string Name { get; }
 
+    public abstract IReadOnlyList<string> FileLinkHostNames { get; }
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(IXVideoSharingHosterConfig.ApiKey)];

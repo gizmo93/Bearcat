@@ -10,4 +10,7 @@ public class Vidara(ApiClient apiClient, ILogger<Vidara> logger)
         IHosterWithFolders
 {
     public override string Name => "Vidara";
+
+    public override IReadOnlyList<string> FileLinkHostNames =>
+        ["vidara.to", "vidara.so", "vidaraa.cc", "streamix.so", "stmix.io"];
 }

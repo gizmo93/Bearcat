@@ -25,7 +25,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -39,7 +39,10 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
             var response = await api.ProtectLinkAsync(
                 request: CreateRequestContent(
                     apiKey: config.ApiKey,
-                    links: links,
+                    links: linksPerMirrorNumber
+                        .OrderBy(mirror => mirror.Key)
+                        .SelectMany(mirror => mirror.Value)
+                        .ToList(),
                     password: password,
                     title: containerName,
                     enableCaptcha: enableCaptcha,
@@ -115,7 +118,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         string containerLink,
         string? externalReference,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -131,7 +134,10 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
             var responseBody = await api.UpdateContainerAsync(
                 request: CreateRequestContent(
                     apiKey: config.ApiKey,
-                    links: links,
+                    links: linksPerMirrorNumber
+                        .OrderBy(mirror => mirror.Key)
+                        .SelectMany(mirror => mirror.Value)
+                        .ToList(),
                     password: password,
                     urlId: urlId,
                     enableCaptcha: enableCaptcha,

@@ -65,4 +65,6 @@ public class Release
     public List<ReleaseQualityIssue> QualityIssues { get; set; } = [];
 
     public List<Notification> Notifications { get; set; } = [];
+
+    public List<LinkCrypterContainer> LinkCrypterContainers { get; set; } = [];
 }

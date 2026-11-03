@@ -1,0 +1,114 @@
+@page "/link-crypter-imports/{LinkCrypterImportId:int}"
+
+<PageTitle>@L["LinkCrypterImport"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <a href="/link-crypter-imports" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <LucideIcon Name="arrow-left" class="h-4 w-4" />
+        @L["LinkCrypterImports"]
+    </a>
+
+    @if (!isLoaded)
+    {
+        <p class="text-sm text-muted-foreground">@L["Loading"]</p>
+    }
+    else if (detail is null)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["LinkCrypterImportNotFound"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-page-header">
+            <div class="min-w-0 space-y-2">
+                <div class="flex flex-wrap items-center gap-3">
+                    <h1 class="text-3xl font-semibold tracking-tight">@L["LinkCrypterImport"]</h1>
+                    <LinkCrypterImportStateBadge State="detail.State" />
+                </div>
+                <p class="text-sm text-muted-foreground">
+                    @L["Crypter"]: <span class="text-foreground">@detail.LinkCrypterRegistrationName</span>
+                    · @L["ReleaseTemplate"]: <span class="text-foreground">@detail.ReleaseTemplateName</span>
+                    · @L["PrimaryLanguage"]: <span class="text-foreground">@GetLanguageDisplayName(detail.PrimaryLanguageCode)</span>
+                </p>
+                @if (detail.ArchiveFilesBasePathForReleasesWithoutLocalFiles is { } archiveFilesBasePath)
+                {
+                    <p class="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                        @L["ArchiveFilesBasePathForReleasesWithoutLocalFiles"]: <span class="text-foreground">@archiveFilesBasePath</span>
+                    </p>
+                }
+                @if (HasBackgroundWork)
+                {
+                    <p class="flex items-center gap-2 text-sm text-muted-foreground">
+                        <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                        <span class="tabular-nums">@L["LinkCrypterImportProgress", detail.ProcessedContainerCount, detail.ContainerCountToProcess]</span>
+                    </p>
+                }
+            </div>
+        </div>
+
+        @if (detail.ErrorMessages.Count > 0)
+        {
+            <ul class="list-disc space-y-1 rounded-md border border-destructive/30 py-2 pr-3 pl-7 text-sm text-destructive">
+                @foreach (var message in detail.ErrorMessages)
+                {
+                    <li class="[overflow-wrap:anywhere]">@message</li>
+                }
+            </ul>
+        }
+
+        @if (detail.State is LinkCrypterImportState.WaitingForHosterRegistrations)
+        {
+            <div class="space-y-4 rounded-lg border border-border bg-card p-4 sm:px-5">
+                <div class="space-y-1">
+                    <h2 class="text-lg font-semibold">@L["LinkCrypterImportHosterAccounts"]</h2>
+                    <p class="text-sm text-muted-foreground">@L["LinkCrypterImportHosterAccountsHelp"]</p>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    @foreach (var hosterRegistration in detail.HosterRegistrations)
+                    {
+                        <div class="flex min-w-0 flex-col gap-2">
+                            <span class="text-sm font-medium">@GetHosterName(hosterRegistration.HosterClassName)</span>
+                            <BbSelect TValue="int?"
+                                      Value="@chosenHosterRegistrationIds.GetValueOrDefault(hosterRegistration.HosterClassName)"
+                                      ValueChanged="@((int? hosterRegistrationId) => chosenHosterRegistrationIds[hosterRegistration.HosterClassName] = hosterRegistrationId)"
+                                      Options="GetHosterRegistrationOptions(hosterRegistration)"
+                                      Placeholder="@L["SelectHosterAccount"]"
+                                      Class="w-full" />
+                        </div>
+                    }
+                </div>
+
+                <div class="flex justify-end">
+                    <BbButton Disabled="@(isSubmitting || !AllHosterRegistrationsChosen)" OnClick="CheckFilesAsync">
+                        <LucideIcon Name="file-search" class="h-4 w-4" />
+                        @L["CheckFiles"]
+                    </BbButton>
+                </div>
+            </div>
+        }
+
+        @if (detail.State is LinkCrypterImportState.ReadyForReview)
+        {
+            <div class="flex items-start gap-2 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>@L["LinkCrypterImportReleaseInfoHint"]</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <BbButton Class="sm:ml-auto" Disabled="@(isSubmitting || detail.SelectedContainerCount == 0)" OnClick="StartImportAsync">
+                    <LucideIcon Name="download" class="h-4 w-4" />
+                    @(detail.SelectedReleaseCount == 1 ? L["StartLinkCrypterImportWithOneRelease"] : L["StartLinkCrypterImportWithCount", detail.SelectedReleaseCount])
+                </BbButton>
+            </div>
+        }
+
+        @if (ShowsReleases)
+        {
+            <LinkCrypterImportReleaseList Detail="detail"
+                                          HosterNamesByClassName="hosterNamesByClassName"
+                                          OnReleasesChanged="LoadDetailAsync" />
+        }
+    }
+</section>

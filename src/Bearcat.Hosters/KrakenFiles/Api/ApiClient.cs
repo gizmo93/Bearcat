@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -20,6 +22,8 @@ public class ApiClient(
     private const string LoginProbeHash = "bearcat-login-check";
 
     private const string InvalidCredentialsMessage = "Invalid credentials.";
+
+    private const string FileNotFoundMessage = "File not found";
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -199,6 +203,61 @@ public class ApiClient(
             );
     }
 
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        KrakenFilesConfig config,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureApiKeyAcceptedAsync(config, cancellationToken);
+
+        var fileInfoPerFileId = new ConcurrentDictionary<string, HostedFileInfo>();
+
+        await Parallel.ForEachAsync(
+            fileIds.Distinct(),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = MaxParallelLinkChecks,
+                CancellationToken = cancellationToken,
+            },
+            async (fileId, token) =>
+            {
+                var response = await api.GetFileAsync(fileId, config.ApiKey, token);
+
+                if (response.StatusCode == HttpStatusCode.NotFound && IsFileNotFound(response))
+                {
+                    fileInfoPerFileId[fileId] = new HostedFileInfo(
+                        IsOnline: false,
+                        FileName: null,
+                        SizeBytes: null
+                    );
+
+                    return;
+                }
+
+                if (
+                    !response.IsSuccessStatusCode
+                    || response.Content is not { Status: (int)HttpStatusCode.OK, Data: not null }
+                )
+                {
+                    throw new HttpRequestException(
+                        $"KrakenFiles file request for {fileId} failed with status code {response.StatusCode}",
+                        inner: response.Error,
+                        statusCode: response.StatusCode
+                    );
+                }
+
+                fileInfoPerFileId[fileId] = new HostedFileInfo(
+                    IsOnline: true,
+                    FileName: response.Content.Data.Name,
+                    SizeBytes: null
+                );
+            }
+        );
+
+        return fileInfoPerFileId;
+    }
+
     public async Task EnsureApiKeyAcceptedAsync(
         KrakenFilesConfig config,
         CancellationToken cancellationToken
@@ -354,5 +413,19 @@ public class ApiClient(
         }
 
         return segments.LastOrDefault()?.Replace(".html", string.Empty);
+    }
+
+    private static bool IsFileNotFound(ApiResponse<FileResponse> response)
+    {
+        var content = (response.Error as ApiException)?.Content;
+
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return false;
+        }
+
+        var fileResponse = JsonSerializer.Deserialize<FileResponse>(content, JsonSerializerOptions);
+
+        return fileResponse?.Data?.Message == FileNotFoundMessage;
     }
 }

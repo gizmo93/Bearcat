@@ -110,6 +110,33 @@ public partial class ReleaseBulkActionBar(
         await OnReleasesUpdated.InvokeAsync();
     }
 
+    private async Task DeleteSelectedReleasesAsync()
+    {
+        var releaseIds = Selection.SelectedReleaseIds;
+
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteSelectedReleases"],
+            L["DeleteSelectedReleasesConfirmation", releaseIds.Count],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        await operationRunner.RunAsync((ReleaseService service) => service.DeleteAsync(releaseIds));
+
+        toastService.Success(L["ReleasesDeleted", releaseIds.Count]);
+        Selection.Clear();
+        await OnReleasesUpdated.InvokeAsync();
+    }
+
     private async Task StartOnlineStateCheckAsync()
     {
         var releaseIds = Selection.SelectedReleaseIds;

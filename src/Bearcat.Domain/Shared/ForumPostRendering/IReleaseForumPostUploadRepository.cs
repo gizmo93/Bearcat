@@ -10,4 +10,11 @@ public interface IReleaseForumPostUploadRepository
         int releaseId,
         CancellationToken cancellationToken = default
     );
+
+    Task<
+        IReadOnlyList<ReleaseForumPostLinkCrypterReadModel>
+    > GetForumPostAllHostersLinkCryptersAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
 }

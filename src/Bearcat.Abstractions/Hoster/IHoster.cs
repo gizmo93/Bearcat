@@ -8,6 +8,8 @@ public interface IHoster
 {
     string Name { get; }
 
+    IReadOnlyList<string> FileLinkHostNames { get; }
+
     bool SupportsPremiumOnlyDownloads { get; }
 
     /// <summary>

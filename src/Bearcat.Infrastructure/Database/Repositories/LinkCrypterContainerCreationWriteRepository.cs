@@ -21,11 +21,11 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.LinkCrypters)
                     .ThenInclude(l => l.LinkCrypterRegistration)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.LinkCrypters)
+                    .ThenInclude(l => l.LinkCrypterContainers)
             .Include(u => u.LinkCrypterContainers)
             .Include(u => u.UploadedFiles)
-            .Include(u => u.UploadConfig)
-                .ThenInclude(uc => uc.Uploads)
-                    .ThenInclude(u => u.LinkCrypterContainers)
             .Where(u =>
                 u.UploadState == UploadState.Completed
                 && u.OnlineState == OnlineState.Online
@@ -137,6 +137,112 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
                 container.Scope == LinkCrypterContainerScope.ReleaseCollection
                 && container.CollectionUploadSlotId == collectionUploadSlotId
             )
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<int>> GetReleaseIdsWithOutdatedAllHostersContainersAsync(
+        DateTime updateFailedBefore,
+        CancellationToken cancellationToken
+    )
+    {
+        var releaseIdsWithMissingLatestUpload = dbWrite
+            .UploadConfigLinkCrypters.Where(linkCrypter =>
+                linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseAllHosters
+                && linkCrypter.LinkCrypterRegistration.IsActive
+            )
+            .Select(linkCrypter => new
+            {
+                linkCrypter.UploadConfig.ReleaseId,
+                linkCrypter.LinkCrypterRegistrationId,
+                LatestCompletedUploadId = linkCrypter
+                    .UploadConfig.Uploads.Where(upload =>
+                        upload.UploadState == UploadState.Completed && upload.UploadedFiles.Any()
+                    )
+                    .Max(upload => (int?)upload.Id),
+            })
+            .Where(member =>
+                member.LatestCompletedUploadId != null
+                && !dbWrite.LinkCrypterContainerSourceUploads.Any(source =>
+                    source.UploadId == member.LatestCompletedUploadId
+                    && source.LinkCrypterContainer.Scope
+                        == LinkCrypterContainerScope.ReleaseAllHosters
+                    && source.LinkCrypterContainer.ReleaseId == member.ReleaseId
+                    && source.LinkCrypterContainer.LinkCrypterRegistrationId
+                        == member.LinkCrypterRegistrationId
+                )
+            )
+            .Select(member => member.ReleaseId);
+
+        var releaseIdsWithContainerToUpdate = dbWrite
+            .LinkCrypterContainers.Where(container =>
+                container.Scope == LinkCrypterContainerScope.ReleaseAllHosters
+                && container.LinkCrypterRegistration.IsActive
+                && (
+                    (
+                        container.State == LinkCrypterContainerState.UpdateFailed
+                        && (
+                            container.UpdateFailedAt == null
+                            || container.UpdateFailedAt < updateFailedBefore
+                        )
+                    )
+                    || !container.Release!.UploadConfigs.Any(uploadConfig =>
+                        uploadConfig.LinkCrypters.Any(linkCrypter =>
+                            linkCrypter.ContainerScope
+                                == LinkCrypterContainerScope.ReleaseAllHosters
+                            && linkCrypter.LinkCrypterRegistrationId
+                                == container.LinkCrypterRegistrationId
+                        )
+                    )
+                    || container.SourceUploads.Any(source =>
+                        !source.Upload.UploadConfig.LinkCrypters.Any(linkCrypter =>
+                            linkCrypter.ContainerScope
+                                == LinkCrypterContainerScope.ReleaseAllHosters
+                            && linkCrypter.LinkCrypterRegistrationId
+                                == container.LinkCrypterRegistrationId
+                        )
+                    )
+                )
+            )
+            .Select(container => container.ReleaseId!.Value);
+
+        return await releaseIdsWithMissingLatestUpload
+            .Union(releaseIdsWithContainerToUpdate)
+            .OrderBy(releaseId => releaseId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Release> GetReleaseWithUploadConfigsAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+                    .ThenInclude(linkCrypter => linkCrypter.LinkCrypterRegistration)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig =>
+                    uploadConfig.Uploads.Where(upload =>
+                        upload.UploadState == UploadState.Completed
+                    )
+                )
+                    .ThenInclude(upload => upload.UploadedFiles)
+            .FirstAsync(release => release.Id == releaseId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<LinkCrypterContainer>> GetAllHostersContainersAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .LinkCrypterContainers.Include(container => container.SourceUploads)
+            .Where(container =>
+                container.Scope == LinkCrypterContainerScope.ReleaseAllHosters
+                && container.ReleaseId == releaseId
+            )
+            .OrderBy(container => container.Id)
             .ToListAsync(cancellationToken);
     }
 

@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Hosters.Shared.XFilesharing.Api;
@@ -6,6 +7,12 @@ namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 public interface IXFilesharingApiClient
 {
     Task<Dictionary<string, XFilesharingFileStatus>> FilesExistAsync(
+        string apiKey,
+        IReadOnlySet<string> fileCodes,
+        CancellationToken cancellationToken
+    );
+
+    Task<Dictionary<string, HostedFileInfo>> GetFileInfosAsync(
         string apiKey,
         IReadOnlySet<string> fileCodes,
         CancellationToken cancellationToken

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -196,6 +197,73 @@ public class ApiClient(
         }
 
         return statusPerFileUrl;
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        CloudFamConfig config,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureApiKeyAcceptedAsync(config, cancellationToken);
+
+        var fileInfoPerFileId = new Dictionary<string, HostedFileInfo>(
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        foreach (
+            var chunk in fileIds
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Chunk(MaxFileCodesPerRequest)
+        )
+        {
+            var response = await api.GetFileInfoAsync(
+                apiKey: config.ApiKey,
+                fileCodes: string.Join(',', chunk),
+                cancellationToken: cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode || response.Content is null)
+            {
+                ThrowIfApiKeyRejected(response);
+
+                throw new HttpRequestException(
+                    $"CloudFam file info request failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
+                );
+            }
+
+            if (response.Content.Status != (int)HttpStatusCode.OK)
+            {
+                throw new HttpRequestException(
+                    $"CloudFam file info request failed with status {response.Content.Status}: {response.Content.Message}"
+                );
+            }
+
+            foreach (var item in response.Content.Result ?? [])
+            {
+                var fileInfo = item switch
+                {
+                    { IsAlive: true } => new HostedFileInfo(
+                        IsOnline: true,
+                        FileName: item.Name,
+                        SizeBytes: item.Size
+                    ),
+                    { Status: (int)HttpStatusCode.NotFound } => new HostedFileInfo(
+                        IsOnline: false,
+                        FileName: null,
+                        SizeBytes: null
+                    ),
+                    _ => null,
+                };
+
+                if (item.FileCode is not null && fileInfo is not null)
+                {
+                    fileInfoPerFileId[item.FileCode] = fileInfo;
+                }
+            }
+        }
+
+        return fileInfoPerFileId;
     }
 
     public async Task EnsureApiKeyAcceptedAsync(

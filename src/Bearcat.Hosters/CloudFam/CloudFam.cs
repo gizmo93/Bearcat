@@ -12,9 +12,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.CloudFam;
 
-public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : IHosterWithFolders
+public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger)
+    : IHosterWithFolders,
+        IHosterWithFileInfo
 {
+    private const int MinimumFileIdLength = 8;
+
     public string Name => "CloudFam.io";
+
+    public IReadOnlyList<string> FileLinkHostNames => ["cloudfam.io"];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -136,6 +142,43 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
         }
     }
 
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<CloudFamConfig>();
+
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ExtractFileIdFromFileLink
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileIds: fileIdPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        return ExtractFileIdFromFileLink(fileLink) is { } fileId
+            ? $"https://cloudfam.io/{fileId}"
+            : null;
+    }
+
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
         var config = JsonSerializer.Deserialize<CloudFamConfig>(serializedConfig);
@@ -212,5 +255,25 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    private string? ExtractFileIdFromFileLink(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return
+            FileLinkHostMatching.GetPathSegments(fileLinkUri) is [var fileId, ..]
+            && fileId.Length >= MinimumFileIdLength
+            && fileId.All(char.IsAsciiLetterOrDigit)
+            ? fileId
+            : null;
     }
 }

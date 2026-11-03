@@ -48,6 +48,12 @@ public interface IKeep2ShareApiClient
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        Keep2ShareConfig config,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         Keep2ShareConfig config,
         IReadOnlyList<string> fileUrls,

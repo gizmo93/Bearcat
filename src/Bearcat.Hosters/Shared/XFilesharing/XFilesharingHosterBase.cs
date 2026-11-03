@@ -10,18 +10,23 @@ using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Microsoft.Extensions.Logging;
+using FileInfoResult = Bearcat.Abstractions.Hoster.Results.FileInfoResult;
 
 namespace Bearcat.Hosters.Shared.XFilesharing;
 
 public abstract class XFilesharingHosterBase<TConfig>(
     IXFilesharingApiClient apiClient,
     ILogger logger
-) : IHosterWithFolders, IHosterWithStorageQuota
+) : IHosterWithFolders, IHosterWithStorageQuota, IHosterWithFileInfo
     where TConfig : IXFilesharingHosterConfig
 {
     private const string UnlimitedStorageLeftValue = "inf";
 
+    private const int FileCodeLength = 12;
+
     public abstract string Name { get; }
+
+    public abstract IReadOnlyList<string> FileLinkHostNames { get; }
 
     public abstract bool SupportsPremiumOnlyDownloads { get; }
 
@@ -141,6 +146,66 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        var fileCodePerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            fileLink =>
+                ConvertToOwnFileLinkFormat(fileLink) is { } ownFileLink
+                    ? ExtractFileCode(ownFileLink)
+                    : null
+        );
+
+        try
+        {
+            var fileInfoPerFileCode = await apiClient.GetFileInfosAsync(
+                apiKey: config.ApiKey,
+                fileCodes: fileCodePerFileLink.Values.ToHashSet(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileCodePerFileLink, fileInfoPerFileCode);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        var firstPathSegment = fileLinkUri is null
+            ? null
+            : FileLinkHostMatching.GetPathSegments(fileLinkUri).FirstOrDefault();
+
+        if (firstPathSegment is null)
+        {
+            return null;
+        }
+
+        var fileCode = firstPathSegment.Replace(
+            ".html",
+            string.Empty,
+            StringComparison.OrdinalIgnoreCase
+        );
+
+        return fileCode.Length == FileCodeLength && fileCode.All(char.IsAsciiLetterOrDigit)
+            ? BuildFileUrl(fileCode)
+            : null;
     }
 
     public async Task<DownloadFileResult> DownloadFileAsync(

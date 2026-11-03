@@ -62,7 +62,7 @@ public class FileCryptTest
             config,
             "container-name",
             "password",
-            links,
+            new Dictionary<int, IReadOnlyList<string>> { [1] = links },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -129,7 +129,7 @@ public class FileCryptTest
             config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: false,
             enableContainerDownload: false,
             enableClickAndLoad: false,
@@ -153,6 +153,50 @@ public class FileCryptTest
     }
 
     [Test]
+    public async Task UpdateContainerAsync_TwoMirrors_SendsLinksOfEachMirrorWithOwnMirrorKey()
+    {
+        // Arrange
+        var config = new FileCryptConfig { ApiKey = "api-key" };
+        FormUrlEncodedContent? sentContent = null;
+
+        apiMock
+            .Setup(x =>
+                x.SendAsync(It.IsAny<FormUrlEncodedContent>(), It.IsAny<CancellationToken>())
+            )
+            .Callback<FormUrlEncodedContent, CancellationToken>(
+                (content, _) => sentContent = content
+            )
+            .ReturnsAsync(new Response { State = 1 });
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://filecrypt.cc/Container/60598C0844.html",
+            null,
+            null,
+            new Dictionary<int, IReadOnlyList<string>>
+            {
+                [1] = ["https://first.test/a", "https://first.test/b"],
+                [2] = ["https://second.test/a"],
+            },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
+        FormValues(sentContent!)
+            .Where(value => value.Key.StartsWith("mirror_", StringComparison.Ordinal))
+            .ShouldBe(
+                [
+                    new KeyValuePair<string, string>("mirror_1[0][0]", "https://first.test/a"),
+                    new KeyValuePair<string, string>("mirror_1[0][1]", "https://first.test/b"),
+                    new KeyValuePair<string, string>("mirror_2[0][0]", "https://second.test/a"),
+                ],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
     public async Task CreateContainerAsync_ApiReturnsError_ReturnsFailure()
     {
         // Arrange
@@ -169,7 +213,7 @@ public class FileCryptTest
             config,
             "container-name",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -218,7 +262,7 @@ public class FileCryptTest
             "https://filecrypt.cc/Container/60598C0844.html",
             externalReference,
             "password",
-            links,
+            new Dictionary<int, IReadOnlyList<string>> { [1] = links },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -271,7 +315,7 @@ public class FileCryptTest
             "https://filecrypt.cc/Container/60598C0844.html",
             externalReference,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: false,
             enableContainerDownload: false,
             enableClickAndLoad: false,
@@ -312,7 +356,7 @@ public class FileCryptTest
             "https://filecrypt.cc/Container/60598C0844.html",
             "60598C0844",
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -352,7 +396,7 @@ public class FileCryptTest
             "https://filecrypt.cc/Container/60598C0844.html",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             enableCaptcha: true,
             enableContainerDownload: true,
             enableClickAndLoad: true,
@@ -383,7 +427,7 @@ public class FileCryptTest
             "https://filecrypt.cc/Container/60598C0844.html",
             null,
             null,
-            ["https://hoster.test/file"],
+            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
             cancellationToken: CancellationToken.None
         );
 
@@ -509,6 +553,102 @@ public class FileCryptTest
         capturedBody.ShouldContain("sub=createV2");
         capturedBody.ShouldContain("mirror_1%5B0%5D%5B0%5D=https%3A%2F%2Fhoster.test%2Ffile");
         httpMessageHandler.PendingRequests.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ListContainersAsync_ListV3ReturnsKeyedContainers_ReturnsContainersWithExternalReference()
+    {
+        // Arrange
+        var config = new FileCryptConfig { ApiKey = "api-key" };
+        var response = JsonSerializer.Deserialize<Response>(
+            """
+            {"state":1,"container":{
+              "_5B4FB55E52":{"id":"5B4FB55E52","link":"https://www.filecrypt.cc/Container/5B4FB55E52.html","name":"First.Release","tags":["p1080"],"hoster":["1fichier.com"],"size":123,"links":14,"status":1,"statusimg_id":"AAAAAAAAAA","created":1780256887,"edited":0,"views":{"today":0,"week":0,"all":1},"group":0},
+              "_C938EFD724":{"id":"C938EFD724","link":"https://www.filecrypt.cc/Container/C938EFD724.html","name":"Second.Release","tags":[],"hoster":["turbobit.net"],"size":456,"links":"11","status":1,"statusimg_id":"BBBBBBBBBB","created":1780256888,"edited":0,"views":{"today":0,"week":0,"all":1},"group":0}
+            }}
+            """
+        )!;
+
+        apiMock
+            .Setup(x =>
+                x.SendAsync(It.IsAny<FormUrlEncodedContent>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(response);
+
+        // Act
+        var result = await service.ListContainersAsync(config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Containers.Count.ShouldBe(2);
+        result.Containers[0].ContainerId.ShouldBe("5B4FB55E52");
+        result
+            .Containers[0]
+            .ContainerUrl.ShouldBe("https://www.filecrypt.cc/Container/5B4FB55E52.html");
+        result.Containers[0].ContainerName.ShouldBe("First.Release");
+        result
+            .Containers[0]
+            .ExternalReference.ShouldBe("""{"ContainerId":"5B4FB55E52","Name":"First.Release"}""");
+        result.Containers[1].ContainerId.ShouldBe("C938EFD724");
+
+        apiMock.Verify(
+            x =>
+                x.SendAsync(
+                    It.Is<FormUrlEncodedContent>(content =>
+                        HasFormValue(content, "sub", "listV3")
+                        && HasFormValue(content, "offset", "0")
+                        && HasFormValue(content, "limit", "500")
+                        && HasFormValue(content, "sort", "created")
+                        && HasFormValue(content, "sort_mode", "ASC")
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ReadContainerLinksAsync_InfoReturnsMirrorsWithBackup_ReturnsLinksPerMirrorNumber()
+    {
+        // Arrange
+        var config = new FileCryptConfig { ApiKey = "api-key" };
+        var response = JsonSerializer.Deserialize<ContainerInfoResponse>(
+            """
+            {"container":{
+              "mirror_2":{"links":["https://rapidgator.net/file/second"],"backup":[]},
+              "mirror_1":{"links":["https://trbt.cc/first1.html","https://trbt.cc/first2.html"],"backup":[["https://trbt.cc/backup.html"]]}
+            }}
+            """
+        )!;
+
+        apiMock
+            .Setup(x =>
+                x.GetContainerInfoAsync(
+                    It.Is<FormUrlEncodedContent>(content =>
+                        HasFormValue(content, "sub", "info")
+                        && HasFormValue(content, "container_id", "C938EFD724")
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(response);
+
+        // Act
+        var result = await service.ReadContainerLinksAsync(
+            linkCrypterConfig: config,
+            containerUrl: "https://www.filecrypt.cc/Container/C938EFD724.html",
+            externalReference: """{"ContainerId":"C938EFD724","Name":"Second.Release"}""",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.LinksPerMirrorNumber.Count.ShouldBe(2);
+        result
+            .LinksPerMirrorNumber[1]
+            .ShouldBe(["https://trbt.cc/first1.html", "https://trbt.cc/first2.html"]);
+        result.LinksPerMirrorNumber[2].ShouldBe(["https://rapidgator.net/file/second"]);
+        result.HasBackupLinks.ShouldBeTrue();
     }
 
     private static bool HasFormValue(FormUrlEncodedContent content, string name, string value)

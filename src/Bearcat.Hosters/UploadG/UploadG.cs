@@ -19,6 +19,8 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
 
     public string Name => "UploadG.com";
 
+    public IReadOnlyList<string> FileLinkHostNames => ["uploadg.com"];
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(UploadGConfig.ApiKey)];

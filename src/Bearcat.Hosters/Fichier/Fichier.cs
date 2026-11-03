@@ -14,9 +14,30 @@ namespace Bearcat.Hosters.Fichier;
 
 public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
     : IHosterWithFolders,
-        IHosterWithDownload
+        IHosterWithDownload,
+        IHosterWithFileInfo
 {
+    private const int MinimumFileIdLength = 5;
+
+    private const int MaximumFileIdLength = 20;
+
     public string Name => "1fichier";
+
+    public IReadOnlyList<string> FileLinkHostNames =>
+        [
+            "1fichier.com",
+            "alterupload.com",
+            "cjoint.net",
+            "desfichiers.net",
+            "desfichiers.com",
+            "dfichiers.com",
+            "megadl.fr",
+            "mesfichiers.org",
+            "piecejointe.net",
+            "pjointe.com",
+            "tenvoi.com",
+            "dl4free.com",
+        ];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -122,6 +143,55 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<FichierConfig>();
+
+        var ownFileLinkPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ConvertToOwnFileLinkFormat
+        );
+
+        try
+        {
+            var fileInfoPerOwnFileLink = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileUrls: ownFileLinkPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(
+                ownFileLinkPerFileLink,
+                fileInfoPerOwnFileLink
+            );
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        var fileId = fileLinkUri?.Query.TrimStart('?').Split('&').First();
+
+        return
+            fileId is { Length: >= MinimumFileIdLength and <= MaximumFileIdLength }
+            && fileId.All(char.IsAsciiLetterOrDigit)
+            ? $"https://1fichier.com/?{fileId}"
+            : null;
     }
 
     public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(

@@ -1,8 +1,11 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -44,6 +47,12 @@ public partial class CreateOrEditUploadConfigLinkCrypter(IScopedOperationRunner 
         SelectedLinkCrypterOption?.SupportsContainerDownload is true;
     private bool CanUseClickAndLoad => SelectedLinkCrypterOption?.SupportsClickAndLoad is true;
 
+    private IReadOnlyList<SelectOption<LinkCrypterContainerScope>> ContainerScopeOptions =>
+        Enum.GetValues<LinkCrypterContainerScope>()
+            .Where(scope => scope != LinkCrypterContainerScope.ReleaseCollection)
+            .Select(scope => new SelectOption<LinkCrypterContainerScope>(scope, L.Localize(scope)))
+            .ToList();
+
     protected override async Task OnInitializedAsync()
     {
         linkCrypterOptions = await operationRunner.RunAsync(
@@ -66,11 +75,13 @@ public partial class CreateOrEditUploadConfigLinkCrypter(IScopedOperationRunner 
             if (IsEdit)
             {
                 await service.UpdateAsync(
-                    UploadConfigLinkCrypterId!.Value,
-                    formModel.Password,
-                    CanUseCaptcha && formModel.EnableCaptcha,
-                    CanUseContainerDownload && formModel.EnableContainerDownload,
-                    CanUseClickAndLoad && formModel.EnableClickAndLoad
+                    id: UploadConfigLinkCrypterId!.Value,
+                    password: formModel.Password,
+                    enableCaptcha: CanUseCaptcha && formModel.EnableCaptcha,
+                    enableContainerDownload: CanUseContainerDownload
+                        && formModel.EnableContainerDownload,
+                    enableClickAndLoad: CanUseClickAndLoad && formModel.EnableClickAndLoad,
+                    containerScope: formModel.ContainerScope
                 );
                 return;
             }
@@ -82,7 +93,8 @@ public partial class CreateOrEditUploadConfigLinkCrypter(IScopedOperationRunner 
                 enableCaptcha: CanUseCaptcha && formModel.EnableCaptcha,
                 enableContainerDownload: CanUseContainerDownload
                     && formModel.EnableContainerDownload,
-                enableClickAndLoad: CanUseClickAndLoad && formModel.EnableClickAndLoad
+                enableClickAndLoad: CanUseClickAndLoad && formModel.EnableClickAndLoad,
+                containerScope: formModel.ContainerScope
             );
         });
 
@@ -148,6 +160,7 @@ public partial class CreateOrEditUploadConfigLinkCrypter(IScopedOperationRunner 
             EnableCaptcha = configReadModel.EnableCaptcha,
             EnableContainerDownload = configReadModel.EnableContainerDownload,
             EnableClickAndLoad = configReadModel.EnableClickAndLoad,
+            ContainerScope = configReadModel.ContainerScope,
         };
     }
 

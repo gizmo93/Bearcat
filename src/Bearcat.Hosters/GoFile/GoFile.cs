@@ -17,6 +17,8 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
 {
     public string Name => "GoFile";
 
+    public IReadOnlyList<string> FileLinkHostNames => ["gofile.io"];
+
     public bool SupportsPremiumOnlyDownloads => false;
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(GoFileConfig.ApiKey)];

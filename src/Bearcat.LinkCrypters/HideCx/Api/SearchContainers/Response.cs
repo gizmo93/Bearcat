@@ -6,4 +6,7 @@ public class Response
 {
     [JsonPropertyName("total")]
     public long Total { get; set; }
+
+    [JsonPropertyName("containers")]
+    public List<Container> Containers { get; set; } = [];
 }

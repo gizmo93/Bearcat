@@ -11,6 +11,8 @@ public class DDownload(IDDownloadApiClient apiClient, ILogger<DDownload> logger)
 {
     public override string Name => "ddownload";
 
+    public override IReadOnlyList<string> FileLinkHostNames => ["ddownload.com", "ddl.to"];
+
     protected override string FileUrlFormat => "https://ddownload.com/{0}";
 
     public override bool SupportsPremiumOnlyDownloads => true;

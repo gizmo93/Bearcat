@@ -12,6 +12,8 @@ public class DataVaults(IDataVaultsApiClient apiClient, ILogger<DataVaults> logg
 {
     public override string Name => "datavaults.co";
 
+    public override IReadOnlyList<string> FileLinkHostNames => ["datavaults.co"];
+
     protected override string FileUrlFormat => "https://datavaults.co/{0}";
 
     public override bool SupportsPremiumOnlyDownloads => false;

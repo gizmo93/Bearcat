@@ -172,6 +172,30 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool CollectionLinkCrypterContainerInvalid { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid",
+        "NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid.Description"
+    )]
+    public bool ReleaseAllHostersLinkCrypterContainerInvalid { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.LinkCrypterImportReadyForReview",
+        "NotificationKind.LinkCrypterImportReadyForReview.Description"
+    )]
+    public bool LinkCrypterImportReadyForReview { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.LinkCrypterImportCompleted",
+        "NotificationKind.LinkCrypterImportCompleted.Description"
+    )]
+    public bool LinkCrypterImportCompleted { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.LinkCrypterImportFailed",
+        "NotificationKind.LinkCrypterImportFailed.Description"
+    )]
+    public bool LinkCrypterImportFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.AutomaticForumPostCreated",
         "NotificationKind.AutomaticForumPostCreated.Description"
     )]

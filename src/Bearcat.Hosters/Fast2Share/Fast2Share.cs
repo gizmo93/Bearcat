@@ -15,13 +15,16 @@ namespace Bearcat.Hosters.Fast2Share;
 public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logger)
     : IHosterWithFolders,
         IHosterWithDownload,
-        IHosterWithStorageQuota
+        IHosterWithStorageQuota,
+        IHosterWithFileInfo
 {
     private const int MaxParallelUploads = 10;
 
     private const int UploadAttempts = 3;
 
     public string Name => "Fast2Share.com";
+
+    public IReadOnlyList<string> FileLinkHostNames => ["f2s.im", "fast2share.com"];
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -141,6 +144,43 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Fast2ShareConfig>();
+
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            ExtractFileIdFromFileLink
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                config: config,
+                fileIds: fileIdPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        return ExtractFileIdFromFileLink(fileLink) is { } fileId
+            ? $"https://f2s.im/f/{fileId}"
+            : null;
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
@@ -307,5 +347,24 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    private string? ExtractFileIdFromFileLink(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        return
+            FileLinkHostMatching.GetPathSegments(fileLinkUri) is ["f", var fileId, ..]
+            && fileId.All(character => char.IsAsciiLetterOrDigit(character) || character == '-')
+            ? fileId
+            : null;
     }
 }

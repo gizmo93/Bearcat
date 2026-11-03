@@ -103,11 +103,14 @@ public static class NavigationRegistry
                     ]
                 ),
                 Entry("RemoteSources", "/remote-sources", "server"),
-                EntryWithTooltip(
-                    "CrypterRegistrations",
+                new NavigationSubmenu(
+                    "crypters",
                     "Crypters",
-                    "/link-crypter-registrations",
-                    "shield"
+                    "shield",
+                    [
+                        Entry("CrypterRegistrations", "/link-crypter-registrations", "shield"),
+                        Entry("LinkCrypterImports", "/link-crypter-imports", "folder-input"),
+                    ]
                 ),
                 EntryWithTooltip(
                     "ImageHosterRegistrations",

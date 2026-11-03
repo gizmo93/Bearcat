@@ -41,6 +41,7 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
     {
         return await QueryExistingReleaseFolderPaths(folderPaths)
             .Union(QueryArchiveOutputFolderPaths(folderPaths))
+            .Union(QueryFolderPathsOfArchivesThatAreNotDeleted(folderPaths))
             .Union(QueryRemoteDownloadFolderPaths(folderPaths))
             .ToHashSetAsync(cancellationToken);
     }
@@ -83,6 +84,18 @@ public class ReleaseFolderUsageRepository(IBearcatWriteDbContext dbWrite)
             .Where(archiveFolderPath => EF.Parameter(folderPaths).Contains(archiveFolderPath));
 
         return archiveConfigFolderPaths.Union(archiveConfigTemplateFolderPaths);
+    }
+
+    private IQueryable<string> QueryFolderPathsOfArchivesThatAreNotDeleted(
+        IReadOnlyList<string> folderPaths
+    )
+    {
+        return dbWrite
+            .Archives.Where(archive =>
+                archive.ArchiveState != ArchiveState.Deleted
+                && EF.Parameter(folderPaths).Contains(archive.ArchiveFolderPath)
+            )
+            .Select(archive => archive.ArchiveFolderPath);
     }
 
     private IQueryable<string> QueryRemoteDownloadFolderPaths(

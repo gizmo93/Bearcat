@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
@@ -9,8 +10,14 @@ using Refit;
 
 namespace Bearcat.LinkCrypters.HideCx;
 
-public class HideCx(IHideCxApi api) : ILinkCrypter
+public class HideCx(IHideCxApi api) : ILinkCrypterWithContainerReading
 {
+    private const int ListContainersPageSize = 500;
+
+    private const string DeletedAccessStatus = "deleted";
+
+    private const string MirrorLinkTypePrefix = "mirror_";
+
     public string Name => "Hide.cx";
 
     public List<string> ConfigurationKeys => [nameof(HideCxConfig.ApiKey)];
@@ -25,7 +32,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -40,7 +47,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
             {
                 Name = containerName,
                 Password = password,
-                Mirrors = [links.ToArray()],
+                Mirrors = CreateMirrors(linksPerMirrorNumber),
             };
 
             var result = await api.CreateContainerAsync(
@@ -109,7 +116,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
         string containerLink,
         string? externalReference,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -122,7 +129,10 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
         {
             await api.UpdateContainerAsync(
                 containerId: externalReference!,
-                request: new Api.UpdateContainer.Request { Mirrors = [links.ToArray()] },
+                request: new Api.UpdateContainer.Request
+                {
+                    Mirrors = CreateMirrors(linksPerMirrorNumber),
+                },
                 apiToken: GetAuthToken(config.ApiKey),
                 cancellationToken: cancellationToken
             );
@@ -146,6 +156,130 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
                     ? UpdateContainerOutcome.ContainerNotFound
                     : UpdateContainerOutcome.Failed,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
+        }
+    }
+
+    public async Task<ListContainersResult> ListContainersAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = linkCrypterConfig.As<HideCxConfig>();
+        var containers = new List<ListedContainer>();
+
+        try
+        {
+            var offset = 0;
+            int pageCount;
+
+            do
+            {
+                var response = await api.SearchContainersAsync(
+                    request: new Api.SearchContainers.Request
+                    {
+                        Search = string.Empty,
+                        PrimaryType = null,
+                        AccessStatus = null,
+                        Offset = offset,
+                        Limit = ListContainersPageSize,
+                        OrderBy = "created_at",
+                        OrderType = "asc",
+                    },
+                    apiToken: GetAuthToken(config.ApiKey),
+                    cancellationToken: cancellationToken
+                );
+
+                containers.AddRange(
+                    response
+                        .Containers.Where(container =>
+                            container.AccessStatus != DeletedAccessStatus
+                        )
+                        .Select(container => new ListedContainer(
+                            ContainerId: container.Id,
+                            ContainerUrl: container.CanonicalUrl,
+                            ContainerName: container.Name,
+                            ExternalReference: container.Id
+                        ))
+                );
+
+                pageCount = response.Containers.Count;
+                offset += ListContainersPageSize;
+            } while (pageCount == ListContainersPageSize);
+
+            return new ListContainersResult(
+                IsSuccess: true,
+                Containers: containers,
+                ErrorMessages: []
+            );
+        }
+        catch (Exception ex)
+        {
+            return new ListContainersResult(
+                IsSuccess: false,
+                Containers: [],
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+            );
+        }
+    }
+
+    public async Task<ReadContainerLinksResult> ReadContainerLinksAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        string containerUrl,
+        string? externalReference,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = linkCrypterConfig.As<HideCxConfig>();
+        var containerId =
+            externalReference
+            ?? containerUrl.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
+
+        try
+        {
+            var content = await api.GetContainerAsync(
+                containerId: containerId,
+                apiToken: GetAuthToken(config.ApiKey),
+                cancellationToken: cancellationToken
+            );
+
+            var container = JsonSerializer.Deserialize<Api.GetContainer.Response>(content)!;
+
+            if (container.Links.Any(link => link.HosterUrl is null))
+            {
+                return new ReadContainerLinksResult(
+                    IsSuccess: false,
+                    LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
+                    HasBackupLinks: false,
+                    ErrorMessages:
+                    [
+                        "Hide.cx returned links without hoster_url, which happens when the API key does not belong to the container owner",
+                    ]
+                );
+            }
+
+            var linksPerMirrorNumber = container
+                .Links.GroupBy(link => link.LinkType)
+                .ToDictionary(
+                    mirror => GetMirrorNumber(mirror.Key),
+                    IReadOnlyList<string> (mirror) =>
+                        mirror.Select(link => link.HosterUrl!).ToList()
+                );
+
+            return new ReadContainerLinksResult(
+                IsSuccess: true,
+                LinksPerMirrorNumber: linksPerMirrorNumber,
+                HasBackupLinks: false,
+                ErrorMessages: []
+            );
+        }
+        catch (Exception ex)
+        {
+            return new ReadContainerLinksResult(
+                IsSuccess: false,
+                LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
+                HasBackupLinks: false,
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
             );
         }
     }
@@ -184,6 +318,21 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
     public ILinkCrypterConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<HideCxConfig>(serializedConfig)!;
+    }
+
+    private static int GetMirrorNumber(string linkType)
+    {
+        return int.Parse(linkType[MirrorLinkTypePrefix.Length..], CultureInfo.InvariantCulture);
+    }
+
+    private static string[][] CreateMirrors(
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber
+    )
+    {
+        return linksPerMirrorNumber
+            .OrderBy(mirror => mirror.Key)
+            .Select(mirror => mirror.Value.ToArray())
+            .ToArray();
     }
 
     private static string GetAuthToken(string apiKey) => $"Bearer {apiKey}";

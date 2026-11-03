@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
@@ -157,6 +158,24 @@ public class ApiClient(
         var linkStatesByFileUrl = await GetLinkStatesByFileUrlAsync(fileUrls, cancellationToken);
 
         return linkStatesByFileUrl.ToDictionary(pair => pair.Key, pair => pair.Value.IsOnline);
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        FichierConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        var linkStatesByFileUrl = await GetLinkStatesByFileUrlAsync(fileUrls, cancellationToken);
+
+        return linkStatesByFileUrl.ToDictionary(
+            pair => pair.Key,
+            pair => new HostedFileInfo(
+                IsOnline: pair.Value.IsOnline,
+                FileName: pair.Value.FileName,
+                SizeBytes: pair.Value.SizeBytes
+            )
+        );
     }
 
     public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
@@ -488,7 +507,11 @@ public class ApiClient(
 
         if (fields.Length >= 3 && long.TryParse(fields.Last(), out var sizeBytes))
         {
-            return new LinkState(IsOnline: true, SizeBytes: sizeBytes);
+            return new LinkState(
+                IsOnline: true,
+                SizeBytes: sizeBytes,
+                FileName: string.Join(';', fields.Skip(1).Take(fields.Length - 2))
+            );
         }
 
         throw new HttpRequestException(
@@ -608,7 +631,7 @@ public class ApiClient(
             && uploadId.All(char.IsLetterOrDigit);
     }
 
-    private sealed record LinkState(bool IsOnline, long? SizeBytes);
+    private sealed record LinkState(bool IsOnline, long? SizeBytes, string? FileName = null);
 
     private sealed class FichierUploadContent : HttpContent
     {

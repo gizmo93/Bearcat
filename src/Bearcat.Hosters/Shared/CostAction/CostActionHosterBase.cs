@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
@@ -12,7 +13,8 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Shared.CostAction;
 
 public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClient, ILogger logger)
-    : IHosterWithFolders
+    : IHosterWithFolders,
+        IHosterWithFileInfo
     where TConfig : ICostActionHosterConfig
 {
     private const int UploadAttempts = 3;
@@ -21,7 +23,11 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
 
     public abstract string Name { get; }
 
+    public abstract IReadOnlyList<string> FileLinkHostNames { get; }
+
     protected abstract string AppType { get; }
+
+    protected abstract string OwnFileLinkFormat { get; }
 
     public bool SupportsPremiumOnlyDownloads => false;
 
@@ -166,6 +172,65 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
+    }
+
+    public async Task<FileInfoResult> GetFileInfosAsync(
+        IHosterConfig hosterConfig,
+        IReadOnlyList<string> fileLinks,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        var fileIdPerFileLink = FileInfoResultMapping.GetFileIdPerFileLink(
+            fileLinks,
+            fileLink =>
+                ConvertToOwnFileLinkFormat(fileLink) is { } ownFileLink
+                    ? ExtractFileId(ownFileLink)
+                    : null
+        );
+
+        try
+        {
+            var fileInfoPerFileId = await apiClient.GetFileInfosAsync(
+                apiKey: config.ApiKey,
+                appType: AppType,
+                fileIds: fileIdPerFileLink.Values.Distinct().ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            return FileInfoResultMapping.CreateResult(fileIdPerFileLink, fileInfoPerFileId);
+        }
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
+        {
+            return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public string? ConvertToOwnFileLinkFormat(string fileLink)
+    {
+        var fileLinkUri = FileLinkHostMatching.ParseFileLinkWithAnyHostName(
+            fileLink,
+            FileLinkHostNames
+        );
+
+        if (fileLinkUri is null)
+        {
+            return null;
+        }
+
+        var pathSegments = FileLinkHostMatching.GetPathSegments(fileLinkUri);
+
+        var fileId = pathSegments is ["download", "free", var freeDownloadFileId, ..]
+            ? freeDownloadFileId
+            : pathSegments
+                .FirstOrDefault()
+                ?.Replace(".html", string.Empty, StringComparison.OrdinalIgnoreCase);
+
+        return fileId is { Length: > 0 } && fileId.All(char.IsAsciiLetterOrDigit)
+            ? string.Format(CultureInfo.InvariantCulture, OwnFileLinkFormat, fileId)
+            : null;
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)

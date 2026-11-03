@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
@@ -5,6 +6,7 @@ using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -30,6 +32,8 @@ public class ApiClient(
     private const string StatusCompleted = "completed";
 
     private const string StatusFailed = "failed";
+
+    private const string FileNotFoundError = "File not found.";
 
     private const string StatusNeedHash = "need_hash";
 
@@ -231,6 +235,64 @@ public class ApiClient(
         return results
             .Where(result => result.Status is not null)
             .ToDictionary(result => result.FileUrl, result => result.Status!);
+    }
+
+    public async Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        Fast2ShareConfig config,
+        IReadOnlyList<string> fileIds,
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureApiKeyAcceptedAsync(config, cancellationToken);
+
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+        var fileInfoPerFileId = new ConcurrentDictionary<string, HostedFileInfo>();
+
+        await Parallel.ForEachAsync(
+            fileIds.Distinct(),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = MaxParallelLinkChecks,
+                CancellationToken = cancellationToken,
+            },
+            async (fileId, token) =>
+            {
+                var response = await api.GetFileAsync(authorization, fileId, token);
+
+                if (
+                    response.StatusCode == HttpStatusCode.NotFound
+                    && GetErrorMessage(response) == FileNotFoundError
+                )
+                {
+                    fileInfoPerFileId[fileId] = new HostedFileInfo(
+                        IsOnline: false,
+                        FileName: null,
+                        SizeBytes: null
+                    );
+
+                    return;
+                }
+
+                if (!response.IsSuccessStatusCode || response.Content is null)
+                {
+                    throw new HttpRequestException(
+                        $"Fast2Share file request for {fileId} failed with status code {response.StatusCode}: {GetErrorMessage(response)}",
+                        inner: null,
+                        statusCode: response.StatusCode
+                    );
+                }
+
+                fileInfoPerFileId[fileId] = IsStatus(response.Content.Status, StatusFailed)
+                    ? new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null)
+                    : new HostedFileInfo(
+                        IsOnline: true,
+                        FileName: response.Content.Name,
+                        SizeBytes: response.Content.Size
+                    );
+            }
+        );
+
+        return fileInfoPerFileId;
     }
 
     public async Task EnsureApiKeyAcceptedAsync(

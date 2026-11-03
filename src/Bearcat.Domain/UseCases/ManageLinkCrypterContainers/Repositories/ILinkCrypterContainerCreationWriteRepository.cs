@@ -28,6 +28,21 @@ public interface ILinkCrypterContainerCreationWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<int>> GetReleaseIdsWithOutdatedAllHostersContainersAsync(
+        DateTime updateFailedBefore,
+        CancellationToken cancellationToken
+    );
+
+    Task<Release> GetReleaseWithUploadConfigsAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<LinkCrypterContainer>> GetAllHostersContainersAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    );
+
     Task<LinkCrypterContainer?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     void Add(LinkCrypterContainer container);

@@ -25,7 +25,7 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -40,7 +40,7 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                 request: new RequestBody
                 {
                     Title = containerName,
-                    Links = CreateLinksValue(links),
+                    Links = CreateLinksValue(linksPerMirrorNumber),
                     Options = CreateFolderOptions(
                         password,
                         enableCaptcha,
@@ -75,7 +75,7 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
         string containerLink,
         string? externalReference,
         string? password,
-        IReadOnlyList<string> links,
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber,
         bool enableCaptcha = true,
         bool enableContainerDownload = true,
         bool enableClickAndLoad = true,
@@ -94,7 +94,7 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                 folder: folder,
                 request: new Api.EditFolder.RequestBody
                 {
-                    Links = CreateLinksValue(links),
+                    Links = CreateLinksValue(linksPerMirrorNumber),
                     Options = CreateFolderOptions(
                         password: password,
                         enableCaptcha: enableCaptcha,
@@ -177,7 +177,15 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
         };
     }
 
-    private static string CreateLinksValue(IReadOnlyList<string> links) => string.Join(';', links);
+    private static string CreateLinksValue(
+        IReadOnlyDictionary<int, IReadOnlyList<string>> linksPerMirrorNumber
+    )
+    {
+        return string.Join(
+            ';',
+            linksPerMirrorNumber.OrderBy(mirror => mirror.Key).SelectMany(mirror => mirror.Value)
+        );
+    }
 
     private static async Task<string> GetErrorMessageAsync(Exception exception)
     {

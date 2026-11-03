@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Nitroflare.Api.File;
 
 namespace Bearcat.Hosters.Nitroflare.Api;
@@ -13,6 +14,11 @@ public interface INitroflareApiClient
 
     Task<UploadFileResponse> TestUserHashAsync(
         NitroflareConfig config,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
+        IReadOnlyList<string> fileIds,
         CancellationToken cancellationToken
     );
 

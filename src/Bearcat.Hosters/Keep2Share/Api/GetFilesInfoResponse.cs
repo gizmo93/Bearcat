@@ -19,6 +19,8 @@ public class GetFilesInfoResponse
     {
         public string Id { get; set; } = null!;
 
+        public string? Name { get; set; }
+
         [JsonPropertyName("is_available")]
         public bool? IsAvailable { get; set; }
 

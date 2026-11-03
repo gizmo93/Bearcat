@@ -6,6 +6,7 @@ using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Moq;
 using Shouldly;
+using HostedFileInfo = Bearcat.Abstractions.Hoster.Results.HostedFileInfo;
 
 namespace Bearcat.Hosters.UnitTest.HxFile;
 
@@ -141,6 +142,93 @@ public class ApiClientTest
         // Assert
         result["abc123"].ShouldBe(106954757);
         result.ShouldNotContainKey("def456");
+    }
+
+    [Test]
+    public async Task GetFileInfosAsync_FileInfoReturnsOnlineDeletedAndUnknownStatus_ReturnsInfoOnlyForRecognizedStatuses()
+    {
+        // Arrange
+        var apiClient = CreateApiClient(new RecordingDownloadHandler("unused"));
+
+        apiMock
+            .As<IXFilesharingApi>()
+            .Setup(x =>
+                x.GetFileInfoAsync("api-key", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new FileInfoResponse
+                {
+                    Msg = "OK",
+                    Status = (int)HttpStatusCode.OK,
+                    Results =
+                    [
+                        new FileInfoResult
+                        {
+                            FileCode = "online",
+                            Status = (int)HttpStatusCode.OK,
+                            Name = "archive.part1.rar",
+                            Size = "106954757",
+                        },
+                        new FileInfoResult
+                        {
+                            FileCode = "deleted",
+                            Status = (int)HttpStatusCode.NotFound,
+                        },
+                        new FileInfoResult
+                        {
+                            FileCode = "blocked",
+                            Status = (int)HttpStatusCode.Forbidden,
+                        },
+                    ],
+                }
+            );
+
+        // Act
+        var result = await apiClient.GetFileInfosAsync(
+            apiKey: "api-key",
+            fileCodes: new HashSet<string> { "online", "deleted", "blocked" },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result["online"]
+            .ShouldBe(
+                new HostedFileInfo(
+                    IsOnline: true,
+                    FileName: "archive.part1.rar",
+                    SizeBytes: 106954757
+                )
+            );
+        result["deleted"]
+            .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
+        result.ShouldNotContainKey("blocked");
+    }
+
+    [Test]
+    public async Task GetFileInfosAsync_RequestRejected_ThrowsInsteadOfReportingOffline()
+    {
+        // Arrange
+        var apiClient = CreateApiClient(new RecordingDownloadHandler("unused"));
+
+        apiMock
+            .As<IXFilesharingApi>()
+            .Setup(x =>
+                x.GetFileInfoAsync("api-key", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new FileInfoResponse { Msg = "Wrong auth", Status = (int)HttpStatusCode.Forbidden }
+            );
+
+        // Act
+        var action = () =>
+            apiClient.GetFileInfosAsync(
+                apiKey: "api-key",
+                fileCodes: new HashSet<string> { "abcdefghijkl" },
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await action.ShouldThrowAsync<HttpRequestException>();
     }
 
     private ApiClient CreateApiClient(HttpMessageHandler handler)

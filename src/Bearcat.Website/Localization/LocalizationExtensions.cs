@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
@@ -117,6 +118,36 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         LinkCrypterContainerState state
     ) => localizer[$"LinkCrypterContainerState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        LinkCrypterImportState state
+    ) => localizer[$"LinkCrypterImportState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        LinkCrypterImportContainerStatus status
+    ) => localizer[$"LinkCrypterImportContainerStatus.{status}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        LinkCrypterImportNotImportableReason reason
+    ) => localizer[$"LinkCrypterImportNotImportableReason.{reason}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        LinkCrypterImportMirrorDecision decision
+    ) => localizer[$"LinkCrypterImportMirrorDecision.{decision}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        LinkCrypterImportUploadByBearcatReason reason
+    ) => localizer[$"LinkCrypterImportUploadByBearcatReason.{reason}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        LinkCrypterImportReleaseAction releaseAction
+    ) => localizer[$"LinkCrypterImportReleaseAction.{releaseAction}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

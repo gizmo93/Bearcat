@@ -8,4 +8,6 @@ public class Videro(ApiClient apiClient, ILogger<Videro> logger)
     : XVideoSharingHosterBase<VideroConfig>(apiClient, logger)
 {
     public override string Name => "Videro";
+
+    public override IReadOnlyList<string> FileLinkHostNames => ["videro.my", "videro.im"];
 }

@@ -11,6 +11,7 @@ public sealed record ForumPostTemplateRenderModel
             ReleaseInfo = ForumPostTemplateReleaseInfoModel.Empty,
             Classification = ForumPostTemplateClassificationModel.Empty,
             Uploads = [],
+            LinkCrypters = [],
         };
 
     [ForumPostTemplateVariable("Release data.", IncludeChildren = true)]
@@ -28,6 +29,13 @@ public sealed record ForumPostTemplateRenderModel
         ElementType = typeof(ForumPostTemplateUploadModel)
     )]
     public required IReadOnlyList<ForumPostTemplateUploadModel> Uploads { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Loop over link crypter containers that contain all hosters of the release as mirrors (container scope \"Release (all hosters as mirrors)\"). One entry per link crypter, so a post can show a single download link.",
+        LoopVariable = "crypter",
+        ElementType = typeof(ForumPostTemplateLinkCrypterModel)
+    )]
+    public required IReadOnlyList<ForumPostTemplateLinkCrypterModel> LinkCrypters { get; init; }
 }
 
 public sealed record ForumPostTemplateReleaseModel

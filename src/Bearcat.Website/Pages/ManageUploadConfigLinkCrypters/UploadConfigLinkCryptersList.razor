@@ -59,6 +59,10 @@
                             <div class="min-w-0">
                                 <p class="mb-1 text-[0.6875rem] font-semibold uppercase text-muted-foreground lg:hidden">@L["LinkCrypterSettings"]</p>
                                 <div class="flex flex-wrap gap-1">
+                                    @if (item.ContainerScope is LinkCrypterContainerScope.ReleaseAllHosters)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(item.ContainerScope)</BbBadge>
+                                    }
                                     @if (item.SupportsCaptcha)
                                     {
                                         <BbBadge Variant="@(item.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">

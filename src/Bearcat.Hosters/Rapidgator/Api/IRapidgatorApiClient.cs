@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Rapidgator.Api.User;
@@ -49,6 +50,12 @@ public interface IRapidgatorApiClient
     );
 
     Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, HostedFileInfo>> GetFileInfosAsync(
         RapidgatorConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken
