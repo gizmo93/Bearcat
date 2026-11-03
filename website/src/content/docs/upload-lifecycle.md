@@ -133,7 +133,7 @@ In the link crypter configuration, use **Create container for** to choose which 
 
 ![Create container for in the link crypter configuration](images/add-link-crypter-container-dialog.png)
 
-To create releases from existing FileCrypt or Hide.cx folders, see
+To create releases from existing FileCrypt, Hide.cx or ToLink folders, see
 [Import existing link crypter folders](/Bearcat/import-link-crypter-folders/).
 
 For **Release (all hosters as mirrors)**, the password, captcha, container download and Click'n'Load settings

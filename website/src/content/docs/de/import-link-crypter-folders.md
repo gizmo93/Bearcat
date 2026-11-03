@@ -1,6 +1,6 @@
 ---
 title: "Bestehende Linkcrypterordner importieren"
-description: "Releases aus bestehenden FileCrypt- oder Hide.cx-Ordnern anlegen und ihre Links behalten."
+description: "Releases aus bestehenden FileCrypt-, Hide.cx- oder ToLink-Ordnern anlegen und ihre Links behalten."
 ---
 
 Bearcat liest die Ordner deines Linkcrypteraccounts und legt für jeden Releasenamen ein Release an.
@@ -10,6 +10,7 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 
 - **FileCrypt**: Der API-Schlüssel braucht das Recht `LIST`, um deine Ordner aufzulisten.
 - **Hide.cx**
+- **ToLink**: Ein Ordner enthält alle Links in einer Liste. Bearcat bildet daraus pro Hosterdomain einen Mirror.
 
 ## Ablauf
 

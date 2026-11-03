@@ -14,6 +14,22 @@ public interface IToLinkToApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/v2/folders")]
+    Task<ListFolders.ResponseBody> ListFoldersAsync(
+        [Query] string order,
+        [Query] int limit,
+        [Query] int page,
+        [Authorize] string apiKey,
+        CancellationToken cancellationToken
+    );
+
+    [Get("/api/v2/folders/{folder}/details")]
+    Task<GetFolderDetails.ResponseBody> GetFolderDetailsAsync(
+        string folder,
+        [Authorize] string apiKey,
+        CancellationToken cancellationToken
+    );
+
     [Patch("/api/v2/folders/{folder}")]
     Task<EditFolder.ResponseBody> EditFolderAsync(
         string folder,

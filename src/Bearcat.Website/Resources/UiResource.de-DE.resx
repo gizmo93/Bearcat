@@ -1981,7 +1981,7 @@
   <data name="DeleteLinkCrypterImport" xml:space="preserve"><value>Import löschen</value></data>
   <data name="DeleteLinkCrypterImportConfirmation" xml:space="preserve"><value>Import von {0} löschen? Bereits importierte Releases bleiben in Bearcat.</value></data>
   <data name="LinkCrypterImportDeleted" xml:space="preserve"><value>Import gelöscht.</value></data>
-  <data name="NoLinkCrypterRegistrationsWithContainerReading" xml:space="preserve"><value>Keine aktive Crypterregistrierung kann bestehende Ordner lesen. Unterstützte Crypter: FileCrypt, Hide.cx.</value></data>
+  <data name="NoLinkCrypterRegistrationsWithContainerReading" xml:space="preserve"><value>Keine aktive Crypterregistrierung kann bestehende Ordner lesen. Unterstützte Crypter: FileCrypt, Hide.cx, ToLink.</value></data>
   <data name="SelectLinkCrypterRegistration" xml:space="preserve"><value>Crypter auswählen</value></data>
   <data name="ArchiveFilesBasePathForReleasesWithoutLocalFiles" xml:space="preserve"><value>Archivbasisordner für Releases ohne lokale Dateien</value></data>
   <data name="ArchiveFilesBasePathForReleasesWithoutLocalFilesHelp" xml:space="preserve"><value>Optional. Nötig für Releases ohne lokalen Releaseordner: Bearcat stellt ihre Archive dort aus den importierten Mirrors wieder her.</value></data>

@@ -11,7 +11,7 @@ public class LinkCrypterImportBackgroundTask(
 {
     protected override string DisplayName => "Link crypter import";
 
-    protected override TimeSpan DefaultInterval => TimeSpan.FromSeconds(30);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromSeconds(20);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,
