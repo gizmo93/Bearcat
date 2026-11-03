@@ -9,8 +9,10 @@ using Refit;
 
 namespace Bearcat.LinkCrypters.ToLinkTo;
 
-public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
+public class ToLinkTo(IToLinkToApi api) : ILinkCrypterWithContainerReading
 {
+    private const int ListFoldersPageSize = 200;
+
     public string Name => "tolink.to";
 
     public List<string> ConfigurationKeys => [nameof(ToLinkToConfig.ApiKey)];
@@ -127,6 +129,98 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
         }
     }
 
+    public async Task<ListContainersResult> ListContainersAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = linkCrypterConfig.As<ToLinkToConfig>();
+        var containers = new List<ListedContainer>();
+
+        try
+        {
+            var page = 1;
+            int pageCount;
+
+            do
+            {
+                var response = await api.ListFoldersAsync(
+                    order: "ASC",
+                    limit: ListFoldersPageSize,
+                    page: page,
+                    apiKey: config.ApiKey,
+                    cancellationToken: cancellationToken
+                );
+
+                containers.AddRange(
+                    response.Folders.Select(folder => new ListedContainer(
+                        ContainerId: folder.Folder,
+                        ContainerUrl: $"https://tolink.to/f/{folder.Folder}",
+                        ContainerName: folder.Title,
+                        ExternalReference: folder.Folder
+                    ))
+                );
+
+                pageCount = response.Pages;
+                page++;
+            } while (page <= pageCount);
+
+            return new ListContainersResult(
+                IsSuccess: true,
+                Containers: containers,
+                ErrorMessages: []
+            );
+        }
+        catch (Exception ex)
+        {
+            return new ListContainersResult(
+                IsSuccess: false,
+                Containers: [],
+                ErrorMessages: [await GetErrorMessageAsync(ex)]
+            );
+        }
+    }
+
+    public async Task<ReadContainerLinksResult> ReadContainerLinksAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        string containerUrl,
+        string? externalReference,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = linkCrypterConfig.As<ToLinkToConfig>();
+        var folder = !string.IsNullOrWhiteSpace(externalReference)
+            ? externalReference
+            : GetFolderAlias(containerUrl);
+
+        try
+        {
+            var response = await api.GetFolderDetailsAsync(
+                folder: folder,
+                apiKey: config.ApiKey,
+                cancellationToken: cancellationToken
+            );
+
+            return new ReadContainerLinksResult(
+                IsSuccess: true,
+                LinksPerMirrorNumber: GroupLinksPerHostAsMirrors(
+                    response.Links.Select(link => link.Url).ToList()
+                ),
+                HasBackupLinks: false,
+                ErrorMessages: []
+            );
+        }
+        catch (Exception ex)
+        {
+            return new ReadContainerLinksResult(
+                IsSuccess: false,
+                LinksPerMirrorNumber: new Dictionary<int, IReadOnlyList<string>>(),
+                HasBackupLinks: false,
+                ErrorMessages: [await GetErrorMessageAsync(ex)]
+            );
+        }
+    }
+
     public string SerializeConfig(IReadOnlyDictionary<string, string> config)
     {
         return JsonSerializer.Serialize(config);
@@ -185,6 +279,31 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
             ';',
             linksPerMirrorNumber.OrderBy(mirror => mirror.Key).SelectMany(mirror => mirror.Value)
         );
+    }
+
+    private static Dictionary<int, IReadOnlyList<string>> GroupLinksPerHostAsMirrors(
+        IReadOnlyList<string> links
+    )
+    {
+        return links
+            .GroupBy(GetHostWithoutWww, StringComparer.OrdinalIgnoreCase)
+            .Select((linksOfHost, index) => (MirrorNumber: index + 1, Links: linksOfHost.ToList()))
+            .ToDictionary(
+                mirror => mirror.MirrorNumber,
+                IReadOnlyList<string> (mirror) => mirror.Links
+            );
+    }
+
+    private static string GetHostWithoutWww(string link)
+    {
+        if (!Uri.TryCreate(link, UriKind.Absolute, out var uri))
+        {
+            return link;
+        }
+
+        return uri.Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase)
+            ? uri.Host[4..]
+            : uri.Host;
     }
 
     private static async Task<string> GetErrorMessageAsync(Exception exception)

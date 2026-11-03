@@ -135,7 +135,7 @@ In der Linkcrypterkonfiguration wählst du unter **Container erstellen für**, w
 ![Container erstellen für in der Linkcrypterkonfiguration](../images/add-link-crypter-container-dialog.png)
 
 Du kannst auch [bestehende Linkcrypterordner importieren](/Bearcat/de/import-link-crypter-folders/),
-um Releases aus FileCrypt- oder Hide.cx-Ordnern anzulegen.
+um Releases aus FileCrypt-, Hide.cx- oder ToLink-Ordnern anzulegen.
 
 Bei **Release (alle Hoster als Mirrors)** müssen Passwort, Captcha, Containerdownload und Click'n'Load in allen
 Uploadkonfigurationen des Releases gleich sein. Sonst markiert Bearcat den Container als fehlgeschlagen und

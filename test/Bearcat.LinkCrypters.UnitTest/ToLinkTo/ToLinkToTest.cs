@@ -344,6 +344,131 @@ public class ToLinkToTest
     }
 
     [Test]
+    public async Task ListContainersAsync_TwoPages_ReturnsFoldersOfAllPages()
+    {
+        // Arrange
+        httpMessageHandler.Enqueue(request =>
+        {
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://tolink.to/api/v2/folders?order=ASC&limit=200&page=1");
+            request.Headers.Authorization!.ToString().ShouldBe("Bearer api-key");
+
+            return Task.FromResult(
+                CreateJsonResponse(
+                    HttpStatusCode.OK,
+                    """
+                    {"order":"ASC","limit":200,"page":1,"pages":2,"total":2,"folders":[
+                      {"id":"4","folder":"fofirst","title":"First.Release","status":"1","hits":1,"hoster":["rapidgator"]}
+                    ]}
+                    """
+                )
+            );
+        });
+        httpMessageHandler.Enqueue(request =>
+        {
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://tolink.to/api/v2/folders?order=ASC&limit=200&page=2");
+
+            return Task.FromResult(
+                CreateJsonResponse(
+                    HttpStatusCode.OK,
+                    """
+                    {"order":"ASC","limit":200,"page":2,"pages":2,"total":2,"folders":[
+                      {"id":"5","folder":"fosecond","title":"Second.Release","status":"3","hits":0,"hoster":[""]}
+                    ]}
+                    """
+                )
+            );
+        });
+
+        // Act
+        var result = await service.ListContainersAsync(Config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result
+            .Containers.Select(container => container.ContainerName)
+            .ShouldBe(["First.Release", "Second.Release"]);
+        result.Containers[1].ContainerUrl.ShouldBe("https://tolink.to/f/fosecond");
+        result.Containers[1].ExternalReference.ShouldBe("fosecond");
+        httpMessageHandler.PendingRequests.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ReadContainerLinksAsync_FolderHasLinksOfTwoHosters_ReturnsOneMirrorPerHost()
+    {
+        // Arrange
+        httpMessageHandler.Enqueue(request =>
+        {
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://tolink.to/api/v2/folders/fofirst/details");
+            request.Headers.Authorization!.ToString().ShouldBe("Bearer api-key");
+
+            return Task.FromResult(
+                CreateJsonResponse(
+                    HttpStatusCode.OK,
+                    """
+                    {"id":"4","folder":"fofirst","url":"https://tolink.to/f/fofirst","title":"First.Release","status":1,"links":[
+                      {"id":"1","url":"https://freedl.ink/a1","title":"a.part1.rar","status":1,"size":1500,"hits":0,"hoster":"","created":"2026-11-01 12:00:00"},
+                      {"id":"2","url":"https://rapidgator.net/file/b1","title":"a.part1.rar","status":1,"size":1500,"hits":0,"hoster":"rapidgator","created":"2026-11-01 12:00:00"},
+                      {"id":"3","url":"https://www.freedl.ink/a2","title":"a.part2.rar","status":1,"size":1500,"hits":0,"hoster":"","created":"2026-11-01 12:00:00"},
+                      {"id":"4","url":"https://rapidgator.net/file/b2","title":"a.part2.rar","status":1,"size":1500,"hits":0,"hoster":"rapidgator","created":"2026-11-01 12:00:00"}
+                    ]}
+                    """
+                )
+            );
+        });
+
+        // Act
+        var result = await service.ReadContainerLinksAsync(
+            linkCrypterConfig: Config,
+            containerUrl: "https://tolink.to/f/fofirst",
+            externalReference: "fofirst",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.LinksPerMirrorNumber.Count.ShouldBe(2);
+        result
+            .LinksPerMirrorNumber[1]
+            .ShouldBe(["https://freedl.ink/a1", "https://www.freedl.ink/a2"]);
+        result
+            .LinksPerMirrorNumber[2]
+            .ShouldBe(["https://rapidgator.net/file/b1", "https://rapidgator.net/file/b2"]);
+    }
+
+    [Test]
+    public async Task ReadContainerLinksAsync_FolderOfAnotherAccount_ReturnsNotFoundError()
+    {
+        // Arrange
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                    Content = new StringContent("Resource not found"),
+                }
+            )
+        );
+
+        // Act
+        var result = await service.ReadContainerLinksAsync(
+            linkCrypterConfig: Config,
+            containerUrl: "https://tolink.to/f/foforeign",
+            externalReference: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.LinksPerMirrorNumber.ShouldBeEmpty();
+        result.ErrorMessages.Count.ShouldBe(1);
+    }
+
+    [Test]
     public void DeserializeConfig_SerializedConfig_ReturnsToLinkToConfig()
     {
         // Arrange

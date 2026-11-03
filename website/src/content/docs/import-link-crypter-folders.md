@@ -1,6 +1,6 @@
 ---
 title: "Import Existing Link Crypter Folders"
-description: "Create releases from existing FileCrypt or Hide.cx folders and keep their links."
+description: "Create releases from existing FileCrypt, Hide.cx or ToLink folders and keep their links."
 ---
 
 Bearcat reads the folders in your link crypter account and creates a release for each release name.
@@ -10,6 +10,7 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 
 - **FileCrypt**: the API key needs the `LIST` permission to list your folders.
 - **Hide.cx**
+- **ToLink**
 
 ## Steps
 
