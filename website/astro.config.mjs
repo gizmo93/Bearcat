@@ -37,8 +37,8 @@ const redirectToPreferredLocaleScript = `
 	const path = location.pathname;
 	if (!path.startsWith(basePath) && path !== '${base}') return;
 	const browserPrefersGerman = (navigator.languages?.[0] ?? navigator.language ?? '').toLowerCase().startsWith('de');
-	const preferredLocale = readStoredLocale() ?? (browserPrefersGerman ? 'de' : 'en');
 	const currentLocale = isGermanPath(path) ? 'de' : 'en';
+	const preferredLocale = readStoredLocale() ?? (browserPrefersGerman ? 'de' : currentLocale);
 	if (preferredLocale === currentLocale) return;
 
 	const rest = path.slice(basePath.length);
