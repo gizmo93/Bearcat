@@ -9,8 +9,13 @@ public sealed record ForumPostTemplateUploadModel
     [ForumPostTemplateVariable("Upload configuration name.")]
     public required string Name { get; init; }
 
-    [ForumPostTemplateVariable("Hoster registration name.")]
+    [ForumPostTemplateVariable("Hoster name, e.g. Rapidgator.")]
     public required string HosterName { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Hoster account name of the latest upload. Empty when no account is assigned yet."
+    )]
+    public required string HosterRegistrationName { get; init; }
 
     [ForumPostTemplateVariable(
         "True when the upload is a video upload (main video file on a video hoster instead of archive files)."

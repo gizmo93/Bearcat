@@ -112,7 +112,10 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
                 && u.UploadState == UploadState.Completed
-                && (u.UploadConfig.HosterAccountPoolId != null || u.HosterRegistration!.IsActive)
+                && (
+                    u.UploadConfig.HosterAccountPoolId != null
+                    || u.UploadConfig.HosterRegistration!.IsActive
+                )
                 && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
                 && u.UploadConfig.Release.QualityGateState != QualityGateState.Failed
                 && u.UploadedFiles.Any()

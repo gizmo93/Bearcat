@@ -1836,7 +1836,7 @@
   <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (kein aktiver Account)</value></data>
   <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (Account noch nicht zugewiesen)</value></data>
   <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil noch {1} Uploadkonfigurationen und {2} Uploadkonfigurationsvorlagen ihn verwenden.</value></data>
-  <data name="HosterRegistrationStillHoldsHosterAccountPoolUploads" xml:space="preserve"><value>{0} hält noch {1} Uploads von Accountpools und kann nicht gelöscht werden. Entferne den Account aus den Pools und deaktiviere ihn stattdessen.</value></data>
+  <data name="HosterRegistrationStillHoldsLastUploadsOfOtherUploadConfigs" xml:space="preserve"><value>{0} hat noch {1} Uploads, die die letzten Uploads von Uploadkonfigurationen mit einem anderen Account oder Accountpool sind, und kann nicht gelöscht werden. Deaktiviere den Account stattdessen und entferne ihn aus seinen Accountpools.</value></data>
   <data name="StartUploadsNow" xml:space="preserve"><value>Uploads jetzt starten</value></data>
   <data name="StartUploadsNowDescription" xml:space="preserve"><value>Erstellt die initialen Uploads sofort, statt auf den Cooldown für initiale Uploads zu warten.</value></data>
   <data name="InitialUploadsCreatedOne" xml:space="preserve"><value>Initialer Upload erstellt. Das Packen startet in Kürze.</value></data>

@@ -36,6 +36,7 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
         {
             Name = upload.UploadConfigName,
             HosterName = upload.HosterName,
+            HosterRegistrationName = upload.HosterRegistrationName,
             IsVideoUpload = upload.IsVideoUpload,
             UploadedAt = upload.UploadedAt,
             ArchiveFormat = upload.ArchiveFormat ?? string.Empty,

@@ -621,8 +621,8 @@ public class ReleaseReadRepository(
                 UploadConfigId = c.Id,
                 UploadConfigName = c.Name,
                 c.UploadSource,
-                HosterRegistrationName = c.HosterRegistrationId != null
-                    ? c.HosterRegistration!.Name
+                HosterRegistrationHosterClassName = c.HosterRegistrationId != null
+                    ? c.HosterRegistration!.HosterClassName
                     : null,
                 HosterAccountPoolHosterClassName = c.HosterAccountPoolId != null
                     ? c.HosterAccountPool!.HosterClassName
@@ -652,6 +652,12 @@ public class ReleaseReadRepository(
                         u.UploadConfigId,
                         UploadId = u.Id,
                         u.UploadedAt,
+                        HosterRegistrationName = u.HosterRegistrationId != null
+                            ? u.HosterRegistration!.Name
+                            : null,
+                        HosterRegistrationHosterClassName = u.HosterRegistrationId != null
+                            ? u.HosterRegistration!.HosterClassName
+                            : null,
                     })
                     .First()
             )
@@ -817,10 +823,15 @@ public class ReleaseReadRepository(
                     })
                     .ToList();
 
+                var hosterClassName =
+                    upload?.HosterRegistrationHosterClassName
+                    ?? config.HosterRegistrationHosterClassName
+                    ?? config.HosterAccountPoolHosterClassName!;
+
                 return new ReleaseForumPostUploadReadModel(
                     UploadConfigName: config.UploadConfigName,
-                    HosterName: config.HosterRegistrationName
-                        ?? hosterFactory.GetByName(config.HosterAccountPoolHosterClassName!).Name,
+                    HosterName: hosterFactory.GetByName(hosterClassName).Name,
+                    HosterRegistrationName: upload?.HosterRegistrationName ?? string.Empty,
                     IsVideoUpload: config.UploadSource == UploadSource.VideoFiles,
                     ArchiveFormat: config.ArchiverName is null
                         ? null

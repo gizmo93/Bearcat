@@ -209,6 +209,34 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task UpdateAsync_HosterRegistrationChanged_ClearsHosterFolderOfUploadsNotStartedOnHoster()
+    {
+        // Arrange
+        var firstSeed = await AddUploadConfigDependenciesAsync();
+        var uploadConfig = await AddUploadConfigAsync(firstSeed);
+        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
+        var pendingUpload = await AddUploadAsync(uploadConfig, UploadState.Pending);
+        pendingUpload.HosterFolderId = "folder-on-old-hoster";
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.UpdateAsync(
+            uploadConfig.Id,
+            uploadConfig.Name,
+            UploadTarget.ForHosterRegistration(secondSeed.HosterRegistrationId),
+            firstSeed.ArchiveConfigId,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var upload = await DbContext.Uploads.SingleAsync();
+        upload.HosterFolderId.ShouldBeNull();
+        upload.HosterRegistrationId.ShouldBe(secondSeed.HosterRegistrationId);
+    }
+
+    [Test]
     public async Task UpdateAsync_HosterRegistrationChanged_KeepsHosterRegistrationOfUploadsOfOtherUploadConfigs()
     {
         // Arrange

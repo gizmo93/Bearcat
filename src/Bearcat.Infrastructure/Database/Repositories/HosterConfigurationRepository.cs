@@ -106,7 +106,7 @@ public class HosterConfigurationRepository(
         );
     }
 
-    public async Task<int> GetHosterAccountPoolUploadCountAsync(
+    public async Task<int> GetUploadCountBlockingRegistrationDeletionAsync(
         int id,
         CancellationToken cancellationToken = default
     )
@@ -114,7 +114,10 @@ public class HosterConfigurationRepository(
         return await dbRead.Uploads.CountAsync(
             upload =>
                 upload.HosterRegistrationId == id
-                && upload.UploadConfig.HosterAccountPoolId != null,
+                && upload.UploadConfig.HosterRegistrationId != id
+                && !upload.UploadConfig.Uploads.Any(otherUpload =>
+                    otherUpload.HosterRegistrationId != id
+                ),
             cancellationToken
         );
     }
