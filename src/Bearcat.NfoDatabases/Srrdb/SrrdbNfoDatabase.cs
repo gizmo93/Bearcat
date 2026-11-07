@@ -18,6 +18,8 @@ public partial class SrrdbNfoDatabase(SrrdbClient client) : INfoDatabase, INfoPr
 
     public int ResolutionPriority => 100;
 
+    public int NfoResolutionPriority => 100;
+
     public IReadOnlyList<string> ConfigurationKeys => [];
 
     public async Task<ReleaseInfo?> GetReleaseInfoAsync(
