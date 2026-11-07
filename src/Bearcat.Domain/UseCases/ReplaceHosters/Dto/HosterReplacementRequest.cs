@@ -5,5 +5,6 @@ namespace Bearcat.Domain.UseCases.ReplaceHosters.Dto;
 public sealed record HosterReplacementRequest(
     IReadOnlyList<UploadTarget> SourceUploadTargets,
     UploadTarget ReplacementUploadTarget,
-    bool MarkSourceHosterAsDead = false
+    bool MarkSourceHosterAsDead = false,
+    bool DeleteDuplicateUploadConfigs = false
 );

@@ -48,7 +48,7 @@ public class HosterReplacementService(
         );
 
         logger.LogInformation(
-            "Replaced hoster {SourceHosterClassName} with upload target {ReplacementUploadTargetName}: {UploadConfigCount} upload configs, {UploadConfigTemplateCount} upload config templates, {MovedUploadCount} unstarted uploads, {DeactivatedAccountCount} accounts deactivated, {UploadCountMarkedOffline} uploads marked offline, {SkippedUploadConfigCount} upload configs and {SkippedUploadConfigTemplateCount} upload config templates skipped",
+            "Replaced hoster {SourceHosterClassName} with upload target {ReplacementUploadTargetName}: {UploadConfigCount} upload configs, {UploadConfigTemplateCount} upload config templates, {MovedUploadCount} unstarted uploads, {DeactivatedAccountCount} accounts deactivated, {UploadCountMarkedOffline} uploads marked offline, {SkippedUploadConfigCount} upload configs and {SkippedUploadConfigTemplateCount} upload config templates skipped, {DeletedUploadConfigCount} upload configs and {DeletedUploadConfigTemplateCount} upload config templates deleted",
             plan.SourceHosterClassName,
             plan.Changes.ReplacementUploadTargetName,
             preview.UploadConfigCount,
@@ -57,7 +57,9 @@ public class HosterReplacementService(
             appliedChangeCounts.DeactivatedAccountCount,
             appliedChangeCounts.UploadCountMarkedOffline,
             preview.SkippedUploadConfigs.Count,
-            preview.SkippedUploadConfigTemplates.Count
+            preview.SkippedUploadConfigTemplates.Count,
+            preview.DeletedUploadConfigs.Count,
+            preview.DeletedUploadConfigTemplates.Count
         );
 
         return preview with
@@ -115,7 +117,8 @@ public class HosterReplacementService(
             uploadConfigRows: uploadConfigRows,
             sourceUploadConfigRows: sourceUploadConfigRows,
             sourceNamesByUploadTarget: sourceNamesByUploadTarget,
-            replacementHosterClassName: replacement.HosterClassName
+            replacementHosterClassName: replacement.HosterClassName,
+            deleteDuplicateUploadConfigs: request.DeleteDuplicateUploadConfigs
         );
         var skippedUploadConfigTemplateIds = GetSkippedUploadConfigTemplateIds(
             uploadConfigTemplateRows: uploadConfigTemplateRows,
@@ -123,12 +126,30 @@ public class HosterReplacementService(
             replacementHosterClassName: replacement.HosterClassName
         );
 
-        var skippedUploadConfigRows = sourceUploadConfigRows
+        var skippedOrDeletedUploadConfigRows = sourceUploadConfigRows
             .Where(row => skipReasonsByUploadConfigId.ContainsKey(row.Id))
             .ToList();
-        var skippedUploadConfigTemplateRows = sourceUploadConfigTemplateRows
+        var uploadConfigRowsToDelete = request.DeleteDuplicateUploadConfigs
+            ? skippedOrDeletedUploadConfigRows
+                .Where(row =>
+                    skipReasonsByUploadConfigId[row.Id]
+                    == HosterReplacementSkipReason.DuplicateOnReplacementHoster
+                )
+                .ToList()
+            : [];
+        var skippedUploadConfigRows = skippedOrDeletedUploadConfigRows
+            .Except(uploadConfigRowsToDelete)
+            .ToList();
+
+        var duplicateUploadConfigTemplateRows = sourceUploadConfigTemplateRows
             .Where(row => skippedUploadConfigTemplateIds.Contains(row.Id))
             .ToList();
+        var uploadConfigTemplateRowsToDelete = request.DeleteDuplicateUploadConfigs
+            ? duplicateUploadConfigTemplateRows
+            : [];
+        var skippedUploadConfigTemplateRows = request.DeleteDuplicateUploadConfigs
+            ? []
+            : duplicateUploadConfigTemplateRows;
 
         return new HosterReplacementPlan(
             SourceHosterClassName: sources.First().HosterClassName,
@@ -141,6 +162,10 @@ public class HosterReplacementService(
                     .ToList(),
                 sourceNamesByUploadTarget: sourceNamesByUploadTarget,
                 replacement: replacement,
+                uploadConfigIdsToDelete: uploadConfigRowsToDelete.Select(row => row.Id).ToList(),
+                uploadConfigTemplateIdsToDelete: uploadConfigTemplateRowsToDelete
+                    .Select(row => row.Id)
+                    .ToList(),
                 hosterRegistrationIdsToDeactivate: request.MarkSourceHosterAsDead
                     ? await repository.GetHosterRegistrationIdsOfUploadTargetsAsync(
                         request.SourceUploadTargets,
@@ -149,23 +174,20 @@ public class HosterReplacementService(
                     : []
             ),
             SkippedUploadConfigs: skippedUploadConfigRows
-                .Select(row => new SkippedUploadConfigReadModel(
-                    UploadConfigId: row.Id,
-                    ReleaseId: row.ReleaseId,
-                    ReleaseName: row.ReleaseName,
-                    UploadConfigName: row.Name,
-                    SkipReason: skipReasonsByUploadConfigId[row.Id]
-                ))
+                .Select(row => ToSkippedUploadConfigReadModel(row, skipReasonsByUploadConfigId))
                 .ToList(),
             SkippedUploadConfigTemplates: skippedUploadConfigTemplateRows
-                .Select(row => new SkippedUploadConfigTemplateReadModel(
-                    UploadConfigTemplateId: row.Id,
-                    ReleaseTemplateId: row.ReleaseTemplateId,
-                    ReleaseTemplateName: row.ReleaseTemplateName,
-                    UploadConfigTemplateDisplayName: row.Name
-                        ?? sourceNamesByUploadTarget[row.UploadTarget],
-                    SkipReason: HosterReplacementSkipReason.DuplicateOnReplacementHoster
-                ))
+                .Select(row =>
+                    ToSkippedUploadConfigTemplateReadModel(row, sourceNamesByUploadTarget)
+                )
+                .ToList(),
+            DeletedUploadConfigs: uploadConfigRowsToDelete
+                .Select(row => ToSkippedUploadConfigReadModel(row, skipReasonsByUploadConfigId))
+                .ToList(),
+            DeletedUploadConfigTemplates: uploadConfigTemplateRowsToDelete
+                .Select(row =>
+                    ToSkippedUploadConfigTemplateReadModel(row, sourceNamesByUploadTarget)
+                )
                 .ToList(),
             SourcePoolsBecomingUnused: GetSourcePoolsWithoutSkippedRow(
                 sources: sources,
@@ -212,11 +234,14 @@ public class HosterReplacementService(
                 cancellationToken
             ),
             UploadCountToMarkOffline: await repository.GetUploadCountToMarkOfflineAsync(
-                hosterRegistrationIdsToDeactivate,
-                cancellationToken
+                hosterRegistrationIds: hosterRegistrationIdsToDeactivate,
+                uploadConfigIdsToDelete: plan.Changes.UploadConfigIdsToDelete,
+                cancellationToken: cancellationToken
             ),
             SkippedUploadConfigs: plan.SkippedUploadConfigs,
             SkippedUploadConfigTemplates: plan.SkippedUploadConfigTemplates,
+            DeletedUploadConfigs: plan.DeletedUploadConfigs,
+            DeletedUploadConfigTemplates: plan.DeletedUploadConfigTemplates,
             SourceAccountsInUnselectedPools: await repository.GetSourceAccountsInUnselectedPoolsAsync(
                 sourceUploadTargets: request.SourceUploadTargets,
                 replacementUploadTarget: request.ReplacementUploadTarget,
@@ -308,7 +333,8 @@ public class HosterReplacementService(
         IReadOnlyList<HosterReplacementUploadConfigRow> uploadConfigRows,
         IReadOnlyList<HosterReplacementUploadConfigRow> sourceUploadConfigRows,
         IReadOnlyDictionary<UploadTarget, string> sourceNamesByUploadTarget,
-        string replacementHosterClassName
+        string replacementHosterClassName,
+        bool deleteDuplicateUploadConfigs
     )
     {
         var duplicateUploadConfigIds = GetIdsOfSourceRowsToSkipAsDuplicates(
@@ -336,8 +362,10 @@ public class HosterReplacementService(
         {
             if (duplicateUploadConfigIds.Contains(row.Id))
             {
-                skipReasonsByUploadConfigId[row.Id] =
-                    HosterReplacementSkipReason.DuplicateOnReplacementHoster;
+                skipReasonsByUploadConfigId[row.Id] = GetSkipReasonOfDuplicateUploadConfig(
+                    row,
+                    deleteDuplicateUploadConfigs
+                );
             }
             else if (partiallySkippedCollectionUploadSlotIds.Contains(row.CollectionUploadSlotId))
             {
@@ -347,6 +375,29 @@ public class HosterReplacementService(
         }
 
         return skipReasonsByUploadConfigId;
+    }
+
+    private static HosterReplacementSkipReason GetSkipReasonOfDuplicateUploadConfig(
+        HosterReplacementUploadConfigRow row,
+        bool deleteDuplicateUploadConfigs
+    )
+    {
+        if (!deleteDuplicateUploadConfigs)
+        {
+            return HosterReplacementSkipReason.DuplicateOnReplacementHoster;
+        }
+
+        if (row.CollectionUploadSlotId is not null)
+        {
+            return HosterReplacementSkipReason.DeletionBlockedByCollectionUploadSlot;
+        }
+
+        if (row.HasRunningUpload)
+        {
+            return HosterReplacementSkipReason.DeletionBlockedByRunningUpload;
+        }
+
+        return HosterReplacementSkipReason.DuplicateOnReplacementHoster;
     }
 
     private static HashSet<int> GetSkippedUploadConfigTemplateIds(
@@ -401,6 +452,8 @@ public class HosterReplacementService(
         IReadOnlyList<HosterReplacementUploadConfigTemplateRow> replacedUploadConfigTemplateRows,
         IReadOnlyDictionary<UploadTarget, string> sourceNamesByUploadTarget,
         HosterReplacementUploadTargetReadModel replacement,
+        IReadOnlyList<int> uploadConfigIdsToDelete,
+        IReadOnlyList<int> uploadConfigTemplateIdsToDelete,
         IReadOnlyList<int> hosterRegistrationIdsToDeactivate
     )
     {
@@ -436,8 +489,39 @@ public class HosterReplacementService(
                     .Where(row => row.PremiumOnlyDownload)
                     .Select(row => row.Id)
                     .ToList(),
+            UploadConfigIdsToDelete: uploadConfigIdsToDelete,
+            UploadConfigTemplateIdsToDelete: uploadConfigTemplateIdsToDelete,
             HosterRegistrationIdsToDeactivate: hosterRegistrationIdsToDeactivate,
             LocalNow: timeProvider.GetLocalNow()
+        );
+    }
+
+    private static SkippedUploadConfigReadModel ToSkippedUploadConfigReadModel(
+        HosterReplacementUploadConfigRow row,
+        IReadOnlyDictionary<int, HosterReplacementSkipReason> skipReasonsByUploadConfigId
+    )
+    {
+        return new SkippedUploadConfigReadModel(
+            UploadConfigId: row.Id,
+            ReleaseId: row.ReleaseId,
+            ReleaseName: row.ReleaseName,
+            UploadConfigName: row.Name,
+            SkipReason: skipReasonsByUploadConfigId[row.Id]
+        );
+    }
+
+    private static SkippedUploadConfigTemplateReadModel ToSkippedUploadConfigTemplateReadModel(
+        HosterReplacementUploadConfigTemplateRow row,
+        IReadOnlyDictionary<UploadTarget, string> sourceNamesByUploadTarget
+    )
+    {
+        return new SkippedUploadConfigTemplateReadModel(
+            UploadConfigTemplateId: row.Id,
+            ReleaseTemplateId: row.ReleaseTemplateId,
+            ReleaseTemplateName: row.ReleaseTemplateName,
+            UploadConfigTemplateDisplayName: row.Name
+                ?? sourceNamesByUploadTarget[row.UploadTarget],
+            SkipReason: HosterReplacementSkipReason.DuplicateOnReplacementHoster
         );
     }
 
@@ -480,6 +564,8 @@ public class HosterReplacementService(
         HosterReplacementChanges Changes,
         IReadOnlyList<SkippedUploadConfigReadModel> SkippedUploadConfigs,
         IReadOnlyList<SkippedUploadConfigTemplateReadModel> SkippedUploadConfigTemplates,
+        IReadOnlyList<SkippedUploadConfigReadModel> DeletedUploadConfigs,
+        IReadOnlyList<SkippedUploadConfigTemplateReadModel> DeletedUploadConfigTemplates,
         IReadOnlyList<SourcePoolBecomingUnusedReadModel> SourcePoolsBecomingUnused
     );
 }

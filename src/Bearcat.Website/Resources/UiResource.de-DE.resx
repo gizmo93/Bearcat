@@ -2052,22 +2052,32 @@
   <data name="ReplaceHostersNoReplacementTargets" xml:space="preserve"><value>Kein nutzbarer Account oder Pool vorhanden.</value></data>
   <data name="ReplaceHostersHosterIsDead" xml:space="preserve"><value>Hoster ist tot</value></data>
   <data name="ReplaceHostersHosterIsDeadDescription" xml:space="preserve"><value>Deaktiviert die ausgewählten Accounts und markiert ihre Uploads als offline, damit der automatische Reupload startet.</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigs" xml:space="preserve"><value>Doppelte Konfigurationen löschen</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigsDescription" xml:space="preserve"><value>Löscht übersprungene Konfigurationen, deren Archivkonfiguration bereits beim Ersatzhoster liegt, samt ihren Uploads in Bearcat, während Container bei Linkcryptern bestehen bleiben.</value></data>
   <data name="ReplaceHostersUnstartedUploads" xml:space="preserve"><value>Verschobene ungestartete Uploads</value></data>
   <data name="ReplaceHostersAccountsToDeactivate" xml:space="preserve"><value>Zu deaktivierende Accounts</value></data>
   <data name="ReplaceHostersUploadsToMarkOffline" xml:space="preserve"><value>Als offline zu markierende Uploads</value></data>
+  <data name="ReplaceHostersConfigurationsToDelete" xml:space="preserve"><value>Zu löschende Konfigurationen</value></data>
   <data name="ReplaceHostersUploadsStayingOnSourceHoster" xml:space="preserve"><value>{0} laufende Uploads bleiben beim alten Hoster. Brich sie ab, falls sie nicht fertig werden.</value></data>
   <data name="ReplaceHostersUploadConfigsWithoutArchiveSource" xml:space="preserve"><value>{0} Uploadkonfigurationen haben keine Quelle für einen neuen Upload mehr: kein Archiv, kein Releaseordner und kein Onlinemirror bei einem anderen Hoster.</value></data>
   <data name="ReplaceHostersSkippedUploadConfigs" xml:space="preserve"><value>Übersprungene Uploadkonfigurationen ({0})</value></data>
   <data name="ReplaceHostersSkippedUploadConfigsInTemplates" xml:space="preserve"><value>Übersprungene Uploadkonfigurationen in Vorlagen ({0})</value></data>
+  <data name="ReplaceHostersDeletedUploadConfigs" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen ({0})</value></data>
+  <data name="ReplaceHostersDeletedUploadConfigsInTemplates" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen in Vorlagen ({0})</value></data>
   <data name="ReplaceHostersSkipReason" xml:space="preserve"><value>Grund</value></data>
   <data name="ReplaceHostersAndMore" xml:space="preserve"><value>und {0} weitere</value></data>
   <data name="HosterReplacementSkipReason.DuplicateOnReplacementHoster" xml:space="preserve"><value>Diese Archivkonfiguration liegt bereits beim Ersatzhoster</value></data>
   <data name="HosterReplacementSkipReason.CollectionUploadSlotPartiallySkipped" xml:space="preserve"><value>Ein anderes Mitglied des Collectioncontainers wurde übersprungen</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByCollectionUploadSlot" xml:space="preserve"><value>Gehört zu einem Collectioncontainer und wird nicht gelöscht</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByRunningUpload" xml:space="preserve"><value>Hat einen laufenden Upload und wird nicht gelöscht</value></data>
   <data name="ReplaceHostersAccountInOtherPool" xml:space="preserve"><value>{0} ist auch Mitglied von Pool {1}, der nicht ersetzt wird.</value></data>
   <data name="ReplaceHostersPoolBecomesUnused" xml:space="preserve"><value>Pool {0} wird danach nicht mehr verwendet und kann gelöscht werden.</value></data>
   <data name="ReplaceHostersExecute" xml:space="preserve"><value>Hoster ersetzen</value></data>
-  <data name="ReplaceHostersConfirmation" xml:space="preserve"><value>{0} Uploadkonfigurationen, {1} Uploadkonfigurationen in Vorlagen und {2} ungestartete Uploads wechseln zu {3}. Das lässt sich nicht automatisch rückgängig machen.</value></data>
-  <data name="ReplaceHostersConfirmationWithDeadHoster" xml:space="preserve"><value>{0} Uploadkonfigurationen, {1} Uploadkonfigurationen in Vorlagen und {2} ungestartete Uploads wechseln zu {3}. Zu deaktivierende Accounts: {4}. Als offline zu markierende Uploads: {5}. Das lässt sich nicht automatisch rückgängig machen.</value></data>
+  <data name="ReplaceHostersConfirmation" xml:space="preserve"><value>{0} Uploadkonfigurationen, {1} Uploadkonfigurationen in Vorlagen und {2} ungestartete Uploads wechseln zu {3}.</value></data>
+  <data name="ReplaceHostersConfirmationDeadHoster" xml:space="preserve"><value>Zu deaktivierende Accounts: {0}. Als offline zu markierende Uploads: {1}.</value></data>
+  <data name="ReplaceHostersConfirmationDeletedUploadConfigs" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen: {0}. Zu löschende Uploadkonfigurationen in Vorlagen: {1}.</value></data>
+  <data name="ReplaceHostersCannotBeUndone" xml:space="preserve"><value>Das lässt sich nicht automatisch rückgängig machen.</value></data>
   <data name="ReplaceHostersExecuted" xml:space="preserve"><value>Ersetzt: {0} Uploadkonfigurationen, {1} in Vorlagen, {2} ungestartete Uploads.</value></data>
-  <data name="ReplaceHostersExecutedWithDeadHoster" xml:space="preserve"><value>Ersetzt: {0} Uploadkonfigurationen, {1} in Vorlagen, {2} ungestartete Uploads. Deaktivierte Accounts: {3}. Als offline markierte Uploads: {4}.</value></data>
+  <data name="ReplaceHostersExecutedDeadHoster" xml:space="preserve"><value>Deaktivierte Accounts: {0}. Als offline markierte Uploads: {1}.</value></data>
+  <data name="ReplaceHostersExecutedDeletedUploadConfigs" xml:space="preserve"><value>Gelöschte Uploadkonfigurationen: {0}. Gelöschte Uploadkonfigurationen in Vorlagen: {1}.</value></data>
 </root>

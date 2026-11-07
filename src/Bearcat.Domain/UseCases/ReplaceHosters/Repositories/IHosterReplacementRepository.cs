@@ -59,6 +59,7 @@ public interface IHosterReplacementRepository
 
     Task<int> GetUploadCountToMarkOfflineAsync(
         IReadOnlyList<int> hosterRegistrationIds,
+        IReadOnlyList<int> uploadConfigIdsToDelete,
         CancellationToken cancellationToken
     );
 

@@ -177,7 +177,11 @@ public class HosterReplacementRepository(
                 HosterClassName: uploadConfig.HosterAccountPoolId == null
                     ? uploadConfig.HosterRegistration!.HosterClassName
                     : uploadConfig.HosterAccountPool!.HosterClassName,
-                PremiumOnlyDownload: uploadConfig.PremiumOnlyDownload
+                PremiumOnlyDownload: uploadConfig.PremiumOnlyDownload,
+                HasRunningUpload: uploadConfig.Uploads.Any(upload =>
+                    upload.UploadState == UploadState.Uploading
+                    || upload.UploadState == UploadState.CancellationRequested
+                )
             ))
             .ToListAsync(cancellationToken);
     }
@@ -308,16 +312,28 @@ public class HosterReplacementRepository(
 
     public async Task<int> GetUploadCountToMarkOfflineAsync(
         IReadOnlyList<int> hosterRegistrationIds,
+        IReadOnlyList<int> uploadConfigIdsToDelete,
         CancellationToken cancellationToken
     )
     {
-        return await dbRead
+        var uploadsToMarkOffline = dbRead
             .Uploads.Where(upload =>
                 upload.HosterRegistrationId != null
                 && hosterRegistrationIds.Contains(upload.HosterRegistrationId.Value)
             )
-            .Where(UploadCanBeMarkedOffline)
-            .CountAsync(cancellationToken);
+            .Where(UploadCanBeMarkedOffline);
+
+        var uploadCount = await uploadsToMarkOffline.CountAsync(cancellationToken);
+
+        foreach (var uploadConfigIdChunk in uploadConfigIdsToDelete.Chunk(MaximumIdsPerQuery))
+        {
+            uploadCount -= await uploadsToMarkOffline.CountAsync(
+                upload => uploadConfigIdChunk.Contains(upload.UploadConfigId),
+                cancellationToken
+            );
+        }
+
+        return uploadCount;
     }
 
     public async Task<
@@ -359,6 +375,11 @@ public class HosterReplacementRepository(
             cancellationToken
         );
 
+        await DeleteUploadConfigsAsync(changes.UploadConfigIdsToDelete, cancellationToken);
+        await DeleteUploadConfigTemplatesAsync(
+            changes.UploadConfigTemplateIdsToDelete,
+            cancellationToken
+        );
         await ApplyChangesToUploadConfigsAsync(changes, cancellationToken);
         await ApplyChangesToUploadConfigTemplatesAsync(changes, cancellationToken);
         var movedUploadCount = await MoveUnstartedUploadsToReplacementAsync(
@@ -381,6 +402,38 @@ public class HosterReplacementRepository(
             DeactivatedAccountCount: deactivatedAccountCount,
             UploadCountMarkedOffline: uploadCountMarkedOffline
         );
+    }
+
+    private async Task DeleteUploadConfigsAsync(
+        IReadOnlyList<int> uploadConfigIds,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var uploadConfigIdChunk in uploadConfigIds.Chunk(MaximumIdsPerQuery))
+        {
+            var uploadConfigs = await dbWrite
+                .UploadConfigs.Where(uploadConfig => uploadConfigIdChunk.Contains(uploadConfig.Id))
+                .ToListAsync(cancellationToken);
+
+            dbWrite.UploadConfigs.RemoveRange(uploadConfigs);
+            await dbWrite.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task DeleteUploadConfigTemplatesAsync(
+        IReadOnlyList<int> uploadConfigTemplateIds,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var templateIdChunk in uploadConfigTemplateIds.Chunk(MaximumIdsPerQuery))
+        {
+            var templates = await dbWrite
+                .UploadConfigTemplates.Where(template => templateIdChunk.Contains(template.Id))
+                .ToListAsync(cancellationToken);
+
+            dbWrite.UploadConfigTemplates.RemoveRange(templates);
+            await dbWrite.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private async Task ApplyChangesToUploadConfigsAsync(

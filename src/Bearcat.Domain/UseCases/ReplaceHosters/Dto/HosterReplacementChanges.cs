@@ -12,6 +12,8 @@ public sealed record HosterReplacementChanges(
     IReadOnlyList<int> ReplacedUploadConfigTemplateIds,
     IReadOnlyList<int> RenamedUploadConfigTemplateIds,
     IReadOnlyList<int> UploadConfigTemplateIdsToResetPremiumOnlyDownload,
+    IReadOnlyList<int> UploadConfigIdsToDelete,
+    IReadOnlyList<int> UploadConfigTemplateIdsToDelete,
     IReadOnlyList<int> HosterRegistrationIdsToDeactivate,
     DateTime LocalNow
 );

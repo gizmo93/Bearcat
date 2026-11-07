@@ -6,11 +6,12 @@
         (L["ReplaceHostersUnstartedUploads"], Preview.UnstartedUploadCount),
         (L["ReplaceHostersAccountsToDeactivate"], Preview.AccountCountToDeactivate),
         (L["ReplaceHostersUploadsToMarkOffline"], Preview.UploadCountToMarkOffline),
+        (L["ReplaceHostersConfigurationsToDelete"], Preview.DeletedUploadConfigs.Count + Preview.DeletedUploadConfigTemplates.Count),
     };
 }
 
 <div class="space-y-4">
-    <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         @foreach (var (label, count) in counts)
         {
             <div class="rounded-md border border-border/70 px-3 py-2">
@@ -38,78 +39,28 @@
 
     @if (Preview.SkippedUploadConfigs.Count > 0)
     {
-        <div class="space-y-2">
-            <h3 class="text-sm font-semibold">@L["ReplaceHostersSkippedUploadConfigs", Preview.SkippedUploadConfigs.Count]</h3>
-            <div class="bearcat-config-list">
-                <div class="@($"bearcat-config-header {SkippedRowGridClass}")">
-                    <span>@L["Release"]</span>
-                    <span>@L["ReplaceHostersUploadConfig"]</span>
-                    <span>@L["ReplaceHostersSkipReason"]</span>
-                </div>
-                @foreach (var skippedUploadConfig in Preview.SkippedUploadConfigs.Take(MaximumRenderedSkippedRows))
-                {
-                    <div class="bearcat-config-item" @key="skippedUploadConfig.UploadConfigId">
-                        <div class="@($"bearcat-config-row {SkippedRowGridClass}")">
-                            <div class="min-w-0">
-                                <a class="block truncate text-sm text-primary hover:underline"
-                                   href="@($"/releases/{skippedUploadConfig.ReleaseId}")"
-                                   title="@skippedUploadConfig.ReleaseName">@skippedUploadConfig.ReleaseName</a>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["ReplaceHostersUploadConfig"]</p>
-                                <p class="truncate text-sm" title="@skippedUploadConfig.UploadConfigName">@skippedUploadConfig.UploadConfigName</p>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["ReplaceHostersSkipReason"]</p>
-                                <p class="text-sm text-muted-foreground">@L.Localize(skippedUploadConfig.SkipReason)</p>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-            @if (Preview.SkippedUploadConfigs.Count > MaximumRenderedSkippedRows)
-            {
-                <p class="text-xs text-muted-foreground">@L["ReplaceHostersAndMore", Preview.SkippedUploadConfigs.Count - MaximumRenderedSkippedRows]</p>
-            }
-        </div>
+        <SkippedUploadConfigList Heading="@L["ReplaceHostersSkippedUploadConfigs", Preview.SkippedUploadConfigs.Count]"
+                                 UploadConfigs="Preview.SkippedUploadConfigs" />
     }
 
     @if (Preview.SkippedUploadConfigTemplates.Count > 0)
     {
-        <div class="space-y-2">
-            <h3 class="text-sm font-semibold">@L["ReplaceHostersSkippedUploadConfigsInTemplates", Preview.SkippedUploadConfigTemplates.Count]</h3>
-            <div class="bearcat-config-list">
-                <div class="@($"bearcat-config-header {SkippedRowGridClass}")">
-                    <span>@L["ReleaseTemplate"]</span>
-                    <span>@L["ReplaceHostersUploadConfig"]</span>
-                    <span>@L["ReplaceHostersSkipReason"]</span>
-                </div>
-                @foreach (var skippedTemplate in Preview.SkippedUploadConfigTemplates.Take(MaximumRenderedSkippedRows))
-                {
-                    <div class="bearcat-config-item" @key="skippedTemplate.UploadConfigTemplateId">
-                        <div class="@($"bearcat-config-row {SkippedRowGridClass}")">
-                            <div class="min-w-0">
-                                <a class="block truncate text-sm text-primary hover:underline"
-                                   href="@($"/release-templates/{skippedTemplate.ReleaseTemplateId}")"
-                                   title="@skippedTemplate.ReleaseTemplateName">@skippedTemplate.ReleaseTemplateName</a>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["ReplaceHostersUploadConfig"]</p>
-                                <p class="truncate text-sm" title="@skippedTemplate.UploadConfigTemplateDisplayName">@skippedTemplate.UploadConfigTemplateDisplayName</p>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["ReplaceHostersSkipReason"]</p>
-                                <p class="text-sm text-muted-foreground">@L.Localize(skippedTemplate.SkipReason)</p>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-            @if (Preview.SkippedUploadConfigTemplates.Count > MaximumRenderedSkippedRows)
-            {
-                <p class="text-xs text-muted-foreground">@L["ReplaceHostersAndMore", Preview.SkippedUploadConfigTemplates.Count - MaximumRenderedSkippedRows]</p>
-            }
-        </div>
+        <SkippedUploadConfigTemplateList Heading="@L["ReplaceHostersSkippedUploadConfigsInTemplates", Preview.SkippedUploadConfigTemplates.Count]"
+                                         UploadConfigTemplates="Preview.SkippedUploadConfigTemplates" />
+    }
+
+    @if (Preview.DeletedUploadConfigs.Count > 0)
+    {
+        <SkippedUploadConfigList Heading="@L["ReplaceHostersDeletedUploadConfigs", Preview.DeletedUploadConfigs.Count]"
+                                 UploadConfigs="Preview.DeletedUploadConfigs"
+                                 IsDeletion="true" />
+    }
+
+    @if (Preview.DeletedUploadConfigTemplates.Count > 0)
+    {
+        <SkippedUploadConfigTemplateList Heading="@L["ReplaceHostersDeletedUploadConfigsInTemplates", Preview.DeletedUploadConfigTemplates.Count]"
+                                         UploadConfigTemplates="Preview.DeletedUploadConfigTemplates"
+                                         IsDeletion="true" />
     }
 
     @if (Preview.SourceAccountsInUnselectedPools.Count > 0 || Preview.SourcePoolsBecomingUnused.Count > 0)

@@ -10,6 +10,8 @@ public sealed record HosterReplacementPreview(
     int UploadCountToMarkOffline,
     IReadOnlyList<SkippedUploadConfigReadModel> SkippedUploadConfigs,
     IReadOnlyList<SkippedUploadConfigTemplateReadModel> SkippedUploadConfigTemplates,
+    IReadOnlyList<SkippedUploadConfigReadModel> DeletedUploadConfigs,
+    IReadOnlyList<SkippedUploadConfigTemplateReadModel> DeletedUploadConfigTemplates,
     IReadOnlyList<SourceAccountInUnselectedPoolReadModel> SourceAccountsInUnselectedPools,
     IReadOnlyList<SourcePoolBecomingUnusedReadModel> SourcePoolsBecomingUnused
 );

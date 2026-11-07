@@ -992,6 +992,297 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ExecuteAsync_DeleteDuplicateUploadConfigs_DeletesDuplicatesWithTheirUploadsAndUpdatesReleaseOnlineState()
+    {
+        // Arrange
+        var sourceAccount = await AddRegistrationAsync("Old account");
+        var sourcePool = await AddPoolAsync("Old pool", SourceHosterClassName, sourceAccount);
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var release = await AddReleaseAsync("Release");
+        var archiveConfig = await AddArchiveConfigAsync(release, "Archive");
+        var existingConfig = await AddUploadConfigAsync(
+            archiveConfig: archiveConfig,
+            uploadTarget: TargetOf(replacement),
+            name: "Existing"
+        );
+        await AddCompletedOnlineUploadAsync(existingConfig, replacement);
+        var duplicateConfig = await AddUploadConfigAsync(
+            archiveConfig: archiveConfig,
+            uploadTarget: TargetOf(sourcePool),
+            name: "Duplicate"
+        );
+        var uploadOfDuplicateConfig = await AddCompletedUploadWithFilesAsync(
+            uploadConfig: duplicateConfig,
+            hosterRegistrationId: sourceAccount.Id,
+            uploadOnlineState: OnlineState.Offline,
+            files: [(OnlineState.Offline, LocalNow)]
+        );
+        await AddLinkCrypterContainerAndNotificationAsync(release, uploadOfDuplicateConfig);
+        var releaseTemplate = await AddReleaseTemplateAsync("Template");
+        var archiveConfigTemplate = await AddArchiveConfigTemplateAsync(releaseTemplate, "Archive");
+        var existingTemplate = await AddUploadConfigTemplateAsync(
+            archiveConfigTemplate: archiveConfigTemplate,
+            uploadTarget: TargetOf(replacement),
+            name: "Existing"
+        );
+        var duplicateTemplate = await AddUploadConfigTemplateAsync(
+            archiveConfigTemplate: archiveConfigTemplate,
+            uploadTarget: TargetOf(sourcePool),
+            name: null
+        );
+        (await GetReleaseOnlineStateAsync(release)).ShouldBe(OnlineState.PartiallyOnline);
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.ExecuteAsync(
+            new HosterReplacementRequest(
+                SourceUploadTargets: [TargetOf(sourcePool)],
+                ReplacementUploadTarget: TargetOf(replacement),
+                DeleteDuplicateUploadConfigs: true
+            )
+        );
+
+        // Assert
+        result.SkippedUploadConfigs.ShouldBeEmpty();
+        result.SkippedUploadConfigTemplates.ShouldBeEmpty();
+        result
+            .DeletedUploadConfigs.ShouldHaveSingleItem()
+            .ShouldBe(
+                new SkippedUploadConfigReadModel(
+                    UploadConfigId: duplicateConfig.Id,
+                    ReleaseId: release.Id,
+                    ReleaseName: release.Name,
+                    UploadConfigName: "Duplicate",
+                    SkipReason: HosterReplacementSkipReason.DuplicateOnReplacementHoster
+                )
+            );
+        result
+            .DeletedUploadConfigTemplates.ShouldHaveSingleItem()
+            .UploadConfigTemplateId.ShouldBe(duplicateTemplate.Id);
+        result
+            .SourcePoolsBecomingUnused.ShouldHaveSingleItem()
+            .HosterAccountPoolId.ShouldBe(sourcePool.Id);
+
+        (await ReadDbContext.UploadConfigs.Select(c => c.Id).ToListAsync()).ShouldBe([
+            existingConfig.Id,
+        ]);
+        (await ReadDbContext.UploadConfigTemplates.Select(t => t.Id).ToListAsync()).ShouldBe([
+            existingTemplate.Id,
+        ]);
+        (
+            await ReadDbContext.Uploads.AnyAsync(u => u.Id == uploadOfDuplicateConfig.Id)
+        ).ShouldBeFalse();
+        (
+            await ReadDbContext.UploadedFiles.AnyAsync(f =>
+                f.UploadId == uploadOfDuplicateConfig.Id
+            )
+        ).ShouldBeFalse();
+        (await ReadDbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+        (await ReadDbContext.Notifications.AnyAsync()).ShouldBeFalse();
+        (await GetReleaseOnlineStateAsync(release)).ShouldBe(OnlineState.Online);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_DeleteDuplicateUploadConfigsWithTwoSourcesInOneGroup_ReplacesLowestIdAndDeletesOther()
+    {
+        // Arrange
+        var firstSource = await AddRegistrationAsync("First account");
+        var secondSource = await AddRegistrationAsync("Second account");
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var archiveConfig = await AddArchiveConfigAsync(
+            await AddReleaseAsync("Release"),
+            "Archive"
+        );
+        var lowestIdConfig = await AddUploadConfigAsync(
+            archiveConfig: archiveConfig,
+            uploadTarget: TargetOf(secondSource),
+            name: "Second account"
+        );
+        var higherIdConfig = await AddUploadConfigAsync(
+            archiveConfig: archiveConfig,
+            uploadTarget: TargetOf(firstSource),
+            name: "First account"
+        );
+        var archiveConfigTemplate = await AddArchiveConfigTemplateAsync(
+            await AddReleaseTemplateAsync("Template"),
+            "Archive"
+        );
+        var lowestIdTemplate = await AddUploadConfigTemplateAsync(
+            archiveConfigTemplate: archiveConfigTemplate,
+            uploadTarget: TargetOf(secondSource),
+            name: null
+        );
+        var higherIdTemplate = await AddUploadConfigTemplateAsync(
+            archiveConfigTemplate: archiveConfigTemplate,
+            uploadTarget: TargetOf(firstSource),
+            name: null
+        );
+
+        // Act
+        var result = await service.ExecuteAsync(
+            new HosterReplacementRequest(
+                SourceUploadTargets: [TargetOf(firstSource), TargetOf(secondSource)],
+                ReplacementUploadTarget: TargetOf(replacement),
+                DeleteDuplicateUploadConfigs: true
+            )
+        );
+
+        // Assert
+        result.UploadConfigCount.ShouldBe(1);
+        result.UploadConfigTemplateCount.ShouldBe(1);
+        result.SkippedUploadConfigs.ShouldBeEmpty();
+        result.SkippedUploadConfigTemplates.ShouldBeEmpty();
+        result
+            .DeletedUploadConfigs.ShouldHaveSingleItem()
+            .UploadConfigId.ShouldBe(higherIdConfig.Id);
+        result
+            .DeletedUploadConfigTemplates.ShouldHaveSingleItem()
+            .UploadConfigTemplateId.ShouldBe(higherIdTemplate.Id);
+
+        var remainingConfig = await ReadDbContext.UploadConfigs.SingleAsync();
+        remainingConfig.Id.ShouldBe(lowestIdConfig.Id);
+        remainingConfig.HosterRegistrationId.ShouldBe(replacement.Id);
+        var remainingTemplate = await ReadDbContext.UploadConfigTemplates.SingleAsync();
+        remainingTemplate.Id.ShouldBe(lowestIdTemplate.Id);
+        remainingTemplate.HosterRegistrationId.ShouldBe(replacement.Id);
+    }
+
+    [TestCase(UploadState.Uploading)]
+    [TestCase(UploadState.CancellationRequested)]
+    public async Task ExecuteAsync_DeleteDuplicateUploadConfigs_KeepsSlotMemberAndConfigWithRunningUpload(
+        UploadState runningUploadState
+    )
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var slot = await AddCollectionUploadSlotAsync();
+        var slotArchiveConfig = await AddArchiveConfigAsync(
+            await AddReleaseAsync("Slot release"),
+            "Archive"
+        );
+        await AddUploadConfigAsync(slotArchiveConfig, TargetOf(replacement), "Existing");
+        var duplicateSlotMember = await AddUploadConfigAsync(
+            archiveConfig: slotArchiveConfig,
+            uploadTarget: TargetOf(source),
+            name: "Duplicate slot member",
+            collectionUploadSlotId: slot.Id
+        );
+        var otherSlotMember = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(
+                await AddReleaseAsync("Other slot release"),
+                "Archive"
+            ),
+            uploadTarget: TargetOf(source),
+            name: "Other slot member",
+            collectionUploadSlotId: slot.Id
+        );
+        var runningArchiveConfig = await AddArchiveConfigAsync(
+            await AddReleaseAsync("Running release"),
+            "Archive"
+        );
+        await AddUploadConfigAsync(runningArchiveConfig, TargetOf(replacement), "Existing");
+        var configWithRunningUpload = await AddUploadConfigAsync(
+            archiveConfig: runningArchiveConfig,
+            uploadTarget: TargetOf(source),
+            name: "Running"
+        );
+        await AddUploadAsync(configWithRunningUpload, runningUploadState, source.Id);
+
+        // Act
+        var result = await service.ExecuteAsync(
+            new HosterReplacementRequest(
+                SourceUploadTargets: [TargetOf(source)],
+                ReplacementUploadTarget: TargetOf(replacement),
+                DeleteDuplicateUploadConfigs: true
+            )
+        );
+
+        // Assert
+        result.UploadConfigCount.ShouldBe(0);
+        result.DeletedUploadConfigs.ShouldBeEmpty();
+        result
+            .SkippedUploadConfigs.ToDictionary(config => config.UploadConfigId, c => c.SkipReason)
+            .ShouldBe(
+                new Dictionary<int, HosterReplacementSkipReason>
+                {
+                    [duplicateSlotMember.Id] =
+                        HosterReplacementSkipReason.DeletionBlockedByCollectionUploadSlot,
+                    [otherSlotMember.Id] =
+                        HosterReplacementSkipReason.CollectionUploadSlotPartiallySkipped,
+                    [configWithRunningUpload.Id] =
+                        HosterReplacementSkipReason.DeletionBlockedByRunningUpload,
+                },
+                ignoreOrder: true
+            );
+
+        (
+            await ReadDbContext
+                .UploadConfigs.Where(c => c.HosterRegistrationId == source.Id)
+                .Select(c => c.Id)
+                .ToListAsync()
+        ).ShouldBe(
+            [duplicateSlotMember.Id, otherSlotMember.Id, configWithRunningUpload.Id],
+            ignoreOrder: true
+        );
+    }
+
+    [Test]
+    public async Task ExecuteAsync_DeleteDuplicateUploadConfigsAndMarkSourceHosterAsDead_DoesNotCountUploadsOfDeletedConfigsAsMarkedOffline()
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var duplicateArchiveConfig = await AddArchiveConfigAsync(
+            await AddReleaseAsync("Duplicate release"),
+            "Archive"
+        );
+        await AddUploadConfigAsync(duplicateArchiveConfig, TargetOf(replacement), "Existing");
+        var duplicateConfig = await AddUploadConfigAsync(
+            archiveConfig: duplicateArchiveConfig,
+            uploadTarget: TargetOf(source),
+            name: "Duplicate"
+        );
+        await AddCompletedOnlineUploadAsync(duplicateConfig, source);
+        var replacedConfig = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(
+                await AddReleaseAsync("Replaced release"),
+                "Archive"
+            ),
+            uploadTarget: TargetOf(source),
+            name: "Replaced"
+        );
+        var uploadOfReplacedConfig = await AddCompletedOnlineUploadAsync(replacedConfig, source);
+        var request = new HosterReplacementRequest(
+            SourceUploadTargets: [TargetOf(source)],
+            ReplacementUploadTarget: TargetOf(replacement),
+            MarkSourceHosterAsDead: true,
+            DeleteDuplicateUploadConfigs: true
+        );
+
+        // Act
+        var preview = await service.GetPreviewAsync(request);
+        var result = await service.ExecuteAsync(request);
+
+        // Assert
+        preview
+            .DeletedUploadConfigs.ShouldHaveSingleItem()
+            .UploadConfigId.ShouldBe(duplicateConfig.Id);
+        preview.UploadCountToMarkOffline.ShouldBe(1);
+        result.UploadCountToMarkOffline.ShouldBe(1);
+        result.AccountCountToDeactivate.ShouldBe(1);
+
+        (
+            await ReadDbContext.UploadConfigs.AnyAsync(c => c.Id == duplicateConfig.Id)
+        ).ShouldBeFalse();
+        var remainingUploadOfSource = await ReadDbContext.Uploads.SingleAsync(u =>
+            u.HosterRegistrationId == source.Id
+        );
+        remainingUploadOfSource.Id.ShouldBe(uploadOfReplacedConfig.Id);
+        remainingUploadOfSource.OnlineState.ShouldBe(OnlineState.Offline);
+    }
+
+    [Test]
     public async Task GetPreviewAsync_ReplacementPoolContainsSourceAccount_DoesNotListItAsUnselectedPool()
     {
         // Arrange
@@ -1410,6 +1701,39 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         return upload;
+    }
+
+    private async Task AddLinkCrypterContainerAndNotificationAsync(Release release, Upload upload)
+    {
+        DbContext.Add(
+            new LinkCrypterContainer
+            {
+                Scope = LinkCrypterContainerScope.Release,
+                UploadId = upload.Id,
+                ReleaseId = release.Id,
+                LinkCrypterRegistration = new LinkCrypterRegistration
+                {
+                    Name = "Crypter",
+                    LinkCrypterClassName = "Crypter",
+                    SerializedConfig = "{}",
+                    IsActive = true,
+                },
+                ContainerUrl = "https://crypter.test/container",
+                State = LinkCrypterContainerState.Created,
+                CreatedAt = LocalNow,
+            }
+        );
+        DbContext.Add(
+            new Notification
+            {
+                UploadId = upload.Id,
+                NotificationSeverity = NotificationSeverity.Error,
+                NotificationKind = NotificationKind.Legacy,
+                Message = "Upload failed",
+                CreatedAt = LocalNow,
+            }
+        );
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<OnlineState> GetReleaseOnlineStateAsync(Release release)

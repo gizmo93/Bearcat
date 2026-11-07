@@ -29,6 +29,21 @@ Existing uploads stay on the old hoster until their next reupload. The next reup
 
 The preview lists skipped configurations with a link to the release or template.
 
+## Delete duplicate configurations
+
+With **Delete duplicate configurations**, configurations skipped because the release or template already has
+the same archive configuration on the replacement hoster are deleted instead of kept. This includes the
+other configurations when several selected accounts use the same archive configuration.
+
+- Bearcat deletes their uploads and links.
+- Containers at link crypters stay. Delete them at the link crypter if needed.
+- Configurations of a collection upload slot are not deleted.
+- Configurations with a running upload are not deleted.
+- Configurations in templates have no exceptions.
+
+Configurations that are not deleted stay in the list of skipped configurations. The preview lists the
+configurations to delete. Deleting cannot be undone.
+
 ## Hoster is dead
 
 A dead hoster usually never reports files as offline, and Bearcat does not check inactive accounts.

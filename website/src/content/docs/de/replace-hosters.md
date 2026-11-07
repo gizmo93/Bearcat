@@ -32,6 +32,22 @@ Ersatz.
 
 Die Vorschau listet übersprungene Konfigurationen mit einem Link zum Release oder Template auf.
 
+## Doppelte Konfigurationen löschen
+
+Mit **Doppelte Konfigurationen löschen** werden Konfigurationen, die übersprungen werden, weil das Release
+oder Template dieselbe Archivkonfiguration bereits beim Ersatzhoster hat, gelöscht statt behalten. Das gilt
+auch für die weiteren Konfigurationen, wenn mehrere ausgewählte Accounts dieselbe Archivkonfiguration
+verwenden.
+
+- Bearcat löscht ihre Uploads und Links.
+- Container bei Linkcryptern bleiben bestehen. Lösche sie bei Bedarf beim Linkcrypter.
+- Konfigurationen eines Uploadslots werden nicht gelöscht.
+- Konfigurationen mit einem laufenden Upload werden nicht gelöscht.
+- Für Konfigurationen in Templates gibt es keine Ausnahmen.
+
+Nicht gelöschte Konfigurationen bleiben in der Liste der übersprungenen Konfigurationen. Die Vorschau listet
+die zu löschenden Konfigurationen auf. Das Löschen lässt sich nicht rückgängig machen.
+
 ## Hoster ist tot
 
 Ein toter Hoster meldet Dateien meist nie als offline, und Bearcat prüft inaktive Accounts nicht. Ohne diese

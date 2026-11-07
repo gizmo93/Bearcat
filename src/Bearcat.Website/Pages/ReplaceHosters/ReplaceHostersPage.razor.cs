@@ -24,6 +24,7 @@ public partial class ReplaceHostersPage(
     private string? sourceHosterClassName;
     private UploadTarget? replacementUploadTarget;
     private bool markSourceHosterAsDead;
+    private bool deleteDuplicateUploadConfigs;
     private HosterReplacementPreview? preview;
     private int latestPreviewRequestNumber;
     private bool isLoadingPreview;
@@ -38,6 +39,8 @@ public partial class ReplaceHostersPage(
         replacementUploadTarget is not null
         && uploadTargetChoices!.GetHosterClassName(replacementUploadTarget)
             != sourceHosterClassName;
+
+    private bool CanDeleteDuplicateUploadConfigs => replacementUploadTarget is not null;
 
     private bool HasCompleteInputs =>
         replacementUploadTarget is not null && selectedSourceUploadTargets.Count > 0;
@@ -63,6 +66,7 @@ public partial class ReplaceHostersPage(
         selectedSourceUploadTargets.Clear();
         replacementUploadTarget = null;
         markSourceHosterAsDead = false;
+        deleteDuplicateUploadConfigs = false;
         preview = null;
         isLoadingPreview = false;
         latestPreviewRequestNumber++;
@@ -119,6 +123,8 @@ public partial class ReplaceHostersPage(
     private async Task OnReplacementUploadTargetChangedAsync()
     {
         markSourceHosterAsDead = markSourceHosterAsDead && CanMarkSourceHosterAsDead;
+        deleteDuplicateUploadConfigs =
+            deleteDuplicateUploadConfigs && CanDeleteDuplicateUploadConfigs;
 
         await ReloadPreviewAsync();
     }
@@ -126,6 +132,13 @@ public partial class ReplaceHostersPage(
     private async Task SetMarkSourceHosterAsDeadAsync(bool isMarkedAsDead)
     {
         markSourceHosterAsDead = isMarkedAsDead;
+
+        await ReloadPreviewAsync();
+    }
+
+    private async Task SetDeleteDuplicateUploadConfigsAsync(bool shouldDelete)
+    {
+        deleteDuplicateUploadConfigs = shouldDelete;
 
         await ReloadPreviewAsync();
     }
@@ -162,7 +175,8 @@ public partial class ReplaceHostersPage(
         return new HosterReplacementRequest(
             SourceUploadTargets: selectedSourceUploadTargets.ToList(),
             ReplacementUploadTarget: replacementUploadTarget!,
-            MarkSourceHosterAsDead: markSourceHosterAsDead
+            MarkSourceHosterAsDead: markSourceHosterAsDead,
+            DeleteDuplicateUploadConfigs: deleteDuplicateUploadConfigs
         );
     }
 
@@ -172,7 +186,9 @@ public partial class ReplaceHostersPage(
             || hosterReplacementPreview.UploadConfigTemplateCount > 0
             || hosterReplacementPreview.UnstartedUploadCount > 0
             || hosterReplacementPreview.AccountCountToDeactivate > 0
-            || hosterReplacementPreview.UploadCountToMarkOffline > 0;
+            || hosterReplacementPreview.UploadCountToMarkOffline > 0
+            || hosterReplacementPreview.DeletedUploadConfigs.Count > 0
+            || hosterReplacementPreview.DeletedUploadConfigTemplates.Count > 0;
     }
 
     private async Task ExecuteAsync()
@@ -216,43 +232,78 @@ public partial class ReplaceHostersPage(
 
     private string CreateConfirmationMessage(HosterReplacementPreview hosterReplacementPreview)
     {
-        var replacementName = uploadTargetChoices!.GetName(replacementUploadTarget!);
-
-        return markSourceHosterAsDead
-            ? L[
-                "ReplaceHostersConfirmationWithDeadHoster",
-                hosterReplacementPreview.UploadConfigCount,
-                hosterReplacementPreview.UploadConfigTemplateCount,
-                hosterReplacementPreview.UnstartedUploadCount,
-                replacementName,
-                hosterReplacementPreview.AccountCountToDeactivate,
-                hosterReplacementPreview.UploadCountToMarkOffline
-            ]
-            : L[
+        List<string> messageParts =
+        [
+            L[
                 "ReplaceHostersConfirmation",
                 hosterReplacementPreview.UploadConfigCount,
                 hosterReplacementPreview.UploadConfigTemplateCount,
                 hosterReplacementPreview.UnstartedUploadCount,
-                replacementName
-            ];
+                uploadTargetChoices!.GetName(replacementUploadTarget!)
+            ],
+        ];
+
+        if (markSourceHosterAsDead)
+        {
+            messageParts.Add(
+                L[
+                    "ReplaceHostersConfirmationDeadHoster",
+                    hosterReplacementPreview.AccountCountToDeactivate,
+                    hosterReplacementPreview.UploadCountToMarkOffline
+                ]
+            );
+        }
+
+        if (deleteDuplicateUploadConfigs)
+        {
+            messageParts.Add(
+                L[
+                    "ReplaceHostersConfirmationDeletedUploadConfigs",
+                    hosterReplacementPreview.DeletedUploadConfigs.Count,
+                    hosterReplacementPreview.DeletedUploadConfigTemplates.Count
+                ]
+            );
+        }
+
+        messageParts.Add(L["ReplaceHostersCannotBeUndone"]);
+
+        return string.Join(" ", messageParts);
     }
 
     private string CreateSuccessMessage(HosterReplacementPreview result)
     {
-        return markSourceHosterAsDead
-            ? L[
-                "ReplaceHostersExecutedWithDeadHoster",
-                result.UploadConfigCount,
-                result.UploadConfigTemplateCount,
-                result.UnstartedUploadCount,
-                result.AccountCountToDeactivate,
-                result.UploadCountToMarkOffline
-            ]
-            : L[
+        List<string> messageParts =
+        [
+            L[
                 "ReplaceHostersExecuted",
                 result.UploadConfigCount,
                 result.UploadConfigTemplateCount,
                 result.UnstartedUploadCount
-            ];
+            ],
+        ];
+
+        if (markSourceHosterAsDead)
+        {
+            messageParts.Add(
+                L[
+                    "ReplaceHostersExecutedDeadHoster",
+                    result.AccountCountToDeactivate,
+                    result.UploadCountToMarkOffline
+                ]
+            );
+        }
+
+        if (deleteDuplicateUploadConfigs)
+        {
+            messageParts.Add(
+                L[
+                    "ReplaceHostersExecutedDeletedUploadConfigs",
+                    result.DeletedUploadConfigs.Count,
+                    result.DeletedUploadConfigTemplates.Count
+                ]
+            );
+        }
+
+        return string.Join(" ", messageParts);
     }
 }

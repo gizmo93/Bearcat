@@ -14,7 +14,8 @@ public sealed record HosterReplacementUploadConfigRow(
     int? HosterRegistrationId,
     int? HosterAccountPoolId,
     string HosterClassName,
-    bool PremiumOnlyDownload
+    bool PremiumOnlyDownload,
+    bool HasRunningUpload
 )
 {
     public UploadTarget UploadTarget =>
