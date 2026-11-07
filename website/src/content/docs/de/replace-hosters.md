@@ -41,12 +41,13 @@ verwenden.
 
 - Bearcat löscht ihre Uploads und Links.
 - Container bei Linkcryptern bleiben bestehen. Lösche sie bei Bedarf beim Linkcrypter.
-- Konfigurationen eines Uploadslots werden nicht gelöscht.
+- Ein Uploadslot wird als Ganzes gelöscht, wenn alle seine Konfigurationen doppelt sind und keinen laufenden
+  Upload haben. Sonst bleiben alle seine Konfigurationen.
 - Konfigurationen mit einem laufenden Upload werden nicht gelöscht.
 - Für Konfigurationen in Templates gibt es keine Ausnahmen.
 
 Nicht gelöschte Konfigurationen bleiben in der Liste der übersprungenen Konfigurationen. Die Vorschau listet
-die zu löschenden Konfigurationen auf. Das Löschen lässt sich nicht rückgängig machen.
+die zu löschenden Konfigurationen und Uploadslots auf. Das Löschen lässt sich nicht rückgängig machen.
 
 ## Hoster ist tot
 

@@ -63,6 +63,43 @@
                                          IsDeletion="true" />
     }
 
+    @if (Preview.DeletedCollectionUploadSlots.Count > 0)
+    {
+        <div class="space-y-2">
+            <h3 class="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <LucideIcon Name="trash-2" class="h-4 w-4 shrink-0" />
+                @L["ReplaceHostersDeletedCollectionUploadSlots", Preview.DeletedCollectionUploadSlots.Count]
+            </h3>
+            <div class="bearcat-config-list">
+                <div class="@($"bearcat-config-header {DeletedCollectionUploadSlotGridClass}")">
+                    <span>@L["ReleaseCollection"]</span>
+                    <span>@L["CollectionUploadSlot"]</span>
+                    <span>@L["UploadConfigurations"]</span>
+                </div>
+                @foreach (var slot in Preview.DeletedCollectionUploadSlots)
+                {
+                    <div class="bearcat-config-item" @key="slot.CollectionUploadSlotId">
+                        <div class="@($"bearcat-config-row {DeletedCollectionUploadSlotGridClass}")">
+                            <div class="min-w-0">
+                                <a class="block truncate text-sm text-primary hover:underline"
+                                   href="@($"/release-collections/{slot.ReleaseCollectionId}")"
+                                   title="@slot.ReleaseCollectionName">@slot.ReleaseCollectionName</a>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="bearcat-mobile-label">@L["CollectionUploadSlot"]</p>
+                                <p class="truncate text-sm" title="@slot.CollectionUploadSlotName">@slot.CollectionUploadSlotName</p>
+                            </div>
+                            <div>
+                                <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
+                                <span class="text-sm tabular-nums">@slot.UploadConfigCount</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
     @if (Preview.SourceAccountsInUnselectedPools.Count > 0 || Preview.SourcePoolsBecomingUnused.Count > 0)
     {
         <ul class="space-y-1 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">

@@ -48,7 +48,7 @@ public class HosterReplacementService(
         );
 
         logger.LogInformation(
-            "Replaced hoster {SourceHosterClassName} with upload target {ReplacementUploadTargetName}: {UploadConfigCount} upload configs, {UploadConfigTemplateCount} upload config templates, {MovedUploadCount} unstarted uploads, {DeactivatedAccountCount} accounts deactivated, {UploadCountMarkedOffline} uploads marked offline, {SkippedUploadConfigCount} upload configs and {SkippedUploadConfigTemplateCount} upload config templates skipped, {DeletedUploadConfigCount} upload configs and {DeletedUploadConfigTemplateCount} upload config templates deleted",
+            "Replaced hoster {SourceHosterClassName} with upload target {ReplacementUploadTargetName}: {UploadConfigCount} upload configs, {UploadConfigTemplateCount} upload config templates, {MovedUploadCount} unstarted uploads, {DeactivatedAccountCount} accounts deactivated, {UploadCountMarkedOffline} uploads marked offline, {SkippedUploadConfigCount} upload configs and {SkippedUploadConfigTemplateCount} upload config templates skipped, {DeletedUploadConfigCount} upload configs, {DeletedUploadConfigTemplateCount} upload config templates and {DeletedCollectionUploadSlotCount} collection upload slots deleted",
             plan.SourceHosterClassName,
             plan.Changes.ReplacementUploadTargetName,
             preview.UploadConfigCount,
@@ -59,7 +59,8 @@ public class HosterReplacementService(
             preview.SkippedUploadConfigs.Count,
             preview.SkippedUploadConfigTemplates.Count,
             preview.DeletedUploadConfigs.Count,
-            preview.DeletedUploadConfigTemplates.Count
+            preview.DeletedUploadConfigTemplates.Count,
+            preview.DeletedCollectionUploadSlots.Count
         );
 
         return preview with
@@ -140,6 +141,9 @@ public class HosterReplacementService(
         var skippedUploadConfigRows = skippedOrDeletedUploadConfigRows
             .Except(uploadConfigRowsToDelete)
             .ToList();
+        var deletedCollectionUploadSlots = GetDeletedCollectionUploadSlots(
+            uploadConfigRowsToDelete
+        );
 
         var duplicateUploadConfigTemplateRows = sourceUploadConfigTemplateRows
             .Where(row => skippedUploadConfigTemplateIds.Contains(row.Id))
@@ -162,7 +166,13 @@ public class HosterReplacementService(
                     .ToList(),
                 sourceNamesByUploadTarget: sourceNamesByUploadTarget,
                 replacement: replacement,
-                uploadConfigIdsToDelete: uploadConfigRowsToDelete.Select(row => row.Id).ToList(),
+                uploadConfigIdsToDelete: uploadConfigRowsToDelete
+                    .Where(row => row.CollectionUploadSlotId is null)
+                    .Select(row => row.Id)
+                    .ToList(),
+                collectionUploadSlotIdsToDelete: deletedCollectionUploadSlots
+                    .Select(slot => slot.CollectionUploadSlotId)
+                    .ToList(),
                 uploadConfigTemplateIdsToDelete: uploadConfigTemplateRowsToDelete
                     .Select(row => row.Id)
                     .ToList(),
@@ -189,6 +199,7 @@ public class HosterReplacementService(
                     ToSkippedUploadConfigTemplateReadModel(row, sourceNamesByUploadTarget)
                 )
                 .ToList(),
+            DeletedCollectionUploadSlots: deletedCollectionUploadSlots,
             SourcePoolsBecomingUnused: GetSourcePoolsWithoutSkippedRow(
                 sources: sources,
                 skippedUploadConfigRows: skippedUploadConfigRows,
@@ -235,13 +246,17 @@ public class HosterReplacementService(
             ),
             UploadCountToMarkOffline: await repository.GetUploadCountToMarkOfflineAsync(
                 hosterRegistrationIds: hosterRegistrationIdsToDeactivate,
-                uploadConfigIdsToDelete: plan.Changes.UploadConfigIdsToDelete,
+                uploadConfigIdsToDelete: plan.DeletedUploadConfigs.Select(uploadConfig =>
+                        uploadConfig.UploadConfigId
+                    )
+                    .ToList(),
                 cancellationToken: cancellationToken
             ),
             SkippedUploadConfigs: plan.SkippedUploadConfigs,
             SkippedUploadConfigTemplates: plan.SkippedUploadConfigTemplates,
             DeletedUploadConfigs: plan.DeletedUploadConfigs,
             DeletedUploadConfigTemplates: plan.DeletedUploadConfigTemplates,
+            DeletedCollectionUploadSlots: plan.DeletedCollectionUploadSlots,
             SourceAccountsInUnselectedPools: await repository.GetSourceAccountsInUnselectedPoolsAsync(
                 sourceUploadTargets: request.SourceUploadTargets,
                 replacementUploadTarget: request.ReplacementUploadTarget,
@@ -355,6 +370,12 @@ public class HosterReplacementService(
             )
             .Select(row => row.CollectionUploadSlotId)
             .ToHashSet();
+        var deletableCollectionUploadSlotIds = deleteDuplicateUploadConfigs
+            ? GetIdsOfCollectionUploadSlotsWithOnlyDeletableDuplicates(
+                sourceUploadConfigRows,
+                duplicateUploadConfigIds
+            )
+            : [];
 
         var skipReasonsByUploadConfigId = new Dictionary<int, HosterReplacementSkipReason>();
 
@@ -363,8 +384,9 @@ public class HosterReplacementService(
             if (duplicateUploadConfigIds.Contains(row.Id))
             {
                 skipReasonsByUploadConfigId[row.Id] = GetSkipReasonOfDuplicateUploadConfig(
-                    row,
-                    deleteDuplicateUploadConfigs
+                    row: row,
+                    deleteDuplicateUploadConfigs: deleteDuplicateUploadConfigs,
+                    deletableCollectionUploadSlotIds: deletableCollectionUploadSlotIds
                 );
             }
             else if (partiallySkippedCollectionUploadSlotIds.Contains(row.CollectionUploadSlotId))
@@ -377,9 +399,28 @@ public class HosterReplacementService(
         return skipReasonsByUploadConfigId;
     }
 
+    private static HashSet<int> GetIdsOfCollectionUploadSlotsWithOnlyDeletableDuplicates(
+        IReadOnlyList<HosterReplacementUploadConfigRow> sourceUploadConfigRows,
+        HashSet<int> duplicateUploadConfigIds
+    )
+    {
+        return sourceUploadConfigRows
+            .Where(row => row.CollectionUploadSlotId is not null)
+            .GroupBy(row => row.CollectionUploadSlotId!.Value)
+            .Where(slotRows =>
+                slotRows.Count() == slotRows.First().CollectionUploadSlotUploadConfigCount
+                && slotRows.All(row =>
+                    duplicateUploadConfigIds.Contains(row.Id) && !row.HasRunningUpload
+                )
+            )
+            .Select(slotRows => slotRows.Key)
+            .ToHashSet();
+    }
+
     private static HosterReplacementSkipReason GetSkipReasonOfDuplicateUploadConfig(
         HosterReplacementUploadConfigRow row,
-        bool deleteDuplicateUploadConfigs
+        bool deleteDuplicateUploadConfigs,
+        HashSet<int> deletableCollectionUploadSlotIds
     )
     {
         if (!deleteDuplicateUploadConfigs)
@@ -387,17 +428,37 @@ public class HosterReplacementService(
             return HosterReplacementSkipReason.DuplicateOnReplacementHoster;
         }
 
-        if (row.CollectionUploadSlotId is not null)
-        {
-            return HosterReplacementSkipReason.DeletionBlockedByCollectionUploadSlot;
-        }
-
         if (row.HasRunningUpload)
         {
             return HosterReplacementSkipReason.DeletionBlockedByRunningUpload;
         }
 
+        if (
+            row.CollectionUploadSlotId is { } collectionUploadSlotId
+            && !deletableCollectionUploadSlotIds.Contains(collectionUploadSlotId)
+        )
+        {
+            return HosterReplacementSkipReason.DeletionBlockedByOtherCollectionUploadSlotMember;
+        }
+
         return HosterReplacementSkipReason.DuplicateOnReplacementHoster;
+    }
+
+    private static List<DeletedCollectionUploadSlotReadModel> GetDeletedCollectionUploadSlots(
+        IReadOnlyList<HosterReplacementUploadConfigRow> uploadConfigRowsToDelete
+    )
+    {
+        return uploadConfigRowsToDelete
+            .Where(row => row.CollectionUploadSlotId is not null)
+            .GroupBy(row => row.CollectionUploadSlotId!.Value)
+            .Select(slotRows => new DeletedCollectionUploadSlotReadModel(
+                CollectionUploadSlotId: slotRows.Key,
+                CollectionUploadSlotName: slotRows.First().CollectionUploadSlotName!,
+                ReleaseCollectionId: slotRows.First().ReleaseCollectionId!.Value,
+                ReleaseCollectionName: slotRows.First().ReleaseCollectionName!,
+                UploadConfigCount: slotRows.Count()
+            ))
+            .ToList();
     }
 
     private static HashSet<int> GetSkippedUploadConfigTemplateIds(
@@ -453,6 +514,7 @@ public class HosterReplacementService(
         IReadOnlyDictionary<UploadTarget, string> sourceNamesByUploadTarget,
         HosterReplacementUploadTargetReadModel replacement,
         IReadOnlyList<int> uploadConfigIdsToDelete,
+        IReadOnlyList<int> collectionUploadSlotIdsToDelete,
         IReadOnlyList<int> uploadConfigTemplateIdsToDelete,
         IReadOnlyList<int> hosterRegistrationIdsToDeactivate
     )
@@ -490,6 +552,7 @@ public class HosterReplacementService(
                     .Select(row => row.Id)
                     .ToList(),
             UploadConfigIdsToDelete: uploadConfigIdsToDelete,
+            CollectionUploadSlotIdsToDelete: collectionUploadSlotIdsToDelete,
             UploadConfigTemplateIdsToDelete: uploadConfigTemplateIdsToDelete,
             HosterRegistrationIdsToDeactivate: hosterRegistrationIdsToDeactivate,
             LocalNow: timeProvider.GetLocalNow()
@@ -566,6 +629,7 @@ public class HosterReplacementService(
         IReadOnlyList<SkippedUploadConfigTemplateReadModel> SkippedUploadConfigTemplates,
         IReadOnlyList<SkippedUploadConfigReadModel> DeletedUploadConfigs,
         IReadOnlyList<SkippedUploadConfigTemplateReadModel> DeletedUploadConfigTemplates,
+        IReadOnlyList<DeletedCollectionUploadSlotReadModel> DeletedCollectionUploadSlots,
         IReadOnlyList<SourcePoolBecomingUnusedReadModel> SourcePoolsBecomingUnused
     );
 }

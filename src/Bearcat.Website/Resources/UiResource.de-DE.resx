@@ -353,9 +353,6 @@
   <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Releaseonlinestatus</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Inhaltstyp</value></data>
-  <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Inhaltstyp aktualisiert</value></data>
-  <data name="EditContentType" xml:space="preserve"><value>Inhaltstyp bearbeiten</value></data>
-  <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Releasecollection.</value></data>
   <data name="EditCollectionSettings" xml:space="preserve"><value>Collectioneinstellungen bearbeiten</value></data>
   <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Release Collection.</value></data>
   <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collectioneinstellungen aktualisiert</value></data>
@@ -2053,7 +2050,7 @@
   <data name="ReplaceHostersHosterIsDead" xml:space="preserve"><value>Hoster ist tot</value></data>
   <data name="ReplaceHostersHosterIsDeadDescription" xml:space="preserve"><value>Deaktiviert die ausgewählten Accounts und markiert ihre Uploads als offline, damit der automatische Reupload startet.</value></data>
   <data name="ReplaceHostersDeleteDuplicateUploadConfigs" xml:space="preserve"><value>Doppelte Konfigurationen löschen</value></data>
-  <data name="ReplaceHostersDeleteDuplicateUploadConfigsDescription" xml:space="preserve"><value>Löscht übersprungene Konfigurationen, deren Archivkonfiguration bereits beim Ersatzhoster liegt, samt ihren Uploads in Bearcat, während Container bei Linkcryptern bestehen bleiben.</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigsDescription" xml:space="preserve"><value>Löscht übersprungene Konfigurationen, deren Archivkonfiguration bereits beim Ersatzhoster liegt, samt ihren Uploads in Bearcat. Collectioncontainer werden gelöscht, wenn alle ihre Konfigurationen doppelt sind. Container bei Linkcryptern bleiben bestehen.</value></data>
   <data name="ReplaceHostersUnstartedUploads" xml:space="preserve"><value>Verschobene ungestartete Uploads</value></data>
   <data name="ReplaceHostersAccountsToDeactivate" xml:space="preserve"><value>Zu deaktivierende Accounts</value></data>
   <data name="ReplaceHostersUploadsToMarkOffline" xml:space="preserve"><value>Als offline zu markierende Uploads</value></data>
@@ -2064,20 +2061,21 @@
   <data name="ReplaceHostersSkippedUploadConfigsInTemplates" xml:space="preserve"><value>Übersprungene Uploadkonfigurationen in Vorlagen ({0})</value></data>
   <data name="ReplaceHostersDeletedUploadConfigs" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen ({0})</value></data>
   <data name="ReplaceHostersDeletedUploadConfigsInTemplates" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen in Vorlagen ({0})</value></data>
+  <data name="ReplaceHostersDeletedCollectionUploadSlots" xml:space="preserve"><value>Zu löschende Collectioncontainer ({0})</value></data>
   <data name="ReplaceHostersSkipReason" xml:space="preserve"><value>Grund</value></data>
   <data name="ReplaceHostersAndMore" xml:space="preserve"><value>und {0} weitere</value></data>
   <data name="HosterReplacementSkipReason.DuplicateOnReplacementHoster" xml:space="preserve"><value>Diese Archivkonfiguration liegt bereits beim Ersatzhoster</value></data>
   <data name="HosterReplacementSkipReason.CollectionUploadSlotPartiallySkipped" xml:space="preserve"><value>Ein anderes Mitglied des Collectioncontainers wurde übersprungen</value></data>
-  <data name="HosterReplacementSkipReason.DeletionBlockedByCollectionUploadSlot" xml:space="preserve"><value>Gehört zu einem Collectioncontainer und wird nicht gelöscht</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByOtherCollectionUploadSlotMember" xml:space="preserve"><value>Eine Konfiguration desselben Collectioncontainers kann nicht gelöscht werden</value></data>
   <data name="HosterReplacementSkipReason.DeletionBlockedByRunningUpload" xml:space="preserve"><value>Hat einen laufenden Upload und wird nicht gelöscht</value></data>
   <data name="ReplaceHostersAccountInOtherPool" xml:space="preserve"><value>{0} ist auch Mitglied von Pool {1}, der nicht ersetzt wird.</value></data>
   <data name="ReplaceHostersPoolBecomesUnused" xml:space="preserve"><value>Pool {0} wird danach nicht mehr verwendet und kann gelöscht werden.</value></data>
   <data name="ReplaceHostersExecute" xml:space="preserve"><value>Hoster ersetzen</value></data>
   <data name="ReplaceHostersConfirmation" xml:space="preserve"><value>{0} Uploadkonfigurationen, {1} Uploadkonfigurationen in Vorlagen und {2} ungestartete Uploads wechseln zu {3}.</value></data>
   <data name="ReplaceHostersConfirmationDeadHoster" xml:space="preserve"><value>Zu deaktivierende Accounts: {0}. Als offline zu markierende Uploads: {1}.</value></data>
-  <data name="ReplaceHostersConfirmationDeletedUploadConfigs" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen: {0}. Zu löschende Uploadkonfigurationen in Vorlagen: {1}.</value></data>
+  <data name="ReplaceHostersConfirmationDeletedUploadConfigs" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen: {0}. Zu löschende Uploadkonfigurationen in Vorlagen: {1}. Zu löschende Collectioncontainer: {2}.</value></data>
   <data name="ReplaceHostersCannotBeUndone" xml:space="preserve"><value>Das lässt sich nicht automatisch rückgängig machen.</value></data>
   <data name="ReplaceHostersExecuted" xml:space="preserve"><value>Ersetzt: {0} Uploadkonfigurationen, {1} in Vorlagen, {2} ungestartete Uploads.</value></data>
   <data name="ReplaceHostersExecutedDeadHoster" xml:space="preserve"><value>Deaktivierte Accounts: {0}. Als offline markierte Uploads: {1}.</value></data>
-  <data name="ReplaceHostersExecutedDeletedUploadConfigs" xml:space="preserve"><value>Gelöschte Uploadkonfigurationen: {0}. Gelöschte Uploadkonfigurationen in Vorlagen: {1}.</value></data>
+  <data name="ReplaceHostersExecutedDeletedUploadConfigs" xml:space="preserve"><value>Gelöschte Uploadkonfigurationen: {0}. Gelöschte Uploadkonfigurationen in Vorlagen: {1}. Gelöschte Collectioncontainer: {2}.</value></data>
 </root>

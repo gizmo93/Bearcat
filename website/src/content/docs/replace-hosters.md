@@ -37,12 +37,13 @@ other configurations when several selected accounts use the same archive configu
 
 - Bearcat deletes their uploads and links.
 - Containers at link crypters stay. Delete them at the link crypter if needed.
-- Configurations of a collection upload slot are not deleted.
+- A collection upload slot is deleted as a whole when all its configurations are duplicates without a
+  running upload. Otherwise all its configurations stay.
 - Configurations with a running upload are not deleted.
 - Configurations in templates have no exceptions.
 
 Configurations that are not deleted stay in the list of skipped configurations. The preview lists the
-configurations to delete. Deleting cannot be undone.
+configurations and collection upload slots to delete. Deleting cannot be undone.
 
 ## Hoster is dead
 

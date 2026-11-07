@@ -12,6 +12,7 @@ public sealed record HosterReplacementPreview(
     IReadOnlyList<SkippedUploadConfigTemplateReadModel> SkippedUploadConfigTemplates,
     IReadOnlyList<SkippedUploadConfigReadModel> DeletedUploadConfigs,
     IReadOnlyList<SkippedUploadConfigTemplateReadModel> DeletedUploadConfigTemplates,
+    IReadOnlyList<DeletedCollectionUploadSlotReadModel> DeletedCollectionUploadSlots,
     IReadOnlyList<SourceAccountInUnselectedPoolReadModel> SourceAccountsInUnselectedPools,
     IReadOnlyList<SourcePoolBecomingUnusedReadModel> SourcePoolsBecomingUnused
 );

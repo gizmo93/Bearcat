@@ -260,7 +260,8 @@ public partial class ReplaceHostersPage(
                 L[
                     "ReplaceHostersConfirmationDeletedUploadConfigs",
                     hosterReplacementPreview.DeletedUploadConfigs.Count,
-                    hosterReplacementPreview.DeletedUploadConfigTemplates.Count
+                    hosterReplacementPreview.DeletedUploadConfigTemplates.Count,
+                    hosterReplacementPreview.DeletedCollectionUploadSlots.Count
                 ]
             );
         }
@@ -299,7 +300,8 @@ public partial class ReplaceHostersPage(
                 L[
                     "ReplaceHostersExecutedDeletedUploadConfigs",
                     result.DeletedUploadConfigs.Count,
-                    result.DeletedUploadConfigTemplates.Count
+                    result.DeletedUploadConfigTemplates.Count,
+                    result.DeletedCollectionUploadSlots.Count
                 ]
             );
         }

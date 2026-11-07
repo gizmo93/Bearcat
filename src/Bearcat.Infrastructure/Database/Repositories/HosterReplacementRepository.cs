@@ -172,6 +172,12 @@ public class HosterReplacementRepository(
                 UploadSource: uploadConfig.UploadSource,
                 ArchiveConfigId: uploadConfig.ArchiveConfigId,
                 CollectionUploadSlotId: uploadConfig.CollectionUploadSlotId,
+                CollectionUploadSlotName: uploadConfig.CollectionUploadSlot!.Name,
+                CollectionUploadSlotUploadConfigCount: uploadConfig.CollectionUploadSlotId == null
+                    ? 0
+                    : uploadConfig.CollectionUploadSlot!.UploadConfigs.Count,
+                ReleaseCollectionId: uploadConfig.CollectionUploadSlot!.ReleaseCollectionId,
+                ReleaseCollectionName: uploadConfig.CollectionUploadSlot!.ReleaseCollection.Name,
                 HosterRegistrationId: uploadConfig.HosterRegistrationId,
                 HosterAccountPoolId: uploadConfig.HosterAccountPoolId,
                 HosterClassName: uploadConfig.HosterAccountPoolId == null
@@ -375,6 +381,10 @@ public class HosterReplacementRepository(
             cancellationToken
         );
 
+        await DeleteCollectionUploadSlotsWithTheirUploadConfigsAsync(
+            changes.CollectionUploadSlotIdsToDelete,
+            cancellationToken
+        );
         await DeleteUploadConfigsAsync(changes.UploadConfigIdsToDelete, cancellationToken);
         await DeleteUploadConfigTemplatesAsync(
             changes.UploadConfigTemplateIdsToDelete,
@@ -402,6 +412,28 @@ public class HosterReplacementRepository(
             DeactivatedAccountCount: deactivatedAccountCount,
             UploadCountMarkedOffline: uploadCountMarkedOffline
         );
+    }
+
+    private async Task DeleteCollectionUploadSlotsWithTheirUploadConfigsAsync(
+        IReadOnlyList<int> collectionUploadSlotIds,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var slotIdChunk in collectionUploadSlotIds.Chunk(MaximumIdsPerQuery))
+        {
+            var slots = await dbWrite
+                .CollectionUploadSlots.Include(slot => slot.UploadConfigs)
+                .Where(slot => slotIdChunk.Contains(slot.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var slot in slots)
+            {
+                dbWrite.UploadConfigs.RemoveRange(slot.UploadConfigs);
+                dbWrite.CollectionUploadSlots.Remove(slot);
+            }
+
+            await dbWrite.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private async Task DeleteUploadConfigsAsync(
