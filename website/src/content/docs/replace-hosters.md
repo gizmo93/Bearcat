@@ -4,8 +4,18 @@ description: "Move upload configurations and templates from one hoster to anothe
 ---
 
 Open **Hosters** > **Replace hosters**. Choose the hoster, the accounts and pools to replace, and one
-replacement account or pool of the same kind (video or archive). The preview updates with every change.
-Click **Replace hoster** to apply your selection. Bearcat cannot undo this automatically.
+replacement account or pool of the same kind (video or archive).
+
+![Hoster, accounts and pools to replace](images/replace-hosters-source-selection.png)
+
+The preview updates with every change. Click **Replace hoster** to apply your selection. Bearcat cannot
+undo this automatically.
+
+![Preview before replacing a hoster](images/replace-hosters-preview.png)
+
+After the replacement, a message shows how many configurations and uploads were switched.
+
+![Message after replacing a hoster](images/replace-hosters-success-message.png)
 
 ## What gets replaced
 
@@ -29,6 +39,8 @@ Existing uploads stay on the old hoster. The next reupload uses the selected acc
 | One configuration of a collection upload slot is skipped | The entire upload slot stays unchanged |
 
 The preview lists skipped configurations with a link to the release or template.
+
+![Skipped upload configuration in the preview](images/replace-hosters-skipped-configuration.png)
 
 ## Delete duplicate configurations
 

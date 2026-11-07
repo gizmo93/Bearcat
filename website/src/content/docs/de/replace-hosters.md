@@ -4,9 +4,18 @@ description: "Uploadkonfigurationen und Vorlagen von einem Hoster auf einen ande
 ---
 
 Öffne **Hoster** > **Hoster ersetzen**. Wähle den Hoster, die zu ersetzenden Accounts und Pools sowie einen
-Ersatzaccount oder Ersatzpool derselben Art (Video oder Archiv). Die Vorschau aktualisiert sich bei jeder
-Änderung. Klicke auf **Hoster ersetzen**, um die Auswahl zu übernehmen. Bearcat kann das nicht automatisch
-rückgängig machen.
+Ersatzaccount oder Ersatzpool derselben Art (Video oder Archiv).
+
+![Hoster, Accounts und Pools zum Ersetzen](../images/replace-hosters-source-selection.png)
+
+Die Vorschau aktualisiert sich bei jeder Änderung. Klicke auf **Hoster ersetzen**, um die Auswahl zu
+übernehmen. Bearcat kann das nicht automatisch rückgängig machen.
+
+![Vorschau vor dem Ersetzen eines Hosters](../images/replace-hosters-preview.png)
+
+Nach dem Ersetzen zeigt eine Meldung, wie viele Konfigurationen und Uploads umgestellt wurden.
+
+![Meldung nach dem Ersetzen eines Hosters](../images/replace-hosters-success-message.png)
 
 ## Was ersetzt wird
 
@@ -31,6 +40,8 @@ oder Pool.
 | Eine Konfiguration eines Uploadslots wird übersprungen | Der gesamte Uploadslot bleibt unverändert |
 
 Die Vorschau listet übersprungene Konfigurationen mit einem Link zum Release oder Template auf.
+
+![Übersprungene Uploadkonfiguration in der Vorschau](../images/replace-hosters-skipped-configuration.png)
 
 ## Doppelte Konfigurationen löschen
 
