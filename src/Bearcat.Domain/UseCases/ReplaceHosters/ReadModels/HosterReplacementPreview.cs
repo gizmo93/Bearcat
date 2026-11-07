@@ -6,6 +6,8 @@ public sealed record HosterReplacementPreview(
     int UnstartedUploadCount,
     int UploadCountStayingOnSourceHoster,
     int UploadConfigCountWithoutArchiveSource,
+    int AccountCountToDeactivate,
+    int UploadCountToMarkOffline,
     IReadOnlyList<SkippedUploadConfigReadModel> SkippedUploadConfigs,
     IReadOnlyList<SkippedUploadConfigTemplateReadModel> SkippedUploadConfigTemplates,
     IReadOnlyList<SourceAccountInUnselectedPoolReadModel> SourceAccountsInUnselectedPools,

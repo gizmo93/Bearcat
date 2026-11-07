@@ -5,15 +5,25 @@ using Bearcat.Domain.UseCases.ReplaceHosters.ReadModels;
 using Bearcat.Domain.UseCases.ReplaceHosters.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ReplaceHosters;
 
 public class HosterReplacementService(
     IHosterReplacementRepository repository,
     IHosterFactory hosterFactory,
+    TimeProvider timeProvider,
     ILogger<HosterReplacementService> logger
 )
 {
+    public async Task<IReadOnlyList<HosterReplacementSourceChoiceReadModel>> GetSourceChoicesAsync(
+        string hosterClassName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await repository.GetSourceChoicesAsync(hosterClassName, cancellationToken);
+    }
+
     public async Task<HosterReplacementPreview> GetPreviewAsync(
         HosterReplacementRequest request,
         CancellationToken cancellationToken = default
@@ -32,25 +42,29 @@ public class HosterReplacementService(
         var plan = await CreatePlanAsync(request, cancellationToken);
         var preview = await CreatePreviewAsync(request, plan, cancellationToken);
 
-        var changedUploadCount = await repository.ApplyChangesAndGetChangedUploadCountAsync(
+        var appliedChangeCounts = await repository.ApplyChangesAndGetChangeCountsAsync(
             plan.Changes,
             cancellationToken
         );
 
         logger.LogInformation(
-            "Replaced hoster {SourceHosterClassName} with upload target {ReplacementUploadTargetName}: {UploadConfigCount} upload configs, {UploadConfigTemplateCount} upload config templates, {ChangedUploadCount} unstarted uploads, {SkippedUploadConfigCount} upload configs and {SkippedUploadConfigTemplateCount} upload config templates skipped",
+            "Replaced hoster {SourceHosterClassName} with upload target {ReplacementUploadTargetName}: {UploadConfigCount} upload configs, {UploadConfigTemplateCount} upload config templates, {MovedUploadCount} unstarted uploads, {DeactivatedAccountCount} accounts deactivated, {UploadCountMarkedOffline} uploads marked offline, {SkippedUploadConfigCount} upload configs and {SkippedUploadConfigTemplateCount} upload config templates skipped",
             plan.SourceHosterClassName,
             plan.Changes.ReplacementUploadTargetName,
             preview.UploadConfigCount,
             preview.UploadConfigTemplateCount,
-            changedUploadCount,
+            appliedChangeCounts.MovedUploadCount,
+            appliedChangeCounts.DeactivatedAccountCount,
+            appliedChangeCounts.UploadCountMarkedOffline,
             preview.SkippedUploadConfigs.Count,
             preview.SkippedUploadConfigTemplates.Count
         );
 
         return preview with
         {
-            UnstartedUploadCount = changedUploadCount,
+            UnstartedUploadCount = appliedChangeCounts.MovedUploadCount,
+            AccountCountToDeactivate = appliedChangeCounts.DeactivatedAccountCount,
+            UploadCountToMarkOffline = appliedChangeCounts.UploadCountMarkedOffline,
         };
     }
 
@@ -72,6 +86,7 @@ public class HosterReplacementService(
         var replacement = uploadTargetsByUploadTarget[request.ReplacementUploadTarget];
 
         EnsureReplacementCanReplaceSources(sources, replacement);
+        EnsureDeadSourceHosterDiffersFromReplacementHoster(request, sources, replacement);
 
         var sourceNamesByUploadTarget = sources.ToDictionary(
             source => source.UploadTarget,
@@ -125,7 +140,13 @@ public class HosterReplacementService(
                     .Where(row => !skippedUploadConfigTemplateIds.Contains(row.Id))
                     .ToList(),
                 sourceNamesByUploadTarget: sourceNamesByUploadTarget,
-                replacement: replacement
+                replacement: replacement,
+                hosterRegistrationIdsToDeactivate: request.MarkSourceHosterAsDead
+                    ? await repository.GetHosterRegistrationIdsOfUploadTargetsAsync(
+                        request.SourceUploadTargets,
+                        cancellationToken
+                    )
+                    : []
             ),
             SkippedUploadConfigs: skippedUploadConfigRows
                 .Select(row => new SkippedUploadConfigReadModel(
@@ -161,6 +182,7 @@ public class HosterReplacementService(
     )
     {
         var replacedUploadConfigIds = plan.Changes.ReplacedUploadConfigIds;
+        var hosterRegistrationIdsToDeactivate = plan.Changes.HosterRegistrationIdsToDeactivate;
 
         var hosterClassNamesWithDownload = hosterFactory
             .GetHostersByName()
@@ -185,11 +207,20 @@ public class HosterReplacementService(
                 hosterClassNamesWithDownload: hosterClassNamesWithDownload,
                 cancellationToken: cancellationToken
             ),
+            AccountCountToDeactivate: await repository.GetActiveHosterRegistrationCountAsync(
+                hosterRegistrationIdsToDeactivate,
+                cancellationToken
+            ),
+            UploadCountToMarkOffline: await repository.GetUploadCountToMarkOfflineAsync(
+                hosterRegistrationIdsToDeactivate,
+                cancellationToken
+            ),
             SkippedUploadConfigs: plan.SkippedUploadConfigs,
             SkippedUploadConfigTemplates: plan.SkippedUploadConfigTemplates,
             SourceAccountsInUnselectedPools: await repository.GetSourceAccountsInUnselectedPoolsAsync(
-                request.SourceUploadTargets,
-                cancellationToken
+                sourceUploadTargets: request.SourceUploadTargets,
+                replacementUploadTarget: request.ReplacementUploadTarget,
+                cancellationToken: cancellationToken
             ),
             SourcePoolsBecomingUnused: plan.SourcePoolsBecomingUnused
         );
@@ -252,6 +283,23 @@ public class HosterReplacementService(
         {
             throw new InvalidOperationException(
                 $"Hoster {sourceHoster.Name} cannot be replaced by {replacementHoster.Name} because only one of them is a video hoster."
+            );
+        }
+    }
+
+    private static void EnsureDeadSourceHosterDiffersFromReplacementHoster(
+        HosterReplacementRequest request,
+        IReadOnlyList<HosterReplacementUploadTargetReadModel> sources,
+        HosterReplacementUploadTargetReadModel replacement
+    )
+    {
+        if (
+            request.MarkSourceHosterAsDead
+            && sources.First().HosterClassName == replacement.HosterClassName
+        )
+        {
+            throw new InvalidOperationException(
+                $"Hoster {replacement.HosterClassName} cannot be marked as dead because the replacement uses the same hoster."
             );
         }
     }
@@ -352,7 +400,8 @@ public class HosterReplacementService(
         IReadOnlyList<HosterReplacementUploadConfigRow> replacedUploadConfigRows,
         IReadOnlyList<HosterReplacementUploadConfigTemplateRow> replacedUploadConfigTemplateRows,
         IReadOnlyDictionary<UploadTarget, string> sourceNamesByUploadTarget,
-        HosterReplacementUploadTargetReadModel replacement
+        HosterReplacementUploadTargetReadModel replacement,
+        IReadOnlyList<int> hosterRegistrationIdsToDeactivate
     )
     {
         var replacementHosterSupportsPremiumOnlyDownloads = hosterFactory
@@ -386,7 +435,9 @@ public class HosterReplacementService(
                 : replacedUploadConfigTemplateRows
                     .Where(row => row.PremiumOnlyDownload)
                     .Select(row => row.Id)
-                    .ToList()
+                    .ToList(),
+            HosterRegistrationIdsToDeactivate: hosterRegistrationIdsToDeactivate,
+            LocalNow: timeProvider.GetLocalNow()
         );
     }
 

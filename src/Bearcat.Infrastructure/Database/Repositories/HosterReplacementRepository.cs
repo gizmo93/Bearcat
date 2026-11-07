@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ReplaceHosters.Dto;
 using Bearcat.Domain.UseCases.ReplaceHosters.ReadModels;
 using Bearcat.Domain.UseCases.ReplaceHosters.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database.MaterializedValues;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -31,6 +32,70 @@ public class HosterReplacementRepository(
                 || upload.UploadState == UploadState.Pending
             ) && upload.UploadedFiles.Any()
         );
+
+    private static readonly Expression<Func<Upload, bool>> UploadCanBeMarkedOffline = upload =>
+        upload.UploadState == UploadState.Completed
+        && upload.OnlineState != OnlineState.Offline
+        && upload.UploadedFiles.Any();
+
+    public async Task<IReadOnlyList<HosterReplacementSourceChoiceReadModel>> GetSourceChoicesAsync(
+        string hosterClassName,
+        CancellationToken cancellationToken
+    )
+    {
+        var accountChoices = await dbRead
+            .HosterRegistrations.Where(registration =>
+                registration.HosterClassName == hosterClassName
+            )
+            .OrderBy(registration => registration.Name)
+            .Select(registration => new HosterReplacementSourceChoiceReadModel(
+                UploadTarget: UploadTarget.ForHosterRegistration(registration.Id),
+                Name: registration.Name,
+                IsActive: registration.IsActive,
+                UploadConfigCount: dbRead.UploadConfigs.Count(uploadConfig =>
+                    uploadConfig.HosterRegistrationId == registration.Id
+                ),
+                UploadConfigTemplateCount: dbRead.UploadConfigTemplates.Count(template =>
+                    template.HosterRegistrationId == registration.Id
+                )
+            ))
+            .ToListAsync(cancellationToken);
+
+        var poolChoices = await dbRead
+            .HosterAccountPools.Where(pool => pool.HosterClassName == hosterClassName)
+            .OrderBy(pool => pool.Name)
+            .Select(pool => new HosterReplacementSourceChoiceReadModel(
+                UploadTarget: UploadTarget.ForHosterAccountPool(pool.Id),
+                Name: pool.Name,
+                IsActive: pool.Members.Any(member => member.HosterRegistration.IsActive),
+                UploadConfigCount: dbRead.UploadConfigs.Count(uploadConfig =>
+                    uploadConfig.HosterAccountPoolId == pool.Id
+                ),
+                UploadConfigTemplateCount: dbRead.UploadConfigTemplates.Count(template =>
+                    template.HosterAccountPoolId == pool.Id
+                )
+            ))
+            .ToListAsync(cancellationToken);
+
+        return [.. accountChoices, .. poolChoices];
+    }
+
+    public async Task<IReadOnlyList<int>> GetHosterRegistrationIdsOfUploadTargetsAsync(
+        IReadOnlyList<UploadTarget> uploadTargets,
+        CancellationToken cancellationToken
+    )
+    {
+        var hosterAccountPoolIds = GetHosterAccountPoolIds(uploadTargets);
+
+        var poolMemberIds = await dbRead
+            .HosterAccountPoolMembers.Where(member =>
+                hosterAccountPoolIds.Contains(member.HosterAccountPoolId)
+            )
+            .Select(member => member.HosterRegistrationId)
+            .ToListAsync(cancellationToken);
+
+        return GetHosterRegistrationIds(uploadTargets).Union(poolMemberIds).ToList();
+    }
 
     public async Task<IReadOnlyList<HosterReplacementUploadTargetReadModel>> GetUploadTargetsAsync(
         IReadOnlyList<UploadTarget> uploadTargets,
@@ -229,20 +294,50 @@ public class HosterReplacementRepository(
         return uploadConfigCount;
     }
 
+    public async Task<int> GetActiveHosterRegistrationCountAsync(
+        IReadOnlyList<int> hosterRegistrationIds,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead.HosterRegistrations.CountAsync(
+            registration =>
+                hosterRegistrationIds.Contains(registration.Id) && registration.IsActive,
+            cancellationToken
+        );
+    }
+
+    public async Task<int> GetUploadCountToMarkOfflineAsync(
+        IReadOnlyList<int> hosterRegistrationIds,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead
+            .Uploads.Where(upload =>
+                upload.HosterRegistrationId != null
+                && hosterRegistrationIds.Contains(upload.HosterRegistrationId.Value)
+            )
+            .Where(UploadCanBeMarkedOffline)
+            .CountAsync(cancellationToken);
+    }
+
     public async Task<
         IReadOnlyList<SourceAccountInUnselectedPoolReadModel>
     > GetSourceAccountsInUnselectedPoolsAsync(
         IReadOnlyList<UploadTarget> sourceUploadTargets,
+        UploadTarget replacementUploadTarget,
         CancellationToken cancellationToken
     )
     {
         var hosterRegistrationIds = GetHosterRegistrationIds(sourceUploadTargets);
-        var hosterAccountPoolIds = GetHosterAccountPoolIds(sourceUploadTargets);
+        var hosterAccountPoolIdsToIgnore = GetHosterAccountPoolIds([
+            .. sourceUploadTargets,
+            replacementUploadTarget,
+        ]);
 
         return await dbRead
             .HosterAccountPoolMembers.Where(member =>
                 hosterRegistrationIds.Contains(member.HosterRegistrationId)
-                && !hosterAccountPoolIds.Contains(member.HosterAccountPoolId)
+                && !hosterAccountPoolIdsToIgnore.Contains(member.HosterAccountPoolId)
             )
             .OrderBy(member => member.HosterAccountPool.Name)
             .ThenBy(member => member.HosterRegistration.Name)
@@ -255,7 +350,7 @@ public class HosterReplacementRepository(
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> ApplyChangesAndGetChangedUploadCountAsync(
+    public async Task<HosterReplacementAppliedChangeCounts> ApplyChangesAndGetChangeCountsAsync(
         HosterReplacementChanges changes,
         CancellationToken cancellationToken
     )
@@ -266,14 +361,26 @@ public class HosterReplacementRepository(
 
         await ApplyChangesToUploadConfigsAsync(changes, cancellationToken);
         await ApplyChangesToUploadConfigTemplatesAsync(changes, cancellationToken);
-        var changedUploadCount = await MoveUnstartedUploadsToReplacementAsync(
+        var movedUploadCount = await MoveUnstartedUploadsToReplacementAsync(
+            changes,
+            cancellationToken
+        );
+        var deactivatedAccountCount = await DeactivateHosterRegistrationsAsync(
+            changes,
+            cancellationToken
+        );
+        var uploadCountMarkedOffline = await MarkUploadsOfDeactivatedAccountsAsOfflineAsync(
             changes,
             cancellationToken
         );
 
         await transaction.CommitAsync(cancellationToken);
 
-        return changedUploadCount;
+        return new HosterReplacementAppliedChangeCounts(
+            MovedUploadCount: movedUploadCount,
+            DeactivatedAccountCount: deactivatedAccountCount,
+            UploadCountMarkedOffline: uploadCountMarkedOffline
+        );
     }
 
     private async Task ApplyChangesToUploadConfigsAsync(
@@ -432,6 +539,112 @@ public class HosterReplacementRepository(
         }
 
         return changedUploadCount;
+    }
+
+    private async Task<int> DeactivateHosterRegistrationsAsync(
+        HosterReplacementChanges changes,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .HosterRegistrations.Where(registration =>
+                changes.HosterRegistrationIdsToDeactivate.Contains(registration.Id)
+                && registration.IsActive
+            )
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(registration => registration.IsActive, false),
+                cancellationToken
+            );
+    }
+
+    private async Task<int> MarkUploadsOfDeactivatedAccountsAsOfflineAsync(
+        HosterReplacementChanges changes,
+        CancellationToken cancellationToken
+    )
+    {
+        var uploadIds = await dbWrite
+            .Uploads.Where(upload =>
+                upload.HosterRegistrationId != null
+                && changes.HosterRegistrationIdsToDeactivate.Contains(
+                    upload.HosterRegistrationId.Value
+                )
+            )
+            .Where(UploadCanBeMarkedOffline)
+            .OrderBy(upload => upload.Id)
+            .Select(upload => upload.Id)
+            .ToListAsync(cancellationToken);
+
+        var releaseIds = new HashSet<int>();
+
+        foreach (var uploadIdChunk in uploadIds.Chunk(MaximumIdsPerQuery))
+        {
+            await MarkUploadsAndTheirFilesAsOfflineAsync(
+                uploadIdChunk,
+                changes.LocalNow,
+                cancellationToken
+            );
+            await MaterializedValuesUpdater.UpdateOldestUploadedFileCheckedAtAsync(
+                dbWrite,
+                uploadIdChunk.ToList(),
+                cancellationToken
+            );
+
+            releaseIds.UnionWith(
+                await dbWrite
+                    .Uploads.Where(upload => uploadIdChunk.Contains(upload.Id))
+                    .Select(upload => upload.UploadConfig.ReleaseId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken)
+            );
+        }
+
+        foreach (var releaseIdChunk in releaseIds.Order().Chunk(MaximumIdsPerQuery))
+        {
+            await MaterializedValuesUpdater.UpdateReleaseOnlineStatesAsync(
+                dbWrite,
+                releaseIdChunk.ToList(),
+                cancellationToken
+            );
+        }
+
+        return uploadIds.Count;
+    }
+
+    private async Task MarkUploadsAndTheirFilesAsOfflineAsync(
+        int[] uploadIds,
+        DateTime localNow,
+        CancellationToken cancellationToken
+    )
+    {
+        await dbWrite
+            .UploadedFiles.Where(uploadedFile =>
+                uploadIds.Contains(uploadedFile.UploadId)
+                && uploadedFile.OnlineState != OnlineState.Offline
+            )
+            .ExecuteUpdateAsync(
+                setters =>
+                    setters
+                        .SetProperty(uploadedFile => uploadedFile.OnlineState, OnlineState.Offline)
+                        .SetProperty(uploadedFile => uploadedFile.CheckedAt, localNow),
+                cancellationToken
+            );
+
+        await dbWrite
+            .Uploads.Where(upload => uploadIds.Contains(upload.Id))
+            .ExecuteUpdateAsync(
+                setters =>
+                    setters
+                        .SetProperty(upload => upload.OnlineState, OnlineState.Offline)
+                        .SetProperty(
+                            upload => upload.NotFullyOnlineSince,
+                            upload => upload.NotFullyOnlineSince ?? localNow
+                        )
+                        .SetProperty(
+                            upload => upload.FullyOfflineSince,
+                            upload => upload.FullyOfflineSince ?? localNow
+                        ),
+                cancellationToken
+            );
     }
 
     private async Task<int> CountUploadsOfUploadConfigsAsync(

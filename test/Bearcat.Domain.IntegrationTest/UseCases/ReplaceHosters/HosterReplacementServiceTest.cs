@@ -1,17 +1,24 @@
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.UseCases.ReplaceHosters;
 using Bearcat.Domain.UseCases.ReplaceHosters.Dto;
 using Bearcat.Domain.UseCases.ReplaceHosters.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.FileSystem;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ReplaceHosters;
 
@@ -25,7 +32,10 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
     private const string VideoHosterClassName = "VideoHoster";
     private const string OtherVideoHosterClassName = "OtherVideoHoster";
 
+    private static readonly DateTime LocalNow = new(2026, 11, 5, 12, 0, 0);
+
     private HosterReplacementService service = null!;
+    private TimeProvider timeProvider = null!;
     private ReleaseGroup? releaseGroup;
 
     public enum InvalidHosterReplacementRequest
@@ -37,6 +47,7 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
         InactiveReplacementAccount = 5,
         ReplacementPoolWithoutUsableMember = 6,
         ReplacementOfOtherHosterKind = 7,
+        DeadSourceHosterWithReplacementOfSameHoster = 8,
     }
 
     [SetUp]
@@ -64,9 +75,14 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
             .Setup(factory => factory.GetByName(It.IsAny<string>()))
             .Returns((string hosterClassName) => hostersByName[hosterClassName]);
 
+        var timeProviderMock = new Mock<TimeProvider>(new ConfigurationBuilder().Build());
+        timeProviderMock.Setup(provider => provider.GetLocalNow()).Returns(LocalNow);
+        timeProvider = timeProviderMock.Object;
+
         service = new HosterReplacementService(
             repository: new HosterReplacementRepository(ReadDbContext, DbContext),
             hosterFactory: hosterFactoryMock.Object,
+            timeProvider: timeProvider,
             logger: NullLogger<HosterReplacementService>.Instance
         );
     }
@@ -566,6 +582,7 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
     [TestCase(InvalidHosterReplacementRequest.InactiveReplacementAccount)]
     [TestCase(InvalidHosterReplacementRequest.ReplacementPoolWithoutUsableMember)]
     [TestCase(InvalidHosterReplacementRequest.ReplacementOfOtherHosterKind)]
+    [TestCase(InvalidHosterReplacementRequest.DeadSourceHosterWithReplacementOfSameHoster)]
     public async Task ExecuteAsync_InvalidRequest_ThrowsInvalidOperationException(
         InvalidHosterReplacementRequest invalidRequest
     )
@@ -749,6 +766,342 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
         ).HosterRegistrationId.ShouldBe(replacement.Id);
     }
 
+    [Test]
+    public async Task ExecuteAsync_MarkSourceHosterAsDead_DeactivatesAccountsAndPoolMembersAndMarksUploadsOffline()
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var poolMember = await AddRegistrationAsync("Pool member");
+        var unselectedAccount = await AddRegistrationAsync("Unselected account");
+        var sourcePool = await AddPoolAsync("Old pool", SourceHosterClassName, poolMember);
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var earlierCheck = LocalNow.AddDays(-1);
+        var earlierNotFullyOnlineSince = LocalNow.AddDays(-5);
+
+        var onlineRelease = await AddReleaseAsync("Online release");
+        var onlineConfig = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(onlineRelease, "Archive"),
+            uploadTarget: TargetOf(source),
+            name: "Custom"
+        );
+        var onlineUpload = await AddCompletedUploadWithFilesAsync(
+            uploadConfig: onlineConfig,
+            hosterRegistrationId: source.Id,
+            uploadOnlineState: OnlineState.Online,
+            files: [(OnlineState.Online, null)]
+        );
+        var runningUpload = await AddUploadAsync(onlineConfig, UploadState.Uploading, source.Id);
+
+        var partiallyOnlineRelease = await AddReleaseAsync("Partially online release");
+        var partiallyOnlineConfig = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(partiallyOnlineRelease, "Archive"),
+            uploadTarget: TargetOf(sourcePool),
+            name: "Custom"
+        );
+        var partiallyOnlineUpload = await AddCompletedUploadWithFilesAsync(
+            uploadConfig: partiallyOnlineConfig,
+            hosterRegistrationId: poolMember.Id,
+            uploadOnlineState: OnlineState.PartiallyOnline,
+            files:
+            [
+                (OnlineState.Online, LocalNow.AddHours(-2)),
+                (OnlineState.Offline, earlierCheck),
+            ],
+            notFullyOnlineSince: earlierNotFullyOnlineSince
+        );
+
+        var unselectedRelease = await AddReleaseAsync("Unselected release");
+        var unselectedConfig = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(unselectedRelease, "Archive"),
+            uploadTarget: TargetOf(unselectedAccount),
+            name: "Custom"
+        );
+        var unselectedUpload = await AddCompletedOnlineUploadAsync(
+            unselectedConfig,
+            unselectedAccount
+        );
+
+        (await GetReleaseOnlineStateAsync(onlineRelease)).ShouldBe(OnlineState.Online);
+
+        var request = new HosterReplacementRequest(
+            SourceUploadTargets: [TargetOf(source), TargetOf(sourcePool)],
+            ReplacementUploadTarget: TargetOf(replacement),
+            MarkSourceHosterAsDead: true
+        );
+
+        // Act
+        var preview = await service.GetPreviewAsync(request);
+        var result = await service.ExecuteAsync(request);
+
+        // Assert
+        preview.AccountCountToDeactivate.ShouldBe(2);
+        preview.UploadCountToMarkOffline.ShouldBe(2);
+        result.AccountCountToDeactivate.ShouldBe(2);
+        result.UploadCountToMarkOffline.ShouldBe(2);
+
+        var registrations = await ReadDbContext.HosterRegistrations.ToDictionaryAsync(r => r.Id);
+        registrations[source.Id].IsActive.ShouldBeFalse();
+        registrations[poolMember.Id].IsActive.ShouldBeFalse();
+        registrations[unselectedAccount.Id].IsActive.ShouldBeTrue();
+        registrations[replacement.Id].IsActive.ShouldBeTrue();
+
+        var uploads = await ReadDbContext
+            .Uploads.Include(upload => upload.UploadedFiles)
+            .ToDictionaryAsync(upload => upload.Id);
+
+        var markedOnlineUpload = uploads[onlineUpload.Id];
+        markedOnlineUpload.OnlineState.ShouldBe(OnlineState.Offline);
+        markedOnlineUpload.NotFullyOnlineSince.ShouldBe(LocalNow);
+        markedOnlineUpload.FullyOfflineSince.ShouldBe(LocalNow);
+        markedOnlineUpload.OldestUploadedFileCheckedAt.ShouldBe(LocalNow);
+        var markedFile = markedOnlineUpload.UploadedFiles.ShouldHaveSingleItem();
+        markedFile.OnlineState.ShouldBe(OnlineState.Offline);
+        markedFile.CheckedAt.ShouldBe(LocalNow);
+
+        var markedPartiallyOnlineUpload = uploads[partiallyOnlineUpload.Id];
+        markedPartiallyOnlineUpload.OnlineState.ShouldBe(OnlineState.Offline);
+        markedPartiallyOnlineUpload.NotFullyOnlineSince.ShouldBe(earlierNotFullyOnlineSince);
+        markedPartiallyOnlineUpload.FullyOfflineSince.ShouldBe(LocalNow);
+        markedPartiallyOnlineUpload.OldestUploadedFileCheckedAt.ShouldBe(earlierCheck);
+        markedPartiallyOnlineUpload.UploadedFiles.ShouldAllBe(file =>
+            file.OnlineState == OnlineState.Offline
+        );
+        markedPartiallyOnlineUpload
+            .UploadedFiles.Select(file => file.CheckedAt)
+            .ShouldBe([LocalNow, earlierCheck], ignoreOrder: true);
+
+        uploads[runningUpload.Id].OnlineState.ShouldBe(OnlineState.Unknown);
+        uploads[unselectedUpload.Id].OnlineState.ShouldBe(OnlineState.Online);
+
+        (await GetReleaseOnlineStateAsync(onlineRelease)).ShouldBe(OnlineState.Offline);
+        (await GetReleaseOnlineStateAsync(partiallyOnlineRelease)).ShouldBe(OnlineState.Offline);
+        (await GetReleaseOnlineStateAsync(unselectedRelease)).ShouldBe(OnlineState.Online);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_MarkSourceHosterAsDead_AlsoMarksUploadsOfSkippedConfigsOffline()
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var release = await AddReleaseAsync("Release");
+        var archiveConfig = await AddArchiveConfigAsync(release, "Archive");
+        await AddUploadConfigAsync(archiveConfig, TargetOf(replacement), "Existing");
+        var skippedConfig = await AddUploadConfigAsync(archiveConfig, TargetOf(source), "Skipped");
+        var uploadOfSkippedConfig = await AddCompletedOnlineUploadAsync(skippedConfig, source);
+
+        // Act
+        var result = await service.ExecuteAsync(
+            new HosterReplacementRequest(
+                SourceUploadTargets: [TargetOf(source)],
+                ReplacementUploadTarget: TargetOf(replacement),
+                MarkSourceHosterAsDead: true
+            )
+        );
+
+        // Assert
+        result.SkippedUploadConfigs.ShouldHaveSingleItem();
+        result.UploadCountToMarkOffline.ShouldBe(1);
+        (
+            await ReadDbContext.UploadConfigs.SingleAsync(c => c.Id == skippedConfig.Id)
+        ).HosterRegistrationId.ShouldBe(source.Id);
+        (
+            await ReadDbContext.Uploads.SingleAsync(u => u.Id == uploadOfSkippedConfig.Id)
+        ).OnlineState.ShouldBe(OnlineState.Offline);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_MarkSourceHosterAsDead_AutomaticReuploadRunsOnReplacementOnceDue()
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var group = await GetReleaseGroupAsync();
+        group.EnableAutomaticReuploads = true;
+        var release = await AddReleaseAsync("Release");
+        var uploadConfig = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(release, "Archive"),
+            uploadTarget: TargetOf(source),
+            name: "Custom"
+        );
+        var offlineUpload = await AddCompletedOnlineUploadAsync(uploadConfig, source);
+
+        await service.ExecuteAsync(
+            new HosterReplacementRequest(
+                SourceUploadTargets: [TargetOf(source)],
+                ReplacementUploadTarget: TargetOf(replacement),
+                MarkSourceHosterAsDead: true
+            )
+        );
+
+        var uploadCreationService = CreateUploadCreationService();
+
+        // Act
+        await uploadCreationService.CreateAutomaticReuploadsForOfflineUploadsAsync(
+            LocalNow.AddHours(23),
+            CancellationToken.None
+        );
+        var uploadCountBeforeDue = await ReadDbContext.Uploads.CountAsync();
+
+        await uploadCreationService.CreateAutomaticReuploadsForOfflineUploadsAsync(
+            LocalNow.AddHours(25),
+            CancellationToken.None
+        );
+
+        // Assert
+        uploadCountBeforeDue.ShouldBe(1);
+        var reupload = await ReadDbContext.Uploads.SingleAsync(u => u.Id != offlineUpload.Id);
+        reupload.UploadConfigId.ShouldBe(uploadConfig.Id);
+        reupload.HosterRegistrationId.ShouldBe(replacement.Id);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_WithoutMarkSourceHosterAsDead_ChangesNoOnlineStatesAndNoIsActive()
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var replacement = await AddRegistrationAsync("New account", ReplacementHosterClassName);
+        var release = await AddReleaseAsync("Release");
+        var uploadConfig = await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(release, "Archive"),
+            uploadTarget: TargetOf(source),
+            name: "Custom"
+        );
+        var upload = await AddCompletedOnlineUploadAsync(uploadConfig, source);
+
+        // Act
+        var result = await service.ExecuteAsync(
+            new HosterReplacementRequest([TargetOf(source)], TargetOf(replacement))
+        );
+
+        // Assert
+        result.AccountCountToDeactivate.ShouldBe(0);
+        result.UploadCountToMarkOffline.ShouldBe(0);
+        (
+            await ReadDbContext.HosterRegistrations.SingleAsync(r => r.Id == source.Id)
+        ).IsActive.ShouldBeTrue();
+
+        var unchangedUpload = await ReadDbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+        unchangedUpload.OnlineState.ShouldBe(OnlineState.Online);
+        unchangedUpload.NotFullyOnlineSince.ShouldBeNull();
+        unchangedUpload.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
+        (await GetReleaseOnlineStateAsync(release)).ShouldBe(OnlineState.Online);
+    }
+
+    [Test]
+    public async Task GetPreviewAsync_ReplacementPoolContainsSourceAccount_DoesNotListItAsUnselectedPool()
+    {
+        // Arrange
+        var source = await AddRegistrationAsync("Old account");
+        var replacementPool = await AddPoolAsync("New pool", SourceHosterClassName, source);
+        var unselectedPool = await AddPoolAsync("Unselected", SourceHosterClassName, source);
+        var otherAccount = await AddRegistrationAsync("Other account");
+        DbContext.Add(
+            new HosterAccountPoolMember
+            {
+                HosterAccountPoolId = replacementPool.Id,
+                HosterRegistrationId = otherAccount.Id,
+                Priority = 2,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetPreviewAsync(
+            new HosterReplacementRequest([TargetOf(otherAccount)], TargetOf(replacementPool))
+        );
+        var resultWithSourceInBothPools = await service.GetPreviewAsync(
+            new HosterReplacementRequest([TargetOf(source)], TargetOf(replacementPool))
+        );
+
+        // Assert
+        result.SourceAccountsInUnselectedPools.ShouldBeEmpty();
+        resultWithSourceInBothPools
+            .SourceAccountsInUnselectedPools.ShouldHaveSingleItem()
+            .HosterAccountPoolId.ShouldBe(unselectedPool.Id);
+    }
+
+    [Test]
+    public async Task GetSourceChoicesAsync_AccountsAndPoolsOfHoster_ReturnsThemWithUsageCounts()
+    {
+        // Arrange
+        var activeAccount = await AddRegistrationAsync("Active account");
+        var inactiveAccount = await AddRegistrationAsync("Inactive account", isActive: false);
+        await AddRegistrationAsync("Other hoster account", ReplacementHosterClassName);
+        var pool = await AddPoolAsync("Pool", SourceHosterClassName, activeAccount);
+        var poolWithoutActiveMember = await AddPoolAsync(
+            name: "Pool without active member",
+            hosterClassName: SourceHosterClassName,
+            member: inactiveAccount
+        );
+        var release = await AddReleaseAsync("Release");
+        await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(release, "First"),
+            uploadTarget: TargetOf(activeAccount),
+            name: "First"
+        );
+        await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(release, "Second"),
+            uploadTarget: TargetOf(activeAccount),
+            name: "Second"
+        );
+        await AddUploadConfigAsync(
+            archiveConfig: await AddArchiveConfigAsync(release, "Third"),
+            uploadTarget: TargetOf(pool),
+            name: "Third"
+        );
+        var releaseTemplate = await AddReleaseTemplateAsync("Template");
+        await AddUploadConfigTemplateAsync(
+            archiveConfigTemplate: await AddArchiveConfigTemplateAsync(releaseTemplate, "First"),
+            uploadTarget: TargetOf(inactiveAccount),
+            name: null
+        );
+        await AddUploadConfigTemplateAsync(
+            archiveConfigTemplate: await AddArchiveConfigTemplateAsync(releaseTemplate, "Second"),
+            uploadTarget: TargetOf(pool),
+            name: null
+        );
+
+        // Act
+        var result = await service.GetSourceChoicesAsync(SourceHosterClassName);
+
+        // Assert
+        result.ShouldBe([
+            new HosterReplacementSourceChoiceReadModel(
+                UploadTarget: TargetOf(activeAccount),
+                Name: "Active account",
+                IsActive: true,
+                UploadConfigCount: 2,
+                UploadConfigTemplateCount: 0
+            ),
+            new HosterReplacementSourceChoiceReadModel(
+                UploadTarget: TargetOf(inactiveAccount),
+                Name: "Inactive account",
+                IsActive: false,
+                UploadConfigCount: 0,
+                UploadConfigTemplateCount: 1
+            ),
+            new HosterReplacementSourceChoiceReadModel(
+                UploadTarget: TargetOf(pool),
+                Name: "Pool",
+                IsActive: true,
+                UploadConfigCount: 1,
+                UploadConfigTemplateCount: 1
+            ),
+            new HosterReplacementSourceChoiceReadModel(
+                UploadTarget: TargetOf(poolWithoutActiveMember),
+                Name: "Pool without active member",
+                IsActive: false,
+                UploadConfigCount: 0,
+                UploadConfigTemplateCount: 0
+            ),
+        ]);
+        result.Count(choice => choice.IsHosterAccountPool).ShouldBe(2);
+    }
+
     private static UploadTarget TargetOf(HosterRegistration registration) =>
         UploadTarget.ForHosterRegistration(registration.Id);
 
@@ -813,6 +1166,14 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
                 new HosterReplacementRequest(
                     [source],
                     TargetOf(await AddRegistrationAsync("Video", VideoHosterClassName))
+                ),
+            InvalidHosterReplacementRequest.DeadSourceHosterWithReplacementOfSameHoster =>
+                new HosterReplacementRequest(
+                    SourceUploadTargets: [source],
+                    ReplacementUploadTarget: TargetOf(
+                        await AddRegistrationAsync("Other account of same hoster")
+                    ),
+                    MarkSourceHosterAsDead: true
                 ),
             _ => throw new ArgumentOutOfRangeException(nameof(invalidRequest)),
         };
@@ -1015,6 +1376,59 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         return upload;
+    }
+
+    private async Task<Upload> AddCompletedUploadWithFilesAsync(
+        UploadConfig uploadConfig,
+        int hosterRegistrationId,
+        OnlineState uploadOnlineState,
+        IReadOnlyList<(OnlineState OnlineState, DateTime? CheckedAt)> files,
+        DateTime? notFullyOnlineSince = null
+    )
+    {
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            HosterRegistrationId = hosterRegistrationId,
+            UploadState = UploadState.Completed,
+            OnlineState = uploadOnlineState,
+            NotFullyOnlineSince = notFullyOnlineSince,
+            CreatedAt = LocalNow.AddDays(-10),
+            UploadedFiles = files
+                .Select(file => new UploadedFile
+                {
+                    VideoFileRelativePath = "file.bin",
+                    HosterFileLink = $"https://hoster.test/file/{Guid.NewGuid()}",
+                    OnlineState = file.OnlineState,
+                    CheckedAt = file.CheckedAt,
+                    CreatedAt = LocalNow.AddDays(-10),
+                })
+                .ToList(),
+        };
+
+        DbContext.Add(upload);
+        await DbContext.SaveChangesAsync();
+
+        return upload;
+    }
+
+    private async Task<OnlineState> GetReleaseOnlineStateAsync(Release release)
+    {
+        var releaseFromDatabase = await ReadDbContext.Releases.SingleAsync(r => r.Id == release.Id);
+
+        return releaseFromDatabase.OnlineState;
+    }
+
+    private UploadCreationService CreateUploadCreationService()
+    {
+        return new UploadCreationService(
+            uploadStateRepository: new UploadStateRepository(CreateDbContext()),
+            timeProvider: timeProvider,
+            configuration: Mock.Of<IApplicationConfigurationProvider>(),
+            notificationService: Mock.Of<INotificationService>(),
+            logger: NullLogger<UploadCreationService>.Instance,
+            qualityGateEvaluator: new QualityGateEvaluator([], new FileSystemService())
+        );
     }
 
     private Task<Upload> AddCompletedOnlineUploadAsync(

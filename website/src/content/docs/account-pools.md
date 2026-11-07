@@ -61,6 +61,11 @@ An account cannot be deleted while it holds the last uploads of an upload config
 another account. Bearcat would upload these releases again. Remove it from the pool and deactivate it
 instead. A deactivated account gets no new uploads, its existing uploads stay.
 
+## Replace a pool
+
+To move all upload configurations from a pool to another account or pool, use
+[Replace Hosters](/Bearcat/replace-hosters/).
+
 ## Forum posts
 
 In forum posts, `upload.hoster_name` is the hoster's display name (e.g. "Rapidgator"), not the pool or

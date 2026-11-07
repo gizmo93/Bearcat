@@ -154,6 +154,7 @@ public class HosterAccountPoolRepository(
                     member.HosterRegistration.Name,
                     member.HosterRegistration.IsActive,
                     member.HosterRegistration.HasUnreadableSecrets,
+                    member.HosterRegistration.RequiresCaptchaVerification,
                     member.Priority
                 ))
                 .ToList()

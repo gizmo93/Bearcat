@@ -54,6 +54,54 @@ public class UploadTargetChoices(
             .ToList();
     }
 
+    public IReadOnlyList<UploadTargetHoster> GetHosters()
+    {
+        var hostersOfRegistrations = hosterRegistrations.Select(
+            registration => new UploadTargetHoster(
+                registration.FullClassName,
+                registration.HosterName,
+                registration.IsVideoHoster
+            )
+        );
+        var hostersOfPools = hosterAccountPools.Select(pool => new UploadTargetHoster(
+            pool.HosterClassName,
+            pool.HosterName,
+            pool.IsVideoHoster
+        ));
+
+        return hostersOfRegistrations
+            .Concat(hostersOfPools)
+            .DistinctBy(hoster => hoster.HosterClassName)
+            .OrderBy(hoster => hoster.HosterName)
+            .ToList();
+    }
+
+    public string GetHosterClassName(UploadTarget uploadTarget)
+    {
+        return uploadTarget.HosterAccountPoolId is { } hosterAccountPoolId
+            ? FindHosterAccountPool(hosterAccountPoolId).HosterClassName
+            : FindHosterRegistration(uploadTarget.HosterRegistrationId!.Value).FullClassName;
+    }
+
+    public bool IsUsableForUploads(UploadTarget uploadTarget)
+    {
+        if (uploadTarget.HosterAccountPoolId is { } hosterAccountPoolId)
+        {
+            return FindHosterAccountPool(hosterAccountPoolId)
+                .MembersInPriorityOrder.Any(member =>
+                    member.IsActive
+                    && !member.HasUnreadableSecrets
+                    && !member.RequiresCaptchaVerification
+                );
+        }
+
+        var hosterRegistration = FindHosterRegistration(uploadTarget.HosterRegistrationId!.Value);
+
+        return hosterRegistration.IsActive
+            && !hosterRegistration.HasUnreadableSecrets
+            && !hosterRegistration.RequiresCaptchaVerification;
+    }
+
     public bool MatchesUploadSource(UploadTarget uploadTarget, UploadSource uploadSource)
     {
         var isVideoHoster = uploadTarget.HosterAccountPoolId is { } hosterAccountPoolId

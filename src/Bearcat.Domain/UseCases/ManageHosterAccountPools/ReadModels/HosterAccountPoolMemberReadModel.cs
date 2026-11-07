@@ -5,5 +5,6 @@ public record HosterAccountPoolMemberReadModel(
     string Name,
     bool IsActive,
     bool HasUnreadableSecrets,
+    bool RequiresCaptchaVerification,
     int Priority
 );

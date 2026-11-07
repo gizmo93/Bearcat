@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.UseCases.ReplaceHosters.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
 using Microsoft.Extensions.Localization;
@@ -40,6 +41,11 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReleaseType releaseType
     ) => localizer[$"ReleaseType.{releaseType}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        HosterReplacementSkipReason skipReason
+    ) => localizer[$"HosterReplacementSkipReason.{skipReason}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

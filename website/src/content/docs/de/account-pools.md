@@ -65,6 +65,11 @@ einen Pool oder einen anderen Account verwendet. Bearcat würde diese Releases s
 ihn stattdessen aus dem Pool und deaktiviere ihn. Ein deaktivierter Account bekommt keine neuen Uploads,
 seine bestehenden Uploads bleiben erhalten.
 
+## Pool ersetzen
+
+Um alle Uploadkonfigurationen eines Pools auf einen anderen Account oder Pool umzustellen, nutze
+[Hoster ersetzen](/Bearcat/de/replace-hosters/).
+
 ## Forenposts
 
 In Forenposts ist `upload.hoster_name` der Anzeigename des Hosters (z. B. "Rapidgator"), nicht der Name

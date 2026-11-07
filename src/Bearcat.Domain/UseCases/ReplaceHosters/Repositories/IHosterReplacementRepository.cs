@@ -11,6 +11,16 @@ public interface IHosterReplacementRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<HosterReplacementSourceChoiceReadModel>> GetSourceChoicesAsync(
+        string hosterClassName,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<int>> GetHosterRegistrationIdsOfUploadTargetsAsync(
+        IReadOnlyList<UploadTarget> uploadTargets,
+        CancellationToken cancellationToken
+    );
+
     Task<
         IReadOnlyList<HosterReplacementUploadConfigRow>
     > GetUploadConfigRowsOfReleasesContainingUploadTargetsAsync(
@@ -42,14 +52,25 @@ public interface IHosterReplacementRepository
         CancellationToken cancellationToken
     );
 
+    Task<int> GetActiveHosterRegistrationCountAsync(
+        IReadOnlyList<int> hosterRegistrationIds,
+        CancellationToken cancellationToken
+    );
+
+    Task<int> GetUploadCountToMarkOfflineAsync(
+        IReadOnlyList<int> hosterRegistrationIds,
+        CancellationToken cancellationToken
+    );
+
     Task<
         IReadOnlyList<SourceAccountInUnselectedPoolReadModel>
     > GetSourceAccountsInUnselectedPoolsAsync(
         IReadOnlyList<UploadTarget> sourceUploadTargets,
+        UploadTarget replacementUploadTarget,
         CancellationToken cancellationToken
     );
 
-    Task<int> ApplyChangesAndGetChangedUploadCountAsync(
+    Task<HosterReplacementAppliedChangeCounts> ApplyChangesAndGetChangeCountsAsync(
         HosterReplacementChanges changes,
         CancellationToken cancellationToken
     );

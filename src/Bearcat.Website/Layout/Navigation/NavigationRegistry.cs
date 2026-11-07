@@ -98,8 +98,14 @@ public static class NavigationRegistry
                     "Hosters",
                     "key-round",
                     [
-                        Entry("HosterRegistrations", "/hoster-registrations", "key-round"),
+                        Entry(
+                            "HosterRegistrations",
+                            "/hoster-registrations",
+                            "key-round",
+                            NavLinkMatch.All
+                        ),
                         Entry("HosterAccountPools", "/hoster-account-pools", "group"),
+                        Entry("ReplaceHosters", "/hoster-registrations/replace", "replace"),
                     ]
                 ),
                 Entry("RemoteSources", "/remote-sources", "server"),

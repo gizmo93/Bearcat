@@ -2038,4 +2038,33 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>file states unknown</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>files are no archive parts</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>file names differ from the first adopted mirror</value></data>
+  <data name="ReplaceHosters" xml:space="preserve"><value>Replace hosters</value></data>
+  <data name="ReplaceHostersSourceHeading" xml:space="preserve"><value>Hoster to replace</value></data>
+  <data name="ReplaceHostersSelectHoster" xml:space="preserve"><value>Select hoster</value></data>
+  <data name="ReplaceHostersAccountOrPool" xml:space="preserve"><value>Account or pool</value></data>
+  <data name="ReplaceHostersUploadConfig" xml:space="preserve"><value>Upload configuration</value></data>
+  <data name="ReplaceHostersUploadConfigsInTemplates" xml:space="preserve"><value>Upload configurations in templates</value></data>
+  <data name="ReplaceHostersPool" xml:space="preserve"><value>Pool</value></data>
+  <data name="ReplaceHostersReplacementHeading" xml:space="preserve"><value>Replacement</value></data>
+  <data name="ReplaceHostersNoReplacementTargets" xml:space="preserve"><value>No usable account or pool available.</value></data>
+  <data name="ReplaceHostersHosterIsDead" xml:space="preserve"><value>Hoster is dead</value></data>
+  <data name="ReplaceHostersHosterIsDeadDescription" xml:space="preserve"><value>Deactivates the selected accounts and marks their uploads offline, so the automatic reupload starts.</value></data>
+  <data name="ReplaceHostersUnstartedUploads" xml:space="preserve"><value>Unstarted uploads moved</value></data>
+  <data name="ReplaceHostersAccountsToDeactivate" xml:space="preserve"><value>Accounts to deactivate</value></data>
+  <data name="ReplaceHostersUploadsToMarkOffline" xml:space="preserve"><value>Uploads to mark offline</value></data>
+  <data name="ReplaceHostersUploadsStayingOnSourceHoster" xml:space="preserve"><value>{0} running uploads stay on the old hoster. Cancel them if they do not finish.</value></data>
+  <data name="ReplaceHostersUploadConfigsWithoutArchiveSource" xml:space="preserve"><value>{0} upload configurations have no source left for a new upload: no archive, no release folder and no online mirror on another hoster.</value></data>
+  <data name="ReplaceHostersSkippedUploadConfigs" xml:space="preserve"><value>Skipped upload configurations ({0})</value></data>
+  <data name="ReplaceHostersSkippedUploadConfigsInTemplates" xml:space="preserve"><value>Skipped upload configurations in templates ({0})</value></data>
+  <data name="ReplaceHostersSkipReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="ReplaceHostersAndMore" xml:space="preserve"><value>and {0} more</value></data>
+  <data name="HosterReplacementSkipReason.DuplicateOnReplacementHoster" xml:space="preserve"><value>This archive configuration is already on the replacement hoster</value></data>
+  <data name="HosterReplacementSkipReason.CollectionUploadSlotPartiallySkipped" xml:space="preserve"><value>Another member of the collection upload slot was skipped</value></data>
+  <data name="ReplaceHostersAccountInOtherPool" xml:space="preserve"><value>{0} is also a member of pool {1}, which is not replaced.</value></data>
+  <data name="ReplaceHostersPoolBecomesUnused" xml:space="preserve"><value>Pool {0} is no longer used afterwards and can be deleted.</value></data>
+  <data name="ReplaceHostersExecute" xml:space="preserve"><value>Replace hoster</value></data>
+  <data name="ReplaceHostersConfirmation" xml:space="preserve"><value>{0} upload configurations, {1} upload configurations in templates and {2} unstarted uploads move to {3}. This cannot be undone automatically.</value></data>
+  <data name="ReplaceHostersConfirmationWithDeadHoster" xml:space="preserve"><value>{0} upload configurations, {1} upload configurations in templates and {2} unstarted uploads move to {3}. Accounts to deactivate: {4}. Uploads to mark offline: {5}. This cannot be undone automatically.</value></data>
+  <data name="ReplaceHostersExecuted" xml:space="preserve"><value>Replaced: {0} upload configurations, {1} in templates, {2} unstarted uploads.</value></data>
+  <data name="ReplaceHostersExecutedWithDeadHoster" xml:space="preserve"><value>Replaced: {0} upload configurations, {1} in templates, {2} unstarted uploads. Deactivated accounts: {3}. Uploads marked offline: {4}.</value></data>
 </root>
