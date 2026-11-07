@@ -426,6 +426,41 @@ public class XenForoForumClientTest
     }
 
     [Test]
+    public async Task GetForumTreeAsync_LocalizedForumRoute_ReadsSubforumsByLinkClass()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ =>
+            HtmlResponse(
+                """
+                <div class="node node--forum">
+                    <h3 class="node-title"><a href="/forum/videoboerse.40/">Videobörse</a></h3>
+                    <div class="node-subNodesFlat">
+                        <ol class="node-subNodeFlatList">
+                            <li><a href="/forum/hd-area.42/" class="subNodeLink subNodeLink--forum">HD Area</a></li>
+                            <li><a href="/link-forums/regeln.43/" class="subNodeLink subNodeLink--link">Regeln</a></li>
+                        </ol>
+                    </div>
+                    <div class="node-extra">
+                        <a href="/thema/some-release.1/post-2">Some release</a>
+                        <a href="/user/someone.3/">someone</a>
+                    </div>
+                </div>
+                """
+            )
+        );
+        using var client = CreateClient(handler, "https://boerse.cx/");
+
+        // Act
+        var tree = await client.GetForumTreeAsync(CancellationToken.None);
+
+        // Assert
+        var subforum = tree.ShouldHaveSingleItem().Children.ShouldHaveSingleItem();
+        subforum.Id.Value.ShouldBe("https://boerse.cx/forum/hd-area.42/");
+        subforum.Title.ShouldBe("HD Area");
+    }
+
+    [Test]
     public async Task SearchThreadsAsync_Subdirectory_KeepsSearchAndResultsInsideInstallation()
     {
         // Arrange

@@ -770,7 +770,7 @@ public sealed partial class XenForoForumClient : IDisposable
             }
 
             var uri = new Uri(baseUri, href);
-            if (!uri.AbsolutePath.Contains("/forums/", StringComparison.Ordinal))
+            if (!IsSubforumLink(link, uri))
             {
                 continue;
             }
@@ -789,6 +789,12 @@ public sealed partial class XenForoForumClient : IDisposable
         }
 
         return subforums;
+    }
+
+    private static bool IsSubforumLink(IElement link, Uri uri)
+    {
+        return link.ClassList.Contains("subNodeLink--forum")
+            || uri.AbsolutePath.Contains("/forums/", StringComparison.Ordinal);
     }
 
     private ForumTargetId ReadForumTargetId(IElement card)
