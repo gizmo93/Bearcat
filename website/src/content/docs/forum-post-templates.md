@@ -136,6 +136,6 @@ Open a release or release collection and click **Render forum post** in the arro
   releases, click **Extract media data** on the release.
 - **Upload names:** name your upload configurations the way they should appear in the post, for
   example `Rapidgator`. Then you can use `{{ upload.name }}` directly.
-- **Hoster names:** `upload.hoster_name` is the hoster of the latest upload, for example `Rapidgator`.
-  `upload.hoster_registration_name` is its account and stays empty until an account is assigned.
+- **Hoster names:** `upload.hoster_name` shows the hoster name of the latest upload, for example `Rapidgator`.
+  `upload.hoster_registration_name` shows the account name and stays empty until an account is assigned.
 - **Several forums:** BBCode support varies between forums. Use one template per forum if needed.
