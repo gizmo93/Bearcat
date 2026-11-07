@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using System.Text;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.NfoDatabases.Xrel;
 using Bearcat.NfoDatabases.Xrel.Api;
@@ -22,9 +23,9 @@ public class XrelNfoDatabaseTest
         httpClientFactoryMock = new Mock<IHttpClientFactory>(MockBehavior.Strict);
         httpClientFactoryMock
             .Setup(factory => factory.CreateClient(XrelNfoDatabase.CoverHttpClientName))
-            .Returns(() => CreateCoverHttpClient(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+            .Returns(() => CreateHttpClient(_ => new HttpResponseMessage(HttpStatusCode.OK)));
         service = new XrelNfoDatabase(
-            new XrelClient(apiMock.Object, new XrelRateLimitState()),
+            new XrelClient(apiMock.Object, new XrelRateLimitState(), httpClientFactoryMock.Object),
             httpClientFactoryMock.Object
         );
     }
@@ -300,7 +301,7 @@ public class XrelNfoDatabaseTest
         httpClientFactoryMock
             .Setup(factory => factory.CreateClient(XrelNfoDatabase.CoverHttpClientName))
             .Returns(() =>
-                CreateCoverHttpClient(request =>
+                CreateHttpClient(request =>
                 {
                     checkedCoverUrls.Add(request.RequestUri!.ToString());
                     return new HttpResponseMessage(HttpStatusCode.NotFound);
@@ -377,6 +378,160 @@ public class XrelNfoDatabaseTest
         checkedCoverUrls.ShouldBe(["https://uploads2.xrel.to/img_cover/movie123-full.JPG"]);
     }
 
+    [Test]
+    public async Task GetReleaseNfoAsync_P2pNfoPageContainsStrippedNfo_ReturnsDecodedAndNormalizedNfo()
+    {
+        // Arrange
+        SetupP2pRelease("P2P.Release.2026-GRP");
+        var requestedUrls = new List<string>();
+
+        SetupNfoPage(request =>
+        {
+            requestedUrls.Add(request.RequestUri!.ToString());
+
+            return CreateHtmlResponse(
+                HttpStatusCode.OK,
+                """
+                <html><head><title>P2P.Release.2026-GRP NFO</title></head><body>
+                <div id="nfo_stripped" style="display: none;"> <pre>
+
+                   P2P &quot;Release&quot;&#32;&#32;
+                Group&#039;s finest
+
+
+
+                Web: <a href="https://group.test" target="_blank">https://group.test</a>
+                </pre> </div>
+                </body></html>
+                """
+            );
+        });
+
+        // Act
+        var result = await service.GetReleaseNfoAsync(
+            new XrelConfig(),
+            "P2P Release 2026-GRP",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.FileName.ShouldBe("P2P.Release.2026-GRP.nfo");
+        result.Content.ShouldBe("   P2P \"Release\"\nGroup's finest\n\nWeb: https://group.test");
+        requestedUrls.ShouldBe(["https://www.xrel.to/p2p/42-P2P-Release/nfo.html"]);
+    }
+
+    [Test]
+    public async Task GetReleaseNfoAsync_NfoPageWithoutStrippedNfo_ReturnsNull()
+    {
+        // Arrange
+        SetupP2pRelease("P2P.Release.2026-GRP");
+
+        SetupNfoPage(_ =>
+            CreateHtmlResponse(
+                HttpStatusCode.OK,
+                "<html><head><title>NFO</title></head><body><div id=\"nfo\"></div></body></html>"
+            )
+        );
+
+        // Act
+        var result = await service.GetReleaseNfoAsync(
+            new XrelConfig(),
+            "P2P.Release.2026-GRP",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetReleaseNfoAsync_CloudflareChallenge_ThrowsRateLimitExceeded()
+    {
+        // Arrange
+        SetupP2pRelease("P2P.Release.2026-GRP");
+
+        SetupNfoPage(_ =>
+            CreateHtmlResponse(
+                HttpStatusCode.TooManyRequests,
+                "<html><head><title>Just a moment...</title></head><body></body></html>"
+            )
+        );
+
+        // Act
+        var action = () =>
+            service.GetReleaseNfoAsync(
+                new XrelConfig(),
+                "P2P.Release.2026-GRP",
+                CancellationToken.None
+            );
+
+        // Assert
+        var exception = await action.ShouldThrowAsync<NfoDatabaseRateLimitExceededException>();
+        exception.DatabaseName.ShouldBe("xREL");
+    }
+
+    [Test]
+    public async Task GetReleaseNfoAsync_P2pReleaseNotFound_ReturnsNullWithoutNfoPageRequest()
+    {
+        // Arrange
+        apiMock
+            .Setup(api =>
+                api.GetP2pReleaseInfoAsync(
+                    "Unknown.Release.2026-GRP",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(CreateApiResponse<XrelP2PRelease>(HttpStatusCode.NotFound));
+
+        // Act
+        var result = await service.GetReleaseNfoAsync(
+            new XrelConfig(),
+            "Unknown.Release.2026-GRP",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+
+        httpClientFactoryMock.Verify(
+            factory => factory.CreateClient(XrelClient.NfoPageHttpClientName),
+            Times.Never
+        );
+    }
+
+    private void SetupP2pRelease(string dirname)
+    {
+        apiMock
+            .Setup(api => api.GetP2pReleaseInfoAsync(dirname, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new XrelP2PRelease(
+                        Dirname: dirname,
+                        LinkHref: "https://www.xrel.to/p2p/42-P2P-Release/nfo.html",
+                        SizeMb: 11900,
+                        ExtInfo: null
+                    )
+                )
+            );
+    }
+
+    private void SetupNfoPage(Func<HttpRequestMessage, HttpResponseMessage> responseFactory)
+    {
+        httpClientFactoryMock
+            .Setup(factory => factory.CreateClient(XrelClient.NfoPageHttpClientName))
+            .Returns(() => CreateHttpClient(responseFactory));
+    }
+
+    private static HttpResponseMessage CreateHtmlResponse(HttpStatusCode statusCode, string html)
+    {
+        return new HttpResponseMessage(statusCode)
+        {
+            Content = new StringContent(html, Encoding.UTF8, "text/html"),
+        };
+    }
+
     private static ApiResponse<T> CreateApiResponse<T>(
         HttpStatusCode statusCode,
         T? content = default,
@@ -395,7 +550,7 @@ public class XrelNfoDatabaseTest
         return new ApiResponse<T>(response, content!, new RefitSettings(), error: null);
     }
 
-    private static HttpClient CreateCoverHttpClient(
+    private static HttpClient CreateHttpClient(
         Func<HttpRequestMessage, HttpResponseMessage> responseFactory
     )
     {

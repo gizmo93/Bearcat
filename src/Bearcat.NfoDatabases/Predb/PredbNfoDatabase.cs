@@ -17,6 +17,8 @@ public partial class PredbNfoDatabase(PredbClient client) : INfoDatabase, INfoPr
 
     public int ResolutionPriority => 200;
 
+    public int NfoResolutionPriority => 200;
+
     public IReadOnlyList<string> ConfigurationKeys => [];
 
     public async Task<ReleaseInfo?> GetReleaseInfoAsync(

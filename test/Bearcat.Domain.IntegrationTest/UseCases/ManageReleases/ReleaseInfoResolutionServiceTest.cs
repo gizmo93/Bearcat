@@ -247,6 +247,65 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessMissingReleaseInfosAsync_MultipleNfoProviders_UsesLowestNfoResolutionPriorityFirst()
+    {
+        // Arrange
+        const string xrelDatabaseClassName = "XrelNfoDatabase";
+        const string lastNfoProviderClassName = "AlphaNfoProvider";
+        const string firstNfoProviderClassName = "ZuluNfoProvider";
+        await AddReleaseAsync("Bearcat.Nfo.Order.2026-GRP");
+        await AddNfoDatabaseRegistrationAsync(xrelDatabaseClassName, isActive: true);
+        await AddNfoDatabaseRegistrationAsync(lastNfoProviderClassName, isActive: true);
+        await AddNfoDatabaseRegistrationAsync(firstNfoProviderClassName, isActive: true);
+
+        SetupNfoDatabase(
+            xrelDatabaseClassName,
+            "Bearcat.Nfo.Order.2026-GRP",
+            CreateReleaseInfo("Bearcat.Nfo.Order.2026-GRP")
+        );
+
+        var lastNfoProviderMock = SetupNfoProvider(
+            lastNfoProviderClassName,
+            "Bearcat.Nfo.Order.2026-GRP",
+            new ReleaseNfo("stripped.nfo", "stripped nfo content"),
+            nfoResolutionPriority: 1000
+        );
+
+        SetupNfoProvider(
+            firstNfoProviderClassName,
+            "Bearcat.Nfo.Order.2026-GRP",
+            new ReleaseNfo("original.nfo", "original nfo content"),
+            nfoResolutionPriority: 100
+        );
+
+        // Act
+        var resolvedCount = await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+
+        // Assert
+        resolvedCount.ShouldBe(1);
+
+        DbContext.ChangeTracker.Clear();
+
+        var persistedRelease = await DbContext
+            .Releases.Include(item => item.ReleaseNfo)
+            .SingleAsync();
+
+        persistedRelease.ReleaseNfo.ShouldNotBeNull();
+        persistedRelease.ReleaseNfo.FileName.ShouldBe("original.nfo");
+        persistedRelease.ReleaseNfo.Content.ShouldBe("original nfo content");
+
+        lastNfoProviderMock.Verify(
+            provider =>
+                provider.GetReleaseNfoAsync(
+                    It.IsAny<INfoDatabaseConfig>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task ProcessMissingReleaseInfosAsync_RemoteNfoAndReleaseFolderExists_WritesNfoFileToDisk()
     {
         // Arrange
@@ -1317,16 +1376,23 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
     private Mock<INfoProvider> SetupNfoProvider(
         string className,
         string expectedReleaseName,
-        ReleaseNfo? releaseNfo
+        ReleaseNfo? releaseNfo,
+        int nfoResolutionPriority = 100
     )
     {
         var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
         var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
         var providerMock = nfoDatabaseMock.As<INfoProvider>();
         nfoDatabaseMock.SetupGet(database => database.ResolutionPriority).Returns(100);
+
+        providerMock
+            .SetupGet(provider => provider.NfoResolutionPriority)
+            .Returns(nfoResolutionPriority);
+
         nfoDatabaseMock
             .Setup(database => database.DeserializeConfig(SerializedConfig))
             .Returns(configMock.Object);
+
         providerMock
             .Setup(provider =>
                 provider.GetReleaseNfoAsync(
@@ -1336,9 +1402,11 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
                 )
             )
             .ReturnsAsync(releaseNfo);
+
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(className))
             .Returns(nfoDatabaseMock.Object);
+
         nfoDatabasesByClassName[className] = nfoDatabaseMock.Object;
 
         return providerMock;

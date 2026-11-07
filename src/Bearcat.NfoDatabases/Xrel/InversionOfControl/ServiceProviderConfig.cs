@@ -38,6 +38,12 @@ public static class ServiceProviderConfig
                 client => client.Timeout = TimeSpan.FromSeconds(10)
             )
             .UseProxyForCategory(ProxyCategory.NfoDatabases);
+        services
+            .AddHttpClient(
+                XrelClient.NfoPageHttpClientName,
+                client => client.Timeout = TimeSpan.FromSeconds(30)
+            )
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
         services.AddScoped<XrelClient>();
         services.AddKeyedScoped<INfoDatabase, XrelNfoDatabase>(nameof(XrelNfoDatabase));
         services.AddScoped<INfoDatabaseFactory, NfoDatabaseFactory>();

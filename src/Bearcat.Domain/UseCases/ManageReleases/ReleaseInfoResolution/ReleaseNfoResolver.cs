@@ -40,20 +40,16 @@ public class ReleaseNfoResolver(
         CancellationToken cancellationToken
     )
     {
-        foreach (var registration in registrations)
+        var nfoProviders = GetNfoProvidersInResolutionOrder(registrations);
+
+        foreach (var (registration, nfoDatabase, nfoProvider) in nfoProviders)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
-                var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
-
-                if (nfoDatabase is not INfoProvider nfoProvider)
-                {
-                    continue;
-                }
-
                 var config = nfoDatabase.DeserializeConfig(registration.SerializedConfig);
+
                 var nfo = await nfoProvider.GetReleaseNfoAsync(
                     config: config,
                     dirname: release.ReleaseInfo?.ReleaseName ?? release.Name,
@@ -94,6 +90,30 @@ public class ReleaseNfoResolver(
         }
 
         return false;
+    }
+
+    private List<NfoProviderRegistration> GetNfoProvidersInResolutionOrder(
+        IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations
+    )
+    {
+        var nfoProviders = new List<NfoProviderRegistration>();
+
+        foreach (var registration in registrations)
+        {
+            var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
+
+            if (nfoDatabase is INfoProvider nfoProvider)
+            {
+                nfoProviders.Add(
+                    new NfoProviderRegistration(registration, nfoDatabase, nfoProvider)
+                );
+            }
+        }
+
+        return nfoProviders
+            .OrderBy(entry => entry.NfoProvider.NfoResolutionPriority)
+            .ThenBy(entry => entry.Registration.NfoDatabaseClassName)
+            .ToList();
     }
 
     private static void AttachNfo(Release release, string fileName, string content)
@@ -143,4 +163,10 @@ public class ReleaseNfoResolver(
             );
         }
     }
+
+    private sealed record NfoProviderRegistration(
+        ActiveNfoDatabaseRegistrationReadModel Registration,
+        INfoDatabase NfoDatabase,
+        INfoProvider NfoProvider
+    );
 }

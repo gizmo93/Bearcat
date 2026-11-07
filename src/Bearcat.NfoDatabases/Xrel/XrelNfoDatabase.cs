@@ -7,13 +7,16 @@ using Bearcat.NfoDatabases.Xrel.Api;
 namespace Bearcat.NfoDatabases.Xrel;
 
 public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpClientFactory)
-    : INfoDatabase
+    : INfoDatabase,
+        INfoProvider
 {
     public const string CoverHttpClientName = "xrel-cover";
 
     public string Name => "xREL";
 
     public int ResolutionPriority => 0;
+
+    public int NfoResolutionPriority => 1000;
 
     public IReadOnlyList<string> ConfigurationKeys => [];
 
@@ -55,6 +58,35 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
             cancellationToken
         );
         return MapReleaseInfo(p2pRelease, p2pExternalInfoEnrichment);
+    }
+
+    public async Task<ReleaseNfo?> GetReleaseNfoAsync(
+        INfoDatabaseConfig config,
+        string dirname,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var normalizedDirname = NormalizeDirname(dirname);
+
+        if (string.IsNullOrWhiteSpace(normalizedDirname))
+        {
+            return null;
+        }
+
+        var p2pRelease = await client.GetP2pReleaseInfoAsync(normalizedDirname, cancellationToken);
+        var nfoPageUrl = NormalizeXrelUrl(p2pRelease?.LinkHref);
+
+        if (string.IsNullOrWhiteSpace(p2pRelease?.Dirname) || nfoPageUrl is null)
+        {
+            return null;
+        }
+
+        var nfoText = await client.GetP2pNfoTextAsync(nfoPageUrl, cancellationToken);
+        var normalizedNfoText = NormalizeNfoText(nfoText);
+
+        return normalizedNfoText is null
+            ? null
+            : new ReleaseNfo($"{p2pRelease.Dirname}.nfo", normalizedNfoText);
     }
 
     public string SerializeConfig(IReadOnlyDictionary<string, string> config)
@@ -373,6 +405,21 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
         return NullIfWhiteSpace(normalized);
     }
 
+    private static string? NormalizeNfoText(string? nfoText)
+    {
+        if (nfoText is null)
+        {
+            return null;
+        }
+
+        var normalized = TrailingWhitespaceRegex()
+            .Replace(nfoText.ReplaceLineEndings("\n"), string.Empty);
+
+        normalized = MultipleEmptyLinesRegex().Replace(normalized, "\n\n").Trim('\n');
+
+        return NullIfWhiteSpace(normalized);
+    }
+
     private static string NormalizeDirname(string dirname)
     {
         var normalized = WhitespaceRegex().Replace(dirname.Trim(), ".");
@@ -394,6 +441,9 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
 
     [GeneratedRegex(@"\n{3,}")]
     private static partial Regex MultipleEmptyLinesRegex();
+
+    [GeneratedRegex(@"[^\S\n]+$", RegexOptions.Multiline)]
+    private static partial Regex TrailingWhitespaceRegex();
 
     private sealed record XrelExternalInfoEnrichment(
         string? Genre,
