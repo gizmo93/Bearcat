@@ -97,23 +97,29 @@ public class HosterRegistrationService(
         return await readRepository.GetUploadCountAsync(id, cancellationToken);
     }
 
-    public async Task<int> GetHosterAccountPoolUploadCountAsync(
+    public async Task<int> GetUploadCountBlockingRegistrationDeletionAsync(
         int id,
         CancellationToken cancellationToken = default
     )
     {
-        return await readRepository.GetHosterAccountPoolUploadCountAsync(id, cancellationToken);
+        return await readRepository.GetUploadCountBlockingRegistrationDeletionAsync(
+            id,
+            cancellationToken
+        );
     }
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var hosterAccountPoolUploadCount =
-            await readRepository.GetHosterAccountPoolUploadCountAsync(id, cancellationToken);
+        var uploadCountBlockingRegistrationDeletion =
+            await readRepository.GetUploadCountBlockingRegistrationDeletionAsync(
+                id,
+                cancellationToken
+            );
 
-        if (hosterAccountPoolUploadCount > 0)
+        if (uploadCountBlockingRegistrationDeletion > 0)
         {
             throw new InvalidOperationException(
-                $"Hoster registration {id} still holds {hosterAccountPoolUploadCount} uploads of account pools and cannot be deleted."
+                $"Hoster registration {id} still holds {uploadCountBlockingRegistrationDeletion} uploads that are the last uploads of upload configurations not targeting it and cannot be deleted."
             );
         }
 

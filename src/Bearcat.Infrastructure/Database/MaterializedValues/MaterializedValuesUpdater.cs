@@ -38,7 +38,7 @@ public static class MaterializedValuesUpdater
     }
 
     public static async Task UpdateReleaseOnlineStatesAsync(
-        BearcatDbContext context,
+        IBearcatWriteDbContext context,
         List<int> releaseIds,
         CancellationToken cancellationToken
     )
@@ -69,7 +69,7 @@ public static class MaterializedValuesUpdater
     }
 
     public static async Task UpdateOldestUploadedFileCheckedAtAsync(
-        BearcatDbContext context,
+        IBearcatWriteDbContext context,
         List<int> uploadIds,
         CancellationToken cancellationToken
     )

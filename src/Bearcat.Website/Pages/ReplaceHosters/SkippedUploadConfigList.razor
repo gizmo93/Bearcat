@@ -1,0 +1,40 @@
+<div class="space-y-2">
+    <h3 class="@HeadingClass">
+        @if (IsDeletion)
+        {
+            <LucideIcon Name="trash-2" class="h-4 w-4 shrink-0" />
+        }
+        @Heading
+    </h3>
+    <div class="bearcat-config-list">
+        <div class="@($"bearcat-config-header {RowGridClass}")">
+            <span>@L["Release"]</span>
+            <span>@L["ReplaceHostersUploadConfig"]</span>
+            <span>@L["ReplaceHostersSkipReason"]</span>
+        </div>
+        @foreach (var uploadConfig in UploadConfigs.Take(MaximumRenderedRows))
+        {
+            <div class="bearcat-config-item" @key="uploadConfig.UploadConfigId">
+                <div class="@($"bearcat-config-row {RowGridClass}")">
+                    <div class="min-w-0">
+                        <a class="block truncate text-sm text-primary hover:underline"
+                           href="@($"/releases/{uploadConfig.ReleaseId}")"
+                           title="@uploadConfig.ReleaseName">@uploadConfig.ReleaseName</a>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="bearcat-mobile-label">@L["ReplaceHostersUploadConfig"]</p>
+                        <p class="truncate text-sm" title="@uploadConfig.UploadConfigName">@uploadConfig.UploadConfigName</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="bearcat-mobile-label">@L["ReplaceHostersSkipReason"]</p>
+                        <p class="text-sm text-muted-foreground">@L.Localize(uploadConfig.SkipReason)</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (UploadConfigs.Count > MaximumRenderedRows)
+    {
+        <p class="text-xs text-muted-foreground">@L["ReplaceHostersAndMore", UploadConfigs.Count - MaximumRenderedRows]</p>
+    }
+</div>

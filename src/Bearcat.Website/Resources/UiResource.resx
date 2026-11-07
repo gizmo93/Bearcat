@@ -1833,7 +1833,7 @@
   <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (no active account)</value></data>
   <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (account not assigned yet)</value></data>
   <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" cannot be deleted because {1} upload configurations and {2} upload configuration templates still use it.</value></data>
-  <data name="HosterRegistrationStillHoldsHosterAccountPoolUploads" xml:space="preserve"><value>{0} still holds {1} uploads of account pools and cannot be deleted. Remove it from the pools and deactivate it instead.</value></data>
+  <data name="HosterRegistrationStillHoldsLastUploadsOfOtherUploadConfigs" xml:space="preserve"><value>{0} cannot be deleted: it has {1} uploads whose configurations target another account or account pool. Deactivate the account instead and remove it from its account pools.</value></data>
   <data name="StartUploadsNow" xml:space="preserve"><value>Start uploads now</value></data>
   <data name="StartUploadsNowDescription" xml:space="preserve"><value>Create the initial uploads now instead of waiting for the initial upload cooldown.</value></data>
   <data name="InitialUploadsCreatedOne" xml:space="preserve"><value>Initial upload created. Packing starts shortly.</value></data>
@@ -1875,7 +1875,7 @@
   <data name="FirstStartSetupHosterNextRequirement" xml:space="preserve"><value>Select at least one registration with a successful login to continue.</value></data>
   <data name="FirstStartSetupCaptchaVerificationCompleted" xml:space="preserve"><value>Captcha verification for {0} completed.</value></data>
   <data name="FirstStartSetupReleaseTemplateTitle" xml:space="preserve"><value>Release group and template</value></data>
-  <data name="FirstStartSetupReleaseTemplateDescription" xml:space="preserve"><value>A release group decides whether Bearcat reuploads offline links. A release template is the recipe that automations use for every new release: archive settings and target hosters. You can change both later on the release groups and release templates pages.</value></data>
+  <data name="FirstStartSetupReleaseTemplateDescription" xml:space="preserve"><value>A release group controls whether Bearcat reuploads offline links. A release template contains the archive settings and target hosters for automatically created releases. You can change both later on the release groups and release templates pages.</value></data>
   <data name="FirstStartSetupReleaseTemplateChoice" xml:space="preserve"><value>Release template choice</value></data>
   <data name="FirstStartSetupUseExistingTemplate" xml:space="preserve"><value>Use existing template</value></data>
   <data name="FirstStartSetupUseExistingTemplateDescription" xml:space="preserve"><value>Continue with a template you already created.</value></data>
@@ -2038,4 +2038,44 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>file states unknown</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>files are no archive parts</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>file names differ from the first adopted mirror</value></data>
+  <data name="ReplaceHosters" xml:space="preserve"><value>Replace hosters</value></data>
+  <data name="ReplaceHostersSourceHeading" xml:space="preserve"><value>Hoster to replace</value></data>
+  <data name="ReplaceHostersSelectHoster" xml:space="preserve"><value>Select hoster</value></data>
+  <data name="ReplaceHostersAccountOrPool" xml:space="preserve"><value>Account or pool</value></data>
+  <data name="ReplaceHostersUploadConfig" xml:space="preserve"><value>Upload configuration</value></data>
+  <data name="ReplaceHostersUploadConfigsInTemplates" xml:space="preserve"><value>Upload configurations in templates</value></data>
+  <data name="ReplaceHostersPool" xml:space="preserve"><value>Pool</value></data>
+  <data name="ReplaceHostersReplacementHeading" xml:space="preserve"><value>Replacement</value></data>
+  <data name="ReplaceHostersNoReplacementTargets" xml:space="preserve"><value>No usable account or pool available.</value></data>
+  <data name="ReplaceHostersHosterIsDead" xml:space="preserve"><value>Hoster is dead</value></data>
+  <data name="ReplaceHostersHosterIsDeadDescription" xml:space="preserve"><value>Deactivates the selected accounts and marks their uploads as offline so Bearcat can reupload them automatically.</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigs" xml:space="preserve"><value>Delete duplicate configurations</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigsDescription" xml:space="preserve"><value>Deletes duplicate configurations and their uploads in Bearcat if the same archive configuration is already used on the replacement hoster. Collection upload slots are deleted when all their configurations are duplicates. Link crypter containers are kept.</value></data>
+  <data name="ReplaceHostersUnstartedUploads" xml:space="preserve"><value>Uploads not yet started</value></data>
+  <data name="ReplaceHostersAccountsToDeactivate" xml:space="preserve"><value>Accounts to deactivate</value></data>
+  <data name="ReplaceHostersUploadsToMarkOffline" xml:space="preserve"><value>Uploads to mark offline</value></data>
+  <data name="ReplaceHostersConfigurationsToDelete" xml:space="preserve"><value>Configurations to delete</value></data>
+  <data name="ReplaceHostersUploadsStayingOnSourceHoster" xml:space="preserve"><value>{0} running uploads stay on the old hoster. Cancel them if they do not finish.</value></data>
+  <data name="ReplaceHostersUploadConfigsWithoutArchiveSource" xml:space="preserve"><value>{0} upload configurations have no source left for a new upload: no archive, no release folder and no online mirror on another hoster.</value></data>
+  <data name="ReplaceHostersSkippedUploadConfigs" xml:space="preserve"><value>Skipped upload configurations ({0})</value></data>
+  <data name="ReplaceHostersSkippedUploadConfigsInTemplates" xml:space="preserve"><value>Skipped upload configurations in templates ({0})</value></data>
+  <data name="ReplaceHostersDeletedUploadConfigs" xml:space="preserve"><value>Upload configurations to delete ({0})</value></data>
+  <data name="ReplaceHostersDeletedUploadConfigsInTemplates" xml:space="preserve"><value>Upload configurations in templates to delete ({0})</value></data>
+  <data name="ReplaceHostersDeletedCollectionUploadSlots" xml:space="preserve"><value>Collection upload slots to delete ({0})</value></data>
+  <data name="ReplaceHostersSkipReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="ReplaceHostersAndMore" xml:space="preserve"><value>and {0} more</value></data>
+  <data name="HosterReplacementSkipReason.DuplicateOnReplacementHoster" xml:space="preserve"><value>This archive configuration is already used on the replacement hoster</value></data>
+  <data name="HosterReplacementSkipReason.CollectionUploadSlotPartiallySkipped" xml:space="preserve"><value>Another configuration in this collection upload slot was skipped</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByOtherCollectionUploadSlotMember" xml:space="preserve"><value>A configuration of the same collection upload slot cannot be deleted</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByRunningUpload" xml:space="preserve"><value>Cannot be deleted while an upload is running</value></data>
+  <data name="ReplaceHostersAccountInOtherPool" xml:space="preserve"><value>{0} also belongs to pool {1}. This pool will not be replaced.</value></data>
+  <data name="ReplaceHostersPoolBecomesUnused" xml:space="preserve"><value>Pool {0} will no longer be used. You can delete it.</value></data>
+  <data name="ReplaceHostersExecute" xml:space="preserve"><value>Replace hoster</value></data>
+  <data name="ReplaceHostersConfirmation" xml:space="preserve"><value>{0} upload configurations, {1} configurations in templates and {2} uploads that have not yet started will switch to {3}.</value></data>
+  <data name="ReplaceHostersConfirmationDeadHoster" xml:space="preserve"><value>Bearcat will deactivate {0} accounts and mark {1} uploads as offline.</value></data>
+  <data name="ReplaceHostersConfirmationDeletedUploadConfigs" xml:space="preserve"><value>Bearcat will delete {0} upload configurations, {1} configurations in templates and {2} collection upload slots.</value></data>
+  <data name="ReplaceHostersCannotBeUndone" xml:space="preserve"><value>This cannot be undone automatically.</value></data>
+  <data name="ReplaceHostersExecuted" xml:space="preserve"><value>Switched to the replacement: {0} upload configurations, {1} configurations in templates and {2} uploads that have not yet started.</value></data>
+  <data name="ReplaceHostersExecutedDeadHoster" xml:space="preserve"><value>Deactivated {0} accounts and marked {1} uploads as offline.</value></data>
+  <data name="ReplaceHostersExecutedDeletedUploadConfigs" xml:space="preserve"><value>Deleted {0} upload configurations, {1} configurations in templates and {2} collection upload slots.</value></data>
 </root>

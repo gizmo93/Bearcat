@@ -530,7 +530,7 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetUploadsDueForAutomaticReuploadAsync_HosterRegistrationOfUploadInactiveButOfUploadConfigActive_ReturnsNoUpload()
+    public async Task GetUploadsDueForAutomaticReuploadAsync_HosterRegistrationOfUploadInactiveButOfUploadConfigActive_ReturnsUpload()
     {
         // Arrange
         var registrationOfUploadConfig = await AddHosterRegistrationAsync(
@@ -538,6 +538,31 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
             isActive: true
         );
         var registrationOfUpload = await AddHosterRegistrationAsync("Holding", isActive: false);
+        var upload = await AddUploadAsync(
+            await AddUploadConfigAsync(registrationOfUploadConfig, numberOfHoursUntilReupload: 24),
+            fileCheckedAts: [LocalNow.AddHours(-1)],
+            onlineState: OnlineState.Offline,
+            notFullyOnlineSince: LocalNow.AddHours(-30),
+            fullyOfflineSince: LocalNow.AddHours(-30),
+            hosterRegistrationOfUpload: registrationOfUpload
+        );
+
+        // Act
+        var result = await GetUploadsDueForAutomaticReuploadAsync();
+
+        // Assert
+        result.ShouldHaveSingleItem().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task GetUploadsDueForAutomaticReuploadAsync_HosterRegistrationOfUploadActiveButOfUploadConfigInactive_ReturnsNoUpload()
+    {
+        // Arrange
+        var registrationOfUploadConfig = await AddHosterRegistrationAsync(
+            "Configured",
+            isActive: false
+        );
+        var registrationOfUpload = await AddHosterRegistrationAsync("Holding", isActive: true);
         await AddUploadAsync(
             await AddUploadConfigAsync(registrationOfUploadConfig, numberOfHoursUntilReupload: 24),
             fileCheckedAts: [LocalNow.AddHours(-1)],

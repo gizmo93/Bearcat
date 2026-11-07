@@ -135,4 +135,6 @@ Vorlage, klicke auf **Forenpost kopieren** und füge das Ergebnis in deinem Foru
   automatisch aus. Bei anderen Releases klickst du im Release auf **Mediendaten extrahieren**.
 - **Uploadnamen:** Benenne deine Uploadkonfigurationen so, wie sie im Post erscheinen sollen, zum
   Beispiel `Rapidgator`. Dann kannst du `{{ upload.name }}` direkt verwenden.
+- **Hosternamen:** `upload.hoster_name` zeigt den Hosternamen des letzten Uploads, zum Beispiel `Rapidgator`.
+  `upload.hoster_registration_name` zeigt den Accountnamen und bleibt leer, bis ein Account zugewiesen ist.
 - **Mehrere Foren:** Die BBCode-Unterstützung unterscheidet sich je nach Forum. Verwende bei Bedarf eine Vorlage pro Forum.

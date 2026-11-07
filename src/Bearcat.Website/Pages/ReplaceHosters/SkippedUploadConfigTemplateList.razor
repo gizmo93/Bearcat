@@ -1,0 +1,40 @@
+<div class="space-y-2">
+    <h3 class="@HeadingClass">
+        @if (IsDeletion)
+        {
+            <LucideIcon Name="trash-2" class="h-4 w-4 shrink-0" />
+        }
+        @Heading
+    </h3>
+    <div class="bearcat-config-list">
+        <div class="@($"bearcat-config-header {RowGridClass}")">
+            <span>@L["ReleaseTemplate"]</span>
+            <span>@L["ReplaceHostersUploadConfig"]</span>
+            <span>@L["ReplaceHostersSkipReason"]</span>
+        </div>
+        @foreach (var uploadConfigTemplate in UploadConfigTemplates.Take(MaximumRenderedRows))
+        {
+            <div class="bearcat-config-item" @key="uploadConfigTemplate.UploadConfigTemplateId">
+                <div class="@($"bearcat-config-row {RowGridClass}")">
+                    <div class="min-w-0">
+                        <a class="block truncate text-sm text-primary hover:underline"
+                           href="@($"/release-templates/{uploadConfigTemplate.ReleaseTemplateId}")"
+                           title="@uploadConfigTemplate.ReleaseTemplateName">@uploadConfigTemplate.ReleaseTemplateName</a>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="bearcat-mobile-label">@L["ReplaceHostersUploadConfig"]</p>
+                        <p class="truncate text-sm" title="@uploadConfigTemplate.UploadConfigTemplateDisplayName">@uploadConfigTemplate.UploadConfigTemplateDisplayName</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="bearcat-mobile-label">@L["ReplaceHostersSkipReason"]</p>
+                        <p class="text-sm text-muted-foreground">@L.Localize(uploadConfigTemplate.SkipReason)</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (UploadConfigTemplates.Count > MaximumRenderedRows)
+    {
+        <p class="text-xs text-muted-foreground">@L["ReplaceHostersAndMore", UploadConfigTemplates.Count - MaximumRenderedRows]</p>
+    }
+</div>

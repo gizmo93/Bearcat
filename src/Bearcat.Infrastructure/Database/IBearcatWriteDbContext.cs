@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Bearcat.Infrastructure.Database;
 
@@ -47,6 +48,8 @@ public interface IBearcatWriteDbContext
     EntityEntry Entry(object entity);
 
     ChangeTracker ChangeTracker { get; }
+
+    DatabaseFacade Database { get; }
     DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; }
     DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; }
     DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; }

@@ -60,14 +60,20 @@ wird, bevor die erste Datei hochgeladen ist.
 
 ## Account entfernen
 
-Ein Account, der noch Uploads eines Pools hält, kann nicht gelöscht werden. Entferne ihn stattdessen aus
-dem Pool und deaktiviere ihn. Ein deaktivierter Account bekommt keine neuen Uploads, seine bestehenden
-Uploads bleiben erhalten.
+Du kannst einen Account nicht löschen, solange dort die neuesten Uploads einer Uploadkonfiguration liegen,
+die einen Pool oder einen anderen Account als Uploadziel verwendet. Bearcat würde diese Releases sonst
+erneut hochladen. Entferne den Account stattdessen aus dem Pool und deaktiviere ihn. Er bekommt dann keine
+neuen Uploads mehr. Seine bestehenden Uploads bleiben erhalten.
+
+## Pool ersetzen
+
+Mit [Hoster ersetzen](/Bearcat/de/replace-hosters/) stellst du alle Uploadkonfigurationen eines Pools auf
+einen anderen Account oder Pool um.
 
 ## Forenposts
 
-In Forenposts ist der Hostername eines Pooluploads der Anzeigename des Hosters (z. B. "Rapidgator"),
-nicht der Name des Pools oder Accounts.
+In Forenposts ist `upload.hoster_name` der Anzeigename des Hosters (z. B. "Rapidgator"), nicht der Name
+des Pools oder Accounts. `upload.hoster_registration_name` zeigt den Accountnamen des letzten Uploads.
 
 ## Parallele Uploads
 

@@ -99,6 +99,7 @@ using Bearcat.Domain.UseCases.ManageUploads.UploadExecution.UploadPreparation;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
+using Bearcat.Domain.UseCases.ReplaceHosters;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -149,6 +150,7 @@ public static class ServiceProviderConfig
             services.AddScoped<QualityProfileService>();
             services.AddScoped<ProxyServerService>();
             services.AddScoped<HosterAccountPoolService>();
+            services.AddScoped<HosterReplacementService>();
             services.AddScoped<ProxyCategoryDefaultService>();
             services.AddScoped<ProxySelectionValidator>();
             services.AddScoped<AdditionalArchiveContentService>();

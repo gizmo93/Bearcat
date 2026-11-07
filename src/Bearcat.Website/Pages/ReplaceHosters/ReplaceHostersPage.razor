@@ -1,0 +1,155 @@
+@page "/hoster-registrations/replace"
+@using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto
+
+<PageTitle>@L["ReplaceHosters"] - Bearcat</PageTitle>
+
+@if (uploadTargetChoices is null)
+{
+    return;
+}
+
+<section class="space-y-8">
+    <div class="bearcat-page-header">
+        <h1 class="text-3xl font-semibold tracking-tight">@L["ReplaceHosters"]</h1>
+    </div>
+
+    <div class="space-y-3">
+        <h2 class="text-lg font-semibold">@L["ReplaceHostersSourceHeading"]</h2>
+
+        @if (hosters.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                @L["NoHosterAccountsYet"]
+            </div>
+        }
+        else
+        {
+            <BbFormFieldSelect TValue="string"
+                               Value="sourceHosterClassName"
+                               ValueChanged="OnSourceHosterChangedAsync"
+                               Class="max-w-md"
+                               Label="@L["Hoster"]"
+                               Placeholder="@L["ReplaceHostersSelectHoster"]"
+                               Options="hosters.Select(hoster => new SelectOption<string>(hoster.HosterClassName, hoster.HosterName))" />
+        }
+
+        @if (sourceChoices.Count > 0)
+        {
+            <div class="bearcat-config-list">
+                <div class="@($"bearcat-config-header {SourceChoiceGridClass}")">
+                    <span>@L["ReplaceHostersAccountOrPool"]</span>
+                    <span>@L["UploadConfigurations"]</span>
+                    <span>@L["ReplaceHostersUploadConfigsInTemplates"]</span>
+                </div>
+                @foreach (var (sourceChoice, sourceChoiceNumber) in sourceChoices.Select((choice, position) => (choice, position)))
+                {
+                    var checkboxId = $"replace-hosters-source-{sourceChoiceNumber}";
+
+                    <div class="bearcat-config-item" @key="sourceChoice.UploadTarget">
+                        <div class="@($"bearcat-config-row {SourceChoiceGridClass}")">
+                            <div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                                <BbCheckbox Id="@checkboxId"
+                                            Checked="selectedSourceUploadTargets.Contains(sourceChoice.UploadTarget)"
+                                            CheckedChanged="@(isSelected => SetSourceSelectedAsync(sourceChoice.UploadTarget, isSelected))"
+                                            AriaLabel="@sourceChoice.Name" />
+                                <label for="@checkboxId" class="min-w-0 cursor-pointer truncate text-sm font-medium" title="@sourceChoice.Name">
+                                    @sourceChoice.Name
+                                </label>
+                                @if (sourceChoice.IsHosterAccountPool)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["ReplaceHostersPool"]</BbBadge>
+                                }
+                                @if (!sourceChoice.IsActive)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["Inactive"]</BbBadge>
+                                }
+                            </div>
+
+                            <div>
+                                <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
+                                <span class="text-sm tabular-nums">@sourceChoice.UploadConfigCount</span>
+                            </div>
+
+                            <div>
+                                <p class="bearcat-mobile-label">@L["ReplaceHostersUploadConfigsInTemplates"]</p>
+                                <span class="text-sm tabular-nums">@sourceChoice.UploadConfigTemplateCount</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @if (sourceHosterClassName is not null)
+    {
+        <div class="space-y-3">
+            <h2 class="text-lg font-semibold">@L["ReplaceHostersReplacementHeading"]</h2>
+
+            <div class="max-w-md" @key="sourceHosterClassName">
+                <UploadTargetSelect Choices="uploadTargetChoices"
+                                    UploadSource="ReplacementUploadSource"
+                                    OfferedUploadTargetFilter="CanBeReplacement"
+                                    NoUploadTargetsText="@L["ReplaceHostersNoReplacementTargets"]"
+                                    @bind-Value="replacementUploadTarget"
+                                    @bind-Value:after="OnReplacementUploadTargetChangedAsync" />
+            </div>
+
+            <div class="flex items-start gap-3">
+                <BbCheckbox Id="replace-hosters-hoster-is-dead"
+                            Class="mt-0.5"
+                            Checked="markSourceHosterAsDead"
+                            CheckedChanged="SetMarkSourceHosterAsDeadAsync"
+                            Disabled="!CanMarkSourceHosterAsDead" />
+                <label for="replace-hosters-hoster-is-dead" class="min-w-0 space-y-0.5">
+                    <span class="block text-sm font-medium">@L["ReplaceHostersHosterIsDead"]</span>
+                    <span class="block text-xs text-muted-foreground">@L["ReplaceHostersHosterIsDeadDescription"]</span>
+                </label>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <BbCheckbox Id="replace-hosters-delete-duplicate-upload-configs"
+                            Class="mt-0.5"
+                            Checked="deleteDuplicateUploadConfigs"
+                            CheckedChanged="SetDeleteDuplicateUploadConfigsAsync"
+                            Disabled="!CanDeleteDuplicateUploadConfigs" />
+                <label for="replace-hosters-delete-duplicate-upload-configs" class="min-w-0 space-y-0.5">
+                    <span class="block text-sm font-medium">@L["ReplaceHostersDeleteDuplicateUploadConfigs"]</span>
+                    <span class="block text-xs text-muted-foreground">@L["ReplaceHostersDeleteDuplicateUploadConfigsDescription"]</span>
+                </label>
+            </div>
+        </div>
+    }
+
+    @if (HasCompleteInputs)
+    {
+        <div class="space-y-3">
+            <div class="flex items-center gap-2">
+                <h2 class="text-lg font-semibold">@L["Preview"]</h2>
+                @if (isLoadingPreview)
+                {
+                    <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin text-muted-foreground" />
+                }
+            </div>
+
+            @if (preview is not null)
+            {
+                <HosterReplacementPreviewPanel Preview="preview" />
+            }
+
+            <div class="flex justify-end">
+                <BbButton Disabled="!CanExecute" OnClick="ExecuteAsync">
+                    @if (isExecuting)
+                    {
+                        <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                    }
+                    else
+                    {
+                        <LucideIcon Name="replace" class="h-4 w-4" />
+                    }
+                    @L["ReplaceHostersExecute"]
+                </BbButton>
+            </div>
+        </div>
+    }
+</section>

@@ -1,0 +1,126 @@
+@{
+    var counts = new (string Label, int Count)[]
+    {
+        (L["UploadConfigurations"], Preview.UploadConfigCount),
+        (L["ReplaceHostersUploadConfigsInTemplates"], Preview.UploadConfigTemplateCount),
+        (L["ReplaceHostersUnstartedUploads"], Preview.UnstartedUploadCount),
+        (L["ReplaceHostersAccountsToDeactivate"], Preview.AccountCountToDeactivate),
+        (L["ReplaceHostersUploadsToMarkOffline"], Preview.UploadCountToMarkOffline),
+        (L["ReplaceHostersConfigurationsToDelete"], Preview.DeletedUploadConfigs.Count + Preview.DeletedUploadConfigTemplates.Count),
+    };
+}
+
+<div class="space-y-4">
+    <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach (var (label, count) in counts)
+        {
+            <div class="rounded-md border border-border/70 px-3 py-2">
+                <dt class="text-xs text-muted-foreground">@label</dt>
+                <dd class="text-2xl font-semibold tabular-nums">@count</dd>
+            </div>
+        }
+    </dl>
+
+    @if (Preview.UploadCountStayingOnSourceHoster > 0)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <LucideIcon Name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+            @L["ReplaceHostersUploadsStayingOnSourceHoster", Preview.UploadCountStayingOnSourceHoster]
+        </div>
+    }
+
+    @if (Preview.UploadConfigCountWithoutArchiveSource > 0)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <LucideIcon Name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+            @L["ReplaceHostersUploadConfigsWithoutArchiveSource", Preview.UploadConfigCountWithoutArchiveSource]
+        </div>
+    }
+
+    @if (Preview.SkippedUploadConfigs.Count > 0)
+    {
+        <SkippedUploadConfigList Heading="@L["ReplaceHostersSkippedUploadConfigs", Preview.SkippedUploadConfigs.Count]"
+                                 UploadConfigs="Preview.SkippedUploadConfigs" />
+    }
+
+    @if (Preview.SkippedUploadConfigTemplates.Count > 0)
+    {
+        <SkippedUploadConfigTemplateList Heading="@L["ReplaceHostersSkippedUploadConfigsInTemplates", Preview.SkippedUploadConfigTemplates.Count]"
+                                         UploadConfigTemplates="Preview.SkippedUploadConfigTemplates" />
+    }
+
+    @if (Preview.DeletedUploadConfigs.Count > 0)
+    {
+        <SkippedUploadConfigList Heading="@L["ReplaceHostersDeletedUploadConfigs", Preview.DeletedUploadConfigs.Count]"
+                                 UploadConfigs="Preview.DeletedUploadConfigs"
+                                 IsDeletion="true" />
+    }
+
+    @if (Preview.DeletedUploadConfigTemplates.Count > 0)
+    {
+        <SkippedUploadConfigTemplateList Heading="@L["ReplaceHostersDeletedUploadConfigsInTemplates", Preview.DeletedUploadConfigTemplates.Count]"
+                                         UploadConfigTemplates="Preview.DeletedUploadConfigTemplates"
+                                         IsDeletion="true" />
+    }
+
+    @if (Preview.DeletedCollectionUploadSlots.Count > 0)
+    {
+        <div class="space-y-2">
+            <h3 class="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <LucideIcon Name="trash-2" class="h-4 w-4 shrink-0" />
+                @L["ReplaceHostersDeletedCollectionUploadSlots", Preview.DeletedCollectionUploadSlots.Count]
+            </h3>
+            <div class="bearcat-config-list">
+                <div class="@($"bearcat-config-header {DeletedCollectionUploadSlotGridClass}")">
+                    <span>@L["ReleaseCollection"]</span>
+                    <span>@L["CollectionUploadSlot"]</span>
+                    <span>@L["UploadConfigurations"]</span>
+                </div>
+                @foreach (var slot in Preview.DeletedCollectionUploadSlots)
+                {
+                    <div class="bearcat-config-item" @key="slot.CollectionUploadSlotId">
+                        <div class="@($"bearcat-config-row {DeletedCollectionUploadSlotGridClass}")">
+                            <div class="min-w-0">
+                                <a class="block truncate text-sm text-primary hover:underline"
+                                   href="@($"/release-collections/{slot.ReleaseCollectionId}")"
+                                   title="@slot.ReleaseCollectionName">@slot.ReleaseCollectionName</a>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="bearcat-mobile-label">@L["CollectionUploadSlot"]</p>
+                                <p class="truncate text-sm" title="@slot.CollectionUploadSlotName">@slot.CollectionUploadSlotName</p>
+                            </div>
+                            <div>
+                                <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
+                                <span class="text-sm tabular-nums">@slot.UploadConfigCount</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Preview.SourceAccountsInUnselectedPools.Count > 0 || Preview.SourcePoolsBecomingUnused.Count > 0)
+    {
+        <ul class="space-y-1 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            @foreach (var account in Preview.SourceAccountsInUnselectedPools)
+            {
+                <li class="flex items-start gap-2">
+                    <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                    <a class="hover:underline" href="/hoster-account-pools">
+                        @L["ReplaceHostersAccountInOtherPool", account.HosterRegistrationName, account.HosterAccountPoolName]
+                    </a>
+                </li>
+            }
+            @foreach (var pool in Preview.SourcePoolsBecomingUnused)
+            {
+                <li class="flex items-start gap-2">
+                    <LucideIcon Name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+                    <a class="hover:underline" href="/hoster-account-pools">
+                        @L["ReplaceHostersPoolBecomesUnused", pool.HosterAccountPoolName]
+                    </a>
+                </li>
+            }
+        </ul>
+    }
+</div>

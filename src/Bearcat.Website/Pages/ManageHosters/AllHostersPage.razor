@@ -10,10 +10,16 @@
             <h1 class="text-3xl font-semibold tracking-tight">@L["HosterRegistrations"]</h1>
         </div>
 
-        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
-            <LucideIcon Name="plus" class="h-4 w-4" />
-            @L["NewHoster"]
-        </BbButton>
+        <div class="flex flex-wrap gap-2">
+            <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["NewHoster"]
+            </BbButton>
+            <BbButton Variant="ButtonVariant.Outline" Class="bearcat-page-action" Href="/hoster-registrations/replace">
+                <LucideIcon Name="replace" class="h-4 w-4" />
+                @L["ReplaceHosters"]
+            </BbButton>
+        </div>
     </div>
 
     <BbDataTable TData="HosterRegistrationReadModel"

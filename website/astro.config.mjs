@@ -109,6 +109,7 @@ export default defineConfig({
 						{ label: 'Release detail page', translations: { de: 'Releasedetailseite' }, slug: 'release-detail-page' },
 						{ label: 'Accounts and reuploads', translations: { de: 'Konten und Reuploads' }, slug: 'account-settings' },
 						{ label: 'Account pools', translations: { de: 'Accountpools' }, slug: 'account-pools' },
+						{ label: 'Replace hosters', translations: { de: 'Hoster ersetzen' }, slug: 'replace-hosters' },
 						{ label: 'Video hosters', translations: { de: 'Videohoster' }, slug: 'video-hosters' },
 						{ label: 'Upload lifecycle', translations: { de: 'Ablauf eines Uploads' }, slug: 'upload-lifecycle' },
 						{ label: 'Import link crypter folders', translations: { de: 'Linkcrypterordner importieren' }, slug: 'import-link-crypter-folders' },

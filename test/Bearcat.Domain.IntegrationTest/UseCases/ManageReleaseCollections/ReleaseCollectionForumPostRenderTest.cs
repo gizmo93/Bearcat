@@ -30,7 +30,10 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 == new List<ArchiverDto> { new("RAR", "RarArchiver", ".rar") }
             ),
             Mock.Of<ILinkCrypterFactory>(),
-            Mock.Of<IHosterFactory>()
+            Mock.Of<IHosterFactory>(factory =>
+                factory.GetByName("Rapidgator")
+                == Mock.Of<IHoster>(hoster => hoster.Name == "Rapidgator")
+            )
         );
         var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
         var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);

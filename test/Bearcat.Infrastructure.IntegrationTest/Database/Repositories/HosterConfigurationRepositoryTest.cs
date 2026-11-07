@@ -168,42 +168,113 @@ public class HosterConfigurationRepositoryTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task GetHosterAccountPoolUploadCountAsync_PoolAndAccountUploadsOfSeveralAccounts_CountsOnlyPoolUploadsOnRegistration()
+    public async Task GetUploadCountBlockingRegistrationDeletionAsync_UploadConfigRetargetedToOtherRegistrationWithAllUploadsOnRegistration_CountsUploads()
     {
         // Arrange
         var testData = new MaterializedValuesTestData(DbContext);
-        var alphaRegistration = testData.AddHosterRegistration("Alpha");
-        var betaRegistration = testData.AddHosterRegistration("Beta");
-        var hosterAccountPool = testData.AddHosterAccountPool(
-            "Pool",
-            alphaRegistration,
-            betaRegistration
-        );
+        var oldRegistration = testData.AddHosterRegistration("Old");
+        var newRegistration = testData.AddHosterRegistration("New");
         var release = testData.AddRelease("Release");
-        var alphaUploadConfig = testData.AddUploadConfig(release, alphaRegistration);
-        var poolUploadConfig = testData.AddHosterAccountPoolUploadConfig(
-            release,
-            hosterAccountPool
-        );
-        testData.AddUpload(alphaUploadConfig, OnlineState.Online);
-        testData.AddUpload(poolUploadConfig, OnlineState.Online).HosterRegistration =
-            alphaRegistration;
-        testData.AddUpload(poolUploadConfig, OnlineState.Offline).HosterRegistration =
-            alphaRegistration;
-        testData.AddUpload(poolUploadConfig, OnlineState.Online).HosterRegistration =
-            betaRegistration;
-        testData.AddUnassignedUpload(poolUploadConfig, UploadState.Pending);
+        var retargetedUploadConfig = testData.AddUploadConfig(release, newRegistration);
+        testData.AddUpload(retargetedUploadConfig, OnlineState.Online).HosterRegistration =
+            oldRegistration;
+        testData.AddUpload(retargetedUploadConfig, OnlineState.Offline).HosterRegistration =
+            oldRegistration;
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetHosterAccountPoolUploadCountAsync(
-            alphaRegistration.Id,
+        var result = await repository.GetUploadCountBlockingRegistrationDeletionAsync(
+            oldRegistration.Id,
             CancellationToken.None
         );
 
         // Assert
         result.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetUploadCountBlockingRegistrationDeletionAsync_PoolUploadConfigWithAllUploadsOnRegistration_CountsUploads()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var registration = testData.AddHosterRegistration("Member");
+        var release = testData.AddRelease("Release");
+        var poolUploadConfig = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool("Pool", registration)
+        );
+        testData.AddUpload(poolUploadConfig, OnlineState.Online).HosterRegistration = registration;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadCountBlockingRegistrationDeletionAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetUploadCountBlockingRegistrationDeletionAsync_UploadConfigsWithUploadOnOtherRegistrationOrUnassignedUpload_CountsNoUploads()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var registration = testData.AddHosterRegistration("Alpha");
+        var otherRegistration = testData.AddHosterRegistration("Beta");
+        var release = testData.AddRelease("Release");
+        var uploadConfigWithUploadOnOtherRegistration = testData.AddUploadConfig(
+            release,
+            otherRegistration
+        );
+        testData.AddUpload(uploadConfigWithUploadOnOtherRegistration, OnlineState.Online);
+        testData
+            .AddUpload(uploadConfigWithUploadOnOtherRegistration, OnlineState.Offline)
+            .HosterRegistration = registration;
+        var uploadConfigWithUnassignedUpload = testData.AddHosterAccountPoolUploadConfig(
+            release,
+            testData.AddHosterAccountPool("Pool", registration, otherRegistration)
+        );
+        testData.AddUnassignedUpload(uploadConfigWithUnassignedUpload, UploadState.Pending);
+        testData
+            .AddUpload(uploadConfigWithUnassignedUpload, OnlineState.Offline)
+            .HosterRegistration = registration;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadCountBlockingRegistrationDeletionAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task GetUploadCountBlockingRegistrationDeletionAsync_UploadConfigTargetingRegistration_CountsNoUploads()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var registration = testData.AddHosterRegistration("Alpha");
+        var release = testData.AddRelease("Release");
+        var uploadConfig = testData.AddUploadConfig(release, registration);
+        testData.AddUpload(uploadConfig, OnlineState.Online);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUploadCountBlockingRegistrationDeletionAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(0);
     }
 
     private static HosterRegistration CreateRegistration(

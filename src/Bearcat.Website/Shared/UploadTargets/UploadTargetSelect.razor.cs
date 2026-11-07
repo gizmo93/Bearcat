@@ -23,4 +23,13 @@ public partial class UploadTargetSelect : ComponentBase
 
     [Parameter]
     public Expression<Func<UploadTarget?>>? ValueExpression { get; set; }
+
+    [Parameter]
+    public Func<UploadTarget, bool>? OfferedUploadTargetFilter { get; set; }
+
+    [Parameter]
+    public string? NoUploadTargetsText { get; set; }
+
+    private bool IsOffered(UploadTarget uploadTarget) =>
+        OfferedUploadTargetFilter?.Invoke(uploadTarget) ?? true;
 }

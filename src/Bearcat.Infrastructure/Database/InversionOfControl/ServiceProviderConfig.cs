@@ -47,6 +47,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
+using Bearcat.Domain.UseCases.ReplaceHosters.Repositories;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics.Repositories;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
@@ -177,6 +178,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IProxyServerWriteRepository, ProxyServerRepository>();
             services.AddScoped<IHosterAccountPoolReadRepository, HosterAccountPoolRepository>();
             services.AddScoped<IHosterAccountPoolWriteRepository, HosterAccountPoolRepository>();
+            services.AddScoped<IHosterReplacementRepository, HosterReplacementRepository>();
             services.AddScoped<
                 IProxyCategoryDefaultReadRepository,
                 ProxyCategoryDefaultRepository

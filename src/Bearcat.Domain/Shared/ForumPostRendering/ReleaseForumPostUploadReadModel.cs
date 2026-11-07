@@ -3,6 +3,7 @@ namespace Bearcat.Domain.Shared.ForumPostRendering;
 public record ReleaseForumPostUploadReadModel(
     string UploadConfigName,
     string HosterName,
+    string HosterRegistrationName,
     bool IsVideoUpload,
     string? ArchiveFormat,
     string? ArchivePassword,

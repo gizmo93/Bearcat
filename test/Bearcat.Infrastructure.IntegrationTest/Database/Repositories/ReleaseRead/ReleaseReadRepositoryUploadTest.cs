@@ -38,11 +38,19 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
                 new LinkCrypterDto("KeepLinks", "KeepLinks", [], false, true, true),
             ]);
 
+        var hosterFactory = new Mock<IHosterFactory>();
+        hosterFactory
+            .Setup(factory => factory.GetByName(It.IsAny<string>()))
+            .Returns(
+                (string hosterClassName) =>
+                    Mock.Of<IHoster>(hoster => hoster.Name == $"{hosterClassName} display name")
+            );
+
         repository = new ReleaseReadRepository(
             ReadDbContext,
             archiverFactory.Object,
             linkCrypterFactory.Object,
-            Mock.Of<IHosterFactory>()
+            hosterFactory.Object
         );
     }
 
@@ -660,7 +668,8 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         result.Select(upload => upload.UploadConfigName).ShouldBe(["Config A", "Config B"]);
 
         var first = result[0];
-        first.HosterName.ShouldBe("Hoster A");
+        first.HosterName.ShouldBe("ExampleHoster display name");
+        first.HosterRegistrationName.ShouldBe("Hoster A");
         first.ArchiveFormat.ShouldBe("RAR");
         first.ArchivePassword.ShouldBe("archive-secret");
         first.UploadedAt.ShouldBe(MidnightUtc.AddHours(1).AddMilliseconds(250));
@@ -681,7 +690,8 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         collectionCrypter.CreatedAt.ShouldBe(MidnightUtc.AddHours(3).AddMilliseconds(5));
 
         var second = result[1];
-        second.HosterName.ShouldBe("Hoster B");
+        second.HosterName.ShouldBe("ExampleHoster display name");
+        second.HosterRegistrationName.ShouldBeEmpty();
         second.UploadedAt.ShouldBeNull();
         second.Links.ShouldBeEmpty();
         var unusedCrypter = second.LinkCrypters.ShouldHaveSingleItem();
@@ -821,7 +831,8 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         // Assert
         var videoUpload = result.ShouldHaveSingleItem();
         videoUpload.UploadConfigName.ShouldBe("Video");
-        videoUpload.HosterName.ShouldBe("Video Hoster");
+        videoUpload.HosterName.ShouldBe("ExampleHoster display name");
+        videoUpload.HosterRegistrationName.ShouldBe("Video Hoster");
         videoUpload.ArchiveFormat.ShouldBeNull();
         videoUpload.ArchivePassword.ShouldBeNull();
         videoUpload.UploadedAt.ShouldBe(MidnightUtc.AddMinutes(5));
@@ -831,6 +842,29 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
             "https://video.example/embed/main",
             "https://video.example/embed/sample",
         ]);
+    }
+
+    [Test]
+    public async Task GetForumPostUploadsAsync_UploadConfigRetargetedAfterLatestUpload_ReturnsHosterOfLatestUpload()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.Retargeted.2026-GRP");
+        var oldRegistration = testData.AddHosterRegistration("Old account");
+        oldRegistration.HosterClassName = "OldHoster";
+        var newRegistration = testData.AddHosterRegistration("New account");
+        newRegistration.HosterClassName = "NewHoster";
+        var uploadConfig = testData.AddUploadConfig(release, "Upload", newRegistration);
+        testData.AddUpload(uploadConfig, MidnightUtc, MidnightUtc).HosterRegistration =
+            oldRegistration;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        var upload = result.ShouldHaveSingleItem();
+        upload.HosterName.ShouldBe("OldHoster display name");
+        upload.HosterRegistrationName.ShouldBe("Old account");
     }
 
     [Test]

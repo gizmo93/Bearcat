@@ -74,14 +74,29 @@ public class HosterAccountPoolRepositoryTest(DatabaseProvider databaseProvider)
                     "Alfafile account",
                     true,
                     false,
+                    false,
                     1
                 ),
             ]);
         result[1].MembersInPriorityOrder.ShouldBeEmpty();
         result[2]
             .MembersInPriorityOrder.ShouldBe([
-                new HosterAccountPoolMemberReadModel(second.Id, "Second account", false, true, 1),
-                new HosterAccountPoolMemberReadModel(first.Id, "First account", true, false, 2),
+                new HosterAccountPoolMemberReadModel(
+                    second.Id,
+                    "Second account",
+                    false,
+                    true,
+                    false,
+                    1
+                ),
+                new HosterAccountPoolMemberReadModel(
+                    first.Id,
+                    "First account",
+                    true,
+                    false,
+                    false,
+                    2
+                ),
             ]);
     }
 

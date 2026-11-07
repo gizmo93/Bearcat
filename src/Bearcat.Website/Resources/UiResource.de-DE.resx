@@ -286,11 +286,11 @@
   <data name="NoDistributionTargets" xml:space="preserve"><value>Keine Verteilziele</value></data>
     <data name="NoImageUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationen.</value></data>
     <data name="NoImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationsvorlagen.</value></data>
-  <data name="CollectionImageUploadConfigurations" xml:space="preserve"><value>Release Collection Bilduploadkonfigurationen</value></data>
+  <data name="CollectionImageUploadConfigurations" xml:space="preserve"><value>Bilduploadkonfigurationen für Releasecollections</value></data>
   <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Lädt das Cover der Collection einmal für alle zugehörigen Releases hoch.</value></data>
-  <data name="NoCollectionImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Collection Bilduploadkonfigurationsvorlagen.</value></data>
-  <data name="AddCollectionImageUploadConfig" xml:space="preserve"><value>Collection Bilduploadkonfiguration hinzufügen</value></data>
-    <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhosterziele für die Coverbilder von Release Collections aus dieser Vorlage fest.</value></data>
+  <data name="NoCollectionImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationsvorlagen für Collections.</value></data>
+  <data name="AddCollectionImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration für Collection hinzufügen</value></data>
+    <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Wähle die Bildhoster für Coverbilder von Releasecollections aus dieser Vorlage.</value></data>
   <data name="CollectionImageUploads" xml:space="preserve"><value>Bilduploads</value></data>
   <data name="CollectionImageUploadsDescription" xml:space="preserve"><value>Bildhosterziele für das Coverbild dieser Collection.</value></data>
   <data name="NoCollectionImageUploadsYet" xml:space="preserve"><value>Noch keine Bilduploadkonfiguration.</value></data>
@@ -353,11 +353,8 @@
   <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Releaseonlinestatus</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Inhaltstyp</value></data>
-  <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Inhaltstyp aktualisiert</value></data>
-  <data name="EditContentType" xml:space="preserve"><value>Inhaltstyp bearbeiten</value></data>
-  <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Releasecollection.</value></data>
   <data name="EditCollectionSettings" xml:space="preserve"><value>Collectioneinstellungen bearbeiten</value></data>
-  <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Release Collection.</value></data>
+  <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Releasecollection.</value></data>
   <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collectioneinstellungen aktualisiert</value></data>
   <data name="AnyReleaseContentType" xml:space="preserve"><value>Alle Inhaltstypen</value></data>
   <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Film</value></data>
@@ -936,15 +933,15 @@
   <data name="LeaveWorkflow" xml:space="preserve"><value>Verlassen</value></data>
   <data name="CopyTitle" xml:space="preserve"><value>Titel kopieren</value></data>
   <data name="DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
-  <data name="DistributionSiteRegistrations" xml:space="preserve"><value>Verteilungsseiten Registrierungen</value></data>
+  <data name="DistributionSiteRegistrations" xml:space="preserve"><value>Verteilungsseitenregistrierungen</value></data>
   <data name="NewDistributionSite" xml:space="preserve"><value>Neue Verteilungsseite</value></data>
   <data name="DistributionSite" xml:space="preserve"><value>Verteilungsseite</value></data>
   <data name="AddDistributionSite" xml:space="preserve"><value>Verteilungsseite hinzufügen</value></data>
   <data name="DistributionSiteDialogDescription" xml:space="preserve"><value>Füge Zugangsdaten für eine Verteilungsseite hinzu.</value></data>
   <data name="SelectDistributionSite" xml:space="preserve"><value>Verteilungsseite auswählen</value></data>
   <data name="OpenDistributionSiteActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
-  <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} aktiviert</value></data>
-  <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} deaktiviert</value></data>
+  <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Verteilungsseitenregistrierung {0} aktiviert</value></data>
+  <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Verteilungsseitenregistrierung {0} deaktiviert</value></data>
   <data name="Forum" xml:space="preserve"><value>Forum</value></data>
   <data name="Blog" xml:space="preserve"><value>Blog</value></data>
   <data name="PostToForum" xml:space="preserve"><value>Im Forum posten</value></data>
@@ -1050,7 +1047,7 @@
   <data name="TelegramNothingDelivered" xml:space="preserve"><value>Noch nichts zugestellt</value></data>
   <data name="TelegramLastError" xml:space="preserve"><value>Letzter Fehler: {0}</value></data>
   <data name="NotificationSettings" xml:space="preserve"><value>Benachrichtigungseinstellungen</value></data>
-  <data name="NotificationSettingsDescription" xml:space="preserve"><value>Wähle für diese Bearcat Instanz, welche Ereignisse Benachrichtigungen erzeugen. Änderungen gelten nur für künftige Benachrichtigungen. Vorhandene Benachrichtigungen und wartende Telegramzustellungen bleiben unverändert.</value></data>
+  <data name="NotificationSettingsDescription" xml:space="preserve"><value>Wähle für diese Bearcatinstanz, welche Ereignisse Benachrichtigungen erzeugen. Änderungen gelten nur für künftige Benachrichtigungen. Vorhandene Benachrichtigungen und wartende Telegramzustellungen bleiben unverändert.</value></data>
   <data name="NotificationGroup.Releases" xml:space="preserve"><value>Releases</value></data>
   <data name="NotificationGroup.Archives" xml:space="preserve"><value>Archive</value></data>
   <data name="NotificationGroup.Uploads" xml:space="preserve"><value>Uploads</value></data>
@@ -1467,7 +1464,7 @@
   <data name="CredentialsMustBeEnteredAgain" xml:space="preserve"><value>Zugangsdaten neu eingeben</value></data>
   <data name="UnreadableSecretsBadgeHint" xml:space="preserve"><value>Die gespeicherten Zugangsdaten konnten mit dem aktuellen Verschlüsselungsschlüssel nicht entschlüsselt werden und müssen neu eingegeben werden.</value></data>
   <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Gib das Bottoken ein.</value></data>
-  <data name="DeleteRegistrationWarning" xml:space="preserve"><value>Beim Löschen dieser Registrierung werden auch alle zugehörigen Daten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.</value></data>
+  <data name="DeleteRegistrationWarning" xml:space="preserve"><value>Beim Löschen dieser Registrierung werden auch alle zugehörigen Daten dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="TypeNameToConfirmDeletion" xml:space="preserve"><value>Gib {0} ein, um das Löschen zu bestätigen</value></data>
   <data name="ProxyServers" xml:space="preserve"><value>Proxyserver</value></data>
   <data name="ProxyServersIntro" xml:space="preserve"><value>Server, über die Bearcat ausgehende Verbindungen leiten kann.</value></data>
@@ -1836,7 +1833,7 @@
   <data name="HosterAccountPoolWithoutActiveAccounts" xml:space="preserve"><value>{0} (kein aktiver Account)</value></data>
   <data name="HosterAccountNotAssignedYet" xml:space="preserve"><value>{0} (Account noch nicht zugewiesen)</value></data>
   <data name="HosterAccountPoolStillInUse" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil noch {1} Uploadkonfigurationen und {2} Uploadkonfigurationsvorlagen ihn verwenden.</value></data>
-  <data name="HosterRegistrationStillHoldsHosterAccountPoolUploads" xml:space="preserve"><value>{0} hält noch {1} Uploads von Accountpools und kann nicht gelöscht werden. Entferne den Account aus den Pools und deaktiviere ihn stattdessen.</value></data>
+  <data name="HosterRegistrationStillHoldsLastUploadsOfOtherUploadConfigs" xml:space="preserve"><value>{0} kann nicht gelöscht werden: Dort liegen noch {1} Uploads, deren Konfigurationen einen anderen Account oder Accountpool als Uploadziel verwenden. Deaktiviere den Account stattdessen und entferne ihn aus seinen Accountpools.</value></data>
   <data name="StartUploadsNow" xml:space="preserve"><value>Uploads jetzt starten</value></data>
   <data name="StartUploadsNowDescription" xml:space="preserve"><value>Erstellt die initialen Uploads sofort, statt auf den Cooldown für initiale Uploads zu warten.</value></data>
   <data name="InitialUploadsCreatedOne" xml:space="preserve"><value>Initialer Upload erstellt. Das Packen startet in Kürze.</value></data>
@@ -1878,7 +1875,7 @@
   <data name="FirstStartSetupHosterNextRequirement" xml:space="preserve"><value>Wähle mindestens eine Registrierung mit erfolgreichem Login aus, um fortzufahren.</value></data>
   <data name="FirstStartSetupCaptchaVerificationCompleted" xml:space="preserve"><value>Captchaverifizierung für {0} abgeschlossen.</value></data>
   <data name="FirstStartSetupReleaseTemplateTitle" xml:space="preserve"><value>Releasegruppe und Template</value></data>
-  <data name="FirstStartSetupReleaseTemplateDescription" xml:space="preserve"><value>Eine Releasegruppe legt fest, ob Bearcat Offlinelinks erneut hochlädt. Ein Releasetemplate ist das Rezept, das Automatisierungen für jedes neue Release nutzen: Archiveinstellungen und Zielhoster. Beides kannst du später auf den Seiten Releasegruppen und Releasetemplates ändern.</value></data>
+  <data name="FirstStartSetupReleaseTemplateDescription" xml:space="preserve"><value>Eine Releasegruppe legt fest, ob Bearcat Offlinelinks erneut hochlädt. Ein Releasetemplate enthält die Archiveinstellungen und Zielhoster für automatisch erstellte Releases. Beides kannst du später unter Releasegruppen und Releasetemplates ändern.</value></data>
   <data name="FirstStartSetupReleaseTemplateChoice" xml:space="preserve"><value>Auswahl des Releasetemplates</value></data>
   <data name="FirstStartSetupUseExistingTemplate" xml:space="preserve"><value>Vorhandenes Template verwenden</value></data>
   <data name="FirstStartSetupUseExistingTemplateDescription" xml:space="preserve"><value>Mit einem bereits erstellten Template fortfahren.</value></data>
@@ -2041,4 +2038,44 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>Dateistatus unbekannt</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>Dateien sind keine Archivteile</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>Dateinamen weichen vom ersten übernommenen Mirror ab</value></data>
+  <data name="ReplaceHosters" xml:space="preserve"><value>Hoster ersetzen</value></data>
+  <data name="ReplaceHostersSourceHeading" xml:space="preserve"><value>Zu ersetzender Hoster</value></data>
+  <data name="ReplaceHostersSelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>
+  <data name="ReplaceHostersAccountOrPool" xml:space="preserve"><value>Account oder Pool</value></data>
+  <data name="ReplaceHostersUploadConfig" xml:space="preserve"><value>Uploadkonfiguration</value></data>
+  <data name="ReplaceHostersUploadConfigsInTemplates" xml:space="preserve"><value>Uploadkonfigurationen in Vorlagen</value></data>
+  <data name="ReplaceHostersPool" xml:space="preserve"><value>Pool</value></data>
+  <data name="ReplaceHostersReplacementHeading" xml:space="preserve"><value>Ersatz</value></data>
+  <data name="ReplaceHostersNoReplacementTargets" xml:space="preserve"><value>Kein nutzbarer Account oder Pool vorhanden.</value></data>
+  <data name="ReplaceHostersHosterIsDead" xml:space="preserve"><value>Hoster ist tot</value></data>
+  <data name="ReplaceHostersHosterIsDeadDescription" xml:space="preserve"><value>Deaktiviert die ausgewählten Accounts und markiert ihre Uploads als offline, damit Bearcat sie automatisch erneut hochladen kann.</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigs" xml:space="preserve"><value>Doppelte Konfigurationen löschen</value></data>
+  <data name="ReplaceHostersDeleteDuplicateUploadConfigsDescription" xml:space="preserve"><value>Löscht doppelte Konfigurationen samt ihren Uploads in Bearcat, wenn dieselbe Archivkonfiguration bereits beim Ersatzhoster verwendet wird. Collectioncontainer werden gelöscht, wenn alle ihre Konfigurationen doppelt sind. Container bei Linkcryptern bleiben bestehen.</value></data>
+  <data name="ReplaceHostersUnstartedUploads" xml:space="preserve"><value>Noch nicht gestartete Uploads</value></data>
+  <data name="ReplaceHostersAccountsToDeactivate" xml:space="preserve"><value>Zu deaktivierende Accounts</value></data>
+  <data name="ReplaceHostersUploadsToMarkOffline" xml:space="preserve"><value>Als offline zu markierende Uploads</value></data>
+  <data name="ReplaceHostersConfigurationsToDelete" xml:space="preserve"><value>Zu löschende Konfigurationen</value></data>
+  <data name="ReplaceHostersUploadsStayingOnSourceHoster" xml:space="preserve"><value>{0} laufende Uploads bleiben beim alten Hoster. Brich sie ab, falls sie nicht fertig werden.</value></data>
+  <data name="ReplaceHostersUploadConfigsWithoutArchiveSource" xml:space="preserve"><value>{0} Uploadkonfigurationen haben keine Quelle für einen neuen Upload mehr: kein Archiv, kein Releaseordner und kein Onlinemirror bei einem anderen Hoster.</value></data>
+  <data name="ReplaceHostersSkippedUploadConfigs" xml:space="preserve"><value>Übersprungene Uploadkonfigurationen ({0})</value></data>
+  <data name="ReplaceHostersSkippedUploadConfigsInTemplates" xml:space="preserve"><value>Übersprungene Uploadkonfigurationen in Vorlagen ({0})</value></data>
+  <data name="ReplaceHostersDeletedUploadConfigs" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen ({0})</value></data>
+  <data name="ReplaceHostersDeletedUploadConfigsInTemplates" xml:space="preserve"><value>Zu löschende Uploadkonfigurationen in Vorlagen ({0})</value></data>
+  <data name="ReplaceHostersDeletedCollectionUploadSlots" xml:space="preserve"><value>Zu löschende Collectioncontainer ({0})</value></data>
+  <data name="ReplaceHostersSkipReason" xml:space="preserve"><value>Grund</value></data>
+  <data name="ReplaceHostersAndMore" xml:space="preserve"><value>und {0} weitere</value></data>
+  <data name="HosterReplacementSkipReason.DuplicateOnReplacementHoster" xml:space="preserve"><value>Diese Archivkonfiguration wird bereits beim Ersatzhoster verwendet</value></data>
+  <data name="HosterReplacementSkipReason.CollectionUploadSlotPartiallySkipped" xml:space="preserve"><value>Eine andere Konfiguration dieses Collectioncontainers wurde übersprungen</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByOtherCollectionUploadSlotMember" xml:space="preserve"><value>Eine Konfiguration desselben Collectioncontainers kann nicht gelöscht werden</value></data>
+  <data name="HosterReplacementSkipReason.DeletionBlockedByRunningUpload" xml:space="preserve"><value>Kann wegen eines laufenden Uploads nicht gelöscht werden</value></data>
+  <data name="ReplaceHostersAccountInOtherPool" xml:space="preserve"><value>{0} gehört auch zum Pool {1}. Dieser Pool wird nicht ersetzt.</value></data>
+  <data name="ReplaceHostersPoolBecomesUnused" xml:space="preserve"><value>Pool {0} wird danach nicht mehr verwendet. Du kannst ihn löschen.</value></data>
+  <data name="ReplaceHostersExecute" xml:space="preserve"><value>Hoster ersetzen</value></data>
+  <data name="ReplaceHostersConfirmation" xml:space="preserve"><value>{0} Uploadkonfigurationen, {1} Konfigurationen in Vorlagen und {2} noch nicht gestartete Uploads wechseln zu {3}.</value></data>
+  <data name="ReplaceHostersConfirmationDeadHoster" xml:space="preserve"><value>Bearcat deaktiviert {0} Accounts und markiert {1} Uploads als offline.</value></data>
+  <data name="ReplaceHostersConfirmationDeletedUploadConfigs" xml:space="preserve"><value>Bearcat löscht {0} Uploadkonfigurationen, {1} Konfigurationen in Vorlagen und {2} Collectioncontainer.</value></data>
+  <data name="ReplaceHostersCannotBeUndone" xml:space="preserve"><value>Das lässt sich nicht automatisch rückgängig machen.</value></data>
+  <data name="ReplaceHostersExecuted" xml:space="preserve"><value>Umgestellt: {0} Uploadkonfigurationen, {1} Konfigurationen in Vorlagen und {2} noch nicht gestartete Uploads.</value></data>
+  <data name="ReplaceHostersExecutedDeadHoster" xml:space="preserve"><value>{0} Accounts deaktiviert und {1} Uploads als offline markiert.</value></data>
+  <data name="ReplaceHostersExecutedDeletedUploadConfigs" xml:space="preserve"><value>{0} Uploadkonfigurationen, {1} Konfigurationen in Vorlagen und {2} Collectioncontainer gelöscht.</value></data>
 </root>

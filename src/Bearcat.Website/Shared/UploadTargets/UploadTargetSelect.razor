@@ -2,8 +2,14 @@
 @using Bearcat.Domain.ValueObjects
 
 @{
-    var hosterRegistrations = Choices.GetSelectableHosterRegistrations(Value, UploadSource);
-    var hosterAccountPools = Choices.GetSelectableHosterAccountPools(UploadSource);
+    var hosterRegistrations = Choices
+        .GetSelectableHosterRegistrations(Value, UploadSource)
+        .Where(hosterRegistration => IsOffered(UploadTarget.ForHosterRegistration(hosterRegistration.Id)))
+        .ToList();
+    var hosterAccountPools = Choices
+        .GetSelectableHosterAccountPools(UploadSource)
+        .Where(hosterAccountPool => IsOffered(UploadTarget.ForHosterAccountPool(hosterAccountPool.Id)))
+        .ToList();
 }
 
 <BbFormFieldSelect TValue="UploadTarget"
@@ -49,6 +55,6 @@
 @if (hosterRegistrations.Count == 0 && hosterAccountPools.Count == 0)
 {
     <p class="text-xs text-muted-foreground">
-        @(UploadSource is UploadSource.VideoFiles ? L["NoVideoHosterAccountsYet"] : L["NoHosterAccountsYet"])
+        @(NoUploadTargetsText ?? (UploadSource is UploadSource.VideoFiles ? L["NoVideoHosterAccountsYet"] : L["NoHosterAccountsYet"]))
     </p>
 }

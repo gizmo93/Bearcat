@@ -34,10 +34,15 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         linkCrypterFactory.Setup(factory => factory.GetLinkCrypters()).Returns([]);
         var poolHoster = new Mock<IHoster>();
         poolHoster.Setup(hoster => hoster.Name).Returns("Pool hoster display name");
+        var singleAccountHoster = new Mock<IHoster>();
+        singleAccountHoster.Setup(hoster => hoster.Name).Returns("Single account display name");
         var hosterFactory = new Mock<IHosterFactory>(MockBehavior.Strict);
         hosterFactory
             .Setup(factory => factory.GetByName(PoolHosterClassName))
             .Returns(poolHoster.Object);
+        hosterFactory
+            .Setup(factory => factory.GetByName("ExampleHoster"))
+            .Returns(singleAccountHoster.Object);
 
         repository = new ReleaseReadRepository(
             ReadDbContext,
@@ -192,7 +197,51 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         // Assert
         result
             .Select(upload => upload.HosterName)
-            .ShouldBe(["Pool hoster display name", "Single account hoster"], ignoreOrder: true);
+            .ShouldBe(
+                ["Pool hoster display name", "Single account display name"],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task GetForumPostUploadsAsync_HosterAccountPoolUploadWithAssignedAccount_ReturnsHosterNameAndAccountName()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.ForumPoolAccount.2026-GRP");
+        var poolConfig = AddHosterAccountPoolUploadConfig(release, memberIsActive: true);
+        var upload = testData.AddUpload(poolConfig, MidnightUtc, MidnightUtc);
+        upload.HosterRegistration = poolConfig
+            .HosterAccountPool!.Members.Single()
+            .HosterRegistration;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        var forumPostUpload = result.ShouldHaveSingleItem();
+        forumPostUpload.HosterName.ShouldBe("Pool hoster display name");
+        forumPostUpload.HosterRegistrationName.ShouldBe("Bearcat.ForumPoolAccount.2026-GRP member");
+    }
+
+    [Test]
+    public async Task GetForumPostUploadsAsync_PendingHosterAccountPoolUploadWithoutAccount_ReturnsHosterNameAndEmptyAccountName()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.ForumPoolPending.2026-GRP");
+        var poolConfig = AddHosterAccountPoolUploadConfig(release, memberIsActive: true);
+        AddUnassignedUpload(poolConfig, UploadState.Pending);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        var forumPostUpload = result.ShouldHaveSingleItem();
+        forumPostUpload.HosterName.ShouldBe("Pool hoster display name");
+        forumPostUpload.HosterRegistrationName.ShouldBeEmpty();
     }
 
     private UploadConfig AddHosterAccountPoolUploadConfig(
@@ -203,6 +252,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
     {
         var memberRegistration = testData.AddHosterRegistration($"{release.Name} member");
         memberRegistration.IsActive = memberIsActive;
+        memberRegistration.HosterClassName = PoolHosterClassName;
         var uploadConfig = new UploadConfig
         {
             UploadSource = UploadSource.ArchiveFiles,

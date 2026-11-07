@@ -57,13 +57,19 @@ unusable before the first file is uploaded.
 
 ## Remove an account
 
-An account that still holds uploads of a pool cannot be deleted. Remove it from the pool and deactivate
-it instead. A deactivated account gets no new uploads, its existing uploads stay.
+You cannot delete an account while it stores the latest uploads of an upload configuration that targets
+a pool or another account. Bearcat would upload these releases again. Remove the account from the pool and
+deactivate it instead. It will receive no new uploads, but its existing uploads stay.
+
+## Replace a pool
+
+To move all upload configurations from a pool to another account or pool, use
+[Replace Hosters](/Bearcat/replace-hosters/).
 
 ## Forum posts
 
-In forum posts, the hoster name of a pool upload is the hoster's display name (e.g. "Rapidgator"), not
-the pool or account name.
+In forum posts, `upload.hoster_name` is the hoster's display name (e.g. "Rapidgator"), not the pool or
+account name. `upload.hoster_registration_name` shows the account name of the latest upload.
 
 ## Parallel uploads
 

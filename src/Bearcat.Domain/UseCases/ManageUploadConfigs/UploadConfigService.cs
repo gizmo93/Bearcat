@@ -78,6 +78,7 @@ public class UploadConfigService(
 
             foreach (var upload in uploadsNotStartedOnHoster)
             {
+                upload.RemoveHosterRegistrationAndFolderAssignment();
                 upload.HosterRegistrationId = uploadTarget.HosterRegistrationId;
             }
         }
