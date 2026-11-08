@@ -118,6 +118,11 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             ),
             mirrorFileSizeService,
             new UploadCancellationService(notificationService),
+            new ArchiveFileCopyService(
+                new FileSystemService(),
+                transferProgressTracker,
+                NullLogger<ArchiveFileCopyService>.Instance
+            ),
             NullLogger<ArchiveRestoreService>.Instance
         );
 
@@ -385,6 +390,78 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             fileBytes.ShouldBe([.. Encoding.UTF8.GetBytes(GetMirrorFileContent(link)), (byte)0]);
             archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(fileBytes)));
         }
+    }
+
+    [Test]
+    public async Task ProcessAsync_OneNeededFileIsMissingInStorageFolder_RestoresOnlyThatFileIntoTheStorageFolder()
+    {
+        // Arrange
+        var scenario = await AddStorageFolderArchiveScenarioAsync(
+            archiveState: ArchiveState.MissingFiles,
+            addWaitingUpload: true
+        );
+
+        // Act
+        await restoreService.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext
+            .Archives.Include(a => a.ArchiveFiles)
+            .SingleAsync(a => a.Id == scenario.ArchiveId);
+        var missingArchiveFile = archive.ArchiveFiles.Single(f =>
+            f.Id == scenario.MissingArchiveFileId
+        );
+        var restoredFilePath = Path.Combine(scenario.ArchiveFolderPath, "archive.part2.rar");
+        var restoredFileHash = await Md5FileHash.ComputeAsync(
+            restoredFilePath,
+            CancellationToken.None
+        );
+
+        downloadHoster.DownloadedLinks.ShouldBe(["https://mirror.test/file-2"]);
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        archive.ArchiveStorageFolderId.ShouldBe(scenario.StorageFolderId);
+        archive.ArchiveFolderPath.ShouldBe(scenario.ArchiveFolderPath);
+        missingArchiveFile.FullFileName.ShouldBe(restoredFilePath);
+        missingArchiveFile.Md5Hash.ShouldBe(restoredFileHash);
+        missingArchiveFile.Md5HashInStorageFolder.ShouldBe(restoredFileHash);
+        (await File.ReadAllTextAsync(restoredFilePath)).ShouldBe(
+            GetMirrorFileContent("https://mirror.test/file-2")
+        );
+        (await File.ReadAllTextAsync(scenario.PresentFilePath)).ShouldBe("storage-present");
+        Directory
+            .Exists(Path.Combine(archiveFilesBasePath, $"restore-{scenario.ArchiveId}"))
+            .ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_RestoreOfStorageFolderArchiveWasInterrupted_DeletesOnlyTheRestoreFolder()
+    {
+        // Arrange
+        var scenario = await AddStorageFolderArchiveScenarioAsync(
+            archiveState: ArchiveState.Restoring,
+            addWaitingUpload: false
+        );
+        var restoreFolderPath = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, $"restore-{scenario.ArchiveId}"))
+            .FullName;
+        await File.WriteAllTextAsync(
+            Path.Combine(restoreFolderPath, "archive.part2.rar"),
+            "partial-download"
+        );
+
+        // Act
+        await restoreService.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.SingleAsync(a => a.Id == scenario.ArchiveId);
+
+        archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
+        archive.ArchiveStorageFolderId.ShouldBe(scenario.StorageFolderId);
+        archive.ArchiveFolderPath.ShouldBe(scenario.ArchiveFolderPath);
+        Directory.Exists(restoreFolderPath).ShouldBeFalse();
+        (await File.ReadAllTextAsync(scenario.PresentFilePath)).ShouldBe("storage-present");
     }
 
     private async Task<DeletedArchiveScenario> AddDeletedArchiveScenarioAsync(
@@ -679,6 +756,160 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         );
     }
 
+    private async Task<StorageFolderArchiveScenario> AddStorageFolderArchiveScenarioAsync(
+        ArchiveState archiveState,
+        bool addWaitingUpload
+    )
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = releaseFolderPath,
+            ReleaseGroup = releaseGroup,
+        };
+        var archiveConfig = new ArchiveConfig
+        {
+            Release = release,
+            Name = "Main archive",
+            ArchiveFilesBasePath = archiveFilesBasePath,
+            ArchiverName = "zip",
+            ArchiveNamePrefix = "bearcat-release",
+            ArchivePassword = "secret",
+            ArchiveFileSizeMb = 512,
+        };
+        var mirrorUploadConfig = new UploadConfig
+        {
+            UploadSource = UploadSource.ArchiveFiles,
+            Release = release,
+            ArchiveConfig = archiveConfig,
+            HosterRegistration = new HosterRegistration
+            {
+                Name = "Mirror",
+                SerializedConfig = "{}",
+                HosterClassName = MirrorHosterClassName,
+                IsActive = true,
+                UseForMirrorDownloads = true,
+            },
+            Name = "Mirror upload",
+        };
+        var targetUploadConfig = new UploadConfig
+        {
+            UploadSource = UploadSource.ArchiveFiles,
+            Release = release,
+            ArchiveConfig = archiveConfig,
+            HosterRegistration = new HosterRegistration
+            {
+                Name = "Target",
+                SerializedConfig = "{}",
+                HosterClassName = TargetHosterClassName,
+                IsActive = true,
+            },
+            Name = "Target upload",
+        };
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Name = "NAS",
+            Path = Directory.CreateDirectory(Path.Combine(tempRootPath, "nas")).FullName,
+            IsActive = true,
+            MaxParallelFileCopies = 1,
+            Priority = 1,
+        };
+
+        DbContext.UploadConfigs.AddRange(mirrorUploadConfig, targetUploadConfig);
+        DbContext.ArchiveStorageFolders.Add(storageFolder);
+        await DbContext.SaveChangesAsync();
+
+        var archiveFolderPath = Directory
+            .CreateDirectory(Path.Combine(storageFolder.Path, "Bearcat.Release.001.Main archive"))
+            .FullName;
+
+        var presentFilePath = Path.Combine(archiveFolderPath, "archive.part1.rar");
+        await File.WriteAllTextAsync(presentFilePath, "storage-present");
+
+        var presentFileHash = await Md5FileHash.ComputeAsync(
+            presentFilePath,
+            CancellationToken.None
+        );
+
+        var presentArchiveFile = new ArchiveFile
+        {
+            FullFileName = presentFilePath,
+            Md5Hash = presentFileHash,
+            Md5HashInStorageFolder = presentFileHash,
+        };
+        var missingArchiveFile = new ArchiveFile
+        {
+            FullFileName = Path.Combine(archiveFolderPath, "archive.part2.rar"),
+            Md5Hash = "0123456789ABCDEF0123456789ABCDEF",
+            Md5HashInStorageFolder = "0123456789ABCDEF0123456789ABCDEF",
+        };
+        var archive = new Archive
+        {
+            ArchiveConfigId = archiveConfig.Id,
+            ArchiveFolderPath = archiveFolderPath,
+            ArchiveStorageFolderId = storageFolder.Id,
+            ArchiveState = archiveState,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow.AddHours(-3),
+            ArchiveFiles = [presentArchiveFile, missingArchiveFile],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var mirrorUpload = new Upload
+        {
+            UploadConfigId = mirrorUploadConfig.Id,
+            HosterRegistrationId = mirrorUploadConfig.HosterRegistrationId,
+            Archive = archive,
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            UploadedAt = DateTime.UtcNow.AddHours(-2),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                CreateUploadedFile(presentArchiveFile, "https://mirror.test/file-1"),
+                CreateUploadedFile(missingArchiveFile, "https://mirror.test/file-2"),
+            ],
+        };
+
+        DbContext.Archives.Add(archive);
+        DbContext.Uploads.Add(mirrorUpload);
+
+        if (addWaitingUpload)
+        {
+            DbContext.Uploads.Add(
+                new Upload
+                {
+                    UploadConfigId = targetUploadConfig.Id,
+                    HosterRegistrationId = targetUploadConfig.HosterRegistrationId,
+                    CreatedAt = DateTime.UtcNow,
+                    UploadState = UploadState.WaitingForArchive,
+                    OnlineState = OnlineState.Unknown,
+                    ErrorMessages = [],
+                    UploadedFiles = [],
+                }
+            );
+        }
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return new StorageFolderArchiveScenario(
+            ArchiveId: archive.Id,
+            MissingArchiveFileId: missingArchiveFile.Id,
+            StorageFolderId: storageFolder.Id,
+            ArchiveFolderPath: archiveFolderPath,
+            PresentFilePath: presentFilePath
+        );
+    }
+
     private static UploadedFile CreateUploadedFile(
         ArchiveFile archiveFile,
         string hosterFileLink,
@@ -716,6 +947,14 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         int WaitingUploadId,
         string CarriedOverFilePath,
         string LocallyPresentFilePath
+    );
+
+    private sealed record StorageFolderArchiveScenario(
+        int ArchiveId,
+        int MissingArchiveFileId,
+        int StorageFolderId,
+        string ArchiveFolderPath,
+        string PresentFilePath
     );
 
     private sealed class DefaultConfigurationProvider : IApplicationConfigurationProvider

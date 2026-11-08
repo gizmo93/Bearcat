@@ -87,6 +87,45 @@ public class ArchiveFileCopyServiceTest
     }
 
     [Test]
+    public async Task CopyArchiveFilesAndVerifySizesAsync_TargetFileWithSameSizeExists_SkipsCopyAndReturnsIt()
+    {
+        // Arrange
+        var firstTargetFilePath = Path.Join(TargetFolderPath, "archive.part1.rar");
+        fileSystemServiceMock.Setup(f => f.FileExists(firstTargetFilePath)).Returns(true);
+        fileSystemServiceMock.Setup(f => f.GetFileSizeBytes(It.IsAny<string>())).Returns(100);
+        var archiveFilesWithSize = CreateArchiveFilesWithSize();
+
+        // Act
+        var copiedFiles = await CopyArchiveFilesAsync(
+            archiveFilesWithSize,
+            maxParallelFileCopies: 1
+        );
+
+        // Assert
+        copiedFiles.Count.ShouldBe(2);
+        fileSystemServiceMock.Verify(
+            f =>
+                f.CopyFileAsync(
+                    It.IsAny<string>(),
+                    firstTargetFilePath,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+        fileSystemServiceMock.Verify(
+            f =>
+                f.CopyFileAsync(
+                    It.IsAny<string>(),
+                    Path.Join(TargetFolderPath, "archive.part2.rar"),
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task CopyArchiveFilesAndVerifySizesAsync_ParallelCopiesFinishOutOfOrder_ReturnsCopiedFilesInInputOrder()
     {
         // Arrange

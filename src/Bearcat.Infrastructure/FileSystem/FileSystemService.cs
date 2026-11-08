@@ -6,6 +6,7 @@ namespace Bearcat.Infrastructure.FileSystem;
 public class FileSystemService : IFileSystemService
 {
     private const int CopyBufferSizeBytes = 1024 * 1024;
+    private const string PartialCopyFileSuffix = ".partial";
 
     public List<string> GetFoldersInPath(string path)
     {
@@ -172,9 +173,10 @@ public class FileSystemService : IFileSystemService
             progress: progress,
             totalBytes: sourceStream.Length
         );
+        var partialDestinationFilePath = destinationFilePath + PartialCopyFileSuffix;
         var destinationStream = new FileStream(
-            path: destinationFilePath,
-            mode: FileMode.CreateNew,
+            path: partialDestinationFilePath,
+            mode: FileMode.Create,
             access: FileAccess.Write,
             share: FileShare.None,
             bufferSize: CopyBufferSizeBytes,
@@ -192,10 +194,12 @@ public class FileSystemService : IFileSystemService
                 );
                 await destinationStream.FlushAsync(cancellationToken);
             }
+
+            File.Move(partialDestinationFilePath, destinationFilePath, overwrite: false);
         }
         catch
         {
-            File.Delete(destinationFilePath);
+            File.Delete(partialDestinationFilePath);
             throw;
         }
     }

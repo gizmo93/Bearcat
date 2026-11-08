@@ -59,6 +59,8 @@ damit du Archive auch ohne Bearcat zuordnen kannst. Zeichen, die in Ordnernamen 
 
 Bearcat kopiert die Dateien und prüft ihre Grösse. Erst danach verwendet es den neuen Speicherort
 und löscht die ursprünglichen Archivdateien. Den ursprünglichen Archivordner entfernt es nur, wenn er leer ist.
+Archivdateien, die lokal fehlen, verhindern das Verschieben nicht. Sie fehlen weiterhin, bis ein Reupload
+sie wiederherstellt.
 
 Unter **Aktivität** siehst du Fortschritt und Ziel. Mit **Verschieben abbrechen** entfernst du die
 bisher kopierten Dateien; das Archiv bleibt am ursprünglichen Ort.
@@ -101,9 +103,11 @@ Speicherordner. Das gilt auch, wenn der **Basispfad der Archivdateien** nicht ex
 an, nur den Unterordner darin. Bearcat benachrichtigt dich pro Archiv einmal, bis du die Benachrichtigung
 erledigt hast.
 
-Ist der Speicherordner nicht erreichbar oder fehlen dort Archivdateien, behandelt Bearcat das Archiv wie
-jedes Archiv mit fehlenden Dateien: Es stellt die Dateien von einem [Mirror](/Bearcat/de/mirror-downloads/)
-wieder her oder packt Managed Releases neu. Bearcat legt den Speicherordner nie an.
+Fehlen Archivdateien im Speicherordner, lädt Bearcat nur die fehlenden Dateien von einem
+[Mirror](/Bearcat/de/mirror-downloads/) herunter und legt sie wieder in den Ordner des Archivs im Speicherordner.
+Ohne Mirror packt Bearcat Managed Releases neu. Ist der Speicherordner nicht erreichbar, schlägt die
+Wiederherstellung mit einer Benachrichtigung fehl, statt Dateien herunterzuladen. Bearcat legt den
+Speicherordner nie an.
 
 ## Wo gespeicherte Archive angezeigt werden
 

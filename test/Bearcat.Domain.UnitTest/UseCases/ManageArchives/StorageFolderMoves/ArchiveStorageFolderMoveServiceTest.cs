@@ -20,6 +20,7 @@ public class ArchiveStorageFolderMoveServiceTest
     private Mock<IArchiveCleanupRepository> repositoryMock = null!;
     private Mock<IFileSystemService> fileSystemServiceMock = null!;
     private Mock<ITransferProgressTracker> progressTrackerMock = null!;
+    private Mock<INotificationService> notificationServiceMock = null!;
     private ArchiveStorageFolderMoveService service = null!;
 
     [SetUp]
@@ -36,13 +37,16 @@ public class ArchiveStorageFolderMoveServiceTest
             .ReturnsAsync([]);
         fileSystemServiceMock = new Mock<IFileSystemService>();
         fileSystemServiceMock.Setup(f => f.GetFileSizeBytes(It.IsAny<string>())).Returns(Gigabyte);
-        fileSystemServiceMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(true);
+        fileSystemServiceMock
+            .Setup(f => f.FileExists(It.IsAny<string>()))
+            .Returns<string>(path => !path.StartsWith("/mnt/", StringComparison.Ordinal));
         progressTrackerMock = new Mock<ITransferProgressTracker>();
+        notificationServiceMock = new Mock<INotificationService>();
 
         service = new ArchiveStorageFolderMoveService(
             repositoryMock.Object,
             fileSystemServiceMock.Object,
-            Mock.Of<INotificationService>(),
+            notificationServiceMock.Object,
             new ArchiveFileCopyService(
                 fileSystemServiceMock.Object,
                 progressTrackerMock.Object,
@@ -192,6 +196,96 @@ public class ArchiveStorageFolderMoveServiceTest
             f => f.DeleteFileIfExists("/archives/archive-7/archive.part1.rar"),
             Times.Never
         );
+    }
+
+    [Test]
+    public async Task MoveArchivesAsync_OneArchiveFileIsMissing_MovesExistingFileAndPointsMissingFileIntoTargetFolder()
+    {
+        // Arrange
+        var storageFolder = CreateStorageFolder(1, "/mnt/first");
+        SetupStorageFolders(storageFolder);
+        fileSystemServiceMock
+            .Setup(f => f.GetAvailableFreeSpaceBytes(storageFolder.Path))
+            .Returns(10 * Gigabyte);
+        var archive = CreateArchive(7);
+        var missingArchiveFile = new ArchiveFile
+        {
+            Id = 71,
+            FullFileName = "/archives/archive-7/archive.part2.rar",
+            Md5HashInStorageFolder = "11111111111111111111111111111111",
+        };
+        archive.ArchiveFiles.Add(missingArchiveFile);
+        fileSystemServiceMock
+            .Setup(f => f.FileExists(missingArchiveFile.FullFileName))
+            .Returns(false);
+        var targetFolderPath = Path.Join(storageFolder.Path, "Release.7.Main archive.7");
+
+        // Act
+        await service.MoveArchivesAsync([archive], CancellationToken.None);
+
+        // Assert
+        archive.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+        archive.ArchiveFolderPath.ShouldBe(targetFolderPath);
+        archive
+            .ArchiveFiles[0]
+            .FullFileName.ShouldBe(Path.Join(targetFolderPath, "archive.part1.rar"));
+        missingArchiveFile.FullFileName.ShouldBe(Path.Join(targetFolderPath, "archive.part2.rar"));
+        missingArchiveFile.Md5HashInStorageFolder.ShouldBeNull();
+        fileSystemServiceMock.Verify(
+            f =>
+                f.CopyFileAsync(
+                    "/archives/archive-7/archive.part1.rar",
+                    It.IsAny<string>(),
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        fileSystemServiceMock.Verify(
+            f =>
+                f.CopyFileAsync(
+                    "/archives/archive-7/archive.part2.rar",
+                    It.IsAny<string>(),
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task MoveArchivesAsync_NoArchiveFileExists_LeavesArchiveUntouchedWithoutNotification()
+    {
+        // Arrange
+        var storageFolder = CreateStorageFolder(1, "/mnt/first");
+        SetupStorageFolders(storageFolder);
+        fileSystemServiceMock
+            .Setup(f => f.GetAvailableFreeSpaceBytes(storageFolder.Path))
+            .Returns(10 * Gigabyte);
+        fileSystemServiceMock.Setup(f => f.FileExists(It.IsAny<string>())).Returns(false);
+        var archive = CreateArchive(7);
+
+        // Act
+        await service.MoveArchivesAsync([archive], CancellationToken.None);
+
+        // Assert
+        archive.ArchiveStorageFolderId.ShouldBeNull();
+        archive.ArchiveFolderPath.ShouldBe("/archives/archive-7");
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        archive
+            .ArchiveFiles.Single()
+            .FullFileName.ShouldBe("/archives/archive-7/archive.part1.rar");
+        fileSystemServiceMock.Verify(
+            f =>
+                f.CopyFileAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+        notificationServiceMock.VerifyNoOtherCalls();
     }
 
     private void SetupStorageFolders(params ArchiveStorageFolder[] storageFolders)

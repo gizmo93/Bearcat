@@ -65,18 +65,21 @@ public class ArchiveFileCopyService(
                     var fileName = Path.GetFileName(file.ArchiveFile.FullFileName);
                     var targetFilePath = Path.Join(targetFolderPath, fileName);
 
-                    await fileSystemService.CopyFileAsync(
-                        sourceFilePath: file.ArchiveFile.FullFileName,
-                        destinationFilePath: targetFilePath,
-                        progress: new TransferProgressReporter(
-                            tracker: progressTracker,
-                            identifier: transferIdentifier,
-                            fileId: file.ArchiveFile.Id,
-                            fileName: fileName,
-                            sourceName: sourceName
-                        ),
-                        cancellationToken: fileCancellationToken
-                    );
+                    if (!TargetFileIsCompleteCopyFromEarlierRun(file, targetFilePath))
+                    {
+                        await fileSystemService.CopyFileAsync(
+                            sourceFilePath: file.ArchiveFile.FullFileName,
+                            destinationFilePath: targetFilePath,
+                            progress: new TransferProgressReporter(
+                                tracker: progressTracker,
+                                identifier: transferIdentifier,
+                                fileId: file.ArchiveFile.Id,
+                                fileName: fileName,
+                                sourceName: sourceName
+                            ),
+                            cancellationToken: fileCancellationToken
+                        );
+                    }
 
                     copiedFilesByInputIndex[indexedFile.Index] = new CopiedArchiveFile(
                         file.ArchiveFile,
@@ -136,6 +139,15 @@ public class ArchiveFileCopyService(
                 archiveId
             );
         }
+    }
+
+    private bool TargetFileIsCompleteCopyFromEarlierRun(
+        ArchiveFileWithSize file,
+        string targetFilePath
+    )
+    {
+        return fileSystemService.FileExists(targetFilePath)
+            && fileSystemService.GetFileSizeBytes(targetFilePath) == file.SizeBytes;
     }
 
     private static List<CopiedArchiveFile> GetCopiedFilesInInputOrder(

@@ -59,6 +59,8 @@ so you can tell archives apart without Bearcat. Characters that are not allowed 
 
 Bearcat copies the files and checks their sizes before using the new location and deleting the
 original archive files. It removes the original archive folder only if it is empty.
+Archive files that are missing locally do not block the move. They stay missing until a reupload
+restores them.
 
 Under **Activity**, you can follow progress and see the destination. **Cancel move** removes the
 files copied so far and keeps the archive at its original location.
@@ -99,9 +101,10 @@ If copying fails, Bearcat removes the copied files and the upload reads the arch
 folder. This also applies when the **Archive files base path** does not exist: Bearcat never creates
 it, only the subfolder inside it. Bearcat notifies you once per archive until you resolve the notification.
 
-If the storage folder is unreachable or archive files are missing there, Bearcat handles the archive like
-any archive with missing files: it restores the files from a [mirror](/Bearcat/mirror-downloads/) or
-repacks managed releases. Bearcat never creates the storage folder.
+If archive files are missing in the storage folder, Bearcat downloads only the missing files from a
+[mirror](/Bearcat/mirror-downloads/) and puts them back into the archive's folder in the storage folder.
+Without a mirror, it repacks managed releases. If the storage folder is not available, the restore fails
+with a notification instead of downloading. Bearcat never creates the storage folder.
 
 ## Where stored archives are shown
 

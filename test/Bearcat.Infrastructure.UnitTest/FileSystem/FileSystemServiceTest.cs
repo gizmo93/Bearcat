@@ -96,6 +96,7 @@ public class FileSystemServiceTest
 
         // Assert
         (await File.ReadAllTextAsync(destinationFilePath)).ShouldBe("existing");
+        File.Exists(destinationFilePath + ".partial").ShouldBeFalse();
     }
 
     [Test]
@@ -118,6 +119,7 @@ public class FileSystemServiceTest
 
         // Assert
         File.Exists(destinationFilePath).ShouldBeFalse();
+        File.Exists(destinationFilePath + ".partial").ShouldBeFalse();
     }
 
     [Test]

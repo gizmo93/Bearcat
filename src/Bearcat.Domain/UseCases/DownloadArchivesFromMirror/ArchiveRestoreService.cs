@@ -9,6 +9,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -28,6 +29,7 @@ public class ArchiveRestoreService(
     MirrorDownloadCoordinator mirrorDownloadCoordinator,
     MirrorFileSizeService mirrorFileSizeService,
     UploadCancellationService uploadCancellationService,
+    ArchiveFileCopyService archiveFileCopyService,
     ILogger<ArchiveRestoreService> logger
 )
 {
@@ -48,17 +50,49 @@ public class ArchiveRestoreService(
 
         foreach (var archive in interruptedArchives)
         {
-            logger.LogInformation(
-                "Discarding interrupted restore of archive {ArchiveId} at {ArchiveFolderPath}",
-                archive.Id,
-                archive.ArchiveFolderPath
-            );
-
-            fileSystemService.DeleteDirectoryIfExists(archive.ArchiveFolderPath);
-            archive.ArchiveState = ArchiveState.Deleted;
+            if (archive.ArchiveStorageFolderId is null)
+            {
+                DiscardInterruptedLocalRestore(archive);
+            }
+            else
+            {
+                DiscardInterruptedStorageFolderRestore(archive);
+            }
         }
 
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private void DiscardInterruptedLocalRestore(Archive archive)
+    {
+        logger.LogInformation(
+            "Discarding interrupted restore of archive {ArchiveId} at {ArchiveFolderPath}",
+            archive.Id,
+            archive.ArchiveFolderPath
+        );
+
+        fileSystemService.DeleteDirectoryIfExists(archive.ArchiveFolderPath);
+        archive.ArchiveState = ArchiveState.Deleted;
+    }
+
+    private void DiscardInterruptedStorageFolderRestore(Archive archive)
+    {
+        var restoreFolderPath = GetStorageFolderArchiveRestoreFolderPath(archive);
+
+        logger.LogInformation(
+            "Discarding interrupted restore of archive {ArchiveId} in storage folder at {ArchiveFolderPath}, deleting the downloaded files in {RestoreFolderPath}",
+            archive.Id,
+            archive.ArchiveFolderPath,
+            restoreFolderPath
+        );
+
+        fileSystemService.DeleteDirectoryIfExists(restoreFolderPath);
+        archive.ArchiveState = ArchiveState.MissingFiles;
+    }
+
+    private static string GetStorageFolderArchiveRestoreFolderPath(Archive archive)
+    {
+        return Path.Join(archive.ArchiveConfig.ArchiveFilesBasePath, $"restore-{archive.Id}");
     }
 
     private async Task RestoreWaitingUploadsAsync(CancellationToken cancellationToken)
@@ -128,9 +162,95 @@ public class ArchiveRestoreService(
             return;
         }
 
+        if (archive.ArchiveStorageFolderId is null)
+        {
+            await RestoreArchiveFilesAsync(
+                archive: archive,
+                archiveFilesToRestore: neededArchiveFiles,
+                uploadsOfArchive: uploadsOfArchive,
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
+            );
+
+            return;
+        }
+
+        await RestoreMissingArchiveFilesInStorageFolderAsync(
+            archive: archive,
+            neededArchiveFiles: neededArchiveFiles,
+            uploadsOfArchive: uploadsOfArchive,
+            waitingUploads: waitingUploads,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task RestoreMissingArchiveFilesInStorageFolderAsync(
+        Archive archive,
+        IReadOnlyList<ArchiveFile> neededArchiveFiles,
+        IReadOnlyList<Upload> uploadsOfArchive,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        var storageFolder = archive.ArchiveStorageFolder!;
+
+        var missingArchiveFiles = neededArchiveFiles
+            .Where(archiveFile => !fileSystemService.FileExists(archiveFile.FullFileName))
+            .ToList();
+
+        if (missingArchiveFiles.Count == 0)
+        {
+            archive.ArchiveState = ArchiveState.Created;
+
+            await repository.SaveChangesAsync(cancellationToken);
+
+            logger.LogInformation(
+                "All archive files of archive {ArchiveId} needed by the waiting uploads exist again in storage folder {StorageFolderName}, the archive does not need to be restored",
+                archive.Id,
+                storageFolder.Name
+            );
+
+            return;
+        }
+
+        if (!fileSystemService.DirectoryExists(storageFolder.Path))
+        {
+            logger.LogWarning(
+                "Cannot restore archive {ArchiveId} because its storage folder {StorageFolderPath} is not available",
+                archive.Id,
+                storageFolder.Path
+            );
+
+            await NotifyRestoreFailedAndFailWaitingUploadsAsync(
+                archive: archive,
+                errorMessage: $"The archive storage folder {storageFolder.Path} is not available. Bearcat does not create it, so check that it exists or is mounted.",
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
+            );
+
+            return;
+        }
+
+        await RestoreArchiveFilesAsync(
+            archive: archive,
+            archiveFilesToRestore: missingArchiveFiles,
+            uploadsOfArchive: uploadsOfArchive,
+            waitingUploads: waitingUploads,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task RestoreArchiveFilesAsync(
+        Archive archive,
+        IReadOnlyList<ArchiveFile> archiveFilesToRestore,
+        IReadOnlyList<Upload> uploadsOfArchive,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
         var plan = mirrorSourceResolver.ResolveSources(
             uploadsOfArchive: uploadsOfArchive,
-            neededArchiveFiles: neededArchiveFiles
+            neededArchiveFiles: archiveFilesToRestore
         );
 
         if (plan.FilesWithoutSource.Count > 0)
@@ -173,19 +293,12 @@ public class ArchiveRestoreService(
                 archive.Id
             );
 
-            notificationService.Create(
-                kind: NotificationKind.ArchiveRestoreFailed,
-                message: "No online mirror is available to restore the archive files from.",
-                entity: archive,
-                selector: n => n.Archive
+            await NotifyRestoreFailedAndFailWaitingUploadsAsync(
+                archive: archive,
+                errorMessage: "No online mirror is available to restore the archive files from.",
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
             );
-
-            FailWaitingUploads(
-                waitingUploads,
-                "No online mirror is available to restore the archive files from."
-            );
-
-            await repository.SaveChangesAsync(cancellationToken);
 
             return;
         }
@@ -203,27 +316,42 @@ public class ArchiveRestoreService(
                 archiveFilesBasePath
             );
 
-            notificationService.Create(
-                kind: NotificationKind.ArchiveRestoreFailed,
-                message: errorMessage,
-                entity: archive,
-                selector: n => n.Archive
+            await NotifyRestoreFailedAndFailWaitingUploadsAsync(
+                archive: archive,
+                errorMessage: errorMessage,
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
             );
-
-            FailWaitingUploads(waitingUploads, errorMessage);
-
-            await repository.SaveChangesAsync(cancellationToken);
 
             return;
         }
 
         await RestoreFromMirrorsAsync(
             archive: archive,
-            neededArchiveFiles: neededArchiveFiles,
+            neededArchiveFiles: archiveFilesToRestore,
             plan: plan,
             waitingUploads: waitingUploads,
             cancellationToken: cancellationToken
         );
+    }
+
+    private async Task NotifyRestoreFailedAndFailWaitingUploadsAsync(
+        Archive archive,
+        string errorMessage,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        notificationService.Create(
+            kind: NotificationKind.ArchiveRestoreFailed,
+            message: errorMessage,
+            entity: archive,
+            selector: n => n.Archive
+        );
+
+        FailWaitingUploads(waitingUploads, errorMessage);
+
+        await repository.SaveChangesAsync(cancellationToken);
     }
 
     private void FailWaitingUploads(IReadOnlyList<Upload> waitingUploads, string errorMessage)
@@ -252,12 +380,14 @@ public class ArchiveRestoreService(
         var downloadSettings = ReadDownloadSettings();
         var hosters = await ResolveHostersAsync(plan, cancellationToken);
 
-        var restoreFolderPath = fileSystemService.CreateTempDirectory(
-            archive.ArchiveConfig.ArchiveFilesBasePath
-        );
+        var restoreFolderPath = CreateRestoreFolder(archive);
 
         archive.ArchiveState = ArchiveState.Restoring;
-        archive.ArchiveFolderPath = restoreFolderPath;
+
+        if (archive.ArchiveStorageFolderId is null)
+        {
+            archive.ArchiveFolderPath = restoreFolderPath;
+        }
 
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -360,6 +490,52 @@ public class ArchiveRestoreService(
             return;
         }
 
+        if (archive.ArchiveStorageFolderId is null)
+        {
+            await PointArchiveFilesToRestoreFolderAsync(
+                archive: archive,
+                restoreFolderPath: restoreFolderPath,
+                results: results,
+                cancellationToken: cancellationToken
+            );
+
+            return;
+        }
+
+        await CopyRestoredArchiveFilesIntoStorageFolderAsync(
+            archive: archive,
+            previousArchiveState: previousArchiveState,
+            restoreFolderPath: restoreFolderPath,
+            results: results,
+            waitingUploads: waitingUploads,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private string CreateRestoreFolder(Archive archive)
+    {
+        if (archive.ArchiveStorageFolderId is null)
+        {
+            return fileSystemService.CreateTempDirectory(
+                archive.ArchiveConfig.ArchiveFilesBasePath
+            );
+        }
+
+        var restoreFolderPath = GetStorageFolderArchiveRestoreFolderPath(archive);
+
+        fileSystemService.DeleteDirectoryIfExists(restoreFolderPath);
+        fileSystemService.CreateDirectory(restoreFolderPath);
+
+        return restoreFolderPath;
+    }
+
+    private async Task PointArchiveFilesToRestoreFolderAsync(
+        Archive archive,
+        string restoreFolderPath,
+        IReadOnlyList<FileDownloadResult> results,
+        CancellationToken cancellationToken
+    )
+    {
         var archiveFilesById = archive.ArchiveFiles.ToDictionary(file => file.Id);
 
         foreach (var result in results)
@@ -370,13 +546,6 @@ public class ArchiveRestoreService(
         }
 
         archive.ArchiveState = ArchiveState.Created;
-        archive.ArchiveStorageFolderId = null;
-        archive.ArchiveStorageFolder = null;
-
-        foreach (var archiveFile in archive.ArchiveFiles)
-        {
-            archiveFile.Md5HashInStorageFolder = null;
-        }
 
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -386,6 +555,122 @@ public class ArchiveRestoreService(
             archive.Id,
             restoreFolderPath
         );
+    }
+
+    private async Task CopyRestoredArchiveFilesIntoStorageFolderAsync(
+        Archive archive,
+        ArchiveState previousArchiveState,
+        string restoreFolderPath,
+        IReadOnlyList<FileDownloadResult> results,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        var storageFolder = archive.ArchiveStorageFolder!;
+
+        var transferIdentifier = new TransferIdentifier(
+            TransferType.ArchiveMoveToStorageFolder,
+            archive.Id
+        );
+
+        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
+            transferIdentifier,
+            cancellationToken
+        );
+
+        IReadOnlyList<CopiedArchiveFile> copiedFiles;
+
+        try
+        {
+            copiedFiles = await archiveFileCopyService.CopyArchiveFilesAndVerifySizesAsync(
+                archiveId: archive.Id,
+                archiveFilesWithSize: archiveFileCopyService.GetArchiveFilesWithSize(
+                    GetArchiveFilesInRestoreFolder(results)
+                ),
+                targetFolderPath: archive.ArchiveFolderPath,
+                sourceName: storageFolder.Name,
+                transferIdentifier: transferIdentifier,
+                maxParallelFileCopies: storageFolder.MaxParallelFileCopies,
+                cancellationToken: userCancellableTransfer.CancellationToken
+            );
+        }
+        catch (OperationCanceledException) when (userCancellableTransfer.WasCanceledByUser)
+        {
+            await HandleRestoreCancellationAsync(
+                archive: archive,
+                previousArchiveState: previousArchiveState,
+                restoreFolderPath: restoreFolderPath,
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
+            );
+
+            return;
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(
+                ex,
+                "Failed to restore archive {ArchiveId}: the downloaded archive files could not be copied into storage folder {StorageFolderName} at {ArchiveFolderPath}",
+                archive.Id,
+                storageFolder.Name,
+                archive.ArchiveFolderPath
+            );
+
+            await DiscardRestoreAndFailWaitingUploadsAsync(
+                archive: archive,
+                previousArchiveState: previousArchiveState,
+                restoreFolderPath: restoreFolderPath,
+                errorMessage: $"Archive restore failed: the downloaded archive files could not be copied into storage folder '{storageFolder.Name}': {ex.Message.TrimEnd('.')}.",
+                waitingUploads: waitingUploads,
+                cancellationToken: cancellationToken
+            );
+
+            return;
+        }
+
+        var archiveFilesById = archive.ArchiveFiles.ToDictionary(file => file.Id);
+
+        var md5HashesByArchiveFileId = results.ToDictionary(
+            result => result.ArchiveFileId,
+            result => result.Md5Hash
+        );
+
+        foreach (var copiedFile in copiedFiles)
+        {
+            var archiveFile = archiveFilesById[copiedFile.ArchiveFile.Id];
+            var md5Hash = md5HashesByArchiveFileId[archiveFile.Id];
+
+            archiveFile.FullFileName = copiedFile.CopiedFilePath;
+            archiveFile.Md5Hash = md5Hash;
+            archiveFile.Md5HashInStorageFolder = md5Hash;
+        }
+
+        archive.ArchiveState = ArchiveState.Created;
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        fileSystemService.DeleteDirectoryIfExists(restoreFolderPath);
+
+        logger.LogInformation(
+            "Restored {FileCount} archive files of archive {ArchiveId} into storage folder {StorageFolderName} at {ArchiveFolderPath}",
+            copiedFiles.Count,
+            archive.Id,
+            storageFolder.Name,
+            archive.ArchiveFolderPath
+        );
+    }
+
+    private static List<ArchiveFile> GetArchiveFilesInRestoreFolder(
+        IReadOnlyList<FileDownloadResult> results
+    )
+    {
+        return results
+            .Select(result => new ArchiveFile
+            {
+                Id = result.ArchiveFileId,
+                FullFileName = result.TargetFilePath,
+            })
+            .ToList();
     }
 
     private async Task HandleRestoreCancellationAsync(
@@ -448,26 +733,39 @@ public class ArchiveRestoreService(
             totalFileCount
         );
 
+        await DiscardRestoreAndFailWaitingUploadsAsync(
+            archive: archive,
+            previousArchiveState: previousArchiveState,
+            restoreFolderPath: restoreFolderPath,
+            errorMessage: BuildFailureMessage(
+                failures: failures,
+                totalFileCount: totalFileCount,
+                maxAttempts: maxAttempts
+            ),
+            waitingUploads: waitingUploads,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task DiscardRestoreAndFailWaitingUploadsAsync(
+        Archive archive,
+        ArchiveState previousArchiveState,
+        string restoreFolderPath,
+        string errorMessage,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
         fileSystemService.DeleteDirectoryIfExists(restoreFolderPath);
 
         archive.ArchiveState = previousArchiveState;
 
-        var errorMessage = BuildFailureMessage(
-            failures: failures,
-            totalFileCount: totalFileCount,
-            maxAttempts: maxAttempts
+        await NotifyRestoreFailedAndFailWaitingUploadsAsync(
+            archive: archive,
+            errorMessage: errorMessage,
+            waitingUploads: waitingUploads,
+            cancellationToken: cancellationToken
         );
-
-        notificationService.Create(
-            kind: NotificationKind.ArchiveRestoreFailed,
-            message: errorMessage,
-            entity: archive,
-            selector: n => n.Archive
-        );
-
-        FailWaitingUploads(waitingUploads, errorMessage);
-
-        await repository.SaveChangesAsync(cancellationToken);
     }
 
     private static string BuildFailureMessage(

@@ -12,7 +12,8 @@ public class ArchiveRestoreRepository(IBearcatWriteDbContext dbWrite) : IArchive
     )
     {
         return await dbWrite
-            .Archives.Where(a => a.ArchiveState == ArchiveState.Restoring)
+            .Archives.Include(a => a.ArchiveConfig)
+            .Where(a => a.ArchiveState == ArchiveState.Restoring)
             .OrderBy(a => a.Id)
             .ToListAsync(cancellationToken);
     }
@@ -50,6 +51,7 @@ public class ArchiveRestoreRepository(IBearcatWriteDbContext dbWrite) : IArchive
         return await dbWrite
             .Archives.AsSplitQuery()
             .Include(a => a.ArchiveConfig)
+            .Include(a => a.ArchiveStorageFolder)
             .Include(a => a.ArchiveFiles)
             .Where(a => a.ArchiveConfigId == archiveConfigId)
             .OrderByDescending(a => a.Id)

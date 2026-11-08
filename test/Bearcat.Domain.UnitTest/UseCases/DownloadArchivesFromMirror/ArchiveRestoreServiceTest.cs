@@ -11,6 +11,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
@@ -111,36 +112,49 @@ public class ArchiveRestoreServiceTest
     }
 
     [Test]
-    public async Task ProcessAsync_ArchiveWithMissingFilesInStorageFolder_RestoresLocallyAndClearsStorageFolderAndStorageFolderHashes()
+    public async Task ProcessAsync_NeededFilesExistAgainInStorageFolder_MarksArchiveCreatedWithoutDownloading()
     {
         // Arrange
         var scenario = CreateScenario();
-        var storageFolder = new ArchiveStorageFolder
-        {
-            Id = 5,
-            Name = "NAS",
-            Path = "/gone",
-        };
-        scenario.Archive.ArchiveState = ArchiveState.MissingFiles;
-        scenario.Archive.ArchiveStorageFolderId = storageFolder.Id;
-        scenario.Archive.ArchiveStorageFolder = storageFolder;
-        foreach (var archiveFile in scenario.Archive.ArchiveFiles)
-        {
-            archiveFile.Md5HashInStorageFolder = "11111111111111111111111111111111";
-        }
+        var storageFolder = MoveArchiveIntoStorageFolder(scenario.Archive);
+        fileSystemServiceMock.Setup(x => x.FileExists(It.IsAny<string>())).Returns(true);
         var service = CreateService();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
+        downloadHoster.DownloadedLinks.ShouldBeEmpty();
         scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
-        scenario.Archive.ArchiveFolderPath.ShouldBe(restoreFolderPath);
-        scenario.Archive.ArchiveStorageFolderId.ShouldBeNull();
-        scenario.Archive.ArchiveStorageFolder.ShouldBeNull();
-        scenario.Archive.ArchiveFiles.ShouldAllBe(archiveFile =>
-            archiveFile.Md5HashInStorageFolder == null
-        );
+        scenario.Archive.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+        scenario.Archive.ArchiveFolderPath.ShouldBe("/nas/archive-3");
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_StorageFolderIsNotAvailable_FailsWithoutDownloading()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        var storageFolder = MoveArchiveIntoStorageFolder(scenario.Archive);
+        fileSystemServiceMock.Setup(x => x.DirectoryExists(storageFolder.Path)).Returns(false);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        downloadHoster.DownloadedLinks.ShouldBeEmpty();
+        fileSystemServiceMock.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Never);
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
+        scenario.Archive.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Failed);
+        restoreFailedMessages
+            .Single()
+            .ShouldBe(
+                "The archive storage folder /nas is not available. Bearcat does not create it, so check that it exists or is mounted."
+            );
     }
 
     [Test]
@@ -685,6 +699,11 @@ public class ArchiveRestoreServiceTest
             ),
             mirrorFileSizeService,
             new UploadCancellationService(notificationServiceMock.Object),
+            new ArchiveFileCopyService(
+                fileSystemServiceMock.Object,
+                transferProgressTracker,
+                NullLogger<ArchiveFileCopyService>.Instance
+            ),
             NullLogger<ArchiveRestoreService>.Instance
         );
     }
@@ -831,6 +850,31 @@ public class ArchiveRestoreServiceTest
         repository.SerializedConfigs[mirrorRegistration.Id] = "protected";
 
         return new Scenario(archive, donorUpload, waitingUpload);
+    }
+
+    private static ArchiveStorageFolder MoveArchiveIntoStorageFolder(Archive archive)
+    {
+        var storageFolder = new ArchiveStorageFolder
+        {
+            Id = 5,
+            Name = "NAS",
+            Path = "/nas",
+        };
+
+        archive.ArchiveState = ArchiveState.MissingFiles;
+        archive.ArchiveStorageFolderId = storageFolder.Id;
+        archive.ArchiveStorageFolder = storageFolder;
+        archive.ArchiveFolderPath = "/nas/archive-3";
+
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            archiveFile.FullFileName = Path.Join(
+                archive.ArchiveFolderPath,
+                Path.GetFileName(archiveFile.FullFileName)
+            );
+        }
+
+        return storageFolder;
     }
 
     private HosterRegistration AddSecondaryMirrorUpload(

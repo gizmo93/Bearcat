@@ -97,6 +97,24 @@ public class ArchiveStorageFolderMoveService(
         CancellationToken cancellationToken
     )
     {
+        var existingArchiveFiles = archive
+            .ArchiveFiles.Where(archiveFile =>
+                fileSystemService.FileExists(archiveFile.FullFileName)
+            )
+            .OrderBy(archiveFile => archiveFile.Id)
+            .ToList();
+
+        if (existingArchiveFiles.Count == 0)
+        {
+            logger.LogInformation(
+                "Archive {ArchiveId} stays at {ArchiveFolderPath} because none of its archive files exist",
+                archive.Id,
+                archive.ArchiveFolderPath
+            );
+
+            return;
+        }
+
         var transferIdentifier = new TransferIdentifier(
             TransferType.ArchiveMoveToStorageFolder,
             archive.Id
@@ -109,6 +127,7 @@ public class ArchiveStorageFolderMoveService(
 
         var copiedArchive = await CopyArchiveIntoStorageFolderAsync(
             archive: archive,
+            existingArchiveFiles: existingArchiveFiles,
             storageFolders: storageFolders,
             archiveIdsWithUnresolvedNotification: archiveIdsWithUnresolvedNotification,
             transferIdentifier: transferIdentifier,
@@ -130,6 +149,7 @@ public class ArchiveStorageFolderMoveService(
 
     private async Task<ArchiveCopiedIntoStorageFolder?> CopyArchiveIntoStorageFolderAsync(
         Archive archive,
+        IReadOnlyList<ArchiveFile> existingArchiveFiles,
         IReadOnlyList<ArchiveStorageFolder> storageFolders,
         ArchiveIdsWithUnresolvedNotification archiveIdsWithUnresolvedNotification,
         TransferIdentifier transferIdentifier,
@@ -142,8 +162,9 @@ public class ArchiveStorageFolderMoveService(
         try
         {
             var archiveFilesWithSize = archiveFileCopyService.GetArchiveFilesWithSize(
-                archive.ArchiveFiles.OrderBy(file => file.Id).ToList()
+                existingArchiveFiles
             );
+
             var archiveSizeBytes = archiveFilesWithSize.Sum(file => file.SizeBytes);
 
             storageFolder = ArchiveStorageFolderSelector.SelectStorageFolder(
@@ -289,6 +310,8 @@ public class ArchiveStorageFolderMoveService(
             copiedFile.ArchiveFile.Md5HashInStorageFolder = copiedFile.ArchiveFile.Md5Hash;
         }
 
+        PointMissingArchiveFilesToStorageFolder(archive, copiedArchive);
+
         archive.ArchiveFolderPath = copiedArchive.TargetFolderPath;
         archive.ArchiveStorageFolderId = copiedArchive.StorageFolder.Id;
         archive.ArchiveStorageFolder = copiedArchive.StorageFolder;
@@ -322,6 +345,45 @@ public class ArchiveStorageFolderMoveService(
                 localArchiveFolderPath
             );
         }
+    }
+
+    private void PointMissingArchiveFilesToStorageFolder(
+        Archive archive,
+        ArchiveCopiedIntoStorageFolder copiedArchive
+    )
+    {
+        var copiedArchiveFiles = copiedArchive
+            .CopiedFiles.Select(copiedFile => copiedFile.ArchiveFile)
+            .ToHashSet();
+
+        var missingArchiveFiles = archive
+            .ArchiveFiles.Where(archiveFile => !copiedArchiveFiles.Contains(archiveFile))
+            .ToList();
+
+        if (missingArchiveFiles.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var missingArchiveFile in missingArchiveFiles)
+        {
+            missingArchiveFile.FullFileName = Path.Join(
+                copiedArchive.TargetFolderPath,
+                Path.GetFileName(missingArchiveFile.FullFileName)
+            );
+
+            missingArchiveFile.Md5HashInStorageFolder = null;
+        }
+
+        logger.LogInformation(
+            "Archive files {FileNames} of archive {ArchiveId} did not exist and stay missing in storage folder {StorageFolderName} until a reupload restores them",
+            string.Join(
+                ", ",
+                missingArchiveFiles.Select(file => Path.GetFileName(file.FullFileName))
+            ),
+            archive.Id,
+            copiedArchive.StorageFolder.Name
+        );
     }
 
     private async Task<bool> ArchiveChangedDuringCopyAsync(
