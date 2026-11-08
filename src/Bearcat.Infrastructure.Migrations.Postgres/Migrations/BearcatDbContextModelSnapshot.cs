@@ -315,6 +315,11 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("MaxParallelFileCopies")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("MinimumFreeSpaceGb")
                         .HasColumnType("integer");
 

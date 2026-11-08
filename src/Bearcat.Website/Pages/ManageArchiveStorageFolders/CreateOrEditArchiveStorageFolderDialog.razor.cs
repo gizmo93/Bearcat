@@ -139,6 +139,9 @@ public partial class CreateOrEditArchiveStorageFolderDialog(
             ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative => nameof(
                 ArchiveStorageFolderFormModel.MinimumFreeSpaceGb
             ),
+            ArchiveStorageFolderValidationError.MaxParallelFileCopiesMustBeAtLeastOne => nameof(
+                ArchiveStorageFolderFormModel.MaxParallelFileCopies
+            ),
             _ => nameof(ArchiveStorageFolderFormModel.Path),
         };
     }

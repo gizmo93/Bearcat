@@ -160,6 +160,7 @@ public class ArchiveStorageFolderMoveService(
                 targetFolderPath: targetFolderPath,
                 sourceName: storageFolder.Name,
                 transferIdentifier: transferIdentifier,
+                maxParallelFileCopies: storageFolder.MaxParallelFileCopies,
                 cancellationToken: userCancellableTransfer.CancellationToken
             );
 

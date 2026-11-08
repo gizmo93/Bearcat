@@ -295,6 +295,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("MaxParallelFileCopies")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("MinimumFreeSpaceGb")
                         .HasColumnType("INTEGER");
 

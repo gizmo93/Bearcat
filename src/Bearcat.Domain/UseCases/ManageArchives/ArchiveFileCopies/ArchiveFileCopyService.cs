@@ -29,6 +29,7 @@ public class ArchiveFileCopyService(
         string targetFolderPath,
         string sourceName,
         TransferIdentifier transferIdentifier,
+        int maxParallelFileCopies,
         CancellationToken cancellationToken
     )
     {
@@ -47,47 +48,59 @@ public class ArchiveFileCopyService(
                 .ToList()
         );
 
-        var copiedFiles = new List<CopiedArchiveFile>();
+        var copiedFilesByInputIndex = new CopiedArchiveFile?[archiveFilesWithSize.Count];
 
         try
         {
-            foreach (var file in archiveFilesWithSize)
-            {
-                var fileName = Path.GetFileName(file.ArchiveFile.FullFileName);
-                var targetFilePath = Path.Join(targetFolderPath, fileName);
-
-                await fileSystemService.CopyFileAsync(
-                    sourceFilePath: file.ArchiveFile.FullFileName,
-                    destinationFilePath: targetFilePath,
-                    progress: new TransferProgressReporter(
-                        tracker: progressTracker,
-                        identifier: transferIdentifier,
-                        fileId: file.ArchiveFile.Id,
-                        fileName: fileName,
-                        sourceName: sourceName
-                    ),
-                    cancellationToken: cancellationToken
-                );
-
-                copiedFiles.Add(new CopiedArchiveFile(file.ArchiveFile, targetFilePath));
-
-                var copiedSizeBytes = fileSystemService.GetFileSizeBytes(targetFilePath);
-
-                if (copiedSizeBytes != file.SizeBytes)
+            await Parallel.ForEachAsync(
+                archiveFilesWithSize.Index(),
+                new ParallelOptions
                 {
-                    throw new IOException(
-                        $"Copied file {targetFilePath} has {copiedSizeBytes} bytes instead of {file.SizeBytes} bytes"
-                    );
-                }
-            }
+                    MaxDegreeOfParallelism = Math.Max(1, maxParallelFileCopies),
+                    CancellationToken = cancellationToken,
+                },
+                async (indexedFile, fileCancellationToken) =>
+                {
+                    var file = indexedFile.Item;
+                    var fileName = Path.GetFileName(file.ArchiveFile.FullFileName);
+                    var targetFilePath = Path.Join(targetFolderPath, fileName);
 
-            return copiedFiles;
+                    await fileSystemService.CopyFileAsync(
+                        sourceFilePath: file.ArchiveFile.FullFileName,
+                        destinationFilePath: targetFilePath,
+                        progress: new TransferProgressReporter(
+                            tracker: progressTracker,
+                            identifier: transferIdentifier,
+                            fileId: file.ArchiveFile.Id,
+                            fileName: fileName,
+                            sourceName: sourceName
+                        ),
+                        cancellationToken: fileCancellationToken
+                    );
+
+                    copiedFilesByInputIndex[indexedFile.Index] = new CopiedArchiveFile(
+                        file.ArchiveFile,
+                        targetFilePath
+                    );
+
+                    var copiedSizeBytes = fileSystemService.GetFileSizeBytes(targetFilePath);
+
+                    if (copiedSizeBytes != file.SizeBytes)
+                    {
+                        throw new IOException(
+                            $"Copied file {targetFilePath} has {copiedSizeBytes} bytes instead of {file.SizeBytes} bytes"
+                        );
+                    }
+                }
+            );
+
+            return GetCopiedFilesInInputOrder(copiedFilesByInputIndex);
         }
         catch
         {
             DeleteCopiedFiles(
                 archiveId: archiveId,
-                copiedFiles: copiedFiles,
+                copiedFiles: GetCopiedFilesInInputOrder(copiedFilesByInputIndex),
                 targetFolderPath: targetFolderPath
             );
 
@@ -123,5 +136,12 @@ public class ArchiveFileCopyService(
                 archiveId
             );
         }
+    }
+
+    private static List<CopiedArchiveFile> GetCopiedFilesInInputOrder(
+        CopiedArchiveFile?[] copiedFilesByInputIndex
+    )
+    {
+        return copiedFilesByInputIndex.OfType<CopiedArchiveFile>().ToList();
     }
 }

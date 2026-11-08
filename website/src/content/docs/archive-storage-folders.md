@@ -16,6 +16,7 @@ Open **Configuration > Release settings > Archive storage folders** and click **
 | **Name** | Unique name for the storage folder. |
 | **Path** | Absolute path of an existing folder. Each path can only be registered once. |
 | **Minimum free space (GB)** | Space that must remain free after the move. Set `0` for no minimum. |
+| **Parallel file copies** | How many files of one archive are copied at the same time, both when moving into the folder and when copying into a local working copy. Raise it for network mounts (SMB, rclone), keep `1` for local hard disks. |
 | **Priority** | Lower values take priority. |
 | **Local working copy for reuploads** | Copy the files a reupload needs into a temporary local working copy. When off, read them directly from the storage folder. |
 

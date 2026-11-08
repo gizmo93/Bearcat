@@ -14,6 +14,10 @@ public class ArchiveStorageFolderConfiguration : IEntityTypeConfiguration<Archiv
         builder.Property(storageFolder => storageFolder.Path).IsRequired().HasMaxLength(500);
         builder.Property(storageFolder => storageFolder.IsActive).IsRequired();
         builder.Property(storageFolder => storageFolder.MinimumFreeSpaceGb).IsRequired();
+        builder
+            .Property(storageFolder => storageFolder.MaxParallelFileCopies)
+            .IsRequired()
+            .HasDefaultValue(1);
         builder.Property(storageFolder => storageFolder.Priority).IsRequired();
         builder
             .Property(storageFolder => storageFolder.UseLocalWorkingCopyForReuploads)

@@ -65,6 +65,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
                 "  NAS archive  ",
                 $"  {storageFolderPath}  ",
                 MinimumFreeSpaceGb: 50,
+                MaxParallelFileCopies: 4,
                 Priority: 2,
                 UseLocalWorkingCopyForReuploads: true
             )
@@ -78,6 +79,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         storageFolder.Path.ShouldBe(storageFolderPath);
         storageFolder.IsActive.ShouldBeTrue();
         storageFolder.MinimumFreeSpaceGb.ShouldBe(50);
+        storageFolder.MaxParallelFileCopies.ShouldBe(4);
         storageFolder.Priority.ShouldBe(2);
         storageFolder.UseLocalWorkingCopyForReuploads.ShouldBeTrue();
     }
@@ -251,6 +253,23 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateAsync_ZeroMaxParallelFileCopies_ReturnsMaxParallelFileCopiesMustBeAtLeastOne()
+    {
+        // Act
+        var result = await service.CreateAsync(
+            CreateInput("NAS archive", storageFolderPath) with
+            {
+                MaxParallelFileCopies = 0,
+            }
+        );
+
+        // Assert
+        result.ValidationErrors.ShouldBe([
+            ArchiveStorageFolderValidationError.MaxParallelFileCopiesMustBeAtLeastOne,
+        ]);
+    }
+
+    [Test]
     public async Task CreateAsync_SeveralInvalidFields_ReturnsAllValidationErrors()
     {
         // Act
@@ -259,6 +278,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
                 "",
                 "",
                 MinimumFreeSpaceGb: -5,
+                MaxParallelFileCopies: 1,
                 Priority: 0,
                 UseLocalWorkingCopyForReuploads: false
             )
@@ -286,6 +306,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
                 "Second disk",
                 otherStorageFolderPath,
                 MinimumFreeSpaceGb: 20,
+                MaxParallelFileCopies: 3,
                 Priority: 5,
                 UseLocalWorkingCopyForReuploads: true
             )
@@ -298,6 +319,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         storageFolder.Path.ShouldBe(otherStorageFolderPath);
         storageFolder.IsActive.ShouldBeFalse();
         storageFolder.MinimumFreeSpaceGb.ShouldBe(20);
+        storageFolder.MaxParallelFileCopies.ShouldBe(3);
         storageFolder.Priority.ShouldBe(5);
         storageFolder.UseLocalWorkingCopyForReuploads.ShouldBeTrue();
     }
@@ -541,6 +563,7 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
             name,
             path,
             MinimumFreeSpaceGb: 10,
+            MaxParallelFileCopies: 1,
             Priority: 1,
             UseLocalWorkingCopyForReuploads: false
         );
