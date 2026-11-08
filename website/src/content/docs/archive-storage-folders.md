@@ -54,7 +54,8 @@ Bearcat then moves archives once their retention period has passed.
 For each archive, Bearcat chooses an active, accessible folder with enough space for all archive
 files plus the required free space. The lowest priority takes precedence.
 At the same priority, the folder with the most free space wins.
-An archive always stays together in one subfolder.
+An archive always stays together in one subfolder named `<release name>.<archive config name>.<archive ID>`,
+so you can tell archives apart without Bearcat. Characters that are not allowed in folder names become `_`.
 
 Bearcat copies the files and checks their sizes before using the new location and deleting the
 original archive files. It removes the original archive folder only if it is empty.

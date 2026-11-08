@@ -54,7 +54,8 @@ Bearcat verschiebt die Archive dann nach Ablauf der Aufbewahrungsfrist.
 Bearcat wählt für jedes Archiv einen aktiven, erreichbaren Speicherordner mit genug Platz für alle
 Archivdateien und den freizuhaltenden Speicherplatz. Die niedrigste Priorität hat Vorrang.
 Bei gleicher Priorität gewinnt der Ordner mit dem meisten freien Platz.
-Ein Archiv bleibt immer zusammen in einem Unterordner.
+Ein Archiv bleibt immer zusammen in einem Unterordner namens `<Releasename>.<Archivkonfigurationsname>.<Archiv-ID>`,
+damit du Archive auch ohne Bearcat zuordnen kannst. Zeichen, die in Ordnernamen nicht erlaubt sind, werden zu `_`.
 
 Bearcat kopiert die Dateien und prüft ihre Grösse. Erst danach verwendet es den neuen Speicherort
 und löscht die ursprünglichen Archivdateien. Den ursprünglichen Archivordner entfernt es nur, wenn er leer ist.

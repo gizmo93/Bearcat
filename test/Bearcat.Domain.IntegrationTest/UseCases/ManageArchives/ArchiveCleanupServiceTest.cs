@@ -292,8 +292,10 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var storageFolder = await AddStorageFolderAsync();
         var archive = await AddScenarioAsync();
-        var archiveFolderName = Path.GetFileName(archive.ArchiveFolderPath);
-        var expectedTargetFolderPath = Path.Join(storageFolderPath, archiveFolderName);
+        var expectedTargetFolderPath = Path.Join(
+            storageFolderPath,
+            $"Bearcat.Release.001.Main archive.{archive.Id}"
+        );
         SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
 
         // Act
@@ -355,39 +357,16 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_MoveActionAndTargetFolderExists_UsesFolderNameWithArchiveId()
-    {
-        // Arrange
-        await AddStorageFolderAsync();
-        var archive = await AddScenarioAsync();
-        var archiveFolderName = Path.GetFileName(archive.ArchiveFolderPath);
-        var existingFilePath = Path.Join(storageFolderPath, archiveFolderName, "other.rar");
-        Directory.CreateDirectory(Path.Join(storageFolderPath, archiveFolderName));
-        await File.WriteAllTextAsync(existingFilePath, "other");
-        SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        var result = await LoadArchiveAsync(archive);
-        result.ArchiveFolderPath.ShouldBe(
-            Path.Join(storageFolderPath, $"{archiveFolderName}.{archive.Id}")
-        );
-        result.ArchiveFiles.ShouldAllBe(f => File.Exists(f.FullFileName));
-        File.Exists(existingFilePath).ShouldBeTrue();
-    }
-
-    [Test]
     public async Task ProcessAsync_MoveActionAndCopyFails_DeletesCopiedFilesAndKeepsArchiveLocal()
     {
         // Arrange
         await AddStorageFolderAsync();
         var archive = await AddScenarioAsync();
-        var archiveFolderName = Path.GetFileName(archive.ArchiveFolderPath);
-        var targetFolderPath = Path.Join(storageFolderPath, $"{archiveFolderName}.{archive.Id}");
+        var targetFolderPath = Path.Join(
+            storageFolderPath,
+            $"Bearcat.Release.001.Main archive.{archive.Id}"
+        );
         var blockingFilePath = Path.Join(targetFolderPath, "archive.part2.rar");
-        Directory.CreateDirectory(Path.Join(storageFolderPath, archiveFolderName));
         Directory.CreateDirectory(targetFolderPath);
         await File.WriteAllTextAsync(blockingFilePath, "foreign");
         SetupConfiguration(ArchiveRetentionAction.MoveToStorageFolder);

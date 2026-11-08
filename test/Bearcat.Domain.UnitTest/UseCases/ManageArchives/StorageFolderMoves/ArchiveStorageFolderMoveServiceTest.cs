@@ -76,12 +76,37 @@ public class ArchiveStorageFolderMoveServiceTest
 
         // Assert
         firstArchive.ArchiveStorageFolderId.ShouldBe(firstFolder.Id);
-        firstArchive.ArchiveFolderPath.ShouldBe(Path.Join(firstFolder.Path, "archive-1"));
+        firstArchive.ArchiveFolderPath.ShouldBe(
+            Path.Join(firstFolder.Path, "Release.1.Main archive.1")
+        );
         secondArchive.ArchiveStorageFolderId.ShouldBe(secondFolder.Id);
-        secondArchive.ArchiveFolderPath.ShouldBe(Path.Join(secondFolder.Path, "archive-2"));
+        secondArchive.ArchiveFolderPath.ShouldBe(
+            Path.Join(secondFolder.Path, "Release.2.Main archive.2")
+        );
         fileSystemServiceMock.Verify(
             f => f.GetAvailableFreeSpaceBytes(firstFolder.Path),
             Times.Exactly(2)
+        );
+    }
+
+    [Test]
+    public async Task MoveArchivesAsync_ArchiveConfigNameWithForbiddenCharacters_ReplacesThemInTargetFolderName()
+    {
+        // Arrange
+        var storageFolder = CreateStorageFolder(1, "/mnt/first");
+        SetupStorageFolders(storageFolder);
+        fileSystemServiceMock
+            .Setup(f => f.GetAvailableFreeSpaceBytes(storageFolder.Path))
+            .Returns(10 * Gigabyte);
+        var archive = CreateArchive(7);
+        archive.ArchiveConfig.Name = "RAR: 500/MB?";
+
+        // Act
+        await service.MoveArchivesAsync([archive], CancellationToken.None);
+
+        // Assert
+        archive.ArchiveFolderPath.ShouldBe(
+            Path.Join(storageFolder.Path, "Release.7.RAR_ 500_MB_.7")
         );
     }
 
@@ -159,7 +184,8 @@ public class ArchiveStorageFolderMoveServiceTest
         );
         progressTrackerMock.Verify(t => t.StopTracking(transferIdentifier), Times.Once);
         fileSystemServiceMock.Verify(
-            f => f.DeleteDirectoryIfEmpty(Path.Join(storageFolder.Path, "archive-7")),
+            f =>
+                f.DeleteDirectoryIfEmpty(Path.Join(storageFolder.Path, "Release.7.Main archive.7")),
             Times.Once
         );
         fileSystemServiceMock.Verify(

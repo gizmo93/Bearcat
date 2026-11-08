@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
@@ -20,6 +21,22 @@ public class ArchiveStorageFolderMoveService(
     ILogger<ArchiveStorageFolderMoveService> logger
 )
 {
+    private const int MaximumReleaseAndArchiveConfigNameLength = 200;
+
+    private static readonly SearchValues<char> CharactersForbiddenInFolderNames =
+        SearchValues.Create([
+            .. Path.GetInvalidFileNameChars(),
+            '<',
+            '>',
+            ':',
+            '"',
+            '/',
+            '\\',
+            '|',
+            '?',
+            '*',
+        ]);
+
     public async Task MoveArchivesAsync(
         IReadOnlyList<Archive> archives,
         CancellationToken cancellationToken
@@ -212,20 +229,38 @@ public class ArchiveStorageFolderMoveService(
             .ToList();
     }
 
-    private string GetTargetFolderPath(ArchiveStorageFolder storageFolder, Archive archive)
+    private static string GetTargetFolderPath(ArchiveStorageFolder storageFolder, Archive archive)
     {
-        var archiveFolderName = Path.GetFileName(
-            Path.TrimEndingDirectorySeparator(archive.ArchiveFolderPath)
+        return Path.Join(storageFolder.Path, GetArchiveFolderNameInStorageFolder(archive));
+    }
+
+    private static string GetArchiveFolderNameInStorageFolder(Archive archive)
+    {
+        var releaseAndArchiveConfigName = ReplaceCharactersForbiddenInFolderNames(
+            $"{archive.ArchiveConfig.Release.Name}.{archive.ArchiveConfig.Name}"
         );
 
-        var targetFolderPath = Path.Join(storageFolder.Path, archiveFolderName);
-
-        if (!fileSystemService.DirectoryExists(targetFolderPath))
+        if (releaseAndArchiveConfigName.Length > MaximumReleaseAndArchiveConfigNameLength)
         {
-            return targetFolderPath;
+            releaseAndArchiveConfigName = releaseAndArchiveConfigName[
+                ..MaximumReleaseAndArchiveConfigNameLength
+            ];
         }
 
-        return Path.Join(storageFolder.Path, $"{archiveFolderName}.{archive.Id}");
+        return $"{releaseAndArchiveConfigName}.{archive.Id}";
+    }
+
+    private static string ReplaceCharactersForbiddenInFolderNames(string folderName)
+    {
+        var characters = folderName
+            .Select(character =>
+                CharactersForbiddenInFolderNames.Contains(character) || char.IsControl(character)
+                    ? '_'
+                    : character
+            )
+            .ToArray();
+
+        return new string(characters);
     }
 
     private async Task PointArchiveToStorageFolderAndDeleteLocalFilesAsync(
