@@ -40,6 +40,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 Path = "/mnt/cloud",
                 IsActive = false,
                 MinimumFreeSpaceGb = 0,
+                MaxParallelFileCopies = 4,
                 Priority = 2,
                 UseLocalWorkingCopyForReuploads = true,
             }
@@ -60,6 +61,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 "/mnt/disk2",
                 IsActive: true,
                 MinimumFreeSpaceGb: 25,
+                MaxParallelFileCopies: 1,
                 Priority: 1,
                 UseLocalWorkingCopyForReuploads: false,
                 StoredArchiveCount: 0
@@ -70,6 +72,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 "/mnt/cloud",
                 IsActive: false,
                 MinimumFreeSpaceGb: 0,
+                MaxParallelFileCopies: 4,
                 Priority: 2,
                 UseLocalWorkingCopyForReuploads: true,
                 StoredArchiveCount: 1
@@ -80,6 +83,7 @@ public class ArchiveStorageFolderRepositoryTest(DatabaseProvider databaseProvide
                 "/mnt/nas",
                 IsActive: true,
                 MinimumFreeSpaceGb: 25,
+                MaxParallelFileCopies: 1,
                 Priority: 2,
                 UseLocalWorkingCopyForReuploads: false,
                 StoredArchiveCount: 2

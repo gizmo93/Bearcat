@@ -1774,6 +1774,8 @@
   <data name="SelectArchiveStorageFolderDescription" xml:space="preserve"><value>Choose an existing folder outside the working directories.</value></data>
   <data name="MinimumFreeSpaceGb" xml:space="preserve"><value>Minimum free space (GB)</value></data>
   <data name="ArchiveStorageFolderMinimumFreeSpaceHelp" xml:space="preserve"><value>Space that must stay free in this folder after archives were moved there.</value></data>
+  <data name="MaxParallelFileCopies" xml:space="preserve"><value>Parallel file copies</value></data>
+  <data name="MaxParallelFileCopiesHelp" xml:space="preserve"><value>How many files of one archive are copied into or out of this folder at the same time. Values above 1 can speed up network mounts such as SMB. Keep 1 for local hard disks.</value></data>
   <data name="ArchiveStorageFolderPriorityHelp" xml:space="preserve"><value>Lower values are preferred. Several folders can share a priority.</value></data>
   <data name="UseLocalWorkingCopyForReuploads" xml:space="preserve"><value>Local working copy for reuploads</value></data>
   <data name="UseLocalWorkingCopyForReuploadsHelp" xml:space="preserve"><value>Copies the archive files needed for a reupload into a temporary local working copy. The storage folder is not changed. When disabled, a reupload reads the archives directly from this folder and changes their hashes there.</value></data>
@@ -1798,6 +1800,7 @@
   <data name="ArchiveStorageFolderValidationError.PathOverlapsWorkingDirectory" xml:space="preserve"><value>The path must not be a working directory, lie inside one or contain one.</value></data>
   <data name="ArchiveStorageFolderValidationError.PathChangeWithStoredArchives" xml:space="preserve"><value>The path cannot be changed while archives are stored in this folder.</value></data>
   <data name="ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative" xml:space="preserve"><value>Minimum free space must not be negative.</value></data>
+  <data name="ArchiveStorageFolderValidationError.MaxParallelFileCopiesMustBeAtLeastOne" xml:space="preserve"><value>Parallel file copies must be at least 1.</value></data>
   <data name="CheckStorage" xml:space="preserve"><value>Check storage</value></data>
   <data name="StorageQuotaCheckFailed" xml:space="preserve"><value>Storage check for registration {0} failed: {1}</value></data>
   <data name="StorageQuotaOfRegistration" xml:space="preserve"><value>Registration {0}: {1}</value></data>

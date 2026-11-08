@@ -12,6 +12,8 @@ public class ArchiveStorageFolder
 
     public int MinimumFreeSpaceGb { get; set; }
 
+    public int MaxParallelFileCopies { get; set; }
+
     public int Priority { get; set; }
 
     public bool UseLocalWorkingCopyForReuploads { get; set; }

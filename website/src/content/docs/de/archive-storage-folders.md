@@ -16,6 +16,7 @@ ob dort das erwartete Laufwerk eingebunden ist.
 | **Name** | Eindeutiger Name für den Speicherordner. |
 | **Pfad** | Absoluter Pfad eines vorhandenen Ordners. Jeder Pfad kann nur einmal registriert werden. |
 | **Freizuhaltender Speicherplatz (GB)** | So viel Platz muss nach dem Verschieben noch frei sein. Mit `0` gilt kein Mindestwert. |
+| **Parallele Dateikopien** | So viele Dateien eines Archivs werden gleichzeitig kopiert, sowohl beim Verschieben in den Ordner als auch beim Kopieren in eine lokale Arbeitskopie. Erhöhe den Wert für Netzwerkmounts (SMB, rclone), für lokale Festplatten lässt du `1`. |
 | **Priorität** | Niedrigere Werte haben Vorrang. |
 | **Lokale Arbeitskopie für Reuploads** | Kopiert die Dateien, die ein Reupload braucht, in eine temporäre lokale Arbeitskopie. Wenn ausgeschaltet, liest der Reupload direkt aus dem Speicherordner. |
 
@@ -53,7 +54,8 @@ Bearcat verschiebt die Archive dann nach Ablauf der Aufbewahrungsfrist.
 Bearcat wählt für jedes Archiv einen aktiven, erreichbaren Speicherordner mit genug Platz für alle
 Archivdateien und den freizuhaltenden Speicherplatz. Die niedrigste Priorität hat Vorrang.
 Bei gleicher Priorität gewinnt der Ordner mit dem meisten freien Platz.
-Ein Archiv bleibt immer zusammen in einem Unterordner.
+Ein Archiv bleibt immer zusammen in einem Unterordner namens `<Releasename>.<Archivkonfigurationsname>.<Archiv-ID>`,
+damit du Archive auch ohne Bearcat zuordnen kannst. Zeichen, die in Ordnernamen nicht erlaubt sind, werden zu `_`.
 
 Bearcat kopiert die Dateien und prüft ihre Grösse. Erst danach verwendet es den neuen Speicherort
 und löscht die ursprünglichen Archivdateien. Den ursprünglichen Archivordner entfernt es nur, wenn er leer ist.

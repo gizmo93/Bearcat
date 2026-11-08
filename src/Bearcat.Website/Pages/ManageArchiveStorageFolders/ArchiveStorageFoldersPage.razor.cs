@@ -38,6 +38,7 @@ public partial class ArchiveStorageFoldersPage(
             Name = storageFolder.Name,
             Path = storageFolder.Path,
             MinimumFreeSpaceGb = storageFolder.MinimumFreeSpaceGb,
+            MaxParallelFileCopies = storageFolder.MaxParallelFileCopies,
             Priority = storageFolder.Priority,
             UseLocalWorkingCopyForReuploads = storageFolder.UseLocalWorkingCopyForReuploads,
         };

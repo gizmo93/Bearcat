@@ -6,6 +6,7 @@ public record ArchiveStorageFolderReadModel(
     string Path,
     bool IsActive,
     int MinimumFreeSpaceGb,
+    int MaxParallelFileCopies,
     int Priority,
     bool UseLocalWorkingCopyForReuploads,
     int StoredArchiveCount

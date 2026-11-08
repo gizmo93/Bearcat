@@ -35,6 +35,14 @@
                                          AllowNegative="false" />
 
                 <BbFormFieldNumericInput TValue="int"
+                                         @bind-Value="FormModel.MaxParallelFileCopies"
+                                         Label="@L["MaxParallelFileCopies"]"
+                                         HelperText="@L["MaxParallelFileCopiesHelp"]"
+                                         Min="1"
+                                         Step="1"
+                                         AllowNegative="false" />
+
+                <BbFormFieldNumericInput TValue="int"
                                          @bind-Value="FormModel.Priority"
                                          Label="@L["Priority"]"
                                          HelperText="@L["ArchiveStorageFolderPriorityHelp"]"

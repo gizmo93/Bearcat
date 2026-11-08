@@ -13,4 +13,5 @@ public enum ArchiveStorageFolderValidationError
     PathOverlapsWorkingDirectory = 9,
     PathChangeWithStoredArchives = 10,
     MinimumFreeSpaceNegative = 11,
+    MaxParallelFileCopiesMustBeAtLeastOne = 12,
 }

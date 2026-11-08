@@ -24,6 +24,7 @@ public class ArchiveStorageFolderRepository(
                 storageFolder.Path,
                 storageFolder.IsActive,
                 storageFolder.MinimumFreeSpaceGb,
+                storageFolder.MaxParallelFileCopies,
                 storageFolder.Priority,
                 storageFolder.UseLocalWorkingCopyForReuploads,
                 dbRead.Archives.Count(archive =>

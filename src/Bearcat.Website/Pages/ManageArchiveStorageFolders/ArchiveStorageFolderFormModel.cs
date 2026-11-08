@@ -12,6 +12,8 @@ public class ArchiveStorageFolderFormModel
 
     public int MinimumFreeSpaceGb { get; set; }
 
+    public int MaxParallelFileCopies { get; set; } = 1;
+
     public int Priority { get; set; } = 1;
 
     public bool UseLocalWorkingCopyForReuploads { get; set; }
@@ -22,6 +24,7 @@ public class ArchiveStorageFolderFormModel
             Name ?? string.Empty,
             Path ?? string.Empty,
             MinimumFreeSpaceGb,
+            MaxParallelFileCopies,
             Priority,
             UseLocalWorkingCopyForReuploads
         );

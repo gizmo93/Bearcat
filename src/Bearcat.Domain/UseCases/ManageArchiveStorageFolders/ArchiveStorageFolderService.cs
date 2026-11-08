@@ -169,6 +169,7 @@ public class ArchiveStorageFolderService(
         storageFolder.Name = normalizedInput.Name;
         storageFolder.Path = normalizedInput.Path;
         storageFolder.MinimumFreeSpaceGb = normalizedInput.MinimumFreeSpaceGb;
+        storageFolder.MaxParallelFileCopies = normalizedInput.MaxParallelFileCopies;
         storageFolder.Priority = normalizedInput.Priority;
         storageFolder.UseLocalWorkingCopyForReuploads =
             normalizedInput.UseLocalWorkingCopyForReuploads;
@@ -205,6 +206,13 @@ public class ArchiveStorageFolderService(
         if (normalizedInput.MinimumFreeSpaceGb < 0)
         {
             validationErrors.Add(ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative);
+        }
+
+        if (normalizedInput.MaxParallelFileCopies < 1)
+        {
+            validationErrors.Add(
+                ArchiveStorageFolderValidationError.MaxParallelFileCopiesMustBeAtLeastOne
+            );
         }
 
         return validationErrors;
