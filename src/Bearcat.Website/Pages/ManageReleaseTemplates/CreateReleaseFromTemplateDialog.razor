@@ -36,6 +36,15 @@
                               Label="@L["Name"]"
                               Placeholder="@L["NameYourRelease"]" />
 
+            <BbFormFieldCombobox TValue="string"
+                                 @bind-Value="formModel.PrimaryLanguageCode"
+                                 Label="@L["PrimaryLanguage"]"
+                                 SearchPlaceholder="@L["SearchLanguage"]"
+                                 EmptyMessage="@L["NoLanguagesFound"]"
+                                 InputClass="w-full"
+                                 MatchTriggerWidth="true"
+                                 Options="LanguageOptions" />
+
             @if (selectedTemplate is not null)
             {
                 <div class="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3">

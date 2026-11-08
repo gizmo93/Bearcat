@@ -7,4 +7,6 @@ public class CreateReleaseFromTemplateFormModel
     public string Name { get; set; } = string.Empty;
 
     public string FolderPath { get; set; } = string.Empty;
+
+    public string PrimaryLanguageCode { get; set; } = string.Empty;
 }

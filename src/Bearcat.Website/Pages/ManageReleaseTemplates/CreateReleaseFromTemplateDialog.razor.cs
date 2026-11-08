@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Website.Pages.ManageReleases;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -36,6 +37,9 @@ public partial class CreateReleaseFromTemplateDialog(
         releaseTemplates
             .Select(template => new SelectOption<int?>(template.ReleaseTemplateId, template.Name))
             .ToList();
+
+    private IReadOnlyList<SelectOption<string>> LanguageOptions =>
+        PrimaryLanguageSelectOptions.Create(L["Unknown"]);
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,7 +79,7 @@ public partial class CreateReleaseFromTemplateDialog(
                         releaseTemplateId: formModel.ReleaseTemplateId!.Value,
                         releaseFolderPath: formModel.FolderPath,
                         name: formModel.Name,
-                        primaryLanguageCode: null
+                        primaryLanguageCode: formModel.PrimaryLanguageCode
                     )
             );
         }
