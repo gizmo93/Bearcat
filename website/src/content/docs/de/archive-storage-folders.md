@@ -109,6 +109,36 @@ Ohne Mirror packt Bearcat Managed Releases neu. Ist der Speicherordner nicht err
 Wiederherstellung mit einer Benachrichtigung fehl, statt Dateien herunterzuladen. Bearcat legt den
 Speicherordner nie an.
 
+## Netzwerkmounts
+
+Bei Netzwerkmounts mit hoher Latenz, etwa einer entfernten SMB-Freigabe, kann der Mount die
+Übertragung bremsen. Die folgenden Systembefehle gelten für Linux, auch auf einem NAS von Synology.
+
+- **Parallele Dateikopien:** Mehrere Dateien gleichzeitig zu kopieren kann bei hoher Latenz schneller
+  sein. Teste dafür den Wert `6`.
+- **Readahead:** Liest der Kernel bei SMB-Mounts (CIFS) zu wenig im Voraus, kann das Kopieren in lokale
+  Arbeitskopien langsam sein. Teste einen Wert von 16 MiB:
+
+  ```bash
+  for f in /sys/class/bdi/cifs-*/read_ahead_kb; do echo 16384 > "$f"; done
+  ```
+
+  Der Wert gilt nur bis zum nächsten Mounten. Unterstützt dein Kernel die Mountoption `rasize`,
+  kannst du stattdessen `rasize=16777216` verwenden.
+- **TCP-Puffer:** Nutzt die Übertragung nur einen kleinen Teil der verfügbaren Bandbreite, können
+  höhere Puffergrenzen helfen:
+
+  ```bash
+  sysctl -w net.core.wmem_max=67108864 net.core.rmem_max=67108864
+  sysctl -w net.ipv4.tcp_wmem="4096 65536 67108864" net.ipv4.tcp_rmem="4096 131072 67108864"
+  ```
+
+Führe die Befehle für Readahead und TCP-Puffer nach jedem Systemstart als root aus, sobald die Freigaben
+gemountet sind. Auf einer Synology kannst du dafür im Aufgabenplaner eine Aufgabe beim Hochfahren anlegen.
+Da DSM Freigaben neu mounten kann, kannst du den Readaheadwert zusätzlich stündlich setzen lassen.
+
+Wähle möglichst einen Speicherstandort mit geringer Latenz zum Rechner, auf dem Bearcat läuft.
+
 ## Wo gespeicherte Archive angezeigt werden
 
 Der Tab **Archive** der Releasedetailseite und die Liste **Archive** zeigen den Namen des Speicherordners

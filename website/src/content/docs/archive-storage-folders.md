@@ -106,6 +106,36 @@ If archive files are missing in the storage folder, Bearcat downloads only the m
 Without a mirror, it repacks managed releases. If the storage folder is not available, the restore fails
 with a notification instead of downloading. Bearcat never creates the storage folder.
 
+## Network mounts
+
+On network mounts with high latency, such as a remote SMB share, the mount can limit transfer speed.
+The system commands below apply to Linux, including Synology NAS devices.
+
+- **Parallel file copies:** copying several files at once can be faster over a high-latency connection.
+  Try setting this to `6`.
+- **Readahead:** if the kernel reads too little ahead on SMB (CIFS) mounts, copying into local working
+  copies can be slow. Try 16 MiB:
+
+  ```bash
+  for f in /sys/class/bdi/cifs-*/read_ahead_kb; do echo 16384 > "$f"; done
+  ```
+
+  The value resets on every remount. If your kernel supports the `rasize` mount option, you can use
+  `rasize=16777216` instead.
+- **TCP buffers:** if transfers use only a small part of the available bandwidth, higher buffer limits
+  may help:
+
+  ```bash
+  sysctl -w net.core.wmem_max=67108864 net.core.rmem_max=67108864
+  sysctl -w net.ipv4.tcp_wmem="4096 65536 67108864" net.ipv4.tcp_rmem="4096 131072 67108864"
+  ```
+
+Run the readahead and TCP buffer commands as root after every boot, once the shares are mounted.
+On Synology, you can create a boot-up task in Task Scheduler. Since DSM can remount shares, you can
+also schedule an hourly task to reapply the readahead value.
+
+Choose a storage location with low latency to the machine running Bearcat.
+
 ## Where stored archives are shown
 
 The **Archives** tab of the release detail page and the **Archives** list show the storage folder name
