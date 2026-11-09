@@ -11,6 +11,8 @@ public sealed class BackgroundTaskScheduleCache(IServiceScopeFactory serviceScop
 {
     private readonly ConcurrentDictionary<string, TimeSpan> overrides = [];
     private readonly ConcurrentDictionary<string, bool> enabledStates = [];
+    private readonly Dictionary<string, CancellationTokenSource> runningTickTokenSources = new();
+    private readonly Lock runningTickTokenSourcesLock = new();
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private volatile bool isInitialized;
 
@@ -77,7 +79,43 @@ public sealed class BackgroundTaskScheduleCache(IServiceScopeFactory serviceScop
 
     public void SetEnabled(string key, bool isEnabled)
     {
-        enabledStates[key] = isEnabled;
+        lock (runningTickTokenSourcesLock)
+        {
+            enabledStates[key] = isEnabled;
+
+            if (!isEnabled && runningTickTokenSources.TryGetValue(key, out var tokenSource))
+            {
+                tokenSource.Cancel();
+            }
+        }
+    }
+
+    public CancellationToken RegisterRunningTick(string key, CancellationToken stoppingToken)
+    {
+        var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+
+        lock (runningTickTokenSourcesLock)
+        {
+            runningTickTokenSources[key] = tokenSource;
+
+            if (!IsEnabled(key))
+            {
+                tokenSource.Cancel();
+            }
+        }
+
+        return tokenSource.Token;
+    }
+
+    public void UnregisterRunningTick(string key)
+    {
+        lock (runningTickTokenSourcesLock)
+        {
+            if (runningTickTokenSources.Remove(key, out var tokenSource))
+            {
+                tokenSource.Dispose();
+            }
+        }
     }
 
     public void Dispose()

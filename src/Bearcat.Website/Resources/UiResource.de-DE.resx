@@ -748,6 +748,7 @@
   <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} aktiviert</value></data>
   <data name="BackgroundTasks" xml:space="preserve"><value>Hintergrundaufgaben</value></data>
   <data name="Duration" xml:space="preserve"><value>Dauer</value></data>
+  <data name="Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
   <data name="Error" xml:space="preserve"><value>Fehler</value></data>
   <data name="Errors" xml:space="preserve"><value>Fehler</value></data>
   <data name="Finished" xml:space="preserve"><value>Ende</value></data>

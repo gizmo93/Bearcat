@@ -4,4 +4,5 @@ public enum BackgroundTaskExecutionStatus
 {
     Success = 1,
     Error = 2,
+    Canceled = 3,
 }

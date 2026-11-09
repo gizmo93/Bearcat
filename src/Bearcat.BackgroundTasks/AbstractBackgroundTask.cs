@@ -95,12 +95,37 @@ public abstract class AbstractBackgroundTask(
             }
         }
 
-        await stateService.MarkStartedAsync(Key, DisplayName, stoppingToken);
+        var tickCancellationToken = scheduleCache.RegisterRunningTick(Key, stoppingToken);
 
         try
         {
-            await ExecuteTickAsync(scope.ServiceProvider, stoppingToken);
-            await stateService.MarkSucceededAsync(Key, DisplayName, stoppingToken);
+            await stateService.MarkStartedAsync(Key, DisplayName, stoppingToken);
+
+            await ExecuteTickAndMarkResultAsync(
+                serviceProvider: scope.ServiceProvider,
+                stateService: stateService,
+                tickCancellationToken: tickCancellationToken,
+                stoppingToken: stoppingToken
+            );
+        }
+        finally
+        {
+            scheduleCache.UnregisterRunningTick(Key);
+        }
+    }
+
+    private async Task ExecuteTickAndMarkResultAsync(
+        IServiceProvider serviceProvider,
+        BackgroundTaskStateService stateService,
+        CancellationToken tickCancellationToken,
+        CancellationToken stoppingToken
+    )
+    {
+        Exception? tickException = null;
+
+        try
+        {
+            await ExecuteTickAsync(serviceProvider, tickCancellationToken);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
@@ -108,9 +133,39 @@ public abstract class AbstractBackgroundTask(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "{DisplayName} background task tick failed", DisplayName);
-            await stateService.MarkFailedAsync(Key, DisplayName, exception, stoppingToken);
+            tickException = exception;
         }
+
+        if (tickCancellationToken.IsCancellationRequested)
+        {
+            logger.LogInformation(
+                "{DisplayName} background task tick was canceled because the task was disabled",
+                DisplayName
+            );
+
+            await MarkCanceledAsync(stoppingToken);
+        }
+        else if (tickException is not null)
+        {
+            logger.LogError(
+                tickException,
+                "{DisplayName} background task tick failed",
+                DisplayName
+            );
+
+            await stateService.MarkFailedAsync(Key, DisplayName, tickException, stoppingToken);
+        }
+        else
+        {
+            await stateService.MarkSucceededAsync(Key, DisplayName, stoppingToken);
+        }
+    }
+
+    private async Task MarkCanceledAsync(CancellationToken stoppingToken)
+    {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var stateService = scope.ServiceProvider.GetRequiredService<BackgroundTaskStateService>();
+        await stateService.MarkCanceledAsync(Key, DisplayName, stoppingToken);
     }
 
     private async Task<bool> WaitForNextTickAsync(

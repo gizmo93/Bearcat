@@ -206,6 +206,7 @@ public partial class BackgroundTasksPage(
         {
             BackgroundTaskExecutionStatus.Success => L["Success"],
             BackgroundTaskExecutionStatus.Error => L["Error"],
+            BackgroundTaskExecutionStatus.Canceled => L["Canceled"],
             _ => L["NeverRun"],
         };
     }

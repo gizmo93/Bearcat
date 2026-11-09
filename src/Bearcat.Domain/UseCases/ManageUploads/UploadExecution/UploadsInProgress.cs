@@ -40,6 +40,14 @@ public sealed class UploadsInProgress(ITransferProgressTracker progressTracker, 
         progressTracker.StopTracking(new TransferIdentifier(TransferType.Upload, uploadId));
     }
 
+    public void StopTrackingProgressOfUnfinishedUploads()
+    {
+        foreach (var uploadId in contextsByUploadId.Keys)
+        {
+            progressTracker.StopTracking(new TransferIdentifier(TransferType.Upload, uploadId));
+        }
+    }
+
     public async Task RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
         CancellationToken cancellationToken
     )

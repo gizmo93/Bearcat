@@ -66,61 +66,68 @@ public class UploadFilesService(
         var hostersByName = hosterFactory.GetHostersByName();
         var uploadsInProgress = new UploadsInProgress(progressTracker, logger);
 
-        await PrepareAndStartUploadsAsync(
-            uploads: pendingUploads,
-            hostersByName: hostersByName,
-            uploadsInProgress: uploadsInProgress,
-            cancellationToken: cancellationToken
-        );
-
-        var nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
-
-        while (uploadsInProgress.HasUploadsOrRunningFileUploads)
+        try
         {
-            await uploadCancellationRequestService.ApplyCancellationRequestsToUploadsInProgressAsync(
-                uploadsInProgress,
-                cancellationToken
+            await PrepareAndStartUploadsAsync(
+                uploads: pendingUploads,
+                hostersByName: hostersByName,
+                uploadsInProgress: uploadsInProgress,
+                cancellationToken: cancellationToken
             );
 
-            await uploadsInProgress.RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
-                cancellationToken
-            );
+            var nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
+
+            while (uploadsInProgress.HasUploadsOrRunningFileUploads)
+            {
+                await uploadCancellationRequestService.ApplyCancellationRequestsToUploadsInProgressAsync(
+                    uploadsInProgress,
+                    cancellationToken
+                );
+
+                await uploadsInProgress.RemoveCompletedFileUploadTasksAndLogUnexpectedErrorsAsync(
+                    cancellationToken
+                );
+
+                await fileUploadResultService.ApplyAvailableFileUploadResultsAsync(
+                    uploadsInProgress,
+                    cancellationToken
+                );
+
+                await StartFileUploadsWithinConcurrencyLimitsAsync(
+                    uploadsInProgress,
+                    cancellationToken
+                );
+
+                if (!uploadsInProgress.HasUploadsOrRunningFileUploads)
+                {
+                    break;
+                }
+
+                if (DateTimeOffset.UtcNow >= nextPendingUploadCheck)
+                {
+                    await AddNewPendingUploadsAsync(
+                        hostersByName: hostersByName,
+                        uploadsInProgress: uploadsInProgress,
+                        cancellationToken: cancellationToken
+                    );
+
+                    nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
+                }
+
+                await WaitBeforeNextQueuePollAsync(cancellationToken);
+            }
+
+            uploadsInProgress.CompletedFileUploads.Writer.Complete();
 
             await fileUploadResultService.ApplyAvailableFileUploadResultsAsync(
                 uploadsInProgress,
                 cancellationToken
             );
-
-            await StartFileUploadsWithinConcurrencyLimitsAsync(
-                uploadsInProgress,
-                cancellationToken
-            );
-
-            if (!uploadsInProgress.HasUploadsOrRunningFileUploads)
-            {
-                break;
-            }
-
-            if (DateTimeOffset.UtcNow >= nextPendingUploadCheck)
-            {
-                await AddNewPendingUploadsAsync(
-                    hostersByName: hostersByName,
-                    uploadsInProgress: uploadsInProgress,
-                    cancellationToken: cancellationToken
-                );
-
-                nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
-            }
-
-            await WaitBeforeNextQueuePollAsync(cancellationToken);
         }
-
-        uploadsInProgress.CompletedFileUploads.Writer.Complete();
-
-        await fileUploadResultService.ApplyAvailableFileUploadResultsAsync(
-            uploadsInProgress,
-            cancellationToken
-        );
+        finally
+        {
+            uploadsInProgress.StopTrackingProgressOfUnfinishedUploads();
+        }
 
         logger.LogInformation("Finished processing pending uploads");
     }
