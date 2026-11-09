@@ -82,6 +82,21 @@ public class BackgroundTaskStateService(
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task MarkCanceledAsync(
+        string key,
+        string displayName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var taskState = await GetOrCreateAsync(key, displayName, null, cancellationToken);
+        taskState.LastFinishedAt = timeProvider.GetLocalNow();
+        taskState.LastExecutionStatus = BackgroundTaskExecutionStatus.Canceled;
+        taskState.LastErrorMessage = null;
+        taskState.UpdatedAt = taskState.LastFinishedAt.Value;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetIsEnabledAsync(
         int id,
         bool isEnabled,

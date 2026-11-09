@@ -174,6 +174,22 @@ public class BackgroundTaskStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task MarkCanceledAsync_TaskExists_SetsCanceledStatus()
+    {
+        // Arrange
+        await AddTaskStateAsync();
+
+        // Act
+        await service.MarkCanceledAsync(Key, DisplayName, CancellationToken.None);
+
+        // Assert
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
+        taskState.LastFinishedAt.ShouldNotBeNull();
+        taskState.LastExecutionStatus.ShouldBe(BackgroundTaskExecutionStatus.Canceled);
+        taskState.LastErrorMessage.ShouldBeNull();
+    }
+
+    [Test]
     public async Task MarkFailedAsync_LongErrorMessage_TruncatesToMaxLength()
     {
         // Arrange

@@ -11,4 +11,8 @@ public interface IBackgroundTaskScheduleCache
     bool IsEnabled(string key);
 
     void SetEnabled(string key, bool isEnabled);
+
+    CancellationToken RegisterRunningTick(string key, CancellationToken stoppingToken);
+
+    void UnregisterRunningTick(string key);
 }
