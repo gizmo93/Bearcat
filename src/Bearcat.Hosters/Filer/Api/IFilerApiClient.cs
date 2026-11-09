@@ -28,6 +28,13 @@ public interface IFilerApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFilesToFolderAsync(
+        FilerConfig config,
+        IReadOnlyDictionary<string, string> editCodePerFileHash,
+        string folderHash,
+        CancellationToken cancellationToken
+    );
+
     Task DownloadFileAsync(
         FilerConfig config,
         string fileHash,

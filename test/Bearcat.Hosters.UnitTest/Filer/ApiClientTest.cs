@@ -332,7 +332,7 @@ public class ApiClientTest
         );
 
         // Assert
-        exception.Message.ShouldContain($"did not move file {FileHash}");
+        exception.Message.ShouldContain("moved 0 of 1 files");
     }
 
     [Test]

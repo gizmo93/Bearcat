@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Filer;
 
 public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
-    : IHosterWithFolders,
+    : IHosterWithBatchFileMove,
         IHosterWithFileInfo,
         IHosterWithDownload
 {
@@ -22,6 +22,8 @@ public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
     private const string FileLinkPathSegment = "get";
 
     private const int MaxParallelUploads = 3;
+
+    private const int MaxFilesPerMoveRequest = 10;
 
     private const int UploadAttempts = 3;
 
@@ -196,10 +198,7 @@ public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
     {
         var config = hosterConfig.As<FilerConfig>();
 
-        if (
-            externalId?.Split(ExternalIdSeparator)
-            is not [{ Length: > 0 } fileHash, { Length: > 0 } editCode]
-        )
+        if (!TryReadFileHashAndEditCode(externalId, out var fileHash, out var editCode))
         {
             throw new HttpRequestException(
                 $"Cannot move Filer file {fileUrl} because its edit code is unknown"
@@ -213,6 +212,90 @@ public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
             folderHash: folderId,
             cancellationToken: cancellationToken
         );
+    }
+
+    public async Task<IReadOnlyList<string>> MoveFilesToFolderAsync(
+        IReadOnlyList<HosterFileToMoveDto> files,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<FilerConfig>();
+        var movableFiles = new List<(string FileLink, string FileHash, string EditCode)>();
+
+        foreach (var file in files)
+        {
+            if (!TryReadFileHashAndEditCode(file.ExternalId, out var fileHash, out var editCode))
+            {
+                logger.LogWarning(
+                    "Cannot move Filer file {FileLink} because its edit code is unknown",
+                    file.HosterFileLink
+                );
+
+                continue;
+            }
+
+            movableFiles.Add((file.HosterFileLink, fileHash, editCode));
+        }
+
+        var movedFileLinks = new List<string>();
+
+        foreach (var filesOfOneRequest in movableFiles.Chunk(MaxFilesPerMoveRequest))
+        {
+            try
+            {
+                await apiClient.MoveFilesToFolderAsync(
+                    config: config,
+                    editCodePerFileHash: filesOfOneRequest.ToDictionary(
+                        file => file.FileHash,
+                        file => file.EditCode
+                    ),
+                    folderHash: folderId,
+                    cancellationToken: cancellationToken
+                );
+
+                movedFileLinks.AddRange(filesOfOneRequest.Select(file => file.FileLink));
+            }
+            catch (Exception ex)
+                when (ex
+                        is not HosterCredentialsRejectedException
+                            and not OperationCanceledException
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to move {FileCount} Filer files to folder {FolderId}",
+                    filesOfOneRequest.Length,
+                    folderId
+                );
+            }
+        }
+
+        return movedFileLinks;
+    }
+
+    private static bool TryReadFileHashAndEditCode(
+        string? externalId,
+        out string fileHash,
+        out string editCode
+    )
+    {
+        if (
+            externalId?.Split(ExternalIdSeparator)
+            is [{ Length: > 0 } readFileHash, { Length: > 0 } readEditCode]
+        )
+        {
+            fileHash = readFileHash;
+            editCode = readEditCode;
+
+            return true;
+        }
+
+        fileHash = string.Empty;
+        editCode = string.Empty;
+
+        return false;
     }
 
     public async Task<DownloadFileResult> DownloadFileAsync(

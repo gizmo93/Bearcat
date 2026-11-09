@@ -145,6 +145,111 @@ public class FilerTest
     }
 
     [Test]
+    public async Task MoveFilesToFolderAsync_ElevenFilesAndSecondRequestFails_ReturnsTheTenFilesOfTheFirstRequest()
+    {
+        // Arrange
+        const string folderHash = "bf939f014bcd87b4";
+        var files = Enumerable
+            .Range(1, 11)
+            .Select(index => new HosterFileToMoveDto(
+                $"https://filer.net/get/{index:D16}",
+                $"{index:D16}:d8f65339142f346a"
+            ))
+            .ToList();
+
+        apiClientMock
+            .Setup(x =>
+                x.MoveFilesToFolderAsync(
+                    config,
+                    It.Is<IReadOnlyDictionary<string, string>>(editCodes => editCodes.Count == 10),
+                    folderHash,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(Task.CompletedTask);
+
+        apiClientMock
+            .Setup(x =>
+                x.MoveFilesToFolderAsync(
+                    config,
+                    It.Is<IReadOnlyDictionary<string, string>>(editCodes => editCodes.Count == 1),
+                    folderHash,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("Invalid edit code"));
+
+        // Act
+        var movedFileLinks = await service.MoveFilesToFolderAsync(
+            files: files,
+            folderId: folderHash,
+            hosterConfig: config,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        movedFileLinks.ShouldBe(files.Take(10).Select(file => file.HosterFileLink).ToList());
+    }
+
+    [Test]
+    public async Task MoveFilesToFolderAsync_OneFileWithoutEditCode_MovesTheOtherFilesInOneRequest()
+    {
+        // Arrange
+        const string folderHash = "bf939f014bcd87b4";
+        const string secondFileHash = "36293ad21cebb03b";
+        IReadOnlyDictionary<string, string>? requestedEditCodePerFileHash = null;
+
+        apiClientMock
+            .Setup(x =>
+                x.MoveFilesToFolderAsync(
+                    config,
+                    It.IsAny<IReadOnlyDictionary<string, string>>(),
+                    folderHash,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(
+                (
+                    FilerConfig _,
+                    IReadOnlyDictionary<string, string> editCodePerFileHash,
+                    string _,
+                    CancellationToken _
+                ) => requestedEditCodePerFileHash = editCodePerFileHash
+            )
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var movedFileLinks = await service.MoveFilesToFolderAsync(
+            files:
+            [
+                new HosterFileToMoveDto(
+                    $"https://filer.net/get/{FileHash}",
+                    $"{FileHash}:d8f65339142f346a"
+                ),
+                new HosterFileToMoveDto("https://filer.net/get/1111111111111111", null),
+                new HosterFileToMoveDto(
+                    $"https://filer.net/get/{secondFileHash}",
+                    $"{secondFileHash}:8c717a573f227b24"
+                ),
+            ],
+            folderId: folderHash,
+            hosterConfig: config,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        movedFileLinks.ShouldBe([
+            $"https://filer.net/get/{FileHash}",
+            $"https://filer.net/get/{secondFileHash}",
+        ]);
+
+        requestedEditCodePerFileHash.ShouldNotBeNull();
+        requestedEditCodePerFileHash[FileHash].ShouldBe("d8f65339142f346a");
+        requestedEditCodePerFileHash[secondFileHash].ShouldBe("8c717a573f227b24");
+        requestedEditCodePerFileHash.Count.ShouldBe(2);
+    }
+
+    [Test]
     public async Task CheckFilesExistAsync_LinksWithAndWithoutFileName_MapsStatusPerUrlAndSkipsForeignLinks()
     {
         // Arrange

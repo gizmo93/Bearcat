@@ -150,18 +150,30 @@ public partial class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        await MoveFilesToFolderAsync(
+            config: config,
+            editCodePerFileHash: new Dictionary<string, string> { [fileHash] = editCode },
+            folderHash: folderHash,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task MoveFilesToFolderAsync(
+        FilerConfig config,
+        IReadOnlyDictionary<string, string> editCodePerFileHash,
+        string folderHash,
+        CancellationToken cancellationToken
+    )
+    {
         var response = await SendWithSessionCookieAsync(
             config: config,
             sendRequestAsync: cookie =>
                 api.MoveFilesAsync(
                     cookie: cookie,
                     request: new MoveFilesRequest(
-                        FileHashes: [fileHash],
+                        FileHashes: editCodePerFileHash.Keys.ToList(),
                         TargetFolderHash: folderHash,
-                        EditCodePerFileHash: new Dictionary<string, string>
-                        {
-                            [fileHash] = editCode,
-                        }
+                        EditCodePerFileHash: editCodePerFileHash
                     ),
                     cancellationToken: cancellationToken
                 ),
@@ -176,10 +188,10 @@ public partial class ApiClient(
             );
         }
 
-        if (response.Content.MovedFiles != 1)
+        if (response.Content.MovedFiles != editCodePerFileHash.Count)
         {
             throw new HttpRequestException(
-                $"Filer did not move file {fileHash} into folder {folderHash}: {response.Content.Message}"
+                $"Filer moved {response.Content.MovedFiles} of {editCodePerFileHash.Count} files into folder {folderHash}: {response.Content.Message}"
             );
         }
     }
