@@ -60,6 +60,7 @@ Schlägt ein Download trotz Wiederholungen fehl, versucht Bearcat den nächsten 
 | Keep2Share | Ja |
 | Fast2Share.com | Ja |
 | mega4upload.net | Ja |
+| filer.net | Ja |
 | DDownload | Nein |
 | datavaults.co | Nein |
 | file-upload.org | Nein |

@@ -59,6 +59,7 @@ If a download still fails after retries, Bearcat tries the next available mirror
 | Keep2Share | Yes |
 | Fast2Share.com | Yes |
 | mega4upload.net | Yes |
+| filer.net | Yes |
 | DDownload | No |
 | datavaults.co | No |
 | file-upload.org | No |
