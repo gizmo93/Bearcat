@@ -149,6 +149,9 @@ one after another.
 Once Bearcat has posted to all matching forums, it marks the release or collection as posted and removes it from the queue.
 If you post manually, use **Mark as posted**.
 
+The same **Automatic posting** section appears in the overview of a release or collection, above **Posted locations**.
+Use it for releases and collections that are no longer in the queue, for example to post to a forum you added later.
+
 ## When a release or collection cannot be posted
 
 Instead of the forum list, the entry shows a short reason:

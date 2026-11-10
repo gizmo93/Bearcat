@@ -148,6 +148,10 @@ die Post-URL unter **Veröffentlichungsorte**. **In alle passenden Foren posten*
 Sobald Bearcat in allen passenden Foren gepostet hat, markiert es das Release oder die Collection als gepostet
 und entfernt den Eintrag aus der Warteschlange. Wenn du selbst postest, verwende **Als gepostet markieren**.
 
+Den gleichen Abschnitt **Automatisches Posten** findest du auch in der Übersicht eines Releases oder einer Collection,
+über **Veröffentlichungsorte**. Damit postest du auch Releases und Collections, die nicht mehr in der Warteschlange sind,
+zum Beispiel in ein später hinzugefügtes Forum.
+
 ## Wenn ein Release oder eine Collection nicht gepostet werden kann
 
 Statt der Forenliste zeigt der Eintrag einen kurzen Grund:

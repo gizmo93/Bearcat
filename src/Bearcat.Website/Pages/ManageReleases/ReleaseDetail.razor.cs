@@ -12,6 +12,8 @@ using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
+using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
@@ -79,6 +81,7 @@ public partial class ReleaseDetail(
     private int imageUploadConfigCount;
     private PostedLocations? postedLocations;
     private bool hasActiveForumRegistration;
+    private AutoPostPlan autoPostPlan = null!;
     private bool isStartingInitialUploads;
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
@@ -97,6 +100,9 @@ public partial class ReleaseDetail(
         release.OnlineUploadConfigsCount > 0
         && progressSteps.Single(step => step.Kind == ReleaseProgressStepKind.Posted).State
             == ProgressStepState.Pending;
+
+    private bool IsAutoPostPlanSectionVisible =>
+        hasActiveForumRegistration && (autoPostPlan.IsBlocked || autoPostPlan.Sites.Count > 0);
 
     private bool HasOfflineUploadConfigs =>
         release.OnlineUploadConfigsCount < release.UploadConfigsCount;
@@ -159,6 +165,7 @@ public partial class ReleaseDetail(
         await LoadImageUploadConfigCountAsync();
         await LoadOverviewUploadsAndProgressStepsAsync();
         await LoadHasActiveForumRegistrationAsync();
+        await LoadAutoPostPlanAsync();
         remoteDownloadOrigin = await operationRunner.RunAsync(
             (IRemoteSourceDownloadReadRepository repository) =>
                 repository.GetByReleaseIdAsync(ReleaseId)
@@ -251,6 +258,14 @@ public partial class ReleaseDetail(
         );
         hasActiveForumRegistration = distributionSiteRegistrations.Any(registration =>
             registration.Kind == DistributionSiteKind.Forum && registration.IsActive
+        );
+    }
+
+    private async Task LoadAutoPostPlanAsync()
+    {
+        autoPostPlan = await operationRunner.RunAsync(
+            (AutoForumPostingPlanService service) =>
+                service.GetPlanAsync(ForumPostTemplateType.Release, ReleaseId)
         );
     }
 
@@ -398,12 +413,35 @@ public partial class ReleaseDetail(
             }
         );
 
+        await ReloadAutoPostPlanAndForumPostStateAsync();
+    }
+
+    private async Task ReloadAutoPostPlanAndForumPostStateAsync()
+    {
+        await LoadAutoPostPlanAsync();
+        await ReloadForumPostStateAsync();
+    }
+
+    private async Task HandleAutoPostPlanChangedAsync(AutoPostPlan plan)
+    {
+        autoPostPlan = plan;
+        await ReloadForumPostStateAsync();
+    }
+
+    private async Task ReloadForumPostStateAsync()
+    {
         if (reloadableComponents.TryGetValue(nameof(ReleaseOverview), out var releaseOverview))
         {
             await releaseOverview.ReloadAsync();
         }
 
         await ReloadPostedLocationsAsync();
+        await ReloadProgressAsync();
+    }
+
+    private async Task HandlePostedLocationsChangedAsync()
+    {
+        await LoadAutoPostPlanAsync();
         await ReloadProgressAsync();
     }
 

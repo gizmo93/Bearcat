@@ -9,13 +9,9 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
-using Bearcat.Domain.UseCases.PostToForums.PostCreation;
-using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Formatting;
-using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
-using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -26,7 +22,6 @@ public partial class PostQueuePage(
     PostQueueWorkflowState workflowState,
     PostQueueCountCache postQueueCountCache,
     NavigationManager navigationManager,
-    ToastService toastService,
     TimeProvider timeProvider
 ) : ComponentBase
 {
@@ -36,15 +31,6 @@ public partial class PostQueuePage(
         (ForumPostTemplateType EntityType, int EntityId),
         AutoPostPlan
     > autoPostPlans = [];
-    private readonly HashSet<(
-        ForumPostTemplateType EntityType,
-        int EntityId,
-        int RegistrationId
-    )> busySites = [];
-    private readonly Dictionary<
-        (ForumPostTemplateType EntityType, int EntityId, int RegistrationId),
-        string
-    > siteErrors = [];
     private bool isLoading = true;
     private bool enabled = true;
 
@@ -92,8 +78,6 @@ public partial class PostQueuePage(
 
     private async Task LoadAutoPostPlansAsync()
     {
-        siteErrors.Clear();
-
         var releasePlans = await LoadAutoPostPlansAsync(
             ForumPostTemplateType.Release,
             releaseItems.Select(item => item.ReleaseId).ToList()
@@ -123,216 +107,14 @@ public partial class PostQueuePage(
         );
     }
 
-    private async Task ReloadAutoPostPlanAsync(ForumPostTemplateType entityType, int entityId)
+    private void StoreAutoPostPlan(AutoPostPlan plan)
     {
-        var plan = await operationRunner.RunAsync(
-            (AutoForumPostingPlanService service) => service.GetPlanAsync(entityType, entityId)
-        );
-
-        autoPostPlans[(entityType, entityId)] = plan;
+        autoPostPlans[(plan.EntityType, plan.EntityId)] = plan;
     }
 
     private AutoPostPlan AutoPostPlanFor(ForumPostTemplateType entityType, int entityId)
     {
         return autoPostPlans[(entityType, entityId)];
-    }
-
-    private HashSet<int> BusyRegistrationIdsFor(ForumPostTemplateType entityType, int entityId)
-    {
-        return busySites
-            .Where(site => site.EntityType == entityType && site.EntityId == entityId)
-            .Select(site => site.RegistrationId)
-            .ToHashSet();
-    }
-
-    private Dictionary<int, string> SiteErrorsFor(ForumPostTemplateType entityType, int entityId)
-    {
-        return siteErrors
-            .Where(siteError =>
-                siteError.Key.EntityType == entityType && siteError.Key.EntityId == entityId
-            )
-            .ToDictionary(siteError => siteError.Key.RegistrationId, siteError => siteError.Value);
-    }
-
-    private async Task PostToSiteAsync(
-        ForumPostTemplateType entityType,
-        int entityId,
-        AutoPostSiteEntry site
-    )
-    {
-        busySites.Add((entityType, entityId, site.DistributionSiteRegistrationId));
-
-        try
-        {
-            await ExecuteAndApplyAsync(entityType, entityId, site);
-        }
-        finally
-        {
-            busySites.Remove((entityType, entityId, site.DistributionSiteRegistrationId));
-        }
-    }
-
-    private async Task PostToAllMatchedSitesAsync(ForumPostTemplateType entityType, int entityId)
-    {
-        var pendingSites = AutoPostPlanFor(entityType, entityId).PendingSites;
-
-        foreach (var site in pendingSites)
-        {
-            busySites.Add((entityType, entityId, site.DistributionSiteRegistrationId));
-            StateHasChanged();
-
-            try
-            {
-                var succeeded = await ExecuteAndApplyAsync(entityType, entityId, site);
-
-                if (!succeeded)
-                {
-                    return;
-                }
-            }
-            finally
-            {
-                busySites.Remove((entityType, entityId, site.DistributionSiteRegistrationId));
-            }
-
-            if (!autoPostPlans.ContainsKey((entityType, entityId)))
-            {
-                return;
-            }
-        }
-    }
-
-    private async Task UpdatePostAsync(
-        ForumPostTemplateType entityType,
-        int entityId,
-        AutoPostSiteEntry site
-    )
-    {
-        busySites.Add((entityType, entityId, site.DistributionSiteRegistrationId));
-        siteErrors.Remove((entityType, entityId, site.DistributionSiteRegistrationId));
-
-        try
-        {
-            var result = await operationRunner.RunAsync(
-                (AutoForumPostUpdateService service) =>
-                    service.UpdatePostOnSiteAsync(
-                        entityType: entityType,
-                        entityId: entityId,
-                        distributionSiteRegistrationId: site.DistributionSiteRegistrationId
-                    )
-            );
-
-            if (result.Status == AutoPostUpdateStatus.Updated)
-            {
-                toastService.Success(
-                    L["AutoPostUpdateSucceeded", site.DistributionSiteRegistrationName]
-                );
-
-                if (result.UploadsMarkedPosted)
-                {
-                    await LoadAsync();
-                    return;
-                }
-            }
-            else
-            {
-                siteErrors[(entityType, entityId, site.DistributionSiteRegistrationId)] =
-                    result.Status == AutoPostUpdateStatus.Skipped
-                        ? UpdateSkipReasonText(entityType, result)
-                        : string.Join(" ", result.Errors);
-
-                toastService.Error(
-                    L["AutoPostUpdateFailed", site.DistributionSiteRegistrationName]
-                );
-            }
-
-            await ReloadAutoPostPlanAsync(entityType, entityId);
-        }
-        finally
-        {
-            busySites.Remove((entityType, entityId, site.DistributionSiteRegistrationId));
-        }
-    }
-
-    private async Task<bool> ExecuteAndApplyAsync(
-        ForumPostTemplateType entityType,
-        int entityId,
-        AutoPostSiteEntry site
-    )
-    {
-        siteErrors.Remove((entityType, entityId, site.DistributionSiteRegistrationId));
-
-        var result = await operationRunner.RunAsync(
-            (AutoForumPostCreationService service) =>
-                service.CreatePostOnSiteAsync(
-                    entityType: entityType,
-                    entityId: entityId,
-                    distributionSiteRegistrationId: site.DistributionSiteRegistrationId
-                )
-        );
-
-        if (result.Status == AutoPostExecutionStatus.Posted)
-        {
-            toastService.Success(L["AutoPostSucceeded", site.DistributionSiteRegistrationName]);
-
-            if (result.UploadsMarkedPosted)
-            {
-                await LoadAsync();
-                return true;
-            }
-
-            await ReloadAutoPostPlanAsync(entityType, entityId);
-            return true;
-        }
-
-        var message =
-            result.Status == AutoPostExecutionStatus.Skipped
-                ? SkipReasonText(entityType, result)
-                : string.Join(" ", result.Errors);
-
-        siteErrors[(entityType, entityId, site.DistributionSiteRegistrationId)] = message;
-        toastService.Error(L["AutoPostFailed", site.DistributionSiteRegistrationName]);
-
-        await ReloadAutoPostPlanAsync(entityType, entityId);
-
-        return false;
-    }
-
-    private string SkipReasonText(ForumPostTemplateType entityType, AutoPostExecutionResult result)
-    {
-        if (result.BlockedReason is not null)
-        {
-            return L.Localize(result.BlockedReason.Value, entityType);
-        }
-
-        return result.SkipReason switch
-        {
-            AutoPostSkipReason.AlreadyPosted => entityType == ForumPostTemplateType.Release
-                ? L["AutoPostSkippedAlreadyPosted"]
-                : L["AutoPostSkippedCollectionAlreadyPosted"],
-            AutoPostSkipReason.NoMatch => L["AutoPostNoMatchingRule"],
-            _ => L["AutoPostSkippedSiteUnavailable"],
-        };
-    }
-
-    private string UpdateSkipReasonText(
-        ForumPostTemplateType entityType,
-        AutoPostUpdateResult result
-    )
-    {
-        if (result.BlockedReason is not null)
-        {
-            return L.Localize(result.BlockedReason.Value, entityType);
-        }
-
-        if (result.SkipReason != AutoPostUpdateSkipReason.NotPosted)
-        {
-            return L["AutoPostSkippedSiteUnavailable"];
-        }
-
-        return entityType == ForumPostTemplateType.Release
-            ? L["AutoPostUpdateNotPosted"]
-            : L["AutoPostUpdateCollectionNotPosted"];
     }
 
     private void StartReleaseWorkflow(int? startReleaseId = null)

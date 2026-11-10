@@ -6,6 +6,8 @@ using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
@@ -55,6 +57,7 @@ public partial class ReleaseCollectionDetail(
     private PostedLocations? postedLocations;
     private readonly HashSet<int> containerIdsWithRunningAction = [];
     private bool hasActiveForumRegistration;
+    private AutoPostPlan autoPostPlan = null!;
     private bool isInitialized;
     private bool isResolvingMetadata;
     private bool isDescriptionExpanded;
@@ -80,6 +83,9 @@ public partial class ReleaseCollectionDetail(
         releaseCollection.Releases.Any(release => release.OnlineUploadConfigsCount > 0)
         && progressSteps.Single(step => step.Kind == ReleaseCollectionProgressStepKind.Posted).State
             == ProgressStepState.Pending;
+
+    private bool IsAutoPostPlanSectionVisible =>
+        hasActiveForumRegistration && (autoPostPlan.IsBlocked || autoPostPlan.Sites.Count > 0);
 
     private string ReleaseCountText =>
         releaseCollection.Releases.Count == 1
@@ -110,6 +116,7 @@ public partial class ReleaseCollectionDetail(
         {
             isDescriptionExpanded = false;
             await LoadReleaseCollectionAsync();
+            await LoadAutoPostPlanAsync();
             await LoadHasActiveForumRegistrationAsync();
         }
     }
@@ -170,6 +177,14 @@ public partial class ReleaseCollectionDetail(
         );
         hasActiveForumRegistration = distributionSiteRegistrations.Any(registration =>
             registration.Kind == DistributionSiteKind.Forum && registration.IsActive
+        );
+    }
+
+    private async Task LoadAutoPostPlanAsync()
+    {
+        autoPostPlan = await operationRunner.RunAsync(
+            (AutoForumPostingPlanService service) =>
+                service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, ReleaseCollectionId)
         );
     }
 
@@ -410,11 +425,34 @@ public partial class ReleaseCollectionDetail(
             }
         );
 
+        await ReloadAutoPostPlanAndForumPostStateAsync();
+    }
+
+    private async Task ReloadAutoPostPlanAndForumPostStateAsync()
+    {
+        await LoadAutoPostPlanAsync();
+        await ReloadForumPostStateAsync();
+    }
+
+    private async Task HandleAutoPostPlanChangedAsync(AutoPostPlan plan)
+    {
+        autoPostPlan = plan;
+        await ReloadForumPostStateAsync();
+    }
+
+    private async Task ReloadForumPostStateAsync()
+    {
         if (postedLocations is not null)
         {
             await postedLocations.ReloadAsync();
         }
 
+        await LoadReleaseCollectionAsync();
+    }
+
+    private async Task HandlePostedLocationsChangedAsync()
+    {
+        await LoadAutoPostPlanAsync();
         await LoadReleaseCollectionAsync();
     }
 

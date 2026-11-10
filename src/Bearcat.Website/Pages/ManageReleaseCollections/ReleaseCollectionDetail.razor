@@ -6,6 +6,7 @@
 @using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps
 @using Bearcat.Website.Pages.ManageReleaseCollections.UploadSlots
 @using Bearcat.Website.Pages.PostQueue
+@using Bearcat.Website.Pages.PostToForum
 
 @if (!isInitialized)
 {
@@ -199,10 +200,18 @@
                                                      ContainerIdsWithRunningAction="containerIdsWithRunningAction" />
                 </div>
             }
-            <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations">
+            <div id="@PostedLocationsElementId" class="bearcat-release-posted-locations space-y-4">
+                @if (IsAutoPostPlanSectionVisible)
+                {
+                    <div class="bearcat-overview-card p-4">
+                        <AutoPostPlanSection Plan="autoPostPlan"
+                                             OnPlanChanged="HandleAutoPostPlanChangedAsync"
+                                             OnUploadsMarkedPosted="ReloadAutoPostPlanAndForumPostStateAsync" />
+                    </div>
+                }
                 <PostedLocations @ref="postedLocations"
                                  ReleaseCollectionId="@ReleaseCollectionId"
-                                 OnLocationsChanged="LoadReleaseCollectionAsync" />
+                                 OnLocationsChanged="HandlePostedLocationsChangedAsync" />
             </div>
         </BbTabsContent>
 

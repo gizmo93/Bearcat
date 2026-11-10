@@ -1,4 +1,4 @@
-<div class="space-y-2 border-t border-border/60 pt-3">
+<div class="space-y-2">
     <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
             <LucideIcon Name="send" class="h-4 w-4 text-muted-foreground" />
@@ -10,7 +10,7 @@
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Disabled="IsAnySiteBusy"
-                      OnClick="OnPostToAllMatchedSites">
+                      OnClick="PostToAllMatchedSitesAsync">
                 <LucideIcon Name="send-horizontal" class="h-4 w-4" />
                 @L["AutoPostAllMatchedSites"]
             </BbButton>
@@ -69,7 +69,7 @@
                         <p class="text-xs text-muted-foreground">@L["AutoPostNoMatchingRule"]</p>
                     }
 
-                    @if (SiteErrors.GetValueOrDefault(site.DistributionSiteRegistrationId) is { } error)
+                    @if (siteErrors.GetValueOrDefault(site.DistributionSiteRegistrationId) is { } error)
                     {
                         <p class="text-xs text-destructive">@error</p>
                     }
@@ -88,7 +88,7 @@
                             <BbButton Variant="ButtonVariant.Outline"
                                       Size="ButtonSize.Small"
                                       Disabled="IsAnySiteBusy"
-                                      OnClick="@(() => OnUpdatePost.InvokeAsync(site))">
+                                      OnClick="@(() => UpdatePostAsync(site))">
                                 <LucideIcon Name="@(IsSiteBusy(site) ? "loader-circle" : "file-pen")"
                                             class="@($"h-4 w-4 {(IsSiteBusy(site) ? "animate-spin" : string.Empty)}")" />
                                 @L["AutoPostUpdatePost"]
@@ -100,7 +100,7 @@
                 {
                     <BbButton Size="ButtonSize.Small"
                               Disabled="IsAnySiteBusy"
-                              OnClick="@(() => OnPostToSite.InvokeAsync(site))">
+                              OnClick="@(() => PostToSiteAsync(site))">
                         <LucideIcon Name="@(IsSiteBusy(site) ? "loader-circle" : "send")"
                                     class="@($"h-4 w-4 {(IsSiteBusy(site) ? "animate-spin" : string.Empty)}")" />
                         @L["AutoPostNow"]
@@ -110,39 +110,3 @@
         }
     }
 </div>
-
-@code
-{
-    [Parameter]
-    [EditorRequired]
-    public AutoPostPlan Plan { get; set; } = null!;
-
-    [Parameter]
-    [EditorRequired]
-    public IReadOnlySet<int> BusyRegistrationIds { get; set; } = null!;
-
-    [Parameter]
-    [EditorRequired]
-    public IReadOnlyDictionary<int, string> SiteErrors { get; set; } = null!;
-
-    [Parameter]
-    public EventCallback<AutoPostSiteEntry> OnPostToSite { get; set; }
-
-    [Parameter]
-    public EventCallback OnPostToAllMatchedSites { get; set; }
-
-    [Parameter]
-    public EventCallback<AutoPostSiteEntry> OnUpdatePost { get; set; }
-
-    private bool IsAnySiteBusy => BusyRegistrationIds.Count > 0;
-
-    private bool IsSiteBusy(AutoPostSiteEntry site)
-    {
-        return BusyRegistrationIds.Contains(site.DistributionSiteRegistrationId);
-    }
-
-    private static bool CanUpdatePost(AutoPostSiteEntry site)
-    {
-        return site.PostedLocationId is not null && site.ResolvedForumPostTemplateId is not null;
-    }
-}

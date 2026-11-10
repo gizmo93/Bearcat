@@ -1,4 +1,5 @@
 @page "/post-queue"
+@using Bearcat.Website.Pages.PostToForum
 
 <PageTitle>@L["PostQueue"] - Bearcat</PageTitle>
 
@@ -62,7 +63,7 @@
 
                 @foreach (var item in collectionItems)
                 {
-                    <BbCard Class="border-border/70 shadow-sm">
+                    <BbCard @key="item.ReleaseCollectionId" Class="border-border/70 shadow-sm">
                         <BbCardContent Class="space-y-3 p-4">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div class="min-w-0 space-y-1">
@@ -112,12 +113,11 @@
                                 }
                             </div>
 
-                            <AutoPostPlanSection Plan="AutoPostPlanFor(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId)"
-                                                 BusyRegistrationIds="BusyRegistrationIdsFor(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId)"
-                                                 SiteErrors="SiteErrorsFor(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId)"
-                                                 OnPostToSite="@(site => PostToSiteAsync(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId, site))"
-                                                 OnPostToAllMatchedSites="@(() => PostToAllMatchedSitesAsync(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId))"
-                                                 OnUpdatePost="@(site => UpdatePostAsync(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId, site))" />
+                            <div class="border-t border-border/60 pt-3">
+                                <AutoPostPlanSection Plan="AutoPostPlanFor(ForumPostTemplateType.ReleaseCollection, item.ReleaseCollectionId)"
+                                                     OnPlanChanged="StoreAutoPostPlan"
+                                                     OnUploadsMarkedPosted="LoadAsync" />
+                            </div>
                         </BbCardContent>
                     </BbCard>
                 }
@@ -142,7 +142,7 @@
 
                 @foreach (var item in releaseItems)
                 {
-                    <BbCard Class="border-border/70 shadow-sm">
+                    <BbCard @key="item.ReleaseId" Class="border-border/70 shadow-sm">
                         <BbCardContent Class="space-y-3 p-4">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div class="min-w-0 space-y-1">
@@ -202,12 +202,11 @@
                                 }
                             </div>
 
-                            <AutoPostPlanSection Plan="AutoPostPlanFor(ForumPostTemplateType.Release, item.ReleaseId)"
-                                                 BusyRegistrationIds="BusyRegistrationIdsFor(ForumPostTemplateType.Release, item.ReleaseId)"
-                                                 SiteErrors="SiteErrorsFor(ForumPostTemplateType.Release, item.ReleaseId)"
-                                                 OnPostToSite="@(site => PostToSiteAsync(ForumPostTemplateType.Release, item.ReleaseId, site))"
-                                                 OnPostToAllMatchedSites="@(() => PostToAllMatchedSitesAsync(ForumPostTemplateType.Release, item.ReleaseId))"
-                                                 OnUpdatePost="@(site => UpdatePostAsync(ForumPostTemplateType.Release, item.ReleaseId, site))" />
+                            <div class="border-t border-border/60 pt-3">
+                                <AutoPostPlanSection Plan="AutoPostPlanFor(ForumPostTemplateType.Release, item.ReleaseId)"
+                                                     OnPlanChanged="StoreAutoPostPlan"
+                                                     OnUploadsMarkedPosted="LoadAsync" />
+                            </div>
                         </BbCardContent>
                     </BbCard>
                 }
