@@ -12,6 +12,10 @@ public class ReleaseCollectionForumPostRenderSource(
     ForumPostImageLinkBuilder imageLinkBuilder
 ) : IForumPostRenderSource
 {
+    private const string CollectionVariableName = "collection";
+
+    private const string SeriesVariableName = "series";
+
     private const string ReleasesVariablePath = "releases";
 
     private const string ReleaseImageLinksVariablePath = "release.imagelinks";
@@ -50,29 +54,25 @@ public class ReleaseCollectionForumPostRenderSource(
             cancellationToken
         );
 
-        var releases = new List<ForumPostTemplateCollectionReleaseModel>();
         var releaseScriptObjects = new ScriptArray();
 
         foreach (var releaseId in collection.ReleaseIds)
         {
             var renderData = renderDataByReleaseId[releaseId];
-            var release = ToCollectionReleaseModel(renderData.RenderModel);
             var releaseScriptObject = new ScriptObject();
 
             releaseScriptObject.Import(
-                release,
+                ToCollectionReleaseModel(renderData.RenderModel),
                 ForumPostTemplateVariableCatalog.ShouldExposeMember
             );
 
             releaseScriptObject[ImageLinksVariableName] = renderData.ImageLinks;
-
-            releases.Add(release);
             releaseScriptObjects.Add(releaseScriptObject);
         }
 
-        var renderModel = new ForumPostTemplateCollectionRenderModel
+        var scriptObject = new ScriptObject
         {
-            Collection = new ForumPostTemplateCollectionModel
+            [CollectionVariableName] = new ForumPostTemplateCollectionModel
             {
                 Name = collection.Name,
                 Key = collection.Key,
@@ -81,14 +81,9 @@ public class ReleaseCollectionForumPostRenderSource(
                     collection.PrimaryLanguageCode
                 ),
             },
-            Series = ToSeriesModel(collection.Series),
-            Releases = releases,
+            [SeriesVariableName] = ToSeriesModel(collection.Series),
+            [ReleasesVariablePath] = releaseScriptObjects,
         };
-
-        var scriptObject = new ScriptObject();
-
-        scriptObject.Import(renderModel, ForumPostTemplateVariableCatalog.ShouldExposeMember);
-        scriptObject[ReleasesVariablePath] = releaseScriptObjects;
 
         scriptObject[ImageLinksVariableName] = await imageLinkBuilder.BuildForCollectionAsync(
             entityId,
