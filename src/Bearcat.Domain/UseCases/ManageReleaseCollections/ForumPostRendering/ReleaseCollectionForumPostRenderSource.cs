@@ -37,19 +37,18 @@ public class ReleaseCollectionForumPostRenderSource(
             return null;
         }
 
-        var releases = new List<ForumPostTemplateCollectionReleaseModel>();
+        var uploadsByReleaseId = await uploadBuilder.BuildByReleaseIdAsync(
+            collection.Releases.Select(release => release.ReleaseId).ToList(),
+            cancellationToken
+        );
 
-        foreach (var release in collection.Releases)
-        {
-            var uploads = await uploadBuilder.BuildAsync(release.ReleaseId, cancellationToken);
-            releases.Add(
-                new ForumPostTemplateCollectionReleaseModel
-                {
-                    Name = release.Name,
-                    Uploads = uploads,
-                }
-            );
-        }
+        var releases = collection
+            .Releases.Select(release => new ForumPostTemplateCollectionReleaseModel
+            {
+                Name = release.Name,
+                Uploads = uploadsByReleaseId.GetValueOrDefault(release.ReleaseId, []),
+            })
+            .ToList();
 
         var renderModel = new ForumPostTemplateCollectionRenderModel
         {

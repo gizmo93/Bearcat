@@ -32,11 +32,12 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         );
         var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
         var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);
-        var renderSource = new ReleaseForumPostRenderSource(
+        var renderModelBuilder = new ReleaseForumPostRenderModelBuilder(
             releaseReadRepository,
             uploadBuilder,
             imageLinkBuilder
         );
+        var renderSource = new ReleaseForumPostRenderSource(renderModelBuilder);
 
         service = new ForumPostRenderService(forumPostTemplateRepository, [renderSource]);
     }

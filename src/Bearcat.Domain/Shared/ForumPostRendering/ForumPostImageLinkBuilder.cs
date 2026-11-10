@@ -34,13 +34,20 @@ public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
             ]
         );
 
-    public async Task<ScriptObject> BuildForReleaseAsync(
-        int releaseId,
+    public async Task<IReadOnlyDictionary<int, ScriptObject>> BuildForReleasesAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     )
     {
-        var imageLinks = await repository.GetReleaseImageLinksAsync(releaseId, cancellationToken);
-        return ToScriptObject(imageLinks);
+        var imageLinksByReleaseId = await repository.GetReleaseImageLinksByReleaseIdAsync(
+            releaseIds,
+            cancellationToken
+        );
+
+        return releaseIds.ToDictionary(
+            releaseId => releaseId,
+            releaseId => ToScriptObject(imageLinksByReleaseId.GetValueOrDefault(releaseId, []))
+        );
     }
 
     public async Task<ScriptObject> BuildForCollectionAsync(
