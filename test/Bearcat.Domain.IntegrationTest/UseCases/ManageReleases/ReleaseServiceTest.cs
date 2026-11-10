@@ -1,4 +1,4 @@
-using Bearcat.Abstractions;
+﻿using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
@@ -34,6 +34,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
     private Mock<IHosterFactory> hosterFactoryMock = null!;
+    private Mock<IMediaMetadataDatabaseFactory> metadataDatabaseFactoryMock = null!;
     private ReleaseService service = null!;
     private string tempRootPath = null!;
 
@@ -44,6 +45,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         Directory.CreateDirectory(tempRootPath);
         var timeProvider = CreateTimeProvider();
         hosterFactoryMock = new Mock<IHosterFactory>();
+        metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
         var unmanagedReleaseArchiveInitializer = new UnmanagedReleaseArchiveInitializationService(
             new RealArchiverFactory()
         );
@@ -56,10 +58,21 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             CreateReleaseFromFolderCreationService(
                 DbContext,
                 unmanagedReleaseArchiveInitializer,
+                metadataDatabaseFactoryMock.Object,
                 timeProvider
             ),
             new MirrorCoverageEvaluator(hosterFactoryMock.Object),
-            new LocalArchiveDeleter(Mock.Of<IFileSystemService>())
+            new LocalArchiveDeleter(Mock.Of<IFileSystemService>()),
+            new ReleaseCollectionInfoResolutionService(
+                new ReleaseCollectionInfoRepository(DbContext),
+                new MediaMetadataResolver(
+                    new MediaMetadataResolverRepository(DbContext, NoOpSecretProtector.Instance),
+                    metadataDatabaseFactoryMock.Object,
+                    NullLogger<MediaMetadataResolver>.Instance
+                ),
+                NullLogger<ReleaseCollectionInfoResolutionService>.Instance,
+                timeProvider
+            )
         );
     }
 
@@ -496,6 +509,81 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         release.UploadConfigs.Single().CollectionUploadSlotId.ShouldBe(uploadSlot.Id);
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_TemplateCreatesNewCollection_ResolvesCollectionMetadata()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var releaseTemplate = await DbContext.ReleaseTemplates.SingleAsync(template =>
+            template.Id == seed.ReleaseTemplateId
+        );
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        DbContext.MediaDatabaseRegistrations.Add(
+            new MediaDatabaseRegistration
+            {
+                MediaDatabaseClassName = "TvdbMetadataDatabase",
+                SerializedConfig = "{}",
+                IsActive = true,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+
+        var config = Mock.Of<IMediaMetadataDatabaseConfig>();
+        var database = new Mock<IMediaMetadataDatabase>();
+        database
+            .SetupGet(metadataDatabase => metadataDatabase.SupportedMediaKinds)
+            .Returns([MediaKind.TvSeries]);
+        database
+            .Setup(metadataDatabase => metadataDatabase.DeserializeConfig("{}"))
+            .Returns(config);
+        database
+            .Setup(metadataDatabase =>
+                metadataDatabase.GetByTitleAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup =>
+                        lookup.Title == "Hostage" && lookup.EpisodeNumber == null
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new MediaMetadata(
+                    Title: "Hostage",
+                    Description: "Series description",
+                    Genre: null,
+                    CoverUrl: "https://example.com/cover.jpg",
+                    DatabaseUrl: "https://example.com/series/hostage"
+                )
+            );
+        metadataDatabaseFactoryMock
+            .Setup(factory => factory.Get("TvdbMetadataDatabase"))
+            .Returns(database.Object);
+        var releaseFolderPath = CreateTemplateReleaseFolder(
+            "Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
+        );
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            releaseFolderPath,
+            null,
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var collection = await DbContext
+            .ReleaseCollections.Include(collection => collection.Metadata)
+            .SingleAsync(collection => collection.Releases.Any(release => release.Id == result));
+
+        collection.Metadata.ShouldNotBeNull();
+        collection.Metadata.Title.ShouldBe("Hostage");
+        collection.Metadata.CoverUrl.ShouldBe("https://example.com/cover.jpg");
+        collection.MetadataCheckedAt.ShouldNotBeNull();
     }
 
     [Test]
@@ -1693,6 +1781,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     private static ReleaseFromFolderCreationService CreateReleaseFromFolderCreationService(
         BearcatDbContext dbContext,
         UnmanagedReleaseArchiveInitializationService unmanagedReleaseArchiveInitializationService,
+        IMediaMetadataDatabaseFactory metadataDatabaseFactory,
         TimeProvider timeProvider
     )
     {
@@ -1736,7 +1825,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                             dbContext,
                             NoOpSecretProtector.Instance
                         ),
-                        new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
+                        metadataDatabaseFactory,
                         NullLogger<MediaMetadataResolver>.Instance
                     ),
                     nfoDatabaseFactory.Object,

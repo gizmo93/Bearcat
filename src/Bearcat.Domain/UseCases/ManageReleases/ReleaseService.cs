@@ -6,6 +6,7 @@ using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -23,7 +24,8 @@ public class ReleaseService(
     IReleaseFolderUsageRepository releaseFolderUsageRepository,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     MirrorCoverageEvaluator mirrorCoverageEvaluator,
-    LocalArchiveDeleter localArchiveDeleter
+    LocalArchiveDeleter localArchiveDeleter,
+    ReleaseCollectionInfoResolutionService releaseCollectionInfoResolutionService
 )
 {
     public async Task<int> CreateAsync(
@@ -444,8 +446,18 @@ public class ReleaseService(
             cancellationToken: cancellationToken
         );
 
+        var releaseCollectionIsNew = release.ReleaseCollection is { Id: 0 };
+
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        if (releaseCollectionIsNew)
+        {
+            await releaseCollectionInfoResolutionService.ResolveAsync(
+                release.ReleaseCollectionId!.Value,
+                cancellationToken
+            );
+        }
 
         return release.Id;
     }
