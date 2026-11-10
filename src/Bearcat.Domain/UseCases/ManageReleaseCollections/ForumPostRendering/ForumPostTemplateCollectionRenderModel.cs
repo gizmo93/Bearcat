@@ -42,6 +42,11 @@ public sealed record ForumPostTemplateCollectionModel
 
     [ForumPostTemplateVariable("Primary language name.")]
     public required string PrimaryLanguage { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Sum of release.main_video.size_bytes over all releases of the collection. Releases without a main video count as 0."
+    )]
+    public required long MainVideoTotalSizeBytes { get; init; }
 }
 
 public sealed record ForumPostTemplateCollectionUploadSlotModel

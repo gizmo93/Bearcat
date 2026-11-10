@@ -86,6 +86,7 @@ In Collectionvorlagen durchläufst du die Releases mit `{{~ for release in relea
 Auch die weiteren Releasedaten erreichst du hier über `release`: `release.release_info`,
 `release.classification`, `release.uploads`, `release.link_crypters` und `release.imagelinks`.
 `imagelinks` ohne `release.` enthält die Bildlinks der Collection.
+`collection.main_video_total_size_bytes` ist die Summe von `release.main_video.size_bytes` über alle Releases.
 
 ```text
 {{~ for release in releases ~}}

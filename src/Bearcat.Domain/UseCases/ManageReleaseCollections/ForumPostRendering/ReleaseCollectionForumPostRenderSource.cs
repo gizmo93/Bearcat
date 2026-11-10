@@ -82,6 +82,9 @@ public class ReleaseCollectionForumPostRenderSource(
                 PrimaryLanguage = ReleaseForumPostRenderModelBuilder.GetLanguageName(
                     collection.PrimaryLanguageCode
                 ),
+                MainVideoTotalSizeBytes = renderDataByReleaseId.Values.Sum(renderData =>
+                    renderData.RenderModel.Release.MainVideo.SizeBytes
+                ),
             },
             [SeriesVariableName] = ToSeriesModel(collection.Series),
             [ReleasesVariablePath] = releaseScriptObjects,

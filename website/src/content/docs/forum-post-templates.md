@@ -86,6 +86,7 @@ Use `release.name`, `release.nfo` and the other release fields just as you would
 The remaining release data is also under `release`: `release.release_info`, `release.classification`,
 `release.uploads`, `release.link_crypters` and `release.imagelinks`.
 `imagelinks` without `release.` contains the collection's image links.
+`collection.main_video_total_size_bytes` is the sum of `release.main_video.size_bytes` over all releases.
 
 ```text
 {{~ for release in releases ~}}

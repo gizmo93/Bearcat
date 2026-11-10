@@ -19,6 +19,10 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
+    private const string VideoMediaInfoJson = """
+        { "media": { "track": [ { "@type": "General", "Format": "Matroska" }, { "@type": "Video", "StreamOrder": "0", "Format": "AVC" } ] } }
+        """;
+
     private ForumPostRenderService service = null!;
 
     [SetUp]
@@ -222,7 +226,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 + ";{{ release.classification.title }}/{{ release.classification.resolution }}"
                 + "{{ for crypter in release.link_crypters }};{{ crypter.container_link }}{{ end }}"
                 + ";{{ release.imagelinks.cover.full }}"
-                + "{{ end }}|{{ imagelinks.cover.full }}",
+                + "{{ end }}|{{ imagelinks.cover.full }}"
+                + "|{{ collection.main_video_total_size_bytes }}",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -240,7 +245,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 + ";https://crypter.example/E01;https://img.example/E01.jpg"
                 + "|Bodies.2023.S01E02-GRP;E02 nfo;Bodies.2023.S01E02.Info;Bodies E02/2160p"
                 + ";https://crypter.example/E02;https://img.example/E02.jpg"
-                + "|"
+                + "||3000"
         );
     }
 
@@ -404,16 +409,17 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         );
 
         foreach (
-            var (episode, resolution) in new[]
+            var (episode, resolution, mainVideoSizeBytes) in new[]
             {
-                ("E02", ReleaseResolution.R2160p),
-                ("E01", ReleaseResolution.R1080p),
+                ("E02", ReleaseResolution.R2160p, 2000L),
+                ("E01", ReleaseResolution.R1080p, 1000L),
             }
         )
         {
             AddDetailedRelease(
                 episode: episode,
                 resolution: resolution,
+                mainVideoSizeBytes: mainVideoSizeBytes,
                 releaseGroup: releaseGroup,
                 collection: collection,
                 linkCrypterRegistration: linkCrypterRegistration,
@@ -429,6 +435,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     private void AddDetailedRelease(
         string episode,
         ReleaseResolution resolution,
+        long mainVideoSizeBytes,
         ReleaseGroup releaseGroup,
         ReleaseCollection collection,
         LinkCrypterRegistration linkCrypterRegistration,
@@ -460,6 +467,23 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 ParserVersion = 1,
                 ClassifiedAt = DateTime.UtcNow,
             },
+            MediaFiles =
+            [
+                new ReleaseMediaFile
+                {
+                    RelativePath = $"{episode}.mkv",
+                    SizeBytes = mainVideoSizeBytes,
+                    MediaInfoJson = VideoMediaInfoJson,
+                    MediaInfoText = string.Empty,
+                },
+                new ReleaseMediaFile
+                {
+                    RelativePath = $"{episode}.iso",
+                    SizeBytes = 5000,
+                    MediaInfoJson = "{}",
+                    MediaInfoText = string.Empty,
+                },
+            ],
         };
 
         var container = new LinkCrypterContainer
