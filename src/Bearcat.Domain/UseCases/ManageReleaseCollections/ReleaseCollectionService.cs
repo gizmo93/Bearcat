@@ -133,6 +133,19 @@ public class ReleaseCollectionService(
             releaseCollectionId,
             cancellationToken
         );
+
+        var releaseCount = await writeRepository.GetReleaseCountAsync(
+            releaseCollectionId: releaseCollectionId,
+            cancellationToken: cancellationToken
+        );
+
+        if (releaseCount > 0)
+        {
+            throw new InvalidOperationException(
+                "A release collection can only be deleted when no releases belong to it."
+            );
+        }
+
         writeRepository.Remove(releaseCollection);
 
         await writeRepository.SaveChangesAsync(cancellationToken);

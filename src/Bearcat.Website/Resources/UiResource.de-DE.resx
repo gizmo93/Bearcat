@@ -850,6 +850,10 @@
   <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Erstellt pro Release eine neue Uploadkonfiguration mit dem gewählten Hoster.</value></data>
   <data name="DeleteCollectionUploadSlot" xml:space="preserve"><value>Uploadslot löschen</value></data>
   <data name="DeleteCollectionUploadSlotConfirmation" xml:space="preserve"><value>Uploadslot {0} löschen? Dadurch werden {1} Uploadkonfigurationen, {2} Uploads und {3} erzeugte Containerlinks aus der Datenbank entfernt.</value></data>
+  <data name="DeleteReleaseCollection" xml:space="preserve"><value>Releasecollection löschen</value></data>
+  <data name="DeleteReleaseCollectionConfirmation" xml:space="preserve"><value>Releasecollection {0} löschen? Ihre Uploadslots, Bilduploadkonfigurationen und Veröffentlichungsorte werden ebenfalls entfernt.</value></data>
+  <data name="DeleteReleaseCollectionHasReleases" xml:space="preserve"><value>Entferne zuerst alle Releases aus dieser Collection, bevor du sie löschst.</value></data>
+  <data name="DeleteReleaseCollectionTitle" xml:space="preserve"><value>Releasecollection {0} löschen</value></data>
   <data name="NewCollectionUploadSlot" xml:space="preserve"><value>Neuer Uploadslot</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Aktionen für Releasecollections öffnen</value></data>
   <data name="PasswordPolicy" xml:space="preserve"><value>Passwortregel</value></data>

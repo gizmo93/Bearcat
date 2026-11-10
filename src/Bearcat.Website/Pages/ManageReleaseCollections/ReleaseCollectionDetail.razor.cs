@@ -359,6 +359,36 @@ public partial class ReleaseCollectionDetail(
         }
     }
 
+    private async Task DeleteReleaseCollectionAsync()
+    {
+        if (releaseCollection.Releases.Count > 0)
+        {
+            toastService.Error(L["DeleteReleaseCollectionHasReleases"]);
+            return;
+        }
+
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteReleaseCollectionTitle", releaseCollection.Name],
+            L["DeleteReleaseCollectionConfirmation", releaseCollection.Name],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        await operationRunner.RunAsync(
+            (ReleaseCollectionService service) => service.DeleteAsync(ReleaseCollectionId)
+        );
+        navigationManager.NavigateTo("/release-collections");
+    }
+
     private async Task ShowPostToForumDialogAsync()
     {
         var parameters = new Dictionary<string, object?>

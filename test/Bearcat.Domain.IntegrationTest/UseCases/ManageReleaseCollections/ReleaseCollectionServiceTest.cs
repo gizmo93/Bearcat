@@ -188,6 +188,24 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task DeleteAsync_CollectionHasReleases_ThrowsAndKeepsCollection()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+
+        // Act
+        var act = () => service.DeleteAsync(seed.CollectionId);
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidOperationException>();
+
+        DbContext.ChangeTracker.Clear();
+        var exists = await DbContext.ReleaseCollections.AnyAsync(c => c.Id == seed.CollectionId);
+
+        exists.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task UpdateMetadataAsync_CoverUrlChanged_UpdatesMetadataAndRemovesCompletedImageUploads()
     {
         // Arrange
