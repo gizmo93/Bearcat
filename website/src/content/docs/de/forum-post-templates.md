@@ -80,12 +80,12 @@ Ein vollständiges Beispiel mit NFO und Links von Linkcryptern:
 [/CENTER]
 ```
 
-Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases der Collection mit
-`{{~ for release in releases ~}}`. In der Schleife sind `release.name`, `release.nfo` und die anderen
-Werte unter `release` dieselben wie in Vorlagen für Releases. Werte, die dort auf oberster Ebene liegen,
-stehen unter `release`: `release.release_info`, `release.classification`, `release.uploads`,
-`release.link_crypters` und `release.imagelinks`. `imagelinks` ausserhalb der Schleife enthält die
-Bildlinks der Collection selbst.
+In Collectionvorlagen durchläufst du die Releases mit `{{~ for release in releases ~}}`.
+`release.name`, `release.nfo` und die anderen Releasefelder verwendest du wie in Releasevorlagen.
+
+Auch die weiteren Releasedaten erreichst du hier über `release`: `release.release_info`,
+`release.classification`, `release.uploads`, `release.link_crypters` und `release.imagelinks`.
+`imagelinks` ohne `release.` enthält die Bildlinks der Collection.
 
 ```text
 {{~ for release in releases ~}}
@@ -97,9 +97,10 @@ Bildlinks der Collection selbst.
 {{~ end ~}}
 ```
 
-`upload_slots` enthält die Uploadslots der Collection mit `upload_slot.name` und `upload_slot.key`.
-`upload_slot.link_crypters` enthält die Container des Slots, die die Links aller Releases im Slot
-sammeln.
+Mit einer Schleife über `upload_slots` durchläufst du die Uploadslots der Collection.
+`upload_slot.name` und `upload_slot.key` geben den Namen und Schlüssel des Slots aus.
+Über `upload_slot.link_crypters` greifst du auf seine Container zu. Sie enthalten die Links aller
+Releases in diesem Slot.
 
 ```text
 {{~ for upload_slot in upload_slots ~}}

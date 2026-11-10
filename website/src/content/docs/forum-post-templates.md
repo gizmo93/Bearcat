@@ -80,12 +80,12 @@ A complete example with NFO and link crypter links:
 [/CENTER]
 ```
 
-Collection templates work the same way. They loop over the collection's releases with
-`{{~ for release in releases ~}}`. Inside the loop, `release.name`, `release.nfo` and the other
-`release` values are the same as in release templates. Values that are top level in release templates
-are under `release`: `release.release_info`, `release.classification`, `release.uploads`,
-`release.link_crypters` and `release.imagelinks`. `imagelinks` outside the loop contains the
-collection's own image links.
+In collection templates, loop over the releases with `{{~ for release in releases ~}}`.
+Use `release.name`, `release.nfo` and the other release fields just as you would in release templates.
+
+The remaining release data is also under `release`: `release.release_info`, `release.classification`,
+`release.uploads`, `release.link_crypters` and `release.imagelinks`.
+`imagelinks` without `release.` contains the collection's image links.
 
 ```text
 {{~ for release in releases ~}}
@@ -97,9 +97,10 @@ collection's own image links.
 {{~ end ~}}
 ```
 
-`upload_slots` lists the collection's upload slots with `upload_slot.name` and `upload_slot.key`.
-`upload_slot.link_crypters` holds the slot's collection containers, which bundle the links of all
-releases in the slot.
+Loop over `upload_slots` to access the collection's upload slots.
+`upload_slot.name` and `upload_slot.key` give you each slot's name and key.
+Use `upload_slot.link_crypters` to access its containers. They contain the links of all releases
+in that slot.
 
 ```text
 {{~ for upload_slot in upload_slots ~}}
