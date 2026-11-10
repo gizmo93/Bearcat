@@ -97,6 +97,19 @@ Bildlinks der Collection selbst.
 {{~ end ~}}
 ```
 
+`upload_slots` enthält die Uploadslots der Collection mit `upload_slot.name` und `upload_slot.key`.
+`upload_slot.link_crypters` enthält die Container des Slots, die die Links aller Releases im Slot
+sammeln.
+
+```text
+{{~ for upload_slot in upload_slots ~}}
+[B]{{ upload_slot.name }}[/B]
+{{~ for crypter in upload_slot.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
+
 ### Ein Link für alle Hoster
 
 Mit `link_crypters` greifst du auf die Container für **Release (alle Hoster als Mirrors)** zu.

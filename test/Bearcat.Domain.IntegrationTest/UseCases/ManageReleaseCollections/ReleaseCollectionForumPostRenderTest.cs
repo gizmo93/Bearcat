@@ -115,6 +115,69 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     }
 
     [Test]
+    public async Task RenderAsync_CollectionTemplateLoopsUploadSlots_RendersCollectionContainerLinksPerSlot()
+    {
+        // Arrange
+        var collection = await AddCollectionWithImageUploadAsync();
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = "filecrypt",
+            LinkCrypterClassName = "FileCrypt",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+
+        var germanSlot = new CollectionUploadSlot
+        {
+            ReleaseCollection = collection,
+            Name = "German",
+            Key = "german",
+        };
+
+        var englishSlot = new CollectionUploadSlot
+        {
+            ReleaseCollection = collection,
+            Name = "English",
+            Key = "english",
+        };
+
+        var container = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.ReleaseCollection,
+            CollectionUploadSlot = germanSlot,
+            LinkCrypterRegistration = linkCrypterRegistration,
+            ContainerUrl = "https://filecrypt.example/season",
+            Password = "crypterpw",
+            State = LinkCrypterContainerState.Created,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        var template = new ForumPostTemplate
+        {
+            Name = "Collection upload slots template",
+            Type = ForumPostTemplateType.ReleaseCollection,
+            TemplateBody =
+                "{{ for upload_slot in upload_slots }}|{{ upload_slot.name }}/{{ upload_slot.key }}"
+                + "{{ for crypter in upload_slot.link_crypters }}[{{ crypter.name }}:{{ crypter.password }}:{{ crypter.container_link }}]"
+                + "{{ end }}{{ end }}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.AddRange(linkCrypterRegistration, germanSlot, englishSlot, container, template);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe(
+            "|English/english|German/german[filecrypt:crypterpw:https://filecrypt.example/season]"
+        );
+    }
+
+    [Test]
     public async Task RenderAsync_TemplateUsesPrimaryLanguage_RendersNativeLanguageName()
     {
         var collection = await AddCollectionWithImageUploadAsync();
@@ -182,7 +245,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     }
 
     [Test]
-    public void GetVariables_CollectionType_ContainsPerReleaseVariablesIncludingImageLinks()
+    public void GetVariables_CollectionType_ContainsPerReleaseAndUploadSlotVariablesIncludingImageLinks()
     {
         // Act
         var variables = service.GetVariables(ForumPostTemplateType.ReleaseCollection);
@@ -215,6 +278,17 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             .Children.Select(node => node.Insertion?.Text)
             .ShouldContain("{{ release.imagelinks.<image_upload_config_name>.full }}");
 
+        var uploadSlotsVariable = variables.Single(node => node.Name == "upload_slots");
+        uploadSlotsVariable.LoopStatement.ShouldBe("for upload_slot in upload_slots");
+
+        uploadSlotsVariable
+            .Children.Select(node => node.Path)
+            .ShouldBe(["upload_slot.name", "upload_slot.key", "upload_slot.link_crypters"]);
+
+        uploadSlotsVariable
+            .Children.Single(node => node.Path == "upload_slot.link_crypters")
+            .LoopStatement.ShouldBe("for crypter in upload_slot.link_crypters");
+
         variables
             .Single(node => node.Path == "imagelinks")
             .Children.Select(node => node.Insertion?.Text)
@@ -238,7 +312,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         previewData.ShouldNotBeNull();
         previewData
             .DataNodes.Select(node => node.Name)
-            .ShouldBe(["collection", "series", "releases", "imagelinks"]);
+            .ShouldBe(["collection", "series", "releases", "upload_slots", "imagelinks"]);
         var firstRelease = previewData
             .DataNodes.Single(node => node.Name == "releases")
             .Children.Single();

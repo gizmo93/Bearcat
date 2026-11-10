@@ -18,6 +18,8 @@ public class ReleaseCollectionForumPostRenderSource(
 
     private const string ReleasesVariablePath = "releases";
 
+    private const string UploadSlotsVariableName = "upload_slots";
+
     private const string ReleaseImageLinksVariablePath = "release.imagelinks";
 
     private const string ImageLinksVariableName = "imagelinks";
@@ -83,6 +85,7 @@ public class ReleaseCollectionForumPostRenderSource(
             },
             [SeriesVariableName] = ToSeriesModel(collection.Series),
             [ReleasesVariablePath] = releaseScriptObjects,
+            [UploadSlotsVariableName] = collection.UploadSlots.Select(ToUploadSlotModel).ToList(),
         };
 
         scriptObject[ImageLinksVariableName] = await imageLinkBuilder.BuildForCollectionAsync(
@@ -133,6 +136,20 @@ public class ReleaseCollectionForumPostRenderSource(
             Classification = renderModel.Classification,
             Uploads = renderModel.Uploads,
             LinkCrypters = renderModel.LinkCrypters,
+        };
+    }
+
+    private static ForumPostTemplateCollectionUploadSlotModel ToUploadSlotModel(
+        CollectionForumPostUploadSlotReadModel uploadSlot
+    )
+    {
+        return new ForumPostTemplateCollectionUploadSlotModel
+        {
+            Name = uploadSlot.Name,
+            Key = uploadSlot.Key,
+            LinkCrypters = uploadSlot
+                .LinkCrypters.Select(ReleaseForumPostUploadBuilder.ToLinkCrypterModel)
+                .ToList(),
         };
     }
 

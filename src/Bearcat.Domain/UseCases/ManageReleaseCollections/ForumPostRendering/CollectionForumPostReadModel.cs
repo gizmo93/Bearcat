@@ -6,7 +6,8 @@ public record CollectionForumPostReadModel(
     string ReleaseGroupName,
     string? PrimaryLanguageCode,
     CollectionForumPostSeriesReadModel? Series,
-    IReadOnlyList<int> ReleaseIds
+    IReadOnlyList<int> ReleaseIds,
+    IReadOnlyList<CollectionForumPostUploadSlotReadModel> UploadSlots
 );
 
 public record CollectionForumPostSeriesReadModel(

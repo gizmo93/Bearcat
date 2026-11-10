@@ -97,6 +97,19 @@ collection's own image links.
 {{~ end ~}}
 ```
 
+`upload_slots` lists the collection's upload slots with `upload_slot.name` and `upload_slot.key`.
+`upload_slot.link_crypters` holds the slot's collection containers, which bundle the links of all
+releases in the slot.
+
+```text
+{{~ for upload_slot in upload_slots ~}}
+[B]{{ upload_slot.name }}[/B]
+{{~ for crypter in upload_slot.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
+
 ### One link for all hosters
 
 Use `link_crypters` to access the containers for **Release (all hosters as mirrors)**.

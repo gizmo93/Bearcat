@@ -20,6 +20,13 @@ public sealed record ForumPostTemplateCollectionRenderModel
         ElementType = typeof(ForumPostTemplateCollectionReleaseModel)
     )]
     public required IReadOnlyList<ForumPostTemplateCollectionReleaseModel> Releases { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Loop over the upload slots of the collection.",
+        LoopVariable = "upload_slot",
+        ElementType = typeof(ForumPostTemplateCollectionUploadSlotModel)
+    )]
+    public required IReadOnlyList<ForumPostTemplateCollectionUploadSlotModel> UploadSlots { get; init; }
 }
 
 public sealed record ForumPostTemplateCollectionModel
@@ -35,6 +42,22 @@ public sealed record ForumPostTemplateCollectionModel
 
     [ForumPostTemplateVariable("Primary language name.")]
     public required string PrimaryLanguage { get; init; }
+}
+
+public sealed record ForumPostTemplateCollectionUploadSlotModel
+{
+    [ForumPostTemplateVariable("Upload slot name.")]
+    public required string Name { get; init; }
+
+    [ForumPostTemplateVariable("Upload slot key.")]
+    public required string Key { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Loop over the link crypter containers of the upload slot. These are the collection containers that bundle the links of all releases of the slot. One entry per link crypter.",
+        LoopVariable = "crypter",
+        ElementType = typeof(ForumPostTemplateLinkCrypterModel)
+    )]
+    public required IReadOnlyList<ForumPostTemplateLinkCrypterModel> LinkCrypters { get; init; }
 }
 
 public sealed record ForumPostTemplateSeriesModel

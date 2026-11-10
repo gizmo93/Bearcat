@@ -66,7 +66,7 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
         };
     }
 
-    private static ForumPostTemplateLinkCrypterModel ToLinkCrypterModel(
+    public static ForumPostTemplateLinkCrypterModel ToLinkCrypterModel(
         ReleaseForumPostLinkCrypterReadModel linkCrypter
     )
     {
