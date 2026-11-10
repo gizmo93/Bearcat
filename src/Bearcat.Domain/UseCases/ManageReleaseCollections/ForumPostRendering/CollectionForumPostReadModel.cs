@@ -6,7 +6,7 @@ public record CollectionForumPostReadModel(
     string ReleaseGroupName,
     string? PrimaryLanguageCode,
     CollectionForumPostSeriesReadModel? Series,
-    IReadOnlyList<CollectionForumPostReleaseReadModel> Releases
+    IReadOnlyList<int> ReleaseIds
 );
 
 public record CollectionForumPostSeriesReadModel(
@@ -15,5 +15,3 @@ public record CollectionForumPostSeriesReadModel(
     string? CoverUrl,
     string? MetadataDatabaseUrl
 );
-
-public record CollectionForumPostReleaseReadModel(int ReleaseId, string Name);

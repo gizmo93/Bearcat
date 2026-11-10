@@ -81,7 +81,21 @@ Ein vollständiges Beispiel mit NFO und Links von Linkcryptern:
 ```
 
 Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases der Collection mit
-`{{~ for release in releases ~}}`.
+`{{~ for release in releases ~}}`. In der Schleife sind `release.name`, `release.nfo` und die anderen
+Werte unter `release` dieselben wie in Vorlagen für Releases. Werte, die dort auf oberster Ebene liegen,
+stehen unter `release`: `release.release_info`, `release.classification`, `release.uploads`,
+`release.link_crypters` und `release.imagelinks`. `imagelinks` ausserhalb der Schleife enthält die
+Bildlinks der Collection selbst.
+
+```text
+{{~ for release in releases ~}}
+[B]{{ release.name }}[/B]
+[IMG]{{ release.imagelinks.cover.full }}[/IMG]
+{{~ for crypter in release.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
 
 ### Ein Link für alle Hoster
 

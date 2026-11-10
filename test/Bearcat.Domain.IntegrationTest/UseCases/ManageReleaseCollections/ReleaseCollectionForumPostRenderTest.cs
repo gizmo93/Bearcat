@@ -6,6 +6,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -35,12 +36,18 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 == Mock.Of<IHoster>(hoster => hoster.Name == "Rapidgator")
             )
         );
-        var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
         var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);
+
+        var releaseRenderModelBuilder = new ReleaseForumPostRenderModelBuilder(
+            releaseReadRepository: releaseReadRepository,
+            uploadBuilder: new ReleaseForumPostUploadBuilder(releaseReadRepository),
+            imageLinkBuilder: imageLinkBuilder
+        );
+
         var collectionSource = new ReleaseCollectionForumPostRenderSource(
-            new ReleaseCollectionForumPostRepository(DbContext),
-            uploadBuilder,
-            imageLinkBuilder
+            repository: new ReleaseCollectionForumPostRepository(DbContext),
+            releaseRenderModelBuilder: releaseRenderModelBuilder,
+            imageLinkBuilder: imageLinkBuilder
         );
 
         service = new ForumPostRenderService(
@@ -137,6 +144,84 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     }
 
     [Test]
+    public async Task RenderAsync_CollectionTemplateUsesPerReleaseData_RendersOwnDataOfEachRelease()
+    {
+        // Arrange
+        var collection = await AddCollectionWithTwoDetailedReleasesAsync();
+        var template = new ForumPostTemplate
+        {
+            Name = "Collection per release template",
+            Type = ForumPostTemplateType.ReleaseCollection,
+            TemplateBody =
+                "{{ for release in releases }}|{{ release.name }}"
+                + ";{{ release.nfo }}"
+                + ";{{ release.release_info.release_name }}"
+                + ";{{ release.classification.title }}/{{ release.classification.resolution }}"
+                + "{{ for crypter in release.link_crypters }};{{ crypter.container_link }}{{ end }}"
+                + ";{{ release.imagelinks.cover.full }}"
+                + "{{ end }}|{{ imagelinks.cover.full }}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe(
+            "|Bodies.2023.S01E01-GRP;E01 nfo;Bodies.2023.S01E01.Info;Bodies E01/1080p"
+                + ";https://crypter.example/E01;https://img.example/E01.jpg"
+                + "|Bodies.2023.S01E02-GRP;E02 nfo;Bodies.2023.S01E02.Info;Bodies E02/2160p"
+                + ";https://crypter.example/E02;https://img.example/E02.jpg"
+                + "|"
+        );
+    }
+
+    [Test]
+    public void GetVariables_CollectionType_ContainsPerReleaseVariablesIncludingImageLinks()
+    {
+        // Act
+        var variables = service.GetVariables(ForumPostTemplateType.ReleaseCollection);
+
+        // Assert
+        var releasesVariable = variables.Single(node => node.Name == "releases");
+        releasesVariable.LoopStatement.ShouldBe("for release in releases");
+
+        releasesVariable
+            .Children.Select(node => node.Path)
+            .ShouldBe([
+                "release.name",
+                "release.primary_language",
+                "release.nfo",
+                "release.steam_app_id",
+                "release.steam_url",
+                "release.imdb_id",
+                "release.imdb_url",
+                "release.main_video",
+                "release.media_files",
+                "release.release_info",
+                "release.classification",
+                "release.uploads",
+                "release.link_crypters",
+                "release.imagelinks",
+            ]);
+
+        releasesVariable
+            .Children.Single(node => node.Path == "release.imagelinks")
+            .Children.Select(node => node.Insertion?.Text)
+            .ShouldContain("{{ release.imagelinks.<image_upload_config_name>.full }}");
+
+        variables
+            .Single(node => node.Path == "imagelinks")
+            .Children.Select(node => node.Insertion?.Text)
+            .ShouldContain("{{ imagelinks.<image_upload_config_name>.full }}");
+    }
+
+    [Test]
     public async Task LoadPreviewDataAsync_ExistingCollection_ReturnsDataNodesAndRendersPreview()
     {
         // Arrange
@@ -161,6 +246,26 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         firstRelease
             .Children.Single(node => node.Name == "name")
             .Value.ShouldBe("Bodies.2023.S01E01-GRP");
+
+        firstRelease
+            .Children.Select(node => node.Name)
+            .ShouldBe([
+                "name",
+                "primary_language",
+                "nfo",
+                "steam_app_id",
+                "steam_url",
+                "imdb_id",
+                "imdb_url",
+                "main_video",
+                "media_files",
+                "release_info",
+                "classification",
+                "uploads",
+                "link_crypters",
+                "imagelinks",
+            ]);
+
         var renderResult = await ForumPostRenderService.RenderPreviewAsync(
             previewData,
             "{{ series.title }}{{ for release in releases }}|{{ release.name }}{{ end }}"
@@ -181,6 +286,143 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
 
         // Assert
         previewData.ShouldBeNull();
+    }
+
+    private async Task<ReleaseCollection> AddCollectionWithTwoDetailedReleasesAsync()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = $"Release group {Guid.NewGuid():N}",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+            Releases = [],
+        };
+
+        var collection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = $"key-{Guid.NewGuid():N}",
+            Name = "Bodies.2023.S01.German.DL.1080p",
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = "filecrypt",
+            LinkCrypterClassName = "FileCrypt",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = "ImgBB",
+            ImageHosterClassName = "ImgBb",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+
+        DbContext.AddRange(
+            releaseGroup,
+            collection,
+            linkCrypterRegistration,
+            imageHosterRegistration
+        );
+
+        foreach (
+            var (episode, resolution) in new[]
+            {
+                ("E02", ReleaseResolution.R2160p),
+                ("E01", ReleaseResolution.R1080p),
+            }
+        )
+        {
+            AddDetailedRelease(
+                episode: episode,
+                resolution: resolution,
+                releaseGroup: releaseGroup,
+                collection: collection,
+                linkCrypterRegistration: linkCrypterRegistration,
+                imageHosterRegistration: imageHosterRegistration
+            );
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        return collection;
+    }
+
+    private void AddDetailedRelease(
+        string episode,
+        ReleaseResolution resolution,
+        ReleaseGroup releaseGroup,
+        ReleaseCollection collection,
+        LinkCrypterRegistration linkCrypterRegistration,
+        ImageHosterRegistration imageHosterRegistration
+    )
+    {
+        var release = new Release
+        {
+            Name = $"Bodies.2023.S01{episode}-GRP",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = $"/tmp/bodies-s01{episode}",
+            ReleaseGroup = releaseGroup,
+            ReleaseCollection = collection,
+            ReleaseNfo = new ReleaseNfo { FileName = $"{episode}.nfo", Content = $"{episode} nfo" },
+            ReleaseInfo = new ReleaseInfo
+            {
+                NfoDatabaseClassName = "XrelNfoDatabase",
+                ReleaseName = $"Bodies.2023.S01{episode}.Info",
+                ExternalInfos = [],
+            },
+            Classification = new ReleaseClassification
+            {
+                Title = $"Bodies {episode}",
+                ContentType = ReleaseContentType.TvShowEpisode,
+                ContentTypeSource = ClassificationSource.ReleaseName,
+                Resolution = resolution,
+                ResolutionSource = ClassificationSource.ReleaseName,
+                ParserVersion = 1,
+                ClassifiedAt = DateTime.UtcNow,
+            },
+        };
+
+        var container = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.ReleaseAllHosters,
+            Release = release,
+            LinkCrypterRegistration = linkCrypterRegistration,
+            ContainerUrl = $"https://crypter.example/{episode}",
+            State = LinkCrypterContainerState.Created,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            Release = release,
+            Name = "Cover",
+            ImageHosterRegistration = imageHosterRegistration,
+            ImageUploads = [],
+        };
+
+        var imageUpload = new ImageUpload
+        {
+            ImageUploadConfig = imageUploadConfig,
+            CreatedAt = DateTime.UtcNow.AddMinutes(-5),
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            ImageUrls =
+            [
+                new ImageUploadUrl
+                {
+                    ImageSize = ImageSize.Full,
+                    Url = $"https://img.example/{episode}.jpg",
+                },
+            ],
+        };
+
+        DbContext.AddRange(release, container, imageUploadConfig, imageUpload);
     }
 
     private async Task<ReleaseCollection> AddCollectionWithImageUploadAsync()

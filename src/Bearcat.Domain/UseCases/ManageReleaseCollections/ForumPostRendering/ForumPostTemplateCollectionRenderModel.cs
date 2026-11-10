@@ -1,4 +1,5 @@
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 
@@ -65,10 +66,51 @@ public sealed record ForumPostTemplateCollectionReleaseModel
     [ForumPostTemplateVariable("Release name.")]
     public required string Name { get; init; }
 
+    [ForumPostTemplateVariable("Primary language name.")]
+    public required string PrimaryLanguage { get; init; }
+
+    [ForumPostTemplateVariable("Stored NFO content for the release.")]
+    public required string Nfo { get; init; }
+
+    [ForumPostTemplateVariable("Steam app id, e.g. 1172710.")]
+    public required string SteamAppId { get; init; }
+
+    [ForumPostTemplateVariable("Steam store page URL.")]
+    public required string SteamUrl { get; init; }
+
+    [ForumPostTemplateVariable("IMDb id, e.g. tt0133093.")]
+    public required string ImdbId { get; init; }
+
+    [ForumPostTemplateVariable("IMDb title URL.")]
+    public required string ImdbUrl { get; init; }
+
+    [ForumPostTemplateVariable("Main video file (largest video file).", IncludeChildren = true)]
+    public required ForumPostTemplateMediaFileModel MainVideo { get; init; }
+
     [ForumPostTemplateVariable(
-        "Loop over upload configurations of the release.",
+        "Loop over all extracted media files.",
+        LoopVariable = "file",
+        ElementType = typeof(ForumPostTemplateMediaFileModel)
+    )]
+    public required IReadOnlyList<ForumPostTemplateMediaFileModel> MediaFiles { get; init; }
+
+    [ForumPostTemplateVariable("First resolved release info.", IncludeChildren = true)]
+    public required ForumPostTemplateReleaseInfoModel ReleaseInfo { get; init; }
+
+    [ForumPostTemplateVariable("Parsed release classification.", IncludeChildren = true)]
+    public required ForumPostTemplateClassificationModel Classification { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Loop over upload configurations.",
         LoopVariable = "upload",
         ElementType = typeof(ForumPostTemplateUploadModel)
     )]
     public required IReadOnlyList<ForumPostTemplateUploadModel> Uploads { get; init; }
+
+    [ForumPostTemplateVariable(
+        "Loop over link crypter containers that contain all hosters of the release as mirrors (container scope \"Release (all hosters as mirrors)\"). One entry per link crypter, so a post can show a single download link.",
+        LoopVariable = "crypter",
+        ElementType = typeof(ForumPostTemplateLinkCrypterModel)
+    )]
+    public required IReadOnlyList<ForumPostTemplateLinkCrypterModel> LinkCrypters { get; init; }
 }

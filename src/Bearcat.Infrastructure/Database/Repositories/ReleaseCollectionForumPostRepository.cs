@@ -36,11 +36,11 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
             return null;
         }
 
-        var releases = await dbRead
+        var releaseIds = await dbRead
             .Releases.Where(release => release.ReleaseCollectionId == releaseCollectionId)
             .OrderBy(release => release.Name)
             .ThenBy(release => release.Id)
-            .Select(release => new CollectionForumPostReleaseReadModel(release.Id, release.Name))
+            .Select(release => release.Id)
             .ToListAsync(cancellationToken);
 
         return new CollectionForumPostReadModel(
@@ -49,7 +49,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
             ReleaseGroupName: collection.ReleaseGroupName,
             PrimaryLanguageCode: collection.PrimaryLanguageCode,
             Series: collection.Series,
-            Releases: releases
+            ReleaseIds: releaseIds
         );
     }
 }

@@ -81,7 +81,21 @@ A complete example with NFO and link crypter links:
 ```
 
 Collection templates work the same way. They loop over the collection's releases with
-`{{~ for release in releases ~}}`.
+`{{~ for release in releases ~}}`. Inside the loop, `release.name`, `release.nfo` and the other
+`release` values are the same as in release templates. Values that are top level in release templates
+are under `release`: `release.release_info`, `release.classification`, `release.uploads`,
+`release.link_crypters` and `release.imagelinks`. `imagelinks` outside the loop contains the
+collection's own image links.
+
+```text
+{{~ for release in releases ~}}
+[B]{{ release.name }}[/B]
+[IMG]{{ release.imagelinks.cover.full }}[/IMG]
+{{~ for crypter in release.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
 
 ### One link for all hosters
 

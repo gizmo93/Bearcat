@@ -5,34 +5,37 @@ namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
 {
-    public static ForumPostTemplateVariableNode VariableNode { get; } =
-        ForumPostTemplateVariableNode.CreateObjectNode(
-            "imagelinks",
-            "imagelinks",
-            "Image URLs by image upload configuration name.",
+    public static ForumPostTemplateVariableNode CreateVariableNode(string path)
+    {
+        return ForumPostTemplateVariableNode.CreateObjectNode(
+            name: "imagelinks",
+            path: path,
+            description: "Image URLs by image upload configuration name.",
+            children:
             [
                 ForumPostTemplateVariableNode.CreateValueNode(
-                    "<image_upload_config_name>.full",
-                    "imagelinks.<image_upload_config_name>.full",
-                    "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
+                    name: "<image_upload_config_name>.full",
+                    path: $"{path}.<image_upload_config_name>.full",
+                    description: "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
                 ),
                 ForumPostTemplateVariableNode.CreateValueNode(
-                    "<image_upload_config_name>.medium",
-                    "imagelinks.<image_upload_config_name>.medium",
-                    "Medium image URL by image upload configuration name."
+                    name: "<image_upload_config_name>.medium",
+                    path: $"{path}.<image_upload_config_name>.medium",
+                    description: "Medium image URL by image upload configuration name."
                 ),
                 ForumPostTemplateVariableNode.CreateValueNode(
-                    "<image_upload_config_name>.thumbnail",
-                    "imagelinks.<image_upload_config_name>.thumbnail",
-                    "Thumbnail image URL by image upload configuration name."
+                    name: "<image_upload_config_name>.thumbnail",
+                    path: $"{path}.<image_upload_config_name>.thumbnail",
+                    description: "Thumbnail image URL by image upload configuration name."
                 ),
                 ForumPostTemplateVariableNode.CreateValueNode(
-                    "[\"Image Upload Config Name\"].full",
-                    "imagelinks[\"Image Upload Config Name\"].full",
-                    "Full image URL using the original image upload configuration name."
+                    name: "[\"Image Upload Config Name\"].full",
+                    path: $"{path}[\"Image Upload Config Name\"].full",
+                    description: "Full image URL using the original image upload configuration name."
                 ),
             ]
         );
+    }
 
     public async Task<IReadOnlyDictionary<int, ScriptObject>> BuildForReleasesAsync(
         IReadOnlyList<int> releaseIds,

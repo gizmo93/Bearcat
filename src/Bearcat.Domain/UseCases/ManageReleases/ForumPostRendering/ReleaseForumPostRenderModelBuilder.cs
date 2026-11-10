@@ -190,7 +190,7 @@ public class ReleaseForumPostRenderModelBuilder(
         return name.Length > 1 && name[0] == 'R' && char.IsDigit(name[1]) ? name[1..] : name;
     }
 
-    private static string GetLanguageName(string? languageCode)
+    public static string GetLanguageName(string? languageCode)
     {
         if (string.IsNullOrWhiteSpace(languageCode))
         {
