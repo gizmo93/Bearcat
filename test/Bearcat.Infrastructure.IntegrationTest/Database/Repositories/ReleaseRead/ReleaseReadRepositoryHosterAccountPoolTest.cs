@@ -182,7 +182,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_HosterAccountPoolConfig_ReturnsDisplayNameOfPoolHoster()
+    public async Task GetForumPostUploadsByReleaseIdAsync_HosterAccountPoolConfig_ReturnsDisplayNameOfPoolHoster()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.ForumPool.2026-GRP");
@@ -192,7 +192,12 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = uploadsByReleaseId[release.Id];
 
         // Assert
         result
@@ -204,7 +209,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_HosterAccountPoolUploadWithAssignedAccount_ReturnsHosterNameAndAccountName()
+    public async Task GetForumPostUploadsByReleaseIdAsync_HosterAccountPoolUploadWithAssignedAccount_ReturnsHosterNameAndAccountName()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.ForumPoolAccount.2026-GRP");
@@ -217,7 +222,12 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = uploadsByReleaseId[release.Id];
 
         // Assert
         var forumPostUpload = result.ShouldHaveSingleItem();
@@ -226,7 +236,7 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_PendingHosterAccountPoolUploadWithoutAccount_ReturnsHosterNameAndEmptyAccountName()
+    public async Task GetForumPostUploadsByReleaseIdAsync_PendingHosterAccountPoolUploadWithoutAccount_ReturnsHosterNameAndEmptyAccountName()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.ForumPoolPending.2026-GRP");
@@ -236,7 +246,12 @@ public class ReleaseReadRepositoryHosterAccountPoolTest(DatabaseProvider databas
         DbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = uploadsByReleaseId[release.Id];
 
         // Assert
         var forumPostUpload = result.ShouldHaveSingleItem();

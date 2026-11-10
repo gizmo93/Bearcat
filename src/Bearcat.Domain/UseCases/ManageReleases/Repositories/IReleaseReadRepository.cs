@@ -30,6 +30,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyDictionary<int, ReleaseReadModel>> GetReleasesByIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<UnmanagedArchiveFolderReadModel>> GetUnmanagedArchiveFoldersAsync(
         int releaseId,
         CancellationToken cancellationToken = default
@@ -63,8 +68,18 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyDictionary<int, ReleaseInfoReadModel>> GetReleaseInfosByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task<ReleaseMetadataReadModel?> GetReleaseMetadataAsync(
         int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyDictionary<int, ReleaseMetadataReadModel>> GetReleaseMetadataByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     );
 
@@ -73,8 +88,20 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyDictionary<int, ReleaseNfoReadModel>> GetReleaseNfosByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ReleaseExternalIdentifierReadModel>> GetReleaseExternalIdentifiersAsync(
         int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ReleaseExternalIdentifierReadModel>>
+    > GetReleaseExternalIdentifiersByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     );
 
@@ -83,8 +110,22 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ReleaseMediaFileReadModel>>
+    > GetMediaFilesByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task<ReleaseClassificationReadModel?> GetClassificationAsync(
         int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<
+        IReadOnlyDictionary<int, ReleaseClassificationReadModel>
+    > GetClassificationsByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     );
 

@@ -80,8 +80,37 @@ A complete example with NFO and link crypter links:
 [/CENTER]
 ```
 
-Collection templates work the same way. They loop over the collection's releases with
-`{{~ for release in releases ~}}`.
+In collection templates, loop over the releases with `{{~ for release in releases ~}}`.
+Use `release.name`, `release.nfo` and the other release fields just as you would in release templates.
+
+The remaining release data is also under `release`: `release.release_info`, `release.classification`,
+`release.uploads`, `release.link_crypters` and `release.imagelinks`.
+`imagelinks` without `release.` contains the collection's image links.
+`collection.main_video_total_size_bytes` is the sum of `release.main_video.size_bytes` over all releases.
+
+```text
+{{~ for release in releases ~}}
+[B]{{ release.name }}[/B]
+[IMG]{{ release.imagelinks.cover.full }}[/IMG]
+{{~ for crypter in release.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
+
+Loop over `upload_slots` to access the collection's upload slots.
+`upload_slot.name` and `upload_slot.key` give you each slot's name and key.
+Use `upload_slot.link_crypters` to access its containers. They contain the links of all releases
+in that slot.
+
+```text
+{{~ for upload_slot in upload_slots ~}}
+[B]{{ upload_slot.name }}[/B]
+{{~ for crypter in upload_slot.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
 
 ### One link for all hosters
 

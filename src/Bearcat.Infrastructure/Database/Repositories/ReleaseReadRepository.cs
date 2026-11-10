@@ -230,10 +230,19 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
+        var releasesById = await GetReleasesByIdAsync([releaseId], cancellationToken);
+        return releasesById.GetValueOrDefault(releaseId);
+    }
+
+    public async Task<IReadOnlyDictionary<int, ReleaseReadModel>> GetReleasesByIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
         return await dbRead
-            .Releases.Where(r => r.Id == releaseId)
+            .Releases.Where(r => EF.Parameter(releaseIds).Contains(r.Id))
             .Select(ToReleaseReadModel())
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .ToDictionaryAsync(release => release.ReleaseId, cancellationToken);
     }
 
     public async Task<
@@ -607,17 +616,20 @@ public class ReleaseReadRepository(
         );
     }
 
-    public async Task<IReadOnlyList<ReleaseForumPostUploadReadModel>> GetForumPostUploadsAsync(
-        int releaseId,
+    public async Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ReleaseForumPostUploadReadModel>>
+    > GetForumPostUploadsByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     )
     {
         var uploadConfigs = await dbRead
-            .UploadConfigs.Where(c => c.ReleaseId == releaseId)
+            .UploadConfigs.Where(c => EF.Parameter(releaseIds).Contains(c.ReleaseId))
             .OrderBy(c => c.Name)
             .ThenBy(c => c.Id)
             .Select(c => new
             {
+                c.ReleaseId,
                 UploadConfigId = c.Id,
                 UploadConfigName = c.Name,
                 c.UploadSource,
@@ -642,7 +654,7 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken: cancellationToken);
 
         var latestUploads = await dbRead
-            .Uploads.Where(u => u.UploadConfig.ReleaseId == releaseId)
+            .Uploads.Where(u => EF.Parameter(releaseIds).Contains(u.UploadConfig.ReleaseId))
             .GroupBy(u => u.UploadConfigId)
             .Select(g =>
                 g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
@@ -681,9 +693,7 @@ public class ReleaseReadRepository(
         if (uploadIds.Count > 0)
         {
             var directLinks = await dbRead
-                .UploadedFiles.Where(f =>
-                    uploadIds.Contains(f.UploadId) && f.Upload.UploadConfig.ReleaseId == releaseId
-                )
+                .UploadedFiles.Where(f => EF.Parameter(uploadIds).Contains(f.UploadId))
                 .OrderBy(f =>
                     f.ArchiveFile != null ? f.ArchiveFile.FullFileName : f.VideoFileRelativePath
                 )
@@ -716,8 +726,7 @@ public class ReleaseReadRepository(
                 .LinkCrypterContainers.Where(c =>
                     c.Scope == LinkCrypterContainerScope.Release
                     && c.UploadId != null
-                    && uploadIds.Contains(c.UploadId.Value)
-                    && c.Upload!.UploadConfig.ReleaseId == releaseId
+                    && EF.Parameter(uploadIds).Contains(c.UploadId.Value)
                 )
                 .Select(c => new
                 {
@@ -732,8 +741,7 @@ public class ReleaseReadRepository(
 
             var collectionContainers = await dbRead
                 .LinkCrypterContainerSourceUploads.Where(source =>
-                    uploadIds.Contains(source.UploadId)
-                    && source.Upload.UploadConfig.ReleaseId == releaseId
+                    EF.Parameter(uploadIds).Contains(source.UploadId)
                     && (
                         source.LinkCrypterContainer.Scope
                             == LinkCrypterContainerScope.ReleaseCollection
@@ -778,11 +786,13 @@ public class ReleaseReadRepository(
             );
         }
 
+        var containersByUploadId = containers.ToLookup(c => c.UploadId);
+
         var archiverNamesByClassName = archiverFactory
             .GetArchivers()
             .ToDictionary(archiver => archiver.ClassName, archiver => archiver.Name);
 
-        return uploadConfigs
+        var uploads = uploadConfigs
             .Select(config =>
             {
                 latestUploadByConfigId.TryGetValue(config.UploadConfigId, out var upload);
@@ -805,13 +815,13 @@ public class ReleaseReadRepository(
                             == LinkCrypterContainerScope.ReleaseAllHosters;
                         var container = upload is null
                             ? default
-                            : containers.FirstOrDefault(c =>
-                                c.UploadId == upload.UploadId
-                                && c.LinkCrypterRegistrationId
-                                    == linkCrypter.LinkCrypterRegistrationId
-                                && (c.Scope == LinkCrypterContainerScope.ReleaseAllHosters)
-                                    == isAllHostersLinkCrypter
-                            );
+                            : containersByUploadId[upload.UploadId]
+                                .FirstOrDefault(c =>
+                                    c.LinkCrypterRegistrationId
+                                        == linkCrypter.LinkCrypterRegistrationId
+                                    && (c.Scope == LinkCrypterContainerScope.ReleaseAllHosters)
+                                        == isAllHostersLinkCrypter
+                                );
 
                         return new ReleaseForumPostLinkCrypterReadModel(
                             Name: linkCrypter.Name,
@@ -828,50 +838,76 @@ public class ReleaseReadRepository(
                     ?? config.HosterRegistrationHosterClassName
                     ?? config.HosterAccountPoolHosterClassName!;
 
-                return new ReleaseForumPostUploadReadModel(
-                    UploadConfigName: config.UploadConfigName,
-                    HosterName: hosterFactory.GetByName(hosterClassName).Name,
-                    HosterRegistrationName: upload?.HosterRegistrationName ?? string.Empty,
-                    IsVideoUpload: config.UploadSource == UploadSource.VideoFiles,
-                    ArchiveFormat: config.ArchiverName is null
-                        ? null
-                        : archiverNamesByClassName.GetValueOrDefault(
-                            config.ArchiverName,
-                            config.ArchiverName
-                        ),
-                    ArchivePassword: config.ArchivePassword,
-                    UploadedAt: upload?.UploadedAt,
-                    Links: links,
-                    EmbedLinks: embedLinks,
-                    LinkCrypters: linkCrypters
+                return (
+                    config.ReleaseId,
+                    Upload: new ReleaseForumPostUploadReadModel(
+                        UploadConfigName: config.UploadConfigName,
+                        HosterName: hosterFactory.GetByName(hosterClassName).Name,
+                        HosterRegistrationName: upload?.HosterRegistrationName ?? string.Empty,
+                        IsVideoUpload: config.UploadSource == UploadSource.VideoFiles,
+                        ArchiveFormat: config.ArchiverName is null
+                            ? null
+                            : archiverNamesByClassName.GetValueOrDefault(
+                                config.ArchiverName,
+                                config.ArchiverName
+                            ),
+                        ArchivePassword: config.ArchivePassword,
+                        UploadedAt: upload?.UploadedAt,
+                        Links: links,
+                        EmbedLinks: embedLinks,
+                        LinkCrypters: linkCrypters
+                    )
                 );
             })
             .ToList();
+
+        return uploads
+            .GroupBy(row => row.ReleaseId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<ReleaseForumPostUploadReadModel>)
+                        group.Select(row => row.Upload).ToList()
+            );
     }
 
     public async Task<
-        IReadOnlyList<ReleaseForumPostLinkCrypterReadModel>
-    > GetForumPostAllHostersLinkCryptersAsync(
-        int releaseId,
+        IReadOnlyDictionary<int, IReadOnlyList<ReleaseForumPostLinkCrypterReadModel>>
+    > GetForumPostAllHostersLinkCryptersByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead
+        var linkCrypters = await dbRead
             .LinkCrypterContainers.Where(c =>
                 c.Scope == LinkCrypterContainerScope.ReleaseAllHosters
-                && c.ReleaseId == releaseId
+                && c.ReleaseId != null
+                && EF.Parameter(releaseIds).Contains(c.ReleaseId.Value)
                 && c.ContainerUrl != string.Empty
             )
             .OrderBy(c => c.LinkCrypterRegistration.Name)
             .ThenBy(c => c.Id)
-            .Select(c => new ReleaseForumPostLinkCrypterReadModel(
-                c.LinkCrypterRegistration.Name,
-                c.Password,
-                c.ContainerUrl,
-                c.StatusImageId,
-                c.CreatedAt
-            ))
+            .Select(c => new
+            {
+                ReleaseId = c.ReleaseId!.Value,
+                LinkCrypter = new ReleaseForumPostLinkCrypterReadModel(
+                    c.LinkCrypterRegistration.Name,
+                    c.Password,
+                    c.ContainerUrl,
+                    c.StatusImageId,
+                    c.CreatedAt
+                ),
+            })
             .ToListAsync(cancellationToken);
+
+        return linkCrypters
+            .GroupBy(row => row.ReleaseId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<ReleaseForumPostLinkCrypterReadModel>)
+                        group.Select(row => row.LinkCrypter).ToList()
+            );
     }
 
     public async Task<
@@ -939,26 +975,46 @@ public class ReleaseReadRepository(
             .ToList();
     }
 
-    public Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetReleaseImageLinksAsync(
-        int releaseId,
+    public async Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ForumPostImageLinkReadModel>>
+    > GetReleaseImageLinksByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     )
     {
-        return GetImageLinksAsync(config => config.ReleaseId == releaseId, cancellationToken);
+        var imageLinks = await GetImageLinksAsync(
+            config =>
+                config.ReleaseId != null
+                && EF.Parameter(releaseIds).Contains(config.ReleaseId.Value),
+            cancellationToken
+        );
+
+        return imageLinks
+            .GroupBy(row => row.ReleaseId!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<ForumPostImageLinkReadModel>)
+                        group.Select(row => row.ImageLink).ToList()
+            );
     }
 
-    public Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetCollectionImageLinksAsync(
+    public async Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetCollectionImageLinksAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default
     )
     {
-        return GetImageLinksAsync(
+        var imageLinks = await GetImageLinksAsync(
             config => config.ReleaseCollectionId == releaseCollectionId,
             cancellationToken
         );
+
+        return imageLinks.Select(row => row.ImageLink).ToList();
     }
 
-    private async Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetImageLinksAsync(
+    private async Task<
+        List<(int? ReleaseId, ForumPostImageLinkReadModel ImageLink)>
+    > GetImageLinksAsync(
         Expression<Func<ImageUploadConfig, bool>> predicate,
         CancellationToken cancellationToken
     )
@@ -969,6 +1025,7 @@ public class ReleaseReadRepository(
             .ThenBy(config => config.Id)
             .Select(config => new
             {
+                config.ReleaseId,
                 config.Name,
                 Urls = config
                     .ImageUploads.Where(upload =>
@@ -997,14 +1054,22 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken);
 
         return configs
-            .Select(config => new ForumPostImageLinkReadModel(
-                config.Name,
-                config
-                    .Urls.OrderBy(url => url.ImageSize)
-                    .ThenBy(url => url.Id)
-                    .Select(url => new ForumPostImageLinkUrlReadModel(url.ImageSize, url.Url))
-                    .ToList()
-            ))
+            .Select(config =>
+                (
+                    config.ReleaseId,
+                    new ForumPostImageLinkReadModel(
+                        config.Name,
+                        config
+                            .Urls.OrderBy(url => url.ImageSize)
+                            .ThenBy(url => url.Id)
+                            .Select(url => new ForumPostImageLinkUrlReadModel(
+                                url.ImageSize,
+                                url.Url
+                            ))
+                            .ToList()
+                    )
+                )
+            )
             .ToList();
     }
 
@@ -1013,11 +1078,29 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var releaseInfo = await dbRead
+        var releaseInfosByReleaseId = await GetReleaseInfosByReleaseIdAsync(
+            [releaseId],
+            cancellationToken
+        );
+
+        return releaseInfosByReleaseId.GetValueOrDefault(releaseId);
+    }
+
+    public async Task<
+        IReadOnlyDictionary<int, ReleaseInfoReadModel>
+    > GetReleaseInfosByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseInfos = await dbRead
             .Releases.AsSplitQuery()
-            .Where(release => release.Id == releaseId && release.ReleaseInfo != null)
+            .Where(release =>
+                EF.Parameter(releaseIds).Contains(release.Id) && release.ReleaseInfo != null
+            )
             .Select(release => new
             {
+                ReleaseId = release.Id,
                 release.ReleaseInfo!.NfoDatabaseClassName,
                 release.ReleaseInfo.ReleaseName,
                 release.ReleaseInfo.ReleaseDatabaseUrl,
@@ -1036,31 +1119,32 @@ public class ReleaseReadRepository(
                     })
                     .ToList(),
             })
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .ToListAsync(cancellationToken: cancellationToken);
 
-        if (releaseInfo is null)
-        {
-            return null;
-        }
-
-        return new ReleaseInfoReadModel(
-            releaseInfo.NfoDatabaseClassName,
-            releaseInfo.ReleaseName,
-            releaseInfo.ReleaseDatabaseUrl,
-            releaseInfo.SizeNumber,
-            releaseInfo.SizeUnit,
-            releaseInfo.VideoType,
-            releaseInfo.AudioType,
-            releaseInfo
-                .ExternalInfos.Select(externalInfo => new ReleaseExternalInfoReadModel(
-                    externalInfo.Id,
-                    externalInfo.Type,
-                    externalInfo.Title,
-                    externalInfo
-                        .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(url.Type, url.Url))
-                        .ToList()
-                ))
-                .ToList()
+        return releaseInfos.ToDictionary(
+            releaseInfo => releaseInfo.ReleaseId,
+            releaseInfo => new ReleaseInfoReadModel(
+                releaseInfo.NfoDatabaseClassName,
+                releaseInfo.ReleaseName,
+                releaseInfo.ReleaseDatabaseUrl,
+                releaseInfo.SizeNumber,
+                releaseInfo.SizeUnit,
+                releaseInfo.VideoType,
+                releaseInfo.AudioType,
+                releaseInfo
+                    .ExternalInfos.Select(externalInfo => new ReleaseExternalInfoReadModel(
+                        externalInfo.Id,
+                        externalInfo.Type,
+                        externalInfo.Title,
+                        externalInfo
+                            .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
+                                url.Type,
+                                url.Url
+                            ))
+                            .ToList()
+                    ))
+                    .ToList()
+            )
         );
     }
 
@@ -1069,17 +1153,42 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
+        var metadataByReleaseId = await GetReleaseMetadataByReleaseIdAsync(
+            [releaseId],
+            cancellationToken
+        );
+
+        return metadataByReleaseId.GetValueOrDefault(releaseId);
+    }
+
+    public async Task<
+        IReadOnlyDictionary<int, ReleaseMetadataReadModel>
+    > GetReleaseMetadataByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
         return await dbRead
-            .Releases.Where(release => release.Id == releaseId && release.Metadata != null)
-            .Select(release => new ReleaseMetadataReadModel(
-                release.Metadata!.MetadataDatabaseClassName,
-                release.Metadata.Title,
-                release.Metadata.Genre,
-                release.Metadata.Description,
-                release.Metadata.CoverUrl,
-                release.Metadata.MetadataDatabaseUrl
-            ))
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .Releases.Where(release =>
+                EF.Parameter(releaseIds).Contains(release.Id) && release.Metadata != null
+            )
+            .Select(release => new
+            {
+                ReleaseId = release.Id,
+                Metadata = new ReleaseMetadataReadModel(
+                    release.Metadata!.MetadataDatabaseClassName,
+                    release.Metadata.Title,
+                    release.Metadata.Genre,
+                    release.Metadata.Description,
+                    release.Metadata.CoverUrl,
+                    release.Metadata.MetadataDatabaseUrl
+                ),
+            })
+            .ToDictionaryAsync(
+                release => release.ReleaseId,
+                release => release.Metadata,
+                cancellationToken
+            );
     }
 
     public async Task<ReleaseNfoReadModel?> GetReleaseNfoAsync(
@@ -1087,14 +1196,33 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
+        var nfosByReleaseId = await GetReleaseNfosByReleaseIdAsync([releaseId], cancellationToken);
+        return nfosByReleaseId.GetValueOrDefault(releaseId);
+    }
+
+    public async Task<IReadOnlyDictionary<int, ReleaseNfoReadModel>> GetReleaseNfosByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
         return await dbRead
-            .Releases.Where(release => release.Id == releaseId && release.ReleaseNfo != null)
-            .Select(release => new ReleaseNfoReadModel(
-                release.ReleaseNfo!.Id,
-                release.ReleaseNfo.FileName,
-                release.ReleaseNfo.Content
-            ))
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .Releases.Where(release =>
+                EF.Parameter(releaseIds).Contains(release.Id) && release.ReleaseNfo != null
+            )
+            .Select(release => new
+            {
+                ReleaseId = release.Id,
+                Nfo = new ReleaseNfoReadModel(
+                    release.ReleaseNfo!.Id,
+                    release.ReleaseNfo.FileName,
+                    release.ReleaseNfo.Content
+                ),
+            })
+            .ToDictionaryAsync(
+                release => release.ReleaseId,
+                release => release.Nfo,
+                cancellationToken
+            );
     }
 
     public async Task<
@@ -1104,13 +1232,31 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
+        var externalIdentifiersByReleaseId = await GetReleaseExternalIdentifiersByReleaseIdAsync(
+            [releaseId],
+            cancellationToken
+        );
+
+        return externalIdentifiersByReleaseId.GetValueOrDefault(releaseId, []);
+    }
+
+    public async Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ReleaseExternalIdentifierReadModel>>
+    > GetReleaseExternalIdentifiersByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
         var identifiers = await dbRead
-            .ReleaseExternalIdentifiers.Where(identifier => identifier.ReleaseId == releaseId)
+            .ReleaseExternalIdentifiers.Where(identifier =>
+                EF.Parameter(releaseIds).Contains(identifier.ReleaseId)
+            )
             .OrderBy(identifier => identifier.Type)
             .ThenBy(identifier => identifier.Value)
             .ThenBy(identifier => identifier.Source)
             .Select(identifier => new
             {
+                identifier.ReleaseId,
                 identifier.Type,
                 identifier.Value,
                 identifier.Source,
@@ -1118,13 +1264,24 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken);
 
         return identifiers
-            .GroupBy(identifier => new { identifier.Type, identifier.Value })
-            .Select(group => new ReleaseExternalIdentifierReadModel(
-                group.Key.Type,
-                group.Key.Value,
-                group.Select(identifier => identifier.Source).Distinct().Order().ToList()
-            ))
-            .ToList();
+            .GroupBy(identifier => identifier.ReleaseId)
+            .ToDictionary(
+                releaseGroup => releaseGroup.Key,
+                releaseGroup =>
+                    (IReadOnlyList<ReleaseExternalIdentifierReadModel>)
+                        releaseGroup
+                            .GroupBy(identifier => new { identifier.Type, identifier.Value })
+                            .Select(group => new ReleaseExternalIdentifierReadModel(
+                                group.Key.Type,
+                                group.Key.Value,
+                                group
+                                    .Select(identifier => identifier.Source)
+                                    .Distinct()
+                                    .Order()
+                                    .ToList()
+                            ))
+                            .ToList()
+            );
     }
 
     public async Task<IReadOnlyList<ReleaseMediaFileReadModel>> GetMediaFilesAsync(
@@ -1132,11 +1289,27 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
+        var mediaFilesByReleaseId = await GetMediaFilesByReleaseIdAsync(
+            [releaseId],
+            cancellationToken
+        );
+
+        return mediaFilesByReleaseId.GetValueOrDefault(releaseId, []);
+    }
+
+    public async Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ReleaseMediaFileReadModel>>
+    > GetMediaFilesByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
         var files = await dbRead
-            .ReleaseMediaFiles.Where(file => file.ReleaseId == releaseId)
+            .ReleaseMediaFiles.Where(file => EF.Parameter(releaseIds).Contains(file.ReleaseId))
             .OrderBy(file => file.RelativePath)
             .Select(file => new
             {
+                file.ReleaseId,
                 file.Id,
                 file.RelativePath,
                 file.SizeBytes,
@@ -1146,61 +1319,23 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken);
 
         return files
-            .Select(file =>
-            {
-                var metadata = MediaInfoOutputParser.Parse(file.MediaInfoJson);
-
-                return new ReleaseMediaFileReadModel(
-                    file.Id,
-                    file.RelativePath,
-                    file.SizeBytes,
-                    metadata?.ContainerFormat,
-                    metadata?.Duration,
-                    metadata?.VideoStream is null
-                        ? null
-                        : new ReleaseVideoStreamReadModel(
-                            metadata.VideoStream.Index,
-                            metadata.VideoStream.Codec,
-                            metadata.VideoStream.CodecProfile,
-                            metadata.VideoStream.IsDefault,
-                            metadata.VideoStream.Language,
-                            metadata.VideoStream.Title,
-                            metadata.VideoStream.Width,
-                            metadata.VideoStream.Height,
-                            metadata.VideoStream.Fps,
-                            metadata.VideoStream.PixelFormat,
-                            metadata.VideoStream.BitrateKbps
-                        ),
-                    metadata
-                        ?.AudioStreams.Select(stream => new ReleaseAudioStreamReadModel(
-                            stream.Index,
-                            stream.Codec,
-                            stream.CodecProfile,
-                            stream.IsDefault,
-                            stream.Language,
-                            stream.Title,
-                            stream.SampleRate,
-                            stream.ChannelLayout,
-                            stream.Channels,
-                            stream.BitrateKbps
-                        ))
-                        .ToList()
-                        ?? [],
-                    metadata
-                        ?.SubtitleStreams.Select(stream => new ReleaseSubtitleStreamReadModel(
-                            stream.Index,
-                            stream.Codec,
-                            stream.IsDefault,
-                            stream.Forced,
-                            stream.Language,
-                            stream.Title
-                        ))
-                        .ToList()
-                        ?? [],
-                    file.MediaInfoText
-                );
-            })
-            .ToList();
+            .GroupBy(file => file.ReleaseId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<ReleaseMediaFileReadModel>)
+                        group
+                            .Select(file =>
+                                ToMediaFileReadModel(
+                                    mediaFileId: file.Id,
+                                    relativePath: file.RelativePath,
+                                    sizeBytes: file.SizeBytes,
+                                    mediaInfoJson: file.MediaInfoJson,
+                                    mediaInfoText: file.MediaInfoText
+                                )
+                            )
+                            .ToList()
+            );
     }
 
     public async Task<ReleaseClassificationReadModel?> GetClassificationAsync(
@@ -1208,30 +1343,55 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
+        var classificationsByReleaseId = await GetClassificationsByReleaseIdAsync(
+            [releaseId],
+            cancellationToken
+        );
+
+        return classificationsByReleaseId.GetValueOrDefault(releaseId);
+    }
+
+    public async Task<
+        IReadOnlyDictionary<int, ReleaseClassificationReadModel>
+    > GetClassificationsByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    )
+    {
         return await dbRead
-            .Releases.Where(release => release.Id == releaseId && release.Classification != null)
-            .Select(release => new ReleaseClassificationReadModel(
-                release.Classification!.Title,
-                release.Classification.Year,
-                release.Classification.Season,
-                release.Classification.Episode,
-                release.Classification.EpisodeEnd,
-                release.Classification.ContentType,
-                release.Classification.ContentTypeSource,
-                release.Classification.Platform,
-                release.Classification.PlatformSource,
-                release.Classification.Resolution,
-                release.Classification.ResolutionSource,
-                release.Classification.Source,
-                release.Classification.SourceSource,
-                release.Classification.ReleaseGroupToken,
-                release.Classification.PrimaryLanguage,
-                release.Classification.LanguageSource,
-                release.Classification.IsMultiLanguage,
-                release.Classification.ParserVersion,
-                release.Classification.ClassifiedAt
-            ))
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .Releases.Where(release =>
+                EF.Parameter(releaseIds).Contains(release.Id) && release.Classification != null
+            )
+            .Select(release => new
+            {
+                ReleaseId = release.Id,
+                Classification = new ReleaseClassificationReadModel(
+                    release.Classification!.Title,
+                    release.Classification.Year,
+                    release.Classification.Season,
+                    release.Classification.Episode,
+                    release.Classification.EpisodeEnd,
+                    release.Classification.ContentType,
+                    release.Classification.ContentTypeSource,
+                    release.Classification.Platform,
+                    release.Classification.PlatformSource,
+                    release.Classification.Resolution,
+                    release.Classification.ResolutionSource,
+                    release.Classification.Source,
+                    release.Classification.SourceSource,
+                    release.Classification.ReleaseGroupToken,
+                    release.Classification.PrimaryLanguage,
+                    release.Classification.LanguageSource,
+                    release.Classification.IsMultiLanguage,
+                    release.Classification.ParserVersion,
+                    release.Classification.ClassifiedAt
+                ),
+            })
+            .ToDictionaryAsync(
+                release => release.ReleaseId,
+                release => release.Classification,
+                cancellationToken
+            );
     }
 
     public async Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(
@@ -1620,6 +1780,67 @@ public class ReleaseReadRepository(
                 Errors: container.Errors
             ))
             .ToList();
+    }
+
+    private static ReleaseMediaFileReadModel ToMediaFileReadModel(
+        int mediaFileId,
+        string relativePath,
+        long sizeBytes,
+        string mediaInfoJson,
+        string mediaInfoText
+    )
+    {
+        var metadata = MediaInfoOutputParser.Parse(mediaInfoJson);
+
+        return new ReleaseMediaFileReadModel(
+            mediaFileId,
+            relativePath,
+            sizeBytes,
+            metadata?.ContainerFormat,
+            metadata?.Duration,
+            metadata?.VideoStream is null
+                ? null
+                : new ReleaseVideoStreamReadModel(
+                    metadata.VideoStream.Index,
+                    metadata.VideoStream.Codec,
+                    metadata.VideoStream.CodecProfile,
+                    metadata.VideoStream.IsDefault,
+                    metadata.VideoStream.Language,
+                    metadata.VideoStream.Title,
+                    metadata.VideoStream.Width,
+                    metadata.VideoStream.Height,
+                    metadata.VideoStream.Fps,
+                    metadata.VideoStream.PixelFormat,
+                    metadata.VideoStream.BitrateKbps
+                ),
+            metadata
+                ?.AudioStreams.Select(stream => new ReleaseAudioStreamReadModel(
+                    stream.Index,
+                    stream.Codec,
+                    stream.CodecProfile,
+                    stream.IsDefault,
+                    stream.Language,
+                    stream.Title,
+                    stream.SampleRate,
+                    stream.ChannelLayout,
+                    stream.Channels,
+                    stream.BitrateKbps
+                ))
+                .ToList()
+                ?? [],
+            metadata
+                ?.SubtitleStreams.Select(stream => new ReleaseSubtitleStreamReadModel(
+                    stream.Index,
+                    stream.Codec,
+                    stream.IsDefault,
+                    stream.Forced,
+                    stream.Language,
+                    stream.Title
+                ))
+                .ToList()
+                ?? [],
+            mediaInfoText
+        );
     }
 
     private static Expression<Func<Release, ReleaseReadModel>> ToReleaseReadModel()

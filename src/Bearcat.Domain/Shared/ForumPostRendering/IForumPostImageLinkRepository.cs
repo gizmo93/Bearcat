@@ -2,8 +2,10 @@ namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 public interface IForumPostImageLinkRepository
 {
-    Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetReleaseImageLinksAsync(
-        int releaseId,
+    Task<
+        IReadOnlyDictionary<int, IReadOnlyList<ForumPostImageLinkReadModel>>
+    > GetReleaseImageLinksByReleaseIdAsync(
+        IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     );
 

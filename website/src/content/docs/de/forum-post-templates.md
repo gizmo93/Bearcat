@@ -80,8 +80,37 @@ Ein vollständiges Beispiel mit NFO und Links von Linkcryptern:
 [/CENTER]
 ```
 
-Vorlagen für Collections funktionieren genauso. Sie durchlaufen die Releases der Collection mit
-`{{~ for release in releases ~}}`.
+In Collectionvorlagen durchläufst du die Releases mit `{{~ for release in releases ~}}`.
+`release.name`, `release.nfo` und die anderen Releasefelder verwendest du wie in Releasevorlagen.
+
+Auch die weiteren Releasedaten erreichst du hier über `release`: `release.release_info`,
+`release.classification`, `release.uploads`, `release.link_crypters` und `release.imagelinks`.
+`imagelinks` ohne `release.` enthält die Bildlinks der Collection.
+`collection.main_video_total_size_bytes` ist die Summe von `release.main_video.size_bytes` über alle Releases.
+
+```text
+{{~ for release in releases ~}}
+[B]{{ release.name }}[/B]
+[IMG]{{ release.imagelinks.cover.full }}[/IMG]
+{{~ for crypter in release.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
+
+Mit einer Schleife über `upload_slots` durchläufst du die Uploadslots der Collection.
+`upload_slot.name` und `upload_slot.key` geben den Namen und Schlüssel des Slots aus.
+Über `upload_slot.link_crypters` greifst du auf seine Container zu. Sie enthalten die Links aller
+Releases in diesem Slot.
+
+```text
+{{~ for upload_slot in upload_slots ~}}
+[B]{{ upload_slot.name }}[/B]
+{{~ for crypter in upload_slot.link_crypters ~}}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{~ end ~}}
+{{~ end ~}}
+```
 
 ### Ein Link für alle Hoster
 

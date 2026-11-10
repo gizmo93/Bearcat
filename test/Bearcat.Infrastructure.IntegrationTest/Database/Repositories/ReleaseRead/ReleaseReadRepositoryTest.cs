@@ -20,16 +20,21 @@ namespace Bearcat.Infrastructure.IntegrationTest.Database.Repositories.ReleaseRe
 public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
+    private ReleaseReadRepositoryTestData testData = null!;
     private ReleaseReadRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
+        testData = new ReleaseReadRepositoryTestData(DbContext);
         repository = new ReleaseReadRepository(
             ReadDbContext,
-            Mock.Of<IArchiverFactory>(),
+            Mock.Of<IArchiverFactory>(factory => factory.GetArchivers() == new List<ArchiverDto>()),
             Mock.Of<ILinkCrypterFactory>(),
-            Mock.Of<IHosterFactory>()
+            Mock.Of<IHosterFactory>(factory =>
+                factory.GetByName(It.IsAny<string>())
+                == Mock.Of<IHoster>(hoster => hoster.Name == "Example Hoster")
+            )
         );
     }
 
@@ -1069,6 +1074,187 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             .HosterHasUnreadableSecrets.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task ByReleaseIdMethods_TwoReleasesWithDifferentData_ReturnEachReleaseItsOwnData()
+    {
+        // Arrange
+        var firstRelease = AddReleaseWithForumPostData(
+            name: "Bearcat.First.2026-GRP",
+            imdbId: "tt0000001",
+            resolution: ReleaseResolution.R1080p
+        );
+        var secondRelease = AddReleaseWithForumPostData(
+            name: "Bearcat.Second.2026-GRP",
+            imdbId: "tt0000002",
+            resolution: ReleaseResolution.R720p
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        List<int> releaseIds = [firstRelease.Id, secondRelease.Id];
+
+        // Act
+        var releases = await repository.GetReleasesByIdAsync(releaseIds, CancellationToken.None);
+
+        var infos = await repository.GetReleaseInfosByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var metadata = await repository.GetReleaseMetadataByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var nfos = await repository.GetReleaseNfosByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var externalIdentifiers = await repository.GetReleaseExternalIdentifiersByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var mediaFiles = await repository.GetMediaFilesByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var classifications = await repository.GetClassificationsByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        // Assert
+        foreach (var release in new[] { firstRelease, secondRelease })
+        {
+            releases[release.Id].Name.ShouldBe(release.Name);
+            infos[release.Id].ReleaseName.ShouldBe($"{release.Name}.Info");
+            metadata[release.Id].Title.ShouldBe($"{release.Name} Title");
+            nfos[release.Id].Content.ShouldBe($"{release.Name} nfo");
+            mediaFiles[release.Id]
+                .ShouldHaveSingleItem()
+                .RelativePath.ShouldBe($"{release.Name}.mkv");
+            classifications[release.Id].Title.ShouldBe($"{release.Name} Classification");
+        }
+
+        externalIdentifiers[firstRelease.Id].ShouldHaveSingleItem().Value.ShouldBe("tt0000001");
+        externalIdentifiers[secondRelease.Id].ShouldHaveSingleItem().Value.ShouldBe("tt0000002");
+        classifications[firstRelease.Id].Resolution.ShouldBe(ReleaseResolution.R1080p);
+        classifications[secondRelease.Id].Resolution.ShouldBe(ReleaseResolution.R720p);
+    }
+
+    [Test]
+    public async Task ByReleaseIdMethods_ReleaseWithoutData_ReturnsNoEntriesForReleaseWithoutData()
+    {
+        // Arrange
+        var releaseWithData = AddReleaseWithForumPostData(
+            name: "Bearcat.WithData.2026-GRP",
+            imdbId: "tt0000001",
+            resolution: ReleaseResolution.R1080p
+        );
+        var releaseWithoutData = testData.AddRelease("Bearcat.WithoutData.2026-GRP");
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        List<int> releaseIds = [releaseWithData.Id, releaseWithoutData.Id];
+
+        // Act
+        var releases = await repository.GetReleasesByIdAsync(releaseIds, CancellationToken.None);
+
+        var infos = await repository.GetReleaseInfosByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var metadata = await repository.GetReleaseMetadataByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var nfos = await repository.GetReleaseNfosByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var externalIdentifiers = await repository.GetReleaseExternalIdentifiersByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var mediaFiles = await repository.GetMediaFilesByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var classifications = await repository.GetClassificationsByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        // Assert
+        releases.Keys.ShouldBe([releaseWithData.Id, releaseWithoutData.Id], ignoreOrder: true);
+        infos.Keys.ShouldBe([releaseWithData.Id]);
+        metadata.Keys.ShouldBe([releaseWithData.Id]);
+        nfos.Keys.ShouldBe([releaseWithData.Id]);
+        externalIdentifiers.Keys.ShouldBe([releaseWithData.Id]);
+        mediaFiles.Keys.ShouldBe([releaseWithData.Id]);
+        classifications.Keys.ShouldBe([releaseWithData.Id]);
+    }
+
+    [Test]
+    public async Task GetForumPostUploadsByReleaseIdAsync_TwoReleasesWithLinkCrypterContainers_ReturnsOwnLinksAndContainersPerRelease()
+    {
+        // Arrange
+        var releaseRegistration = testData.AddLinkCrypterRegistration("Crypter Release");
+        var allHostersRegistration = testData.AddLinkCrypterRegistration("Crypter All");
+        var firstRelease = AddReleaseWithLinkCrypterContainers(
+            name: "First",
+            releaseRegistration: releaseRegistration,
+            allHostersRegistration: allHostersRegistration
+        );
+        var secondRelease = AddReleaseWithLinkCrypterContainers(
+            name: "Second",
+            releaseRegistration: releaseRegistration,
+            allHostersRegistration: allHostersRegistration
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        List<int> releaseIds = [firstRelease.Id, secondRelease.Id];
+
+        // Act
+        var uploads = await repository.GetForumPostUploadsByReleaseIdAsync(
+            releaseIds,
+            CancellationToken.None
+        );
+
+        var allHostersLinkCrypters =
+            await repository.GetForumPostAllHostersLinkCryptersByReleaseIdAsync(
+                releaseIds,
+                CancellationToken.None
+            );
+
+        // Assert
+        foreach (
+            var (release, name) in new[] { (firstRelease, "First"), (secondRelease, "Second") }
+        )
+        {
+            var upload = uploads[release.Id].ShouldHaveSingleItem();
+            upload.Links.ShouldBe([$"https://hoster.example/{name}"]);
+            upload
+                .LinkCrypters.Select(crypter => (crypter.Name, crypter.ContainerUrl))
+                .ShouldBe(
+                    [
+                        ("Crypter Release", $"https://crypter.example/release-{name}"),
+                        ("Crypter All", $"https://crypter.example/all-{name}"),
+                    ],
+                    ignoreOrder: true
+                );
+            allHostersLinkCrypters[release.Id]
+                .ShouldHaveSingleItem()
+                .ContainerUrl.ShouldBe($"https://crypter.example/all-{name}");
+        }
+    }
+
     private async Task<InPostQueueFilterReleases> AddInPostQueueFilterReleasesAsync()
     {
         var notPostedRelease = await AddPostQueueReleaseAsync(
@@ -1455,6 +1641,93 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 },
             ],
         };
+    }
+
+    private Release AddReleaseWithForumPostData(
+        string name,
+        string imdbId,
+        ReleaseResolution resolution
+    )
+    {
+        var release = testData.AddRelease(name);
+        release.ReleaseInfo = new ReleaseInfo
+        {
+            NfoDatabaseClassName = "XrelNfoDatabase",
+            ReleaseName = $"{name}.Info",
+            ExternalInfos = [],
+        };
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = "XrelNfoDatabase",
+            Title = $"{name} Title",
+        };
+        release.ReleaseNfo = new ReleaseNfo { FileName = $"{name}.nfo", Content = $"{name} nfo" };
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = imdbId,
+                Source = ExternalIdentifierSource.Nfo,
+            }
+        );
+        release.MediaFiles.Add(
+            new ReleaseMediaFile
+            {
+                RelativePath = $"{name}.mkv",
+                SizeBytes = 1_048_576,
+                MediaInfoJson = "{}",
+                MediaInfoText = "No media info",
+            }
+        );
+        release.Classification = new ReleaseClassification
+        {
+            Title = $"{name} Classification",
+            ContentType = ReleaseContentType.Movie,
+            ContentTypeSource = ClassificationSource.ReleaseName,
+            Resolution = resolution,
+            ResolutionSource = ClassificationSource.ReleaseName,
+            ParserVersion = 1,
+            ClassifiedAt = ReleaseReadRepositoryTestData.MidnightUtc,
+        };
+
+        return release;
+    }
+
+    private Release AddReleaseWithLinkCrypterContainers(
+        string name,
+        LinkCrypterRegistration releaseRegistration,
+        LinkCrypterRegistration allHostersRegistration
+    )
+    {
+        var release = testData.AddRelease($"Bearcat.{name}.2026-GRP");
+        var uploadConfig = testData.AddUploadConfig(release, "Config");
+        testData.AddUploadConfigLinkCrypter(uploadConfig, releaseRegistration);
+        testData.AddUploadConfigLinkCrypter(
+            uploadConfig,
+            allHostersRegistration,
+            LinkCrypterContainerScope.ReleaseAllHosters
+        );
+        var upload = testData.AddUpload(
+            uploadConfig,
+            ReleaseReadRepositoryTestData.MidnightUtc,
+            ReleaseReadRepositoryTestData.MidnightUtc
+        );
+        testData.AddUploadedFile(upload, $"{name}.part01.rar", $"https://hoster.example/{name}");
+        testData.AddReleaseContainer(
+            upload,
+            releaseRegistration,
+            $"https://crypter.example/release-{name}",
+            ReleaseReadRepositoryTestData.MidnightUtc
+        );
+        testData.AddAllHostersContainer(
+            release,
+            [upload],
+            allHostersRegistration,
+            $"https://crypter.example/all-{name}",
+            ReleaseReadRepositoryTestData.MidnightUtc
+        );
+
+        return release;
     }
 
     private async Task<Release> AddReleaseAsync(

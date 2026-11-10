@@ -574,7 +574,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_LatestUploadWithFilesAndContainers_ReturnsLinksAndContainerPerLinkCrypter()
+    public async Task GetForumPostUploadsByReleaseIdAsync_LatestUploadWithFilesAndContainers_ReturnsLinksAndContainerPerLinkCrypter()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.ForumPost.2026-GRP");
@@ -662,7 +662,12 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = uploadsByReleaseId[release.Id];
 
         // Assert
         result.Select(upload => upload.UploadConfigName).ShouldBe(["Config A", "Config B"]);
@@ -701,7 +706,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_AllHostersContainer_ReturnsSameContainerForEveryMemberUploadAndAsReleaseLinkCrypter()
+    public async Task GetForumPostUploadsByReleaseIdAsync_AllHostersContainer_ReturnsSameContainerForEveryMemberUploadAndAsReleaseLinkCrypter()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.AllHosters.2026-GRP");
@@ -775,11 +780,20 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        var uploads = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
-        var releaseLinkCrypters = await repository.GetForumPostAllHostersLinkCryptersAsync(
-            release.Id,
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
             CancellationToken.None
         );
+
+        var uploads = uploadsByReleaseId[release.Id];
+
+        var linkCryptersByReleaseId =
+            await repository.GetForumPostAllHostersLinkCryptersByReleaseIdAsync(
+                [release.Id],
+                CancellationToken.None
+            );
+
+        var releaseLinkCrypters = linkCryptersByReleaseId[release.Id];
 
         // Assert
         uploads.Select(upload => upload.UploadConfigName).ShouldBe(["Config A", "Config B"]);
@@ -801,7 +815,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_VideoUploadConfigWithoutArchiveConfig_ReturnsVideoFlagLinksAndEmbedLinksWithoutArchiveFormatAndPassword()
+    public async Task GetForumPostUploadsByReleaseIdAsync_VideoUploadConfigWithoutArchiveConfig_ReturnsVideoFlagLinksAndEmbedLinksWithoutArchiveFormatAndPassword()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.VideoForumPost.2026-GRP");
@@ -826,7 +840,12 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = uploadsByReleaseId[release.Id];
 
         // Assert
         var videoUpload = result.ShouldHaveSingleItem();
@@ -845,7 +864,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetForumPostUploadsAsync_UploadConfigRetargetedAfterLatestUpload_ReturnsHosterOfLatestUpload()
+    public async Task GetForumPostUploadsByReleaseIdAsync_UploadConfigRetargetedAfterLatestUpload_ReturnsHosterOfLatestUpload()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.Retargeted.2026-GRP");
@@ -859,7 +878,12 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await repository.GetForumPostUploadsAsync(release.Id, CancellationToken.None);
+        var uploadsByReleaseId = await repository.GetForumPostUploadsByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = uploadsByReleaseId[release.Id];
 
         // Assert
         var upload = result.ShouldHaveSingleItem();

@@ -1,6 +1,6 @@
-using System.Globalization;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.ValueObjects;
 using Scriban.Runtime;
 
@@ -8,20 +8,34 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 
 public class ReleaseCollectionForumPostRenderSource(
     IReleaseCollectionForumPostRepository repository,
-    ReleaseForumPostUploadBuilder uploadBuilder,
+    ReleaseForumPostRenderModelBuilder releaseRenderModelBuilder,
     ForumPostImageLinkBuilder imageLinkBuilder
 ) : IForumPostRenderSource
 {
+    private const string CollectionVariableName = "collection";
+
+    private const string SeriesVariableName = "series";
+
+    private const string ReleasesVariablePath = "releases";
+
+    private const string UploadSlotsVariableName = "upload_slots";
+
+    private const string ReleaseImageLinksVariablePath = "release.imagelinks";
+
+    private const string ImageLinksVariableName = "imagelinks";
+
     public ForumPostTemplateType Type => ForumPostTemplateType.ReleaseCollection;
 
     public IReadOnlyList<ForumPostTemplateVariableNode> GetVariables()
     {
+        var variables = ForumPostTemplateVariableCatalog.GetVariables(
+            typeof(ForumPostTemplateCollectionRenderModel)
+        );
+
         return
         [
-            .. ForumPostTemplateVariableCatalog.GetVariables(
-                typeof(ForumPostTemplateCollectionRenderModel)
-            ),
-            ForumPostImageLinkBuilder.VariableNode,
+            .. variables.Select(AddReleaseImageLinksVariableNode),
+            ForumPostImageLinkBuilder.CreateVariableNode(ImageLinksVariableName),
         ];
     }
 
@@ -37,37 +51,47 @@ public class ReleaseCollectionForumPostRenderSource(
             return null;
         }
 
-        var releases = new List<ForumPostTemplateCollectionReleaseModel>();
+        var renderDataByReleaseId = await releaseRenderModelBuilder.BuildAsync(
+            collection.ReleaseIds,
+            cancellationToken
+        );
 
-        foreach (var release in collection.Releases)
+        var releaseScriptObjects = new ScriptArray();
+
+        foreach (var releaseId in collection.ReleaseIds)
         {
-            var uploads = await uploadBuilder.BuildAsync(release.ReleaseId, cancellationToken);
-            releases.Add(
-                new ForumPostTemplateCollectionReleaseModel
-                {
-                    Name = release.Name,
-                    Uploads = uploads,
-                }
+            var renderData = renderDataByReleaseId[releaseId];
+            var releaseScriptObject = new ScriptObject();
+
+            releaseScriptObject.Import(
+                ToCollectionReleaseModel(renderData.RenderModel),
+                ForumPostTemplateVariableCatalog.ShouldExposeMember
             );
+
+            releaseScriptObject[ImageLinksVariableName] = renderData.ImageLinks;
+            releaseScriptObjects.Add(releaseScriptObject);
         }
 
-        var renderModel = new ForumPostTemplateCollectionRenderModel
+        var scriptObject = new ScriptObject
         {
-            Collection = new ForumPostTemplateCollectionModel
+            [CollectionVariableName] = new ForumPostTemplateCollectionModel
             {
                 Name = collection.Name,
                 Key = collection.Key,
                 ReleaseGroup = collection.ReleaseGroupName,
-                PrimaryLanguage = GetLanguageName(collection.PrimaryLanguageCode),
+                PrimaryLanguage = ReleaseForumPostRenderModelBuilder.GetLanguageName(
+                    collection.PrimaryLanguageCode
+                ),
+                MainVideoTotalSizeBytes = renderDataByReleaseId.Values.Sum(renderData =>
+                    renderData.RenderModel.Release.MainVideo.SizeBytes
+                ),
             },
-            Series = ToSeriesModel(collection.Series),
-            Releases = releases,
+            [SeriesVariableName] = ToSeriesModel(collection.Series),
+            [ReleasesVariablePath] = releaseScriptObjects,
+            [UploadSlotsVariableName] = collection.UploadSlots.Select(ToUploadSlotModel).ToList(),
         };
 
-        var scriptObject = new ScriptObject();
-
-        scriptObject.Import(renderModel, ForumPostTemplateVariableCatalog.ShouldExposeMember);
-        scriptObject["imagelinks"] = await imageLinkBuilder.BuildForCollectionAsync(
+        scriptObject[ImageLinksVariableName] = await imageLinkBuilder.BuildForCollectionAsync(
             entityId,
             cancellationToken
         );
@@ -75,21 +99,61 @@ public class ReleaseCollectionForumPostRenderSource(
         return scriptObject;
     }
 
-    private static string GetLanguageName(string? languageCode)
+    private static ForumPostTemplateVariableNode AddReleaseImageLinksVariableNode(
+        ForumPostTemplateVariableNode variable
+    )
     {
-        if (string.IsNullOrWhiteSpace(languageCode))
+        if (variable.Path != ReleasesVariablePath)
         {
-            return string.Empty;
+            return variable;
         }
 
-        try
+        return variable with
         {
-            return CultureInfo.GetCultureInfo(languageCode).NativeName;
-        }
-        catch (CultureNotFoundException)
+            Children =
+            [
+                .. variable.Children,
+                ForumPostImageLinkBuilder.CreateVariableNode(ReleaseImageLinksVariablePath),
+            ],
+        };
+    }
+
+    private static ForumPostTemplateCollectionReleaseModel ToCollectionReleaseModel(
+        ForumPostTemplateRenderModel renderModel
+    )
+    {
+        var release = renderModel.Release;
+
+        return new ForumPostTemplateCollectionReleaseModel
         {
-            return languageCode;
-        }
+            Name = release.Name,
+            PrimaryLanguage = release.PrimaryLanguage,
+            Nfo = release.Nfo,
+            SteamAppId = release.SteamAppId,
+            SteamUrl = release.SteamUrl,
+            ImdbId = release.ImdbId,
+            ImdbUrl = release.ImdbUrl,
+            MainVideo = release.MainVideo,
+            MediaFiles = release.MediaFiles,
+            ReleaseInfo = renderModel.ReleaseInfo,
+            Classification = renderModel.Classification,
+            Uploads = renderModel.Uploads,
+            LinkCrypters = renderModel.LinkCrypters,
+        };
+    }
+
+    private static ForumPostTemplateCollectionUploadSlotModel ToUploadSlotModel(
+        CollectionForumPostUploadSlotReadModel uploadSlot
+    )
+    {
+        return new ForumPostTemplateCollectionUploadSlotModel
+        {
+            Name = uploadSlot.Name,
+            Key = uploadSlot.Key,
+            LinkCrypters = uploadSlot
+                .LinkCrypters.Select(ReleaseForumPostUploadBuilder.ToLinkCrypterModel)
+                .ToList(),
+        };
     }
 
     private static ForumPostTemplateSeriesModel ToSeriesModel(

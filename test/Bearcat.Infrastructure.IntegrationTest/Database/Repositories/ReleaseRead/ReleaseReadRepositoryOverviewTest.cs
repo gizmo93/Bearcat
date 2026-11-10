@@ -369,7 +369,7 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task GetReleaseImageLinksAsync_SeveralUploadsPerConfig_ReturnsUrlsOfLatestUploadOnly()
+    public async Task GetReleaseImageLinksByReleaseIdAsync_SeveralUploadsPerConfig_ReturnsUrlsOfLatestUploadOnly()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.ImageLinks.2026-GRP");
@@ -438,7 +438,12 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await repository.GetReleaseImageLinksAsync(release.Id, CancellationToken.None);
+        var imageLinksByReleaseId = await repository.GetReleaseImageLinksByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = imageLinksByReleaseId[release.Id];
 
         // Assert
         result.Select(item => item.ImageUploadConfigName).ShouldBe(["Cover", "Empty", "Screens"]);
@@ -458,7 +463,7 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task GetReleaseImageLinksAsync_UrlsStoredInDifferentSizeOrder_ReturnsUrlsOrderedByImageSize()
+    public async Task GetReleaseImageLinksByReleaseIdAsync_UrlsStoredInDifferentSizeOrder_ReturnsUrlsOrderedByImageSize()
     {
         // Arrange
         var release = testData.AddRelease("Bearcat.ImageOrder.2026-GRP");
@@ -484,7 +489,12 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await repository.GetReleaseImageLinksAsync(release.Id, CancellationToken.None);
+        var imageLinksByReleaseId = await repository.GetReleaseImageLinksByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        var result = imageLinksByReleaseId[release.Id];
 
         // Assert
         result
