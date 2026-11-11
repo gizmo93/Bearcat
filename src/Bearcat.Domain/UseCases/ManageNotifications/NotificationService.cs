@@ -125,6 +125,8 @@ public class NotificationService(
             NotificationKind.ReleaseFolderMissing => configuration.ReleaseFolderMissing,
             NotificationKind.ReleaseFolderExtractionFailed =>
                 configuration.ReleaseFolderExtractionFailed,
+            NotificationKind.ReleaseCreationSkippedBecauseNameExists =>
+                configuration.ReleaseCreationSkippedBecauseNameExists,
             NotificationKind.ArchiveCreationFailed => configuration.ArchiveCreationFailed,
             NotificationKind.ArchiveFilesMissing => configuration.ArchiveFilesMissing,
             NotificationKind.ArchiveRestoreFailed => configuration.ArchiveRestoreFailed,

@@ -205,6 +205,82 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task CreateAsync_ReleaseWithSameNameInDifferentCaseExists_ThrowsReleaseNameAlreadyExistsException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Duplicate name group");
+        await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseNameAlreadyExistsException>(() =>
+            service.CreateAsync(
+                "bearcat.release.001",
+                "/tmp/other-release",
+                ReleaseType.Managed,
+                ReleaseContentType.Movie,
+                releaseGroup.Id,
+                null,
+                false,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.ReleaseName.ShouldBe("bearcat.release.001");
+        (await DbContext.Releases.CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task UpdateAsync_NameOfOtherReleaseInDifferentCase_ThrowsReleaseNameAlreadyExistsException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Rename group");
+        await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
+        var release = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.002");
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseNameAlreadyExistsException>(() =>
+            service.UpdateAsync(
+                release.Id,
+                "BEARCAT.RELEASE.001",
+                release.ReleaseFolderPath,
+                ReleaseContentType.Movie,
+                releaseGroup.Id,
+                null,
+                false,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.ReleaseName.ShouldBe("BEARCAT.RELEASE.001");
+    }
+
+    [Test]
+    public async Task UpdateAsync_OwnNameInDifferentCase_UpdatesName()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Own name group");
+        var release = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
+
+        // Act
+        await service.UpdateAsync(
+            release.Id,
+            "BEARCAT.Release.001",
+            release.ReleaseFolderPath,
+            ReleaseContentType.Movie,
+            releaseGroup.Id,
+            null,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await CreateDbContext().Releases.SingleAsync();
+        result.Name.ShouldBe("BEARCAT.Release.001");
+    }
+
+    [Test]
     public async Task UpdateReleaseGroupAsync_ReleaseIdsAreEmpty_DoesNotChangeReleases()
     {
         // Arrange

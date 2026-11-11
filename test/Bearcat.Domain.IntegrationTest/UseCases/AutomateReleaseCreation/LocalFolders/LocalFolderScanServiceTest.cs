@@ -121,7 +121,9 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
             ),
             timeProvider: CreateTimeProvider(),
             configuration: CreateConfigurationProvider(),
-            notificationService: notificationService
+            notificationService: notificationService,
+            releaseWriteRepository: new ReleaseWriteRepository(DbContext),
+            logger: NullLogger<LocalFolderScanService>.Instance
         );
     }
 
@@ -762,6 +764,75 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
 
         var ignoredFolder = await DbContext.ReleaseFolderAutomationIgnoredFolders.SingleAsync();
         ignoredFolder.FolderPath.ShouldBe(existingFolder.FullName);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReleaseWithSameNameInDifferentCaseExists_IgnoresFolderAndNotifies()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await AddReleaseAsync(
+            releaseTemplate.ReleaseGroupId,
+            Path.Combine(tempRootPath, "elsewhere", "BEARCAT.release.1080p")
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+        var laterResult = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+        laterResult.ShouldBe(0);
+        (await DbContext.Releases.CountAsync()).ShouldBe(1);
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+
+        var ignoredFolder = await DbContext.ReleaseFolderAutomationIgnoredFolders.SingleAsync();
+        ignoredFolder.FolderPath.ShouldBe(folder.FullName);
+
+        var notification = await DbContext.Notifications.SingleAsync();
+        notification.NotificationKind.ShouldBe(
+            NotificationKind.ReleaseCreationSkippedBecauseNameExists
+        );
+        notification.Message.ShouldContain(folder.FullName);
+    }
+
+    [Test]
+    public async Task ProcessAsync_TwoFoldersWithSameNameInDifferentCaseInOneScan_CreatesOneReleaseAndIgnoresOtherFolder()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var firstBasePath = Directory.CreateDirectory(Path.Combine(tempRootPath, "first"));
+        var secondBasePath = Directory.CreateDirectory(Path.Combine(tempRootPath, "second"));
+        var firstFolder = Directory.CreateDirectory(
+            Path.Combine(firstBasePath.FullName, "Bearcat.Release.1080p")
+        );
+        var secondFolder = Directory.CreateDirectory(
+            Path.Combine(secondBasePath.FullName, "bearcat.release.1080p")
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, firstBasePath.FullName, null);
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, secondBasePath.FullName, null);
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+
+        var release = await DbContext.Releases.SingleAsync();
+        var ignoredFolder = await DbContext.ReleaseFolderAutomationIgnoredFolders.SingleAsync();
+        new[] { release.ReleaseFolderPath, ignoredFolder.FolderPath }.ShouldBe(
+            [firstFolder.FullName, secondFolder.FullName],
+            ignoreOrder: true
+        );
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+        (
+            await DbContext.Notifications.CountAsync(notification =>
+                notification.NotificationKind
+                == NotificationKind.ReleaseCreationSkippedBecauseNameExists
+            )
+        ).ShouldBe(1);
     }
 
     [Test]

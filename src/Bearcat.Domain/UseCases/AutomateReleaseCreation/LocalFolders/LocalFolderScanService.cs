@@ -8,7 +8,10 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
+using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
@@ -22,7 +25,9 @@ public class LocalFolderScanService(
     ReleaseFolderVerificationAndExtractionService verificationAndExtractionService,
     TimeProvider timeProvider,
     IApplicationConfigurationProvider configuration,
-    INotificationService notificationService
+    INotificationService notificationService,
+    IReleaseWriteRepository releaseWriteRepository,
+    ILogger<LocalFolderScanService> logger
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -65,6 +70,7 @@ public class LocalFolderScanService(
         var observationsByPath = observations.ToDictionary(observation => observation.FolderPath);
 
         var createdCount = 0;
+        var releaseNamesCreatedInThisScan = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var candidate in candidatesToProcess)
         {
@@ -74,6 +80,7 @@ public class LocalFolderScanService(
                 candidate: candidate,
                 observation: observationsByPath.GetValueOrDefault(candidate.FolderPath),
                 settings: settings,
+                releaseNamesCreatedInThisScan: releaseNamesCreatedInThisScan,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
@@ -241,6 +248,7 @@ public class LocalFolderScanService(
         ReleaseFolderCandidate candidate,
         ReleaseFolderObservation? observation,
         LocalFolderScanSettings settings,
+        HashSet<string> releaseNamesCreatedInThisScan,
         DateTime localNow,
         CancellationToken cancellationToken
     )
@@ -293,11 +301,56 @@ public class LocalFolderScanService(
             return CandidateFolderProcessingResult.ObservationChanged;
         }
 
+        var releaseName = FolderPathHelper.GetFolderName(candidate.FolderPath);
+
+        if (
+            releaseNamesCreatedInThisScan.Contains(releaseName)
+            || await releaseWriteRepository.NameExistsAsync(
+                name: releaseName,
+                excludedReleaseId: null,
+                cancellationToken: cancellationToken
+            )
+        )
+        {
+            IgnoreFolderBecauseReleaseNameExists(candidate, releaseName, localNow);
+            repository.RemoveFolderObservation(observation);
+            return CandidateFolderProcessingResult.ObservationChanged;
+        }
+
         await CreateReleaseAsync(candidate, localNow, cancellationToken);
 
+        releaseNamesCreatedInThisScan.Add(releaseName);
         repository.RemoveFolderObservation(observation);
 
         return CandidateFolderProcessingResult.ReleaseCreated;
+    }
+
+    private void IgnoreFolderBecauseReleaseNameExists(
+        ReleaseFolderCandidate candidate,
+        string releaseName,
+        DateTime localNow
+    )
+    {
+        repository.AddIgnoredFolder(
+            new ReleaseFolderAutomationIgnoredFolder
+            {
+                ReleaseFolderAutomationId = candidate.Automation.Id,
+                FolderPath = candidate.FolderPath,
+                IgnoredAt = localNow,
+            }
+        );
+
+        notificationService.Create(
+            kind: NotificationKind.ReleaseCreationSkippedBecauseNameExists,
+            message: $"Folder '{candidate.FolderPath}' was skipped by a folder automation because a release named '{releaseName}' already exists. The folder is now ignored by this automation."
+        );
+
+        logger.LogWarning(
+            "Skipped folder {FolderPath} of folder automation {ReleaseFolderAutomationId} because a release named {ReleaseName} already exists",
+            candidate.FolderPath,
+            candidate.Automation.Id,
+            releaseName
+        );
     }
 
     private void AddFolderObservation(

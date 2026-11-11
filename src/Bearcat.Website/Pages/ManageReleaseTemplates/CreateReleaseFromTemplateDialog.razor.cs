@@ -93,6 +93,12 @@ public partial class CreateReleaseFromTemplateDialog(
             ShowFolderValidationMessage(GetFolderAlreadyInUseMessage(exception.UsageKind));
             return;
         }
+        catch (ReleaseNameAlreadyExistsException)
+        {
+            messageStore.Add(() => formModel.Name, L["ReleaseNameAlreadyExists"]);
+            editContext.NotifyValidationStateChanged();
+            return;
+        }
         catch (ReleaseTemplateNotFoundException)
         {
             messageStore.Add(

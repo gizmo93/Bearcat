@@ -92,7 +92,7 @@ public class ReleasesController(
     /// Create a release from a finished folder using a release template.
     /// </summary>
     /// <remarks>
-    /// The caller asserts that the folder is complete: there is no wait for the folder to become stable. The folder path must be the path as seen by the Bearcat process, which is the container path when Bearcat runs in Docker. Release info resolution and media metadata extraction run synchronously, so the call can take several seconds. Fails with 409 if the folder is already the release folder of a release, the archive folder of an unmanaged release or the target folder of a remote download.
+    /// The caller asserts that the folder is complete: there is no wait for the folder to become stable. The folder path must be the path as seen by the Bearcat process, which is the container path when Bearcat runs in Docker. Release info resolution and media metadata extraction run synchronously, so the call can take several seconds. Fails with 409 if the folder is already the release folder of a release, the archive folder of an unmanaged release or the target folder of a remote download, or if a release with the same name (case-insensitive) already exists.
     /// </remarks>
     [HttpPost]
     [RequiresApiKey]
@@ -134,6 +134,10 @@ public class ReleasesController(
             return ValidationProblem();
         }
         catch (ReleaseFolderAlreadyInUseException exception)
+        {
+            return Problem(detail: exception.Message, statusCode: StatusCodes.Status409Conflict);
+        }
+        catch (ReleaseNameAlreadyExistsException exception)
         {
             return Problem(detail: exception.Message, statusCode: StatusCodes.Status409Conflict);
         }

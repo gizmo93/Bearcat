@@ -313,9 +313,10 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         HosterRegistration? hosterRegistrationOfUpload = null
     )
     {
+        var releaseNumber = await DbContext.Releases.CountAsync() + 1;
         var release = new Release
         {
-            Name = "Bearcat.Release.2026-GRP",
+            Name = $"Bearcat.Release.{releaseNumber:000}-GRP",
             CreatedAt = DateTime.UtcNow,
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/release",

@@ -4,6 +4,7 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Domain.ValueObjects;
@@ -848,6 +849,7 @@ public class RemoteSourceScanServiceTest(DatabaseProvider databaseProvider)
             CreateSessionProvider(),
             timeProvider,
             CreateConfigurationProvider(),
+            Mock.Of<INotificationService>(),
             NullLogger<RemoteSourceScanService>.Instance
         );
 

@@ -187,9 +187,10 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
         bool imageHosterRegistrationIsActive = true
     )
     {
+        var releaseNumber = await DbContext.Releases.CountAsync() + 1;
         var release = new Release
         {
-            Name = "Bodies.2023.S01E01-GRP",
+            Name = $"Bodies.2023.S01E{releaseNumber:00}-GRP",
             CreatedAt = CreatedAt,
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/bodies",

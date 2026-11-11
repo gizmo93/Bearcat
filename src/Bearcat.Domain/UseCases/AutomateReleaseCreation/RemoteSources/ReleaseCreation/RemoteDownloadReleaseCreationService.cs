@@ -2,6 +2,8 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -13,6 +15,7 @@ public class RemoteDownloadReleaseCreationService(
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     INotificationService notificationService,
     TimeProvider timeProvider,
+    IReleaseWriteRepository releaseWriteRepository,
     ILogger<RemoteDownloadReleaseCreationService> logger
 )
 {
@@ -48,6 +51,25 @@ public class RemoteDownloadReleaseCreationService(
             await MarkAsFailedAndNotifyAsync(
                 download,
                 "The release template of the automation was deleted, so no release could be created",
+                cancellationToken
+            );
+
+            return false;
+        }
+
+        var releaseName = FolderPathHelper.GetFolderName(download.LocalFolderPath);
+
+        if (
+            await releaseWriteRepository.NameExistsAsync(
+                name: releaseName,
+                excludedReleaseId: null,
+                cancellationToken: cancellationToken
+            )
+        )
+        {
+            await MarkAsFailedAndNotifyAsync(
+                download,
+                $"A release named '{releaseName}' already exists, so no release was created",
                 cancellationToken
             );
 

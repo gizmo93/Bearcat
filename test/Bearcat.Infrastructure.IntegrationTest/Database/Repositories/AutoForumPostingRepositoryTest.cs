@@ -585,7 +585,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             AddCollectionSlotUploadConfig(firstCollection, inactiveHoster),
             new DateTime(2026, 9, 11, 0, 0, 0, DateTimeKind.Utc)
         );
-        var memberRelease = AddRelease("Bearcat.Collection.001.E01");
+        var memberRelease = AddRelease("Bearcat.Collection.001.Member");
         memberRelease.ReleaseCollection = firstCollection;
         AddUpload(
             AddUploadConfig(memberRelease, activeHoster),

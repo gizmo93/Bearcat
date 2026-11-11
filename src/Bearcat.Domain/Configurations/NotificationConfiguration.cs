@@ -34,6 +34,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ReleaseFolderExtractionFailed { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ReleaseCreationSkippedBecauseNameExists",
+        "NotificationKind.ReleaseCreationSkippedBecauseNameExists.Description"
+    )]
+    public bool ReleaseCreationSkippedBecauseNameExists { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.ArchiveCreationFailed",
         "NotificationKind.ArchiveCreationFailed.Description"
     )]

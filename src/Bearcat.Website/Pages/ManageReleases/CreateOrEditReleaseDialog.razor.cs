@@ -3,6 +3,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
@@ -134,26 +135,47 @@ public partial class CreateOrEditReleaseDialog(
                 editContext.NotifyValidationStateChanged();
                 return;
             }
+            catch (ReleaseNameAlreadyExistsException)
+            {
+                ShowNameAlreadyExistsMessage();
+                return;
+            }
 
             await DialogRef.CloseAsync(DialogResult.Ok(ReleaseId.Value));
             return;
         }
 
-        var id = await operationRunner.RunAsync(
-            (ReleaseService service) =>
-                service.CreateAsync(
-                    name: formModel.Name,
-                    releaseFolderPath: formModel.FolderPath,
-                    releaseType: formModel.ReleaseType,
-                    releaseContentType: formModel.ReleaseContentType,
-                    releaseGroupId: formModel.ReleaseGroupId,
-                    primaryLanguageCode: formModel.PrimaryLanguageCode,
-                    excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
-                )
-        );
+        int id;
+
+        try
+        {
+            id = await operationRunner.RunAsync(
+                (ReleaseService service) =>
+                    service.CreateAsync(
+                        name: formModel.Name,
+                        releaseFolderPath: formModel.FolderPath,
+                        releaseType: formModel.ReleaseType,
+                        releaseContentType: formModel.ReleaseContentType,
+                        releaseGroupId: formModel.ReleaseGroupId,
+                        primaryLanguageCode: formModel.PrimaryLanguageCode,
+                        excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
+                    )
+            );
+        }
+        catch (ReleaseNameAlreadyExistsException)
+        {
+            ShowNameAlreadyExistsMessage();
+            return;
+        }
 
         await DialogRef.CloseAsync(DialogResult.Ok(id));
         navigationManager.NavigateTo("releases");
+    }
+
+    private void ShowNameAlreadyExistsMessage()
+    {
+        messageStore!.Add(() => formModel.Name, L["ReleaseNameAlreadyExists"]);
+        editContext.NotifyValidationStateChanged();
     }
 
     private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)

@@ -39,6 +39,12 @@ public class ReleaseService(
         CancellationToken cancellationToken = default
     )
     {
+        await ThrowWhenNameExistsAsync(
+            name: name,
+            excludedReleaseId: null,
+            cancellationToken: cancellationToken
+        );
+
         var localNow = timeProvider.GetLocalNow();
         var isUnmanaged = releaseType is ReleaseType.Unmanaged;
 
@@ -87,6 +93,12 @@ public class ReleaseService(
         CancellationToken cancellationToken = default
     )
     {
+        await ThrowWhenNameExistsAsync(
+            name: name,
+            excludedReleaseId: releaseId,
+            cancellationToken: cancellationToken
+        );
+
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
 
         if (
@@ -437,6 +449,13 @@ public class ReleaseService(
             throw new ReleaseFolderAlreadyInUseException(normalizedFolderPath, usageKind.Value);
         }
 
+        await ThrowWhenNameExistsAsync(
+            name: name.TrimOrNullWhenWhitespace()
+                ?? FolderPathHelper.GetFolderName(normalizedFolderPath),
+            excludedReleaseId: null,
+            cancellationToken: cancellationToken
+        );
+
         var release = await releaseFromFolderCreationService.CreateAsync(
             releaseTemplate: releaseTemplate,
             folderPath: normalizedFolderPath,
@@ -460,6 +479,18 @@ public class ReleaseService(
         }
 
         return release.Id;
+    }
+
+    private async Task ThrowWhenNameExistsAsync(
+        string name,
+        int? excludedReleaseId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (await writeRepository.NameExistsAsync(name, excludedReleaseId, cancellationToken))
+        {
+            throw new ReleaseNameAlreadyExistsException(name);
+        }
     }
 
     private async Task<ReleaseFolderUsageKind?> GetFolderUsageKindAsync(

@@ -41,4 +41,5 @@ public enum NotificationKind
     LinkCrypterImportReadyForReview = 37,
     LinkCrypterImportCompleted = 38,
     LinkCrypterImportFailed = 39,
+    ReleaseCreationSkippedBecauseNameExists = 40,
 }

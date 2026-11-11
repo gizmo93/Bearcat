@@ -18,6 +18,12 @@ public interface IReleaseWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<bool> NameExistsAsync(
+        string name,
+        int? excludedReleaseId,
+        CancellationToken cancellationToken
+    );
+
     void Add(Release release);
     void Remove(Release release);
     Task SaveChangesAsync(CancellationToken cancellationToken);
