@@ -16,6 +16,7 @@ See [link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 
 - Open **Release templates**, click **New release template**, and add the configurations.
 - Open a configured release and choose **Save as template** from its action menu.
+- Choose **Duplicate** from the action menu of a template to create a variant of it.
 
 ![Release templates](images/release-templates-page.png)
 

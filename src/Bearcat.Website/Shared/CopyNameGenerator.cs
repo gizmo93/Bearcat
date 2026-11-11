@@ -1,8 +1,8 @@
 using System.Globalization;
 
-namespace Bearcat.Website.Pages.ManageForumPostTemplates;
+namespace Bearcat.Website.Shared;
 
-public static class ForumPostTemplateCopyNameGenerator
+public static class CopyNameGenerator
 {
     private const int FirstNumberedCopy = 2;
 

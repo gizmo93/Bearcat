@@ -1619,8 +1619,8 @@
   <data name="DiscardChanges" xml:space="preserve"><value>Discard changes</value></data>
   <data name="ForumPostTemplateNameAlreadyExists" xml:space="preserve"><value>A forum post template named {0} already exists.</value></data>
   <data name="FixTemplateSyntaxErrorsBeforeSaving" xml:space="preserve"><value>Fix the template syntax errors before saving.</value></data>
-  <data name="ForumPostTemplateCopyName" xml:space="preserve"><value>{0} (copy)</value></data>
-  <data name="ForumPostTemplateNumberedCopyName" xml:space="preserve"><value>{0} (copy {1})</value></data>
+  <data name="CopyName" xml:space="preserve"><value>{0} (copy)</value></data>
+  <data name="NumberedCopyName" xml:space="preserve"><value>{0} (copy {1})</value></data>
   <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Forum post template cannot be deleted</value></data>
   <data name="ForumPostTemplateUsedByOnePostingRule" xml:space="preserve"><value>{0} is used by 1 posting rule. Replace the template in that rule first, then delete it.</value></data>
   <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} is used by {1} posting rules. Replace the template in those rules first, then delete it.</value></data>

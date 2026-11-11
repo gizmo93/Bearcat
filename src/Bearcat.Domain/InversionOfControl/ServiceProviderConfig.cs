@@ -81,6 +81,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CollectionImageUploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CreationFromRelease;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Duplication;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ImageUploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
@@ -172,6 +173,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseClassificationService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ReleaseTemplateFromReleaseCreationService>();
+            services.AddScoped<ReleaseTemplateCopyService>();
             services.AddScoped<ArchiveConfigTemplateService>();
             services.AddScoped<UploadConfigTemplateService>();
             services.AddScoped<ImageUploadConfigTemplateService>();

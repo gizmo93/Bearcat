@@ -16,6 +16,7 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 
 - Öffne **Releasetemplates**, klicke auf **Neues Releasetemplate** und füge die Konfigurationen hinzu.
 - Öffne ein konfiguriertes Release und wähle im Aktionsmenü **Als Template speichern**.
+- Wähle im Aktionsmenü eines Templates **Duplizieren**, um eine Variante davon zu erstellen.
 
 ![Releasetemplates](../images/release-templates-page.png)
 

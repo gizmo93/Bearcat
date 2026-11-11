@@ -1,8 +1,10 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Duplication;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -107,6 +109,22 @@ public partial class ReleaseTemplatesPage(
         {
             await LoadReleaseTemplatesAsync();
         }
+    }
+
+    private async Task DuplicateAsync(ReleaseTemplateSummaryReadModel releaseTemplate)
+    {
+        var copyName = CopyNameGenerator.CreateCopyName(
+            releaseTemplate.Name,
+            releaseTemplates.Select(template => template.Name).ToList(),
+            L["CopyName"],
+            L["NumberedCopyName"]
+        );
+
+        var duplicatedReleaseTemplateId = await operationRunner.RunAsync(
+            (ReleaseTemplateCopyService service) =>
+                service.CopyAsync(releaseTemplate.ReleaseTemplateId, copyName)
+        );
+        navigationManager.NavigateTo($"/release-templates/{duplicatedReleaseTemplateId}");
     }
 
     private async Task DeleteAsync(ReleaseTemplateSummaryReadModel releaseTemplate)

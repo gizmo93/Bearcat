@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CollectionImageUploadConfigTemplates;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Duplication;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ImageUploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
@@ -10,6 +11,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -28,7 +30,7 @@ public partial class ReleaseTemplateDetail(
     private ReleaseTemplateDetailReadModel releaseTemplate = null!;
     private bool isInitialized;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await LoadReleaseTemplateAsync();
     }
@@ -102,6 +104,26 @@ public partial class ReleaseTemplateDetail(
         {
             await LoadReleaseTemplateAsync();
         }
+    }
+
+    private async Task DuplicateTemplateAsync()
+    {
+        var existingReleaseTemplates = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
+        );
+
+        var copyName = CopyNameGenerator.CreateCopyName(
+            releaseTemplate.Name,
+            existingReleaseTemplates.Select(template => template.Name).ToList(),
+            L["CopyName"],
+            L["NumberedCopyName"]
+        );
+
+        var duplicatedReleaseTemplateId = await operationRunner.RunAsync(
+            (ReleaseTemplateCopyService service) =>
+                service.CopyAsync(releaseTemplate.ReleaseTemplateId, copyName)
+        );
+        navigationManager.NavigateTo($"/release-templates/{duplicatedReleaseTemplateId}");
     }
 
     private async Task DeleteTemplateAsync()

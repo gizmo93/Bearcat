@@ -698,11 +698,11 @@ public partial class ForumPostTemplatesPage(
         }
 
         var sourceTemplate = GetSelectedTemplateSummary();
-        var copyName = ForumPostTemplateCopyNameGenerator.CreateCopyName(
+        var copyName = CopyNameGenerator.CreateCopyName(
             sourceTemplate.Name,
             templates.Select(template => template.Name).ToList(),
-            L["ForumPostTemplateCopyName"],
-            L["ForumPostTemplateNumberedCopyName"]
+            L["CopyName"],
+            L["NumberedCopyName"]
         );
 
         var copyId = await operationRunner.RunAsync(

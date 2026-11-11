@@ -97,6 +97,9 @@
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(template))">
                                     @L["Edit"]
                                 </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DuplicateAsync(template))">
+                                    @L["Duplicate"]
+                                </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(template))">
                                     @L["Delete"]
                                 </BbDropdownMenuItem>

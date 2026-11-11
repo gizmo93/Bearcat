@@ -17,104 +17,92 @@
         </BbButton>
     </div>
 
-    <BbDataTable TData="ReleaseFolderAutomationReadModel"
-                 Data="automations"
-                 ShowToolbar="false"
-                 ShowPagination="@(automations.Count > 10)"
-                 InitialPageSize="10"
-                 IsLoading="isLoading"
-                 AriaLabel="@L["ReleaseFolderAutomations"]"
-                 Class="bearcat-data-table bearcat-folder-automations-table">
-        <Columns>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header="@L["ReleaseBasePath"]"
-                               Property="@(automation => automation.BasePath)">
-                <CellTemplate Context="automation">
-                    <p class="bearcat-release-list-path" title="@automation.BasePath">
-                        @automation.BasePath
-                    </p>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header="@L["FolderNamePattern"]"
-                               Property="@(automation => automation.FolderNamePattern ?? string.Empty)"
-                               Width="160px">
-                <CellTemplate Context="automation">
-                    @if (string.IsNullOrWhiteSpace(automation.FolderNamePattern))
-                    {
-                        <span class="text-sm text-muted-foreground">@L["AllFolders"]</span>
-                    }
-                    else
-                    {
-                        <BbBadge Variant="BadgeVariant.Outline">@automation.FolderNamePattern</BbBadge>
-                    }
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header="@L["ReleaseTemplate"]"
-                               Property="@(automation => automation.ReleaseTemplateName)"
-                               Width="170px">
-                <CellTemplate Context="automation">
-                    <BbBadge Variant="BadgeVariant.Secondary">@automation.ReleaseTemplateName</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header="@L["ReleaseType"]"
-                               Property="@(automation => automation.ReleaseType.ToString())"
-                               Width="120px">
-                <CellTemplate Context="automation">
-                    <BbBadge Variant="BadgeVariant.Outline">@L.Localize(automation.ReleaseType)</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header="@L["ReleaseContentType"]"
-                               Property="@(automation => automation.ReleaseContentType.ToString())"
-                               Width="120px">
-                <CellTemplate Context="automation">
-                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(automation.ReleaseContentType)</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header="@L["PrimaryLanguage"]"
-                               Property="@(automation => automation.PrimaryLanguageCode ?? string.Empty)"
-                               Width="150px">
-                <CellTemplate Context="automation">
-                    @if (string.IsNullOrWhiteSpace(automation.PrimaryLanguageCode))
-                    {
-                        <span class="text-sm text-muted-foreground">@L["NotSet"]</span>
-                    }
-                    else
-                    {
-                        <BbBadge Variant="BadgeVariant.Outline">
-                            @GetLanguageDisplayName(automation.PrimaryLanguageCode)
-                        </BbBadge>
-                    }
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="bool"
-                               Header="@L["Status"]"
-                               Property="@(automation => automation.IsEnabled)"
-                               Width="220px">
-                <CellTemplate Context="automation">
-                    <div class="flex items-center gap-1.5 whitespace-nowrap">
+    <div class="bearcat-full-width-list @@container">
+        <div class="overflow-hidden rounded-lg border bg-card">
+            <div class="hidden h-11 items-center gap-x-4 bg-muted px-4 text-sm font-medium text-muted-foreground @@xl:grid @@xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_9rem_2.25rem] @@7xl:hidden">
+                <span>@L["ReleaseBasePath"]</span>
+                <span>@L["ReleaseTemplate"]</span>
+                <span>@L["Status"]</span>
+                <span></span>
+            </div>
+            <div class="hidden h-11 items-center gap-x-4 bg-muted px-4 text-sm font-medium text-muted-foreground @@7xl:grid @@7xl:grid-cols-[minmax(0,1.6fr)_minmax(0,0.8fr)_8rem_minmax(0,1fr)_7rem_9rem_9rem_2.25rem]">
+                <span>@L["ReleaseBasePath"]</span>
+                <span>@L["FolderNamePattern"]</span>
+                <span>@L["PrimaryLanguage"]</span>
+                <span>@L["ReleaseTemplate"]</span>
+                <span>@L["ReleaseType"]</span>
+                <span>@L["ReleaseContentType"]</span>
+                <span>@L["Status"]</span>
+                <span></span>
+            </div>
+
+            @if (!isLoading && automations.Count == 0)
+            {
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="inbox" class="h-5 w-5" />
+                    <span>@L["NoReleaseFolderAutomationsFound"]</span>
+                </div>
+            }
+
+            @foreach (var automation in automations)
+            {
+                <div class="grid grid-cols-[minmax(0,1fr)_auto_2.25rem] items-start gap-x-3 gap-y-2 border-t p-4 first:border-t-0 @@xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_9rem_2.25rem] @@xl:items-center @@xl:gap-x-4 @@xl:py-3 @@7xl:grid-cols-[minmax(0,1.6fr)_minmax(0,0.8fr)_8rem_minmax(0,1fr)_7rem_9rem_9rem_2.25rem]">
+                    <div class="col-span-full row-start-2 min-w-0 space-y-1.5 @@xl:col-auto @@xl:row-auto @@7xl:contents @@7xl:space-y-0">
+                        <p class="text-[0.8125rem] text-muted-foreground [overflow-wrap:anywhere] @@xl:truncate" title="@automation.BasePath">
+                            @automation.BasePath
+                        </p>
+                        <div class="flex flex-wrap items-center gap-1.5 @@7xl:contents">
+                            <div class="min-w-0">
+                                @if (string.IsNullOrWhiteSpace(automation.FolderNamePattern))
+                                {
+                                    <span class="text-xs text-muted-foreground @@7xl:text-sm">@L["AllFolders"]</span>
+                                }
+                                else
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline" title="@L["FolderNamePattern"]">@automation.FolderNamePattern</BbBadge>
+                                }
+                            </div>
+                            <div class="@(string.IsNullOrWhiteSpace(automation.PrimaryLanguageCode) ? "@max-7xl:hidden" : string.Empty)">
+                                @if (string.IsNullOrWhiteSpace(automation.PrimaryLanguageCode))
+                                {
+                                    <span class="text-sm text-muted-foreground">@L["NotSet"]</span>
+                                }
+                                else
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline" title="@L["PrimaryLanguage"]">
+                                        @GetLanguageDisplayName(automation.PrimaryLanguageCode)
+                                    </BbBadge>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-start-1 row-start-1 min-w-0 space-y-1.5 @@xl:col-auto @@xl:row-auto @@7xl:contents @@7xl:space-y-0">
+                        <p class="truncate text-sm font-medium" title="@automation.ReleaseTemplateName">
+                            @automation.ReleaseTemplateName
+                        </p>
+                        <div class="flex flex-wrap items-center gap-1.5 @@7xl:contents">
+                            <div>
+                                <BbBadge Variant="BadgeVariant.Outline">@L.Localize(automation.ReleaseType)</BbBadge>
+                            </div>
+                            <div>
+                                <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(automation.ReleaseContentType)</BbBadge>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 justify-self-end whitespace-nowrap @@xl:justify-self-start">
                         <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
                             @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
                         </BbBadge>
                         @if (ShouldExtractArchives(automation))
                         {
-                            <BbBadge Variant="BadgeVariant.Outline" Class="text-muted-foreground" title="@L["ExtractArchivesBeforeReleaseCreation"]">
+                            <BbBadge Variant="BadgeVariant.Outline" Class="text-muted-foreground" title="@L["ExtractArchivesBeforeReleaseCreation"]" aria-label="@L["ExtractsArchives"]">
                                 <BbBadgeIcon Name="file-archive" />
-                                @L["ExtractsArchives"]
                             </BbBadge>
                         }
                     </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
-                               Header=""
-                               Property="@(automation => automation.BasePath)"
-                               Width="56px">
-                <CellTemplate Context="automation">
+
                     <div class="flex justify-end">
                         <BbDropdownMenu>
                             <BbDropdownMenuTrigger>
@@ -135,16 +123,10 @@
                             </BbDropdownMenuContent>
                         </BbDropdownMenu>
                     </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-        </Columns>
-        <EmptyTemplate>
-            <div class="bearcat-release-empty">
-                <LucideIcon Name="inbox" class="h-5 w-5" />
-                <span>@L["NoReleaseFolderAutomationsFound"]</span>
-            </div>
-        </EmptyTemplate>
-    </BbDataTable>
+                </div>
+            }
+        </div>
+    </div>
 
     @if (failedExtractions.Count > 0)
     {

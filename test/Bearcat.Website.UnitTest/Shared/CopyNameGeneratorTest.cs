@@ -1,9 +1,9 @@
-using Bearcat.Website.Pages.ManageForumPostTemplates;
+using Bearcat.Website.Shared;
 using Shouldly;
 
-namespace Bearcat.Website.UnitTest.Pages.ManageForumPostTemplates;
+namespace Bearcat.Website.UnitTest.Shared;
 
-public class ForumPostTemplateCopyNameGeneratorTest
+public class CopyNameGeneratorTest
 {
     private const string CopyNameFormat = "{0} (copy)";
     private const string NumberedCopyNameFormat = "{0} (copy {1})";
@@ -15,7 +15,7 @@ public class ForumPostTemplateCopyNameGeneratorTest
         string[] existingNames = ["Movies"];
 
         // Act
-        var copyName = ForumPostTemplateCopyNameGenerator.CreateCopyName(
+        var copyName = CopyNameGenerator.CreateCopyName(
             "Movies",
             existingNames,
             CopyNameFormat,
@@ -33,7 +33,7 @@ public class ForumPostTemplateCopyNameGeneratorTest
         string[] existingNames = ["Movies", "Movies (copy)"];
 
         // Act
-        var copyName = ForumPostTemplateCopyNameGenerator.CreateCopyName(
+        var copyName = CopyNameGenerator.CreateCopyName(
             "Movies",
             existingNames,
             CopyNameFormat,
@@ -51,7 +51,7 @@ public class ForumPostTemplateCopyNameGeneratorTest
         string[] existingNames = ["Movies", "Movies (copy)", "Movies (copy 2)", "Movies (copy 3)"];
 
         // Act
-        var copyName = ForumPostTemplateCopyNameGenerator.CreateCopyName(
+        var copyName = CopyNameGenerator.CreateCopyName(
             "Movies",
             existingNames,
             CopyNameFormat,
@@ -69,7 +69,7 @@ public class ForumPostTemplateCopyNameGeneratorTest
         string[] existingNames = ["Movies", "movies (copy)"];
 
         // Act
-        var copyName = ForumPostTemplateCopyNameGenerator.CreateCopyName(
+        var copyName = CopyNameGenerator.CreateCopyName(
             "Movies",
             existingNames,
             CopyNameFormat,
