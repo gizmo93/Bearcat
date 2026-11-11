@@ -15,6 +15,8 @@ public sealed partial class ReleaseSearchBar : ComponentBase, IDisposable
     private readonly RestartableDelay searchTermApplyDelay = new();
     private string inputText = string.Empty;
     private string? appliedSearchTerm;
+    private string? searchTermOfLastReceivedQuery;
+    private readonly List<string?> appliedSearchTermsNotYetReceivedInQuery = [];
     private bool isFocused;
     private bool isScopeListDismissed;
     private int highlightedEntryIndex;
@@ -57,11 +59,24 @@ public sealed partial class ReleaseSearchBar : ComponentBase, IDisposable
 
     protected override void OnParametersSet()
     {
-        if (Query.SearchTerm == appliedSearchTerm)
+        if (Query.SearchTerm == searchTermOfLastReceivedQuery)
         {
             return;
         }
 
+        searchTermOfLastReceivedQuery = Query.SearchTerm;
+
+        var indexOfReceivedSearchTerm = appliedSearchTermsNotYetReceivedInQuery.IndexOf(
+            Query.SearchTerm
+        );
+
+        if (indexOfReceivedSearchTerm >= 0)
+        {
+            appliedSearchTermsNotYetReceivedInQuery.RemoveRange(0, indexOfReceivedSearchTerm + 1);
+            return;
+        }
+
+        appliedSearchTermsNotYetReceivedInQuery.Clear();
         appliedSearchTerm = Query.SearchTerm;
         inputText = Query.SearchTerm ?? string.Empty;
     }
@@ -95,12 +110,13 @@ public sealed partial class ReleaseSearchBar : ComponentBase, IDisposable
         searchTermApplyDelay.Cancel();
 
         var searchTerm = SearchUrlParameters.NormalizeText(inputText);
-        if (searchTerm == Query.SearchTerm)
+        if (searchTerm == appliedSearchTerm)
         {
             return;
         }
 
         appliedSearchTerm = searchTerm;
+        appliedSearchTermsNotYetReceivedInQuery.Add(searchTerm);
         await queryChanged.InvokeAsync(Query with { SearchTerm = searchTerm });
     }
 
@@ -162,7 +178,13 @@ public sealed partial class ReleaseSearchBar : ComponentBase, IDisposable
 
         var scopeValue = inputText.Trim();
         inputText = string.Empty;
-        appliedSearchTerm = null;
+
+        if (appliedSearchTerm is not null)
+        {
+            appliedSearchTerm = null;
+            appliedSearchTermsNotYetReceivedInQuery.Add(null);
+        }
+
         highlightedEntryIndex = 0;
 
         await OnQueryChanged.InvokeAsync(
