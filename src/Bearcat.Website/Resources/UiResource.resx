@@ -853,6 +853,11 @@
   <data name="DeleteReleaseCollection" xml:space="preserve"><value>Delete release collection</value></data>
   <data name="DeleteReleaseCollectionConfirmation" xml:space="preserve"><value>Delete the release collection {0}? Its upload slots, image upload configurations and posted locations are removed as well.</value></data>
   <data name="DeleteReleaseCollectionHasReleases" xml:space="preserve"><value>Remove all releases from this collection before deleting it.</value></data>
+  <data name="DeleteSelectedReleaseCollections" xml:space="preserve"><value>Delete selected release collections</value></data>
+  <data name="DeleteSelectedReleaseCollectionsConfirmation" xml:space="preserve"><value>Delete {0} release collection(s)? Their upload slots, image upload configurations and posted locations are removed as well.</value></data>
+  <data name="DeleteSelectedReleaseCollectionsConfirmationWithSkipped" xml:space="preserve"><value>Delete {0} release collection(s)? Their upload slots, image upload configurations and posted locations are removed as well. {1} selected release collection(s) still contain releases and are skipped.</value></data>
+  <data name="DeleteSelectedReleaseCollectionsAllHaveReleases" xml:space="preserve"><value>All selected release collections still contain releases. Remove the releases before deleting them.</value></data>
+  <data name="ReleaseCollectionsDeleted" xml:space="preserve"><value>{0} release collection(s) deleted.</value></data>
   <data name="DeleteReleaseCollectionTitle" xml:space="preserve"><value>Delete release collection {0}</value></data>
   <data name="NewCollectionUploadSlot" xml:space="preserve"><value>New upload slot</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>

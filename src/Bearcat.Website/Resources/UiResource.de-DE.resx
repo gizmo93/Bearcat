@@ -853,6 +853,11 @@
   <data name="DeleteReleaseCollection" xml:space="preserve"><value>Releasecollection löschen</value></data>
   <data name="DeleteReleaseCollectionConfirmation" xml:space="preserve"><value>Releasecollection {0} löschen? Ihre Uploadslots, Bilduploadkonfigurationen und Veröffentlichungsorte werden ebenfalls entfernt.</value></data>
   <data name="DeleteReleaseCollectionHasReleases" xml:space="preserve"><value>Entferne zuerst alle Releases aus dieser Collection, bevor du sie löschst.</value></data>
+  <data name="DeleteSelectedReleaseCollections" xml:space="preserve"><value>Ausgewählte Releasecollections löschen</value></data>
+  <data name="DeleteSelectedReleaseCollectionsConfirmation" xml:space="preserve"><value>{0} Releasecollection(s) löschen? Ihre Uploadslots, Bilduploadkonfigurationen und Veröffentlichungsorte werden ebenfalls entfernt.</value></data>
+  <data name="DeleteSelectedReleaseCollectionsConfirmationWithSkipped" xml:space="preserve"><value>{0} Releasecollection(s) löschen? Ihre Uploadslots, Bilduploadkonfigurationen und Veröffentlichungsorte werden ebenfalls entfernt. {1} ausgewählte Releasecollection(s) enthalten noch Releases und werden übersprungen.</value></data>
+  <data name="DeleteSelectedReleaseCollectionsAllHaveReleases" xml:space="preserve"><value>Alle ausgewählten Releasecollections enthalten noch Releases. Entferne zuerst die Releases, bevor du sie löschst.</value></data>
+  <data name="ReleaseCollectionsDeleted" xml:space="preserve"><value>{0} Releasecollection(s) gelöscht.</value></data>
   <data name="DeleteReleaseCollectionTitle" xml:space="preserve"><value>Releasecollection {0} löschen</value></data>
   <data name="NewCollectionUploadSlot" xml:space="preserve"><value>Neuer Uploadslot</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Aktionen für Releasecollections öffnen</value></data>
