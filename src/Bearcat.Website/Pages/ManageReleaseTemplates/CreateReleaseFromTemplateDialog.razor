@@ -11,6 +11,12 @@
                                Placeholder="@L["SelectReleaseTemplate"]"
                                Options="ReleaseTemplateOptions" />
 
+            <BbFormFieldSwitch @bind-Checked="formModel.CreateOneReleasePerSubfolder"
+                               @bind-Checked:after="HandleCreateOneReleasePerSubfolderChangedAsync"
+                               Label="@L["CreateOneReleasePerSubfolder"]"
+                               HelperText="@L["CreateOneReleasePerSubfolderHelp"]"
+                               Disabled="isCreating" />
+
             <div class="space-y-2">
                 <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
                 <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
@@ -31,10 +37,73 @@
                 }
             </div>
 
-            <BbFormFieldInput TValue="string"
-                              @bind-Value="formModel.Name"
-                              Label="@L["Name"]"
-                              Placeholder="@L["NameYourRelease"]" />
+            @if (!formModel.CreateOneReleasePerSubfolder)
+            {
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="formModel.Name"
+                                  Label="@L["Name"]"
+                                  Placeholder="@L["NameYourRelease"]" />
+            }
+            else if (subfolderPreview is not null)
+            {
+                <div class="space-y-2 rounded-md border border-border/70 p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <p class="text-sm font-medium">@L["Subfolders"]</p>
+                        <div class="flex gap-2">
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.Small"
+                                      Disabled="isCreating"
+                                      OnClick="SelectAllSubfoldersThatCanBecomeReleases">
+                                @L["SelectAll"]
+                            </BbButton>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.Small"
+                                      Disabled="isCreating"
+                                      OnClick="DeselectAllSubfolders">
+                                @L["DeselectAll"]
+                            </BbButton>
+                        </div>
+                    </div>
+
+                    @if (subfolderPreview.MatchingFolderCount == 0)
+                    {
+                        <p class="text-sm text-muted-foreground">@L["NoSubfoldersFound"]</p>
+                    }
+                    else
+                    {
+                        <ul class="max-h-72 space-y-2 overflow-y-auto">
+                            @foreach (var subfolder in subfolderPreview.MatchingFolders)
+                            {
+                                <li @key="subfolder.FolderPath" class="space-y-1 text-sm" title="@subfolder.FolderPath">
+                                    <div class="flex min-w-0 items-center gap-2">
+                                        <BbCheckbox Checked="selectedSubfolderPaths.Contains(subfolder.FolderPath)"
+                                                    CheckedChanged="@(isSelected => SetSubfolderSelected(subfolder.FolderPath, isSelected))"
+                                                    Disabled="@(isCreating || !CanSubfolderBecomeRelease(subfolder))"
+                                                    AriaLabel="@subfolder.FolderName" />
+                                        <span class="min-w-0 flex-1 truncate">@subfolder.FolderName</span>
+                                        @if (createdSubfolderPaths.Contains(subfolder.FolderPath))
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Outline" Class="shrink-0 text-muted-foreground">
+                                                @L["Created"]
+                                            </BbBadge>
+                                        }
+                                        else if (subfolder.IsUsedByReleaseArchiveOrRemoteDownload)
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Outline" Class="shrink-0 text-muted-foreground">
+                                                @L["ReleaseFolderPreviewInUse"]
+                                            </BbBadge>
+                                        }
+                                    </div>
+                                    @if (subfolderErrorMessagesByFolderPath.TryGetValue(subfolder.FolderPath, out var errorMessage))
+                                    {
+                                        <p class="text-xs text-destructive">@errorMessage</p>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
 
             <BbFormFieldCombobox TValue="string"
                                  @bind-Value="formModel.PrimaryLanguageCode"
@@ -99,12 +168,12 @@
 
         <div class="flex justify-end gap-2">
             <BbButton Variant="ButtonVariant.Outline" Disabled="isCreating" OnClick="CancelAsync">
-                @L["Cancel"]
+                @(createdSubfolderPaths.Count > 0 ? L["Close"] : L["Cancel"])
             </BbButton>
             <BbButton Type="ButtonType.Submit"
                       Disabled="@(releaseTemplates.Count == 0 || isCreating)"
                       Loading="isCreating">
-                @L["CreateRelease"]
+                @SubmitButtonText
             </BbButton>
         </div>
     </div>

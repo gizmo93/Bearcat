@@ -22,6 +22,9 @@ See [link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 On **Releases**, choose **New from template**. The new release normally takes the folder name,
 as do archive configurations set to use the release name.
 
+Enable **One release per subfolder** to create a release for every direct subfolder of the selected
+folder. Deselect the subfolders you do not want. Subfolders already in use cannot be selected.
+
 Enable **Collection detection** in the template to group related releases, such as episodes of a TV
 season. See [Release Collections](/Bearcat/release-collections/).
 

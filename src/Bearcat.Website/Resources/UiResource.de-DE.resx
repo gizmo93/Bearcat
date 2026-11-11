@@ -697,6 +697,15 @@
   <data name="ArchiveNamePreview" xml:space="preserve"><value>Archivname:</value></data>
   <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Erstelle zuerst ein Archivkonfigurationstemplate.</value></data>
   <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Release aus Template erstellen</value></data>
+  <data name="CreateOneReleasePerSubfolder" xml:space="preserve"><value>Ein Release pro Unterordner</value></data>
+  <data name="CreateOneReleasePerSubfolderHelp" xml:space="preserve"><value>Erstellt für jeden ausgewählten Unterordner des Ordners ein Release. Jedes Release übernimmt den Namen seines Unterordners.</value></data>
+  <data name="Subfolders" xml:space="preserve"><value>Unterordner</value></data>
+  <data name="NoSubfoldersFound" xml:space="preserve"><value>Dieser Ordner hat keine Unterordner.</value></data>
+  <data name="SelectAtLeastOneSubfolder" xml:space="preserve"><value>Wähle mindestens einen Unterordner aus</value></data>
+  <data name="CreateReleasesCount" xml:space="preserve"><value>{0} Releases erstellen</value></data>
+  <data name="CreatingReleasesProgress" xml:space="preserve"><value>Erstelle Release {0} von {1}</value></data>
+  <data name="ReleasesCreatedCount" xml:space="preserve"><value>{0} Releases erstellt</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="CreateReleaseFromTemplateDescription" xml:space="preserve"><value>Wähle ein Template und einen Releaseordner. Der Releasename wird standardmässig aus dem Ordnernamen gesetzt.</value></data>
   <data name="DeleteArchiveConfigTemplateConfirmation" xml:space="preserve"><value>Archivkonfigurationstemplate {0} löschen? Verwendende Uploadkonfigurationstemplates werden ebenfalls entfernt.</value></data>
   <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Linkcryptertemplate {0} löschen?</value></data>

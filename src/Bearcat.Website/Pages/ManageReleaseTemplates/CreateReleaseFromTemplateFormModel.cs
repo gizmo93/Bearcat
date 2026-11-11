@@ -9,4 +9,6 @@ public class CreateReleaseFromTemplateFormModel
     public string FolderPath { get; set; } = string.Empty;
 
     public string PrimaryLanguageCode { get; set; } = string.Empty;
+
+    public bool CreateOneReleasePerSubfolder { get; set; }
 }

@@ -22,6 +22,10 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 Wähle auf **Releases** den Eintrag **Neu aus Template**. Das neue Release übernimmt normalerweise
 den Ordnernamen, ebenso die Archivkonfigurationen, die den Releasenamen verwenden.
 
+Aktiviere **Ein Release pro Unterordner**, um für jeden direkten Unterordner des gewählten Ordners
+ein Release zu erstellen. Wähle die Unterordner ab, die du nicht willst. Bereits verwendete
+Unterordner lassen sich nicht auswählen.
+
 Aktiviere **Collectionerkennung** im Template, um zusammengehörige Releases zu gruppieren, etwa die Folgen
 einer TV-Staffel. Siehe [Releasecollections](/Bearcat/de/release-collections/).
 
