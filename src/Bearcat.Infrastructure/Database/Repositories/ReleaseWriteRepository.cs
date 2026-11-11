@@ -69,6 +69,18 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .FirstOrDefaultAsync(t => t.Id == releaseTemplateId, cancellationToken);
     }
 
+    public async Task<bool> NameExistsAsync(
+        string name,
+        int? excludedReleaseId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.Releases.AnyAsync(
+            release => release.Name.ToLower() == name.ToLower() && release.Id != excludedReleaseId,
+            cancellationToken
+        );
+    }
+
     public void Add(Release release)
     {
         dbWrite.Add(release);

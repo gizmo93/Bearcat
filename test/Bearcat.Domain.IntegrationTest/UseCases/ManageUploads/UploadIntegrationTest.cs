@@ -8,6 +8,7 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -140,9 +141,10 @@ public abstract class UploadIntegrationTest(DatabaseProvider databaseProvider)
             NumberOfHoursUntilReupload = 24,
             QualityProfile = qualityProfile,
         };
+        var releaseNumber = await DbContext.Releases.CountAsync() + 1;
         var release = new Release
         {
-            Name = "Bearcat.Release.001",
+            Name = $"Bearcat.Release.{releaseNumber:000}",
             CreatedAt = releaseCreatedAt ?? LocalNow.AddMinutes(-10),
             ReleaseType = releaseType,
             ReleaseFolderPath = releaseType is ReleaseType.Managed ? "/tmp/release" : null,

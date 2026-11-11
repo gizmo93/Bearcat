@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.RemoteSource.Dto;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
@@ -17,6 +18,7 @@ public class RemoteSourceScanService(
     RemoteSourceSessionProvider sessionProvider,
     TimeProvider timeProvider,
     IApplicationConfigurationProvider configuration,
+    INotificationService notificationService,
     ILogger<RemoteSourceScanService> logger
 )
 {
@@ -378,6 +380,11 @@ public class RemoteSourceScanService(
                 fileCountAndSize: new FolderFileCountAndSize(0, 0),
                 localNow: localNow
             )
+        );
+
+        notificationService.Create(
+            kind: NotificationKind.ReleaseCreationSkippedBecauseNameExists,
+            message: $"Remote folder '{folder.FullPath}' on '{automation.RemoteSourceRegistration.Name}' was not downloaded because a download or release named '{folder.Name}' already exists."
         );
 
         logger.LogInformation(

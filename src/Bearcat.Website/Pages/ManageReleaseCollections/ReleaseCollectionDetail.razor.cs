@@ -60,6 +60,7 @@ public partial class ReleaseCollectionDetail(
     private AutoPostPlan autoPostPlan = null!;
     private bool isInitialized;
     private bool isResolvingMetadata;
+    private bool isRefreshing;
     private bool isDescriptionExpanded;
     private int? loadedReleaseCollectionId;
     private string? activeTab = ReleaseCollectionDetailTab.Overview;
@@ -118,6 +119,27 @@ public partial class ReleaseCollectionDetail(
             await LoadReleaseCollectionAsync();
             await LoadAutoPostPlanAsync();
             await LoadHasActiveForumRegistrationAsync();
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        isRefreshing = true;
+
+        try
+        {
+            await LoadReleaseCollectionAsync();
+            await LoadAutoPostPlanAsync();
+            await LoadHasActiveForumRegistrationAsync();
+
+            if (postedLocations is not null)
+            {
+                await postedLocations.ReloadAsync();
+            }
+        }
+        finally
+        {
+            isRefreshing = false;
         }
     }
 

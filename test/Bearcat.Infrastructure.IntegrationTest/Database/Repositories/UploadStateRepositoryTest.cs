@@ -4,6 +4,7 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
 namespace Bearcat.Infrastructure.IntegrationTest.Database.Repositories;
@@ -758,9 +759,10 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
         QualityGateState qualityGateState = QualityGateState.Passed
     )
     {
+        var releaseNumber = await DbContext.Releases.CountAsync() + 1;
         var release = new Release
         {
-            Name = "Bearcat.Release.001",
+            Name = $"Bearcat.Release.{releaseNumber:000}",
             CreatedAt = LocalNow.AddDays(-10),
             ReleaseType = ReleaseType.Unmanaged,
             QualityGateState = qualityGateState,

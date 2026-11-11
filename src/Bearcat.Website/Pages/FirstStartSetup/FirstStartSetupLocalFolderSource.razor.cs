@@ -2,6 +2,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
@@ -177,6 +178,12 @@ public partial class FirstStartSetupLocalFolderSource(
                         )
                 );
             }
+        }
+        catch (ReleaseNameAlreadyExistsException)
+        {
+            messageStore.Add(() => formModel.TestFolderPath!, L["ReleaseNameAlreadyExists"]);
+            editContext.NotifyValidationStateChanged();
+            return;
         }
         finally
         {

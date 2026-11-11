@@ -221,6 +221,7 @@ public class RemoteDownloadReleaseCreationServiceTest(DatabaseProvider databaseP
                 CreateNotificationConfigurationProvider()
             ),
             timeProvider,
+            new ReleaseWriteRepository(dbContext),
             NullLogger<RemoteDownloadReleaseCreationService>.Instance
         );
 

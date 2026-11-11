@@ -853,6 +853,11 @@
   <data name="DeleteReleaseCollection" xml:space="preserve"><value>Delete release collection</value></data>
   <data name="DeleteReleaseCollectionConfirmation" xml:space="preserve"><value>Delete the release collection {0}? Its upload slots, image upload configurations and posted locations are removed as well.</value></data>
   <data name="DeleteReleaseCollectionHasReleases" xml:space="preserve"><value>Remove all releases from this collection before deleting it.</value></data>
+  <data name="DeleteSelectedReleaseCollections" xml:space="preserve"><value>Delete selected release collections</value></data>
+  <data name="DeleteSelectedReleaseCollectionsConfirmation" xml:space="preserve"><value>Delete {0} release collection(s)? Their upload slots, image upload configurations and posted locations are removed as well.</value></data>
+  <data name="DeleteSelectedReleaseCollectionsConfirmationWithSkipped" xml:space="preserve"><value>Delete {0} release collection(s)? Their upload slots, image upload configurations and posted locations are removed as well. {1} selected release collection(s) still contain releases and are skipped.</value></data>
+  <data name="DeleteSelectedReleaseCollectionsAllHaveReleases" xml:space="preserve"><value>All selected release collections still contain releases. Remove the releases before deleting them.</value></data>
+  <data name="ReleaseCollectionsDeleted" xml:space="preserve"><value>{0} release collection(s) deleted.</value></data>
   <data name="DeleteReleaseCollectionTitle" xml:space="preserve"><value>Delete release collection {0}</value></data>
   <data name="NewCollectionUploadSlot" xml:space="preserve"><value>New upload slot</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>
@@ -1091,6 +1096,8 @@
   <data name="NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid" xml:space="preserve"><value>All hosters link crypter container invalid</value></data><data name="NotificationKind.ReleaseAllHostersLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>A link crypter container that contains all hosters of a release as mirrors is invalid.</value></data>
   <data name="NotificationKind.LinkCrypterImportReadyForReview" xml:space="preserve"><value>Link crypter import ready for review</value></data><data name="NotificationKind.LinkCrypterImportReadyForReview.Description" xml:space="preserve"><value>The containers of a link crypter import were read and checked and can be reviewed now.</value></data>
   <data name="NotificationKind.LinkCrypterImportCompleted" xml:space="preserve"><value>Link crypter import completed</value></data><data name="NotificationKind.LinkCrypterImportCompleted.Description" xml:space="preserve"><value>All selected containers of a link crypter import were imported.</value></data>
+  <data name="NotificationKind.ReleaseCreationSkippedBecauseNameExists" xml:space="preserve"><value>Release creation skipped because the name exists</value></data>
+  <data name="NotificationKind.ReleaseCreationSkippedBecauseNameExists.Description" xml:space="preserve"><value>A folder found by a folder automation or remote source was skipped because a release with the same name already exists. No release was created.</value></data>
   <data name="NotificationKind.LinkCrypterImportFailed" xml:space="preserve"><value>Link crypter import failed</value></data><data name="NotificationKind.LinkCrypterImportFailed.Description" xml:space="preserve"><value>A link crypter import failed or some of its containers could not be imported.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatic forum post created</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>A release was posted automatically to a forum.</value></data>
   <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatic forum post failed</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>A release could not be posted automatically to a forum.</value></data>
@@ -1466,6 +1473,7 @@
   <data name="ReleaseFolderAlreadyUsedByRelease" xml:space="preserve"><value>This folder is already the release folder of a release.</value></data>
   <data name="ReleaseFolderAlreadyUsedByUnmanagedRelease" xml:space="preserve"><value>This folder is already the archive folder of an unmanaged release.</value></data>
   <data name="ReleaseFolderAlreadyUsedByRemoteDownload" xml:space="preserve"><value>This folder is already the target folder of a remote download.</value></data>
+  <data name="ReleaseNameAlreadyExists" xml:space="preserve"><value>A release with this name already exists.</value></data>
   <data name="CredentialsMustBeEnteredAgain" xml:space="preserve"><value>Re-enter credentials</value></data>
   <data name="UnreadableSecretsBadgeHint" xml:space="preserve"><value>The stored credentials could not be decrypted with the current encryption key and must be entered again.</value></data>
   <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Enter the bot token.</value></data>

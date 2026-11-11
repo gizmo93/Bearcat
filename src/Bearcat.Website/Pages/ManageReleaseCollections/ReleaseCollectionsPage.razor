@@ -2,7 +2,7 @@
 
 <PageTitle>@L["ReleaseCollections"] - Bearcat</PageTitle>
 
-<section class="bearcat-releases-page space-y-4">
+<section class="@SectionClass">
     <div class="bearcat-page-header">
         <div>
             <h1 class="text-3xl font-semibold tracking-tight">@L["ReleaseCollections"]</h1>
@@ -13,6 +13,7 @@
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_minmax(10rem,14rem)_auto] md:items-end">
             <BbFormFieldInput TValue="string"
                               @bind-Value="searchTerm"
+                              @bind-Value:after="ApplySearchAsync"
                               Label="@L["Search"]"
                               Placeholder="@L["SearchReleaseCollections"]" />
 
@@ -42,12 +43,14 @@
     <BbDataTable TData="ReleaseCollectionReadModel"
                  @key="CollectionsTableKey"
                  Data="releaseCollections"
+                 SelectionMode="DataTableSelectionMode.Multiple"
+                 @bind-SelectedItems="selectedReleaseCollections"
                  ShowToolbar="false"
                  ShowPagination="false"
                  InitialPageSize="@pageSize"
                  IsLoading="isLoading"
                  AriaLabel="@L["ReleaseCollections"]"
-                 Class="bearcat-data-table bearcat-release-templates-table">
+                 Class="bearcat-data-table bearcat-release-templates-table bearcat-release-collections-table">
         <Columns>
             <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
                                Header="@L["Name"]"
@@ -145,4 +148,41 @@
                             OnPageSelected="GoToPageAsync" />
         </div>
     </div>
+
+    @if (selectedReleaseCollections.Count > 0)
+    {
+        <div class="bearcat-release-bulk-action-bar">
+            <span class="shrink-0 px-1.5 text-sm font-medium tabular-nums">@L["SelectedCount", selectedReleaseCollections.Count]</span>
+            @if (selectedReleaseCollections.Count < releaseCollections.Count)
+            {
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.Small"
+                          Class="shrink-0"
+                          AriaLabel="@L["SelectAllOnPage"]"
+                          title="@L["SelectAllOnPage"]"
+                          OnClick="SelectAllOnPage">
+                    <LucideIcon Name="list-checks" class="h-4 w-4" />
+                    <span class="hidden sm:inline">@L["SelectAllOnPage"]</span>
+                </BbButton>
+            }
+            <span class="h-5 w-px shrink-0 bg-border" aria-hidden="true"></span>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.Small"
+                      Class="shrink-0 text-destructive hover:text-destructive"
+                      AriaLabel="@L["DeleteSelectedReleaseCollections"]"
+                      title="@L["DeleteSelectedReleaseCollections"]"
+                      OnClick="DeleteSelectedReleaseCollectionsAsync">
+                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                <span class="hidden sm:inline">@L["Delete"]</span>
+            </BbButton>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.IconSmall"
+                      Class="shrink-0"
+                      AriaLabel="@L["DeselectAll"]"
+                      title="@L["DeselectAll"]"
+                      OnClick="ClearSelection">
+                <LucideIcon Name="x" class="h-4 w-4" />
+            </BbButton>
+        </div>
+    }
 </section>

@@ -945,6 +945,7 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
             CreateReleaseFromFolderCreator(dbContext),
             CreateNotificationService(dbContext),
             timeProvider,
+            new ReleaseWriteRepository(dbContext),
             NullLogger<RemoteDownloadReleaseCreationService>.Instance
         );
 

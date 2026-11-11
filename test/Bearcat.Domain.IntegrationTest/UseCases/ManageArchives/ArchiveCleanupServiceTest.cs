@@ -641,9 +641,10 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
             EnableAutomaticReuploads = false,
             NumberOfHoursUntilReupload = 24,
         };
+        var releaseNumber = await DbContext.Releases.CountAsync() + 1;
         var release = new Release
         {
-            Name = "Bearcat.Release.001",
+            Name = $"Bearcat.Release.{releaseNumber:000}",
             ReleaseType = releaseType,
             ReleaseFolderPath = releaseType is ReleaseType.Managed ? releaseFolderPath : null,
             ExcludeFromAutoCleanup = excludeFromAutoCleanup,

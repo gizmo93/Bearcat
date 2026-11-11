@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -8,15 +9,21 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
+using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
-public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunner)
+public partial class ReleaseCollectionsPage(
+    IScopedOperationRunner operationRunner,
+    DialogService dialogService,
+    ToastService toastService
+)
 {
     private readonly int[] pageSizes = [10, 20, 50, 100];
 
     private IReadOnlyList<ReleaseCollectionReadModel> releaseCollections = [];
+    private IReadOnlyCollection<ReleaseCollectionReadModel> selectedReleaseCollections = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private string? searchTerm;
     private ReleaseContentType? selectedReleaseContentType;
@@ -30,6 +37,12 @@ public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunn
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
+
+    private string SectionClass =>
+        selectedReleaseCollections.Count > 0
+            ? "bearcat-releases-page space-y-4 pb-20"
+            : "bearcat-releases-page space-y-4";
+
     private string CollectionsTableKey =>
         $"{pageIndex}-{pageSize}-{searchTerm}-{selectedReleaseContentType}-{selectedReleaseGroupId}";
 
@@ -65,6 +78,70 @@ public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunn
     private async Task ApplySearchAsync()
     {
         pageIndex = 0;
+        await RefreshAsync();
+    }
+
+    private void SelectAllOnPage()
+    {
+        selectedReleaseCollections = releaseCollections;
+    }
+
+    private void ClearSelection()
+    {
+        selectedReleaseCollections = [];
+    }
+
+    private async Task DeleteSelectedReleaseCollectionsAsync()
+    {
+        var releaseCollectionsWithoutReleases = selectedReleaseCollections
+            .Where(releaseCollection => releaseCollection.ReleaseCount == 0)
+            .ToList();
+
+        var releaseCollectionsWithReleasesCount =
+            selectedReleaseCollections.Count - releaseCollectionsWithoutReleases.Count;
+
+        if (releaseCollectionsWithoutReleases.Count == 0)
+        {
+            toastService.Error(L["DeleteSelectedReleaseCollectionsAllHaveReleases"]);
+            return;
+        }
+
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteSelectedReleaseCollections"],
+            releaseCollectionsWithReleasesCount == 0
+                ? L[
+                    "DeleteSelectedReleaseCollectionsConfirmation",
+                    releaseCollectionsWithoutReleases.Count
+                ]
+                : L[
+                    "DeleteSelectedReleaseCollectionsConfirmationWithSkipped",
+                    releaseCollectionsWithoutReleases.Count,
+                    releaseCollectionsWithReleasesCount
+                ],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        foreach (var releaseCollection in releaseCollectionsWithoutReleases)
+        {
+            await operationRunner.RunAsync(
+                (ReleaseCollectionService service) =>
+                    service.DeleteAsync(releaseCollection.ReleaseCollectionId)
+            );
+        }
+
+        toastService.Success(
+            L["ReleaseCollectionsDeleted", releaseCollectionsWithoutReleases.Count]
+        );
         await RefreshAsync();
     }
 
@@ -109,6 +186,7 @@ public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunn
             );
 
             releaseCollections = result.Items;
+            selectedReleaseCollections = [];
             totalCount = result.TotalCount;
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;

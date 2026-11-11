@@ -3,6 +3,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
 namespace Bearcat.Infrastructure.IntegrationTest.Database.Repositories;
@@ -343,9 +344,10 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
                 }
                 : null,
         };
+        var releaseNumber = await DbContext.Releases.CountAsync() + 1;
         var release = new Release
         {
-            Name = "Bearcat.Release.001",
+            Name = $"Bearcat.Release.{releaseNumber:000}",
             CreatedAt = new DateTime(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc),
             ReleaseType = releaseType,
             ReleaseFolderPath = releaseType is ReleaseType.Managed ? "/tmp/release" : null,
