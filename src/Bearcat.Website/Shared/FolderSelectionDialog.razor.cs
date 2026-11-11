@@ -115,8 +115,12 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         loadErrorMessage = null;
         node.Children =
         [
-            .. listing.FolderPaths.Select(CreateFolderNode),
-            .. listing.FilePaths.Select(CreateFileNode),
+            .. listing
+                .FolderPaths.Select(CreateFolderNode)
+                .OrderBy(folderNode => folderNode.Name, StringComparer.OrdinalIgnoreCase),
+            .. listing
+                .FilePaths.Select(CreateFileNode)
+                .OrderBy(fileNode => fileNode.Name, StringComparer.OrdinalIgnoreCase),
         ];
         node.ChildrenLoaded = true;
         node.HasChildren = node.Children.Count > 0;
