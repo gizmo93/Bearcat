@@ -697,6 +697,15 @@
   <data name="ArchiveNamePreview" xml:space="preserve"><value>Archive name:</value></data>
   <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Create an archive configuration template first.</value></data>
   <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Create release from template</value></data>
+  <data name="CreateOneReleasePerSubfolder" xml:space="preserve"><value>One release per subfolder</value></data>
+  <data name="CreateOneReleasePerSubfolderHelp" xml:space="preserve"><value>Creates a release for every selected subfolder of the folder. Each release takes the name of its subfolder.</value></data>
+  <data name="Subfolders" xml:space="preserve"><value>Subfolders</value></data>
+  <data name="NoSubfoldersFound" xml:space="preserve"><value>This folder has no subfolders.</value></data>
+  <data name="SelectAtLeastOneSubfolder" xml:space="preserve"><value>Select at least one subfolder</value></data>
+  <data name="CreateReleasesCount" xml:space="preserve"><value>Create {0} releases</value></data>
+  <data name="CreatingReleasesProgress" xml:space="preserve"><value>Creating release {0} of {1}</value></data>
+  <data name="ReleasesCreatedCount" xml:space="preserve"><value>Created {0} releases</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="CreateReleaseFromTemplateDescription" xml:space="preserve"><value>Select a template and release folder. The release name defaults to the folder name.</value></data>
   <data name="DeleteArchiveConfigTemplateConfirmation" xml:space="preserve"><value>Delete archive config template {0}? Upload config templates using it will also be removed.</value></data>
   <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Delete link crypter template {0}?</value></data>
