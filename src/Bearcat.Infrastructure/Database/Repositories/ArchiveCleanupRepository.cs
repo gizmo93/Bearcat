@@ -48,8 +48,13 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                 a.Id > afterArchiveId
                 && a.ArchiveState == ArchiveState.Created
                 && a.ArchiveStorageFolderId == null
-                && a.Uploads.Any()
-                && a.Uploads.All(u => u.UploadedAt != null)
+                && a.Uploads.Any(u => u.UploadedAt != null)
+                && a.Uploads.All(u =>
+                    u.UploadedAt != null
+                    || u.UploadConfig.Uploads.Any(laterUpload =>
+                        laterUpload.Id > u.Id && laterUpload.UploadedAt != null
+                    )
+                )
                 && !a.ArchiveConfig.Release.ExcludeFromAutoCleanup
                 && dbWrite
                     .Uploads.Where(u =>

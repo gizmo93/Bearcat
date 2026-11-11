@@ -95,7 +95,7 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         await AddArchiveAsync(
             "PartlyUploaded",
             uploadedAt: Cutoff.AddDays(-1),
-            hasFailedUploadWithoutUploadedAt: true
+            failedUploadWithoutUploadedAt: FailedUploadWithoutUploadedAt.AfterCompletedUpload
         );
 
         // Act
@@ -108,6 +108,28 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetLocalArchivesPastRetentionAsync_FailedUploadReplacedByLaterCompletedUpload_ReturnsArchive()
+    {
+        // Arrange
+        var archive = await AddArchiveAsync(
+            "Reuploaded",
+            uploadedAt: Cutoff.AddDays(-1),
+            failedUploadWithoutUploadedAt: FailedUploadWithoutUploadedAt.BeforeCompletedUpload
+        );
+
+        // Act
+        var result = await repository.GetLocalArchivesPastRetentionAsync(
+            Cutoff,
+            afterArchiveId: 0,
+            maximumArchiveCount: 100,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldHaveSingleItem().Id.ShouldBe(archive.Id);
     }
 
     [Test]
@@ -473,7 +495,8 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         ArchiveState archiveState = ArchiveState.Created,
         string? archiveFileFolderPath = null,
         IReadOnlyList<string>? uploadedFileLinks = null,
-        bool hasFailedUploadWithoutUploadedAt = false,
+        FailedUploadWithoutUploadedAt failedUploadWithoutUploadedAt =
+            FailedUploadWithoutUploadedAt.None,
         bool hosterRegistrationIsActive = true,
         bool hosterRegistrationUseForMirrorDownloads = false
     )
@@ -530,55 +553,71 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
             ArchiveFileSizeMb = 512,
             CreatedAt = Cutoff.AddDays(-30),
             ArchiveFiles = archiveFiles,
-            Uploads =
-            [
-                new Upload
-                {
-                    UploadConfig = uploadConfig,
-                    HosterRegistration = uploadConfig.HosterRegistration,
-                    CreatedAt = uploadedAt.AddHours(-1),
-                    UploadedAt = uploadedAt,
-                    UploadState = uploadState,
-                    OnlineState = OnlineState.Online,
-                    ErrorMessages = [],
-                    UploadedFiles = (uploadedFileLinks ?? [])
-                        .Select(
-                            (link, index) =>
-                                new UploadedFile
-                                {
-                                    ArchiveFile = archiveFiles[index],
-                                    HosterFileLink = link,
-                                    OnlineState = OnlineState.Online,
-                                    CreatedAt = uploadedAt,
-                                    ErrorMessages = [],
-                                }
-                        )
-                        .ToList(),
-                },
-            ],
+            Uploads = [],
             ErrorMessages = [],
         };
 
-        if (hasFailedUploadWithoutUploadedAt)
+        var completedUpload = new Upload
         {
-            archive.Uploads.Add(
-                new Upload
-                {
-                    UploadConfig = uploadConfig,
-                    HosterRegistration = uploadConfig.HosterRegistration,
-                    CreatedAt = uploadedAt.AddHours(-1),
-                    UploadState = UploadState.Failed,
-                    OnlineState = OnlineState.Unknown,
-                    ErrorMessages = [],
-                    UploadedFiles = [],
-                }
-            );
-        }
+            UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
+            CreatedAt = uploadedAt.AddHours(-1),
+            UploadedAt = uploadedAt,
+            UploadState = uploadState,
+            OnlineState = OnlineState.Online,
+            ErrorMessages = [],
+            UploadedFiles = (uploadedFileLinks ?? [])
+                .Select(
+                    (link, index) =>
+                        new UploadedFile
+                        {
+                            ArchiveFile = archiveFiles[index],
+                            HosterFileLink = link,
+                            OnlineState = OnlineState.Online,
+                            CreatedAt = uploadedAt,
+                            ErrorMessages = [],
+                        }
+                )
+                .ToList(),
+        };
+
+        var failedUpload = new Upload
+        {
+            UploadConfig = uploadConfig,
+            HosterRegistration = uploadConfig.HosterRegistration,
+            CreatedAt = uploadedAt.AddHours(-1),
+            UploadState = UploadState.Failed,
+            OnlineState = OnlineState.Unknown,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
 
         DbContext.Archives.Add(archive);
+
+        if (failedUploadWithoutUploadedAt is FailedUploadWithoutUploadedAt.BeforeCompletedUpload)
+        {
+            archive.Uploads.Add(failedUpload);
+            await DbContext.SaveChangesAsync();
+        }
+
+        archive.Uploads.Add(completedUpload);
         await DbContext.SaveChangesAsync();
+
+        if (failedUploadWithoutUploadedAt is FailedUploadWithoutUploadedAt.AfterCompletedUpload)
+        {
+            archive.Uploads.Add(failedUpload);
+            await DbContext.SaveChangesAsync();
+        }
+
         DbContext.ChangeTracker.Clear();
 
         return archive;
+    }
+
+    private enum FailedUploadWithoutUploadedAt
+    {
+        None,
+        BeforeCompletedUpload,
+        AfterCompletedUpload,
     }
 }
