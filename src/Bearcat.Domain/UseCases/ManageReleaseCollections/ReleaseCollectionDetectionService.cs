@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
@@ -8,6 +9,37 @@ public static partial class ReleaseCollectionDetectionService
 {
     private const string DefaultSeriesCollectionTemplate = "{title}.S{season}.{variant}";
     private static readonly char[] ReleaseNamePartTrimCharacters = ['.', '_', '-', ' '];
+    private static readonly char[] ReleaseNameTokenSeparators = ['.', '_', ' '];
+
+    private static readonly HashSet<string> ReleaseVariantMarkers = new(
+        StringComparer.OrdinalIgnoreCase
+    )
+    {
+        "repack",
+        "proper",
+        "rerip",
+        "internal",
+        "dirfix",
+        "nfofix",
+        "uncut",
+        "unrated",
+        "extended",
+        "remastered",
+        "restored",
+        "theatrical",
+        "dubbed",
+        "subbed",
+        "synced",
+        "hdr",
+        "hdr10",
+        "dv",
+        "3d",
+        "ac3",
+        "ac3d",
+        "eac3",
+        "dts",
+        "aac",
+    };
 
     public static ReleaseCollectionDetectionResult? Detect(
         string releaseName,
@@ -27,10 +59,9 @@ public static partial class ReleaseCollectionDetectionService
 
         return releaseTemplate.ReleaseCollectionDetectionMode switch
         {
-            ReleaseCollectionDetectionMode.SeriesEpisodePattern => DetectSeriesEpisode(
-                trimmedReleaseName,
-                releaseTemplate
-            ),
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern
+            or ReleaseCollectionDetectionMode.SeriesEpisodePatternWithEpisodeTitle =>
+                DetectSeriesEpisode(trimmedReleaseName, releaseTemplate),
             ReleaseCollectionDetectionMode.CustomRegex => DetectCustomRegex(
                 trimmedReleaseName,
                 releaseTemplate
@@ -53,7 +84,15 @@ public static partial class ReleaseCollectionDetectionService
 
         var title = match.Groups["title"].Value.Trim(ReleaseNamePartTrimCharacters);
         var season = match.Groups["season"].Value.PadLeft(2, '0');
-        var variant = match.Groups["rest"].Value.Trim(ReleaseNamePartTrimCharacters);
+        var textAfterEpisodeMarker = match.Groups["rest"].Value;
+
+        var textAfterEpisodeTitle =
+            releaseTemplate.ReleaseCollectionDetectionMode
+            is ReleaseCollectionDetectionMode.SeriesEpisodePatternWithEpisodeTitle
+                ? RemoveEpisodeTitle(textAfterEpisodeMarker)
+                : textAfterEpisodeMarker;
+
+        var variant = textAfterEpisodeTitle.Trim(ReleaseNamePartTrimCharacters);
 
         var templateValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -78,6 +117,34 @@ public static partial class ReleaseCollectionDetectionService
             Key: NormalizeKey(key),
             Name: NormalizeSpaces(name)
         );
+    }
+
+    private static string RemoveEpisodeTitle(string textAfterEpisodeMarker)
+    {
+        var tokenStart = 0;
+
+        while (tokenStart < textAfterEpisodeMarker.Length)
+        {
+            var separatorIndex = textAfterEpisodeMarker.IndexOfAny(
+                ReleaseNameTokenSeparators,
+                tokenStart
+            );
+
+            var tokenEnd = separatorIndex < 0 ? textAfterEpisodeMarker.Length : separatorIndex;
+            var token = textAfterEpisodeMarker[tokenStart..tokenEnd];
+
+            if (
+                ReleaseVariantMarkers.Contains(token)
+                || ReleaseNameParser.IsLanguageResolutionOrSourceToken(token)
+            )
+            {
+                return textAfterEpisodeMarker[tokenStart..];
+            }
+
+            tokenStart = tokenEnd + 1;
+        }
+
+        return textAfterEpisodeMarker;
     }
 
     private static ReleaseCollectionDetectionResult? DetectCustomRegex(

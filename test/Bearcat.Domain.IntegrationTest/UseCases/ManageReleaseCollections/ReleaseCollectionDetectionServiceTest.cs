@@ -28,6 +28,70 @@ public class ReleaseCollectionDetectionServiceTest
         result.Name.ShouldBe("Hostage.S01.German.AC3.DL.1080p.Web.x265-FuN.mkv");
     }
 
+    [TestCase(
+        "Penny.Dreadful.S03E07.Welt.der.Finsternis.German.DL.1080p.BluRay.x264-RSG",
+        "Penny.Dreadful.S03.German.DL.1080p.BluRay.x264-RSG"
+    )]
+    [TestCase(
+        "Penny.Dreadful.S03E08.Ewige.Nacht.German.DL.1080p.BluRay.x264-RSG",
+        "Penny.Dreadful.S03.German.DL.1080p.BluRay.x264-RSG"
+    )]
+    [TestCase(
+        "Severance.S02E04.Woes.Hollow.2160p.ATVP.WEB-DL.DDP5.1.H.265-NTb",
+        "Severance.S02.2160p.ATVP.WEB-DL.DDP5.1.H.265-NTb"
+    )]
+    [TestCase(
+        "Some.Show.S01E05.Episode.Title.REPACK.720p.HDTV.x264-GRP",
+        "Some.Show.S01.REPACK.720p.HDTV.x264-GRP"
+    )]
+    [TestCase(
+        "Some.Show.S01E01.UNCUT.German.DL.1080p.BluRay.x264-GRP",
+        "Some.Show.S01.UNCUT.German.DL.1080p.BluRay.x264-GRP"
+    )]
+    [TestCase("Some.Show.S01E02.Episode.Title.XviD-GRP", "Some.Show.S01.Episode.Title.XviD-GRP")]
+    public void Detect_SeriesEpisodePatternWithEpisodeTitle_RemovesEpisodeTitleBeforeReleaseTags(
+        string releaseName,
+        string expectedCollectionName
+    )
+    {
+        // Arrange
+        var releaseTemplate = new ReleaseTemplate
+        {
+            ReleaseCollectionDetectionMode =
+                ReleaseCollectionDetectionMode.SeriesEpisodePatternWithEpisodeTitle,
+        };
+
+        // Act
+        var result = ReleaseCollectionDetectionService.Detect(releaseName, releaseTemplate);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe(expectedCollectionName);
+    }
+
+    [Test]
+    public void Detect_SeriesEpisodePattern_EpisodeTitleBeforeReleaseTags_KeepsEpisodeTitle()
+    {
+        // Arrange
+        var releaseTemplate = new ReleaseTemplate
+        {
+            ReleaseCollectionDetectionMode = ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+        };
+
+        // Act
+        var result = ReleaseCollectionDetectionService.Detect(
+            "Penny.Dreadful.S03E07.Welt.der.Finsternis.German.DL.1080p.BluRay.x264-RSG",
+            releaseTemplate
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+
+        result.Name.ShouldBe(
+            "Penny.Dreadful.S03.Welt.der.Finsternis.German.DL.1080p.BluRay.x264-RSG"
+        );
+    }
+
     [Test]
     public void Detect_DisabledMode_ReturnsNull()
     {

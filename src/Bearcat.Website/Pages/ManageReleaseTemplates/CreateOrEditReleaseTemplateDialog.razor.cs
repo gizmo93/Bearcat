@@ -47,6 +47,7 @@ public partial class CreateOrEditReleaseTemplateDialog(IScopedOperationRunner op
         new[]
         {
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ReleaseCollectionDetectionMode.SeriesEpisodePatternWithEpisodeTitle,
             ReleaseCollectionDetectionMode.CustomRegex,
         }
             .Select(mode => new SelectOption<ReleaseCollectionDetectionMode>(

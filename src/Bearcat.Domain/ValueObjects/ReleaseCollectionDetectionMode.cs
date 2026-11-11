@@ -5,4 +5,5 @@ public enum ReleaseCollectionDetectionMode
     Disabled = 1,
     SeriesEpisodePattern = 2,
     CustomRegex = 3,
+    SeriesEpisodePatternWithEpisodeTitle = 4,
 }

@@ -877,6 +877,7 @@
   <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collection detection</value></data>
   <data name="ReleaseCollectionDetectionMode.CustomRegex" xml:space="preserve"><value>Custom regex</value></data>
   <data name="ReleaseCollectionDetectionMode.SeriesEpisodePattern" xml:space="preserve"><value>Series episode pattern</value></data>
+  <data name="ReleaseCollectionDetectionMode.SeriesEpisodePatternWithEpisodeTitle" xml:space="preserve"><value>Series episode pattern, episode title removed</value></data>
   <data name="ReleaseCollectionKeyTemplate" xml:space="preserve"><value>Collection key template</value></data>
   <data name="ReleaseCollectionKeyTemplateRequired" xml:space="preserve"><value>Collection key template is required for custom regex detection.</value></data>
   <data name="ReleaseCollectionNameTemplate" xml:space="preserve"><value>Collection name template</value></data>

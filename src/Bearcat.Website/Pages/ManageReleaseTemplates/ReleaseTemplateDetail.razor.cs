@@ -74,11 +74,9 @@ public partial class ReleaseTemplateDetail(
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
                 UseReleaseCollections =
                     releaseTemplate.ReleaseCollectionDetectionMode
-                        is ReleaseCollectionDetectionMode.SeriesEpisodePattern
-                            or ReleaseCollectionDetectionMode.CustomRegex,
+                        is not ReleaseCollectionDetectionMode.Disabled,
                 ReleaseCollectionDetectionMode = releaseTemplate.ReleaseCollectionDetectionMode
-                    is ReleaseCollectionDetectionMode.SeriesEpisodePattern
-                        or ReleaseCollectionDetectionMode.CustomRegex
+                    is not ReleaseCollectionDetectionMode.Disabled
                     ? releaseTemplate.ReleaseCollectionDetectionMode
                     : ReleaseCollectionDetectionMode.SeriesEpisodePattern,
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,

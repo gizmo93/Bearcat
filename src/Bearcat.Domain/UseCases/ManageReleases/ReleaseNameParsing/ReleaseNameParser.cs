@@ -198,6 +198,14 @@ public static partial class ReleaseNameParser
         };
     }
 
+    public static bool IsLanguageResolutionOrSourceToken(string token)
+    {
+        return Resolutions.ContainsKey(token)
+            || Sources.ContainsKey(token)
+            || LanguageCatalog.TryResolveName(token, out _)
+            || IsMultiLanguageMarker(token);
+    }
+
     private static bool IsMultiLanguageMarker(string token)
     {
         return MultiLanguageMarkers.Contains(token) || MultiLanguagePattern().IsMatch(token);
