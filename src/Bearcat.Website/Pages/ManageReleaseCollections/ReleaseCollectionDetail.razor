@@ -124,6 +124,15 @@
             <div class="bearcat-release-header-actions">
                 @ForumPostActions(isInStickyHeader: false)
 
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.IconSmall"
+                          Disabled="isRefreshing"
+                          AriaLabel="@L["Refresh"]"
+                          title="@L["Refresh"]"
+                          OnClick="RefreshAsync">
+                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isRefreshing ? "animate-spin" : string.Empty)}")" />
+                </BbButton>
+
                 <BbDropdownMenu>
                     <BbDropdownMenuTrigger>
                         <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseCollectionActions"]">
