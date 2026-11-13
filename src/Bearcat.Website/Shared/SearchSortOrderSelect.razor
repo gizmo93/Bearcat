@@ -1,0 +1,8 @@
+@typeparam TSortOrder where TSortOrder : struct, Enum
+
+<BbSelect TValue="TSortOrder"
+          Value="Value"
+          ValueChanged="SelectAsync"
+          Options="Options"
+          AriaLabel="@L["SortOrder"]"
+          Class="bearcat-search-sort-select" />

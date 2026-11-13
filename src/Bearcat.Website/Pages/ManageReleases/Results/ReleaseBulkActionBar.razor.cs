@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -17,7 +18,7 @@ public partial class ReleaseBulkActionBar(
 {
     [Parameter]
     [EditorRequired]
-    public ReleaseSelection Selection { get; set; } = null!;
+    public SearchResultSelection Selection { get; set; } = null!;
 
     [Parameter]
     public IReadOnlyList<int> VisibleReleaseIds { get; set; } = [];
@@ -53,7 +54,7 @@ public partial class ReleaseBulkActionBar(
 
     private async Task ApplyReleaseGroupAsync(int releaseGroupId)
     {
-        var releaseIds = Selection.SelectedReleaseIds;
+        var releaseIds = Selection.SelectedIds;
 
         await operationRunner.RunAsync(
             (ReleaseService service) => service.UpdateReleaseGroupAsync(releaseIds, releaseGroupId)
@@ -66,7 +67,7 @@ public partial class ReleaseBulkActionBar(
 
     private async Task ApplyPrimaryLanguageAsync(string primaryLanguageCode)
     {
-        var releaseIds = Selection.SelectedReleaseIds;
+        var releaseIds = Selection.SelectedIds;
 
         await operationRunner.RunAsync(
             (ReleaseService service) =>
@@ -80,7 +81,7 @@ public partial class ReleaseBulkActionBar(
 
     private async Task CreateManualReuploadsAsync()
     {
-        var releaseIds = Selection.SelectedReleaseIds;
+        var releaseIds = Selection.SelectedIds;
 
         var result = await dialogService.ConfirmAsync(
             L["ReuploadNotFullyOnlineHosters"],
@@ -112,7 +113,7 @@ public partial class ReleaseBulkActionBar(
 
     private async Task DeleteSelectedReleasesAsync()
     {
-        var releaseIds = Selection.SelectedReleaseIds;
+        var releaseIds = Selection.SelectedIds;
 
         var result = await dialogService.ConfirmAsync(
             L["DeleteSelectedReleases"],
@@ -139,7 +140,7 @@ public partial class ReleaseBulkActionBar(
 
     private async Task StartOnlineStateCheckAsync()
     {
-        var releaseIds = Selection.SelectedReleaseIds;
+        var releaseIds = Selection.SelectedIds;
         _ = CheckOnlineStateInBackgroundAsync(releaseIds);
 
         toastService.Info(L["OnlineStateCheckStartedForReleases", releaseIds.Count]);

@@ -1,12 +1,11 @@
-using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Microsoft.AspNetCore.Components;
 
-namespace Bearcat.Website.Pages.ManageReleases.Results;
+namespace Bearcat.Website.Shared;
 
-public partial class ReleaseSearchResultStates : ComponentBase
+public partial class SearchResultStates<TItem> : ComponentBase
 {
     [Parameter]
-    public IReadOnlyList<ReleaseSearchResultReadModel>? Releases { get; set; }
+    public IReadOnlyList<TItem>? Items { get; set; }
 
     [Parameter]
     public bool IsLoading { get; set; }
@@ -16,6 +15,18 @@ public partial class ReleaseSearchResultStates : ComponentBase
 
     [Parameter]
     public EventCallback OnResetFilters { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string NoResultsText { get; set; } = string.Empty;
+
+    [Parameter]
+    [EditorRequired]
+    public string NoMatchingResultsText { get; set; } = string.Empty;
+
+    [Parameter]
+    [EditorRequired]
+    public string NoMatchingResultsHintText { get; set; } = string.Empty;
 
     [Parameter]
     [EditorRequired]

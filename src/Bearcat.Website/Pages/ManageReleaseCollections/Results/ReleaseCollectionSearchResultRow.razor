@@ -1,0 +1,72 @@
+@using Bearcat.Website.Formatting
+
+<div class="@RowClass"
+     data-selected="@(IsSelected ? "true" : "false")">
+    <div class="bearcat-release-result-checkbox" @onclick="ToggleSelectionAsync">
+        <BbCheckbox Checked="IsSelected" AriaLabel="@L["SelectReleaseCollection", ReleaseCollection.Name]" />
+    </div>
+
+    <div class="min-w-0">
+        <a class="bearcat-release-result-name" href="@DetailUrl">
+            <HighlightedSearchTermText Text="@ReleaseCollection.Name" SearchTerm="@SearchTerm" />
+        </a>
+        <p class="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]" title="@L["ReleaseCollectionKey"]">
+            <HighlightedSearchTermText Text="@ReleaseCollection.Key" SearchTerm="@SearchTerm" />
+        </p>
+    </div>
+
+    <div class="bearcat-release-result-details">
+        <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span class="@OnlineStateDotClass" aria-hidden="true"></span>
+                <span>@OnlineStateText</span>
+            </span>
+        </div>
+        <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LucideIcon Name="@ContentTypeIconName" class="h-3.5 w-3.5 shrink-0" />
+                <span>@L.Localize(ReleaseCollection.ReleaseContentType)</span>
+            </span>
+        </div>
+        <div class="min-w-0">
+            <span class="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs text-muted-foreground" title="@L["ReleaseGroup"]">
+                <LucideIcon Name="layers" class="h-3.5 w-3.5 shrink-0 xl:hidden" />
+                <span class="truncate">@ReleaseCollection.ReleaseGroupName</span>
+            </span>
+        </div>
+        <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+                <LucideIcon Name="list-video" class="h-3.5 w-3.5 shrink-0 xl:hidden" />
+                <span class="xl:hidden">@ReleaseCountText</span>
+                <span class="hidden xl:inline">@ReleaseCollection.ReleaseCount.ToString("N0", CultureInfo.CurrentCulture)</span>
+            </span>
+        </div>
+        <div class="@LanguageCellClass">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LucideIcon Name="languages" class="h-3.5 w-3.5 shrink-0 xl:hidden" />
+                <span class="font-mono uppercase">@(ReleaseCollection.PrimaryLanguageCode ?? "-")</span>
+            </span>
+        </div>
+        <div class="min-w-0">
+            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground" title="@ReleaseCollection.CreatedAt.ToString("g")">
+                <LucideIcon Name="clock" class="h-3.5 w-3.5 shrink-0 xl:hidden" />
+                <span>@timeProvider.Humanize(ReleaseCollection.CreatedAt)</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="bearcat-config-actions bearcat-release-result-actions">
+        <BbDropdownMenu>
+            <BbDropdownMenuTrigger>
+                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseCollectionActions"]">
+                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                </BbButton>
+            </BbDropdownMenuTrigger>
+            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                <BbDropdownMenuItem Href="@DetailUrl">
+                    @L["OpenDetails"]
+                </BbDropdownMenuItem>
+            </BbDropdownMenuContent>
+        </BbDropdownMenu>
+    </div>
+</div>

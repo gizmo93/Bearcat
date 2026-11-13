@@ -1662,17 +1662,17 @@ button .bearcat-nav-group-label:hover {
     height: 0.875rem;
 }
 
-.bearcat-release-filter-button {
+.bearcat-search-filter-button {
     border-style: dashed;
     gap: 0.4rem;
     font-weight: 500;
 }
 
-.bearcat-release-filter-button-active {
+.bearcat-search-filter-button-active {
     border-style: solid;
 }
 
-.bearcat-release-option-menu {
+.bearcat-option-menu {
     width: min(16rem, calc(100vw - 2rem));
     padding: 0;
 }
@@ -2889,35 +2889,6 @@ button .bearcat-nav-group-label:hover {
 
     .bearcat-release-templates-table :where(tbody td:nth-child(6)) {
         grid-column: 2;
-        grid-row: 1 / span 5;
-        justify-self: end;
-    }
-
-    .bearcat-release-collections-table :where(tbody tr) {
-        grid-template-columns: 1.5rem minmax(0, 1fr) 2.25rem;
-    }
-
-    .bearcat-release-collections-table :where(tbody td:nth-child(1)) {
-        grid-column: 1;
-        grid-row: 1 / span 5;
-    }
-
-    .bearcat-release-collections-table :where(tbody td:nth-child(2)) {
-        grid-column: 2;
-        grid-row: 1;
-    }
-
-    .bearcat-release-collections-table :where(tbody td:nth-child(3)),
-    .bearcat-release-collections-table :where(tbody td:nth-child(4)),
-    .bearcat-release-collections-table :where(tbody td:nth-child(5)),
-    .bearcat-release-collections-table :where(tbody td:nth-child(6)) {
-        grid-column: 2;
-        grid-row: auto;
-        justify-self: start;
-    }
-
-    .bearcat-release-collections-table :where(tbody td:nth-child(7)) {
-        grid-column: 3;
         grid-row: 1 / span 5;
         justify-self: end;
     }
@@ -4498,7 +4469,7 @@ body:has([aria-modal="true"]) [role="menu"] {
     display: none;
 }
 
-.bearcat-release-sort-select {
+.bearcat-search-sort-select {
     width: 12.5rem;
     max-width: 100%;
 }

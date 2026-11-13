@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases.Search;
@@ -32,25 +33,25 @@ public partial class ReleaseOnlineStateSegments : ComponentBase
                 OnlineState.Online,
                 L.Localize(OnlineState.Online),
                 Counts?.OnlineCount ?? 0,
-                "h-2 w-2 shrink-0 rounded-full bg-muted-foreground/60"
+                OnlineStateDotClasses.GetDotClass(OnlineState.Online)
             ),
             new(
                 OnlineState.PartiallyOnline,
                 L.Localize(OnlineState.PartiallyOnline),
                 Counts?.PartiallyOnlineCount ?? 0,
-                "h-2 w-2 shrink-0 rounded-full border-[1.5px] border-destructive"
+                OnlineStateDotClasses.GetDotClass(OnlineState.PartiallyOnline)
             ),
             new(
                 OnlineState.Offline,
                 L.Localize(OnlineState.Offline),
                 Counts?.OfflineCount ?? 0,
-                "h-2 w-2 shrink-0 rounded-full bg-destructive"
+                OnlineStateDotClasses.GetDotClass(OnlineState.Offline)
             ),
             new(
                 OnlineState.Unknown,
                 L["NoUploads"],
                 Counts?.WithoutUploadConfigsCount ?? 0,
-                "h-2.5 w-2.5 shrink-0 rounded-full border border-dashed border-muted-foreground"
+                OnlineStateDotClasses.GetDotClass(OnlineState.Unknown)
             ),
         ];
 

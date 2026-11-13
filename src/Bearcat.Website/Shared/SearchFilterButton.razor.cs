@@ -2,13 +2,13 @@ using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
-namespace Bearcat.Website.Pages.ManageReleases.Search;
+namespace Bearcat.Website.Shared;
 
-public partial class ReleaseSearchFilterButton<TValue> : ComponentBase
+public partial class SearchFilterButton<TValue> : ComponentBase
 {
     private const string ClearFilterItemValue = "clear-filter";
 
-    private readonly string searchInputId = $"release-filter-search-{Guid.NewGuid():N}";
+    private readonly string searchInputId = $"search-filter-options-search-{Guid.NewGuid():N}";
     private bool isOpen;
     private bool openedByTriggerClick;
 
@@ -33,8 +33,8 @@ public partial class ReleaseSearchFilterButton<TValue> : ComponentBase
 
     private string TriggerClass =>
         IsActive
-            ? "bearcat-release-filter-button bearcat-release-filter-button-active"
-            : "bearcat-release-filter-button";
+            ? "bearcat-search-filter-button bearcat-search-filter-button-active"
+            : "bearcat-search-filter-button";
 
     private string SelectedOptionText =>
         Options.FirstOrDefault(option => IsSelected(option.Value))?.Text

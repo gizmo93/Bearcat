@@ -4,6 +4,7 @@ using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.ReplaceHosters.ReadModels;
@@ -86,6 +87,11 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReleaseSearchSortOrder sortOrder
     ) => localizer[$"ReleaseSearchSortOrder.{sortOrder}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ReleaseCollectionSearchSortOrder sortOrder
+    ) => localizer[$"ReleaseCollectionSearchSortOrder.{sortOrder}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

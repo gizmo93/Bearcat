@@ -356,7 +356,6 @@
   <data name="EditCollectionSettings" xml:space="preserve"><value>Edit collection settings</value></data>
   <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Choose the content type and primary language for this release collection.</value></data>
   <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collection settings updated</value></data>
-  <data name="AnyReleaseContentType" xml:space="preserve"><value>Any content type</value></data>
   <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Movie</value></data>
   <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>TV show episode</value></data>
   <data name="ReleaseContentType.Other" xml:space="preserve"><value>Other</value></data>
@@ -828,7 +827,6 @@
   <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
   <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Only premium users can download files uploaded with this configuration.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Verifying...</value></data>
-  <data name="AllReleaseGroups" xml:space="preserve"><value>All release groups</value></data>
   <data name="Back" xml:space="preserve"><value>Back</value></data>
   <data name="CollectionUploadGroupName" xml:space="preserve"><value>Group name</value></data>
   <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Group name is required.</value></data>
@@ -2104,4 +2102,14 @@
   <data name="ReplaceHostersExecuted" xml:space="preserve"><value>Switched to the replacement: {0} upload configurations, {1} configurations in templates and {2} uploads that have not yet started.</value></data>
   <data name="ReplaceHostersExecutedDeadHoster" xml:space="preserve"><value>Deactivated {0} accounts and marked {1} uploads as offline.</value></data>
   <data name="ReplaceHostersExecutedDeletedUploadConfigs" xml:space="preserve"><value>Deleted {0} upload configurations, {1} configurations in templates and {2} collection upload slots.</value></data>
+  <data name="ReleaseCollectionTotalCount" xml:space="preserve"><value>{0} collections</value></data>
+  <data name="ReleaseCollectionTotalCountOne" xml:space="preserve"><value>{0} collection</value></data>
+  <data name="ReleaseCollectionSearchBarPlaceholder" xml:space="preserve"><value>Search by name or collection key</value></data>
+  <data name="NoReleaseCollectionsMatch" xml:space="preserve"><value>No collections match</value></data>
+  <data name="NoReleaseCollectionsMatchHint" xml:space="preserve"><value>Remove a filter or search for a shorter part of the name or collection key.</value></data>
+  <data name="SelectReleaseCollection" xml:space="preserve"><value>Select {0}</value></data>
+  <data name="ReleaseCollectionSearchSortOrder.NameAscending" xml:space="preserve"><value>Name A to Z</value></data>
+  <data name="ReleaseCollectionSearchSortOrder.NameDescending" xml:space="preserve"><value>Name Z to A</value></data>
+  <data name="ReleaseCollectionSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Recently added</value></data>
+  <data name="ReleaseCollectionSearchSortOrder.CreatedAtAscending" xml:space="preserve"><value>Oldest first</value></data>
 </root>

@@ -11,11 +11,13 @@ using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using Bearcat.Website.Pages.ManageReleases.Results;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
@@ -33,12 +35,20 @@ public partial class AllReleasesPage(
 {
     private const string ResultViewKey = "bearcat.releases.resultView";
 
+    private static readonly IReadOnlyList<ReleaseSearchSortOrder> SortOrders =
+    [
+        ReleaseSearchSortOrder.CreatedAtDescending,
+        ReleaseSearchSortOrder.NameAscending,
+        ReleaseSearchSortOrder.UploadsPostedAtDescending,
+        ReleaseSearchSortOrder.OfflineUploadConfigCountDescending,
+    ];
+
     private IReadOnlyList<ReleaseSearchResultReadModel>? releases;
     private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
     private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
-    private readonly ReleaseSelection selection = new();
+    private readonly SearchResultSelection selection = new();
     private readonly ReleaseKeyboardFocus keyboardFocus = new();
     private ReleaseSearchResultView resultView = ReleaseSearchResultView.List;
     private PersistingComponentStateSubscription persistSubscription;
@@ -107,6 +117,14 @@ public partial class AllReleasesPage(
             totalCount == 1 ? "ReleaseTotalCountOne" : "ReleaseTotalCount",
             totalCount.ToString("N0", CultureInfo.CurrentCulture)
         ];
+
+    private IReadOnlyList<SelectOption<ReleaseSearchSortOrder>> SortOrderOptions =>
+        SortOrders
+            .Select(sortOrder => new SelectOption<ReleaseSearchSortOrder>(
+                sortOrder,
+                L.Localize(sortOrder)
+            ))
+            .ToList();
 
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
 

@@ -1,0 +1,22 @@
+<div class="relative flex min-h-12 w-full items-center gap-2 rounded-xl border border-input bg-card py-1.5 pl-10 pr-3.5 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+    <LucideIcon Name="search" class="pointer-events-none absolute left-3.5 top-4 h-4 w-4 text-muted-foreground" />
+
+    <input type="text"
+           class="h-8 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
+           placeholder="@L["ReleaseCollectionSearchBarPlaceholder"]"
+           aria-label="@L["SearchReleaseCollections"]"
+           autocomplete="off"
+           spellcheck="false"
+           data-page-search-input
+           @bind="inputText"
+           @bind:event="oninput"
+           @bind:after="HandleInputChanged"
+           @onkeydown="HandleKeyDownAsync"
+           @onfocus="HandleFocus"
+           @onblur="HandleBlur" />
+
+    @if (!isFocused)
+    {
+        <BbKbd Keys="/" Size="KbdSize.Small" Class="ml-auto hidden shrink-0 sm:inline-flex" />
+    }
+</div>

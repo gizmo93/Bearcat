@@ -27,7 +27,7 @@
                aria-controls="@ScopeListId"
                aria-expanded="@(IsScopeListOpen ? "true" : "false")"
                aria-activedescendant="@(IsScopeListOpen ? GetScopeEntryId(highlightedEntryIndex) : null)"
-               data-release-search-input
+               data-page-search-input
                @bind="inputText"
                @bind:event="oninput"
                @bind:after="HandleInputChanged"

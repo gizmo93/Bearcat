@@ -1,205 +1,238 @@
 using System.Globalization;
-using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.Pages.ManageReleaseCollections.Search;
 using Bearcat.Website.ScopedOperations;
-using BlazorBlueprint.Components;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Primitives;
+using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
 public partial class ReleaseCollectionsPage(
     IScopedOperationRunner operationRunner,
-    DialogService dialogService,
-    ToastService toastService
-)
+    NavigationManager navigationManager
+) : IReleaseCollectionSearchUrlValues
 {
-    private readonly int[] pageSizes = [10, 20, 50, 100];
+    private static readonly IReadOnlyList<ReleaseCollectionSearchSortOrder> SortOrders =
+    [
+        ReleaseCollectionSearchSortOrder.NameAscending,
+        ReleaseCollectionSearchSortOrder.NameDescending,
+        ReleaseCollectionSearchSortOrder.CreatedAtDescending,
+        ReleaseCollectionSearchSortOrder.CreatedAtAscending,
+    ];
 
-    private IReadOnlyList<ReleaseCollectionReadModel> releaseCollections = [];
-    private IReadOnlyCollection<ReleaseCollectionReadModel> selectedReleaseCollections = [];
+    private readonly SearchResultSelection selection = new();
+    private IReadOnlyList<ReleaseCollectionReadModel>? releaseCollections;
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
-    private string? searchTerm;
-    private ReleaseContentType? selectedReleaseContentType;
-    private int? selectedReleaseGroupId;
+    private ReleaseCollectionSearchQuery searchQuery = new();
+    private ReleaseOnlineStateCounts? onlineStateCounts;
+    private SearchUrlState<ReleaseCollectionSearchQuery>? loadedState;
     private int totalCount;
     private int pageIndex;
-    private int pageSize = 10;
+    private int pageSize = SearchUrlParameters.DefaultPageSize;
     private bool isLoading;
 
-    private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? SearchTerm { get; set; }
+
+    [SupplyParameterFromQuery(Name = "content")]
+    public string? ReleaseContentType { get; set; }
+
+    [SupplyParameterFromQuery(Name = "lang")]
+    public string? Language { get; set; }
+
+    [SupplyParameterFromQuery(Name = "state")]
+    public string? OnlineState { get; set; }
+
+    [SupplyParameterFromQuery(Name = "group")]
+    public int? ReleaseGroupId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string? SortOrder { get; set; }
+
+    [SupplyParameterFromQuery(Name = "page")]
+    public int? Page { get; set; }
+
+    [SupplyParameterFromQuery(Name = "size")]
+    public int? PageSize { get; set; }
+
+    private string ReleaseCollectionTotalCountText =>
+        L[
+            totalCount == 1 ? "ReleaseCollectionTotalCountOne" : "ReleaseCollectionTotalCount",
+            totalCount.ToString("N0", CultureInfo.CurrentCulture)
+        ];
+
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-    private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
-    private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
+
+    private IReadOnlyList<ReleaseCollectionReadModel> VisibleReleaseCollections =>
+        releaseCollections ?? [];
+
+    private IReadOnlyList<int> VisibleReleaseCollectionIds =>
+        VisibleReleaseCollections
+            .Select(releaseCollection => releaseCollection.ReleaseCollectionId)
+            .ToList();
+
+    private bool HasActiveFilters => searchQuery != EmptySearchQuery;
+
+    private ReleaseCollectionSearchQuery EmptySearchQuery => new(SortOrder: searchQuery.SortOrder);
+
+    private IReadOnlyList<SelectOption<ReleaseCollectionSearchSortOrder>> SortOrderOptions =>
+        SortOrders
+            .Select(sortOrder => new SelectOption<ReleaseCollectionSearchSortOrder>(
+                sortOrder,
+                L.Localize(sortOrder)
+            ))
+            .ToList();
 
     private string SectionClass =>
-        selectedReleaseCollections.Count > 0
+        selection.Count > 0
             ? "bearcat-releases-page space-y-4 pb-20"
             : "bearcat-releases-page space-y-4";
-
-    private string CollectionsTableKey =>
-        $"{pageIndex}-{pageSize}-{searchTerm}-{selectedReleaseContentType}-{selectedReleaseGroupId}";
-
-    private IReadOnlyList<SelectOption<int?>> ReleaseGroupOptions =>
-        [
-            new(null, L["AllReleaseGroups"]),
-            .. releaseGroups.Select(group => new SelectOption<int?>(
-                group.ReleaseGroupId,
-                group.Name
-            )),
-        ];
-
-    private IReadOnlyList<SelectOption<ReleaseContentType?>> ReleaseContentTypeOptions =>
-        [
-            new(null, L["AnyReleaseContentType"]),
-            .. Enum.GetValues<ReleaseContentType>()
-                .Select(type => new SelectOption<ReleaseContentType?>(type, L.Localize(type))),
-        ];
-
-    private IReadOnlyList<SelectOption<int>> PageSizeOptions =>
-        pageSizes
-            .Select(size => new SelectOption<int>(size, size.ToString(CultureInfo.CurrentCulture)))
-            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
         releaseGroups = await operationRunner.RunAsync(
             (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
         );
-        await RefreshAsync();
     }
 
-    private async Task ApplySearchAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        pageIndex = 0;
-        await RefreshAsync();
-    }
+        var state = ReleaseCollectionSearchUrl.Parse(this);
 
-    private void SelectAllOnPage()
-    {
-        selectedReleaseCollections = releaseCollections;
-    }
-
-    private void ClearSelection()
-    {
-        selectedReleaseCollections = [];
-    }
-
-    private async Task DeleteSelectedReleaseCollectionsAsync()
-    {
-        var releaseCollectionsWithoutReleases = selectedReleaseCollections
-            .Where(releaseCollection => releaseCollection.ReleaseCount == 0)
-            .ToList();
-
-        var releaseCollectionsWithReleasesCount =
-            selectedReleaseCollections.Count - releaseCollectionsWithoutReleases.Count;
-
-        if (releaseCollectionsWithoutReleases.Count == 0)
-        {
-            toastService.Error(L["DeleteSelectedReleaseCollectionsAllHaveReleases"]);
-            return;
-        }
-
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteSelectedReleaseCollections"],
-            releaseCollectionsWithReleasesCount == 0
-                ? L[
-                    "DeleteSelectedReleaseCollectionsConfirmation",
-                    releaseCollectionsWithoutReleases.Count
-                ]
-                : L[
-                    "DeleteSelectedReleaseCollectionsConfirmationWithSkipped",
-                    releaseCollectionsWithoutReleases.Count,
-                    releaseCollectionsWithReleasesCount
-                ],
-            new ConfirmDialogOptions
-            {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
-            }
-        );
-
-        if (!result.Confirmed)
+        if (state == loadedState)
         {
             return;
         }
 
-        foreach (var releaseCollection in releaseCollectionsWithoutReleases)
+        if (loadedState is not null && loadedState.Query != state.Query)
         {
-            await operationRunner.RunAsync(
-                (ReleaseCollectionService service) =>
-                    service.DeleteAsync(releaseCollection.ReleaseCollectionId)
-            );
+            selection.Clear();
         }
 
-        toastService.Success(
-            L["ReleaseCollectionsDeleted", releaseCollectionsWithoutReleases.Count]
-        );
-        await RefreshAsync();
+        searchQuery = state.Query;
+        pageIndex = state.PageIndex;
+        pageSize = state.PageSize;
+        await RefreshReleaseCollectionsAsync();
     }
 
-    private async Task ResetSearchAsync()
+    private string GetPageUri(int page)
     {
-        searchTerm = null;
-        selectedReleaseContentType = null;
-        selectedReleaseGroupId = null;
-        pageIndex = 0;
-        await RefreshAsync();
+        return ReleaseCollectionSearchUrl.Build(searchQuery, page, pageSize);
     }
 
-    private async Task OnPageSizeChangedAsync()
-    {
-        pageIndex = 0;
-        await RefreshAsync();
-    }
-
-    private async Task GoToPageAsync(int page)
-    {
-        pageIndex = page - 1;
-        await RefreshAsync();
-    }
-
-    private async Task RefreshAsync()
+    private async Task RefreshReleaseCollectionsAsync()
     {
         isLoading = true;
 
         try
         {
-            PagedResult<ReleaseCollectionReadModel> result = await operationRunner.RunAsync(
+            var result = await operationRunner.RunAsync(
                 (IReleaseCollectionReadRepository repository) =>
                     repository.SearchAsync(
-                        new ReleaseCollectionSearchQuery(
-                            SearchTerm: searchTerm,
-                            ReleaseContentType: selectedReleaseContentType,
-                            ReleaseGroupId: selectedReleaseGroupId,
-                            PageIndex: pageIndex,
-                            PageSize: pageSize
-                        )
+                        searchQuery with
+                        {
+                            PageIndex = pageIndex,
+                            PageSize = pageSize,
+                        }
                     )
             );
 
             releaseCollections = result.Items;
-            selectedReleaseCollections = [];
             totalCount = result.TotalCount;
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;
+            selection.KeepOnly(VisibleReleaseCollectionIds);
 
             if (totalCount > 0 && pageIndex >= TotalPages)
             {
                 pageIndex = TotalPages - 1;
-                await RefreshAsync();
+                await RefreshReleaseCollectionsAsync();
+                return;
             }
+
+            onlineStateCounts = await operationRunner.RunAsync(
+                (IReleaseCollectionReadRepository repository) =>
+                    repository.CountByOnlineStateAsync(searchQuery)
+            );
+
+            loadedState = new SearchUrlState<ReleaseCollectionSearchQuery>(
+                Query: searchQuery,
+                PageIndex: pageIndex,
+                PageSize: pageSize
+            );
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private Task ApplySearchAsync(ReleaseCollectionSearchQuery query)
+    {
+        return NavigateToSearchAsync(query, replaceHistoryEntry: false);
+    }
+
+    private Task ApplySearchTermAsync(string? searchTerm)
+    {
+        return ApplySearchAsync(searchQuery with { SearchTerm = searchTerm });
+    }
+
+    private Task ApplyTypedSearchTermAsync(string? searchTerm)
+    {
+        return NavigateToSearchAsync(
+            searchQuery with
+            {
+                SearchTerm = searchTerm,
+            },
+            replaceHistoryEntry: true
+        );
+    }
+
+    private Task ApplyOnlineStateAsync(OnlineState? onlineState)
+    {
+        return ApplySearchAsync(searchQuery with { OnlineState = onlineState });
+    }
+
+    private Task ApplySortOrderAsync(ReleaseCollectionSearchSortOrder sortOrder)
+    {
+        return ApplySearchAsync(searchQuery with { SortOrder = sortOrder });
+    }
+
+    private Task ResetFiltersAsync()
+    {
+        return ApplySearchAsync(EmptySearchQuery);
+    }
+
+    private async Task NavigateToSearchAsync(
+        ReleaseCollectionSearchQuery query,
+        bool replaceHistoryEntry
+    )
+    {
+        var targetUri = navigationManager
+            .ToAbsoluteUri(ReleaseCollectionSearchUrl.Build(query, page: 1, pageSize))
+            .ToString();
+
+        if (targetUri == navigationManager.Uri)
+        {
+            await RefreshReleaseCollectionsAsync();
+            return;
+        }
+
+        navigationManager.NavigateTo(targetUri, replace: replaceHistoryEntry);
+    }
+
+    private void ChangePageSize(int selectedPageSize)
+    {
+        navigationManager.NavigateTo(
+            ReleaseCollectionSearchUrl.Build(searchQuery, page: 1, selectedPageSize)
+        );
     }
 }

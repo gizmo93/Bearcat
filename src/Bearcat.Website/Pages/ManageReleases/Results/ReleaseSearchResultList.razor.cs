@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases.Results;
@@ -15,7 +16,7 @@ public partial class ReleaseSearchResultList : ComponentBase
 
     [Parameter]
     [EditorRequired]
-    public ReleaseSelection Selection { get; set; } = null!;
+    public SearchResultSelection Selection { get; set; } = null!;
 
     [Parameter]
     public string? SearchTerm { get; set; }
