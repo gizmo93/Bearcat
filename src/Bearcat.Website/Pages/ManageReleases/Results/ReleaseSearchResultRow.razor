@@ -10,7 +10,7 @@
 
     <div class="min-w-0">
         <a class="bearcat-release-result-name" href="@($"/releases/{Release.ReleaseId}")">
-            <HighlightedReleaseName Name="@Release.Name" SearchTerm="@SearchTerm" />
+            <HighlightedSearchTermText Text="@Release.Name" SearchTerm="@SearchTerm" />
         </a>
         <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             @if (MetadataTitleText is not null)

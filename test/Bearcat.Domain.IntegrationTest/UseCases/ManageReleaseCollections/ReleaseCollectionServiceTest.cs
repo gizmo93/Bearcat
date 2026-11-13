@@ -9,6 +9,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.MultiUploadContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -93,6 +94,47 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         collection.Key.ShouldBe("hostage.s01");
         collection.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         collection.ReleaseGroupId.ShouldBe(releaseGroup.Id);
+    }
+
+    [Test]
+    public async Task CreateAsync_NameUsedByCollectionOfOtherReleaseGroupIgnoringCase_Throws()
+    {
+        // Arrange
+        var otherReleaseGroup = new ReleaseGroup
+        {
+            Name = "Other series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        DbContext.ReleaseCollections.Add(
+            new ReleaseCollection
+            {
+                ReleaseGroup = otherReleaseGroup,
+                Key = "hostage.s01",
+                Name = "Hostage S01",
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var act = () =>
+            service.CreateAsync(
+                name: "  HOSTAGE s01  ",
+                key: "hostage.s01.other",
+                releaseContentType: ReleaseContentType.TvShowEpisode,
+                releaseGroupId: releaseGroup.Id
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<ReleaseCollectionNameAlreadyExistsException>();
     }
 
     [Test]
@@ -630,7 +672,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         };
         var assignmentService = new ReleaseCollectionAssignmentService(
             repository,
-            CreateTimeProvider()
+            CreateTimeProvider(),
+            NullLogger<ReleaseCollectionAssignmentService>.Instance
         );
 
         // Act

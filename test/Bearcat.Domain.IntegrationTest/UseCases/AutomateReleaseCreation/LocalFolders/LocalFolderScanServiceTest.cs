@@ -99,7 +99,8 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
                         dbWrite: DbContext,
                         metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
                     ),
-                    CreateTimeProvider()
+                    CreateTimeProvider(),
+                    NullLogger<ReleaseCollectionAssignmentService>.Instance
                 )
             ),
             verificationAndExtractionService: new ReleaseFolderVerificationAndExtractionService(

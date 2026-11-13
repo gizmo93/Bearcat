@@ -15,7 +15,7 @@ public sealed class MaterializedValuesSaveChangesInterceptor : SaveChangesInterc
     )
     {
         throw new NotSupportedException(
-            "Synchronous SaveChanges is not supported: Release.OnlineState and Upload.OldestUploadedFileCheckedAt are only kept up to date by SaveChangesAsync."
+            "Synchronous SaveChanges is not supported: Release.OnlineState, ReleaseCollection.OnlineState and Upload.OldestUploadedFileCheckedAt are only kept up to date by SaveChangesAsync."
         );
     }
 

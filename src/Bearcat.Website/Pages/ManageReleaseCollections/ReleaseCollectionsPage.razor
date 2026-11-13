@@ -1,4 +1,8 @@
 @page "/release-collections"
+@using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto
+@using Bearcat.Website.Pages.ManageReleaseCollections.Results
+@using Bearcat.Website.Pages.ManageReleaseCollections.Search
+@using Bearcat.Website.Pages.ManageReleases.Search
 
 <PageTitle>@L["ReleaseCollections"] - Bearcat</PageTitle>
 
@@ -6,183 +10,47 @@
     <div class="bearcat-page-header">
         <div>
             <h1 class="text-3xl font-semibold tracking-tight">@L["ReleaseCollections"]</h1>
+            <p class="mt-1 text-sm text-muted-foreground">@ReleaseCollectionTotalCountText</p>
         </div>
     </div>
 
-    <div class="rounded-md border border-border/70 bg-card p-4">
-        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_minmax(10rem,14rem)_auto] md:items-end">
-            <BbFormFieldInput TValue="string"
-                              @bind-Value="searchTerm"
-                              @bind-Value:after="ApplySearchAsync"
-                              Label="@L["Search"]"
-                              Placeholder="@L["SearchReleaseCollections"]" />
+    <div class="space-y-3">
+        <ReleaseCollectionSearchBar SearchTerm="@searchQuery.SearchTerm"
+                                    OnSearchTermChanged="ApplySearchTermAsync"
+                                    OnSearchTermTyped="ApplyTypedSearchTermAsync" />
 
-            <BbFormFieldSelect TValue="ReleaseContentType?"
-                               @bind-Value="selectedReleaseContentType"
-                               Label="@L["ReleaseContentType"]"
-                               Options="ReleaseContentTypeOptions" />
+        <ReleaseCollectionSearchFilters Query="searchQuery"
+                                        ReleaseGroups="releaseGroups"
+                                        OnQueryChanged="ApplySearchAsync" />
 
-            <BbFormFieldSelect TValue="int?"
-                               @bind-Value="selectedReleaseGroupId"
-                               Label="@L["ReleaseGroup"]"
-                               Options="ReleaseGroupOptions" />
-
-            <div class="flex flex-wrap gap-2">
-                <BbButton Variant="ButtonVariant.Secondary" OnClick="ApplySearchAsync">
-                    <LucideIcon Name="search" class="h-4 w-4" />
-                    @L["Search"]
-                </BbButton>
-                <BbButton Variant="ButtonVariant.Outline" OnClick="ResetSearchAsync">
-                    <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
-                    @L["Reset"]
-                </BbButton>
-            </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <ReleaseOnlineStateSegments Counts="onlineStateCounts"
+                                        SelectedOnlineState="searchQuery.OnlineState"
+                                        SelectedOnlineStateChanged="ApplyOnlineStateAsync" />
+            <SearchSortOrderSelect TSortOrder="ReleaseCollectionSearchSortOrder"
+                                   Value="searchQuery.SortOrder"
+                                   ValueChanged="ApplySortOrderAsync"
+                                   Options="SortOrderOptions" />
         </div>
     </div>
 
-    <BbDataTable TData="ReleaseCollectionReadModel"
-                 @key="CollectionsTableKey"
-                 Data="releaseCollections"
-                 SelectionMode="DataTableSelectionMode.Multiple"
-                 @bind-SelectedItems="selectedReleaseCollections"
-                 ShowToolbar="false"
-                 ShowPagination="false"
-                 InitialPageSize="@pageSize"
-                 IsLoading="isLoading"
-                 AriaLabel="@L["ReleaseCollections"]"
-                 Class="bearcat-data-table bearcat-release-templates-table bearcat-release-collections-table">
-        <Columns>
-            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
-                               Header="@L["Name"]"
-                               Property="@(collection => collection.Name)"
-                               Width="32%">
-                <CellTemplate Context="collection">
-                    <a class="bearcat-release-list-name"
-                       href="@($"/release-collections/{collection.ReleaseCollectionId}")">
-                        @collection.Name
-                    </a>
-                    <p class="mt-1 truncate text-xs text-muted-foreground" title="@collection.Key">
-                        @collection.Key
-                    </p>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
-                               Header="@L["ReleaseContentType"]"
-                               Property="@(collection => collection.ReleaseContentType.ToString())"
-                               Width="150px">
-                <CellTemplate Context="collection">
-                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(collection.ReleaseContentType)</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
-                               Header="@L["ReleaseGroup"]"
-                               Property="@(collection => collection.ReleaseGroupName)"
-                               Width="180px">
-                <CellTemplate Context="collection">
-                    <BbBadge Variant="BadgeVariant.Outline">@collection.ReleaseGroupName</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="int"
-                               Header="@L["Releases"]"
-                               Property="@(collection => collection.ReleaseCount)"
-                               Width="140px">
-                <CellTemplate Context="collection">
-                    <BbBadge Variant="BadgeVariant.Secondary">@collection.ReleaseCount</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="DateTime"
-                               Header="@L["CreatedAt"]"
-                               Property="@(collection => collection.CreatedAt)"
-                               Width="180px">
-                <CellTemplate Context="collection">
-                    <span class="text-sm">@collection.CreatedAt.ToString("g")</span>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
-                               Header=""
-                               Property="@(collection => collection.Name)"
-                               Width="56px">
-                <CellTemplate Context="collection">
-                    <div class="flex justify-end">
-                        <BbDropdownMenu>
-                            <BbDropdownMenuTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseCollectionActions"]">
-                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                                </BbButton>
-                            </BbDropdownMenuTrigger>
-                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                                <BbDropdownMenuItem Href="@($"/release-collections/{collection.ReleaseCollectionId}")">
-                                    @L["OpenDetails"]
-                                </BbDropdownMenuItem>
-                            </BbDropdownMenuContent>
-                        </BbDropdownMenu>
-                    </div>
-                </CellTemplate>
-            </BbDataTableColumn>
-        </Columns>
-        <EmptyTemplate>
-            <div class="bearcat-release-empty">
-                <LucideIcon Name="inbox" class="h-5 w-5" />
-                <span>@L["NoReleaseCollectionsFound"]</span>
-            </div>
-        </EmptyTemplate>
-    </BbDataTable>
+    <ReleaseCollectionSearchResultList ReleaseCollections="releaseCollections"
+                                       Selection="selection"
+                                       SearchTerm="@searchQuery.SearchTerm"
+                                       IsLoading="isLoading"
+                                       HasActiveFilters="HasActiveFilters"
+                                       OnResetFilters="ResetFiltersAsync"
+                                       OnSelectionChanged="StateHasChanged" />
 
-    <div class="bearcat-release-pagination">
-        <p class="text-sm text-muted-foreground">
-            @L["ReleaseCollectionResultsSummary", FirstResult, LastResult, totalCount]
-        </p>
+    <SearchResultsPagination TotalCount="totalCount"
+                             PageIndex="pageIndex"
+                             PageSize="pageSize"
+                             ResultsSummaryResourceKey="ReleaseCollectionResultsSummary"
+                             GetPageUrl="GetPageUri"
+                             PageSizeChanged="ChangePageSize" />
 
-        <div class="bearcat-release-pagination-controls">
-            <label class="bearcat-page-size">
-                <span>@L["RowsPerPage"]</span>
-                <BbSelect TValue="int"
-                          @bind-Value="pageSize"
-                          @bind-Value:after="OnPageSizeChangedAsync"
-                          Options="PageSizeOptions"
-                          Class="w-24" />
-            </label>
-
-            <PageNavigation CurrentPage="CurrentPage"
-                            TotalPages="TotalPages"
-                            OnPageSelected="GoToPageAsync" />
-        </div>
-    </div>
-
-    @if (selectedReleaseCollections.Count > 0)
-    {
-        <div class="bearcat-release-bulk-action-bar">
-            <span class="shrink-0 px-1.5 text-sm font-medium tabular-nums">@L["SelectedCount", selectedReleaseCollections.Count]</span>
-            @if (selectedReleaseCollections.Count < releaseCollections.Count)
-            {
-                <BbButton Variant="ButtonVariant.Ghost"
-                          Size="ButtonSize.Small"
-                          Class="shrink-0"
-                          AriaLabel="@L["SelectAllOnPage"]"
-                          title="@L["SelectAllOnPage"]"
-                          OnClick="SelectAllOnPage">
-                    <LucideIcon Name="list-checks" class="h-4 w-4" />
-                    <span class="hidden sm:inline">@L["SelectAllOnPage"]</span>
-                </BbButton>
-            }
-            <span class="h-5 w-px shrink-0 bg-border" aria-hidden="true"></span>
-            <BbButton Variant="ButtonVariant.Ghost"
-                      Size="ButtonSize.Small"
-                      Class="shrink-0 text-destructive hover:text-destructive"
-                      AriaLabel="@L["DeleteSelectedReleaseCollections"]"
-                      title="@L["DeleteSelectedReleaseCollections"]"
-                      OnClick="DeleteSelectedReleaseCollectionsAsync">
-                <LucideIcon Name="trash-2" class="h-4 w-4" />
-                <span class="hidden sm:inline">@L["Delete"]</span>
-            </BbButton>
-            <BbButton Variant="ButtonVariant.Ghost"
-                      Size="ButtonSize.IconSmall"
-                      Class="shrink-0"
-                      AriaLabel="@L["DeselectAll"]"
-                      title="@L["DeselectAll"]"
-                      OnClick="ClearSelection">
-                <LucideIcon Name="x" class="h-4 w-4" />
-            </BbButton>
-        </div>
-    }
+    <ReleaseCollectionBulkActionBar Selection="selection"
+                                    VisibleReleaseCollections="VisibleReleaseCollections"
+                                    OnSelectionChanged="StateHasChanged"
+                                    OnReleaseCollectionsDeleted="RefreshReleaseCollectionsAsync" />
 </section>

@@ -1,8 +1,10 @@
+using System.Text;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -142,6 +144,133 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         result.PageIndex.ShouldBe(1);
         result.PageSize.ShouldBe(5);
         result.Items.Select(item => item.Name).ShouldBe(["Collection 06", "Collection 07"]);
+    }
+
+    [Test]
+    public async Task SearchAsync_OnlineStateFilter_ReturnsOnlyCollectionsWithThatOnlineState()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var offlineCollection = AddCollection(releaseGroup, "Offline", OnlineState.Offline);
+        offlineCollection.PrimaryLanguageCode = "de";
+        AddCollection(releaseGroup, "Online", OnlineState.Online);
+        AddCollection(releaseGroup, "Unknown", OnlineState.Unknown);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchAsync(
+            new ReleaseCollectionSearchQuery(OnlineState: OnlineState.Offline),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        var item = result.Items.ShouldHaveSingleItem();
+        item.ReleaseCollectionId.ShouldBe(offlineCollection.Id);
+        item.OnlineState.ShouldBe(OnlineState.Offline);
+        item.PrimaryLanguageCode.ShouldBe("de");
+    }
+
+    [Test]
+    public async Task CountByOnlineStateAsync_OnlineStateAndReleaseGroupFilter_CountsCollectionsOfReleaseGroupPerOnlineState()
+    {
+        // Arrange
+        var seriesGroup = await AddReleaseGroupAsync("Series");
+        var otherGroup = await AddReleaseGroupAsync("Other");
+        AddCollection(seriesGroup, "Online S01", OnlineState.Online);
+        AddCollection(seriesGroup, "Online S02", OnlineState.Online);
+        AddCollection(seriesGroup, "Partially", OnlineState.PartiallyOnline);
+        AddCollection(seriesGroup, "Offline", OnlineState.Offline);
+        AddCollection(seriesGroup, "Unknown", OnlineState.Unknown);
+        AddCollection(otherGroup, "Other", OnlineState.Online);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.CountByOnlineStateAsync(
+            new ReleaseCollectionSearchQuery(
+                ReleaseGroupId: seriesGroup.Id,
+                OnlineState: OnlineState.Offline
+            ),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new ReleaseOnlineStateCounts(
+                TotalCount: 5,
+                OnlineCount: 2,
+                PartiallyOnlineCount: 1,
+                OfflineCount: 1,
+                WithoutUploadConfigsCount: 1
+            )
+        );
+    }
+
+    [TestCase(
+        ReleaseCollectionSearchSortOrder.NameAscending,
+        new[] { "Alpha", "Bravo", "Charlie" }
+    )]
+    [TestCase(
+        ReleaseCollectionSearchSortOrder.NameDescending,
+        new[] { "Charlie", "Bravo", "Alpha" }
+    )]
+    [TestCase(
+        ReleaseCollectionSearchSortOrder.CreatedAtDescending,
+        new[] { "Alpha", "Charlie", "Bravo" }
+    )]
+    [TestCase(
+        ReleaseCollectionSearchSortOrder.CreatedAtAscending,
+        new[] { "Bravo", "Charlie", "Alpha" }
+    )]
+    public async Task SearchAsync_SortOrder_ReturnsCollectionsInThatOrder(
+        ReleaseCollectionSearchSortOrder sortOrder,
+        string[] expectedNames
+    )
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        AddCollection(releaseGroup, "Charlie", "charlie").CreatedAt = LastSecondOfDay.AddDays(-1);
+        AddCollection(releaseGroup, "Alpha", "alpha").CreatedAt = LastSecondOfDay;
+        AddCollection(releaseGroup, "Bravo", "bravo").CreatedAt = LastSecondOfDay.AddDays(-2);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchAsync(
+            new ReleaseCollectionSearchQuery(SortOrder: sortOrder),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Items.Select(item => item.Name).ShouldBe(expectedNames);
+    }
+
+    [TestCase(" DE ", "German S01")]
+    [TestCase("", "Without language S01")]
+    public async Task SearchAsync_PrimaryLanguageCodeFilter_ReturnsCollectionsWithThatLanguageOrWithoutLanguageForEmptyCode(
+        string primaryLanguageCode,
+        string expectedName
+    )
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        AddCollection(releaseGroup, "German S01", "german.s01").PrimaryLanguageCode = "de";
+        AddCollection(releaseGroup, "English S01", "english.s01").PrimaryLanguageCode = "en";
+        AddCollection(releaseGroup, "Without language S01", "without.language.s01");
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchAsync(
+            new ReleaseCollectionSearchQuery(PrimaryLanguageCode: primaryLanguageCode),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.ShouldHaveSingleItem().Name.ShouldBe(expectedName);
     }
 
     [Test]
@@ -598,6 +727,47 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
             .ShouldBe(Enumerable.Range(0, 50).Select(number => $"Release.{number:00}").ToList());
     }
 
+    [Test]
+    public async Task GetByNameAsync_NameDiffersInCaseAndUsesDecomposedUmlauts_ReturnsCollection()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var releaseCollection = AddCollection(releaseGroup, "Türkische Früchte S01", "tf.s01");
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByNameAsync(
+            name: "TÜRKISCHE früchte s01".Normalize(NormalizationForm.FormD),
+            excludedReleaseCollectionId: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(releaseCollection.Id);
+    }
+
+    [Test]
+    public async Task GetByNameAsync_NameOnlyUsedByExcludedCollection_ReturnsNull()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var releaseCollection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByNameAsync(
+            name: "hostage s01",
+            excludedReleaseCollectionId: releaseCollection.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
     private async Task<CollectionDetailSeed> AddCollectionDetailSeedAsync()
     {
         var releaseGroup = await AddReleaseGroupAsync("Series");
@@ -950,6 +1120,22 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         };
 
         DbContext.ReleaseCollections.Add(releaseCollection);
+
+        return releaseCollection;
+    }
+
+    private ReleaseCollection AddCollection(
+        ReleaseGroup releaseGroup,
+        string name,
+        OnlineState onlineState
+    )
+    {
+        var releaseCollection = AddCollection(releaseGroup, name, name.ToLowerInvariant());
+
+        DbContext
+            .Entry(releaseCollection)
+            .Property(collection => collection.OnlineState)
+            .CurrentValue = onlineState;
 
         return releaseCollection;
     }

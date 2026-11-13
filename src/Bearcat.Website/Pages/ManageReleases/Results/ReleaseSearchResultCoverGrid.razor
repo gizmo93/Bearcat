@@ -1,8 +1,11 @@
-<ReleaseSearchResultStates Releases="Releases"
-                           IsLoading="IsLoading"
-                           HasActiveFilters="HasActiveFilters"
-                           OnResetFilters="OnResetFilters"
-                           ContainerClass="bearcat-release-cover-grid">
+<SearchResultStates Items="Releases"
+                    IsLoading="IsLoading"
+                    HasActiveFilters="HasActiveFilters"
+                    OnResetFilters="OnResetFilters"
+                    NoResultsText="@L["NoReleasesFound"]"
+                    NoMatchingResultsText="@L["NoReleasesMatch"]"
+                    NoMatchingResultsHintText="@L["NoReleasesMatchHint"]"
+                    ContainerClass="bearcat-release-cover-grid">
     <SkeletonContent>
         @for (var skeletonIndex = 0; skeletonIndex < SkeletonCardCount; skeletonIndex++)
         {
@@ -26,4 +29,4 @@
                                           OnQuickLook="@(() => OnQuickLook.InvokeAsync(release))" />
         }
     </ChildContent>
-</ReleaseSearchResultStates>
+</SearchResultStates>

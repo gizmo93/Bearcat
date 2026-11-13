@@ -11,6 +11,12 @@ public interface IReleaseCollectionWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseCollection?> GetByNameAsync(
+        string name,
+        int? excludedReleaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<ReleaseCollection> GetByIdAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default

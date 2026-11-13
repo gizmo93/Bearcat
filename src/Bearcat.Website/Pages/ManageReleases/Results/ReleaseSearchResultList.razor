@@ -1,8 +1,11 @@
-<ReleaseSearchResultStates Releases="Releases"
-                           IsLoading="IsLoading"
-                           HasActiveFilters="HasActiveFilters"
-                           OnResetFilters="OnResetFilters"
-                           ContainerClass="bearcat-config-list bearcat-release-result-list">
+<SearchResultStates Items="Releases"
+                    IsLoading="IsLoading"
+                    HasActiveFilters="HasActiveFilters"
+                    OnResetFilters="OnResetFilters"
+                    NoResultsText="@L["NoReleasesFound"]"
+                    NoMatchingResultsText="@L["NoReleasesMatch"]"
+                    NoMatchingResultsHintText="@L["NoReleasesMatchHint"]"
+                    ContainerClass="bearcat-config-list bearcat-release-result-list">
     <SkeletonContent>
         @for (var skeletonIndex = 0; skeletonIndex < SkeletonRowCount; skeletonIndex++)
         {
@@ -50,4 +53,4 @@
                                     OnDelete="@(() => OnDeleteRelease.InvokeAsync(release))" />
         }
     </ChildContent>
-</ReleaseSearchResultStates>
+</SearchResultStates>

@@ -41,8 +41,10 @@
                                         SelectedOnlineState="searchQuery.OnlineState"
                                         SelectedOnlineStateChanged="ApplyOnlineStateAsync" />
             <div class="flex items-center gap-2">
-                <ReleaseSortOrderSelect Value="searchQuery.SortOrder"
-                                        ValueChanged="ApplySortOrderAsync" />
+                <SearchSortOrderSelect TSortOrder="ReleaseSearchSortOrder"
+                                       Value="searchQuery.SortOrder"
+                                       ValueChanged="ApplySortOrderAsync"
+                                       Options="SortOrderOptions" />
                 <ReleaseSearchResultViewToggle Value="resultView"
                                                ValueChanged="ChangeResultViewAsync" />
             </div>

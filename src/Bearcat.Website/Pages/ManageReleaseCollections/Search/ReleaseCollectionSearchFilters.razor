@@ -1,0 +1,31 @@
+<div class="flex flex-wrap items-center gap-2">
+    <SearchFilterButton TValue="ReleaseContentType?"
+                        Label="@L["ReleaseContentType"]"
+                        Options="ReleaseContentTypeOptions"
+                        Value="Query.ReleaseContentType"
+                        ValueChanged="@((ReleaseContentType? value) => ApplyAsync(Query with { ReleaseContentType = value }))" />
+
+    <SearchFilterButton TValue="string"
+                        Label="@L["Language"]"
+                        Options="PrimaryLanguageOptions"
+                        Value="@Query.PrimaryLanguageCode"
+                        ValueChanged="@((string? value) => ApplyAsync(Query with { PrimaryLanguageCode = value }))"
+                        ShowSearch="true" />
+
+    <SearchFilterButton TValue="int?"
+                        Label="@L["ReleaseGroup"]"
+                        Options="ReleaseGroupOptions"
+                        Value="Query.ReleaseGroupId"
+                        ValueChanged="@((int? value) => ApplyAsync(Query with { ReleaseGroupId = value }))"
+                        ShowSearch="true" />
+
+    @if (HasActiveSearch)
+    {
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Class="text-muted-foreground"
+                  OnClick="ResetAllAsync">
+            @L["ResetAllFilters"]
+        </BbButton>
+    }
+</div>

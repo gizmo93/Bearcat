@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -6,6 +7,7 @@ using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -81,19 +83,112 @@ public class ReleaseCollectionRepository(
             );
     }
 
+    public async Task<ReleaseCollection?> GetByNameAsync(
+        string name,
+        int? excludedReleaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var lowerName = name.ToLower();
+        var lowerComposedName = name.Normalize(NormalizationForm.FormC).ToLower();
+
+        return await dbWrite
+            .ReleaseCollections.AsSplitQuery()
+            .Include(collection => collection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .Include(collection => collection.ImageUploadConfigs)
+            .OrderBy(collection => collection.Id)
+            .FirstOrDefaultAsync(
+                collection =>
+                    (
+                        collection.Name.ToLower() == lowerName
+                        || collection.Name.ToLower() == lowerComposedName
+                    )
+                    && collection.Id != excludedReleaseCollectionId,
+                cancellationToken
+            );
+    }
+
     public async Task<PagedResult<ReleaseCollectionReadModel>> SearchAsync(
         ReleaseCollectionSearchQuery query,
         CancellationToken cancellationToken = default
     )
     {
-        var collections = dbRead.ReleaseCollections.AsQueryable();
+        var collections = ApplyReleaseCollectionSearch(dbRead.ReleaseCollections, query);
+        var totalCount = await collections.CountAsync(cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        var pageIndex = Math.Max(0, query.PageIndex);
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+
+        var items = await ApplyReleaseCollectionSortOrder(collections, query.SortOrder)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(collection => new ReleaseCollectionReadModel(
+                collection.Id,
+                collection.Name,
+                collection.Key,
+                collection.ReleaseContentType,
+                collection.ReleaseGroupId,
+                collection.ReleaseGroup.Name,
+                collection.Releases.Count,
+                collection.CreatedAt,
+                collection.OnlineState,
+                collection.PrimaryLanguageCode
+            ))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ReleaseCollectionReadModel>(
+            Items: items,
+            TotalCount: totalCount,
+            PageIndex: pageIndex,
+            PageSize: pageSize
+        );
+    }
+
+    public async Task<ReleaseOnlineStateCounts> CountByOnlineStateAsync(
+        ReleaseCollectionSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var collections = ApplyReleaseCollectionSearch(
+            dbRead.ReleaseCollections,
+            query with
+            {
+                OnlineState = null,
+            }
+        );
+
+        var countsByOnlineState = await collections
+            .GroupBy(collection => collection.OnlineState)
+            .Select(group => new { OnlineState = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.OnlineState, group => group.Count, cancellationToken);
+
+        return new ReleaseOnlineStateCounts(
+            TotalCount: countsByOnlineState.Values.Sum(),
+            OnlineCount: countsByOnlineState.GetValueOrDefault(OnlineState.Online),
+            PartiallyOnlineCount: countsByOnlineState.GetValueOrDefault(
+                OnlineState.PartiallyOnline
+            ),
+            OfflineCount: countsByOnlineState.GetValueOrDefault(OnlineState.Offline),
+            WithoutUploadConfigsCount: countsByOnlineState.GetValueOrDefault(OnlineState.Unknown)
+        );
+    }
+
+    private static IQueryable<ReleaseCollection> ApplyReleaseCollectionSearch(
+        IQueryable<ReleaseCollection> collections,
+        ReleaseCollectionSearchQuery query
+    )
+    {
+        var searchTerm = SearchTextPatterns.TrimOrNullWhenEmpty(query.SearchTerm);
+
+        if (searchTerm is not null)
         {
-            var searchTerm = $"%{query.SearchTerm.Trim().ToLowerInvariant()}%";
+            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(searchTerm);
+
             collections = collections.Where(collection =>
-                EF.Functions.Like(collection.Name.ToLower(), searchTerm)
-                || EF.Functions.Like(collection.Key.ToLower(), searchTerm)
+                EF.Functions.Like(collection.Name.ToLower(), pattern)
+                || EF.Functions.Like(collection.Key.ToLower(), pattern)
             );
         }
 
@@ -111,34 +206,48 @@ public class ReleaseCollectionRepository(
             );
         }
 
-        var totalCount = await collections.CountAsync(cancellationToken);
+        if (query.OnlineState is not null)
+        {
+            collections = collections.Where(collection =>
+                collection.OnlineState == query.OnlineState.Value
+            );
+        }
 
-        var pageIndex = Math.Max(0, query.PageIndex);
-        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        if (query.PrimaryLanguageCode is not null)
+        {
+            var primaryLanguageCode = query.PrimaryLanguageCode.Trim().ToLowerInvariant();
+            collections =
+                primaryLanguageCode.Length == 0
+                    ? collections.Where(collection => collection.PrimaryLanguageCode == null)
+                    : collections.Where(collection =>
+                        collection.PrimaryLanguageCode == primaryLanguageCode
+                    );
+        }
 
-        var items = await collections
-            .OrderBy(collection => collection.Name)
-            .ThenBy(collection => collection.Id)
-            .Skip(pageIndex * pageSize)
-            .Take(pageSize)
-            .Select(collection => new ReleaseCollectionReadModel(
-                collection.Id,
-                collection.Name,
-                collection.Key,
-                collection.ReleaseContentType,
-                collection.ReleaseGroupId,
-                collection.ReleaseGroup.Name,
-                collection.Releases.Count,
-                collection.CreatedAt
-            ))
-            .ToListAsync(cancellationToken);
+        return collections;
+    }
 
-        return new PagedResult<ReleaseCollectionReadModel>(
-            Items: items,
-            TotalCount: totalCount,
-            PageIndex: pageIndex,
-            PageSize: pageSize
-        );
+    private static IOrderedQueryable<ReleaseCollection> ApplyReleaseCollectionSortOrder(
+        IQueryable<ReleaseCollection> collections,
+        ReleaseCollectionSearchSortOrder sortOrder
+    )
+    {
+        return sortOrder switch
+        {
+            ReleaseCollectionSearchSortOrder.NameAscending => collections
+                .OrderBy(collection => collection.Name)
+                .ThenBy(collection => collection.Id),
+            ReleaseCollectionSearchSortOrder.NameDescending => collections
+                .OrderByDescending(collection => collection.Name)
+                .ThenByDescending(collection => collection.Id),
+            ReleaseCollectionSearchSortOrder.CreatedAtDescending => collections
+                .OrderByDescending(collection => collection.CreatedAt)
+                .ThenByDescending(collection => collection.Id),
+            ReleaseCollectionSearchSortOrder.CreatedAtAscending => collections
+                .OrderBy(collection => collection.CreatedAt)
+                .ThenBy(collection => collection.Id),
+            _ => throw new ArgumentOutOfRangeException(nameof(sortOrder), sortOrder, null),
+        };
     }
 
     public async Task<ReleaseCollectionDetailReadModel?> GetDetailAsync(

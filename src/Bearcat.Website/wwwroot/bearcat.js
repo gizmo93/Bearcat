@@ -95,7 +95,7 @@ document.addEventListener("keydown", event => {
     options.find(isSelectableCommandItem)?.click();
 }, true);
 
-const releaseSearchInputSelector = "[data-release-search-input]";
+const pageSearchInputSelector = "[data-page-search-input]";
 
 function isEditableElement(element) {
     return element instanceof HTMLElement
@@ -111,7 +111,7 @@ document.addEventListener("keydown", event => {
         return;
     }
 
-    const searchInput = document.querySelector(releaseSearchInputSelector);
+    const searchInput = document.querySelector(pageSearchInputSelector);
     if (!searchInput) {
         return;
     }
@@ -125,7 +125,7 @@ document.addEventListener("keydown", event => {
         return;
     }
 
-    const searchInput = event.target.closest?.(releaseSearchInputSelector);
+    const searchInput = event.target.closest?.(pageSearchInputSelector);
     if (searchInput?.getAttribute("aria-expanded") === "true") {
         event.preventDefault();
     }

@@ -683,11 +683,32 @@ public class HosterReplacementRepository(
             );
         }
 
+        var releaseCollectionIds = new HashSet<int>();
+
         foreach (var releaseIdChunk in releaseIds.Order().Chunk(MaximumIdsPerQuery))
         {
             await MaterializedValuesUpdater.UpdateReleaseOnlineStatesAsync(
                 dbWrite,
                 releaseIdChunk.ToList(),
+                cancellationToken
+            );
+
+            releaseCollectionIds.UnionWith(
+                await MaterializedValuesUpdater.GetReleaseCollectionIdsOfReleasesAsync(
+                    dbWrite,
+                    releaseIdChunk.ToList(),
+                    cancellationToken
+                )
+            );
+        }
+
+        foreach (
+            var releaseCollectionIdChunk in releaseCollectionIds.Order().Chunk(MaximumIdsPerQuery)
+        )
+        {
+            await MaterializedValuesUpdater.UpdateReleaseCollectionOnlineStatesAsync(
+                dbWrite,
+                releaseCollectionIdChunk.ToList(),
                 cancellationToken
             );
         }

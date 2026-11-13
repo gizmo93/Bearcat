@@ -9,9 +9,11 @@ public sealed class ReleasesAndUploadsToUpdate
     private readonly HashSet<int> releaseIds = [];
     private readonly HashSet<int> uploadConfigIds = [];
     private readonly HashSet<int> uploadIds = [];
+    private readonly HashSet<int> releaseCollectionIds = [];
     private readonly List<PropertyEntry> releaseIdPropertiesToReadAfterSave = [];
     private readonly List<PropertyEntry> uploadConfigIdPropertiesToReadAfterSave = [];
     private readonly List<PropertyEntry> uploadIdPropertiesToReadAfterSave = [];
+    private readonly List<PropertyEntry> releaseCollectionIdPropertiesToReadAfterSave = [];
     private readonly List<int> deletedHosterRegistrationIds = [];
     private readonly List<int> deletedArchiveConfigIds = [];
     private readonly List<int> deletedArchiveIds = [];
@@ -21,9 +23,11 @@ public sealed class ReleasesAndUploadsToUpdate
         releaseIds.Count == 0
         && uploadConfigIds.Count == 0
         && uploadIds.Count == 0
+        && releaseCollectionIds.Count == 0
         && releaseIdPropertiesToReadAfterSave.Count == 0
         && uploadConfigIdPropertiesToReadAfterSave.Count == 0
         && uploadIdPropertiesToReadAfterSave.Count == 0
+        && releaseCollectionIdPropertiesToReadAfterSave.Count == 0
         && deletedHosterRegistrationIds.Count == 0
         && deletedArchiveConfigIds.Count == 0
         && deletedArchiveIds.Count == 0
@@ -37,6 +41,13 @@ public sealed class ReleasesAndUploadsToUpdate
         {
             switch (entry.Entity)
             {
+                case Release:
+                    AddChangedReleaseCollectionId(
+                        entry,
+                        releasesAndUploadsToUpdate.releaseCollectionIds,
+                        releasesAndUploadsToUpdate.releaseCollectionIdPropertiesToReadAfterSave
+                    );
+                    break;
                 case UploadConfig:
                     AddChangedForeignKey(
                         entry,
@@ -171,6 +182,50 @@ public sealed class ReleasesAndUploadsToUpdate
     public List<int> GetUploadIdsAfterSave()
     {
         return GetIdsAfterSave(uploadIds, uploadIdPropertiesToReadAfterSave);
+    }
+
+    public List<int> GetReleaseCollectionIdsAfterSave()
+    {
+        return releaseCollectionIds
+            .Concat(
+                releaseCollectionIdPropertiesToReadAfterSave
+                    .Select(releaseCollectionIdProperty => releaseCollectionIdProperty.CurrentValue)
+                    .OfType<int>()
+            )
+            .Distinct()
+            .Order()
+            .ToList();
+    }
+
+    private static void AddChangedReleaseCollectionId(
+        EntityEntry releaseEntry,
+        HashSet<int> releaseCollectionIdsKnownBeforeSave,
+        List<PropertyEntry> releaseCollectionIdPropertiesToReadAfterSave
+    )
+    {
+        var releaseCollectionIdProperty = releaseEntry.Property(
+            nameof(Release.ReleaseCollectionId)
+        );
+
+        switch (releaseEntry.State)
+        {
+            case EntityState.Added:
+                releaseCollectionIdPropertiesToReadAfterSave.Add(releaseCollectionIdProperty);
+                break;
+            case EntityState.Deleted
+                when releaseCollectionIdProperty.OriginalValue
+                    is int releaseCollectionIdOfDeletedRelease:
+                releaseCollectionIdsKnownBeforeSave.Add(releaseCollectionIdOfDeletedRelease);
+                break;
+            case EntityState.Modified when releaseCollectionIdProperty.IsModified:
+                if (releaseCollectionIdProperty.OriginalValue is int previousReleaseCollectionId)
+                {
+                    releaseCollectionIdsKnownBeforeSave.Add(previousReleaseCollectionId);
+                }
+
+                releaseCollectionIdPropertiesToReadAfterSave.Add(releaseCollectionIdProperty);
+                break;
+        }
     }
 
     private static void AddChangedForeignKey(

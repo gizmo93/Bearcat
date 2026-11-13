@@ -56,7 +56,7 @@ public class ReleaseSearchUrlTest
         );
 
         // Act
-        var url = ReleaseSearchUrl.Build(query, page: 1, pageSize: 5);
+        var url = ReleaseSearchUrl.Build(query, page: 1, pageSize: 10);
 
         // Assert
         url.ShouldBe("/releases?q=release");
@@ -69,7 +69,7 @@ public class ReleaseSearchUrlTest
         var query = new ReleaseSearchQuery(SortOrder: ReleaseSearchSortOrder.NameAscending);
 
         // Act
-        var url = ReleaseSearchUrl.Build(query, page: 1, pageSize: 5);
+        var url = ReleaseSearchUrl.Build(query, page: 1, pageSize: 10);
 
         // Assert
         url.ShouldBe("/releases?sort=NameAscending");
@@ -84,7 +84,7 @@ public class ReleaseSearchUrlTest
         );
 
         // Act
-        var url = ReleaseSearchUrl.Build(state.Query, page: 2, pageSize: 5);
+        var url = ReleaseSearchUrl.Build(state.Query, page: 2, pageSize: 10);
 
         // Assert
         url.ShouldBe("/releases?sort=UploadsPostedAtDescending&page=2");

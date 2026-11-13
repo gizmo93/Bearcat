@@ -5,7 +5,7 @@ namespace Bearcat.Website.Shared;
 
 public static class SearchUrlParameters
 {
-    public const int DefaultPageSize = 5;
+    public const int DefaultPageSize = 10;
     public static readonly IReadOnlyList<int> PageSizes = [5, 10, 20, 50, 100];
 
     public static string? NormalizeText(string? value)
