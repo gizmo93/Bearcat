@@ -23,6 +23,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
     private IFolderSelectionSource source = null!;
     private string? selectedItem;
+    private string? searchText;
     private HashSet<string> expandedItems = [];
     private List<FolderSelectionNode> rootNodes = [];
     private bool isInitializing = true;
