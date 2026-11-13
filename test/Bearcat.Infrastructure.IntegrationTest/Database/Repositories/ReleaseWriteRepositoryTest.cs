@@ -1,3 +1,4 @@
+using System.Text;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -30,6 +31,24 @@ public class ReleaseWriteRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBe(expectedResult);
+    }
+
+    [Test]
+    public async Task NameExistsAsync_NameWithDecomposedUmlauts_MatchesComposedReleaseName()
+    {
+        // Arrange
+        const string composedName = "Türkische.Früchte.1973.1080p-GRP";
+        await AddReleaseAsync(composedName);
+
+        // Act
+        var result = await new ReleaseWriteRepository(CreateDbContext()).NameExistsAsync(
+            composedName.Normalize(NormalizationForm.FormD),
+            excludedReleaseId: null,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeTrue();
     }
 
     [Test]

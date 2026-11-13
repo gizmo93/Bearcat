@@ -455,10 +455,8 @@ public class ReleaseService(
         }
 
         await ThrowWhenNameExistsAsync(
-            name: (
-                name.TrimOrNullWhenWhitespace()
-                ?? FolderPathHelper.GetFolderName(normalizedFolderPath)
-            ).Normalize(NormalizationForm.FormC),
+            name: name.TrimOrNullWhenWhitespace()
+                ?? FolderPathHelper.GetFolderName(normalizedFolderPath),
             excludedReleaseId: null,
             cancellationToken: cancellationToken
         );

@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.Entities;
+﻿using System.Text;
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -75,8 +76,13 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
         CancellationToken cancellationToken
     )
     {
+        var lowerName = name.ToLower();
+        var lowerComposedName = name.Normalize(NormalizationForm.FormC).ToLower();
+
         return await dbWrite.Releases.AnyAsync(
-            release => release.Name.ToLower() == name.ToLower() && release.Id != excludedReleaseId,
+            release =>
+                (release.Name.ToLower() == lowerName || release.Name.ToLower() == lowerComposedName)
+                && release.Id != excludedReleaseId,
             cancellationToken
         );
     }
