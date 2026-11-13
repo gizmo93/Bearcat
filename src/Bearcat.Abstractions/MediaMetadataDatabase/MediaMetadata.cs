@@ -5,5 +5,8 @@ public record MediaMetadata(
     string? Description,
     string? Genre,
     string? CoverUrl,
-    string? DatabaseUrl
+    string? DatabaseUrl,
+    string? ImdbId,
+    string? TmdbId,
+    string? TvdbId
 );

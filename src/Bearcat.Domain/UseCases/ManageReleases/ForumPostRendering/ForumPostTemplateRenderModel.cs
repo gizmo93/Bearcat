@@ -50,6 +50,8 @@ public sealed record ForumPostTemplateReleaseModel
             SteamUrl = string.Empty,
             ImdbId = string.Empty,
             ImdbUrl = string.Empty,
+            TmdbId = string.Empty,
+            TmdbUrl = string.Empty,
             MainVideo = ForumPostTemplateMediaFileModel.Empty,
             MediaFiles = [],
         };
@@ -74,6 +76,12 @@ public sealed record ForumPostTemplateReleaseModel
 
     [ForumPostTemplateVariable("IMDb title URL.")]
     public required string ImdbUrl { get; init; }
+
+    [ForumPostTemplateVariable("TMDB id without the movie/tv prefix, e.g. 12775.")]
+    public required string TmdbId { get; init; }
+
+    [ForumPostTemplateVariable("TMDB movie or TV show URL.")]
+    public required string TmdbUrl { get; init; }
 
     [ForumPostTemplateVariable("Main video file (largest video file).", IncludeChildren = true)]
     public required ForumPostTemplateMediaFileModel MainVideo { get; init; }

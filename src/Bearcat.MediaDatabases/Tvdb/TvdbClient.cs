@@ -37,6 +37,32 @@ public class TvdbClient(ITvdbApi api, TvdbTokenProvider tokenProvider)
         return results?.FirstOrDefault();
     }
 
+    public async Task<TvdbSeriesBaseRecord?> GetSeriesBySlugAsync(
+        TvdbConfig config,
+        string slug,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await SendAsync(
+            config: config,
+            call: token => api.GetSeriesBySlugAsync(slug, token, cancellationToken),
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<TvdbSeriesExtendedRecord?> GetSeriesExtendedAsync(
+        TvdbConfig config,
+        long seriesId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await SendAsync(
+            config: config,
+            call: token => api.GetSeriesExtendedAsync(seriesId, token, cancellationToken),
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task ValidateLoginAsync(
         TvdbConfig config,
         CancellationToken cancellationToken = default

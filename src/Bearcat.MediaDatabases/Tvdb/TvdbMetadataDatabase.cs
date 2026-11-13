@@ -1,11 +1,12 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.MediaDatabases.Extensions;
 
 namespace Bearcat.MediaDatabases.Tvdb;
 
-public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
+public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
 {
     public string Name => "TheTVDB";
 
@@ -46,6 +47,7 @@ public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
             fallbackOverview: series.Overview,
             image: series.Image,
             slug: series.Slug,
+            imdbId: null,
             languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
@@ -82,6 +84,74 @@ public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
             fallbackOverview: result.Overview,
             image: result.ImageUrl,
             slug: result.Slug,
+            imdbId: null,
+            languageCode: lookup.LanguageCode,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<MediaMetadata?> GetByDatabaseIdAsync(
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (
+            lookup.MediaKind != MediaKind.TvSeries
+            || string.IsNullOrWhiteSpace(lookup.TvdbIdOrSlug)
+        )
+        {
+            return null;
+        }
+
+        var tvdbConfig = config.As<TvdbConfig>();
+
+        if (
+            !long.TryParse(
+                lookup.TvdbIdOrSlug,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var seriesId
+            )
+        )
+        {
+            var seriesBySlug = await client.GetSeriesBySlugAsync(
+                config: tvdbConfig,
+                slug: lookup.TvdbIdOrSlug,
+                cancellationToken: cancellationToken
+            );
+
+            if (seriesBySlug is null)
+            {
+                return null;
+            }
+
+            seriesId = seriesBySlug.Id;
+        }
+
+        var series = await client.GetSeriesExtendedAsync(
+            config: tvdbConfig,
+            seriesId: seriesId,
+            cancellationToken: cancellationToken
+        );
+
+        if (series is null)
+        {
+            return null;
+        }
+
+        var imdbId = series
+            .RemoteIds?.Select(remoteId => remoteId.Id)
+            .FirstOrDefault(remoteId => remoteId is not null && ImdbIdRegex().IsMatch(remoteId));
+
+        return await BuildSeriesInfoAsync(
+            config: tvdbConfig,
+            seriesId: series.Id,
+            fallbackName: series.Name,
+            fallbackOverview: series.Overview,
+            image: series.Image,
+            slug: series.Slug,
+            imdbId: imdbId,
             languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
@@ -134,6 +204,7 @@ public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
         string? fallbackOverview,
         string? image,
         string? slug,
+        string? imdbId,
         string? languageCode,
         CancellationToken cancellationToken
     )
@@ -161,7 +232,10 @@ public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
             CoverUrl: NullIfWhiteSpace(image),
             DatabaseUrl: string.IsNullOrWhiteSpace(slug)
                 ? null
-                : $"https://www.thetvdb.com/series/{slug}"
+                : $"https://www.thetvdb.com/series/{slug}",
+            ImdbId: imdbId,
+            TmdbId: null,
+            TvdbId: seriesId.ToString(CultureInfo.InvariantCulture)
         );
     }
 
@@ -179,4 +253,7 @@ public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
     {
         return string.IsNullOrWhiteSpace(value) ? null : value;
     }
+
+    [GeneratedRegex(@"^tt\d{7,8}$")]
+    private static partial Regex ImdbIdRegex();
 }

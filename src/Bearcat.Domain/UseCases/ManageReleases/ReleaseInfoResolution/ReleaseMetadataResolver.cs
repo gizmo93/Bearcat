@@ -76,11 +76,20 @@ public partial class ReleaseMetadataResolver(
             ExternalIdentifierType.Steam
         );
 
+        var manualTmdbId = release
+            .ExternalIdentifiers.FirstOrDefault(identifier =>
+                identifier.Type == ExternalIdentifierType.Tmdb
+                && identifier.Source == ExternalIdentifierSource.Manual
+            )
+            ?.Value;
+
         var resolved = await metadataResolver.ResolveAsync(
             new MediaMetadataLookup(
                 MediaKind: mediaKind.Value,
                 ImdbId: imdbId,
                 SteamAppId: steamAppId,
+                TmdbId: manualTmdbId,
+                TvdbIdOrSlug: null,
                 Title: externalTitle ?? title,
                 Year: yearMatch.Success
                     ? int.Parse(yearMatch.Value, CultureInfo.InvariantCulture)
@@ -124,6 +133,8 @@ public partial class ReleaseMetadataResolver(
             ? existingMetadata?.MetadataDatabaseUrl
             : resolved.Metadata.DatabaseUrl;
 
+        StoreIdentifiersReportedByMediaDatabase(release, resolved.Metadata);
+
         logger.LogInformation(
             "Resolved metadata for release {ReleaseName} using {MetadataDatabase}",
             release.Name,
@@ -131,6 +142,46 @@ public partial class ReleaseMetadataResolver(
         );
 
         return true;
+    }
+
+    private static void StoreIdentifiersReportedByMediaDatabase(
+        Release release,
+        MediaMetadata metadata
+    )
+    {
+        if (metadata.TmdbId is not null)
+        {
+            ReleaseExternalIdentifierService.SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Tmdb,
+                source: ExternalIdentifierSource.Tmdb,
+                value: metadata.TmdbId
+            );
+
+            ReleaseExternalIdentifierService.SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Imdb,
+                source: ExternalIdentifierSource.Tmdb,
+                value: metadata.ImdbId
+            );
+        }
+
+        if (metadata.TvdbId is not null)
+        {
+            ReleaseExternalIdentifierService.SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Tvdb,
+                source: ExternalIdentifierSource.Tvdb,
+                value: metadata.TvdbId
+            );
+
+            ReleaseExternalIdentifierService.SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Imdb,
+                source: ExternalIdentifierSource.Tvdb,
+                value: metadata.ImdbId
+            );
+        }
     }
 
     private bool IsNfoDatabaseMetadata(ReleaseMetadata metadata)

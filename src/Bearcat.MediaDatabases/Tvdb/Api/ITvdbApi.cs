@@ -29,6 +29,22 @@ public interface ITvdbApi
         CancellationToken cancellationToken = default
     );
 
+    [Get("/v4/series/{id}/extended")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<TvdbResponse<TvdbSeriesExtendedRecord>>> GetSeriesExtendedAsync(
+        long id,
+        [Authorize("Bearer")] string token,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/v4/series/slug/{slug}")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<TvdbResponse<TvdbSeriesBaseRecord>>> GetSeriesBySlugAsync(
+        string slug,
+        [Authorize("Bearer")] string token,
+        CancellationToken cancellationToken = default
+    );
+
     [Get("/v4/series/{id}/translations/{language}")]
     [Headers("User-Agent: Bearcat/1.0")]
     Task<ApiResponse<TvdbResponse<TvdbTranslation>>> GetSeriesTranslationAsync(

@@ -133,6 +133,8 @@ public class ReleaseCollectionForumPostRenderSource(
             SteamUrl = release.SteamUrl,
             ImdbId = release.ImdbId,
             ImdbUrl = release.ImdbUrl,
+            TmdbId = release.TmdbId,
+            TmdbUrl = release.TmdbUrl,
             MainVideo = release.MainVideo,
             MediaFiles = release.MediaFiles,
             ReleaseInfo = renderModel.ReleaseInfo,

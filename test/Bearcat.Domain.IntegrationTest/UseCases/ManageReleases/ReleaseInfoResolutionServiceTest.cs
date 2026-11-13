@@ -847,11 +847,14 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
             )
             .ReturnsAsync(
                 new MediaMetadata(
-                    "Amok",
-                    "Description",
-                    "Drama",
-                    "https://images.test/amok.jpg",
-                    "https://metadata.test/amok"
+                    Title: "Amok",
+                    Description: "Description",
+                    Genre: "Drama",
+                    CoverUrl: "https://images.test/amok.jpg",
+                    DatabaseUrl: "https://metadata.test/amok",
+                    ImdbId: null,
+                    TmdbId: null,
+                    TvdbId: null
                 )
             );
         metadataDatabaseFactoryMock
@@ -914,7 +917,10 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
                     CoverUrl: metadataCoverExists
                         ? "https://image.tmdb.org/t/p/w500/bearcat.jpg"
                         : null,
-                    DatabaseUrl: "https://www.themoviedb.org/movie/123"
+                    DatabaseUrl: "https://www.themoviedb.org/movie/123",
+                    ImdbId: null,
+                    TmdbId: null,
+                    TvdbId: null
                 )
             );
         metadataDatabaseFactoryMock
@@ -1069,11 +1075,14 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
             {
                 await AddMetadataFromOtherWorkerAsync(release.Id);
                 return new MediaMetadata(
-                    "Amok",
-                    "Description",
-                    "Drama",
-                    "https://images.test/amok.jpg",
-                    "https://metadata.test/amok"
+                    Title: "Amok",
+                    Description: "Description",
+                    Genre: "Drama",
+                    CoverUrl: "https://images.test/amok.jpg",
+                    DatabaseUrl: "https://metadata.test/amok",
+                    ImdbId: null,
+                    TmdbId: null,
+                    TvdbId: null
                 );
             });
         metadataDatabaseFactoryMock
@@ -1093,6 +1102,166 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
         metadata.Title.ShouldBe("Amok (other worker)");
         var persistedRelease = await DbContext.Releases.SingleAsync();
         persistedRelease.MetadataCheckedAt.ShouldNotBeNull();
+    }
+
+    [TestCase(ExternalIdentifierSource.Manual, "movie/12775")]
+    [TestCase(ExternalIdentifierSource.Tmdb, null)]
+    public async Task RefreshMetadataAsync_TmdbIdentifierExists_OnlyManualTmdbIdentifierIsPassedAsTmdbId(
+        ExternalIdentifierSource tmdbIdentifierSource,
+        string? expectedLookupTmdbId
+    )
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Flesh.and.Blood.1985.1080p.BluRay.x264-GRP");
+        release.ReleaseContentType = ReleaseContentType.Movie;
+
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Tmdb,
+                Value = "movie/12775",
+                Source = tmdbIdentifierSource,
+            }
+        );
+
+        const string databaseClassName = "TmdbMetadataDatabase";
+
+        DbContext.MediaDatabaseRegistrations.Add(
+            new MediaDatabaseRegistration
+            {
+                MediaDatabaseClassName = databaseClassName,
+                SerializedConfig = SerializedConfig,
+                IsActive = true,
+            }
+        );
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var lookups = new List<MediaMetadataLookup>();
+        var config = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict).Object;
+        var database = new Mock<IMediaMetadataDatabase>();
+        database.SetupGet(item => item.SupportedMediaKinds).Returns([MediaKind.Movie]);
+        database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
+
+        database
+            .Setup(item =>
+                item.GetByDatabaseIdAsync(
+                    config,
+                    It.IsAny<MediaMetadataLookup>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<IMediaMetadataDatabaseConfig, MediaMetadataLookup, CancellationToken>(
+                (_, lookup, _) => lookups.Add(lookup)
+            )
+            .ReturnsAsync(CreateFleshAndBloodMetadata());
+
+        database
+            .Setup(item =>
+                item.GetByTitleAsync(
+                    config,
+                    It.IsAny<MediaMetadataLookup>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<IMediaMetadataDatabaseConfig, MediaMetadataLookup, CancellationToken>(
+                (_, lookup, _) => lookups.Add(lookup)
+            )
+            .ReturnsAsync(CreateFleshAndBloodMetadata());
+
+        metadataDatabaseFactoryMock
+            .Setup(factory => factory.Get(databaseClassName))
+            .Returns(database.Object);
+
+        // Act
+        var resolved = await service.RefreshMetadataAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeTrue();
+        lookups.ShouldHaveSingleItem().TmdbId.ShouldBe(expectedLookupTmdbId);
+    }
+
+    [Test]
+    public async Task RefreshMetadataAsync_DatabaseReportsIds_StoresThemAsIdentifiersOfTheDatabaseSource()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Flesh.and.Blood.1985.1080p.BluRay.x264-GRP");
+        release.ReleaseContentType = ReleaseContentType.Movie;
+
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Tmdb,
+                Value = "movie/1",
+                Source = ExternalIdentifierSource.Tmdb,
+            }
+        );
+
+        const string databaseClassName = "TmdbMetadataDatabase";
+
+        DbContext.MediaDatabaseRegistrations.Add(
+            new MediaDatabaseRegistration
+            {
+                MediaDatabaseClassName = databaseClassName,
+                SerializedConfig = SerializedConfig,
+                IsActive = true,
+            }
+        );
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var config = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict).Object;
+        var database = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
+        database.SetupGet(item => item.SupportedMediaKinds).Returns([MediaKind.Movie]);
+        database.SetupGet(item => item.ResolutionPriority).Returns(0);
+        database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
+
+        database
+            .Setup(item =>
+                item.GetByTitleAsync(
+                    config,
+                    It.IsAny<MediaMetadataLookup>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(CreateFleshAndBloodMetadata());
+
+        metadataDatabaseFactoryMock
+            .Setup(factory => factory.Get(databaseClassName))
+            .Returns(database.Object);
+
+        // Act
+        await service.RefreshMetadataAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+
+        var identifiers = await DbContext
+            .ReleaseExternalIdentifiers.OrderBy(identifier => identifier.Type)
+            .Select(identifier => new
+            {
+                identifier.Type,
+                identifier.Value,
+                identifier.Source,
+            })
+            .ToListAsync();
+
+        identifiers.ShouldBe([
+            new
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt0089153",
+                Source = ExternalIdentifierSource.Tmdb,
+            },
+            new
+            {
+                Type = ExternalIdentifierType.Tmdb,
+                Value = "movie/12775",
+                Source = ExternalIdentifierSource.Tmdb,
+            },
+        ]);
     }
 
     [Test]
@@ -1423,6 +1592,20 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
 
         DbContext.NfoDatabaseRegistrations.Add(registration);
         await DbContext.SaveChangesAsync();
+    }
+
+    private static MediaMetadata CreateFleshAndBloodMetadata()
+    {
+        return new MediaMetadata(
+            Title: "Flesh+Blood",
+            Description: null,
+            Genre: null,
+            CoverUrl: null,
+            DatabaseUrl: "https://www.themoviedb.org/movie/12775",
+            ImdbId: "tt0089153",
+            TmdbId: "movie/12775",
+            TvdbId: null
+        );
     }
 
     private async Task<Release> AddReleaseAsync(

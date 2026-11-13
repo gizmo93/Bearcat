@@ -112,6 +112,12 @@ public sealed record ForumPostTemplateCollectionReleaseModel
     [ForumPostTemplateVariable("IMDb title URL.")]
     public required string ImdbUrl { get; init; }
 
+    [ForumPostTemplateVariable("TMDB id without the movie/tv prefix, e.g. 12775.")]
+    public required string TmdbId { get; init; }
+
+    [ForumPostTemplateVariable("TMDB movie or TV show URL.")]
+    public required string TmdbUrl { get; init; }
+
     [ForumPostTemplateVariable("Main video file (largest video file).", IncludeChildren = true)]
     public required ForumPostTemplateMediaFileModel MainVideo { get; init; }
 

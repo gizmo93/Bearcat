@@ -129,6 +129,8 @@ public partial class ReleaseCollectionInfoResolutionService(
             MediaKind: MediaKind.TvSeries,
             ImdbId: ExtractImdbId(collection),
             SteamAppId: null,
+            TmdbId: null,
+            TvdbIdOrSlug: null,
             Title: ExtractSeriesTitle(collection.Name),
             Year: yearMatch.Success
                 ? int.Parse(yearMatch.Value, CultureInfo.InvariantCulture)

@@ -68,6 +68,9 @@
             ExternalIdentifierType.Imdb => $"https://www.imdb.com/title/{identifier.Value}",
             ExternalIdentifierType.Steam =>
                 $"https://store.steampowered.com/app/{identifier.Value}",
+            ExternalIdentifierType.Tmdb => $"https://www.themoviedb.org/{identifier.Value}",
+            ExternalIdentifierType.Tvdb =>
+                $"https://www.thetvdb.com/dereferrer/series/{identifier.Value}",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(identifier),
                 identifier.Type,

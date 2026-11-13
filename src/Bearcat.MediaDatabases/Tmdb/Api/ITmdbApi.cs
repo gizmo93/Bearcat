@@ -14,6 +14,25 @@ public interface ITmdbApi
         CancellationToken cancellationToken = default
     );
 
+    [Get("/3/movie/{movieId}")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<TmdbMovieResponse>> GetMovieAsync(
+        long movieId,
+        [AliasAs("api_key")] string apiKey,
+        [AliasAs("language")] string? language,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/3/tv/{seriesId}")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<TmdbTvResponse>> GetTvAsync(
+        long seriesId,
+        [AliasAs("api_key")] string apiKey,
+        [AliasAs("language")] string? language,
+        [AliasAs("append_to_response")] string appendToResponse,
+        CancellationToken cancellationToken = default
+    );
+
     [Get("/3/search/movie")]
     [Headers("User-Agent: Bearcat/1.0")]
     Task<ApiResponse<TmdbSearchResponse<TmdbMovieResponse>>> SearchMoviesAsync(

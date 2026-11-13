@@ -596,7 +596,10 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
                     Description: "Hostage drama",
                     Genre: null,
                     CoverUrl: "https://artworks.thetvdb.com/banners/hostage.jpg",
-                    DatabaseUrl: "https://www.thetvdb.com/series/hostage"
+                    DatabaseUrl: "https://www.thetvdb.com/series/hostage",
+                    ImdbId: null,
+                    TmdbId: null,
+                    TvdbId: null
                 )
             );
 
@@ -793,7 +796,10 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             Description: "Vier Detectives, ein Verbrechen.",
             Genre: null,
             CoverUrl: "https://artworks.thetvdb.com/banners/cover.jpg",
-            DatabaseUrl: "https://www.thetvdb.com/series/bodies"
+            DatabaseUrl: "https://www.thetvdb.com/series/bodies",
+            ImdbId: null,
+            TmdbId: null,
+            TvdbId: null
         );
     }
 

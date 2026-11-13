@@ -573,6 +573,8 @@
   <data name="ExternalIdentifiers" xml:space="preserve"><value>External identifiers</value></data>
   <data name="ExternalIdentifierType.Imdb" xml:space="preserve"><value>IMDb</value></data>
   <data name="ExternalIdentifierType.Steam" xml:space="preserve"><value>Steam</value></data>
+  <data name="ExternalIdentifierType.Tmdb" xml:space="preserve"><value>TMDB</value></data>
+  <data name="ExternalIdentifierType.Tvdb" xml:space="preserve"><value>TVDB</value></data>
   <data name="ExternalIdentifierSource.Nfo" xml:space="preserve"><value>NFO</value></data>
   <data name="ExternalIdentifierSource.Xrel" xml:space="preserve"><value>xREL</value></data>
   <data name="ExternalIdentifierSource.Srrdb" xml:space="preserve"><value>SRRDB</value></data>

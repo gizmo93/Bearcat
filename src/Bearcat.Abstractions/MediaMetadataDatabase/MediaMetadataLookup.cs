@@ -4,6 +4,8 @@ public record MediaMetadataLookup(
     MediaKind MediaKind,
     string? ImdbId,
     string? SteamAppId,
+    string? TmdbId,
+    string? TvdbIdOrSlug,
     string? Title,
     int? Year,
     int? SeasonNumber,

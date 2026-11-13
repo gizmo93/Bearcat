@@ -37,6 +37,22 @@ public static class ReleaseExternalIdentifierService
         );
     }
 
+    public static void SyncIdentifierValue(
+        Release release,
+        ExternalIdentifierType type,
+        ExternalIdentifierSource source,
+        string? value
+    )
+    {
+        Sync(
+            release: release,
+            type: type,
+            source: source,
+            values: [value],
+            extractor: item => string.IsNullOrWhiteSpace(item) ? [] : [item]
+        );
+    }
+
     public static string? FindValueWithHighestSourcePriority(
         IReadOnlyList<ReleaseExternalIdentifier> identifiers,
         ExternalIdentifierType type

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.MediaMetadataDatabase;
@@ -99,6 +100,53 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
         return null;
     }
 
+    public async Task<MediaMetadata?> GetByDatabaseIdAsync(
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(lookup.TmdbId))
+        {
+            return null;
+        }
+
+        var tmdbConfig = config.As<TmdbConfig>();
+        var tmdbIdParts = lookup.TmdbId.Split('/');
+        var id = long.Parse(tmdbIdParts[1], CultureInfo.InvariantCulture);
+
+        if (tmdbIdParts[0] == "movie")
+        {
+            var movie = await SendAsync(
+                api.GetMovieAsync(
+                    movieId: id,
+                    apiKey: tmdbConfig.ApiKey,
+                    language: lookup.LanguageCode,
+                    cancellationToken: cancellationToken
+                )
+            );
+
+            return MapMovie(movie);
+        }
+
+        if (tmdbIdParts[0] == "tv")
+        {
+            var series = await SendAsync(
+                api.GetTvAsync(
+                    seriesId: id,
+                    apiKey: tmdbConfig.ApiKey,
+                    language: lookup.LanguageCode,
+                    appendToResponse: "external_ids",
+                    cancellationToken: cancellationToken
+                )
+            );
+
+            return MapTv(series);
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(lookup), lookup.TmdbId, null);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IMediaMetadataDatabaseConfig config,
         CancellationToken cancellationToken = default
@@ -176,7 +224,10 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
             Description: movie.Overview,
             Genre: null,
             CoverUrl: coverUrl,
-            DatabaseUrl: $"https://www.themoviedb.org/movie/{movie.Id}"
+            DatabaseUrl: $"https://www.themoviedb.org/movie/{movie.Id}",
+            ImdbId: NullIfWhiteSpace(movie.ImdbId),
+            TmdbId: $"movie/{movie.Id}",
+            TvdbId: null
         );
     }
 
@@ -196,7 +247,10 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
             Description: series.Overview,
             Genre: null,
             CoverUrl: coverUrl,
-            DatabaseUrl: $"https://www.themoviedb.org/tv/{series.Id}"
+            DatabaseUrl: $"https://www.themoviedb.org/tv/{series.Id}",
+            ImdbId: NullIfWhiteSpace(series.ExternalIds?.ImdbId),
+            TmdbId: $"tv/{series.Id}",
+            TvdbId: null
         );
     }
 
@@ -216,7 +270,15 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
             Description: episode.Overview,
             Genre: null,
             CoverUrl: coverUrl,
-            DatabaseUrl: $"https://www.themoviedb.org/tv/{episode.ShowId}/season/{episode.SeasonNumber}/episode/{episode.EpisodeNumber}"
+            DatabaseUrl: $"https://www.themoviedb.org/tv/{episode.ShowId}/season/{episode.SeasonNumber}/episode/{episode.EpisodeNumber}",
+            ImdbId: null,
+            TmdbId: $"tv/{episode.ShowId}",
+            TvdbId: null
         );
+    }
+
+    private static string? NullIfWhiteSpace(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 }

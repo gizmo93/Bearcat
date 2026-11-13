@@ -27,6 +27,10 @@ public class MediaMetadataResolver(
             .ThenBy(item => item.Registration.ClassName)
             .ToList();
 
+        var lookupHasDatabaseId =
+            !string.IsNullOrWhiteSpace(lookup.TmdbId)
+            || !string.IsNullOrWhiteSpace(lookup.TvdbIdOrSlug);
+
         foreach (var (registration, database) in activeDatabases)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -41,7 +45,15 @@ public class MediaMetadataResolver(
                 var config = database.DeserializeConfig(registration.SerializedConfig);
                 MediaMetadata? metadata = null;
 
-                if (
+                if (lookupHasDatabaseId)
+                {
+                    metadata = await database.GetByDatabaseIdAsync(
+                        config: config,
+                        lookup: lookup,
+                        cancellationToken: cancellationToken
+                    );
+                }
+                else if (
                     !string.IsNullOrWhiteSpace(lookup.ImdbId)
                     || !string.IsNullOrWhiteSpace(lookup.SteamAppId)
                 )
@@ -53,7 +65,11 @@ public class MediaMetadataResolver(
                     );
                 }
 
-                if (metadata is null && !string.IsNullOrWhiteSpace(lookup.Title))
+                if (
+                    !lookupHasDatabaseId
+                    && metadata is null
+                    && !string.IsNullOrWhiteSpace(lookup.Title)
+                )
                 {
                     metadata = await database.GetByTitleAsync(config, lookup, cancellationToken);
                 }
