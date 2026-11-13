@@ -107,11 +107,19 @@ public class MediaMetadataService(
                 continue;
             }
 
+            var metadata = MediaInfoOutputParser.Parse(probe.Json);
+
+            if (metadata is null)
+            {
+                logger.LogWarning("mediainfo could not read media file {FilePath}", filePath);
+                continue;
+            }
+
             mediaFiles.Add(
                 new ReleaseMediaFile
                 {
                     RelativePath = Path.GetRelativePath(releaseFolderPath, filePath),
-                    SizeBytes = MediaInfoOutputParser.Parse(probe.Json)?.SizeBytes ?? 0,
+                    SizeBytes = metadata.SizeBytes ?? 0,
                     MediaInfoJson = probe.Json,
                     MediaInfoText = probe.Text,
                 }

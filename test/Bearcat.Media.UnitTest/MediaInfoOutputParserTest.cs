@@ -159,4 +159,19 @@ public class MediaInfoOutputParserTest
         MediaInfoOutputParser.Parse("").ShouldBeNull();
         MediaInfoOutputParser.Parse("{}").ShouldBeNull();
     }
+
+    [Test]
+    public void Parse_MediaNull_ReturnsNull()
+    {
+        // Arrange
+        const string json = """
+            {
+                "creatingLibrary": { "name": "MediaInfoLib", "version": "26.05" },
+                "media": null
+            }
+            """;
+
+        // Act / Assert
+        MediaInfoOutputParser.Parse(json).ShouldBeNull();
+    }
 }

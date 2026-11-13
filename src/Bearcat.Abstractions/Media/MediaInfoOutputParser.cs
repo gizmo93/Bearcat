@@ -26,6 +26,7 @@ public static class MediaInfoOutputParser
         {
             if (
                 !document.RootElement.TryGetProperty("media", out var media)
+                || media.ValueKind != JsonValueKind.Object
                 || !media.TryGetProperty("track", out var tracks)
                 || tracks.ValueKind != JsonValueKind.Array
             )

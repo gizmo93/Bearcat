@@ -20,9 +20,12 @@ ENV \
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    locales \
     p7zip-full \
     mediainfo \
     wget \
+    && sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
     && wget https://www.win-rar.com/fileadmin/winrar-versions/rarlinux-x64-712.tar.gz \
     && tar -xzf rarlinux-x64-712.tar.gz \
     && cp rar/rar rar/unrar /usr/local/bin/ \
