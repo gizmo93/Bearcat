@@ -821,7 +821,13 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
             unselectedAccount
         );
 
+        var releaseCollection = await AddReleaseCollectionAsync(onlineRelease, unselectedRelease);
+
         (await GetReleaseOnlineStateAsync(onlineRelease)).ShouldBe(OnlineState.Online);
+
+        (await GetReleaseCollectionOnlineStateAsync(releaseCollection)).ShouldBe(
+            OnlineState.Online
+        );
 
         var request = new HosterReplacementRequest(
             SourceUploadTargets: [TargetOf(source), TargetOf(sourcePool)],
@@ -876,6 +882,10 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
         (await GetReleaseOnlineStateAsync(onlineRelease)).ShouldBe(OnlineState.Offline);
         (await GetReleaseOnlineStateAsync(partiallyOnlineRelease)).ShouldBe(OnlineState.Offline);
         (await GetReleaseOnlineStateAsync(unselectedRelease)).ShouldBe(OnlineState.Online);
+
+        (await GetReleaseCollectionOnlineStateAsync(releaseCollection)).ShouldBe(
+            OnlineState.PartiallyOnline
+        );
     }
 
     [Test]
@@ -1897,6 +1907,38 @@ public class HosterReplacementServiceTest(DatabaseProvider databaseProvider)
             }
         );
         await DbContext.SaveChangesAsync();
+    }
+
+    private async Task<ReleaseCollection> AddReleaseCollectionAsync(params Release[] releases)
+    {
+        var releaseCollection = new ReleaseCollection
+        {
+            ReleaseGroup = await GetReleaseGroupAsync(),
+            Key = "online.collection",
+            Name = "Online collection",
+            CreatedAt = LocalNow,
+        };
+
+        DbContext.Add(releaseCollection);
+
+        foreach (var release in releases)
+        {
+            release.ReleaseCollection = releaseCollection;
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        return releaseCollection;
+    }
+
+    private async Task<OnlineState> GetReleaseCollectionOnlineStateAsync(
+        ReleaseCollection releaseCollection
+    )
+    {
+        return await ReadDbContext
+            .ReleaseCollections.Where(c => c.Id == releaseCollection.Id)
+            .Select(c => c.OnlineState)
+            .SingleAsync();
     }
 
     private async Task<OnlineState> GetReleaseOnlineStateAsync(Release release)

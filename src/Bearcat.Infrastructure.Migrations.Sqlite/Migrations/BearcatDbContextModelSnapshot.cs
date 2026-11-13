@@ -1594,6 +1594,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OnlineState")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("PrimaryLanguageCode")
                         .HasMaxLength(2)
                         .HasColumnType("TEXT");
@@ -1609,6 +1612,13 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OnlineState");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("Name", "Id");
 
                     b.HasIndex("ReleaseGroupId", "Key")
                         .IsUnique();

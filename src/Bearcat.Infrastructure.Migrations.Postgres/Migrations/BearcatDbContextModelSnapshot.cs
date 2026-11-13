@@ -1672,6 +1672,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int>("OnlineState")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PrimaryLanguageCode")
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)");
@@ -1687,6 +1690,13 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp(4) without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OnlineState");
+
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("Name", "Id");
 
                     b.HasIndex("ReleaseGroupId", "Key")
                         .IsUnique();

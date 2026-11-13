@@ -41,6 +41,31 @@ internal sealed class MaterializedValuesTestData(BearcatDbContext dbContext)
         return release;
     }
 
+    public ReleaseCollection AddReleaseCollection(string name, params Release[] releases)
+    {
+        var releaseCollection = new ReleaseCollection
+        {
+            Name = name,
+            Key = name.ToLowerInvariant(),
+            ReleaseContentType = ReleaseContentType.TvShowEpisode,
+            CreatedAt = LocalNow,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = $"{name} group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+        };
+        dbContext.ReleaseCollections.Add(releaseCollection);
+
+        foreach (var release in releases)
+        {
+            release.ReleaseCollection = releaseCollection;
+        }
+
+        return releaseCollection;
+    }
+
     public ArchiveConfig AddArchiveConfig(Release release)
     {
         var archiveConfig = new ArchiveConfig

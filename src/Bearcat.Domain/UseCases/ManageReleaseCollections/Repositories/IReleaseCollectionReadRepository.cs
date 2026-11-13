@@ -1,12 +1,18 @@
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 
 public interface IReleaseCollectionReadRepository
 {
     Task<PagedResult<ReleaseCollectionReadModel>> SearchAsync(
+        ReleaseCollectionSearchQuery query,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ReleaseOnlineStateCounts> CountByOnlineStateAsync(
         ReleaseCollectionSearchQuery query,
         CancellationToken cancellationToken = default
     );

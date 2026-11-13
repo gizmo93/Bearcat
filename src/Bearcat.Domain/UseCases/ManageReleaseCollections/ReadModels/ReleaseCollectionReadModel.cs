@@ -10,5 +10,7 @@ public record ReleaseCollectionReadModel(
     int ReleaseGroupId,
     string ReleaseGroupName,
     int ReleaseCount,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    OnlineState OnlineState,
+    string? PrimaryLanguageCode
 );

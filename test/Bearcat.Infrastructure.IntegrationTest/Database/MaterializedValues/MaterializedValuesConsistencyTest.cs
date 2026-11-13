@@ -12,6 +12,7 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
 {
     private const int ReleaseCount = 12;
     private const int ChangeRoundCount = 6;
+    private const int ReleaseCollectionCount = 3;
 
     private static readonly OnlineState[] UploadOnlineStates =
     [
@@ -32,7 +33,7 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task SaveChangesAsync_VariedChangesInSeveralSaves_StoredValuesEqualValuesComputedFromUploadConfigsUploadsAndUploadedFiles()
+    public async Task SaveChangesAsync_VariedChangesInSeveralSaves_StoredValuesEqualValuesComputedFromReleasesUploadConfigsUploadsAndUploadedFiles()
     {
         // Arrange
         var hosterRegistrations = new List<HosterRegistration>
@@ -45,8 +46,15 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
             .Range(1, ReleaseCount)
             .Select(number => testData.AddRelease($"Release {number}"))
             .ToList();
+
+        var releaseCollections = Enumerable
+            .Range(1, ReleaseCollectionCount)
+            .Select(number => testData.AddReleaseCollection($"Collection {number}"))
+            .ToList();
+
         foreach (var release in releases)
         {
+            release.ReleaseCollection = PickRandomOrNull(releaseCollections);
             var uploadConfigCount = random.Next(0, 4);
             for (var configNumber = 0; configNumber < uploadConfigCount; configNumber++)
             {
@@ -58,7 +66,7 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
         await DbContext.SaveChangesAsync();
         for (var round = 0; round < ChangeRoundCount; round++)
         {
-            await ApplyRandomChangesAsync(releases, hosterRegistrations);
+            await ApplyRandomChangesAsync(releases, releaseCollections, hosterRegistrations);
             await DbContext.SaveChangesAsync();
         }
 
@@ -68,9 +76,12 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
 
     private async Task ApplyRandomChangesAsync(
         List<Release> releases,
+        List<ReleaseCollection> releaseCollections,
         List<HosterRegistration> hosterRegistrations
     )
     {
+        PickRandom(releases).ReleaseCollection = PickRandomOrNull(releaseCollections);
+
         var uploadConfigs = await DbContext
             .UploadConfigs.Include(uploadConfig => uploadConfig.ArchiveConfig)
             .Include(uploadConfig => uploadConfig.Uploads)
@@ -144,10 +155,29 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
         return items[random.Next(items.Count)];
     }
 
+    private T? PickRandomOrNull<T>(IReadOnlyList<T> items)
+        where T : class
+    {
+        return random.Next(items.Count + 1) == items.Count ? null : PickRandom(items);
+    }
+
     private async Task AssertStoredValuesEqualComputedValuesAsync()
     {
+        var releaseCollections = await ReadDbContext
+            .ReleaseCollections.Select(releaseCollection => new
+            {
+                releaseCollection.Id,
+                releaseCollection.OnlineState,
+            })
+            .ToListAsync();
+
         var releases = await ReadDbContext
-            .Releases.Select(release => new { release.Id, release.OnlineState })
+            .Releases.Select(release => new
+            {
+                release.Id,
+                release.ReleaseCollectionId,
+                release.OnlineState,
+            })
             .ToListAsync();
         var uploadConfigs = await ReadDbContext
             .UploadConfigs.Select(uploadConfig => new { uploadConfig.Id, uploadConfig.ReleaseId })
@@ -191,6 +221,31 @@ public class MaterializedValuesConsistencyTest(DatabaseProvider databaseProvider
                 : OnlineState.Offline;
 
             release.OnlineState.ShouldBe(computedOnlineState, $"Release {release.Id}");
+        }
+
+        foreach (var releaseCollection in releaseCollections)
+        {
+            var knownOnlineStatesOfReleases = releases
+                .Where(release =>
+                    release.ReleaseCollectionId == releaseCollection.Id
+                    && release.OnlineState != OnlineState.Unknown
+                )
+                .Select(release => release.OnlineState)
+                .ToList();
+            var computedOnlineState =
+                knownOnlineStatesOfReleases.Count == 0 ? OnlineState.Unknown
+                : knownOnlineStatesOfReleases.All(onlineState => onlineState == OnlineState.Online)
+                    ? OnlineState.Online
+                : knownOnlineStatesOfReleases.Any(onlineState =>
+                    onlineState is OnlineState.Online or OnlineState.PartiallyOnline
+                )
+                    ? OnlineState.PartiallyOnline
+                : OnlineState.Offline;
+
+            releaseCollection.OnlineState.ShouldBe(
+                computedOnlineState,
+                $"ReleaseCollection {releaseCollection.Id}"
+            );
         }
 
         foreach (var upload in uploads)

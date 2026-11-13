@@ -19,6 +19,22 @@ public static class MaterializedValueExpressions
         : OnlineState.Offline;
 
     public static readonly Expression<
+        Func<ReleaseCollection, OnlineState>
+    > ReleaseCollectionOnlineState = releaseCollection =>
+        !releaseCollection.Releases.Any(release => release.OnlineState != OnlineState.Unknown)
+            ? OnlineState.Unknown
+        : releaseCollection.Releases.All(release =>
+            release.OnlineState == OnlineState.Unknown || release.OnlineState == OnlineState.Online
+        )
+            ? OnlineState.Online
+        : releaseCollection.Releases.Any(release =>
+            release.OnlineState == OnlineState.Online
+            || release.OnlineState == OnlineState.PartiallyOnline
+        )
+            ? OnlineState.PartiallyOnline
+        : OnlineState.Offline;
+
+    public static readonly Expression<
         Func<Upload, DateTime?>
     > OldestUploadedFileCheckedAtWithNeverCheckedFilesAsMinValue = upload =>
         upload.UploadedFiles.Min(uploadedFile =>

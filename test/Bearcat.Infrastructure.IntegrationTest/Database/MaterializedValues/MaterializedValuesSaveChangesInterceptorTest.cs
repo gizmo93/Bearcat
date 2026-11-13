@@ -233,6 +233,91 @@ public class MaterializedValuesSaveChangesInterceptorTest(DatabaseProvider datab
     }
 
     [Test]
+    public async Task SaveChangesAsync_ReleaseCollectionWithOnlyReleasesWithoutUploadConfigs_StoresUnknown()
+    {
+        // Arrange
+        var releaseCollection = testData.AddReleaseCollection(
+            "Collection",
+            testData.AddRelease("First"),
+            testData.AddRelease("Second")
+        );
+
+        // Act
+        await DbContext.SaveChangesAsync();
+
+        // Assert
+        (await GetStoredOnlineStateAsync(releaseCollection)).ShouldBe(OnlineState.Unknown);
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_UploadOnlineStateChanged_UpdatesReleaseCollectionOnlineState()
+    {
+        // Arrange
+        var hosterRegistration = testData.AddHosterRegistration("Alpha");
+        var changedRelease = testData.AddRelease("Changed");
+        var onlineRelease = testData.AddRelease("Online");
+        var releaseWithoutUploadConfigs = testData.AddRelease("Without upload configs");
+
+        var changedUpload = testData.AddUpload(
+            testData.AddUploadConfig(changedRelease, hosterRegistration),
+            OnlineState.Online
+        );
+
+        testData.AddUpload(
+            testData.AddUploadConfig(onlineRelease, hosterRegistration),
+            OnlineState.Online
+        );
+
+        var releaseCollection = testData.AddReleaseCollection(
+            "Collection",
+            changedRelease,
+            onlineRelease,
+            releaseWithoutUploadConfigs
+        );
+
+        await DbContext.SaveChangesAsync();
+        var onlineStateBeforeChange = await GetStoredOnlineStateAsync(releaseCollection);
+        changedUpload.OnlineState = OnlineState.Offline;
+
+        // Act
+        await DbContext.SaveChangesAsync();
+
+        // Assert
+        onlineStateBeforeChange.ShouldBe(OnlineState.Online);
+        (await GetStoredOnlineStateAsync(releaseCollection)).ShouldBe(OnlineState.PartiallyOnline);
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_ReleaseMovedToOtherReleaseCollection_UpdatesBothReleaseCollections()
+    {
+        // Arrange
+        var hosterRegistration = testData.AddHosterRegistration("Alpha");
+        var movedRelease = testData.AddRelease("Moved");
+        var offlineRelease = testData.AddRelease("Offline");
+
+        testData.AddUpload(
+            testData.AddUploadConfig(movedRelease, hosterRegistration),
+            OnlineState.Online
+        );
+
+        testData.AddUploadConfig(offlineRelease, hosterRegistration);
+        var sourceReleaseCollection = testData.AddReleaseCollection("Source", movedRelease);
+        var targetReleaseCollection = testData.AddReleaseCollection("Target", offlineRelease);
+        await DbContext.SaveChangesAsync();
+        movedRelease.ReleaseCollection = targetReleaseCollection;
+
+        // Act
+        await DbContext.SaveChangesAsync();
+
+        // Assert
+        (await GetStoredOnlineStateAsync(sourceReleaseCollection)).ShouldBe(OnlineState.Unknown);
+
+        (await GetStoredOnlineStateAsync(targetReleaseCollection)).ShouldBe(
+            OnlineState.PartiallyOnline
+        );
+    }
+
+    [Test]
     public async Task SaveChangesAsync_UploadWithoutUploadedFiles_StoresNull()
     {
         // Arrange
@@ -632,6 +717,14 @@ public class MaterializedValuesSaveChangesInterceptorTest(DatabaseProvider datab
         return await ReadDbContext
             .Releases.Where(r => r.Id == release.Id)
             .Select(r => r.OnlineState)
+            .SingleAsync();
+    }
+
+    private async Task<OnlineState> GetStoredOnlineStateAsync(ReleaseCollection releaseCollection)
+    {
+        return await ReadDbContext
+            .ReleaseCollections.Where(c => c.Id == releaseCollection.Id)
+            .Select(c => c.OnlineState)
             .SingleAsync();
     }
 

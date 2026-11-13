@@ -33,4 +33,6 @@ public class ReleaseCollection
     public DateTime? MetadataCheckedAt { get; set; }
 
     public DateTime? UploadsPostedAt { get; set; }
+
+    public OnlineState OnlineState { get; private set; } = OnlineState.Unknown;
 }
