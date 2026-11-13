@@ -1,4 +1,5 @@
-﻿using Bearcat.Abstractions;
+﻿using System.Text;
+using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
@@ -39,8 +40,10 @@ public class ReleaseService(
         CancellationToken cancellationToken = default
     )
     {
+        var normalizedName = name.Normalize(NormalizationForm.FormC);
+
         await ThrowWhenNameExistsAsync(
-            name: name,
+            name: normalizedName,
             excludedReleaseId: null,
             cancellationToken: cancellationToken
         );
@@ -50,7 +53,7 @@ public class ReleaseService(
 
         var release = new Release
         {
-            Name = name,
+            Name = normalizedName,
             CreatedAt = localNow,
             ReleaseType = releaseType,
             ReleaseContentType = releaseContentType,
@@ -93,8 +96,10 @@ public class ReleaseService(
         CancellationToken cancellationToken = default
     )
     {
+        var normalizedName = name.Normalize(NormalizationForm.FormC);
+
         await ThrowWhenNameExistsAsync(
-            name: name,
+            name: normalizedName,
             excludedReleaseId: releaseId,
             cancellationToken: cancellationToken
         );
@@ -119,7 +124,7 @@ public class ReleaseService(
             release.ReleaseFolderPath = releaseFolderPath;
         }
 
-        release.Name = name;
+        release.Name = normalizedName;
         release.ReleaseContentType = releaseContentType;
         release.ReleaseGroupId = releaseGroupId;
         release.PrimaryLanguageCode = primaryLanguageCode
@@ -450,8 +455,10 @@ public class ReleaseService(
         }
 
         await ThrowWhenNameExistsAsync(
-            name: name.TrimOrNullWhenWhitespace()
-                ?? FolderPathHelper.GetFolderName(normalizedFolderPath),
+            name: (
+                name.TrimOrNullWhenWhitespace()
+                ?? FolderPathHelper.GetFolderName(normalizedFolderPath)
+            ).Normalize(NormalizationForm.FormC),
             excludedReleaseId: null,
             cancellationToken: cancellationToken
         );

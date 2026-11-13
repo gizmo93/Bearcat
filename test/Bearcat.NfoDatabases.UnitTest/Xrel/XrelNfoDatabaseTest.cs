@@ -261,6 +261,30 @@ public class XrelNfoDatabaseTest
     }
 
     [Test]
+    public async Task GetReleaseInfoAsync_DecomposedUmlautsInName_QueriesOnlyP2pWithComposedName()
+    {
+        // Arrange
+        const string composedName = "Türkische.Früchte.1973.German.1080p.Web-DL.x264-MMS";
+        apiMock
+            .Setup(api => api.GetP2pReleaseInfoAsync(composedName, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateApiResponse<XrelP2PRelease>(HttpStatusCode.NotFound));
+
+        // Act
+        var result = await service.GetReleaseInfoAsync(
+            new XrelConfig(),
+            composedName.Normalize(NormalizationForm.FormD),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+        apiMock.Verify(
+            api => api.GetP2pReleaseInfoAsync(composedName, It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task GetReleaseInfoAsync_RateLimitReached_ThrowsRateLimitException()
     {
         // Arrange

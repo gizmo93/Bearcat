@@ -1,3 +1,4 @@
+using System.Text;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -250,7 +251,11 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
     private FolderSelectionNode CreateFolderNode(string path)
     {
-        return new FolderSelectionNode { Path = path, Name = source.GetDisplayName(path) };
+        return new FolderSelectionNode
+        {
+            Path = path,
+            Name = source.GetDisplayName(path).Normalize(NormalizationForm.FormC),
+        };
     }
 
     private FolderSelectionNode CreateFileNode(string path)
@@ -258,7 +263,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         return new FolderSelectionNode
         {
             Path = path,
-            Name = source.GetDisplayName(path),
+            Name = source.GetDisplayName(path).Normalize(NormalizationForm.FormC),
             IsFile = true,
             HasChildren = false,
             ChildrenLoaded = true,

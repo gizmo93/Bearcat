@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Bearcat.Abstractions.NfoDatabase;
@@ -37,14 +38,18 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
             return null;
         }
 
-        var release = await client.GetReleaseInfoAsync(normalizedDirname, cancellationToken);
-        if (release is not null && !string.IsNullOrWhiteSpace(release.Dirname))
+        if (Ascii.IsValid(normalizedDirname))
         {
-            var externalInfoEnrichment = await GetExternalInfoEnrichmentAsync(
-                release.ExtInfo,
-                cancellationToken
-            );
-            return MapReleaseInfo(release, externalInfoEnrichment);
+            var release = await client.GetReleaseInfoAsync(normalizedDirname, cancellationToken);
+
+            if (release is not null && !string.IsNullOrWhiteSpace(release.Dirname))
+            {
+                var externalInfoEnrichment = await GetExternalInfoEnrichmentAsync(
+                    release.ExtInfo,
+                    cancellationToken
+                );
+                return MapReleaseInfo(release, externalInfoEnrichment);
+            }
         }
 
         var p2pRelease = await client.GetP2pReleaseInfoAsync(normalizedDirname, cancellationToken);
@@ -422,7 +427,8 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
 
     private static string NormalizeDirname(string dirname)
     {
-        var normalized = WhitespaceRegex().Replace(dirname.Trim(), ".");
+        var normalized = WhitespaceRegex()
+            .Replace(dirname.Trim().Normalize(NormalizationForm.FormC), ".");
         normalized = MultipleDotsRegex().Replace(normalized, ".");
         return normalized.Trim('.');
     }

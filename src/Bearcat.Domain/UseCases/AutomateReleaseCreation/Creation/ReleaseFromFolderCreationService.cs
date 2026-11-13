@@ -1,3 +1,4 @@
+using System.Text;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.CollectionAssignment;
@@ -60,7 +61,7 @@ public class ReleaseFromFolderCreationService(
         var releaseData = CreateReleaseFromTemplate(
             releaseTemplate: releaseTemplate,
             releaseType: releaseType,
-            releaseName: releaseName,
+            releaseName: releaseName.Normalize(NormalizationForm.FormC),
             releaseFolderPath: releaseFolderPath,
             createUnmanagedArchiveConfig: createUnmanagedArchiveConfig
         );

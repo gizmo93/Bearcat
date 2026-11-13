@@ -1,4 +1,5 @@
-﻿using Bearcat.Abstractions;
+using System.Text;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
@@ -441,6 +442,34 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         var linkCrypter = uploadConfig.LinkCrypters.Single();
         linkCrypter.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
         linkCrypter.Password.ShouldBe("container-secret");
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_FolderNameWithDecomposedUmlauts_StoresComposedReleaseName()
+    {
+        // Arrange
+        const string composedName = "Türkische.Früchte.1973.German.1080p.Web-DL.x264-MMS";
+        var seed = await AddReleaseTemplateAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder(
+            composedName.Normalize(NormalizationForm.FormD)
+        );
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            releaseFolderPath,
+            null,
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        var release = await DbContext
+            .Releases.Include(r => r.ArchiveConfigs)
+            .SingleAsync(r => r.Id == result);
+
+        release.Name.ShouldBe(composedName);
+        release.ArchiveConfigs.Single().ArchiveNamePrefix.ShouldBe(composedName);
     }
 
     [Test]
