@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -77,6 +78,33 @@ public class ReleaseCollectionRepository(
             .Include(collection => collection.ImageUploadConfigs)
             .FirstOrDefaultAsync(
                 collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
+                cancellationToken
+            );
+    }
+
+    public async Task<ReleaseCollection?> GetByNameAsync(
+        string name,
+        int? excludedReleaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var lowerName = name.ToLower();
+        var lowerComposedName = name.Normalize(NormalizationForm.FormC).ToLower();
+
+        return await dbWrite
+            .ReleaseCollections.AsSplitQuery()
+            .Include(collection => collection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .Include(collection => collection.ImageUploadConfigs)
+            .OrderBy(collection => collection.Id)
+            .FirstOrDefaultAsync(
+                collection =>
+                    (
+                        collection.Name.ToLower() == lowerName
+                        || collection.Name.ToLower() == lowerComposedName
+                    )
+                    && collection.Id != excludedReleaseCollectionId,
                 cancellationToken
             );
     }

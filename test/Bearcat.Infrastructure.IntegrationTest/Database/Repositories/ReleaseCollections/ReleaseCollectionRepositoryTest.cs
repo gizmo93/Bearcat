@@ -1,3 +1,4 @@
+using System.Text;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
@@ -596,6 +597,47 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         result
             .Select(release => release.Name)
             .ShouldBe(Enumerable.Range(0, 50).Select(number => $"Release.{number:00}").ToList());
+    }
+
+    [Test]
+    public async Task GetByNameAsync_NameDiffersInCaseAndUsesDecomposedUmlauts_ReturnsCollection()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var releaseCollection = AddCollection(releaseGroup, "Türkische Früchte S01", "tf.s01");
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByNameAsync(
+            name: "TÜRKISCHE früchte s01".Normalize(NormalizationForm.FormD),
+            excludedReleaseCollectionId: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(releaseCollection.Id);
+    }
+
+    [Test]
+    public async Task GetByNameAsync_NameOnlyUsedByExcludedCollection_ReturnsNull()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Series");
+        var releaseCollection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetByNameAsync(
+            name: "hostage s01",
+            excludedReleaseCollectionId: releaseCollection.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
     }
 
     private async Task<CollectionDetailSeed> AddCollectionDetailSeedAsync()

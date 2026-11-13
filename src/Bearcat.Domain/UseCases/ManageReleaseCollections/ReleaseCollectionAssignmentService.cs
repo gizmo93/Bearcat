@@ -1,14 +1,17 @@
+using System.Text;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public class ReleaseCollectionAssignmentService(
     IReleaseCollectionWriteRepository writeRepository,
-    TimeProvider timeProvider
+    TimeProvider timeProvider,
+    ILogger<ReleaseCollectionAssignmentService> logger
 ) : IReleaseCollectionAssigner
 {
     private readonly Dictionary<
@@ -40,24 +43,22 @@ public class ReleaseCollectionAssignmentService(
 
         if (!releaseCollectionsByKey.TryGetValue(cacheKey, out var releaseCollection))
         {
-            releaseCollection = await writeRepository.GetByReleaseGroupAndKeyAsync(
-                releaseTemplate.ReleaseGroupId,
-                detectionResult.Key,
-                cancellationToken
-            );
+            releaseCollection =
+                await writeRepository.GetByReleaseGroupAndKeyAsync(
+                    releaseTemplate.ReleaseGroupId,
+                    detectionResult.Key,
+                    cancellationToken
+                )
+                ?? await GetByNameOrCreateAsync(
+                    release: release,
+                    releaseTemplate: releaseTemplate,
+                    detectionResult: detectionResult,
+                    cancellationToken: cancellationToken
+                );
 
             if (releaseCollection is null)
             {
-                releaseCollection = new ReleaseCollection
-                {
-                    ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-                    ReleaseContentType = releaseTemplate.ReleaseContentType,
-                    Key = detectionResult.Key,
-                    Name = detectionResult.Name,
-                    PrimaryLanguageCode = release.PrimaryLanguageCode,
-                    CreatedAt = timeProvider.GetLocalNow(),
-                };
-                writeRepository.Add(releaseCollection);
+                return;
             }
 
             releaseCollectionsByKey[cacheKey] = releaseCollection;
@@ -124,6 +125,64 @@ public class ReleaseCollectionAssignmentService(
                 slot.UploadConfigs.Add(uploadConfig);
             }
         }
+    }
+
+    private async Task<ReleaseCollection?> GetByNameOrCreateAsync(
+        Release release,
+        ReleaseTemplate releaseTemplate,
+        ReleaseCollectionDetectionResult detectionResult,
+        CancellationToken cancellationToken
+    )
+    {
+        var releaseCollectionWithSameName =
+            GetReleaseCollectionOfCurrentBatchByName(detectionResult.Name)
+            ?? await writeRepository.GetByNameAsync(
+                name: detectionResult.Name,
+                excludedReleaseCollectionId: null,
+                cancellationToken: cancellationToken
+            );
+
+        if (releaseCollectionWithSameName is null)
+        {
+            var releaseCollection = new ReleaseCollection
+            {
+                ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+                ReleaseContentType = releaseTemplate.ReleaseContentType,
+                Key = detectionResult.Key,
+                Name = detectionResult.Name,
+                PrimaryLanguageCode = release.PrimaryLanguageCode,
+                CreatedAt = timeProvider.GetLocalNow(),
+            };
+
+            writeRepository.Add(releaseCollection);
+
+            return releaseCollection;
+        }
+
+        if (releaseCollectionWithSameName.ReleaseGroupId == releaseTemplate.ReleaseGroupId)
+        {
+            return releaseCollectionWithSameName;
+        }
+
+        logger.LogWarning(
+            "Release {ReleaseName} was not assigned to a release collection because the detected collection name {ReleaseCollectionName} is already used by release collection {ReleaseCollectionId} of another release group",
+            release.Name,
+            detectionResult.Name,
+            releaseCollectionWithSameName.Id
+        );
+
+        return null;
+    }
+
+    private ReleaseCollection? GetReleaseCollectionOfCurrentBatchByName(string name)
+    {
+        return releaseCollectionsByKey.Values.FirstOrDefault(releaseCollection =>
+            string.Equals(
+                releaseCollection.Name.Normalize(NormalizationForm.FormC),
+                name.Normalize(NormalizationForm.FormC),
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
     }
 
     private static void MaterializeImageUploadConfigs(

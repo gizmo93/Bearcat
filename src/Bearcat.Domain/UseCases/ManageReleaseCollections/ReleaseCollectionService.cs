@@ -3,6 +3,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
@@ -26,9 +27,17 @@ public class ReleaseCollectionService(
         CancellationToken cancellationToken = default
     )
     {
+        var cleanedName = CleanRequired(name, nameof(name));
+
+        await ThrowWhenNameExistsAsync(
+            name: cleanedName,
+            excludedReleaseCollectionId: null,
+            cancellationToken: cancellationToken
+        );
+
         var releaseCollection = new ReleaseCollection
         {
-            Name = CleanRequired(name, nameof(name)),
+            Name = cleanedName,
             Key = CleanRequired(key, nameof(key)),
             ReleaseContentType = releaseContentType,
             ReleaseGroupId = releaseGroupId,
@@ -51,7 +60,16 @@ public class ReleaseCollectionService(
             releaseCollectionId,
             cancellationToken
         );
-        releaseCollection.Name = CleanRequired(name, nameof(name));
+
+        var cleanedName = CleanRequired(name, nameof(name));
+
+        await ThrowWhenNameExistsAsync(
+            name: cleanedName,
+            excludedReleaseCollectionId: releaseCollectionId,
+            cancellationToken: cancellationToken
+        );
+
+        releaseCollection.Name = cleanedName;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -473,6 +491,24 @@ public class ReleaseCollectionService(
             collectionUploadSlotId,
             cancellationToken
         );
+    }
+
+    private async Task ThrowWhenNameExistsAsync(
+        string name,
+        int? excludedReleaseCollectionId,
+        CancellationToken cancellationToken
+    )
+    {
+        var existingReleaseCollection = await writeRepository.GetByNameAsync(
+            name: name,
+            excludedReleaseCollectionId: excludedReleaseCollectionId,
+            cancellationToken: cancellationToken
+        );
+
+        if (existingReleaseCollection is not null)
+        {
+            throw new ReleaseCollectionNameAlreadyExistsException(name);
+        }
     }
 
     private static string CleanRequired(string value, string parameterName)
