@@ -66,19 +66,15 @@ public partial class ReleaseMetadataResolver(
             .ReleaseInfo?.ExternalInfos.Select(info => info.Title)
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
-        var imdbId = release
-            .ExternalIdentifiers.Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
-            .OrderBy(identifier => identifier.Source)
-            .Select(identifier => identifier.Value)
-            .FirstOrDefault();
+        var imdbId = ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+            release.ExternalIdentifiers,
+            ExternalIdentifierType.Imdb
+        );
 
-        var steamAppId = release
-            .ExternalIdentifiers.Where(identifier =>
-                identifier.Type == ExternalIdentifierType.Steam
-            )
-            .OrderBy(identifier => identifier.Source)
-            .Select(identifier => identifier.Value)
-            .FirstOrDefault();
+        var steamAppId = ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+            release.ExternalIdentifiers,
+            ExternalIdentifierType.Steam
+        );
 
         var resolved = await metadataResolver.ResolveAsync(
             new MediaMetadataLookup(

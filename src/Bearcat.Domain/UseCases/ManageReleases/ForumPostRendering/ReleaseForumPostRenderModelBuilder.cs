@@ -154,8 +154,12 @@ public class ReleaseForumPostRenderModelBuilder(
         ExternalIdentifierType type
     )
     {
-        return externalIdentifiers.FirstOrDefault(identifier => identifier.Type == type)?.Value
-            ?? string.Empty;
+        var identifier = ReleaseExternalIdentifierService.FindIdentifierWithHighestSourcePriority(
+            externalIdentifiers,
+            type
+        );
+
+        return identifier?.Value ?? string.Empty;
     }
 
     private static ForumPostTemplateClassificationModel ToClassificationModel(

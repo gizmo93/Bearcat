@@ -4,6 +4,7 @@ using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using EntityFramework.Exceptions.Common;
 using Microsoft.Extensions.Logging;
@@ -183,12 +184,14 @@ public partial class ReleaseCollectionInfoResolutionService(
 
     private static string? ExtractImdbId(ReleaseCollection collection)
     {
-        return collection
+        var identifiers = collection
             .Releases.SelectMany(release => release.ExternalIdentifiers)
-            .Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
-            .OrderBy(identifier => identifier.Source)
-            .Select(identifier => identifier.Value)
-            .FirstOrDefault();
+            .ToList();
+
+        return ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+            identifiers,
+            ExternalIdentifierType.Imdb
+        );
     }
 
     private static string? ExtractSeriesTitle(string collectionName)

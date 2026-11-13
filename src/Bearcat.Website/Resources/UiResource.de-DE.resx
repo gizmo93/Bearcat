@@ -580,7 +580,8 @@
   <data name="ExternalIdentifierSource.Tmdb" xml:space="preserve"><value>TMDB</value></data>
   <data name="ExternalIdentifierSource.Tvdb" xml:space="preserve"><value>TVDB</value></data>
   <data name="ImdbId" xml:space="preserve"><value>IMDb-ID</value></data>
-  <data name="ManualImdbIdHelp" xml:space="preserve"><value>IMDb-ID oder URL eingeben. Automatisch erkannte IDs bleiben unverändert.</value></data>
+  <data name="ExternalIdentifierUsed" xml:space="preserve"><value>Verwendet</value></data>
+  <data name="ManualImdbIdHelp" xml:space="preserve"><value>IMDb-ID oder URL eingeben. Eine manuelle ID hat Vorrang vor automatisch erkannten IDs.</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
     <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; lädt Offline Links so schnell wie möglich wieder hoch.</value></data>

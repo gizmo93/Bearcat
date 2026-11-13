@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Parsers;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
@@ -34,6 +35,43 @@ public static class ReleaseExternalIdentifierService
             values: values,
             extractor: SteamAppIdParser.ExtractAll
         );
+    }
+
+    public static string? FindValueWithHighestSourcePriority(
+        IReadOnlyList<ReleaseExternalIdentifier> identifiers,
+        ExternalIdentifierType type
+    )
+    {
+        return identifiers
+            .Where(identifier => identifier.Type == type)
+            .OrderBy(identifier => GetSourcePriority(identifier.Source))
+            .Select(identifier => identifier.Value)
+            .FirstOrDefault();
+    }
+
+    public static ReleaseExternalIdentifierReadModel? FindIdentifierWithHighestSourcePriority(
+        IReadOnlyList<ReleaseExternalIdentifierReadModel> identifiers,
+        ExternalIdentifierType type
+    )
+    {
+        return identifiers
+            .Where(identifier => identifier.Type == type)
+            .OrderBy(identifier => identifier.Sources.Min(GetSourcePriority))
+            .FirstOrDefault();
+    }
+
+    private static int GetSourcePriority(ExternalIdentifierSource source)
+    {
+        return source switch
+        {
+            ExternalIdentifierSource.Manual => 1,
+            ExternalIdentifierSource.Nfo => 2,
+            ExternalIdentifierSource.Xrel => 3,
+            ExternalIdentifierSource.Srrdb => 4,
+            ExternalIdentifierSource.Tmdb => 5,
+            ExternalIdentifierSource.Tvdb => 6,
+            _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
+        };
     }
 
     private static void Sync(

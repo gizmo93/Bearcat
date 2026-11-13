@@ -1,3 +1,4 @@
+@using Bearcat.Domain.UseCases.ManageReleases
 @if (ExternalIdentifiers.Count > 0)
 {
     <div class="bearcat-release-info-external">
@@ -22,6 +23,12 @@
                             <span>@identifier.Value</span>
                             <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
                         </a>
+                        @if (IsIdentifierUsedForMetadataAndTemplates(identifier))
+                        {
+                            <BbBadge Variant="BadgeVariant.Default">
+                                @L["ExternalIdentifierUsed"]
+                            </BbBadge>
+                        }
                     </div>
 
                     <div class="bearcat-release-info-url-list">
@@ -41,6 +48,18 @@
 @code {
     [Parameter]
     public IReadOnlyList<ReleaseExternalIdentifierReadModel> ExternalIdentifiers { get; set; } = [];
+
+    private bool IsIdentifierUsedForMetadataAndTemplates(
+        ReleaseExternalIdentifierReadModel identifier
+    )
+    {
+        var usedIdentifier = ReleaseExternalIdentifierService.FindIdentifierWithHighestSourcePriority(
+            ExternalIdentifiers,
+            identifier.Type
+        );
+
+        return usedIdentifier == identifier;
+    }
 
     private static string GetIdentifierUrl(ReleaseExternalIdentifierReadModel identifier)
     {
