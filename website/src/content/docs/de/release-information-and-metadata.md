@@ -101,6 +101,8 @@ Hat Bearcat den falschen Film, die falsche Serie oder das falsche Spiel gefunden
 **Metadatenzuordnung korrigieren** und gib die ID oder den Link zum richtigen Eintrag ein. Bearcat zeigt
 eine Vorschau. Klicke auf **Übernehmen**, um die Metadaten durch den gewählten Eintrag zu ersetzen.
 
+![correct-metadata-match-dialog.png](../images/correct-metadata-match-dialog.png)
+
 | Bereich | Aufrufen über | Erlaubte Eingabe |
 | --- | --- | --- |
 | Release | Tab **Releaseinfo** | ID oder URL von IMDb, URL von TMDB, URL von Steam oder SteamDB |

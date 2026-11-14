@@ -100,6 +100,8 @@ If Bearcat found the wrong movie, series or game, select **Correct metadata matc
 correct entry's ID or link. Bearcat shows a preview. Click **Apply** to replace the metadata with the
 selected entry.
 
+![correct-metadata-match-dialog.png](images/correct-metadata-match-dialog.png)
+
 | For | Open from | Accepted input |
 | --- | --- | --- |
 | Release | **Release Info** tab | IMDb ID or URL, TMDB URL, Steam or SteamDB URL |
