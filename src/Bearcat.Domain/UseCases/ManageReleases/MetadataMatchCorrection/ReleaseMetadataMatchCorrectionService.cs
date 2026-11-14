@@ -47,9 +47,9 @@ public class ReleaseMetadataMatchCorrectionService(
         var resolved = await mediaMetadataResolver.ResolveAsync(
             new MediaMetadataLookup(
                 MediaKind: mediaKind.Value,
-                ImdbId: GetValueWhenType(reference, ExternalIdentifierType.Imdb),
-                SteamAppId: GetValueWhenType(reference, ExternalIdentifierType.Steam),
-                TmdbId: GetValueWhenType(reference, ExternalIdentifierType.Tmdb),
+                ImdbId: reference.GetValueWhenType(ExternalIdentifierType.Imdb),
+                SteamAppId: reference.GetValueWhenType(ExternalIdentifierType.Steam),
+                TmdbId: reference.GetValueWhenType(ExternalIdentifierType.Tmdb),
                 TvdbIdOrSlug: null,
                 Title: null,
                 Year: null,
@@ -109,7 +109,7 @@ public class ReleaseMetadataMatchCorrectionService(
             release: release,
             type: preview.Reference.Type,
             source: ExternalIdentifierSource.Manual,
-            value: GetCanonicalReferenceValue(preview)
+            value: preview.GetCanonicalReferenceValue()
         );
 
         if (preview.Reference.Type != ExternalIdentifierType.Imdb)
@@ -192,30 +192,6 @@ public class ReleaseMetadataMatchCorrectionService(
             ),
             (ExternalIdentifierType.Steam, MediaKind.Game) => true,
             _ => false,
-        };
-    }
-
-    private static string? GetValueWhenType(
-        MediaDatabaseReference reference,
-        ExternalIdentifierType type
-    )
-    {
-        return reference.Type == type ? reference.Value : null;
-    }
-
-    private static string GetCanonicalReferenceValue(MetadataMatchCorrectionPreview preview)
-    {
-        return preview.Reference.Type switch
-        {
-            ExternalIdentifierType.Tmdb => preview.Metadata.TmdbId
-                ?? throw new InvalidOperationException(
-                    "The media database did not report a TMDB id for a TMDB reference."
-                ),
-            ExternalIdentifierType.Tvdb => preview.Metadata.TvdbId
-                ?? throw new InvalidOperationException(
-                    "The media database did not report a TVDB id for a TVDB reference."
-                ),
-            _ => preview.Reference.Value,
         };
     }
 

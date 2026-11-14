@@ -45,6 +45,23 @@ public class ReleaseCollectionInfoRepository(IBearcatWriteDbContext dbWrite)
             );
     }
 
+    public async Task<ReleaseCollection> GetByIdForMetadataCorrectionAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await IncludeReleaseInfo(dbWrite.ReleaseCollections)
+            .Include(collection => collection.Metadata)
+            .Include(collection => collection.ImageUploadConfigs)
+                .ThenInclude(config => config.ImageUploads)
+            .FirstAsync(collection => collection.Id == releaseCollectionId, cancellationToken);
+    }
+
+    public void Remove(ReleaseCollectionMetadata metadata)
+    {
+        dbWrite.ReleaseCollectionMetadata.Remove(metadata);
+    }
+
     public void DetachPendingMetadata(ReleaseCollection collection)
     {
         var pendingMetadata = dbWrite

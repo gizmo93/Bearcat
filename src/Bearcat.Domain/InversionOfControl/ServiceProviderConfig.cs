@@ -71,6 +71,7 @@ using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.MetadataMatchCorrection;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
@@ -148,6 +149,7 @@ public static class ServiceProviderConfig
                 provider.GetRequiredService<ReleaseCollectionAssignmentService>()
             );
             services.AddScoped<ReleaseCollectionInfoResolutionService>();
+            services.AddScoped<ReleaseCollectionMetadataMatchCorrectionService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<QualityProfileService>();
             services.AddScoped<ProxyServerService>();

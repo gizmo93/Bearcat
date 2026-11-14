@@ -1,6 +1,5 @@
 @using Bearcat.Domain.UseCases.ManageReleases.MetadataMatchCorrection
-@using Bearcat.Website.ScopedOperations
-@inject IScopedOperationRunner OperationRunner
+@using Bearcat.Website.Pages.ManageReleases
 
 <div class="space-y-6">
     <div class="space-y-6" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
@@ -32,19 +31,18 @@
                                   Class="min-w-0 flex-1"
                                   @bind-Value="input"
                                   @bind-Value:after="ClearSearchResult"
-                                  UpdateTiming="UpdateTiming.Immediate"
                                   Label="@L["MetadataMatchReference"]"
-                                  Placeholder="@L["MetadataMatchReferencePlaceholder"]"
+                                  Placeholder="@ReferencePlaceholder"
                                   Disabled="IsBusy" />
                 <BbButton Type="ButtonType.Submit"
                           Variant="ButtonVariant.Outline"
                           Loading="isSearching"
-                          Disabled="IsBusy || string.IsNullOrWhiteSpace(input)">
+                          Disabled="IsBusy">
                     <LucideIcon Name="search" class="h-4 w-4" />
                     @L["Search"]
                 </BbButton>
             </div>
-            <p class="text-sm text-muted-foreground">@L["MetadataMatchReferenceHelp"]</p>
+            <p class="text-sm text-muted-foreground">@ReferenceHelpText</p>
         </form>
 
         @if (failure is not null)
@@ -130,7 +128,24 @@
     public IDialogReference DialogRef { get; set; } = null!;
 
     [Parameter]
-    public int ReleaseId { get; set; }
+    [EditorRequired]
+    public Func<string, Task<MetadataMatchCorrectionPreviewResult>> LoadPreview { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Func<MetadataMatchCorrectionPreview, Task> ApplyCorrection { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> RemoveCorrection { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public string ReferencePlaceholder { get; set; } = string.Empty;
+
+    [Parameter]
+    [EditorRequired]
+    public string ReferenceHelpText { get; set; } = string.Empty;
 
     [Parameter]
     public IReadOnlyList<ReleaseExternalIdentifierReadModel> ExternalIdentifiers { get; set; } = [];
@@ -170,10 +185,7 @@
 
         try
         {
-            var result = await OperationRunner.RunAsync(
-                (ReleaseMetadataMatchCorrectionService service) =>
-                    service.LoadPreviewAsync(ReleaseId, input)
-            );
+            var result = await LoadPreview(input);
 
             failure = result.Failure;
             preview = result.Preview;
@@ -196,10 +208,7 @@
 
         try
         {
-            await OperationRunner.RunAsync(
-                (ReleaseMetadataMatchCorrectionService service) =>
-                    service.ApplyAsync(ReleaseId, previewToApply)
-            );
+            await ApplyCorrection(previewToApply);
         }
         finally
         {
@@ -220,10 +229,7 @@
 
         try
         {
-            await OperationRunner.RunAsync(
-                (ReleaseMetadataMatchCorrectionService service) =>
-                    service.RemoveCorrectionAsync(ReleaseId)
-            );
+            await RemoveCorrection();
         }
         finally
         {

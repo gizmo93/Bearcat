@@ -72,8 +72,8 @@ Du kannst auch mehrere Releases auswählen und ihre Sprache gemeinsam setzen ode
 4. Metadaten über eine IMDb-ID suchen. Ohne passende ID verwendet Bearcat den Titel und weitere Angaben aus dem Releasenamen.
 5. Die Primärsprache an den Metadatenanbieter übergeben.
 
-Bei Collections sucht Bearcat nach einer TV-Serie. Es verwendet eine IMDb-ID aus einem der enthaltenen
-Releases oder sucht nach dem Collectionnamen.
+Bei Collections sucht Bearcat nach einer TV-Serie. Es verwendet eine manuelle ID von TMDB oder TVDB oder eine
+IMDb-ID aus einem der enthaltenen Releases oder sucht nach dem Collectionnamen.
 
 Die Hintergrundaufgabe **Release info resolution** ergänzt fehlende Daten automatisch. Du kannst die
 entsprechenden Aktionen auch im Tab **Releaseinfo** auslösen.
@@ -94,6 +94,31 @@ Im `...`-Menü kannst du das Cover herunterladen, ein vorhandenes NFO bearbeiten
 extrahieren oder die ermittelten Releaseinformationen und Metadaten löschen.
 
 Jede externe IMDb-ID erscheint einmal mit allen Quellen, die sie gefunden haben.
+
+## Falsche Zuordnung korrigieren
+
+Hat Bearcat den falschen Film, die falsche Serie oder das falsche Spiel gefunden, wähle
+**Metadatenzuordnung korrigieren** und gib eine Referenz auf den richtigen Eintrag ein. Bearcat zeigt
+eine Vorschau. **Übernehmen** ersetzt die Metadaten durch den gewählten Eintrag.
+
+| Wo | Schaltfläche | Erlaubte Eingabe |
+| --- | --- | --- |
+| Release | Tab **Releaseinfo** | ID oder URL von IMDb, URL von TMDB, URL von Steam oder SteamDB |
+| Collection | `...`-Menü auf der Collectionseite | ID oder URL von IMDb, Serienlink von TMDB, Serienlink von TVDB |
+
+Die Referenz muss zum Inhaltstyp passen: Filme nehmen Filmlinks von TMDB, Folgen und Collections
+nehmen Serienlinks von TMDB, Spiele nehmen Links von Steam oder SteamDB.
+
+Bearcat speichert die Referenz und die vom Anbieter gemeldete IMDb-ID als manuelle IDs. Manuelle IDs
+haben Vorrang vor IDs aus dem NFO, von xREL, SRRDB oder einem Anbieter.
+
+Eine Korrektur an einer Collection wird als manuelle IDs an allen Releases der Collection gespeichert
+und ersetzt deren bisherige manuelle IDs von IMDb, TMDB und TVDB. Eine Collection braucht dafür
+mindestens ein Release.
+
+Um eine Korrektur rückgängig zu machen, öffne den Dialog erneut und wähle **Korrektur entfernen**.
+Bearcat löscht die manuellen IDs (bei einer Collection die manuellen IDs von IMDb, TMDB und TVDB aller
+ihrer Releases) und sucht die Metadaten erneut.
 
 ## Manuelle Eingabe
 

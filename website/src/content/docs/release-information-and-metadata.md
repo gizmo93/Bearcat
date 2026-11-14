@@ -71,7 +71,7 @@ or clear their language together.
 4. Look up metadata using an IMDb ID. Without a suitable ID, use the title and other details from the release name.
 5. Pass the primary language to the metadata provider.
 
-For collections, Bearcat looks up a TV series using an IMDb ID from an included release or the collection name.
+For collections, Bearcat looks up a TV series using a manual TMDB or TVDB ID or an IMDb ID from an included release, or the collection name.
 
 The **Release info resolution** background task handles missing data automatically. You can also
 trigger the relevant actions from the **Release Info** tab.
@@ -92,6 +92,30 @@ Use the `...` menu to download the cover, edit an existing NFO, extract media da
 the resolved release information and metadata.
 
 Each external IMDb ID appears once, with all sources that found it.
+
+## Correct a wrong match
+
+If Bearcat matched the wrong movie, series or game, select **Correct metadata match** and enter a
+reference to the correct entry. Bearcat shows a preview. **Apply** replaces the metadata with the
+selected entry.
+
+| Where | Button | Accepted input |
+| --- | --- | --- |
+| Release | **Release Info** tab | IMDb ID or URL, TMDB URL, Steam or SteamDB URL |
+| Collection | `...` menu on the collection page | IMDb ID or URL, TMDB series URL, TVDB series URL |
+
+The reference must fit the content type: movies take TMDB movie URLs, episodes and collections take
+TMDB TV URLs, games take Steam or SteamDB URLs.
+
+Bearcat stores the reference and the IMDb ID reported by the provider as manual IDs. Manual IDs take
+precedence over IDs from the NFO, xREL, SRRDB, or a provider.
+
+A collection correction is stored as manual IDs on all releases of the collection and replaces their
+previous manual IMDb, TMDB, and TVDB IDs. A collection needs at least one release.
+
+To undo a correction, open the dialog again and select **Remove correction**. Bearcat deletes the
+manual IDs (for a collection: the manual IMDb, TMDB, and TVDB IDs of all its releases) and looks up
+the metadata again.
 
 ## Manual fallback
 

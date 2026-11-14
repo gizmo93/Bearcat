@@ -1,6 +1,9 @@
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Scriban.Runtime;
 
@@ -9,6 +12,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 public class ReleaseCollectionForumPostRenderSource(
     IReleaseCollectionForumPostRepository repository,
     ReleaseForumPostRenderModelBuilder releaseRenderModelBuilder,
+    IReleaseReadRepository releaseReadRepository,
     ForumPostImageLinkBuilder imageLinkBuilder
 ) : IForumPostRenderSource
 {
@@ -56,6 +60,20 @@ public class ReleaseCollectionForumPostRenderSource(
             cancellationToken
         );
 
+        var externalIdentifiersByReleaseId =
+            await releaseReadRepository.GetReleaseExternalIdentifiersByReleaseIdAsync(
+                collection.ReleaseIds,
+                cancellationToken
+            );
+
+        var releaseExternalIdentifiers = externalIdentifiersByReleaseId
+            .Values.SelectMany(identifiers => identifiers)
+            .ToList();
+
+        var imdbId = FindIdentifierValue(releaseExternalIdentifiers, ExternalIdentifierType.Imdb);
+        var tmdbId = FindIdentifierValue(releaseExternalIdentifiers, ExternalIdentifierType.Tmdb);
+        var tvdbId = FindIdentifierValue(releaseExternalIdentifiers, ExternalIdentifierType.Tvdb);
+
         var releaseScriptObjects = new ScriptArray();
 
         foreach (var releaseId in collection.ReleaseIds)
@@ -82,6 +100,17 @@ public class ReleaseCollectionForumPostRenderSource(
                 PrimaryLanguage = ReleaseForumPostRenderModelBuilder.GetLanguageName(
                     collection.PrimaryLanguageCode
                 ),
+                ImdbId = imdbId,
+                ImdbUrl =
+                    imdbId.Length == 0 ? string.Empty : $"https://www.imdb.com/title/{imdbId}",
+                TmdbId = tmdbId.Length == 0 ? string.Empty : tmdbId.Split('/')[1],
+                TmdbUrl =
+                    tmdbId.Length == 0 ? string.Empty : $"https://www.themoviedb.org/{tmdbId}",
+                TvdbId = tvdbId,
+                TvdbUrl =
+                    tvdbId.Length == 0
+                        ? string.Empty
+                        : $"https://www.thetvdb.com/dereferrer/series/{tvdbId}",
                 MainVideoTotalSizeBytes = renderDataByReleaseId.Values.Sum(renderData =>
                     renderData.RenderModel.Release.MainVideo.SizeBytes
                 ),
@@ -97,6 +126,19 @@ public class ReleaseCollectionForumPostRenderSource(
         );
 
         return scriptObject;
+    }
+
+    private static string FindIdentifierValue(
+        IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers,
+        ExternalIdentifierType type
+    )
+    {
+        var identifier = ReleaseExternalIdentifierService.FindIdentifierWithHighestSourcePriority(
+            externalIdentifiers,
+            type
+        );
+
+        return identifier?.Value ?? string.Empty;
     }
 
     private static ForumPostTemplateVariableNode AddReleaseImageLinksVariableNode(

@@ -102,18 +102,29 @@ public class ReleaseCollectionService(
         metadata.Description = data.Description.TrimOrNullWhenWhitespace();
         metadata.MetadataDatabaseUrl = data.MetadataDatabaseUrl.TrimOrNullWhenWhitespace();
 
-        if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
-        {
-            RemoveUploadedImages(releaseCollection.ImageUploadConfigs);
-        }
+        RemoveCompletedImageUploadsWhenCoverUrlChanged(releaseCollection, previousCoverUrl);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
-    private void RemoveUploadedImages(IReadOnlyList<ImageUploadConfig> imageUploadConfigs)
+    public void RemoveCompletedImageUploadsWhenCoverUrlChanged(
+        ReleaseCollection releaseCollection,
+        string? previousCoverUrl
+    )
     {
-        var uploadedImages = imageUploadConfigs
-            .SelectMany(config => config.ImageUploads)
+        if (
+            string.Equals(
+                previousCoverUrl,
+                releaseCollection.Metadata?.CoverUrl,
+                StringComparison.Ordinal
+            )
+        )
+        {
+            return;
+        }
+
+        var uploadedImages = releaseCollection
+            .ImageUploadConfigs.SelectMany(config => config.ImageUploads)
             .Where(upload => upload.UploadState == UploadState.Completed)
             .ToList();
 

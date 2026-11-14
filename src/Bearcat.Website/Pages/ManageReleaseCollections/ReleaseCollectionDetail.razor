@@ -158,6 +158,12 @@
                             </Icon>
                             <ChildContent>@L["RefreshMetadata"]</ChildContent>
                         </BbDropdownMenuItem>
+                        <BbDropdownMenuItem OnClick="ShowCorrectMetadataMatchDialogAsync">
+                            <Icon>
+                                <LucideIcon Name="replace" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["CorrectMetadataMatch"]</ChildContent>
+                        </BbDropdownMenuItem>
                         <BbDropdownMenuItem Class="text-destructive focus:text-destructive" OnClick="DeleteReleaseCollectionAsync">
                             <Icon>
                                 <LucideIcon Name="trash-2" class="h-4 w-4" />

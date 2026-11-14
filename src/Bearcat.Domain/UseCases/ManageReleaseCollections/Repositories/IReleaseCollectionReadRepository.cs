@@ -33,6 +33,13 @@ public interface IReleaseCollectionReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<
+        IReadOnlyList<ReleaseExternalIdentifierReadModel>
+    > GetManualMediaDatabaseIdentifiersOfReleasesAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<CollectionImageUploadReadModel>> GetImageUploadsAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default

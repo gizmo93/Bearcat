@@ -11,6 +11,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Shouldly;
 
@@ -51,6 +52,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         var collectionSource = new ReleaseCollectionForumPostRenderSource(
             repository: new ReleaseCollectionForumPostRepository(DbContext),
             releaseRenderModelBuilder: releaseRenderModelBuilder,
+            releaseReadRepository: releaseReadRepository,
             imageLinkBuilder: imageLinkBuilder
         );
 
@@ -250,6 +252,75 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     }
 
     [Test]
+    public async Task RenderAsync_TemplateUsesCollectionIdentifiers_RendersIdentifiersOfReleasesBySourcePriority()
+    {
+        // Arrange
+        var collection = await AddCollectionWithTwoDetailedReleasesAsync();
+        var releases = await DbContext
+            .Releases.Where(release => release.ReleaseCollectionId == collection.Id)
+            .OrderBy(release => release.Name)
+            .ToListAsync();
+
+        releases[0]
+            .ExternalIdentifiers.AddRange([
+                new ReleaseExternalIdentifier
+                {
+                    Type = ExternalIdentifierType.Imdb,
+                    Value = "tt9999999",
+                    Source = ExternalIdentifierSource.Xrel,
+                },
+                new ReleaseExternalIdentifier
+                {
+                    Type = ExternalIdentifierType.Tvdb,
+                    Value = "121361",
+                    Source = ExternalIdentifierSource.Manual,
+                },
+            ]);
+
+        releases[1]
+            .ExternalIdentifiers.AddRange([
+                new ReleaseExternalIdentifier
+                {
+                    Type = ExternalIdentifierType.Imdb,
+                    Value = "tt0944947",
+                    Source = ExternalIdentifierSource.Manual,
+                },
+                new ReleaseExternalIdentifier
+                {
+                    Type = ExternalIdentifierType.Tmdb,
+                    Value = "tv/1399",
+                    Source = ExternalIdentifierSource.Tmdb,
+                },
+            ]);
+
+        var template = new ForumPostTemplate
+        {
+            Name = "Collection identifiers template",
+            Type = ForumPostTemplateType.ReleaseCollection,
+            TemplateBody =
+                "{{ collection.imdb_id }}|{{ collection.imdb_url }}"
+                + "|{{ collection.tmdb_id }}|{{ collection.tmdb_url }}"
+                + "|{{ collection.tvdb_id }}|{{ collection.tvdb_url }}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe(
+            "tt0944947|https://www.imdb.com/title/tt0944947"
+                + "|1399|https://www.themoviedb.org/tv/1399"
+                + "|121361|https://www.thetvdb.com/dereferrer/series/121361"
+        );
+    }
+
+    [Test]
     public void GetVariables_CollectionType_ContainsPerReleaseAndUploadSlotVariablesIncludingImageLinks()
     {
         // Act
@@ -269,6 +340,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 "release.steam_url",
                 "release.imdb_id",
                 "release.imdb_url",
+                "release.tmdb_id",
+                "release.tmdb_url",
                 "release.main_video",
                 "release.media_files",
                 "release.release_info",
@@ -336,6 +409,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 "steam_url",
                 "imdb_id",
                 "imdb_url",
+                "tmdb_id",
+                "tmdb_url",
                 "main_video",
                 "media_files",
                 "release_info",

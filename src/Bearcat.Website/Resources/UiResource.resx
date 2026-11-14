@@ -587,9 +587,13 @@
   <data name="MetadataMatchReference" xml:space="preserve"><value>Link or ID</value></data>
   <data name="MetadataMatchReferencePlaceholder" xml:space="preserve"><value>tt0089153 or https://www.themoviedb.org/movie/12775</value></data>
   <data name="MetadataMatchReferenceHelp" xml:space="preserve"><value>Accepted: IMDb ID or URL, TMDB URL, Steam or SteamDB URL.</value></data>
-  <data name="MetadataMatchCorrectionFailure.InputNotRecognized" xml:space="preserve"><value>Input not recognized. Enter an IMDb ID or a URL from IMDb, TMDB, Steam or SteamDB.</value></data>
-  <data name="MetadataMatchCorrectionFailure.ReferenceNotSupportedForContentType" xml:space="preserve"><value>This reference does not fit the content type of the release. Movies accept IMDb and TMDB movie URLs, episodes accept IMDb and TMDB TV URLs, games accept Steam and SteamDB URLs.</value></data>
+  <data name="MetadataMatchCorrectionFailure.InputNotRecognized" xml:space="preserve"><value>Input not recognized. Enter an IMDb ID or a URL from IMDb, TMDB, TVDB, Steam or SteamDB.</value></data>
+  <data name="MetadataMatchCorrectionFailure.ReferenceNotSupportedForContentType" xml:space="preserve"><value>This reference does not fit the content type. Movies accept IMDb and TMDB movie URLs, episodes accept IMDb and TMDB TV URLs, games accept Steam and SteamDB URLs, release collections accept IMDb, TMDB TV and TVDB URLs.</value></data>
   <data name="MetadataMatchCorrectionFailure.NotFound" xml:space="preserve"><value>No entry found. Check the reference and whether a matching media database is configured.</value></data>
+  <data name="MetadataMatchCorrectionFailure.CollectionHasNoReleases" xml:space="preserve"><value>The collection has no releases. A correction is stored on the releases of the collection, so add a release first.</value></data>
+  <data name="CorrectCollectionMetadataMatchDescription" xml:space="preserve"><value>Pick the correct series when the automatic match is wrong. The reference is stored as manual ID on all releases of the collection and takes precedence over automatically detected IDs.</value></data>
+  <data name="CollectionMetadataMatchReferencePlaceholder" xml:space="preserve"><value>tt0944947 or https://www.themoviedb.org/tv/1399</value></data>
+  <data name="CollectionMetadataMatchReferenceHelp" xml:space="preserve"><value>Accepted: IMDb ID or URL, TMDB series URL, TVDB series URL.</value></data>
   <data name="OpenMediaDatabaseEntry" xml:space="preserve"><value>Open media database entry</value></data>
   <data name="ApplyMetadataMatchCorrection" xml:space="preserve"><value>Apply</value></data>
   <data name="CurrentMetadataMatchCorrection" xml:space="preserve"><value>Current correction</value></data>
