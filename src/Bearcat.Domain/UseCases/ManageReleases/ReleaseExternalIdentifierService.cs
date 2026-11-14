@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Parsers;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -51,6 +52,46 @@ public static class ReleaseExternalIdentifierService
             values: [value],
             extractor: item => string.IsNullOrWhiteSpace(item) ? [] : [item]
         );
+    }
+
+    public static void StoreIdentifiersReportedByMediaDatabase(
+        Release release,
+        MediaMetadata metadata
+    )
+    {
+        if (metadata.TmdbId is not null)
+        {
+            SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Tmdb,
+                source: ExternalIdentifierSource.Tmdb,
+                value: metadata.TmdbId
+            );
+
+            SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Imdb,
+                source: ExternalIdentifierSource.Tmdb,
+                value: metadata.ImdbId
+            );
+        }
+
+        if (metadata.TvdbId is not null)
+        {
+            SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Tvdb,
+                source: ExternalIdentifierSource.Tvdb,
+                value: metadata.TvdbId
+            );
+
+            SyncIdentifierValue(
+                release: release,
+                type: ExternalIdentifierType.Imdb,
+                source: ExternalIdentifierSource.Tvdb,
+                value: metadata.ImdbId
+            );
+        }
     }
 
     public static string? FindValueWithHighestSourcePriority(

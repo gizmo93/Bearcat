@@ -67,6 +67,66 @@ public class TmdbMetadataDatabaseTest
     }
 
     [Test]
+    public async Task GetByExternalIdAsync_TvEpisodeWithSeriesImdbId_FallsBackToSeries()
+    {
+        // Arrange
+        var api = new Mock<ITmdbApi>(MockBehavior.Strict);
+
+        api.Setup(item =>
+                item.FindAsync(
+                    "tt0944947",
+                    "secret",
+                    "imdb_id",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbFindResponse(
+                        MovieResults: [],
+                        TvResults:
+                        [
+                            new TmdbTvResponse(
+                                Id: 1399,
+                                Name: "Game of Thrones",
+                                Overview: "Description",
+                                PosterPath: "/got.jpg",
+                                ExternalIds: null
+                            ),
+                        ],
+                        TvEpisodeResults: []
+                    )
+                )
+            );
+
+        var database = new TmdbMetadataDatabase(api.Object);
+
+        // Act
+        var metadata = await database.GetByExternalIdAsync(
+            new TmdbConfig("secret"),
+            new MediaMetadataLookup(
+                MediaKind: MediaKind.TvEpisode,
+                ImdbId: "tt0944947",
+                SteamAppId: null,
+                TmdbId: null,
+                TvdbIdOrSlug: null,
+                Title: null,
+                Year: null,
+                SeasonNumber: null,
+                EpisodeNumber: null,
+                LanguageCode: null
+            )
+        );
+
+        // Assert
+        metadata.ShouldNotBeNull();
+        metadata.Title.ShouldBe("Game of Thrones");
+        metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/tv/1399");
+        metadata.TmdbId.ShouldBe("tv/1399");
+    }
+
+    [Test]
     public async Task GetByTitleAsync_TvEpisode_SearchesSeries()
     {
         var api = new Mock<ITmdbApi>(MockBehavior.Strict);

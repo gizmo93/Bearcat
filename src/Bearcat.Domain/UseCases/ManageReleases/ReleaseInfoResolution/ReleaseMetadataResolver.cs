@@ -39,13 +39,7 @@ public partial class ReleaseMetadataResolver(
             return false;
         }
 
-        var mediaKind = release.ReleaseContentType switch
-        {
-            ReleaseContentType.Movie => MediaKind.Movie,
-            ReleaseContentType.TvShowEpisode => MediaKind.TvEpisode,
-            ReleaseContentType.Game => MediaKind.Game,
-            _ => (MediaKind?)null,
-        };
+        var mediaKind = GetMediaKind(release.ReleaseContentType);
 
         if (mediaKind is null)
         {
@@ -133,7 +127,10 @@ public partial class ReleaseMetadataResolver(
             ? existingMetadata?.MetadataDatabaseUrl
             : resolved.Metadata.DatabaseUrl;
 
-        StoreIdentifiersReportedByMediaDatabase(release, resolved.Metadata);
+        ReleaseExternalIdentifierService.StoreIdentifiersReportedByMediaDatabase(
+            release,
+            resolved.Metadata
+        );
 
         logger.LogInformation(
             "Resolved metadata for release {ReleaseName} using {MetadataDatabase}",
@@ -144,44 +141,15 @@ public partial class ReleaseMetadataResolver(
         return true;
     }
 
-    private static void StoreIdentifiersReportedByMediaDatabase(
-        Release release,
-        MediaMetadata metadata
-    )
+    public static MediaKind? GetMediaKind(ReleaseContentType releaseContentType)
     {
-        if (metadata.TmdbId is not null)
+        return releaseContentType switch
         {
-            ReleaseExternalIdentifierService.SyncIdentifierValue(
-                release: release,
-                type: ExternalIdentifierType.Tmdb,
-                source: ExternalIdentifierSource.Tmdb,
-                value: metadata.TmdbId
-            );
-
-            ReleaseExternalIdentifierService.SyncIdentifierValue(
-                release: release,
-                type: ExternalIdentifierType.Imdb,
-                source: ExternalIdentifierSource.Tmdb,
-                value: metadata.ImdbId
-            );
-        }
-
-        if (metadata.TvdbId is not null)
-        {
-            ReleaseExternalIdentifierService.SyncIdentifierValue(
-                release: release,
-                type: ExternalIdentifierType.Tvdb,
-                source: ExternalIdentifierSource.Tvdb,
-                value: metadata.TvdbId
-            );
-
-            ReleaseExternalIdentifierService.SyncIdentifierValue(
-                release: release,
-                type: ExternalIdentifierType.Imdb,
-                source: ExternalIdentifierSource.Tvdb,
-                value: metadata.ImdbId
-            );
-        }
+            ReleaseContentType.Movie => MediaKind.Movie,
+            ReleaseContentType.TvShowEpisode => MediaKind.TvEpisode,
+            ReleaseContentType.Game => MediaKind.Game,
+            _ => null,
+        };
     }
 
     private bool IsNfoDatabaseMetadata(ReleaseMetadata metadata)

@@ -760,8 +760,7 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
                 SizeNumber: 12,
                 SizeUnit: "GB",
                 ReleaseDatabaseUrl: null,
-                Description: "Manual description",
-                ImdbId: "https://www.imdb.com/title/tt1234567/"
+                Description: "Manual description"
             ),
             CancellationToken.None
         );
@@ -779,11 +778,7 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
         persistedRelease.Metadata.Genre.ShouldBe("Drama");
         persistedRelease.Metadata.Description.ShouldBe("Manual description");
         persistedRelease.Metadata.CoverUrl.ShouldBe("https://images.test/cover.jpg");
-        persistedRelease.ExternalIdentifiers.ShouldContain(identifier =>
-            identifier.Type == ExternalIdentifierType.Imdb
-            && identifier.Value == "tt1234567"
-            && identifier.Source == ExternalIdentifierSource.Manual
-        );
+        persistedRelease.ExternalIdentifiers.ShouldBeEmpty();
     }
 
     [TestCase(false)]
@@ -1436,8 +1431,7 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
                 SizeNumber: null,
                 SizeUnit: null,
                 ReleaseDatabaseUrl: null,
-                Description: null,
-                ImdbId: null
+                Description: null
             ),
             CancellationToken.None
         );

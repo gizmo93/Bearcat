@@ -47,7 +47,8 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
         {
             MediaKind.Movie => MapMovie(response?.MovieResults?.FirstOrDefault()),
             MediaKind.TvSeries => MapTv(response?.TvResults?.FirstOrDefault()),
-            MediaKind.TvEpisode => MapEpisode(response?.TvEpisodeResults?.FirstOrDefault()),
+            MediaKind.TvEpisode => MapEpisode(response?.TvEpisodeResults?.FirstOrDefault())
+                ?? MapTv(response?.TvResults?.FirstOrDefault()),
             _ => null,
         };
     }

@@ -76,6 +76,7 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleases.MetadataMatchCorrection;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
@@ -168,6 +169,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseNfoResolver>();
             services.AddScoped<ReleaseInfoResolver>();
             services.AddScoped<ReleaseMetadataResolver>();
+            services.AddScoped<ReleaseMetadataMatchCorrectionService>();
             services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
             services.AddScoped<ReleaseClassificationService>();

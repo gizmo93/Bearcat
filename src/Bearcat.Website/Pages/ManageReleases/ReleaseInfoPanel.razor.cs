@@ -106,7 +106,6 @@ public partial class ReleaseInfoPanel(
             [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
             [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
             [nameof(EditReleaseInfoDialog.ReleaseMetadata)] = releaseMetadata,
-            [nameof(EditReleaseInfoDialog.ExternalIdentifiers)] = externalIdentifiers,
         };
 
         var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(
@@ -127,6 +126,35 @@ public partial class ReleaseInfoPanel(
         }
 
         toastService.Success(L["ReleaseInfoUpdated"]);
+        await LoadReleaseInfoAsync();
+    }
+
+    private async Task ShowCorrectMetadataMatchDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CorrectMetadataMatchDialog.ReleaseId)] = ReleaseId,
+            [nameof(CorrectMetadataMatchDialog.ExternalIdentifiers)] = externalIdentifiers,
+        };
+
+        var dialog = await dialogService.OpenAsync<CorrectMetadataMatchDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["CorrectMetadataMatch"],
+                Description = L["CorrectMetadataMatchDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(dialog.GetData<string>()!);
         await LoadReleaseInfoAsync();
     }
 
