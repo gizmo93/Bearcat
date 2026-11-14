@@ -87,6 +87,8 @@ Auch die weiteren Releasedaten erreichst du hier über `release`: `release.relea
 `release.classification`, `release.uploads`, `release.link_crypters` und `release.imagelinks`.
 `imagelinks` ohne `release.` enthält die Bildlinks der Collection.
 `collection.main_video_total_size_bytes` ist die Summe von `release.main_video.size_bytes` über alle Releases.
+`collection.imdb_id`, `collection.tmdb_id` und `collection.tvdb_id` enthalten die Serien-IDs aus den
+Releases. Manuelle IDs haben Vorrang. Die zugehörigen `_url`-Variablen enthalten die Links.
 
 ```text
 {{~ for release in releases ~}}

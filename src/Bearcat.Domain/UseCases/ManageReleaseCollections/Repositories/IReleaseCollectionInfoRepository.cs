@@ -17,6 +17,13 @@ public interface IReleaseCollectionInfoRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseCollection> GetByIdForMetadataCorrectionAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
+    void Remove(ReleaseCollectionMetadata metadata);
+
     void DetachPendingMetadata(ReleaseCollection collection);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

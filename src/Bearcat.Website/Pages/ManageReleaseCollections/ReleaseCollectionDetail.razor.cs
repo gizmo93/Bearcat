@@ -4,8 +4,10 @@ using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.MetadataMatchCorrection;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases.MetadataMatchCorrection;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
@@ -362,6 +364,78 @@ public partial class ReleaseCollectionDetail(
 
         toastService.Success(L["MetadataUpdated"]);
         await LoadReleaseCollectionAsync();
+    }
+
+    private async Task ShowCorrectMetadataMatchDialogAsync()
+    {
+        var manualIdentifiers = await operationRunner.RunAsync(
+            (IReleaseCollectionReadRepository repository) =>
+                repository.GetManualMediaDatabaseIdentifiersOfReleasesAsync(ReleaseCollectionId)
+        );
+
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CorrectMetadataMatchDialog.LoadPreview)] =
+                (Func<string, Task<MetadataMatchCorrectionPreviewResult>>)
+                    LoadMetadataMatchPreviewAsync,
+            [nameof(CorrectMetadataMatchDialog.ApplyCorrection)] =
+                (Func<MetadataMatchCorrectionPreview, Task>)ApplyMetadataMatchCorrectionAsync,
+            [nameof(CorrectMetadataMatchDialog.RemoveCorrection)] =
+                (Func<Task>)RemoveMetadataMatchCorrectionAsync,
+            [nameof(CorrectMetadataMatchDialog.ExternalIdentifiers)] = manualIdentifiers,
+            [nameof(CorrectMetadataMatchDialog.ReferencePlaceholder)] = L[
+                "CollectionMetadataMatchReferencePlaceholder"
+            ].Value,
+            [nameof(CorrectMetadataMatchDialog.ReferenceHelpText)] = L[
+                "CollectionMetadataMatchReferenceHelp"
+            ].Value,
+        };
+
+        var dialog = await dialogService.OpenAsync<CorrectMetadataMatchDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["CorrectMetadataMatch"],
+                Description = L["CorrectCollectionMetadataMatchDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(dialog.GetData<string>()!);
+        await LoadReleaseCollectionAsync();
+    }
+
+    private async Task<MetadataMatchCorrectionPreviewResult> LoadMetadataMatchPreviewAsync(
+        string input
+    )
+    {
+        return await operationRunner.RunAsync(
+            (ReleaseCollectionMetadataMatchCorrectionService service) =>
+                service.LoadPreviewAsync(ReleaseCollectionId, input)
+        );
+    }
+
+    private async Task ApplyMetadataMatchCorrectionAsync(MetadataMatchCorrectionPreview preview)
+    {
+        await operationRunner.RunAsync(
+            (ReleaseCollectionMetadataMatchCorrectionService service) =>
+                service.ApplyAsync(ReleaseCollectionId, preview)
+        );
+    }
+
+    private async Task RemoveMetadataMatchCorrectionAsync()
+    {
+        await operationRunner.RunAsync(
+            (ReleaseCollectionMetadataMatchCorrectionService service) =>
+                service.RemoveCorrectionAsync(ReleaseCollectionId)
+        );
     }
 
     private async Task ResolveMetadataAsync()

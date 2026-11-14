@@ -22,6 +22,12 @@ public interface IMediaMetadataDatabase
         CancellationToken cancellationToken = default
     );
 
+    Task<MediaMetadata?> GetByDatabaseIdAsync(
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
+        CancellationToken cancellationToken = default
+    );
+
     Task<TryLoginResult> TryLoginAsync(
         IMediaMetadataDatabaseConfig config,
         CancellationToken cancellationToken = default

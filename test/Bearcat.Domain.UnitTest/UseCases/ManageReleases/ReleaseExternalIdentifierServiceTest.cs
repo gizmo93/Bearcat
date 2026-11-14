@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
@@ -170,5 +171,67 @@ public class ReleaseExternalIdentifierServiceTest
         release.ExternalIdentifiers.ShouldContain(identifier =>
             identifier.Type == ExternalIdentifierType.Imdb && identifier.Value == "tt1111111"
         );
+    }
+
+    [Test]
+    public void FindValueWithHighestSourcePriority_ManualAndXrel_ReturnsManualValue()
+    {
+        // Arrange
+        var identifiers = new List<ReleaseExternalIdentifier>
+        {
+            new()
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt1111111",
+                Source = ExternalIdentifierSource.Nfo,
+            },
+            new()
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt2222222",
+                Source = ExternalIdentifierSource.Xrel,
+            },
+            new()
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt3333333",
+                Source = ExternalIdentifierSource.Manual,
+            },
+        };
+
+        // Act
+        var value = ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+            identifiers,
+            ExternalIdentifierType.Imdb
+        );
+
+        // Assert
+        value.ShouldBe("tt3333333");
+    }
+
+    [Test]
+    public void FindIdentifierWithHighestSourcePriority_ManualAndXrel_ReturnsManualIdentifier()
+    {
+        // Arrange
+        var identifiers = new List<ReleaseExternalIdentifierReadModel>
+        {
+            new(ExternalIdentifierType.Steam, "1172710", [ExternalIdentifierSource.Manual]),
+            new(
+                ExternalIdentifierType.Imdb,
+                "tt2222222",
+                [ExternalIdentifierSource.Nfo, ExternalIdentifierSource.Xrel]
+            ),
+            new(ExternalIdentifierType.Imdb, "tt3333333", [ExternalIdentifierSource.Manual]),
+        };
+
+        // Act
+        var identifier = ReleaseExternalIdentifierService.FindIdentifierWithHighestSourcePriority(
+            identifiers,
+            ExternalIdentifierType.Imdb
+        );
+
+        // Assert
+        identifier.ShouldNotBeNull();
+        identifier.Value.ShouldBe("tt3333333");
     }
 }

@@ -4,6 +4,7 @@ using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using EntityFramework.Exceptions.Common;
 using Microsoft.Extensions.Logging;
@@ -112,7 +113,7 @@ public partial class ReleaseCollectionInfoResolutionService(
         return resolvedCount;
     }
 
-    private async Task<bool> TryResolveAsync(
+    public async Task<bool> TryResolveAsync(
         ReleaseCollection collection,
         bool replaceExisting,
         CancellationToken cancellationToken
@@ -124,10 +125,27 @@ public partial class ReleaseCollectionInfoResolutionService(
         }
 
         var yearMatch = YearRegex().Match(collection.Name);
+        var identifiers = collection
+            .Releases.SelectMany(release => release.ExternalIdentifiers)
+            .ToList();
+
         var lookup = new MediaMetadataLookup(
             MediaKind: MediaKind.TvSeries,
-            ImdbId: ExtractImdbId(collection),
+            ImdbId: ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+                identifiers,
+                ExternalIdentifierType.Imdb
+            ),
             SteamAppId: null,
+            TmdbId: FindManualIdentifierValue(
+                identifiers: identifiers,
+                type: ExternalIdentifierType.Tmdb,
+                requiredValuePrefix: "tv/"
+            ),
+            TvdbIdOrSlug: FindManualIdentifierValue(
+                identifiers: identifiers,
+                type: ExternalIdentifierType.Tvdb,
+                requiredValuePrefix: string.Empty
+            ),
             Title: ExtractSeriesTitle(collection.Name),
             Year: yearMatch.Success
                 ? int.Parse(yearMatch.Value, CultureInfo.InvariantCulture)
@@ -181,12 +199,18 @@ public partial class ReleaseCollectionInfoResolutionService(
         }
     }
 
-    private static string? ExtractImdbId(ReleaseCollection collection)
+    private static string? FindManualIdentifierValue(
+        IReadOnlyList<ReleaseExternalIdentifier> identifiers,
+        ExternalIdentifierType type,
+        string requiredValuePrefix
+    )
     {
-        return collection
-            .Releases.SelectMany(release => release.ExternalIdentifiers)
-            .Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
-            .OrderBy(identifier => identifier.Source)
+        return identifiers
+            .Where(identifier =>
+                identifier.Type == type
+                && identifier.Source == ExternalIdentifierSource.Manual
+                && identifier.Value.StartsWith(requiredValuePrefix, StringComparison.Ordinal)
+            )
             .Select(identifier => identifier.Value)
             .FirstOrDefault();
     }

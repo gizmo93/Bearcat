@@ -15,14 +15,16 @@ public record TmdbMovieResponse(
     long Id,
     string? Title,
     string? Overview,
-    [property: JsonPropertyName("poster_path")] string? PosterPath
+    [property: JsonPropertyName("poster_path")] string? PosterPath,
+    [property: JsonPropertyName("imdb_id")] string? ImdbId
 );
 
 public record TmdbTvResponse(
     long Id,
     string? Name,
     string? Overview,
-    [property: JsonPropertyName("poster_path")] string? PosterPath
+    [property: JsonPropertyName("poster_path")] string? PosterPath,
+    [property: JsonPropertyName("external_ids")] TmdbExternalIdsResponse? ExternalIds
 );
 
 public record TmdbTvEpisodeResponse(

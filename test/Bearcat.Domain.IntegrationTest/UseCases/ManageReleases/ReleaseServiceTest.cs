@@ -660,7 +660,10 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                     Description: "Series description",
                     Genre: null,
                     CoverUrl: "https://example.com/cover.jpg",
-                    DatabaseUrl: "https://example.com/series/hostage"
+                    DatabaseUrl: "https://example.com/series/hostage",
+                    ImdbId: null,
+                    TmdbId: null,
+                    TvdbId: null
                 )
             );
         metadataDatabaseFactoryMock

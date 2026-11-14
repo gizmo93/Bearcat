@@ -30,6 +30,14 @@
                 @(releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"])
             </BbButton>
 
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
+                      OnClick="ShowCorrectMetadataMatchDialogAsync">
+                <LucideIcon Name="replace" class="h-4 w-4" />
+                @L["CorrectMetadataMatch"]
+            </BbButton>
+
             @if (releaseInfo is null)
             {
                 <BbButton Variant="ButtonVariant.Outline"

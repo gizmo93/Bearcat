@@ -62,7 +62,7 @@ while at least one release has an online hoster and the collection is not posted
 active forum distribution site, only **Render forum post** is shown.
 
 The `...` menu contains **Edit collection settings** for the content type and primary language,
-**Edit metadata** and **Resolve metadata**.
+**Edit metadata**, **Resolve metadata** and **Correct metadata match**.
 
 The status display shows progress for metadata, uploads, link containers, images, and posting.
 Red marks a problem or an unfinished step. Click a step to open its tab.
@@ -75,6 +75,11 @@ changing the name or language.
 
 The primary language sets the language for titles and descriptions. Without a selection, the
 provider's default applies. Bearcat searches using an IMDb ID from an included release or the title.
+
+If Bearcat found the wrong series, select **Correct metadata match** in the `...` menu.
+Bearcat saves the corrected IDs as manual IDs for every release in the collection.
+See
+[Correct a wrong match](/Bearcat/release-information-and-metadata/#correct-a-wrong-match).
 
 Use the metadata in forum post templates and upload the cover to your image hosters.
 See [Release Information and Metadata](/Bearcat/release-information-and-metadata/) for lookup details.

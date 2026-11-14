@@ -759,6 +759,38 @@ public class ReleaseCollectionRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<
+        IReadOnlyList<ReleaseExternalIdentifierReadModel>
+    > GetManualMediaDatabaseIdentifiersOfReleasesAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var identifiers = await dbRead
+            .ReleaseExternalIdentifiers.Where(identifier =>
+                identifier.Release.ReleaseCollectionId == releaseCollectionId
+                && identifier.Source == ExternalIdentifierSource.Manual
+                && (
+                    identifier.Type == ExternalIdentifierType.Imdb
+                    || identifier.Type == ExternalIdentifierType.Tmdb
+                    || identifier.Type == ExternalIdentifierType.Tvdb
+                )
+            )
+            .Select(identifier => new { identifier.Type, identifier.Value })
+            .Distinct()
+            .OrderBy(identifier => identifier.Type)
+            .ThenBy(identifier => identifier.Value)
+            .ToListAsync(cancellationToken);
+
+        return identifiers
+            .Select(identifier => new ReleaseExternalIdentifierReadModel(
+                identifier.Type,
+                identifier.Value,
+                [ExternalIdentifierSource.Manual]
+            ))
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<CollectionImageUploadReadModel>> GetImageUploadsAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default

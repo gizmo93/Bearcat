@@ -573,14 +573,33 @@
   <data name="ExternalIdentifiers" xml:space="preserve"><value>Externe IDs</value></data>
   <data name="ExternalIdentifierType.Imdb" xml:space="preserve"><value>IMDb</value></data>
   <data name="ExternalIdentifierType.Steam" xml:space="preserve"><value>Steam</value></data>
+  <data name="ExternalIdentifierType.Tmdb" xml:space="preserve"><value>TMDB</value></data>
+  <data name="ExternalIdentifierType.Tvdb" xml:space="preserve"><value>TVDB</value></data>
   <data name="ExternalIdentifierSource.Nfo" xml:space="preserve"><value>NFO</value></data>
   <data name="ExternalIdentifierSource.Xrel" xml:space="preserve"><value>xREL</value></data>
   <data name="ExternalIdentifierSource.Srrdb" xml:space="preserve"><value>SRRDB</value></data>
   <data name="ExternalIdentifierSource.Manual" xml:space="preserve"><value>Manuell</value></data>
   <data name="ExternalIdentifierSource.Tmdb" xml:space="preserve"><value>TMDB</value></data>
   <data name="ExternalIdentifierSource.Tvdb" xml:space="preserve"><value>TVDB</value></data>
-  <data name="ImdbId" xml:space="preserve"><value>IMDb-ID</value></data>
-  <data name="ManualImdbIdHelp" xml:space="preserve"><value>IMDb-ID oder URL eingeben. Automatisch erkannte IDs bleiben unverändert.</value></data>
+  <data name="ExternalIdentifierUsed" xml:space="preserve"><value>Verwendet</value></data>
+  <data name="CorrectMetadataMatch" xml:space="preserve"><value>Metadatenzuordnung korrigieren</value></data>
+  <data name="CorrectMetadataMatchDescription" xml:space="preserve"><value>Wähle den richtigen Eintrag einer Mediendatenbank, wenn die automatische Zuordnung falsch ist. Die manuelle Referenz hat Vorrang vor automatisch erkannten IDs.</value></data>
+  <data name="MetadataMatchReference" xml:space="preserve"><value>Link oder ID</value></data>
+  <data name="MetadataMatchReferencePlaceholder" xml:space="preserve"><value>tt0089153 oder https://www.themoviedb.org/movie/12775</value></data>
+  <data name="MetadataMatchReferenceHelp" xml:space="preserve"><value>Erlaubt: ID oder URL von IMDb, URL von TMDB, URL von Steam oder SteamDB.</value></data>
+  <data name="MetadataMatchCorrectionFailure.InputNotRecognized" xml:space="preserve"><value>Eingabe nicht erkannt. Gib eine ID von IMDb oder eine URL von IMDb, TMDB, TVDB, Steam oder SteamDB ein.</value></data>
+  <data name="MetadataMatchCorrectionFailure.ReferenceNotSupportedForContentType" xml:space="preserve"><value>Diese Referenz passt nicht zum Inhaltstyp. Filme akzeptieren IMDb und Filmlinks von TMDB, Episoden akzeptieren IMDb und Serienlinks von TMDB, Spiele akzeptieren Links von Steam und SteamDB, Releasecollections akzeptieren IMDb, Serienlinks von TMDB und Links von TVDB.</value></data>
+  <data name="MetadataMatchCorrectionFailure.NotFound" xml:space="preserve"><value>Kein Eintrag gefunden. Prüfe die Referenz und ob eine passende Mediendatenbank eingerichtet ist.</value></data>
+  <data name="MetadataMatchCorrectionFailure.CollectionHasNoReleases" xml:space="preserve"><value>Die Releasecollection enthält keine Releases. Eine Korrektur wird an den Releases der Releasecollection gespeichert, füge also zuerst ein Release hinzu.</value></data>
+  <data name="CorrectCollectionMetadataMatchDescription" xml:space="preserve"><value>Wähle die richtige Serie, wenn die automatische Zuordnung falsch ist. Die Referenz wird als manuelle ID an allen Releases der Releasecollection gespeichert und hat Vorrang vor automatisch erkannten IDs.</value></data>
+  <data name="CollectionMetadataMatchReferencePlaceholder" xml:space="preserve"><value>tt0944947 oder https://www.themoviedb.org/tv/1399</value></data>
+  <data name="CollectionMetadataMatchReferenceHelp" xml:space="preserve"><value>Erlaubt: ID oder URL von IMDb, Serienlink von TMDB, Serienlink von TVDB.</value></data>
+  <data name="OpenMediaDatabaseEntry" xml:space="preserve"><value>Eintrag in der Mediendatenbank öffnen</value></data>
+  <data name="ApplyMetadataMatchCorrection" xml:space="preserve"><value>Übernehmen</value></data>
+  <data name="CurrentMetadataMatchCorrection" xml:space="preserve"><value>Aktuelle Korrektur</value></data>
+  <data name="RemoveMetadataMatchCorrection" xml:space="preserve"><value>Korrektur entfernen</value></data>
+  <data name="MetadataMatchCorrected" xml:space="preserve"><value>Metadatenzuordnung korrigiert</value></data>
+  <data name="MetadataMatchCorrectionRemoved" xml:space="preserve"><value>Korrektur entfernt</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
     <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; lädt Offline Links so schnell wie möglich wieder hoch.</value></data>

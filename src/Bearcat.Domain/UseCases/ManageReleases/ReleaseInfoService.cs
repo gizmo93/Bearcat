@@ -39,7 +39,11 @@ public class ReleaseInfoService(
         CancellationToken cancellationToken = default
     )
     {
-        var release = await repository.GetReleaseForCoverUpdateAsync(releaseId, cancellationToken);
+        var release = await repository.GetReleaseForMetadataUpdateAsync(
+            releaseId,
+            cancellationToken
+        );
+
         var newCoverUrl = data.CoverUrl.TrimOrNullWhenWhitespace();
         var previousCoverUrl = release.Metadata?.CoverUrl;
 
@@ -73,16 +77,7 @@ public class ReleaseInfoService(
         metadata.Genre = data.Genre.TrimOrNullWhenWhitespace();
         metadata.Description = data.Description.TrimOrNullWhenWhitespace();
 
-        ReleaseExternalIdentifierService.SyncImdbIds(
-            release: release,
-            source: ExternalIdentifierSource.Manual,
-            values: [data.ImdbId]
-        );
-
-        if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
-        {
-            RemoveUploadedImages(release.ImageUploadConfigs);
-        }
+        RemoveCompletedImageUploadsWhenCoverUrlChanged(release, previousCoverUrl);
 
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -160,10 +155,18 @@ public class ReleaseInfoService(
         }
     }
 
-    private void RemoveUploadedImages(IReadOnlyList<ImageUploadConfig> imageUploadConfigs)
+    public void RemoveCompletedImageUploadsWhenCoverUrlChanged(
+        Release release,
+        string? previousCoverUrl
+    )
     {
-        var uploadedImages = imageUploadConfigs
-            .SelectMany(config => config.ImageUploads)
+        if (string.Equals(previousCoverUrl, release.Metadata?.CoverUrl, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var uploadedImages = release
+            .ImageUploadConfigs.SelectMany(config => config.ImageUploads)
             .Where(upload => upload.UploadState == UploadState.Completed)
             .ToList();
 

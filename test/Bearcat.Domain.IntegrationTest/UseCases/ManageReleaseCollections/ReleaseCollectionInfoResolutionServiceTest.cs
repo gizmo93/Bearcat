@@ -596,7 +596,10 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
                     Description: "Hostage drama",
                     Genre: null,
                     CoverUrl: "https://artworks.thetvdb.com/banners/hostage.jpg",
-                    DatabaseUrl: "https://www.thetvdb.com/series/hostage"
+                    DatabaseUrl: "https://www.thetvdb.com/series/hostage",
+                    ImdbId: null,
+                    TmdbId: null,
+                    TvdbId: null
                 )
             );
 
@@ -623,6 +626,61 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
 
         var collections = await DbContext.ReleaseCollections.ToListAsync();
         collections.ShouldAllBe(collection => collection.MetadataCheckedAt != null);
+    }
+
+    [Test]
+    public async Task ResolveAsync_ReleaseWithManualTvdbId_ResolvesByTvdbIdAndIgnoresAutomaticTvdbId()
+    {
+        // Arrange
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
+        var firstRelease = CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP");
+        firstRelease.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Tvdb,
+                Value = "999999",
+                Source = ExternalIdentifierSource.Tvdb,
+            }
+        );
+
+        var secondRelease = CreateRelease("Bodies.2023.S01E02.German.DL.1080p-GRP");
+        secondRelease.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Tvdb,
+                Value = "121361",
+                Source = ExternalIdentifierSource.Manual,
+            }
+        );
+
+        var collection = await AddCollectionAsync(
+            "Bodies.2023.S01.German.DL.1080p",
+            firstRelease,
+            secondRelease
+        );
+
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
+        database
+            .Setup(seriesDatabase =>
+                seriesDatabase.GetByDatabaseIdAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup =>
+                        lookup.TvdbIdOrSlug == "121361" && lookup.TmdbId == null
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(CreateMetadata());
+
+        // Act
+        var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeTrue();
+
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
+        metadata.Title.ShouldBe("Bodies");
     }
 
     private async Task AddMetadataFromOtherWorkerAsync(int releaseCollectionId)
@@ -793,7 +851,10 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             Description: "Vier Detectives, ein Verbrechen.",
             Genre: null,
             CoverUrl: "https://artworks.thetvdb.com/banners/cover.jpg",
-            DatabaseUrl: "https://www.thetvdb.com/series/bodies"
+            DatabaseUrl: "https://www.thetvdb.com/series/bodies",
+            ImdbId: null,
+            TmdbId: null,
+            TvdbId: null
         );
     }
 

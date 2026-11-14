@@ -71,7 +71,8 @@ or clear their language together.
 4. Look up metadata using an IMDb ID. Without a suitable ID, use the title and other details from the release name.
 5. Pass the primary language to the metadata provider.
 
-For collections, Bearcat looks up a TV series using an IMDb ID from an included release or the collection name.
+For collections, Bearcat looks up a TV series using a manual TMDB or TVDB ID, or an IMDb ID from the
+included releases. Without a suitable ID, it searches by the collection name.
 
 The **Release info resolution** background task handles missing data automatically. You can also
 trigger the relevant actions from the **Release Info** tab.
@@ -92,6 +93,32 @@ Use the `...` menu to download the cover, edit an existing NFO, extract media da
 the resolved release information and metadata.
 
 Each external IMDb ID appears once, with all sources that found it.
+
+## Correct a wrong match
+
+If Bearcat found the wrong movie, series or game, select **Correct metadata match** and enter the
+correct entry's ID or link. Bearcat shows a preview. Click **Apply** to replace the metadata with the
+selected entry.
+
+![correct-metadata-match-dialog.png](images/correct-metadata-match-dialog.png)
+
+| For | Open from | Accepted input |
+| --- | --- | --- |
+| Release | **Release Info** tab | IMDb ID or URL, TMDB URL, Steam or SteamDB URL |
+| Collection | `...` menu on the collection page | IMDb ID or URL, TMDB series URL, TVDB series URL |
+
+The link must match the content type. For TMDB, use a movie link for movies and a series link for
+episodes or collections. For games, use a Steam or SteamDB link.
+
+Bearcat saves the ID you entered or linked to and the provider's IMDb ID as manual IDs. These take
+priority over IDs from the NFO, xREL, SRRDB, or a provider.
+
+For a collection, Bearcat saves the corrected IDs for every included release, replacing their previous
+manual IMDb, TMDB, and TVDB IDs. The collection must contain at least one release.
+
+To undo a correction, open the dialog again and select **Remove correction**. Bearcat deletes the
+manual IDs and looks up the metadata again. For a collection, it removes the manual IMDb, TMDB, and
+TVDB IDs from every included release.
 
 ## Manual fallback
 

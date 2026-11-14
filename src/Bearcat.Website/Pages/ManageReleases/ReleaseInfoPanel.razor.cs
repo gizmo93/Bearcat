@@ -1,11 +1,13 @@
 using System.Globalization;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.MetadataMatchCorrection;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -106,7 +108,6 @@ public partial class ReleaseInfoPanel(
             [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
             [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
             [nameof(EditReleaseInfoDialog.ReleaseMetadata)] = releaseMetadata,
-            [nameof(EditReleaseInfoDialog.ExternalIdentifiers)] = externalIdentifiers,
         };
 
         var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(
@@ -128,6 +129,73 @@ public partial class ReleaseInfoPanel(
 
         toastService.Success(L["ReleaseInfoUpdated"]);
         await LoadReleaseInfoAsync();
+    }
+
+    private async Task ShowCorrectMetadataMatchDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CorrectMetadataMatchDialog.LoadPreview)] =
+                (Func<string, Task<MetadataMatchCorrectionPreviewResult>>)
+                    LoadMetadataMatchPreviewAsync,
+            [nameof(CorrectMetadataMatchDialog.ApplyCorrection)] =
+                (Func<MetadataMatchCorrectionPreview, Task>)ApplyMetadataMatchCorrectionAsync,
+            [nameof(CorrectMetadataMatchDialog.RemoveCorrection)] =
+                (Func<Task>)RemoveMetadataMatchCorrectionAsync,
+            [nameof(CorrectMetadataMatchDialog.ExternalIdentifiers)] = externalIdentifiers,
+            [nameof(CorrectMetadataMatchDialog.ReferencePlaceholder)] = L[
+                "MetadataMatchReferencePlaceholder"
+            ].Value,
+            [nameof(CorrectMetadataMatchDialog.ReferenceHelpText)] = L[
+                "MetadataMatchReferenceHelp"
+            ].Value,
+        };
+
+        var dialog = await dialogService.OpenAsync<CorrectMetadataMatchDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["CorrectMetadataMatch"],
+                Description = L["CorrectMetadataMatchDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(dialog.GetData<string>()!);
+        await LoadReleaseInfoAsync();
+    }
+
+    private async Task<MetadataMatchCorrectionPreviewResult> LoadMetadataMatchPreviewAsync(
+        string input
+    )
+    {
+        return await operationRunner.RunAsync(
+            (ReleaseMetadataMatchCorrectionService service) =>
+                service.LoadPreviewAsync(ReleaseId, input)
+        );
+    }
+
+    private async Task ApplyMetadataMatchCorrectionAsync(MetadataMatchCorrectionPreview preview)
+    {
+        await operationRunner.RunAsync(
+            (ReleaseMetadataMatchCorrectionService service) =>
+                service.ApplyAsync(ReleaseId, preview)
+        );
+    }
+
+    private async Task RemoveMetadataMatchCorrectionAsync()
+    {
+        await operationRunner.RunAsync(
+            (ReleaseMetadataMatchCorrectionService service) =>
+                service.RemoveCorrectionAsync(ReleaseId)
+        );
     }
 
     private async Task ResolveReleaseInfoAsync()

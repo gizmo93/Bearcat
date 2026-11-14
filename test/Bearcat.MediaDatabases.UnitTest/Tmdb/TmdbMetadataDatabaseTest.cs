@@ -28,7 +28,13 @@ public class TmdbMetadataDatabaseTest
                     new TmdbFindResponse(
                         MovieResults:
                         [
-                            new TmdbMovieResponse(123, "Amok", "Description", "/amok.jpg"),
+                            new TmdbMovieResponse(
+                                Id: 123,
+                                Title: "Amok",
+                                Overview: "Description",
+                                PosterPath: "/amok.jpg",
+                                ImdbId: null
+                            ),
                         ],
                         TvResults: [],
                         TvEpisodeResults: []
@@ -40,14 +46,16 @@ public class TmdbMetadataDatabaseTest
         var metadata = await database.GetByExternalIdAsync(
             new TmdbConfig("secret"),
             new MediaMetadataLookup(
-                MediaKind.Movie,
-                "tt0109093",
-                null,
-                "Amok",
-                1994,
-                null,
-                null,
-                "de"
+                MediaKind: MediaKind.Movie,
+                ImdbId: "tt0109093",
+                SteamAppId: null,
+                TmdbId: null,
+                TvdbIdOrSlug: null,
+                Title: "Amok",
+                Year: 1994,
+                SeasonNumber: null,
+                EpisodeNumber: null,
+                LanguageCode: "de"
             )
         );
 
@@ -56,6 +64,66 @@ public class TmdbMetadataDatabaseTest
         metadata.Description.ShouldBe("Description");
         metadata.CoverUrl.ShouldBe("https://image.tmdb.org/t/p/w500/amok.jpg");
         metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/movie/123");
+    }
+
+    [Test]
+    public async Task GetByExternalIdAsync_TvEpisodeWithSeriesImdbId_FallsBackToSeries()
+    {
+        // Arrange
+        var api = new Mock<ITmdbApi>(MockBehavior.Strict);
+
+        api.Setup(item =>
+                item.FindAsync(
+                    "tt0944947",
+                    "secret",
+                    "imdb_id",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbFindResponse(
+                        MovieResults: [],
+                        TvResults:
+                        [
+                            new TmdbTvResponse(
+                                Id: 1399,
+                                Name: "Game of Thrones",
+                                Overview: "Description",
+                                PosterPath: "/got.jpg",
+                                ExternalIds: null
+                            ),
+                        ],
+                        TvEpisodeResults: []
+                    )
+                )
+            );
+
+        var database = new TmdbMetadataDatabase(api.Object);
+
+        // Act
+        var metadata = await database.GetByExternalIdAsync(
+            new TmdbConfig("secret"),
+            new MediaMetadataLookup(
+                MediaKind: MediaKind.TvEpisode,
+                ImdbId: "tt0944947",
+                SteamAppId: null,
+                TmdbId: null,
+                TvdbIdOrSlug: null,
+                Title: null,
+                Year: null,
+                SeasonNumber: null,
+                EpisodeNumber: null,
+                LanguageCode: null
+            )
+        );
+
+        // Assert
+        metadata.ShouldNotBeNull();
+        metadata.Title.ShouldBe("Game of Thrones");
+        metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/tv/1399");
+        metadata.TmdbId.ShouldBe("tv/1399");
     }
 
     [Test]
@@ -75,7 +143,13 @@ public class TmdbMetadataDatabaseTest
             .ReturnsAsync(
                 CreateApiResponse(
                     new TmdbSearchResponse<TmdbTvResponse>([
-                        new TmdbTvResponse(456, "Agent Kim Reactivated", null, "/agent.jpg"),
+                        new TmdbTvResponse(
+                            Id: 456,
+                            Name: "Agent Kim Reactivated",
+                            Overview: null,
+                            PosterPath: "/agent.jpg",
+                            ExternalIds: null
+                        ),
                     ])
                 )
             );
@@ -84,14 +158,16 @@ public class TmdbMetadataDatabaseTest
         var metadata = await database.GetByTitleAsync(
             new TmdbConfig("secret"),
             new MediaMetadataLookup(
-                MediaKind.TvEpisode,
-                null,
-                null,
-                "Agent Kim Reactivated",
-                null,
-                1,
-                5,
-                null
+                MediaKind: MediaKind.TvEpisode,
+                ImdbId: null,
+                SteamAppId: null,
+                TmdbId: null,
+                TvdbIdOrSlug: null,
+                Title: "Agent Kim Reactivated",
+                Year: null,
+                SeasonNumber: 1,
+                EpisodeNumber: 5,
+                LanguageCode: null
             )
         );
 
@@ -99,6 +175,95 @@ public class TmdbMetadataDatabaseTest
         metadata.Title.ShouldBe("Agent Kim Reactivated");
         metadata.CoverUrl.ShouldBe("https://image.tmdb.org/t/p/w500/agent.jpg");
         metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/tv/456");
+    }
+
+    [Test]
+    public async Task GetByDatabaseIdAsync_MovieId_ReturnsMovieWithImdbIdAndTmdbId()
+    {
+        // Arrange
+        var api = new Mock<ITmdbApi>(MockBehavior.Strict);
+
+        api.Setup(item => item.GetMovieAsync(12775, "secret", "de", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbMovieResponse(
+                        Id: 12775,
+                        Title: "Flesh+Blood",
+                        Overview: "Description",
+                        PosterPath: "/flesh.jpg",
+                        ImdbId: "tt0089153"
+                    )
+                )
+            );
+
+        var database = new TmdbMetadataDatabase(api.Object);
+
+        // Act
+        var metadata = await database.GetByDatabaseIdAsync(
+            new TmdbConfig("secret"),
+            CreateLookup(MediaKind.Movie, tmdbId: "movie/12775")
+        );
+
+        // Assert
+        metadata.ShouldNotBeNull();
+        metadata.Title.ShouldBe("Flesh+Blood");
+        metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/movie/12775");
+        metadata.ImdbId.ShouldBe("tt0089153");
+        metadata.TmdbId.ShouldBe("movie/12775");
+        metadata.TvdbId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetByDatabaseIdAsync_TvIdForEpisode_ReturnsShowWithImdbIdFromExternalIds()
+    {
+        // Arrange
+        var api = new Mock<ITmdbApi>(MockBehavior.Strict);
+
+        api.Setup(item =>
+                item.GetTvAsync(1399, "secret", "de", "external_ids", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbTvResponse(
+                        Id: 1399,
+                        Name: "Game of Thrones",
+                        Overview: "Description",
+                        PosterPath: "/got.jpg",
+                        ExternalIds: new TmdbExternalIdsResponse("tt0944947")
+                    )
+                )
+            );
+
+        var database = new TmdbMetadataDatabase(api.Object);
+
+        // Act
+        var metadata = await database.GetByDatabaseIdAsync(
+            new TmdbConfig("secret"),
+            CreateLookup(MediaKind.TvEpisode, tmdbId: "tv/1399")
+        );
+
+        // Assert
+        metadata.ShouldNotBeNull();
+        metadata.Title.ShouldBe("Game of Thrones");
+        metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/tv/1399");
+        metadata.ImdbId.ShouldBe("tt0944947");
+        metadata.TmdbId.ShouldBe("tv/1399");
+    }
+
+    private static MediaMetadataLookup CreateLookup(MediaKind mediaKind, string tmdbId)
+    {
+        return new MediaMetadataLookup(
+            MediaKind: mediaKind,
+            ImdbId: null,
+            SteamAppId: null,
+            TmdbId: tmdbId,
+            TvdbIdOrSlug: null,
+            Title: "Ignored title",
+            Year: null,
+            SeasonNumber: 1,
+            EpisodeNumber: 2,
+            LanguageCode: "de"
+        );
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(T content)

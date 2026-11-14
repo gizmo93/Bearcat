@@ -257,14 +257,16 @@ public class SteamMetadataDatabaseTest
     )
     {
         return new MediaMetadataLookup(
-            MediaKind.Game,
-            null,
-            steamAppId,
-            title,
-            null,
-            null,
-            null,
-            languageCode
+            MediaKind: MediaKind.Game,
+            ImdbId: null,
+            SteamAppId: steamAppId,
+            TmdbId: null,
+            TvdbIdOrSlug: null,
+            Title: title,
+            Year: null,
+            SeasonNumber: null,
+            EpisodeNumber: null,
+            LanguageCode: languageCode
         );
     }
 

@@ -39,13 +39,7 @@ public partial class ReleaseMetadataResolver(
             return false;
         }
 
-        var mediaKind = release.ReleaseContentType switch
-        {
-            ReleaseContentType.Movie => MediaKind.Movie,
-            ReleaseContentType.TvShowEpisode => MediaKind.TvEpisode,
-            ReleaseContentType.Game => MediaKind.Game,
-            _ => (MediaKind?)null,
-        };
+        var mediaKind = GetMediaKind(release.ReleaseContentType);
 
         if (mediaKind is null)
         {
@@ -66,25 +60,30 @@ public partial class ReleaseMetadataResolver(
             .ReleaseInfo?.ExternalInfos.Select(info => info.Title)
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
-        var imdbId = release
-            .ExternalIdentifiers.Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
-            .OrderBy(identifier => identifier.Source)
-            .Select(identifier => identifier.Value)
-            .FirstOrDefault();
+        var imdbId = ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+            release.ExternalIdentifiers,
+            ExternalIdentifierType.Imdb
+        );
 
-        var steamAppId = release
-            .ExternalIdentifiers.Where(identifier =>
-                identifier.Type == ExternalIdentifierType.Steam
+        var steamAppId = ReleaseExternalIdentifierService.FindValueWithHighestSourcePriority(
+            release.ExternalIdentifiers,
+            ExternalIdentifierType.Steam
+        );
+
+        var manualTmdbId = release
+            .ExternalIdentifiers.FirstOrDefault(identifier =>
+                identifier.Type == ExternalIdentifierType.Tmdb
+                && identifier.Source == ExternalIdentifierSource.Manual
             )
-            .OrderBy(identifier => identifier.Source)
-            .Select(identifier => identifier.Value)
-            .FirstOrDefault();
+            ?.Value;
 
         var resolved = await metadataResolver.ResolveAsync(
             new MediaMetadataLookup(
                 MediaKind: mediaKind.Value,
                 ImdbId: imdbId,
                 SteamAppId: steamAppId,
+                TmdbId: manualTmdbId,
+                TvdbIdOrSlug: null,
                 Title: externalTitle ?? title,
                 Year: yearMatch.Success
                     ? int.Parse(yearMatch.Value, CultureInfo.InvariantCulture)
@@ -128,6 +127,11 @@ public partial class ReleaseMetadataResolver(
             ? existingMetadata?.MetadataDatabaseUrl
             : resolved.Metadata.DatabaseUrl;
 
+        ReleaseExternalIdentifierService.StoreIdentifiersReportedByMediaDatabase(
+            release,
+            resolved.Metadata
+        );
+
         logger.LogInformation(
             "Resolved metadata for release {ReleaseName} using {MetadataDatabase}",
             release.Name,
@@ -135,6 +139,17 @@ public partial class ReleaseMetadataResolver(
         );
 
         return true;
+    }
+
+    public static MediaKind? GetMediaKind(ReleaseContentType releaseContentType)
+    {
+        return releaseContentType switch
+        {
+            ReleaseContentType.Movie => MediaKind.Movie,
+            ReleaseContentType.TvShowEpisode => MediaKind.TvEpisode,
+            ReleaseContentType.Game => MediaKind.Game,
+            _ => null,
+        };
     }
 
     private bool IsNfoDatabaseMetadata(ReleaseMetadata metadata)

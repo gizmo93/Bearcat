@@ -52,6 +52,15 @@ public class SteamMetadataDatabase(ISteamApi api) : IMediaMetadataDatabase
         );
     }
 
+    public Task<MediaMetadata?> GetByDatabaseIdAsync(
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.FromResult<MediaMetadata?>(null);
+    }
+
     public async Task<MediaMetadata?> GetByTitleAsync(
         IMediaMetadataDatabaseConfig config,
         MediaMetadataLookup lookup,
@@ -206,7 +215,10 @@ public class SteamMetadataDatabase(ISteamApi api) : IMediaMetadataDatabase
             Description: data.ShortDescription,
             Genre: genre,
             CoverUrl: data.HeaderImage,
-            DatabaseUrl: $"https://store.steampowered.com/app/{appId}"
+            DatabaseUrl: $"https://store.steampowered.com/app/{appId}",
+            ImdbId: null,
+            TmdbId: null,
+            TvdbId: null
         );
     }
 }

@@ -129,6 +129,7 @@ public class ReleaseForumPostRenderModelBuilder(
 
         var steamAppId = FindIdentifierValue(externalIdentifiers, ExternalIdentifierType.Steam);
         var imdbId = FindIdentifierValue(externalIdentifiers, ExternalIdentifierType.Imdb);
+        var tmdbId = FindIdentifierValue(externalIdentifiers, ExternalIdentifierType.Tmdb);
 
         return new ForumPostTemplateReleaseModel
         {
@@ -142,6 +143,8 @@ public class ReleaseForumPostRenderModelBuilder(
                     : $"https://store.steampowered.com/app/{steamAppId}",
             ImdbId = imdbId,
             ImdbUrl = imdbId.Length == 0 ? string.Empty : $"https://www.imdb.com/title/{imdbId}",
+            TmdbId = tmdbId.Length == 0 ? string.Empty : tmdbId.Split('/')[1],
+            TmdbUrl = tmdbId.Length == 0 ? string.Empty : $"https://www.themoviedb.org/{tmdbId}",
             MainVideo = mainVideo is null
                 ? ForumPostTemplateMediaFileModel.Empty
                 : ToMediaFileModel(mainVideo),
@@ -154,8 +157,12 @@ public class ReleaseForumPostRenderModelBuilder(
         ExternalIdentifierType type
     )
     {
-        return externalIdentifiers.FirstOrDefault(identifier => identifier.Type == type)?.Value
-            ?? string.Empty;
+        var identifier = ReleaseExternalIdentifierService.FindIdentifierWithHighestSourcePriority(
+            externalIdentifiers,
+            type
+        );
+
+        return identifier?.Value ?? string.Empty;
     }
 
     private static ForumPostTemplateClassificationModel ToClassificationModel(

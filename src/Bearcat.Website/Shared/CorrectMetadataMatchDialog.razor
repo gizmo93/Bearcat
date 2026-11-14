@@ -1,0 +1,246 @@
+@using Bearcat.Domain.UseCases.ManageReleases.MetadataMatchCorrection
+@using Bearcat.Website.Pages.ManageReleases
+
+<div class="space-y-6">
+    <div class="space-y-6" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+        @if (manualIdentifiers.Count > 0)
+        {
+            <div class="space-y-2">
+                <div class="bearcat-release-info-external-heading">
+                    <LucideIcon Name="fingerprint" class="h-3.5 w-3.5" />
+                    <span>@L["CurrentMetadataMatchCorrection"]</span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    @foreach (var identifier in manualIdentifiers)
+                    {
+                        <span class="inline-flex items-center gap-2">
+                            <BbBadge Variant="BadgeVariant.Secondary">
+                                @L[$"ExternalIdentifierType.{identifier.Type}"]
+                            </BbBadge>
+                            <span class="font-mono text-sm">@identifier.Value</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+
+        <form class="space-y-2" @onsubmit="SearchAsync">
+            <div class="flex items-end gap-2">
+                <BbFormFieldInput TValue="string"
+                                  Class="min-w-0 flex-1"
+                                  @bind-Value="input"
+                                  @bind-Value:after="ClearSearchResult"
+                                  Label="@L["MetadataMatchReference"]"
+                                  Placeholder="@ReferencePlaceholder"
+                                  Disabled="IsBusy" />
+                <BbButton Type="ButtonType.Submit"
+                          Variant="ButtonVariant.Outline"
+                          Loading="isSearching"
+                          Disabled="IsBusy">
+                    <LucideIcon Name="search" class="h-4 w-4" />
+                    @L["Search"]
+                </BbButton>
+            </div>
+            <p class="text-sm text-muted-foreground">@ReferenceHelpText</p>
+        </form>
+
+        @if (failure is not null)
+        {
+            <p class="text-sm text-destructive">@L[$"MetadataMatchCorrectionFailure.{failure}"]</p>
+        }
+
+        @if (preview is not null)
+        {
+            <div class="bearcat-release-info-list">
+                <article class="bearcat-release-info-item">
+                    <div class="bearcat-release-info-layout">
+                        @if (!string.IsNullOrWhiteSpace(preview.Metadata.CoverUrl))
+                        {
+                            <img src="@preview.Metadata.CoverUrl"
+                                 alt="@preview.Metadata.Title"
+                                 class="bearcat-series-cover" />
+                        }
+
+                        <div class="bearcat-release-info-content">
+                            <div class="min-w-0 space-y-2">
+                                <div class="bearcat-release-info-source-row">
+                                    <span class="bearcat-release-info-source">
+                                        <LucideIcon Name="database" class="h-3.5 w-3.5" />
+                                        @DatabaseDisplayName.GetFromClassName(preview.DatabaseClassName)
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(preview.Metadata.DatabaseUrl))
+                                    {
+                                        <a class="bearcat-release-info-source-link"
+                                           href="@preview.Metadata.DatabaseUrl"
+                                           target="_blank"
+                                           rel="noreferrer noopener"
+                                           title="@preview.Metadata.DatabaseUrl"
+                                           aria-label="@L["OpenMediaDatabaseEntry"]">
+                                            <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                        </a>
+                                    }
+                                </div>
+
+                                <h3 class="bearcat-release-info-title" title="@preview.Metadata.Title">
+                                    @preview.Metadata.Title
+                                </h3>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(preview.Metadata.Description))
+                            {
+                                <div class="bearcat-release-info-description">
+                                    <p>@preview.Metadata.Description</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+
+    <div class="flex flex-wrap justify-end gap-2">
+        @if (manualIdentifiers.Count > 0)
+        {
+            <BbButton Variant="ButtonVariant.Outline"
+                      Class="mr-auto"
+                      Loading="isRemoving"
+                      Disabled="IsBusy"
+                      OnClick="RemoveCorrectionAsync">
+                <LucideIcon Name="undo-2" class="h-4 w-4" />
+                @L["RemoveMetadataMatchCorrection"]
+            </BbButton>
+        }
+        <BbButton Variant="ButtonVariant.Outline" Disabled="IsBusy" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Loading="isApplying"
+                  Disabled="IsBusy || preview is null"
+                  OnClick="ApplyAsync">
+            @L["ApplyMetadataMatchCorrection"]
+        </BbButton>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public IDialogReference DialogRef { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Func<string, Task<MetadataMatchCorrectionPreviewResult>> LoadPreview { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Func<MetadataMatchCorrectionPreview, Task> ApplyCorrection { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task> RemoveCorrection { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public string ReferencePlaceholder { get; set; } = string.Empty;
+
+    [Parameter]
+    [EditorRequired]
+    public string ReferenceHelpText { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<ReleaseExternalIdentifierReadModel> ExternalIdentifiers { get; set; } = [];
+
+    private string? input;
+    private MetadataMatchCorrectionFailure? failure;
+    private MetadataMatchCorrectionPreview? preview;
+    private bool isSearching;
+    private bool isApplying;
+    private bool isRemoving;
+    private IReadOnlyList<ReleaseExternalIdentifierReadModel> manualIdentifiers = [];
+
+    private bool IsBusy => isSearching || isApplying || isRemoving;
+
+    protected override void OnParametersSet()
+    {
+        manualIdentifiers = ExternalIdentifiers
+            .Where(identifier => identifier.Sources.Contains(ExternalIdentifierSource.Manual))
+            .ToList();
+    }
+
+    private void ClearSearchResult()
+    {
+        failure = null;
+        preview = null;
+    }
+
+    private async Task SearchAsync()
+    {
+        if (IsBusy || string.IsNullOrWhiteSpace(input))
+        {
+            return;
+        }
+
+        ClearSearchResult();
+        isSearching = true;
+
+        try
+        {
+            var result = await LoadPreview(input);
+
+            failure = result.Failure;
+            preview = result.Preview;
+        }
+        finally
+        {
+            isSearching = false;
+        }
+    }
+
+    private async Task ApplyAsync()
+    {
+        if (IsBusy || preview is null)
+        {
+            return;
+        }
+
+        var previewToApply = preview;
+        isApplying = true;
+
+        try
+        {
+            await ApplyCorrection(previewToApply);
+        }
+        finally
+        {
+            isApplying = false;
+        }
+
+        await DialogRef.CloseAsync(DialogResult.Ok(L["MetadataMatchCorrected"].Value));
+    }
+
+    private async Task RemoveCorrectionAsync()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        isRemoving = true;
+
+        try
+        {
+            await RemoveCorrection();
+        }
+        finally
+        {
+            isRemoving = false;
+        }
+
+        await DialogRef.CloseAsync(DialogResult.Ok(L["MetadataMatchCorrectionRemoved"].Value));
+    }
+
+    private async Task CancelAsync()
+    {
+        await DialogRef.CancelAsync();
+    }
+}

@@ -44,6 +44,30 @@ public sealed record ForumPostTemplateCollectionModel
     public required string PrimaryLanguage { get; init; }
 
     [ForumPostTemplateVariable(
+        "IMDb id of the series, e.g. tt0944947. Taken from the releases of the collection."
+    )]
+    public required string ImdbId { get; init; }
+
+    [ForumPostTemplateVariable("IMDb title URL of the series.")]
+    public required string ImdbUrl { get; init; }
+
+    [ForumPostTemplateVariable(
+        "TMDB id of the series without the tv prefix, e.g. 1399. Taken from the releases of the collection."
+    )]
+    public required string TmdbId { get; init; }
+
+    [ForumPostTemplateVariable("TMDB TV show URL of the series.")]
+    public required string TmdbUrl { get; init; }
+
+    [ForumPostTemplateVariable(
+        "TVDB series id, e.g. 121361. Taken from the releases of the collection."
+    )]
+    public required string TvdbId { get; init; }
+
+    [ForumPostTemplateVariable("TVDB series URL.")]
+    public required string TvdbUrl { get; init; }
+
+    [ForumPostTemplateVariable(
         "Sum of release.main_video.size_bytes over all releases of the collection. Releases without a main video count as 0."
     )]
     public required long MainVideoTotalSizeBytes { get; init; }
@@ -111,6 +135,12 @@ public sealed record ForumPostTemplateCollectionReleaseModel
 
     [ForumPostTemplateVariable("IMDb title URL.")]
     public required string ImdbUrl { get; init; }
+
+    [ForumPostTemplateVariable("TMDB id without the movie/tv prefix, e.g. 12775.")]
+    public required string TmdbId { get; init; }
+
+    [ForumPostTemplateVariable("TMDB movie or TV show URL.")]
+    public required string TmdbUrl { get; init; }
 
     [ForumPostTemplateVariable("Main video file (largest video file).", IncludeChildren = true)]
     public required ForumPostTemplateMediaFileModel MainVideo { get; init; }

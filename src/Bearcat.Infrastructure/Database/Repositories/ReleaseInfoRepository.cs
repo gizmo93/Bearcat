@@ -96,15 +96,17 @@ public class ReleaseInfoRepository(
         );
     }
 
-    public async Task<Release> GetReleaseForCoverUpdateAsync(
+    public async Task<Release> GetReleaseForMetadataUpdateAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
+                .ThenInclude(info => info!.ExternalInfos)
             .Include(release => release.Metadata)
             .Include(release => release.ExternalIdentifiers)
+            .Include(release => release.ReleaseCollection)
             .Include(release => release.ImageUploadConfigs)
                 .ThenInclude(config => config.ImageUploads)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
