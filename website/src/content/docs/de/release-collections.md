@@ -76,8 +76,9 @@ Beschreibung und Cover zu finden. Wähle **Metadaten abrufen** im `...`-Menü, u
 Die Primärsprache bestimmt die Sprache von Titel und Beschreibung. Ohne Auswahl gilt die Standardsprache
 des Anbieters. Bearcat sucht über eine IMDb-ID aus den enthaltenen Releases oder über den Titel.
 
-Ist die Serie falsch, wähle **Metadatenzuordnung korrigieren** im `...`-Menü. Bearcat speichert die
-Korrektur als manuelle IDs an allen Releases der Collection, siehe
+Hat Bearcat die falsche Serie gefunden, wähle **Metadatenzuordnung korrigieren** im `...`-Menü.
+Bearcat speichert die korrigierten IDs bei allen Releases der Collection als manuelle IDs.
+Details unter
 [Falsche Zuordnung korrigieren](/Bearcat/de/release-information-and-metadata/#falsche-zuordnung-korrigieren).
 
 Du kannst die Metadaten in Forenpostvorlagen verwenden und das Cover auf deine Bildhoster hochladen.

@@ -87,8 +87,8 @@ The remaining release data is also under `release`: `release.release_info`, `rel
 `release.uploads`, `release.link_crypters` and `release.imagelinks`.
 `imagelinks` without `release.` contains the collection's image links.
 `collection.main_video_total_size_bytes` is the sum of `release.main_video.size_bytes` over all releases.
-`collection.imdb_id`, `collection.tmdb_id` and `collection.tvdb_id` (with the matching `_url` variables) contain the
-series IDs of the releases, manual IDs first.
+`collection.imdb_id`, `collection.tmdb_id` and `collection.tvdb_id` contain the series IDs from the
+releases. Manual IDs take priority. The matching `_url` variables contain the links.
 
 ```text
 {{~ for release in releases ~}}

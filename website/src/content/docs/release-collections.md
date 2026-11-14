@@ -76,8 +76,9 @@ changing the name or language.
 The primary language sets the language for titles and descriptions. Without a selection, the
 provider's default applies. Bearcat searches using an IMDb ID from an included release or the title.
 
-If the series is wrong, select **Correct metadata match** in the `...` menu. Bearcat stores the
-correction as manual IDs on all releases of the collection, see
+If Bearcat found the wrong series, select **Correct metadata match** in the `...` menu.
+Bearcat saves the corrected IDs as manual IDs for every release in the collection.
+See
 [Correct a wrong match](/Bearcat/release-information-and-metadata/#correct-a-wrong-match).
 
 Use the metadata in forum post templates and upload the cover to your image hosters.

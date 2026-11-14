@@ -72,8 +72,8 @@ Du kannst auch mehrere Releases auswählen und ihre Sprache gemeinsam setzen ode
 4. Metadaten über eine IMDb-ID suchen. Ohne passende ID verwendet Bearcat den Titel und weitere Angaben aus dem Releasenamen.
 5. Die Primärsprache an den Metadatenanbieter übergeben.
 
-Bei Collections sucht Bearcat nach einer TV-Serie. Es verwendet eine manuelle ID von TMDB oder TVDB oder eine
-IMDb-ID aus einem der enthaltenen Releases oder sucht nach dem Collectionnamen.
+Bei Collections sucht Bearcat nach einer TV-Serie. Dafür verwendet es eine manuelle ID von TMDB oder
+TVDB oder eine IMDb-ID aus den enthaltenen Releases. Ohne passende ID sucht es nach dem Collectionnamen.
 
 Die Hintergrundaufgabe **Release info resolution** ergänzt fehlende Daten automatisch. Du kannst die
 entsprechenden Aktionen auch im Tab **Releaseinfo** auslösen.
@@ -98,27 +98,27 @@ Jede externe IMDb-ID erscheint einmal mit allen Quellen, die sie gefunden haben.
 ## Falsche Zuordnung korrigieren
 
 Hat Bearcat den falschen Film, die falsche Serie oder das falsche Spiel gefunden, wähle
-**Metadatenzuordnung korrigieren** und gib eine Referenz auf den richtigen Eintrag ein. Bearcat zeigt
-eine Vorschau. **Übernehmen** ersetzt die Metadaten durch den gewählten Eintrag.
+**Metadatenzuordnung korrigieren** und gib die ID oder den Link zum richtigen Eintrag ein. Bearcat zeigt
+eine Vorschau. Klicke auf **Übernehmen**, um die Metadaten durch den gewählten Eintrag zu ersetzen.
 
-| Wo | Schaltfläche | Erlaubte Eingabe |
+| Bereich | Aufrufen über | Erlaubte Eingabe |
 | --- | --- | --- |
 | Release | Tab **Releaseinfo** | ID oder URL von IMDb, URL von TMDB, URL von Steam oder SteamDB |
 | Collection | `...`-Menü auf der Collectionseite | ID oder URL von IMDb, Serienlink von TMDB, Serienlink von TVDB |
 
-Die Referenz muss zum Inhaltstyp passen: Filme nehmen Filmlinks von TMDB, Folgen und Collections
-nehmen Serienlinks von TMDB, Spiele nehmen Links von Steam oder SteamDB.
+Der Link muss zum Inhaltstyp passen. Verwende bei TMDB einen Filmlink für Filme und einen Serienlink
+für Folgen oder Collections. Für Spiele verwendest du einen Link von Steam oder SteamDB.
 
-Bearcat speichert die Referenz und die vom Anbieter gemeldete IMDb-ID als manuelle IDs. Manuelle IDs
-haben Vorrang vor IDs aus dem NFO, von xREL, SRRDB oder einem Anbieter.
+Bearcat speichert die ID aus deiner Eingabe und die IMDb-ID des Anbieters als manuelle IDs.
+Diese haben Vorrang vor IDs aus dem NFO, von xREL, SRRDB oder einem Anbieter.
 
-Eine Korrektur an einer Collection wird als manuelle IDs an allen Releases der Collection gespeichert
-und ersetzt deren bisherige manuelle IDs von IMDb, TMDB und TVDB. Eine Collection braucht dafür
-mindestens ein Release.
+Bei einer Collection speichert Bearcat die korrigierten IDs bei allen enthaltenen Releases. Dabei
+ersetzt es deren bisherige manuelle IDs von IMDb, TMDB und TVDB. Die Collection muss dafür mindestens
+ein Release enthalten.
 
 Um eine Korrektur rückgängig zu machen, öffne den Dialog erneut und wähle **Korrektur entfernen**.
-Bearcat löscht die manuellen IDs (bei einer Collection die manuellen IDs von IMDb, TMDB und TVDB aller
-ihrer Releases) und sucht die Metadaten erneut.
+Bearcat löscht die manuellen IDs und sucht die Metadaten erneut. Bei einer Collection entfernt es die
+manuellen IDs von IMDb, TMDB und TVDB aus allen enthaltenen Releases.
 
 ## Manuelle Eingabe
 
