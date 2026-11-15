@@ -2168,6 +2168,8 @@
   <data name="UploadScreenshotGrid" xml:space="preserve"><value>Screenshot grid</value></data>
   <data name="UploadScreenshotsHelp" xml:space="preserve"><value>Screenshots and the screenshot grid are uploaded once they have been created for the release.</value></data>
   <data name="ImageUploadContentRequired" xml:space="preserve"><value>Select at least one image to upload.</value></data>
-  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>Some screenshots are no longer available locally and have no completed image upload. Image upload configurations added later only get screenshots after Regenerate.</value></data>
+  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>These screenshots were deleted after upload. Use Regenerate to upload them to additional image upload configurations.</value></data>
   <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Regenerate needs a managed release whose release folder still exists.</value></data>
+  <data name="ScreenshotsNoImageUploadConfigHint" xml:space="preserve"><value>No image upload configuration uploads screenshots. Add one under Image upload configurations above or turn on screenshots in an existing one.</value></data>
+  <data name="ScreenshotsWithCount" xml:space="preserve"><value>Screenshots ({0})</value></data>
 </root>

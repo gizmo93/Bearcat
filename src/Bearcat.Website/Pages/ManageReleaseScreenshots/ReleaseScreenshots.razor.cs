@@ -152,16 +152,21 @@ public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
             return ReleaseScreenshotState.Created;
         }
 
+        if (overview.ScreenshotGenerationIsPending)
+        {
+            return ReleaseScreenshotState.Waiting;
+        }
+
         return overview is { HasMediaFiles: false, MediaMetadataExtractedAt: not null }
             ? ReleaseScreenshotState.NoVideoFile
-            : ReleaseScreenshotState.Waiting;
+            : ReleaseScreenshotState.NoImageUploadConfig;
     }
 
     private static string? GetImageUrl(ReleaseScreenshotReadModel screenshot)
     {
         return screenshot.FileExists
             ? ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)
-            : screenshot.HostedThumbnailUrl;
+            : screenshot.HostedPreviewUrl;
     }
 
     private static string? GetFullSizeUrl(ReleaseScreenshotReadModel screenshot)
@@ -197,6 +202,7 @@ public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
         NeedsManagedRelease,
         NoVideoFile,
         Waiting,
+        NoImageUploadConfig,
         Failed,
         Created,
     }

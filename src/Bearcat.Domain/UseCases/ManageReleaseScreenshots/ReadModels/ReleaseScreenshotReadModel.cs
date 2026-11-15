@@ -11,6 +11,6 @@ public record ReleaseScreenshotReadModel(
     int Height,
     long SizeBytes,
     bool FileExists,
-    string? HostedThumbnailUrl,
+    string? HostedPreviewUrl,
     string? HostedFullUrl
 );

@@ -10,8 +10,21 @@ internal static class ReleaseScreenshotExpressions
         release =>
             release.ReleaseType == ReleaseType.Managed
             && release.ReleaseFolderPath != null
-            && (release.CreateScreenshots || release.CreateScreenshotGrid)
-            && release.MediaFiles.Any()
+            && (
+                (
+                    release.CreateScreenshots
+                    && release.ImageUploadConfigs.Any(config =>
+                        config.ImageHosterRegistration.IsActive && config.UploadScreenshots
+                    )
+                )
+                || (
+                    release.CreateScreenshotGrid
+                    && release.ImageUploadConfigs.Any(config =>
+                        config.ImageHosterRegistration.IsActive && config.UploadScreenshotGrid
+                    )
+                )
+            )
+            && (release.MediaMetadataExtractedAt == null || release.MediaFiles.Any())
             && release.ScreenshotsGeneratedAt == null
             && release.ScreenshotGenerationErrorMessage == null;
 

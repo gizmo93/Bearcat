@@ -1107,6 +1107,26 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetPostQueueAsync_ScreenshotsEnabledWithoutScreenshotImageConfig_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.ScreenshotsWithoutImageConfig.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true)]
+        );
+        await MakeScreenshotGenerationPendingAsync(release);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
     public async Task GetPostQueueAsync_UnmanagedReleaseWithScreenshotSettings_ShowsRelease()
     {
         // Arrange

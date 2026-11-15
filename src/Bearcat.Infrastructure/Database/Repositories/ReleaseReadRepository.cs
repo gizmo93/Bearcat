@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
@@ -923,7 +924,10 @@ public class ReleaseReadRepository(
     )
     {
         var imageUploadConfigs = await dbRead
-            .ImageUploadConfigs.Where(c => c.ReleaseId == releaseId && c.UploadCover)
+            .ImageUploadConfigs.Where(c =>
+                c.ReleaseId == releaseId
+                && (c.UploadCover || c.UploadScreenshots || c.UploadScreenshotGrid)
+            )
             .OrderBy(c => c.Name)
             .ThenBy(c => c.Id)
             .Select(c => new
@@ -931,6 +935,9 @@ public class ReleaseReadRepository(
                 ImageUploadConfigId = c.Id,
                 ImageUploadConfigName = c.Name,
                 c.ImageHosterRegistration.Name,
+                c.UploadCover,
+                c.UploadScreenshots,
+                c.UploadScreenshotGrid,
                 LatestImageUpload = c
                     .ImageUploads.Where(upload => upload.ReleaseScreenshotId == null)
                     .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
@@ -952,6 +959,69 @@ public class ReleaseReadRepository(
             })
             .ToListAsync(cancellationToken);
 
+        var screenshots = await dbRead
+            .ReleaseScreenshots.Where(screenshot => screenshot.ReleaseId == releaseId)
+            .OrderBy(screenshot => screenshot.Kind)
+            .ThenBy(screenshot => screenshot.Index)
+            .Select(screenshot => new
+            {
+                screenshot.Id,
+                screenshot.Kind,
+                screenshot.Index,
+                screenshot.Timestamp,
+            })
+            .ToListAsync(cancellationToken);
+
+        var screenshotImageUploads = await dbRead
+            .ImageUploads.Where(upload =>
+                upload.ImageUploadConfig.ReleaseId == releaseId
+                && upload.ReleaseScreenshotId != null
+            )
+            .Select(upload => new
+            {
+                upload.Id,
+                upload.ImageUploadConfigId,
+                ReleaseScreenshotId = upload.ReleaseScreenshotId!.Value,
+                upload.CreatedAt,
+                upload.UploadedAt,
+                upload.UploadState,
+                upload.ErrorMessages,
+            })
+            .ToListAsync(cancellationToken);
+
+        var screenshotImageUploadUrls = await dbRead
+            .ImageUploadUrls.Where(url =>
+                url.ImageUpload.ImageUploadConfig.ReleaseId == releaseId
+                && url.ImageUpload.ReleaseScreenshotId != null
+            )
+            .Select(url => new
+            {
+                url.ImageUploadId,
+                url.ImageSize,
+                url.Url,
+            })
+            .ToListAsync(cancellationToken);
+
+        var urlsBySizeByImageUploadId = screenshotImageUploadUrls
+            .GroupBy(url => url.ImageUploadId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyDictionary<ImageSize, string>)
+                        group.ToDictionary(url => url.ImageSize, url => url.Url)
+            );
+
+        var latestScreenshotImageUploads = screenshotImageUploads
+            .GroupBy(upload => (upload.ImageUploadConfigId, upload.ReleaseScreenshotId))
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    group
+                        .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                        .ThenByDescending(upload => upload.Id)
+                        .First()
+            );
+
         return imageUploadConfigs
             .Select(config =>
             {
@@ -966,16 +1036,58 @@ public class ReleaseReadRepository(
                         .ToList()
                     : [];
 
+                var configScreenshotImageUploads = screenshots
+                    .Where(screenshot =>
+                        (
+                            screenshot.Kind is ReleaseScreenshotKind.Screenshot
+                            && config.UploadScreenshots
+                        )
+                        || (
+                            screenshot.Kind is ReleaseScreenshotKind.ScreenshotGrid
+                            && config.UploadScreenshotGrid
+                        )
+                    )
+                    .Select(screenshot =>
+                    {
+                        var screenshotImageUpload = latestScreenshotImageUploads.GetValueOrDefault(
+                            (config.ImageUploadConfigId, screenshot.Id)
+                        );
+
+                        var urlsBySize = screenshotImageUpload
+                            is { UploadState: UploadState.Completed }
+                            ? urlsBySizeByImageUploadId.GetValueOrDefault(
+                                screenshotImageUpload.Id,
+                                new Dictionary<ImageSize, string>()
+                            )
+                            : new Dictionary<ImageSize, string>();
+
+                        return new ReleaseOverviewScreenshotImageUploadReadModel(
+                            Kind: screenshot.Kind,
+                            Index: screenshot.Index,
+                            Timestamp: screenshot.Timestamp,
+                            UploadState: screenshotImageUpload?.UploadState,
+                            ErrorMessages: screenshotImageUpload?.ErrorMessages ?? [],
+                            PreviewUrl: HostedScreenshotUrls.SelectPreviewUrl(
+                                screenshot.Kind,
+                                urlsBySize
+                            ),
+                            FullUrl: HostedScreenshotUrls.SelectFullUrl(urlsBySize)
+                        );
+                    })
+                    .ToList();
+
                 return new ReleaseOverviewImageUploadReadModel(
                     ImageUploadConfigId: config.ImageUploadConfigId,
                     ImageUploadConfigName: config.ImageUploadConfigName,
                     ImageHosterRegistrationName: config.Name,
+                    UploadCover: config.UploadCover,
                     ImageUploadId: upload?.ImageUploadId,
                     CreatedAt: upload?.CreatedAt,
                     UploadedAt: upload?.UploadedAt,
                     UploadState: upload?.UploadState,
                     ErrorMessages: upload?.ErrorMessages ?? [],
-                    ImageUrls: urls
+                    ImageUrls: urls,
+                    ScreenshotImageUploads: configScreenshotImageUploads
                 );
             })
             .ToList();

@@ -157,12 +157,14 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
         result.ShouldBeEmpty();
     }
 
-    [TestCase(false, null, null, true)]
-    [TestCase(true, null, null, false)]
-    [TestCase(true, "2026-04-30", null, true)]
-    [TestCase(true, null, "ffmpeg failed", true)]
+    [TestCase(false, true, null, null, true)]
+    [TestCase(true, true, null, null, false)]
+    [TestCase(true, false, null, null, true)]
+    [TestCase(true, true, "2026-04-30", null, true)]
+    [TestCase(true, true, null, "ffmpeg failed", true)]
     public async Task GetConversionCandidatesAsync_OverdueReleaseWithScreenshotState_ReturnsReleaseOnlyWhenScreenshotsAreNotPending(
         bool createScreenshots,
+        bool hasScreenshotImageUploadConfig,
         string? screenshotsGeneratedAt,
         string? screenshotGenerationErrorMessage,
         bool expectedToBeReturned
@@ -180,6 +182,25 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
             ? null
             : DateTime.Parse(screenshotsGeneratedAt, CultureInfo.InvariantCulture);
         storedRelease.ScreenshotGenerationErrorMessage = screenshotGenerationErrorMessage;
+
+        if (hasScreenshotImageUploadConfig)
+        {
+            storedRelease.ImageUploadConfigs.Add(
+                new ImageUploadConfig
+                {
+                    Name = "Screens",
+                    ImageHosterRegistration = new ImageHosterRegistration
+                    {
+                        Name = "PiXhost",
+                        ImageHosterClassName = "PixHost",
+                        SerializedConfig = "{}",
+                        IsActive = true,
+                    },
+                    UploadScreenshots = true,
+                }
+            );
+        }
+
         storedRelease.MediaFiles.Add(
             new ReleaseMediaFile
             {

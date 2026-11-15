@@ -437,11 +437,11 @@
                                 }
                             </div>
 
-                            @if (imageUpload.ImageUrls.Count == 0)
+                            @if (imageUpload.UploadCover && imageUpload.ImageUrls.Count == 0)
                             {
                                 <p class="text-xs text-muted-foreground">@L["NoImageUploadUrlsFound"]</p>
                             }
-                            else
+                            else if (imageUpload.UploadCover)
                             {
                                 <div class="flex flex-wrap gap-1.5">
                                     @foreach (var imageUrl in imageUpload.ImageUrls)
@@ -461,19 +461,86 @@
                                     }
                                 </div>
                             }
+
+                            @if (imageUpload.ScreenshotImageUploads.Count > 0)
+                            {
+                                var uploadedScreenshots = GetUploadedScreenshots(imageUpload, ReleaseScreenshotKind.Screenshot);
+                                var uploadedScreenshotGrid = GetUploadedScreenshots(imageUpload, ReleaseScreenshotKind.ScreenshotGrid).FirstOrDefault();
+                                var completedScreenshotCount = imageUpload.ScreenshotImageUploads.Count(screenshot => screenshot.UploadState is UploadState.Completed);
+                                var screenshotProblemState = GetScreenshotUploadProblemState(imageUpload);
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                    @if (uploadedScreenshots.Count > 0 || uploadedScreenshotGrid is not null)
+                                    {
+                                        <div class="flex flex-wrap items-center gap-1">
+                                            @foreach (var screenshot in uploadedScreenshots)
+                                            {
+                                                <a href="@screenshot.FullUrl" target="_blank" rel="noopener" title="@GetScreenshotTitle(screenshot)">
+                                                    <img src="@screenshot.PreviewUrl" alt="@GetScreenshotTitle(screenshot)" loading="lazy" class="bearcat-overview-screenshot-preview" />
+                                                </a>
+                                            }
+                                            @if (uploadedScreenshotGrid is not null)
+                                            {
+                                                <a href="@uploadedScreenshotGrid.FullUrl" target="_blank" rel="noopener" title="@GetScreenshotTitle(uploadedScreenshotGrid)">
+                                                    <img src="@uploadedScreenshotGrid.PreviewUrl" alt="@GetScreenshotTitle(uploadedScreenshotGrid)" loading="lazy" class="bearcat-overview-screenshot-preview bearcat-overview-screenshot-grid-preview" />
+                                                </a>
+                                            }
+                                        </div>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @if (uploadedScreenshots.Count > 0)
+                                            {
+                                                <span class="bearcat-overview-chip">
+                                                    @L["ScreenshotsWithCount", uploadedScreenshots.Count]
+                                                    <CopyButton Value="@JoinLines(uploadedScreenshots.Select(screenshot => screenshot.FullUrl!).ToList())"
+                                                                Label="@L["CopyImageUrls"]"
+                                                                Variant="ButtonVariant.Ghost"
+                                                                Class="bearcat-overview-chip-copy" />
+                                                </span>
+                                            }
+                                            @if (uploadedScreenshotGrid is not null)
+                                            {
+                                                <span class="bearcat-overview-chip" title="@uploadedScreenshotGrid.FullUrl">
+                                                    <a href="@uploadedScreenshotGrid.FullUrl"
+                                                       target="_blank"
+                                                       rel="noreferrer noopener"
+                                                       class="hover:underline">
+                                                        @L["ScreenshotGrid"]
+                                                    </a>
+                                                    <CopyButton Value="@uploadedScreenshotGrid.FullUrl"
+                                                                Label="@L["CopyLink"]"
+                                                                Variant="ButtonVariant.Ghost"
+                                                                Class="bearcat-overview-chip-copy" />
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                    <div class="ml-auto flex items-center gap-2">
+                                        <span class="@(completedScreenshotCount == imageUpload.ScreenshotImageUploads.Count ? "text-xs text-muted-foreground" : "text-xs font-medium")">
+                                            @completedScreenshotCount/@imageUpload.ScreenshotImageUploads.Count
+                                        </span>
+                                        @if (screenshotProblemState is { } problemState)
+                                        {
+                                            <UploadStateBadge State="problemState" />
+                                            <ErrorMessagesTooltip Messages="GetFailedScreenshotUploadErrorMessages(imageUpload)" />
+                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
 
-                        <div class="flex shrink-0 items-center gap-2">
-                            @if (imageUpload.UploadState is { } imageUploadState)
-                            {
-                                <UploadStateBadge State="imageUploadState" />
-                                <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
-                            }
-                            else
-                            {
-                                <BbBadge Variant="BadgeVariant.Outline">@L["NoLatestUpload"]</BbBadge>
-                            }
-                        </div>
+                        @if (imageUpload.UploadCover)
+                        {
+                            <div class="flex shrink-0 items-center gap-2">
+                                @if (imageUpload.UploadState is { } imageUploadState)
+                                {
+                                    <UploadStateBadge State="imageUploadState" />
+                                    <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
+                                }
+                                else
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["NoLatestUpload"]</BbBadge>
+                                }
+                            </div>
+                        }
                     </div>
                 }
             </div>

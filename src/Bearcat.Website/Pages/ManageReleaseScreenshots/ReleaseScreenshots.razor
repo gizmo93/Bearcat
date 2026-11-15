@@ -46,6 +46,11 @@
                     @L["ScreenshotsNoVideoFileHint"]
                 </div>
                 break;
+            case ReleaseScreenshotState.NoImageUploadConfig:
+                <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                    @L["ScreenshotsNoImageUploadConfigHint"]
+                </div>
+                break;
             case ReleaseScreenshotState.Waiting:
                 <div class="flex items-center gap-2 rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-primary">
                     <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />

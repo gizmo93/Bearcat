@@ -1,6 +1,7 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Storage;
 using Bearcat.Domain.ValueObjects;
@@ -12,6 +13,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseScreenshots.Generation;
 public class ReleaseScreenshotGenerationService(
     IReleaseScreenshotGenerationRepository repository,
     IVideoScreenshotCreator videoScreenshotCreator,
+    MediaMetadataService mediaMetadataService,
     IFileSystemService fileSystemService,
     ReleaseScreenshotDirectory screenshotDirectory,
     TimeProvider timeProvider,
@@ -38,6 +40,11 @@ public class ReleaseScreenshotGenerationService(
             if (release is null)
             {
                 continue;
+            }
+
+            if (release.MediaMetadataExtractedAt is null)
+            {
+                await mediaMetadataService.ExtractForReleaseAsync(releaseId, cancellationToken);
             }
 
             await GenerateAsync(release, cancellationToken);
@@ -70,6 +77,14 @@ public class ReleaseScreenshotGenerationService(
 
     private async Task GenerateAsync(Release release, CancellationToken cancellationToken)
     {
+        if (release.MediaFiles.Count == 0)
+        {
+            release.ScreenshotGenerationErrorMessage =
+                $"No video file was found in the release folder {release.ReleaseFolderPath}.";
+
+            return;
+        }
+
         var releaseFolderPath = release.ReleaseFolderPath!;
         var mediaFile = release.MediaFiles.MaxBy(file => file.SizeBytes)!;
         var videoFilePath = Path.Combine(releaseFolderPath, mediaFile.RelativePath);
@@ -184,7 +199,7 @@ public class ReleaseScreenshotGenerationService(
         var createdAt = timeProvider.GetLocalNow();
         var screenshots = new List<ReleaseScreenshot>();
 
-        if (release.CreateScreenshots)
+        if (ShouldCreateScreenshots(release))
         {
             var screenshotFiles = await videoScreenshotCreator.CreateScreenshotsAsync(
                 new ScreenshotCreationRequest(
@@ -218,7 +233,7 @@ public class ReleaseScreenshotGenerationService(
             );
         }
 
-        if (release.CreateScreenshotGrid)
+        if (ShouldCreateScreenshotGrid(release))
         {
             var screenshotGridFile = await videoScreenshotCreator.CreateScreenshotGridAsync(
                 new ScreenshotGridCreationRequest(
@@ -253,5 +268,21 @@ public class ReleaseScreenshotGenerationService(
         }
 
         return screenshots;
+    }
+
+    private static bool ShouldCreateScreenshots(Release release)
+    {
+        return release.CreateScreenshots
+            && release.ImageUploadConfigs.Any(config =>
+                config.ImageHosterRegistration.IsActive && config.UploadScreenshots
+            );
+    }
+
+    private static bool ShouldCreateScreenshotGrid(Release release)
+    {
+        return release.CreateScreenshotGrid
+            && release.ImageUploadConfigs.Any(config =>
+                config.ImageHosterRegistration.IsActive && config.UploadScreenshotGrid
+            );
     }
 }

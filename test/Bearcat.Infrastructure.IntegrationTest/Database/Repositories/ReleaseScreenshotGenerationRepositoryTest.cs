@@ -36,7 +36,7 @@ public class ReleaseScreenshotGenerationRepositoryTest(DatabaseProvider database
     }
 
     [Test]
-    public async Task GetReleaseIdsPendingScreenshotGenerationAsync_ReleasesInDifferentStates_ReturnsOnlyPendingManagedReleasesWithVideoFiles()
+    public async Task GetReleaseIdsPendingScreenshotGenerationAsync_ReleasesInDifferentStates_ReturnsManagedReleasesWhoseScreenshotsAnActiveImageUploadConfigUploads()
     {
         // Arrange
         var screenshotsRelease = AddRelease(
@@ -62,6 +62,15 @@ public class ReleaseScreenshotGenerationRepositoryTest(DatabaseProvider database
             release =>
             {
                 release.CreateScreenshots = true;
+                release.MediaMetadataExtractedAt = CreatedAt;
+                release.MediaFiles.Clear();
+            }
+        );
+        var notExtractedRelease = AddRelease(
+            "NotExtracted",
+            release =>
+            {
+                release.CreateScreenshots = true;
                 release.MediaFiles.Clear();
             }
         );
@@ -71,6 +80,30 @@ public class ReleaseScreenshotGenerationRepositoryTest(DatabaseProvider database
             {
                 release.CreateScreenshots = true;
                 release.ScreenshotsGeneratedAt = CreatedAt;
+            }
+        );
+        AddRelease(
+            "WithoutImageUploadConfig",
+            release =>
+            {
+                release.CreateScreenshots = true;
+                release.ImageUploadConfigs.Clear();
+            }
+        );
+        AddRelease(
+            "ImageUploadConfigUploadsOnlyGrid",
+            release =>
+            {
+                release.CreateScreenshots = true;
+                release.ImageUploadConfigs.Single().UploadScreenshots = false;
+            }
+        );
+        AddRelease(
+            "InactiveImageHoster",
+            release =>
+            {
+                release.CreateScreenshots = true;
+                release.ImageUploadConfigs.Single().ImageHosterRegistration.IsActive = false;
             }
         );
         AddRelease(
@@ -90,7 +123,7 @@ public class ReleaseScreenshotGenerationRepositoryTest(DatabaseProvider database
         );
 
         // Assert
-        result.ShouldBe([screenshotsRelease.Id, screenshotGridRelease.Id]);
+        result.ShouldBe([screenshotsRelease.Id, screenshotGridRelease.Id, notExtractedRelease.Id]);
     }
 
     private Release AddRelease(string name, Action<Release> configure)
@@ -110,6 +143,23 @@ public class ReleaseScreenshotGenerationRepositoryTest(DatabaseProvider database
                     SizeBytes = 1_000,
                     MediaInfoJson = "{}",
                     MediaInfoText = "General",
+                },
+            ],
+            ImageUploadConfigs =
+            [
+                new ImageUploadConfig
+                {
+                    Name = "Screens",
+                    ImageHosterRegistration = new ImageHosterRegistration
+                    {
+                        Name = $"{name} hoster",
+                        ImageHosterClassName = "PixHost",
+                        SerializedConfig = "{}",
+                        IsActive = true,
+                    },
+                    UploadCover = false,
+                    UploadScreenshots = true,
+                    UploadScreenshotGrid = true,
                 },
             ],
         };

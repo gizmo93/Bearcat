@@ -11,5 +11,6 @@ public record ReleaseScreenshotOverviewReadModel(
     DateTime? MediaMetadataExtractedAt,
     DateTime? ScreenshotsGeneratedAt,
     string? ScreenshotGenerationErrorMessage,
+    bool ScreenshotGenerationIsPending,
     IReadOnlyList<ReleaseScreenshotReadModel> Screenshots
 );

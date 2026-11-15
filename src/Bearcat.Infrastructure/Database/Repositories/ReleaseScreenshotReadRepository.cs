@@ -44,6 +44,13 @@ public class ReleaseScreenshotReadRepository(IBearcatReadDbContext dbRead)
             })
             .FirstAsync(cancellationToken);
 
+        var screenshotGenerationIsPending = await dbRead
+            .Releases.Where(release => release.Id == releaseId)
+            .AnyAsync(
+                ReleaseScreenshotExpressions.ScreenshotGenerationIsPending,
+                cancellationToken
+            );
+
         var hostedImageUrls = await dbRead
             .ImageUploadUrls.Where(url =>
                 url.ImageUpload.ReleaseScreenshot!.ReleaseId == releaseId
@@ -81,6 +88,7 @@ public class ReleaseScreenshotReadRepository(IBearcatReadDbContext dbRead)
             MediaMetadataExtractedAt: release.MediaMetadataExtractedAt,
             ScreenshotsGeneratedAt: release.ScreenshotsGeneratedAt,
             ScreenshotGenerationErrorMessage: release.ScreenshotGenerationErrorMessage,
+            ScreenshotGenerationIsPending: screenshotGenerationIsPending,
             Screenshots: release
                 .Screenshots.Select(screenshot =>
                 {
@@ -98,12 +106,11 @@ public class ReleaseScreenshotReadRepository(IBearcatReadDbContext dbRead)
                         Height: screenshot.Height,
                         SizeBytes: screenshot.SizeBytes,
                         FileExists: screenshot.FileExists,
-                        HostedThumbnailUrl: urlsBySize.GetValueOrDefault(ImageSize.Thumbnail)
-                            ?? urlsBySize.GetValueOrDefault(ImageSize.Medium)
-                            ?? urlsBySize.GetValueOrDefault(ImageSize.Full),
-                        HostedFullUrl: urlsBySize.GetValueOrDefault(ImageSize.Full)
-                            ?? urlsBySize.GetValueOrDefault(ImageSize.Medium)
-                            ?? urlsBySize.GetValueOrDefault(ImageSize.Thumbnail)
+                        HostedPreviewUrl: HostedScreenshotUrls.SelectPreviewUrl(
+                            screenshot.Kind,
+                            urlsBySize
+                        ),
+                        HostedFullUrl: HostedScreenshotUrls.SelectFullUrl(urlsBySize)
                     );
                 })
                 .ToList()

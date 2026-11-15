@@ -221,6 +221,137 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
     }
 
     [Test]
+    public async Task GetReleaseOverviewImageUploadsAsync_ConfigsUploadingScreenshots_ReturnsScreenshotUploadsPerConfigOrderedByIndex()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.ScreenshotImages.2026-GRP");
+        var secondScreenshot = AddScreenshot(release, ReleaseScreenshotKind.Screenshot, index: 2);
+        var firstScreenshot = AddScreenshot(release, ReleaseScreenshotKind.Screenshot, index: 1);
+        var screenshotGrid = AddScreenshot(release, ReleaseScreenshotKind.ScreenshotGrid, index: 1);
+
+        var coverConfig = testData.AddImageUploadConfig("Cover and screens", release);
+        coverConfig.UploadScreenshots = true;
+        testData.AddImageUpload(
+            coverConfig,
+            MidnightUtc,
+            MidnightUtc,
+            [
+                ReleaseReadRepositoryTestData.CreateImageUrl(
+                    ImageSize.Full,
+                    "https://img.example/cover"
+                ),
+            ]
+        );
+        testData
+            .AddImageUpload(
+                coverConfig,
+                MidnightUtc.AddHours(1),
+                MidnightUtc.AddHours(1),
+                [
+                    ReleaseReadRepositoryTestData.CreateImageUrl(
+                        ImageSize.Thumbnail,
+                        "https://img.example/a1-thumb"
+                    ),
+                    ReleaseReadRepositoryTestData.CreateImageUrl(
+                        ImageSize.Medium,
+                        "https://img.example/a1-medium"
+                    ),
+                    ReleaseReadRepositoryTestData.CreateImageUrl(
+                        ImageSize.Full,
+                        "https://img.example/a1-full"
+                    ),
+                ]
+            )
+            .ReleaseScreenshot = firstScreenshot;
+        testData
+            .AddImageUpload(coverConfig, MidnightUtc.AddHours(1), null, [], UploadState.Failed)
+            .ReleaseScreenshot = secondScreenshot;
+
+        var screenshotsOnlyConfig = testData.AddImageUploadConfig("Screens only", release);
+        screenshotsOnlyConfig.UploadCover = false;
+        screenshotsOnlyConfig.UploadScreenshots = true;
+        screenshotsOnlyConfig.UploadScreenshotGrid = true;
+        testData
+            .AddImageUpload(
+                screenshotsOnlyConfig,
+                MidnightUtc.AddHours(2),
+                MidnightUtc.AddHours(2),
+                [
+                    ReleaseReadRepositoryTestData.CreateImageUrl(
+                        ImageSize.Full,
+                        "https://img.example/b2-full"
+                    ),
+                ]
+            )
+            .ReleaseScreenshot = secondScreenshot;
+        testData
+            .AddImageUpload(
+                screenshotsOnlyConfig,
+                MidnightUtc.AddHours(2),
+                MidnightUtc.AddHours(2),
+                [
+                    ReleaseReadRepositoryTestData.CreateImageUrl(
+                        ImageSize.Full,
+                        "https://img.example/grid-full"
+                    ),
+                ]
+            )
+            .ReleaseScreenshot = screenshotGrid;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetReleaseOverviewImageUploadsAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(config => config.ImageUploadConfigName)
+            .ShouldBe(["Cover and screens", "Screens only"]);
+
+        var coverResult = result[0];
+        coverResult.UploadCover.ShouldBeTrue();
+        coverResult.ImageUrls.Select(url => url.Url).ShouldBe(["https://img.example/cover"]);
+        coverResult
+            .ScreenshotImageUploads.Select(screenshot =>
+                (screenshot.Kind, screenshot.Index, screenshot.UploadState, screenshot.PreviewUrl)
+            )
+            .ShouldBe([
+                (
+                    ReleaseScreenshotKind.Screenshot,
+                    1,
+                    UploadState.Completed,
+                    "https://img.example/a1-medium"
+                ),
+                (ReleaseScreenshotKind.Screenshot, 2, UploadState.Failed, null),
+            ]);
+
+        var screenshotsOnlyResult = result[1];
+        screenshotsOnlyResult.UploadCover.ShouldBeFalse();
+        screenshotsOnlyResult.ImageUrls.ShouldBeEmpty();
+        screenshotsOnlyResult
+            .ScreenshotImageUploads.Select(screenshot =>
+                (screenshot.Kind, screenshot.Index, screenshot.UploadState, screenshot.FullUrl)
+            )
+            .ShouldBe([
+                (ReleaseScreenshotKind.Screenshot, 1, null, null),
+                (
+                    ReleaseScreenshotKind.Screenshot,
+                    2,
+                    UploadState.Completed,
+                    "https://img.example/b2-full"
+                ),
+                (
+                    ReleaseScreenshotKind.ScreenshotGrid,
+                    1,
+                    UploadState.Completed,
+                    "https://img.example/grid-full"
+                ),
+            ]);
+    }
+
+    [Test]
     public async Task GetReleaseOverviewImageUploadsAsync_ConfigsWithZeroOneAndSeveralUploads_ReturnsLatestUploadWithOrderedUrls()
     {
         // Arrange
@@ -985,5 +1116,26 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         sampleFile.AudioStreams.ShouldBeEmpty();
         sampleFile.SubtitleStreams.ShouldBeEmpty();
         sampleFile.MediaInfoText.ShouldBe("No media info");
+    }
+
+    private static ReleaseScreenshot AddScreenshot(
+        Release release,
+        ReleaseScreenshotKind kind,
+        int index
+    )
+    {
+        var screenshot = new ReleaseScreenshot
+        {
+            Kind = kind,
+            Index = index,
+            RelativeFilePath = $"screenshots/{kind}-{index}.jpg",
+            Width = 1920,
+            Height = 1080,
+            SizeBytes = 1024,
+            CreatedAt = MidnightUtc,
+        };
+        release.Screenshots.Add(screenshot);
+
+        return screenshot;
     }
 }

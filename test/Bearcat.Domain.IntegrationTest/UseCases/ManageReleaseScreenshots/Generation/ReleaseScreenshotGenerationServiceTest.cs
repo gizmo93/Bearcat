@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Generation;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Storage;
 using Bearcat.Domain.ValueObjects;
@@ -51,9 +52,23 @@ public class ReleaseScreenshotGenerationServiceTest(DatabaseProvider databasePro
                 .Build()
         );
         videoScreenshotCreatorMock = new Mock<IVideoScreenshotCreator>(MockBehavior.Strict);
+        var mediaMetadataService = new MediaMetadataService(
+            new MediaMetadataRepository(DbContext),
+            new Mock<IMediaMetadataExtractor>(MockBehavior.Strict).Object,
+            new FileSystemService(),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(DbContext),
+                new ControllableTimeProvider(GeneratedAt),
+                NullLogger<ReleaseClassificationService>.Instance
+            ),
+            new ControllableTimeProvider(GeneratedAt),
+            NullLogger<MediaMetadataService>.Instance
+        );
+
         service = new ReleaseScreenshotGenerationService(
             new ReleaseScreenshotGenerationRepository(DbContext),
             videoScreenshotCreatorMock.Object,
+            mediaMetadataService,
             new FileSystemService(),
             screenshotDirectory,
             new ControllableTimeProvider(GeneratedAt),
@@ -286,6 +301,95 @@ public class ReleaseScreenshotGenerationServiceTest(DatabaseProvider databasePro
     }
 
     [Test]
+    public async Task ProcessPendingAsync_MediaMetadataNotExtracted_ExtractsMetadataBeforeCreatingScreenshots()
+    {
+        // Arrange
+        var release = new Release
+        {
+            Name = "Movie.2025.2160p",
+            CreatedAt = new DateTime(2026, 11, 15, 12, 0, 0, DateTimeKind.Unspecified),
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = releaseFolderPath,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = "Movie group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+            CreateScreenshots = true,
+            ScreenshotCount = 2,
+            ImageUploadConfigs =
+            [
+                CreateImageUploadConfig(uploadScreenshots: true, uploadScreenshotGrid: false),
+            ],
+        };
+
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.ProcessPendingAsync(CancellationToken.None);
+
+        // Assert
+        await using var assertContext = CreateDbContext();
+        var storedRelease = await assertContext.Releases.SingleAsync(r => r.Id == release.Id);
+        storedRelease.MediaMetadataExtractedAt.ShouldBe(GeneratedAt);
+        storedRelease.ScreenshotGenerationErrorMessage.ShouldBe(
+            $"No video file was found in the release folder {releaseFolderPath}."
+        );
+        videoScreenshotCreatorMock.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task ProcessPendingAsync_ImageUploadConfigUploadsOnlyScreenshotGrid_CreatesOnlyScreenshotGrid()
+    {
+        // Arrange
+        var release = await AddReleaseAsync(
+            transferCharacteristics: "BT.709",
+            hdrFormat: null,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: true
+        );
+        var screenshotGridFilePath = Path.Combine(
+            screenshotDirectory.GetDirectoryPath(release.Id),
+            "screenshot-grid.jpg"
+        );
+        videoScreenshotCreatorMock
+            .Setup(creator =>
+                creator.CreateScreenshotGridAsync(
+                    It.IsAny<ScreenshotGridCreationRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new CreatedScreenshotGridFile(screenshotGridFilePath, 1920, 2400, 900_000)
+            );
+
+        // Act
+        await service.ProcessPendingAsync(CancellationToken.None);
+
+        // Assert
+        await using var assertContext = CreateDbContext();
+        var storedRelease = await assertContext
+            .Releases.Include(r => r.Screenshots)
+            .SingleAsync(r => r.Id == release.Id);
+        storedRelease.ScreenshotsGeneratedAt.ShouldBe(GeneratedAt);
+        storedRelease
+            .Screenshots.ShouldHaveSingleItem()
+            .Kind.ShouldBe(ReleaseScreenshotKind.ScreenshotGrid);
+        videoScreenshotCreatorMock.Verify(
+            creator =>
+                creator.CreateScreenshotGridAsync(
+                    It.IsAny<ScreenshotGridCreationRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        videoScreenshotCreatorMock.VerifyNoOtherCalls();
+    }
+
+    [Test]
     public async Task ScheduleRegenerationAsync_ReleaseWithScreenshots_RemovesScreenshotsAndFilesAndResetsState()
     {
         // Arrange
@@ -328,7 +432,12 @@ public class ReleaseScreenshotGenerationServiceTest(DatabaseProvider databasePro
         Directory.Exists(screenshotDirectoryPath).ShouldBeFalse();
     }
 
-    private async Task<Release> AddReleaseAsync(string? transferCharacteristics, string? hdrFormat)
+    private async Task<Release> AddReleaseAsync(
+        string? transferCharacteristics,
+        string? hdrFormat,
+        bool uploadScreenshots = true,
+        bool uploadScreenshotGrid = true
+    )
     {
         await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "video");
 
@@ -344,6 +453,7 @@ public class ReleaseScreenshotGenerationServiceTest(DatabaseProvider databasePro
                 EnableAutomaticReuploads = false,
                 NumberOfHoursUntilReupload = 24,
             },
+            MediaMetadataExtractedAt = GeneratedAt,
             CreateScreenshots = true,
             ScreenshotCount = 2,
             CreateScreenshotGrid = true,
@@ -366,6 +476,13 @@ public class ReleaseScreenshotGenerationServiceTest(DatabaseProvider databasePro
                     MediaInfoText = "General",
                 },
             ],
+            ImageUploadConfigs =
+            [
+                CreateImageUploadConfig(
+                    uploadScreenshots: uploadScreenshots,
+                    uploadScreenshotGrid: uploadScreenshotGrid
+                ),
+            ],
         };
 
         DbContext.Releases.Add(release);
@@ -373,6 +490,27 @@ public class ReleaseScreenshotGenerationServiceTest(DatabaseProvider databasePro
         DbContext.ChangeTracker.Clear();
 
         return release;
+    }
+
+    private static ImageUploadConfig CreateImageUploadConfig(
+        bool uploadScreenshots,
+        bool uploadScreenshotGrid
+    )
+    {
+        return new ImageUploadConfig
+        {
+            Name = "Screens",
+            ImageHosterRegistration = new ImageHosterRegistration
+            {
+                Name = "PiXhost",
+                ImageHosterClassName = "PixHost",
+                SerializedConfig = "{}",
+                IsActive = true,
+            },
+            UploadCover = false,
+            UploadScreenshots = uploadScreenshots,
+            UploadScreenshotGrid = uploadScreenshotGrid,
+        };
     }
 
     private static string CreateMediaInfoJson(string? transferCharacteristics, string? hdrFormat)

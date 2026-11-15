@@ -28,6 +28,8 @@ public class ReleaseScreenshotGenerationRepository(IBearcatWriteDbContext dbWrit
             .Releases.AsSplitQuery()
             .Include(release => release.MediaFiles)
             .Include(release => release.Screenshots)
+            .Include(release => release.ImageUploadConfigs)
+                .ThenInclude(config => config.ImageHosterRegistration)
             .FirstOrDefaultAsync(release => release.Id == releaseId, cancellationToken);
     }
 

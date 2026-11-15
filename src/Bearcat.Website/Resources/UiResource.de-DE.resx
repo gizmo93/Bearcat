@@ -2168,6 +2168,8 @@
   <data name="UploadScreenshotGrid" xml:space="preserve"><value>Screenshotraster</value></data>
   <data name="UploadScreenshotsHelp" xml:space="preserve"><value>Screenshots und das Screenshotraster werden hochgeladen, sobald sie für das Release erstellt wurden.</value></data>
   <data name="ImageUploadContentRequired" xml:space="preserve"><value>Wähle mindestens ein Bild zum Hochladen aus.</value></data>
-  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>Einige Screenshots sind lokal nicht mehr vorhanden und haben keinen fertigen Bildupload. Später hinzugefügte Bilduploadkonfigurationen bekommen Screenshots erst nach Neu erstellen.</value></data>
+  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>Diese Screenshots wurden nach dem Upload gelöscht. Mit „Neu erstellen“ lädst du sie zu weiteren Bilduploadkonfigurationen hoch.</value></data>
   <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Neu erstellen braucht ein Release vom Typ Managed, dessen Releaseordner noch existiert.</value></data>
+  <data name="ScreenshotsNoImageUploadConfigHint" xml:space="preserve"><value>Keine Bilduploadkonfiguration lädt Screenshots hoch. Füge oben unter Bilduploadkonfigurationen eine hinzu oder aktiviere Screenshots in einer vorhandenen.</value></data>
+  <data name="ScreenshotsWithCount" xml:space="preserve"><value>Screenshots ({0})</value></data>
 </root>
