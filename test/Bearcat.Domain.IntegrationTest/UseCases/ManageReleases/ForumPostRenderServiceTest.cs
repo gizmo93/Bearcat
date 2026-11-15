@@ -132,8 +132,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         result.Errors.ShouldBeEmpty();
         result.Content.ShouldBe(
             "https://img.example/full.jpg"
-                + "|[1 0:01:30 https://img.example/screenshot-1.jpg]"
-                + "[2 1:02:03 https://img.example/screenshot-2.jpg]"
+                + "|[1 00:01:30 https://img.example/screenshot-1.jpg]"
+                + "[2 01:02:03 https://img.example/screenshot-2.jpg]"
                 + "|https://img.example/grid.jpg|"
         );
     }

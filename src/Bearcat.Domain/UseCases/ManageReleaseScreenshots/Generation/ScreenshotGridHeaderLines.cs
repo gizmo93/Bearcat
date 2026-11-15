@@ -68,7 +68,7 @@ public static class ScreenshotGridHeaderLines
     {
         var hours = (int)duration.TotalHours;
 
-        return $"{hours.ToString(CultureInfo.InvariantCulture)}:{duration.ToString(@"mm\:ss", CultureInfo.InvariantCulture)}";
+        return $"{hours.ToString("00", CultureInfo.InvariantCulture)}:{duration.ToString(@"mm\:ss", CultureInfo.InvariantCulture)}";
     }
 
     private static string FormatVideoStream(MediaVideoStreamMetadata videoStream)

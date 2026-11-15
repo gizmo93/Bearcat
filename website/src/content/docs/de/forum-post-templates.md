@@ -155,7 +155,7 @@ Coverlinks jeder Bilduploadkonfiguration:
 
 - `imagelinks.<name>.screenshots`: eine Liste der hochgeladenen Screenshots, nach Nummer sortiert.
   Jeder Eintrag hat `full`, `medium` und `thumbnail` (die Grössen, die der Bildhoster liefert),
-  `index` (ab 1) und `timestamp` (Videoposition als `h:mm:ss`). Die Liste ist leer, solange nichts
+  `index` (ab 1) und `timestamp` (Videoposition als `hh:mm:ss`). Die Liste ist leer, solange nichts
   hochgeladen ist.
 - `imagelinks.<name>.screenshotgrid`: das Screenshotraster mit `full`, `medium` und `thumbnail`.
   Leer, solange das Raster nicht hochgeladen ist.

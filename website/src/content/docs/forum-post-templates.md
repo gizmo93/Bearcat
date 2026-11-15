@@ -155,7 +155,7 @@ each image upload configuration:
 
 - `imagelinks.<name>.screenshots`: a list of the uploaded screenshots, ordered by number. Each entry
   has `full`, `medium` and `thumbnail` (the sizes the image hoster returns), `index` (starting at 1)
-  and `timestamp` (video position as `h:mm:ss`). The list is empty while nothing is uploaded.
+  and `timestamp` (video position as `hh:mm:ss`). The list is empty while nothing is uploaded.
 - `imagelinks.<name>.screenshotgrid`: the screenshot grid with `full`, `medium` and `thumbnail`.
   Empty while the grid is not uploaded.
 

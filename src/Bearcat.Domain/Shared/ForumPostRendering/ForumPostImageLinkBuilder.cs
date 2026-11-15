@@ -45,7 +45,7 @@ public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
                         ForumPostTemplateVariableNode.CreateValueNode(
                             name: "timestamp",
                             path: "screenshot.timestamp",
-                            description: "Video position of the screenshot (h:mm:ss)."
+                            description: "Video position of the screenshot (hh:mm:ss)."
                         ),
                     ]
                 ),
@@ -176,7 +176,7 @@ public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
             screenshotLinks["index"] = screenshot.Index;
 
             screenshotLinks["timestamp"] = screenshot.Timestamp.ToString(
-                @"h\:mm\:ss",
+                @"hh\:mm\:ss",
                 CultureInfo.InvariantCulture
             );
 

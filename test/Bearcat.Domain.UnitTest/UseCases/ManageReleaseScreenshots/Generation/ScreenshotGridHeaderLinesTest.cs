@@ -36,7 +36,7 @@ public class ScreenshotGridHeaderLinesTest
         // Assert
         result.ShouldBe([
             "Movie.2025.2160p.mkv",
-            "Size: 1.5 GB | Duration: 1:52:03",
+            "Size: 1.5 GB | Duration: 01:52:03",
             "Video: HEVC, 3840x2160, 23.976 fps, Dolby Vision, HDR10 | Audio: E-AC-3 L R C LFE Ls Rs de, AAC 2 ch en",
         ]);
     }
@@ -58,7 +58,7 @@ public class ScreenshotGridHeaderLinesTest
         var result = ScreenshotGridHeaderLines.Build("clip.mp4", metadata);
 
         // Assert
-        result.ShouldBe(["clip.mp4", "Duration: 0:00:42", "Video: HEVC, 3840x2160, 23.976 fps"]);
+        result.ShouldBe(["clip.mp4", "Duration: 00:00:42", "Video: HEVC, 3840x2160, 23.976 fps"]);
     }
 
     private static MediaVideoStreamMetadata CreateVideoStream(
