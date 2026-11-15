@@ -1,0 +1,100 @@
+@using Bearcat.Website.Controllers
+
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div>
+                <BbCardTitle class="text-base">@L["Screenshots"]</BbCardTitle>
+                @if (overview?.ScreenshotsGeneratedAt is { } generatedAt)
+                {
+                    <p class="text-xs text-muted-foreground">@L["ScreenshotsCreatedAt", generatedAt.ToString("g")]</p>
+                }
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="ReloadAsync">
+                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                    @L["Refresh"]
+                </BbButton>
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="@(!CanRegenerate || isScheduling)"
+                          OnClick="ScheduleRegenerationAsync">
+                    <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+                    @L["RegenerateScreenshots"]
+                </BbButton>
+            </div>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        @switch (State)
+        {
+            case ReleaseScreenshotState.Disabled:
+                <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                    @L["ScreenshotsDisabledHint"]
+                </div>
+                break;
+            case ReleaseScreenshotState.NeedsManagedRelease:
+                <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                    @L["ScreenshotsNeedManagedReleaseHint"]
+                </div>
+                break;
+            case ReleaseScreenshotState.NoVideoFile:
+                <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                    @L["ScreenshotsNoVideoFileHint"]
+                </div>
+                break;
+            case ReleaseScreenshotState.Waiting:
+                <div class="flex items-center gap-2 rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-primary">
+                    <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                    @L["ScreenshotsWaitingHint"]
+                </div>
+                break;
+            case ReleaseScreenshotState.Failed:
+                <div class="space-y-1 rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+                    <p class="font-medium">@L["ScreenshotCreationFailed"]</p>
+                    <p class="break-words">@overview!.ScreenshotGenerationErrorMessage</p>
+                </div>
+                break;
+            case ReleaseScreenshotState.Created:
+                <div class="space-y-4">
+                    @if (Screenshots.Count > 0)
+                    {
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            @foreach (var screenshot in Screenshots)
+                            {
+                                <a href="@ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="block space-y-1">
+                                    <img src="@ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)"
+                                         alt="@L["ScreenshotNumber", screenshot.Index]"
+                                         loading="lazy"
+                                         class="aspect-video w-full rounded-md border border-border/70 bg-muted object-cover" />
+                                    <p class="text-xs text-muted-foreground">
+                                        @L["ScreenshotNumber", screenshot.Index] · @FormatTimestamp(screenshot.Timestamp)
+                                    </p>
+                                </a>
+                            }
+                        </div>
+                    }
+
+                    @if (ScreenshotGrid is { } screenshotGrid)
+                    {
+                        <a href="@ReleaseScreenshotController.GetUrl(screenshotGrid.ReleaseScreenshotId)"
+                           target="_blank"
+                           rel="noopener"
+                           class="block space-y-1">
+                            <img src="@ReleaseScreenshotController.GetUrl(screenshotGrid.ReleaseScreenshotId)"
+                                 alt="@L["ScreenshotGrid"]"
+                                 loading="lazy"
+                                 class="max-h-[32rem] w-full rounded-md border border-border/70 bg-muted object-contain" />
+                            <p class="text-xs text-muted-foreground">
+                                @L["ScreenshotGrid"] · @screenshotGrid.Width x @screenshotGrid.Height
+                            </p>
+                        </a>
+                    }
+                </div>
+                break;
+        }
+    </BbCardContent>
+</BbCard>

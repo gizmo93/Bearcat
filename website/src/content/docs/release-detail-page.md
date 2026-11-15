@@ -63,4 +63,7 @@ the name is followed by **local working copy**.
 
 Image uploads need a cover URL, for example from TMDB or xREL.
 
+The **Screenshots** card shows the created [screenshots](/Bearcat/release-templates-and-automations/#screenshots).
+Click an image to open it in full size.
+
 ![image-uploads.png](images/image-uploads.png)

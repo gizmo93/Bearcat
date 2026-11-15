@@ -43,6 +43,12 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                 && !r.ExcludeFromAutoCleanup
                 && r.ReleaseFolderPath != null
                 && !r.UploadConfigs.Any(uc => uc.UploadSource == UploadSource.VideoFiles)
+                && !(
+                    (r.CreateScreenshots || r.CreateScreenshotGrid)
+                    && r.MediaFiles.Any()
+                    && r.ScreenshotsGeneratedAt == null
+                    && r.ScreenshotGenerationErrorMessage == null
+                )
                 && (
                     (r.UploadsPostedAt != null && r.UploadsPostedAt <= cutoff)
                     || (

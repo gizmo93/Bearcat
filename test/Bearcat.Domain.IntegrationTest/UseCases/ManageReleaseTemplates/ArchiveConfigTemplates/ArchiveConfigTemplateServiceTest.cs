@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.ValueObjects;
@@ -10,6 +11,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseTemplates.Archive
 public class ArchiveConfigTemplateServiceTest(DatabaseProvider databaseProvider)
     : ReleaseTemplateIntegrationTest(databaseProvider)
 {
+    private static readonly ReleaseScreenshotSettings ScreenshotsDisabled = new(
+        CreateScreenshots: false,
+        ScreenshotCount: 6,
+        CreateScreenshotGrid: false,
+        ScreenshotGridColumns: 4,
+        ScreenshotGridRows: 4
+    );
+
     private ArchiveConfigTemplateService service = null!;
     private ReleaseTemplateService releaseTemplateService = null!;
 
@@ -100,6 +109,7 @@ public class ArchiveConfigTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
 
@@ -138,6 +148,7 @@ public class ArchiveConfigTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
         var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync();
@@ -178,6 +189,7 @@ public class ArchiveConfigTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
         var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync();

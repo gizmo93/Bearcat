@@ -1,0 +1,47 @@
+<div class="space-y-4 rounded-md border border-border/70 p-4">
+    <p class="text-sm font-semibold">@L["Screenshots"]</p>
+
+    <BbFormFieldSwitch @bind-Checked="FormModel.CreateScreenshots"
+                       Label="@L["CreateScreenshots"]"
+                       HelperText="@L["CreateScreenshotsHelp"]" />
+
+    @if (FormModel.CreateScreenshots)
+    {
+        <BbFormFieldNumericInput TValue="int"
+                                 @bind-Value="FormModel.ScreenshotCount"
+                                 Label="@L["ScreenshotCount"]"
+                                 Min="1"
+                                 Max="20"
+                                 Step="1"
+                                 AllowNegative="false"
+                                 ShowButtons="true" />
+    }
+
+    <BbFormFieldSwitch @bind-Checked="FormModel.CreateScreenshotGrid"
+                       Label="@L["CreateScreenshotGrid"]"
+                       HelperText="@L["CreateScreenshotGridHelp"]" />
+
+    @if (FormModel.CreateScreenshotGrid)
+    {
+        <div class="grid gap-4 sm:grid-cols-2">
+            <BbFormFieldNumericInput TValue="int"
+                                     @bind-Value="FormModel.ScreenshotGridColumns"
+                                     Label="@L["ScreenshotGridColumns"]"
+                                     Min="1"
+                                     Max="8"
+                                     Step="1"
+                                     AllowNegative="false"
+                                     ShowButtons="true" />
+
+            <BbFormFieldNumericInput TValue="int"
+                                     @bind-Value="FormModel.ScreenshotGridRows"
+                                     Label="@L["ScreenshotGridRows"]"
+                                     Min="1"
+                                     Max="10"
+                                     Step="1"
+                                     AllowNegative="false"
+                                     ShowButtons="true" />
+        </div>
+    }
+</div>
+

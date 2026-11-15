@@ -17,6 +17,11 @@ public class ReleaseTemplateConfiguration : IEntityTypeConfiguration<ReleaseTemp
         builder.Property(t => t.ReleaseCollectionPattern).IsRequired(false).HasMaxLength(1000);
         builder.Property(t => t.ReleaseCollectionKeyTemplate).IsRequired(false).HasMaxLength(500);
         builder.Property(t => t.ReleaseCollectionNameTemplate).IsRequired(false).HasMaxLength(500);
+        builder.Property(t => t.CreateScreenshots).IsRequired();
+        builder.Property(t => t.ScreenshotCount).IsRequired();
+        builder.Property(t => t.CreateScreenshotGrid).IsRequired();
+        builder.Property(t => t.ScreenshotGridColumns).IsRequired();
+        builder.Property(t => t.ScreenshotGridRows).IsRequired();
 
         builder
             .HasOne(t => t.ReleaseGroup)

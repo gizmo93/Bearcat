@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
@@ -249,10 +250,17 @@ public partial class FirstStartSetupReleaseTemplateStep(
         var releaseTemplateId = await operationRunner.RunAsync(
             (ReleaseTemplateService service) =>
                 service.CreateAsync(
-                    formModel.ReleaseTemplateName.Trim(),
-                    ReleaseType.Managed,
-                    ReleaseContentType.Movie,
-                    formModel.ReleaseGroupId!.Value
+                    name: formModel.ReleaseTemplateName.Trim(),
+                    releaseType: ReleaseType.Managed,
+                    releaseContentType: ReleaseContentType.Movie,
+                    releaseGroupId: formModel.ReleaseGroupId!.Value,
+                    screenshotSettings: new ReleaseScreenshotSettings(
+                        CreateScreenshots: false,
+                        ScreenshotCount: 6,
+                        CreateScreenshotGrid: false,
+                        ScreenshotGridColumns: 4,
+                        ScreenshotGridRows: 4
+                    )
                 )
         );
 

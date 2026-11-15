@@ -33,6 +33,11 @@ public class ReleaseTemplateRepository(
                 t.ReleaseCollectionPattern,
                 t.ReleaseCollectionKeyTemplate,
                 t.ReleaseCollectionNameTemplate,
+                t.CreateScreenshots,
+                t.ScreenshotCount,
+                t.CreateScreenshotGrid,
+                t.ScreenshotGridColumns,
+                t.ScreenshotGridRows,
                 t.ArchiveConfigTemplates.Count,
                 t.UploadConfigTemplates.Count,
                 t.ImageUploadConfigTemplates.Count,
@@ -246,6 +251,11 @@ public class ReleaseTemplateRepository(
             releaseTemplate.ReleaseCollectionPattern,
             releaseTemplate.ReleaseCollectionKeyTemplate,
             releaseTemplate.ReleaseCollectionNameTemplate,
+            releaseTemplate.CreateScreenshots,
+            releaseTemplate.ScreenshotCount,
+            releaseTemplate.CreateScreenshotGrid,
+            releaseTemplate.ScreenshotGridColumns,
+            releaseTemplate.ScreenshotGridRows,
             releaseTemplate
                 .ArchiveConfigTemplates.OrderBy(a => a.Name)
                 .ThenBy(a => a.Id)

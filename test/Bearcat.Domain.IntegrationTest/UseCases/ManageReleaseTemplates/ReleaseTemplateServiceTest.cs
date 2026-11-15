@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CollectionImageUploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
@@ -12,6 +13,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseTemplates;
 public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
     : ReleaseTemplateIntegrationTest(databaseProvider)
 {
+    private static readonly ReleaseScreenshotSettings ScreenshotsDisabled = new(
+        CreateScreenshots: false,
+        ScreenshotCount: 6,
+        CreateScreenshotGrid: false,
+        ScreenshotGridColumns: 4,
+        ScreenshotGridRows: 4
+    );
+
     private ReleaseTemplateService service = null!;
 
     [SetUp]
@@ -32,6 +41,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Managed,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
 
@@ -57,6 +67,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
 
@@ -91,6 +102,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Managed,
             ReleaseContentType.Movie,
             secondReleaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
 
@@ -117,6 +129,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 ReleaseType.Unmanaged,
                 ReleaseContentType.Movie,
                 releaseGroup.Id,
+                ScreenshotsDisabled,
                 cancellationToken: CancellationToken.None
             )
         );
@@ -151,6 +164,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
                 ReleaseType.Managed,
                 ReleaseContentType.Game,
                 releaseGroup.Id,
+                ScreenshotsDisabled,
                 cancellationToken: CancellationToken.None
             )
         );
@@ -200,6 +214,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Managed,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
 
@@ -240,6 +255,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Managed,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             ReleaseCollectionDetectionMode.Disabled,
             cancellationToken: CancellationToken.None
         );

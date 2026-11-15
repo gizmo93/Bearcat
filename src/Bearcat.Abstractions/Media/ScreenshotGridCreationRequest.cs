@@ -6,7 +6,7 @@ public sealed record ScreenshotGridCreationRequest(
     VideoTransferCharacteristic TransferCharacteristic,
     int Columns,
     int Rows,
-    int SheetWidthPixels,
+    int GridWidthPixels,
     IReadOnlyList<string> HeaderLines,
     string OutputFilePath
 );

@@ -30,6 +30,21 @@ Unterordner lassen sich nicht auswählen.
 Aktiviere **Collectionerkennung** im Template, um zusammengehörige Releases zu gruppieren, etwa die Folgen
 einer TV-Staffel. Siehe [Releasecollections](/Bearcat/de/release-collections/).
 
+### Screenshots
+
+Die Gruppe **Screenshots** im Template und in den Releaseeinstellungen hat zwei Optionen:
+
+| Option | Standard | Ergebnis |
+| --- | --- | --- |
+| **Screenshots erstellen** | Aus, 6 Screenshots | Einzelne Screenshots (1 bis 20) in gleichen Abständen. |
+| **Screenshotraster erstellen** | Aus, 4 Spalten x 4 Zeilen | Ein 1920 Pixel breites Bild mit bis zu 8 Spalten und 10 Zeilen und einer Kopfzeile mit Angaben zu Datei, Video und Audio. |
+
+- Nur Releases vom Typ Managed mit Releaseordner bekommen Screenshots.
+- Bearcat verwendet die grösste Videodatei im Releaseordner.
+- Videos mit HDR10 oder HLG werden auf SDR umgerechnet. Dolby Vision ohne Basisschicht in HDR10 oder HLG wird nicht unterstützt.
+- Die Hintergrundaufgabe **Screenshot creation** erstellt sie. ffmpeg wird [bei Bedarf heruntergeladen](/Bearcat/de/advanced-configuration/#ffmpeg).
+- Der Tab **Bilder** eines Releases zeigt das Ergebnis oder den Fehler. **Neu erstellen** erstellt sie erneut, etwa nach einer Änderung der Optionen.
+
 ## Ordnerautomatisierungen einrichten
 
 1. Erstelle ein Releasetemplate, öffne dann **Ordnerautomatisierungen** und klicke auf **Neue Ordnerautomatisierung**.

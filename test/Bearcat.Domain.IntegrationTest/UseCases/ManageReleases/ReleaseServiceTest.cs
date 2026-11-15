@@ -15,6 +15,8 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Storage;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -34,9 +36,18 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
+    private static readonly ReleaseScreenshotSettings ScreenshotsDisabled = new(
+        CreateScreenshots: false,
+        ScreenshotCount: 6,
+        CreateScreenshotGrid: false,
+        ScreenshotGridColumns: 4,
+        ScreenshotGridRows: 4
+    );
+
     private Mock<IHosterFactory> hosterFactoryMock = null!;
     private Mock<IMediaMetadataDatabaseFactory> metadataDatabaseFactoryMock = null!;
     private ReleaseService service = null!;
+    private ReleaseScreenshotDirectory releaseScreenshotDirectory = null!;
     private string tempRootPath = null!;
 
     [SetUp]
@@ -49,6 +60,13 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
         var unmanagedReleaseArchiveInitializer = new UnmanagedReleaseArchiveInitializationService(
             new RealArchiverFactory()
+        );
+        releaseScreenshotDirectory = new ReleaseScreenshotDirectory(
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(
+                    new Dictionary<string, string?> { ["Bearcat:DataDirectory"] = tempRootPath }
+                )
+                .Build()
         );
         service = new ReleaseService(
             new ReleaseWriteRepository(DbContext),
@@ -73,7 +91,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 ),
                 NullLogger<ReleaseCollectionInfoResolutionService>.Instance,
                 timeProvider
-            )
+            ),
+            releaseScreenshotDirectory
         );
     }
 
@@ -100,8 +119,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -133,8 +153,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.TvShowEpisode,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -160,8 +181,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 ReleaseContentType.Game,
                 releaseGroup.Id,
                 null,
+                ScreenshotsDisabled,
                 false,
-                CancellationToken.None
+                cancellationToken: CancellationToken.None
             )
         );
 
@@ -191,8 +213,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             secondGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -221,8 +244,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 ReleaseContentType.Movie,
                 releaseGroup.Id,
                 null,
+                ScreenshotsDisabled,
                 false,
-                CancellationToken.None
+                cancellationToken: CancellationToken.None
             )
         );
 
@@ -248,8 +272,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 ReleaseContentType.Movie,
                 releaseGroup.Id,
                 null,
+                ScreenshotsDisabled,
                 false,
-                CancellationToken.None
+                cancellationToken: CancellationToken.None
             )
         );
 
@@ -272,8 +297,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -353,11 +379,17 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task DeleteAsync_ReleaseExists_RemovesRelease()
+    public async Task DeleteAsync_ReleaseExists_RemovesReleaseAndScreenshotDirectory()
     {
         // Arrange
         var releaseGroup = await AddReleaseGroupAsync("Managed releases");
         var release = await AddReleaseAsync(releaseGroup.Id);
+        var screenshotDirectoryPath = releaseScreenshotDirectory.GetDirectoryPath(release.Id);
+        Directory.CreateDirectory(screenshotDirectoryPath);
+        await File.WriteAllTextAsync(
+            Path.Combine(screenshotDirectoryPath, "screenshot-01.jpg"),
+            "jpeg"
+        );
 
         // Act
         await service.DeleteAsync(release.Id, CancellationToken.None);
@@ -366,6 +398,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         var result = await DbContext.Releases.AnyAsync();
 
         result.ShouldBeFalse();
+        Directory.Exists(screenshotDirectoryPath).ShouldBeFalse();
     }
 
     [Test]
@@ -395,7 +428,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateFromTemplateAsync_ValidTemplate_PersistsReleaseWithConfigs()
+    public async Task CreateFromTemplateAsync_ValidTemplate_PersistsReleaseWithConfigsAndScreenshotSettings()
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync();
@@ -424,6 +457,11 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
         release.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         release.ReleaseGroupId.ShouldBe(seed.ReleaseGroupId);
+        release.CreateScreenshots.ShouldBeTrue();
+        release.ScreenshotCount.ShouldBe(8);
+        release.CreateScreenshotGrid.ShouldBeTrue();
+        release.ScreenshotGridColumns.ShouldBe(5);
+        release.ScreenshotGridRows.ShouldBe(6);
 
         var archiveConfig = release.ArchiveConfigs.Single();
         archiveConfig.Name.ShouldBe("RAR Forum A");
@@ -989,8 +1027,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -1039,8 +1078,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -1157,8 +1197,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Act
@@ -1183,8 +1224,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Act
@@ -1248,8 +1290,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            ScreenshotsDisabled,
             false,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Act
@@ -1836,6 +1879,11 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseType = releaseType,
             ReleaseContentType = ReleaseContentType.TvShowEpisode,
             ReleaseGroup = releaseGroup,
+            CreateScreenshots = true,
+            ScreenshotCount = 8,
+            CreateScreenshotGrid = true,
+            ScreenshotGridColumns = 5,
+            ScreenshotGridRows = 6,
             ArchiveConfigTemplates =
             [
                 new ArchiveConfigTemplate

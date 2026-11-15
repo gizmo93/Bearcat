@@ -2144,4 +2144,21 @@
   <data name="FfmpegUpdate" xml:space="preserve"><value>Update</value></data>
   <data name="FfmpegDownloading" xml:space="preserve"><value>Downloading...</value></data>
   <data name="FfmpegInstallFailed" xml:space="preserve"><value>Download failed: {0}</value></data>
+  <data name="Screenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="CreateScreenshots" xml:space="preserve"><value>Create screenshots</value></data>
+  <data name="CreateScreenshotsHelp" xml:space="preserve"><value>Creates single screenshots from the largest video file in the release folder.</value></data>
+  <data name="ScreenshotCount" xml:space="preserve"><value>Screenshot count</value></data>
+  <data name="CreateScreenshotGrid" xml:space="preserve"><value>Create screenshot grid</value></data>
+  <data name="CreateScreenshotGridHelp" xml:space="preserve"><value>Creates one 1920 pixel wide image with evenly spaced frames and a header with file, video, and audio details.</value></data>
+  <data name="ScreenshotGridColumns" xml:space="preserve"><value>Columns</value></data>
+  <data name="ScreenshotGridRows" xml:space="preserve"><value>Rows</value></data>
+  <data name="RegenerateScreenshots" xml:space="preserve"><value>Regenerate</value></data>
+  <data name="ScreenshotsCreatedAt" xml:space="preserve"><value>Created {0}</value></data>
+  <data name="ScreenshotsDisabledHint" xml:space="preserve"><value>Screenshots are off for this release. Turn them on in the release settings.</value></data>
+  <data name="ScreenshotsNeedManagedReleaseHint" xml:space="preserve"><value>Screenshots need a managed release with its release folder.</value></data>
+  <data name="ScreenshotsNoVideoFileHint" xml:space="preserve"><value>No video file was found in the release folder.</value></data>
+  <data name="ScreenshotsWaitingHint" xml:space="preserve"><value>Screenshots are created in the background shortly.</value></data>
+  <data name="ScreenshotCreationFailed" xml:space="preserve"><value>Screenshots could not be created</value></data>
+  <data name="ScreenshotNumber" xml:space="preserve"><value>Screenshot {0}</value></data>
+  <data name="ScreenshotGrid" xml:space="preserve"><value>Screenshot grid</value></data>
 </root>

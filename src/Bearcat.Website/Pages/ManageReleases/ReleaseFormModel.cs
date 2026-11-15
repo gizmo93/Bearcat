@@ -1,4 +1,5 @@
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleaseScreenshots;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
@@ -17,6 +18,8 @@ public class ReleaseFormModel
     public string FolderPath { get; set; } = string.Empty;
 
     public bool ExcludeFromAutoCleanup { get; set; }
+
+    public ReleaseScreenshotSettingsFormModel ScreenshotSettings { get; set; } = new();
 
     public bool IsEdit { get; set; }
 }

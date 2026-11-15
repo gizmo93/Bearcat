@@ -63,4 +63,7 @@ verwendet, folgt dem Namen **lokale Arbeitskopie**.
 
 Für Bilduploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL.
 
+Die Karte **Screenshots** zeigt die erstellten [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots).
+Klicke auf ein Bild, um es in voller Grösse zu öffnen.
+
 ![Bilduploads](../images/image-uploads.png)

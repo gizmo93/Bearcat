@@ -122,7 +122,8 @@ public partial class CreateOrEditReleaseDialog(
                             releaseContentType: formModel.ReleaseContentType,
                             releaseGroupId: formModel.ReleaseGroupId,
                             primaryLanguageCode: formModel.PrimaryLanguageCode,
-                            excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
+                            excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup,
+                            screenshotSettings: formModel.ScreenshotSettings.ToSettings()
                         )
                 );
             }
@@ -158,7 +159,8 @@ public partial class CreateOrEditReleaseDialog(
                         releaseContentType: formModel.ReleaseContentType,
                         releaseGroupId: formModel.ReleaseGroupId,
                         primaryLanguageCode: formModel.PrimaryLanguageCode,
-                        excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
+                        excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup,
+                        screenshotSettings: formModel.ScreenshotSettings.ToSettings()
                     )
             );
         }

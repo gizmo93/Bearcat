@@ -39,6 +39,7 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
@@ -159,6 +160,11 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
             services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
+            services.AddScoped<
+                IReleaseScreenshotGenerationRepository,
+                ReleaseScreenshotGenerationRepository
+            >();
+            services.AddScoped<IReleaseScreenshotReadRepository, ReleaseScreenshotReadRepository>();
             services.AddScoped<IReleaseClassificationRepository, ReleaseClassificationRepository>();
             services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();

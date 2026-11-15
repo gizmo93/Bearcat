@@ -66,10 +66,9 @@ public class AddReleaseOnlineStateAndUploadOldestUploadedFileCheckedAtMigrationT
         await MigrateAsync(MigrationName);
 
         // Assert
-        var onlineStatesByReleaseId = await DbContext.Releases.ToDictionaryAsync(
-            release => release.Id,
-            release => release.OnlineState
-        );
+        var onlineStatesByReleaseId = await DbContext
+            .Releases.Select(release => new { release.Id, release.OnlineState })
+            .ToDictionaryAsync(release => release.Id, release => release.OnlineState);
         onlineStatesByReleaseId.ShouldBe(
             new Dictionary<int, OnlineState>
             {

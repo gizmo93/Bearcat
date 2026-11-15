@@ -54,6 +54,22 @@ public class Release
 
     public DateTime? MediaMetadataExtractedAt { get; set; }
 
+    public bool CreateScreenshots { get; set; }
+
+    public int ScreenshotCount { get; set; } = 6;
+
+    public bool CreateScreenshotGrid { get; set; }
+
+    public int ScreenshotGridColumns { get; set; } = 4;
+
+    public int ScreenshotGridRows { get; set; } = 4;
+
+    public List<ReleaseScreenshot> Screenshots { get; set; } = [];
+
+    public DateTime? ScreenshotsGeneratedAt { get; set; }
+
+    public string? ScreenshotGenerationErrorMessage { get; set; }
+
     public DateTime? UploadsPostedAt { get; set; }
 
     public bool ExcludeFromAutoCleanup { get; set; }

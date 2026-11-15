@@ -15,7 +15,12 @@ public record ReleaseReadModel(
     int OnlineUploadConfigsCount,
     bool ExcludeFromAutoCleanup,
     DateTime? UploadsPostedAt,
-    bool HasUploadConfigsWaitingForInitialUpload
+    bool HasUploadConfigsWaitingForInitialUpload,
+    bool CreateScreenshots,
+    int ScreenshotCount,
+    bool CreateScreenshotGrid,
+    int ScreenshotGridColumns,
+    int ScreenshotGridRows
 )
 {
     public OnlineState? OnlineState

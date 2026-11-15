@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
@@ -13,6 +14,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         ReleaseType releaseType,
         ReleaseContentType releaseContentType,
         int releaseGroupId,
+        ReleaseScreenshotSettings screenshotSettings,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.Disabled,
         string? releaseCollectionPattern = null,
@@ -32,6 +34,11 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             ReleaseCollectionKeyTemplate = releaseCollectionKeyTemplate.TrimOrNullWhenWhitespace(),
             ReleaseCollectionNameTemplate =
                 releaseCollectionNameTemplate.TrimOrNullWhenWhitespace(),
+            CreateScreenshots = screenshotSettings.CreateScreenshots,
+            ScreenshotCount = screenshotSettings.ScreenshotCount,
+            CreateScreenshotGrid = screenshotSettings.CreateScreenshotGrid,
+            ScreenshotGridColumns = screenshotSettings.ScreenshotGridColumns,
+            ScreenshotGridRows = screenshotSettings.ScreenshotGridRows,
         };
 
         UnmanagedArchiveConfigTemplates.AddIfMissing(releaseTemplate);
@@ -48,6 +55,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         ReleaseType releaseType,
         ReleaseContentType releaseContentType,
         int releaseGroupId,
+        ReleaseScreenshotSettings screenshotSettings,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.Disabled,
         string? releaseCollectionPattern = null,
@@ -87,6 +95,12 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseCollectionKeyTemplate.TrimOrNullWhenWhitespace();
         releaseTemplate.ReleaseCollectionNameTemplate =
             releaseCollectionNameTemplate.TrimOrNullWhenWhitespace();
+
+        releaseTemplate.CreateScreenshots = screenshotSettings.CreateScreenshots;
+        releaseTemplate.ScreenshotCount = screenshotSettings.ScreenshotCount;
+        releaseTemplate.CreateScreenshotGrid = screenshotSettings.CreateScreenshotGrid;
+        releaseTemplate.ScreenshotGridColumns = screenshotSettings.ScreenshotGridColumns;
+        releaseTemplate.ScreenshotGridRows = screenshotSettings.ScreenshotGridRows;
 
         if (releaseCollectionDetectionMode == ReleaseCollectionDetectionMode.Disabled)
         {

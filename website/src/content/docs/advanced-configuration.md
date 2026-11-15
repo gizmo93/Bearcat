@@ -32,6 +32,7 @@ All tasks are enabled by default.
 | Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/Bearcat/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
 | Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
+| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/Bearcat/release-templates-and-automations/#screenshots) for managed releases that have them enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
 | SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. |

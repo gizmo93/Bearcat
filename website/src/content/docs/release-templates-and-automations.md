@@ -29,6 +29,21 @@ folder. Deselect the subfolders you do not want. Subfolders already in use canno
 Enable **Collection detection** in the template to group related releases, such as episodes of a TV
 season. See [Release Collections](/Bearcat/release-collections/).
 
+### Screenshots
+
+The **Screenshots** group in the template and in the release settings has two options:
+
+| Option | Default | Result |
+| --- | --- | --- |
+| **Create screenshots** | Off, 6 screenshots | Single screenshots (1 to 20) at even intervals. |
+| **Create screenshot grid** | Off, 4 columns x 4 rows | One 1920 pixel wide image with up to 8 columns and 10 rows and a header with file, video, and audio details. |
+
+- Only managed releases with their release folder get screenshots.
+- Bearcat uses the largest video file in the release folder.
+- HDR10 and HLG videos are tonemapped to SDR. Dolby Vision without an HDR10 or HLG base layer is not supported.
+- The **Screenshot creation** background task creates them. ffmpeg is [downloaded on demand](/Bearcat/advanced-configuration/#ffmpeg).
+- The **Images** tab of a release shows the result or the error. **Regenerate** creates them again, for example after changing the options.
+
 ## Setting up folder automations
 
 1. Create a release template, then open **Folder automations** and click **New folder automation**.

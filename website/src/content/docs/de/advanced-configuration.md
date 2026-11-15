@@ -32,6 +32,7 @@ Standardmässig sind alle Aufgaben aktiv.
 | Auto cleanup | Alle 30 Minuten | Wendet aktivierte [Aufräumregeln](#automatisches-aufräumen) nach Ablauf ihrer Aufbewahrungsfristen an. Löscht [lokale Arbeitskopien](/Bearcat/de/archive-storage-folders/#reuploads) gespeicherter Archive, sobald ihre Uploads abgeschlossen sind. |
 | Archive upload | Alle 20 Sekunden | Lädt Archive zu den konfigurierten Hostern hoch. |
 | Image upload | Alle 30 Sekunden | Lädt Coverbilder von Releases zu konfigurierten Bildhostern hoch, wenn eine Cover-URL vorhanden ist. |
+| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/Bearcat/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, bei denen sie aktiviert sind. |
 | Upload state check | Alle 20 Sekunden | Prüft Links und plant erste Uploads sowie automatische Reuploads. |
 | Link crypter container creation | Alle 20 Sekunden | Erstellt Linkcryptercontainer für abgeschlossene Uploads. |
 | SQLite query planner statistics | Beim Start, dann täglich | Nur mit SQLite. Aktualisiert die Statistiken, mit denen SQLite Indizes auswählt. Der erste Lauf kann bei grossen Datenbanken mehrere Sekunden dauern. |

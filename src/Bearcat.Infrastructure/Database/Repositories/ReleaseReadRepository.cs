@@ -1864,7 +1864,12 @@ public class ReleaseReadRepository(
             entity
                 .UploadConfigs.AsQueryable()
                 .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-                .Any(uc => !uc.Uploads.Any())
+                .Any(uc => !uc.Uploads.Any()),
+            entity.CreateScreenshots,
+            entity.ScreenshotCount,
+            entity.CreateScreenshotGrid,
+            entity.ScreenshotGridColumns,
+            entity.ScreenshotGridRows
         );
     }
 

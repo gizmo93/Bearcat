@@ -1413,6 +1413,12 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("CreateScreenshotGrid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CreateScreenshots")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
@@ -1466,6 +1472,22 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.Property<int>("ReleaseType")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScreenshotCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ScreenshotGenerationErrorMessage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ScreenshotGridColumns")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScreenshotGridRows")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ScreenshotsGeneratedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UploadsPostedAt")
                         .HasPrecision(4)
@@ -2016,10 +2038,59 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.ToTable("ReleaseQualityIssues");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseScreenshot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RelativeFilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan?>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId");
+
+                    b.ToTable("ReleaseScreenshots");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CreateScreenshotGrid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CreateScreenshots")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -2049,6 +2120,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ReleaseType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScreenshotCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScreenshotGridColumns")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ScreenshotGridRows")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -3305,6 +3385,17 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("Release");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseScreenshot", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("Screenshots")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseGroup", "ReleaseGroup")
@@ -3650,6 +3741,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("ReleaseInfo");
 
                     b.Navigation("ReleaseNfo");
+
+                    b.Navigation("Screenshots");
 
                     b.Navigation("UploadConfigs");
                 });

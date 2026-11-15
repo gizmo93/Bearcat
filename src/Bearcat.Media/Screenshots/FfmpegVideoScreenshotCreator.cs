@@ -68,7 +68,7 @@ public sealed class FfmpegVideoScreenshotCreator(IFfmpegInstaller ffmpegInstalle
         var layout = ScreenshotGridLayout.Calculate(
             columns: request.Columns,
             rows: request.Rows,
-            sheetWidthPixels: request.SheetWidthPixels,
+            sheetWidthPixels: request.GridWidthPixels,
             headerLineCount: request.HeaderLines.Count
         );
 
