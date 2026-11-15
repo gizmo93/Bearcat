@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bearcat.Infrastructure.Migrations.Postgres
 {
     [DbContext(typeof(BearcatDbContext))]
-    [Migration("20261115213136_AddScreenshotImageUploads")]
-    partial class AddScreenshotImageUploads
+    [Migration("20261115222005_AddReleaseScreenshots")]
+    partial class AddReleaseScreenshots
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2175,6 +2175,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<DateTime?>("FileDeletedAt")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
 

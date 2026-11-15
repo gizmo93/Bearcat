@@ -155,7 +155,7 @@ public class ReleaseCollectionForumPostRenderSource(
             Children =
             [
                 .. variable.Children,
-                ForumPostImageLinkBuilder.CreateVariableNode(ReleaseImageLinksVariablePath),
+                ForumPostImageLinkBuilder.CreateReleaseVariableNode(ReleaseImageLinksVariablePath),
             ],
         };
     }

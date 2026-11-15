@@ -106,6 +106,61 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                 nullable: true
             );
 
+            migrationBuilder.AddColumn<int>(
+                name: "ReleaseScreenshotId",
+                table: "ImageUploads",
+                type: "INTEGER",
+                nullable: true
+            );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "UploadCover",
+                table: "ImageUploadConfigTemplates",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: true
+            );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "UploadScreenshotGrid",
+                table: "ImageUploadConfigTemplates",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: false
+            );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "UploadScreenshots",
+                table: "ImageUploadConfigTemplates",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: false
+            );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "UploadCover",
+                table: "ImageUploadConfigs",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: true
+            );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "UploadScreenshotGrid",
+                table: "ImageUploadConfigs",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: false
+            );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "UploadScreenshots",
+                table: "ImageUploadConfigs",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: false
+            );
+
             migrationBuilder.CreateTable(
                 name: "ReleaseScreenshots",
                 columns: table => new
@@ -126,6 +181,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     Height = table.Column<int>(type: "INTEGER", nullable: false),
                     SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", precision: 4, nullable: false),
+                    FileDeletedAt = table.Column<DateTime>(
+                        type: "TEXT",
+                        precision: 4,
+                        nullable: true
+                    ),
                 },
                 constraints: table =>
                 {
@@ -141,16 +201,41 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
             );
 
             migrationBuilder.CreateIndex(
+                name: "IX_ImageUploads_ReleaseScreenshotId",
+                table: "ImageUploads",
+                column: "ReleaseScreenshotId"
+            );
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ReleaseScreenshots_ReleaseId",
                 table: "ReleaseScreenshots",
                 column: "ReleaseId"
+            );
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ImageUploads_ReleaseScreenshots_ReleaseScreenshotId",
+                table: "ImageUploads",
+                column: "ReleaseScreenshotId",
+                principalTable: "ReleaseScreenshots",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade
             );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_ImageUploads_ReleaseScreenshots_ReleaseScreenshotId",
+                table: "ImageUploads"
+            );
+
             migrationBuilder.DropTable(name: "ReleaseScreenshots");
+
+            migrationBuilder.DropIndex(
+                name: "IX_ImageUploads_ReleaseScreenshotId",
+                table: "ImageUploads"
+            );
 
             migrationBuilder.DropColumn(name: "CreateScreenshotGrid", table: "ReleaseTemplates");
 
@@ -179,6 +264,26 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
             migrationBuilder.Sql(
                 """ALTER TABLE "Releases" DROP COLUMN "ScreenshotsGeneratedAt" """
             );
+
+            migrationBuilder.DropColumn(name: "ReleaseScreenshotId", table: "ImageUploads");
+
+            migrationBuilder.DropColumn(name: "UploadCover", table: "ImageUploadConfigTemplates");
+
+            migrationBuilder.DropColumn(
+                name: "UploadScreenshotGrid",
+                table: "ImageUploadConfigTemplates"
+            );
+
+            migrationBuilder.DropColumn(
+                name: "UploadScreenshots",
+                table: "ImageUploadConfigTemplates"
+            );
+
+            migrationBuilder.DropColumn(name: "UploadCover", table: "ImageUploadConfigs");
+
+            migrationBuilder.DropColumn(name: "UploadScreenshotGrid", table: "ImageUploadConfigs");
+
+            migrationBuilder.DropColumn(name: "UploadScreenshots", table: "ImageUploadConfigs");
         }
     }
 }

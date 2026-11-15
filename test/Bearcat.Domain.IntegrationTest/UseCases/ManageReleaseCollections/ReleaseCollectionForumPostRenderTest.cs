@@ -228,6 +228,9 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 + ";{{ release.classification.title }}/{{ release.classification.resolution }}"
                 + "{{ for crypter in release.link_crypters }};{{ crypter.container_link }}{{ end }}"
                 + ";{{ release.imagelinks.cover.full }}"
+                + "{{ for screenshot in release.imagelinks.cover.screenshots }}"
+                + ";{{ screenshot.index }}={{ screenshot.full }}"
+                + "{{ end }}"
                 + "{{ end }}|{{ imagelinks.cover.full }}"
                 + "|{{ collection.main_video_total_size_bytes }}",
             CreatedAt = DateTime.UtcNow,
@@ -245,8 +248,10 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         result.Content.ShouldBe(
             "|Bodies.2023.S01E01-GRP;E01 nfo;Bodies.2023.S01E01.Info;Bodies E01/1080p"
                 + ";https://crypter.example/E01;https://img.example/E01.jpg"
+                + ";1=https://img.example/E01-screenshot-1.jpg"
                 + "|Bodies.2023.S01E02-GRP;E02 nfo;Bodies.2023.S01E02.Info;Bodies E02/2160p"
                 + ";https://crypter.example/E02;https://img.example/E02.jpg"
+                + ";1=https://img.example/E02-screenshot-1.jpg"
                 + "||3000"
         );
     }
@@ -351,10 +356,17 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 "release.imagelinks",
             ]);
 
-        releasesVariable
-            .Children.Single(node => node.Path == "release.imagelinks")
+        var releaseImageLinksVariable = releasesVariable.Children.Single(node =>
+            node.Path == "release.imagelinks"
+        );
+        releaseImageLinksVariable
             .Children.Select(node => node.Insertion?.Text)
             .ShouldContain("{{ release.imagelinks.<image_upload_config_name>.full }}");
+        releaseImageLinksVariable
+            .Children.Select(node => node.LoopStatement)
+            .ShouldContain(
+                "for screenshot in release.imagelinks.<image_upload_config_name>.screenshots"
+            );
 
         var uploadSlotsVariable = variables.Single(node => node.Name == "upload_slots");
         uploadSlotsVariable.LoopStatement.ShouldBe("for upload_slot in upload_slots");
@@ -367,10 +379,11 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             .Children.Single(node => node.Path == "upload_slot.link_crypters")
             .LoopStatement.ShouldBe("for crypter in upload_slot.link_crypters");
 
-        variables
-            .Single(node => node.Path == "imagelinks")
+        var collectionImageLinksVariable = variables.Single(node => node.Path == "imagelinks");
+        collectionImageLinksVariable
             .Children.Select(node => node.Insertion?.Text)
             .ShouldContain("{{ imagelinks.<image_upload_config_name>.full }}");
+        collectionImageLinksVariable.Children.ShouldAllBe(node => node.LoopStatement == null);
     }
 
     [Test]
@@ -595,7 +608,41 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             ],
         };
 
-        DbContext.AddRange(release, container, imageUploadConfig, imageUpload);
+        var screenshotImageUpload = new ImageUpload
+        {
+            ImageUploadConfig = imageUploadConfig,
+            ReleaseScreenshot = new ReleaseScreenshot
+            {
+                Release = release,
+                Kind = ReleaseScreenshotKind.Screenshot,
+                Index = 1,
+                Timestamp = TimeSpan.FromMinutes(5),
+                RelativeFilePath = "screenshots/screenshot-01.jpg",
+                Width = 1920,
+                Height = 1080,
+                SizeBytes = 1024,
+                CreatedAt = DateTime.UtcNow,
+            },
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            ImageUrls =
+            [
+                new ImageUploadUrl
+                {
+                    ImageSize = ImageSize.Full,
+                    Url = $"https://img.example/{episode}-screenshot-1.jpg",
+                },
+            ],
+        };
+
+        DbContext.AddRange(
+            release,
+            container,
+            imageUploadConfig,
+            imageUpload,
+            screenshotImageUpload
+        );
     }
 
     private async Task<ReleaseCollection> AddCollectionWithImageUploadAsync()

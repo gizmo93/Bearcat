@@ -45,6 +45,7 @@ Die Gruppe **Screenshots** im Template und in den Releaseeinstellungen hat zwei 
 - Die Hintergrundaufgabe **Screenshot creation** erstellt sie. ffmpeg wird [bei Bedarf heruntergeladen](/Bearcat/de/advanced-configuration/#ffmpeg).
 - Der Tab **Bilder** eines Releases zeigt das Ergebnis oder den Fehler. **Neu erstellen** erstellt sie erneut, etwa nach einer Änderung der Optionen.
 - Um sie zu einem Bildhoster hochzuladen, aktiviere **Screenshots** oder **Screenshotraster** in einer [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration). Neu erstellen ersetzt ihre Bilduploads.
+- Forenpostvorlagen können die hochgeladenen Bilder verwenden, siehe [Screenshots in Forenpostvorlagen](/Bearcat/de/forum-post-templates/#screenshots).
 - Screenshotdateien sind temporär. Bearcat löscht sie, sobald jede passende Bilduploadkonfiguration sie hochgeladen hat, oder sofort, wenn keine Konfiguration sie hochlädt. Danach zeigt der Tab **Bilder** die gehosteten Bilder. **Neu erstellen** braucht ein Release vom Typ Managed, dessen Releaseordner noch existiert.
 
 ## Ordnerautomatisierungen einrichten

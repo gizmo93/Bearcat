@@ -995,8 +995,68 @@ public class ReleaseReadRepository(
             cancellationToken
         );
 
+        var screenshotUrls = await dbRead
+            .ImageUploadUrls.Where(url =>
+                url.ImageUpload.ReleaseScreenshotId != null
+                && url.ImageUpload.UploadState == UploadState.Completed
+                && EF.Parameter(releaseIds).Contains(url.ImageUpload.ReleaseScreenshot!.ReleaseId)
+                && url.ImageUploadId
+                    == dbRead
+                        .ImageUploads.Where(latestUpload =>
+                            latestUpload.ImageUploadConfigId == url.ImageUpload.ImageUploadConfigId
+                            && latestUpload.ReleaseScreenshotId
+                                == url.ImageUpload.ReleaseScreenshotId
+                            && latestUpload.UploadState == UploadState.Completed
+                        )
+                        .OrderByDescending(latestUpload =>
+                            latestUpload.UploadedAt ?? latestUpload.CreatedAt
+                        )
+                        .ThenByDescending(latestUpload => latestUpload.Id)
+                        .Select(latestUpload => latestUpload.Id)
+                        .FirstOrDefault()
+            )
+            .OrderBy(url => url.ImageSize)
+            .ThenBy(url => url.Id)
+            .Select(url => new
+            {
+                url.ImageUpload.ImageUploadConfigId,
+                url.ImageUpload.ReleaseScreenshot!.Kind,
+                url.ImageUpload.ReleaseScreenshot.Index,
+                url.ImageUpload.ReleaseScreenshot.Timestamp,
+                Url = new ForumPostImageLinkUrlReadModel(url.ImageSize, url.Url),
+            })
+            .ToListAsync(cancellationToken);
+
+        var screenshotsByConfigId = screenshotUrls
+            .Where(url => url.Kind == ReleaseScreenshotKind.Screenshot)
+            .GroupBy(url => (url.ImageUploadConfigId, url.Index))
+            .OrderBy(screenshot => screenshot.Key.Index)
+            .ToLookup(
+                screenshot => screenshot.Key.ImageUploadConfigId,
+                screenshot => new ForumPostScreenshotImageLinkReadModel(
+                    Index: screenshot.Key.Index,
+                    Timestamp: screenshot.First().Timestamp!.Value,
+                    Urls: screenshot.Select(url => url.Url).ToList()
+                )
+            );
+
+        var screenshotGridUrlsByConfigId = screenshotUrls
+            .Where(url => url.Kind == ReleaseScreenshotKind.ScreenshotGrid)
+            .ToLookup(url => url.ImageUploadConfigId, url => url.Url);
+
         return imageLinks
-            .GroupBy(row => row.ReleaseId!.Value)
+            .Select(row =>
+                (
+                    ReleaseId: row.ReleaseId!.Value,
+                    ImageLink: row.ImageLink with
+                    {
+                        Screenshots = screenshotsByConfigId[row.ImageUploadConfigId].ToList(),
+                        ScreenshotGridUrls = screenshotGridUrlsByConfigId[row.ImageUploadConfigId]
+                            .ToList(),
+                    }
+                )
+            )
+            .GroupBy(row => row.ReleaseId)
             .ToDictionary(
                 group => group.Key,
                 group =>
@@ -1019,7 +1079,7 @@ public class ReleaseReadRepository(
     }
 
     private async Task<
-        List<(int? ReleaseId, ForumPostImageLinkReadModel ImageLink)>
+        List<(int? ReleaseId, int ImageUploadConfigId, ForumPostImageLinkReadModel ImageLink)>
     > GetImageLinksAsync(
         Expression<Func<ImageUploadConfig, bool>> predicate,
         CancellationToken cancellationToken
@@ -1031,6 +1091,7 @@ public class ReleaseReadRepository(
             .ThenBy(config => config.Id)
             .Select(config => new
             {
+                config.Id,
                 config.ReleaseId,
                 config.Name,
                 Urls = config
@@ -1064,16 +1125,19 @@ public class ReleaseReadRepository(
             .Select(config =>
                 (
                     config.ReleaseId,
+                    config.Id,
                     new ForumPostImageLinkReadModel(
-                        config.Name,
-                        config
+                        ImageUploadConfigName: config.Name,
+                        Urls: config
                             .Urls.OrderBy(url => url.ImageSize)
                             .ThenBy(url => url.Id)
                             .Select(url => new ForumPostImageLinkUrlReadModel(
                                 url.ImageSize,
                                 url.Url
                             ))
-                            .ToList()
+                            .ToList(),
+                        Screenshots: [],
+                        ScreenshotGridUrls: []
                     )
                 )
             )

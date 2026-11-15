@@ -68,6 +68,77 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task RenderAsync_TemplateUsesScreenshotImageLinks_RendersScreenshotsByIndexAndScreenshotGrid()
+    {
+        // Arrange
+        var release = await AddReleaseAsync();
+        var imageUploadConfig = release.ImageUploadConfigs.Single();
+
+        AddScreenshotImageUpload(
+            imageUploadConfig: imageUploadConfig,
+            kind: ReleaseScreenshotKind.Screenshot,
+            index: 2,
+            timestamp: new TimeSpan(1, 2, 3),
+            url: "https://img.example/screenshot-2.jpg"
+        );
+
+        AddScreenshotImageUpload(
+            imageUploadConfig: imageUploadConfig,
+            kind: ReleaseScreenshotKind.Screenshot,
+            index: 1,
+            timestamp: TimeSpan.FromSeconds(90),
+            url: "https://img.example/screenshot-1.jpg"
+        );
+
+        AddScreenshotImageUpload(
+            imageUploadConfig: imageUploadConfig,
+            kind: ReleaseScreenshotKind.ScreenshotGrid,
+            index: 1,
+            timestamp: null,
+            url: "https://img.example/grid.jpg"
+        );
+
+        DbContext.ImageUploadConfigs.Add(
+            new ImageUploadConfig
+            {
+                Release = release,
+                Name = "Empty",
+                ImageHosterRegistration = imageUploadConfig.ImageHosterRegistration,
+                ImageUploads = [],
+            }
+        );
+
+        var template = new ForumPostTemplate
+        {
+            Name = "Screenshot image links template",
+            TemplateBody =
+                "{{ imagelinks.imgbb_cover.full }}"
+                + "|{{ for screenshot in imagelinks.imgbb_cover.screenshots }}"
+                + "[{{ screenshot.index }} {{ screenshot.timestamp }} {{ screenshot.full }}]"
+                + "{{ end }}|{{ imagelinks.imgbb_cover.screenshotgrid.full }}"
+                + "|{{ for screenshot in imagelinks.empty.screenshots }}x{{ end }}"
+                + "{{ imagelinks.empty.screenshotgrid.full }}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
+
+        // Assert
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe(
+            "https://img.example/full.jpg"
+                + "|[1 0:01:30 https://img.example/screenshot-1.jpg]"
+                + "[2 1:02:03 https://img.example/screenshot-2.jpg]"
+                + "|https://img.example/grid.jpg|"
+        );
+    }
+
+    [Test]
     public async Task RenderAsync_TemplateUsesPrimaryLanguage_RendersNativeLanguageName()
     {
         var release = await AddReleaseAsync();
@@ -205,5 +276,37 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         return release;
+    }
+
+    private void AddScreenshotImageUpload(
+        ImageUploadConfig imageUploadConfig,
+        ReleaseScreenshotKind kind,
+        int index,
+        TimeSpan? timestamp,
+        string url
+    )
+    {
+        DbContext.ImageUploads.Add(
+            new ImageUpload
+            {
+                ImageUploadConfig = imageUploadConfig,
+                ReleaseScreenshot = new ReleaseScreenshot
+                {
+                    Release = imageUploadConfig.Release!,
+                    Kind = kind,
+                    Index = index,
+                    Timestamp = timestamp,
+                    RelativeFilePath = $"screenshots/{kind}-{index}.jpg",
+                    Width = 1920,
+                    Height = 1080,
+                    SizeBytes = 1024,
+                    CreatedAt = DateTime.UtcNow,
+                },
+                CreatedAt = DateTime.UtcNow,
+                UploadedAt = DateTime.UtcNow,
+                UploadState = UploadState.Completed,
+                ImageUrls = [new ImageUploadUrl { ImageSize = ImageSize.Full, Url = url }],
+            }
+        );
     }
 }
