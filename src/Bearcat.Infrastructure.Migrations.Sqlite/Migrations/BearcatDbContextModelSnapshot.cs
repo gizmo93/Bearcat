@@ -773,6 +773,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("ImageUploadConfigId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ReleaseScreenshotId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("UploadState")
                         .HasColumnType("INTEGER");
 
@@ -782,6 +785,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("ImageUploadConfigId");
+
+                    b.HasIndex("ReleaseScreenshotId");
 
                     b.ToTable("ImageUploads");
                 });
@@ -803,6 +808,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("ReleaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UploadCover")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UploadScreenshotGrid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UploadScreenshots")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -832,6 +846,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UploadCover")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UploadScreenshotGrid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UploadScreenshots")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -2048,6 +2071,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("FileDeletedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Height")
                         .HasColumnType("INTEGER");
 
@@ -2928,7 +2955,14 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseScreenshot", "ReleaseScreenshot")
+                        .WithMany()
+                        .HasForeignKey("ReleaseScreenshotId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("ImageUploadConfig");
+
+                    b.Navigation("ReleaseScreenshot");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfig", b =>

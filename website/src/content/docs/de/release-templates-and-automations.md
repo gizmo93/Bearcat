@@ -44,6 +44,8 @@ Die Gruppe **Screenshots** im Template und in den Releaseeinstellungen hat zwei 
 - Videos mit HDR10 oder HLG werden auf SDR umgerechnet. Dolby Vision ohne Basisschicht in HDR10 oder HLG wird nicht unterstützt.
 - Die Hintergrundaufgabe **Screenshot creation** erstellt sie. ffmpeg wird [bei Bedarf heruntergeladen](/Bearcat/de/advanced-configuration/#ffmpeg).
 - Der Tab **Bilder** eines Releases zeigt das Ergebnis oder den Fehler. **Neu erstellen** erstellt sie erneut, etwa nach einer Änderung der Optionen.
+- Um sie zu einem Bildhoster hochzuladen, aktiviere **Screenshots** oder **Screenshotraster** in einer [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration). Neu erstellen ersetzt ihre Bilduploads.
+- Screenshotdateien sind temporär. Bearcat löscht sie, sobald jede passende Bilduploadkonfiguration sie hochgeladen hat, oder sofort, wenn keine Konfiguration sie hochlädt. Danach zeigt der Tab **Bilder** die gehosteten Bilder. **Neu erstellen** braucht ein Release vom Typ Managed, dessen Releaseordner noch existiert.
 
 ## Ordnerautomatisierungen einrichten
 

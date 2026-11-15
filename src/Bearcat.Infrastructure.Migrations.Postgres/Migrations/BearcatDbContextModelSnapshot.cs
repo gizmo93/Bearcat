@@ -815,6 +815,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ImageUploadConfigId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ReleaseScreenshotId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UploadState")
                         .HasColumnType("integer");
 
@@ -824,6 +827,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("ImageUploadConfigId");
+
+                    b.HasIndex("ReleaseScreenshotId");
 
                     b.ToTable("ImageUploads");
                 });
@@ -848,6 +853,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.Property<int?>("ReleaseId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("UploadCover")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshotGrid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshots")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -879,6 +893,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("UploadCover")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshotGrid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshots")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -2152,6 +2175,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
 
+                    b.Property<DateTime?>("FileDeletedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
                     b.Property<int>("Height")
                         .HasColumnType("integer");
 
@@ -3056,7 +3083,14 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseScreenshot", "ReleaseScreenshot")
+                        .WithMany()
+                        .HasForeignKey("ReleaseScreenshotId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("ImageUploadConfig");
+
+                    b.Navigation("ReleaseScreenshot");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfig", b =>

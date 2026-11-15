@@ -164,6 +164,9 @@ public class ReleaseTemplateFromReleaseCreationService(
             )
                 ? null
                 : imageUploadConfig.Name,
+            UploadCover = imageUploadConfig.UploadCover,
+            UploadScreenshots = imageUploadConfig.UploadScreenshots,
+            UploadScreenshotGrid = imageUploadConfig.UploadScreenshotGrid,
         };
     }
 }

@@ -130,6 +130,9 @@ public class ReleaseTemplateCopyService(IReleaseTemplateWriteRepository writeRep
         {
             ImageHosterRegistrationId = sourceTemplate.ImageHosterRegistrationId,
             Name = sourceTemplate.Name,
+            UploadCover = sourceTemplate.UploadCover,
+            UploadScreenshots = sourceTemplate.UploadScreenshots,
+            UploadScreenshotGrid = sourceTemplate.UploadScreenshotGrid,
         };
     }
 

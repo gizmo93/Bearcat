@@ -16,12 +16,15 @@ public class ImageUploadConfigReadRepository(IBearcatReadDbContext dbRead)
             .ImageUploadConfigs.Where(config => config.ReleaseId == releaseId)
             .OrderBy(config => config.Id)
             .Select(config => new ImageUploadConfigReadModel(
-                config.Id,
-                config.Name,
-                config.ImageHosterRegistrationId,
-                config.ImageHosterRegistration.Name,
-                config.Release!.Name,
-                config.ImageUploads.Count
+                ImageUploadConfigId: config.Id,
+                Name: config.Name,
+                ImageHosterRegistrationId: config.ImageHosterRegistrationId,
+                ImageHosterRegistrationName: config.ImageHosterRegistration.Name,
+                ReleaseName: config.Release!.Name,
+                ImageUploadCount: config.ImageUploads.Count,
+                UploadCover: config.UploadCover,
+                UploadScreenshots: config.UploadScreenshots,
+                UploadScreenshotGrid: config.UploadScreenshotGrid
             ))
             .ToListAsync(cancellationToken);
     }
@@ -34,12 +37,15 @@ public class ImageUploadConfigReadRepository(IBearcatReadDbContext dbRead)
         return await dbRead
             .ImageUploadConfigs.Where(config => config.Id == imageUploadConfigId)
             .Select(config => new ImageUploadConfigReadModel(
-                config.Id,
-                config.Name,
-                config.ImageHosterRegistrationId,
-                config.ImageHosterRegistration.Name,
-                config.Release!.Name,
-                config.ImageUploads.Count
+                ImageUploadConfigId: config.Id,
+                Name: config.Name,
+                ImageHosterRegistrationId: config.ImageHosterRegistrationId,
+                ImageHosterRegistrationName: config.ImageHosterRegistration.Name,
+                ReleaseName: config.Release!.Name,
+                ImageUploadCount: config.ImageUploads.Count,
+                UploadCover: config.UploadCover,
+                UploadScreenshots: config.UploadScreenshots,
+                UploadScreenshotGrid: config.UploadScreenshotGrid
             ))
             .FirstAsync(cancellationToken);
     }

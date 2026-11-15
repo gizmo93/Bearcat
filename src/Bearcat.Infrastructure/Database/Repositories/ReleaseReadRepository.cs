@@ -59,8 +59,13 @@ public class ReleaseReadRepository(
                         )
                     )
             )
-        && r.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
-            .All(ic => ic.ImageUploads.Any());
+        && r.ImageUploadConfigs.AsQueryable()
+            .All(ImageUploadExpressions.ImageUploadConfigIsSettledForPosting)
+        && !r
+            .ImageUploadConfigs.AsQueryable()
+            .Where(ImageUploadExpressions.ImageUploadConfigUploadsScreenshotsToActiveHoster)
+            .Select(ic => ic.Release!)
+            .Any(ReleaseScreenshotExpressions.ScreenshotGenerationIsPending);
 
     private static readonly Expression<Func<Release, bool>> IsNotReadyForPostQueue =
         Expression.Lambda<Func<Release, bool>>(
@@ -918,7 +923,7 @@ public class ReleaseReadRepository(
     )
     {
         var imageUploadConfigs = await dbRead
-            .ImageUploadConfigs.Where(c => c.ReleaseId == releaseId)
+            .ImageUploadConfigs.Where(c => c.ReleaseId == releaseId && c.UploadCover)
             .OrderBy(c => c.Name)
             .ThenBy(c => c.Id)
             .Select(c => new
@@ -927,7 +932,8 @@ public class ReleaseReadRepository(
                 ImageUploadConfigName = c.Name,
                 c.ImageHosterRegistration.Name,
                 LatestImageUpload = c
-                    .ImageUploads.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                    .ImageUploads.Where(upload => upload.ReleaseScreenshotId == null)
+                    .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
                     .ThenByDescending(upload => upload.Id)
                     .Select(upload => new
                     {
@@ -1033,6 +1039,7 @@ public class ReleaseReadRepository(
                         == dbRead
                             .ImageUploads.Where(latestUpload =>
                                 latestUpload.ImageUploadConfigId == upload.ImageUploadConfigId
+                                && latestUpload.ReleaseScreenshotId == null
                             )
                             .OrderByDescending(latestUpload =>
                                 latestUpload.UploadedAt ?? latestUpload.CreatedAt

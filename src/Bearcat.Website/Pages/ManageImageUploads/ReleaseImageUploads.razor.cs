@@ -87,6 +87,16 @@ public partial class ReleaseImageUploads(
         await RefreshImageUploadsAsync();
     }
 
+    private string GetImageLabel(ReleaseImageUploadReadModel upload)
+    {
+        return upload.ScreenshotKind switch
+        {
+            null => L["Cover"],
+            ReleaseScreenshotKind.ScreenshotGrid => L["ScreenshotGrid"],
+            _ => L["ScreenshotNumber", upload.ScreenshotIndex!.Value],
+        };
+    }
+
     private static BadgeVariant GetUploadVariant(UploadState state)
     {
         return state switch

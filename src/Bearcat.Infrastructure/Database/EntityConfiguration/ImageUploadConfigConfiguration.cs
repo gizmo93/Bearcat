@@ -13,6 +13,9 @@ public class ImageUploadConfigConfiguration : IEntityTypeConfiguration<ImageUplo
         builder.Property(config => config.ReleaseCollectionId).IsRequired(false);
         builder.Property(config => config.ImageHosterRegistrationId).IsRequired();
         builder.Property(config => config.Name).IsRequired();
+        builder.Property(config => config.UploadCover).IsRequired();
+        builder.Property(config => config.UploadScreenshots).IsRequired();
+        builder.Property(config => config.UploadScreenshotGrid).IsRequired();
 
         builder
             .HasOne(config => config.Release)

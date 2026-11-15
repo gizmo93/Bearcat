@@ -19,6 +19,7 @@ public class ReleaseScreenshotConfiguration : IEntityTypeConfiguration<ReleaseSc
         builder.Property(screenshot => screenshot.Height).IsRequired();
         builder.Property(screenshot => screenshot.SizeBytes).IsRequired();
         builder.Property(screenshot => screenshot.CreatedAt).IsRequired().HasPrecision(4);
+        builder.Property(screenshot => screenshot.FileDeletedAt).IsRequired(false).HasPrecision(4);
 
         builder.HasIndex(screenshot => screenshot.ReleaseId);
     }

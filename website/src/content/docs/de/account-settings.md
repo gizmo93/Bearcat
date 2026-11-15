@@ -26,12 +26,23 @@ Wähle den Hoster und gib die nötigen Zugangsdaten ein.
 ## Bilduploadkonfiguration
 
 Klicke im Tab **Bilder** eines Releases unter **Bilduploadkonfigurationen** auf **Hinzufügen**. Wähle einen
-Namen und die Bildhosterregistrierung, auf die das Coverbild hochgeladen werden soll.
+Namen, die Bildhosterregistrierung und was hochgeladen wird:
+
+| Option | Standard | Lädt hoch |
+| --- | --- | --- |
+| **Cover** | An | Das Cover, sobald eine Cover-URL vorhanden ist. |
+| **Screenshots** | Aus | Alle einzelnen [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots) des Releases. |
+| **Screenshotraster** | Aus | Das Screenshotraster des Releases. |
+
+Mindestens eine Option muss aktiv sein. Screenshots werden hochgeladen, sobald sie erstellt wurden.
+Bilduploadkonfigurationen von Collections laden immer nur das Cover hoch.
 
 Der Name wird auch in [Forenpostvorlagen](/Bearcat/de/forum-post-templates/) verwendet.
-Mit `ImgBB Cover` greifst du zum Beispiel über `imagelinks.imgbb_cover.full` auf das Bild zu.
+Mit `ImgBB Cover` greifst du zum Beispiel über `imagelinks.imgbb_cover.full` auf das Cover zu.
 
-Bearcat lädt das Bild hoch, sobald eine Cover-URL vorhanden ist.
+Releases und Collections kommen erst in die [Postwarteschlange](/Bearcat/de/post-queue/), wenn kein Bildupload
+mehr wartet oder läuft. Fehlgeschlagene Bilduploads blockieren das Posten nicht. Lösche einen fehlgeschlagenen
+Upload im Tab **Bilder**, um ihn erneut zu versuchen.
 
 ## Automatische Reuploads
 

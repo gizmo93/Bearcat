@@ -463,6 +463,60 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
     }
 
     [Test]
+    public async Task GetReleaseImageLinksByReleaseIdAsync_ScreenshotUploadNewerThanCoverUpload_ReturnsCoverUrls()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.ScreenshotLinks.2026-GRP");
+        var config = testData.AddImageUploadConfig("Cover", release);
+        testData.AddImageUpload(
+            config,
+            MidnightUtc,
+            MidnightUtc,
+            [
+                ReleaseReadRepositoryTestData.CreateImageUrl(
+                    ImageSize.Full,
+                    "https://img.example/cover"
+                ),
+            ]
+        );
+        var screenshotUpload = testData.AddImageUpload(
+            config,
+            MidnightUtc.AddHours(1),
+            MidnightUtc.AddHours(1),
+            [
+                ReleaseReadRepositoryTestData.CreateImageUrl(
+                    ImageSize.Full,
+                    "https://img.example/screenshot"
+                ),
+            ]
+        );
+        screenshotUpload.ReleaseScreenshot = new ReleaseScreenshot
+        {
+            Release = release,
+            Kind = ReleaseScreenshotKind.Screenshot,
+            Index = 1,
+            RelativeFilePath = "screenshots/1/screenshot-01.jpg",
+            Width = 1920,
+            Height = 1080,
+            SizeBytes = 1024,
+            CreatedAt = MidnightUtc,
+        };
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var imageLinksByReleaseId = await repository.GetReleaseImageLinksByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        imageLinksByReleaseId[release.Id]
+            .ShouldHaveSingleItem()
+            .Urls.Select(url => url.Url)
+            .ShouldBe(["https://img.example/cover"]);
+    }
+
+    [Test]
     public async Task GetReleaseImageLinksByReleaseIdAsync_UrlsStoredInDifferentSizeOrder_ReturnsUrlsOrderedByImageSize()
     {
         // Arrange

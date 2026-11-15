@@ -10,6 +10,9 @@ public class ImageUploadConfigTemplateService(IReleaseTemplateWriteRepository wr
         int releaseTemplateId,
         string? name,
         int imageHosterRegistrationId,
+        bool uploadCover,
+        bool uploadScreenshots,
+        bool uploadScreenshotGrid,
         CancellationToken cancellationToken = default
     )
     {
@@ -22,6 +25,9 @@ public class ImageUploadConfigTemplateService(IReleaseTemplateWriteRepository wr
         {
             Name = name.TrimOrNullWhenWhitespace(),
             ImageHosterRegistrationId = imageHosterRegistrationId,
+            UploadCover = uploadCover,
+            UploadScreenshots = uploadScreenshots,
+            UploadScreenshotGrid = uploadScreenshotGrid,
         };
 
         releaseTemplate.ImageUploadConfigTemplates.Add(imageUploadConfigTemplate);
@@ -34,6 +40,9 @@ public class ImageUploadConfigTemplateService(IReleaseTemplateWriteRepository wr
         int imageUploadConfigTemplateId,
         string? name,
         int imageHosterRegistrationId,
+        bool uploadCover,
+        bool uploadScreenshots,
+        bool uploadScreenshotGrid,
         CancellationToken cancellationToken = default
     )
     {
@@ -44,6 +53,9 @@ public class ImageUploadConfigTemplateService(IReleaseTemplateWriteRepository wr
 
         imageUploadConfigTemplate.Name = name.TrimOrNullWhenWhitespace();
         imageUploadConfigTemplate.ImageHosterRegistrationId = imageHosterRegistrationId;
+        imageUploadConfigTemplate.UploadCover = uploadCover;
+        imageUploadConfigTemplate.UploadScreenshots = uploadScreenshots;
+        imageUploadConfigTemplate.UploadScreenshotGrid = uploadScreenshotGrid;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

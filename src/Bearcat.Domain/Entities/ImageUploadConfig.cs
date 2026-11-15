@@ -18,5 +18,11 @@ public class ImageUploadConfig
 
     public string Name { get; set; } = null!;
 
+    public bool UploadCover { get; set; } = true;
+
+    public bool UploadScreenshots { get; set; }
+
+    public bool UploadScreenshotGrid { get; set; }
+
     public List<ImageUpload> ImageUploads { get; set; } = [];
 }

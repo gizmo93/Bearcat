@@ -61,8 +61,8 @@ public class ReleaseCollectionRepository(
                             )
                     )
             )
-            && c.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
-                .All(ic => ic.ImageUploads.Any());
+            && c.ImageUploadConfigs.AsQueryable()
+                .All(ImageUploadExpressions.ImageUploadConfigIsSettledForPosting);
     }
 
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
@@ -807,7 +807,8 @@ public class ReleaseCollectionRepository(
                 config.ImageHosterRegistrationId,
                 ImageHosterRegistrationName = config.ImageHosterRegistration.Name,
                 LatestImageUpload = config
-                    .ImageUploads.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                    .ImageUploads.Where(upload => upload.ReleaseScreenshotId == null)
+                    .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
                     .ThenByDescending(upload => upload.Id)
                     .Select(upload => new
                     {

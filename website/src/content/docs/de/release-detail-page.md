@@ -61,7 +61,8 @@ verwendet, folgt dem Namen **lokale Arbeitskopie**.
 
 ![Konfiguration für Bilduploads](../images/image-upload-config.png)
 
-Für Bilduploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL.
+Für Coveruploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL. Eine [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration)
+kann auch die Screenshots und das Screenshotraster hochladen. Die Liste **Bilduploads** zeigt bei jedem Upload, ob es das Cover, ein Screenshot oder das Screenshotraster ist.
 
 Die Karte **Screenshots** zeigt die erstellten [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots).
 Klicke auf ein Bild, um es in voller Grösse zu öffnen.

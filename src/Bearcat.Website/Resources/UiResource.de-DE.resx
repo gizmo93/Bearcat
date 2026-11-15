@@ -2161,4 +2161,13 @@
   <data name="ScreenshotCreationFailed" xml:space="preserve"><value>Screenshots konnten nicht erstellt werden</value></data>
   <data name="ScreenshotNumber" xml:space="preserve"><value>Screenshot {0}</value></data>
   <data name="ScreenshotGrid" xml:space="preserve"><value>Screenshotraster</value></data>
+  <data name="Cover" xml:space="preserve"><value>Cover</value></data>
+  <data name="ImageUploadContent" xml:space="preserve"><value>Was hochgeladen wird</value></data>
+  <data name="UploadCover" xml:space="preserve"><value>Cover</value></data>
+  <data name="UploadScreenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="UploadScreenshotGrid" xml:space="preserve"><value>Screenshotraster</value></data>
+  <data name="UploadScreenshotsHelp" xml:space="preserve"><value>Screenshots und das Screenshotraster werden hochgeladen, sobald sie für das Release erstellt wurden.</value></data>
+  <data name="ImageUploadContentRequired" xml:space="preserve"><value>Wähle mindestens ein Bild zum Hochladen aus.</value></data>
+  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>Einige Screenshots sind lokal nicht mehr vorhanden und haben keinen fertigen Bildupload. Später hinzugefügte Bilduploadkonfigurationen bekommen Screenshots erst nach Neu erstellen.</value></data>
+  <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Neu erstellen braucht ein Release vom Typ Managed, dessen Releaseordner noch existiert.</value></data>
 </root>

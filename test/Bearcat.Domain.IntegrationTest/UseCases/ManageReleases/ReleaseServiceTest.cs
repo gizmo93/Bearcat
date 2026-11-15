@@ -432,6 +432,26 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync();
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = "PiXhost",
+            ImageHosterClassName = "PixHost",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+        DbContext.ImageUploadConfigTemplates.Add(
+            new ImageUploadConfigTemplate
+            {
+                ReleaseTemplateId = seed.ReleaseTemplateId,
+                ImageHosterRegistration = imageHosterRegistration,
+                Name = "Screens",
+                UploadCover = false,
+                UploadScreenshots = true,
+                UploadScreenshotGrid = true,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Template");
 
         // Act
@@ -449,6 +469,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             .Include(r => r.ArchiveConfigs)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.LinkCrypters)
+            .Include(r => r.ImageUploadConfigs)
             .SingleAsync(r => r.Id == result);
 
         release.Name.ShouldBe("Bearcat.Release.Template");
@@ -480,6 +501,12 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         var linkCrypter = uploadConfig.LinkCrypters.Single();
         linkCrypter.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
         linkCrypter.Password.ShouldBe("container-secret");
+
+        var imageUploadConfig = release.ImageUploadConfigs.Single();
+        imageUploadConfig.Name.ShouldBe("Screens");
+        imageUploadConfig.UploadCover.ShouldBeFalse();
+        imageUploadConfig.UploadScreenshots.ShouldBeTrue();
+        imageUploadConfig.UploadScreenshotGrid.ShouldBeTrue();
     }
 
     [Test]

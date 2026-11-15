@@ -70,10 +70,13 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
 
         // Act
         var configId = await service.CreateAsync(
-            release.Id,
+            releaseId: release.Id,
             name: null,
-            imageHosterRegistration.Id,
-            CancellationToken.None
+            imageHosterRegistrationId: imageHosterRegistration.Id,
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -92,10 +95,13 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
 
         // Act
         var configId = await service.CreateAsync(
-            release.Id,
+            releaseId: release.Id,
             name: "  Release cover  ",
-            imageHosterRegistration.Id,
-            CancellationToken.None
+            imageHosterRegistrationId: imageHosterRegistration.Id,
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -104,7 +110,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_WithoutName_UsesImageHosterName()
+    public async Task UpdateForCollectionAsync_WithoutName_UsesImageHosterName()
     {
         // Arrange
         var collection = await AddCollectionAsync();
@@ -117,7 +123,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Act
-        await service.UpdateAsync(
+        await service.UpdateForCollectionAsync(
             configId,
             name: null,
             imageHosterRegistration.Id,
@@ -130,7 +136,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_WithName_UpdatesNameAndImageHosterRegistration()
+    public async Task UpdateForCollectionAsync_WithName_UpdatesNameAndImageHosterRegistration()
     {
         // Arrange
         var collection = await AddCollectionAsync();
@@ -144,7 +150,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Act
-        await service.UpdateAsync(
+        await service.UpdateForCollectionAsync(
             configId,
             name: "  Updated cover  ",
             secondHosterRegistration.Id,

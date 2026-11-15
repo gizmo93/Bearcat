@@ -43,6 +43,8 @@ The **Screenshots** group in the template and in the release settings has two op
 - HDR10 and HLG videos are tonemapped to SDR. Dolby Vision without an HDR10 or HLG base layer is not supported.
 - The **Screenshot creation** background task creates them. ffmpeg is [downloaded on demand](/Bearcat/advanced-configuration/#ffmpeg).
 - The **Images** tab of a release shows the result or the error. **Regenerate** creates them again, for example after changing the options.
+- To upload them to an image hoster, turn on **Screenshots** or **Screenshot grid** in an [image upload configuration](/Bearcat/account-settings/#image-upload-configuration). Regenerating replaces their image uploads.
+- Screenshot files are temporary. Bearcat deletes them once every matching image upload configuration has uploaded them, or right away when no configuration uploads them. After that the **Images** tab shows the hosted images. **Regenerate** needs a managed release whose release folder still exists.
 
 ## Setting up folder automations
 

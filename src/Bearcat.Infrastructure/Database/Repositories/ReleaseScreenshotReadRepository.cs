@@ -1,5 +1,7 @@
+using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -12,32 +14,100 @@ public class ReleaseScreenshotReadRepository(IBearcatReadDbContext dbRead)
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead
+        var release = await dbRead
             .Releases.Where(release => release.Id == releaseId)
-            .Select(release => new ReleaseScreenshotOverviewReadModel(
+            .Select(release => new
+            {
                 release.ReleaseType,
-                release.ReleaseFolderPath != null,
+                release.ReleaseFolderPath,
                 release.CreateScreenshots,
                 release.CreateScreenshotGrid,
-                release.MediaFiles.Any(),
+                HasMediaFiles = release.MediaFiles.Any(),
                 release.MediaMetadataExtractedAt,
                 release.ScreenshotsGeneratedAt,
                 release.ScreenshotGenerationErrorMessage,
-                release
+                Screenshots = release
                     .Screenshots.OrderBy(screenshot => screenshot.Kind)
                     .ThenBy(screenshot => screenshot.Index)
-                    .Select(screenshot => new ReleaseScreenshotReadModel(
+                    .Select(screenshot => new
+                    {
                         screenshot.Id,
                         screenshot.Kind,
                         screenshot.Index,
                         screenshot.Timestamp,
                         screenshot.Width,
                         screenshot.Height,
-                        screenshot.SizeBytes
-                    ))
-                    .ToList()
-            ))
+                        screenshot.SizeBytes,
+                        FileExists = screenshot.FileDeletedAt == null,
+                    })
+                    .ToList(),
+            })
             .FirstAsync(cancellationToken);
+
+        var hostedImageUrls = await dbRead
+            .ImageUploadUrls.Where(url =>
+                url.ImageUpload.ReleaseScreenshot!.ReleaseId == releaseId
+                && url.ImageUpload.UploadState == UploadState.Completed
+            )
+            .Select(url => new
+            {
+                ReleaseScreenshotId = url.ImageUpload.ReleaseScreenshotId!.Value,
+                url.ImageUploadId,
+                url.ImageSize,
+                url.Url,
+            })
+            .ToListAsync(cancellationToken);
+
+        var hostedImageUrlsByScreenshotId = hostedImageUrls
+            .GroupBy(url => url.ReleaseScreenshotId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var firstImageUploadId = group.Min(url => url.ImageUploadId);
+
+                    return group
+                        .Where(url => url.ImageUploadId == firstImageUploadId)
+                        .ToDictionary(url => url.ImageSize, url => url.Url);
+                }
+            );
+
+        return new ReleaseScreenshotOverviewReadModel(
+            ReleaseType: release.ReleaseType,
+            HasReleaseFolder: release.ReleaseFolderPath is not null,
+            CreateScreenshots: release.CreateScreenshots,
+            CreateScreenshotGrid: release.CreateScreenshotGrid,
+            HasMediaFiles: release.HasMediaFiles,
+            MediaMetadataExtractedAt: release.MediaMetadataExtractedAt,
+            ScreenshotsGeneratedAt: release.ScreenshotsGeneratedAt,
+            ScreenshotGenerationErrorMessage: release.ScreenshotGenerationErrorMessage,
+            Screenshots: release
+                .Screenshots.Select(screenshot =>
+                {
+                    var urlsBySize = hostedImageUrlsByScreenshotId.GetValueOrDefault(
+                        screenshot.Id,
+                        new Dictionary<ImageSize, string>()
+                    );
+
+                    return new ReleaseScreenshotReadModel(
+                        ReleaseScreenshotId: screenshot.Id,
+                        Kind: screenshot.Kind,
+                        Index: screenshot.Index,
+                        Timestamp: screenshot.Timestamp,
+                        Width: screenshot.Width,
+                        Height: screenshot.Height,
+                        SizeBytes: screenshot.SizeBytes,
+                        FileExists: screenshot.FileExists,
+                        HostedThumbnailUrl: urlsBySize.GetValueOrDefault(ImageSize.Thumbnail)
+                            ?? urlsBySize.GetValueOrDefault(ImageSize.Medium)
+                            ?? urlsBySize.GetValueOrDefault(ImageSize.Full),
+                        HostedFullUrl: urlsBySize.GetValueOrDefault(ImageSize.Full)
+                            ?? urlsBySize.GetValueOrDefault(ImageSize.Medium)
+                            ?? urlsBySize.GetValueOrDefault(ImageSize.Thumbnail)
+                    );
+                })
+                .ToList()
+        );
     }
 
     public async Task<string?> GetRelativeFilePathAsync(

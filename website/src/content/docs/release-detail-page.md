@@ -61,7 +61,8 @@ the name is followed by **local working copy**.
 
 ![image-upload-config.png](images/image-upload-config.png)
 
-Image uploads need a cover URL, for example from TMDB or xREL.
+Cover uploads need a cover URL, for example from TMDB or xREL. An [image upload configuration](/Bearcat/account-settings/#image-upload-configuration)
+can also upload the screenshots and the screenshot grid. The **Image uploads** list shows for each upload whether it is the cover, a screenshot, or the screenshot grid.
 
 The **Screenshots** card shows the created [screenshots](/Bearcat/release-templates-and-automations/#screenshots).
 Click an image to open it in full size.

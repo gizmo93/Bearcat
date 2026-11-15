@@ -1,5 +1,3 @@
-@using Bearcat.Website.Controllers
-
 <BbCard Class="border-border/70 shadow-sm">
     <BbCardHeader>
         <div class="bearcat-section-header">
@@ -26,6 +24,11 @@
         </div>
     </BbCardHeader>
     <BbCardContent>
+        @if (ShowRegenerateUnavailableHint)
+        {
+            <p class="mb-4 text-sm text-muted-foreground">@L["RegenerateScreenshotsUnavailableHint"]</p>
+        }
+
         @switch (State)
         {
             case ReleaseScreenshotState.Disabled:
@@ -57,41 +60,58 @@
                 break;
             case ReleaseScreenshotState.Created:
                 <div class="space-y-4">
+                    @if (HasUnavailableScreenshots)
+                    {
+                        <p class="text-sm text-muted-foreground">@L["ScreenshotsUnavailableHint"]</p>
+                    }
+
                     @if (Screenshots.Count > 0)
                     {
                         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             @foreach (var screenshot in Screenshots)
                             {
-                                <a href="@ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)"
-                                   target="_blank"
-                                   rel="noopener"
-                                   class="block space-y-1">
-                                    <img src="@ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)"
-                                         alt="@L["ScreenshotNumber", screenshot.Index]"
-                                         loading="lazy"
-                                         class="aspect-video w-full rounded-md border border-border/70 bg-muted object-cover" />
+                                <div class="space-y-1">
+                                    @if (GetImageUrl(screenshot) is { } imageUrl)
+                                    {
+                                        <a href="@GetFullSizeUrl(screenshot)" target="_blank" rel="noopener" class="block">
+                                            <img src="@imageUrl"
+                                                 alt="@L["ScreenshotNumber", screenshot.Index]"
+                                                 loading="lazy"
+                                                 class="aspect-video w-full rounded-md border border-border/70 bg-muted object-cover" />
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <div class="aspect-video w-full rounded-md border border-dashed border-border/70 bg-muted"></div>
+                                    }
                                     <p class="text-xs text-muted-foreground">
                                         @L["ScreenshotNumber", screenshot.Index] · @FormatTimestamp(screenshot.Timestamp)
                                     </p>
-                                </a>
+                                </div>
                             }
                         </div>
                     }
 
                     @if (ScreenshotGrid is { } screenshotGrid)
                     {
-                        <a href="@ReleaseScreenshotController.GetUrl(screenshotGrid.ReleaseScreenshotId)"
-                           target="_blank"
-                           rel="noopener"
-                           class="block space-y-1">
-                            <img src="@ReleaseScreenshotController.GetUrl(screenshotGrid.ReleaseScreenshotId)"
-                                 alt="@L["ScreenshotGrid"]"
-                                 loading="lazy"
-                                 class="max-h-[32rem] w-full rounded-md border border-border/70 bg-muted object-contain" />
+                        <div class="space-y-1">
+                            @if (GetImageUrl(screenshotGrid) is { } screenshotGridUrl)
+                            {
+                                <a href="@GetFullSizeUrl(screenshotGrid)" target="_blank" rel="noopener" class="block">
+                                    <img src="@screenshotGridUrl"
+                                         alt="@L["ScreenshotGrid"]"
+                                         loading="lazy"
+                                         class="max-h-[32rem] w-full rounded-md border border-border/70 bg-muted object-contain" />
+                                </a>
+                            }
+                            else
+                            {
+                                <div class="aspect-video w-full rounded-md border border-dashed border-border/70 bg-muted"></div>
+                            }
                             <p class="text-xs text-muted-foreground">
                                 @L["ScreenshotGrid"] · @screenshotGrid.Width x @screenshotGrid.Height
                             </p>
-                        </a>
+                        </div>
                     }
                 </div>
                 break;

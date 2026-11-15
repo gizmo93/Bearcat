@@ -2161,4 +2161,13 @@
   <data name="ScreenshotCreationFailed" xml:space="preserve"><value>Screenshots could not be created</value></data>
   <data name="ScreenshotNumber" xml:space="preserve"><value>Screenshot {0}</value></data>
   <data name="ScreenshotGrid" xml:space="preserve"><value>Screenshot grid</value></data>
+  <data name="Cover" xml:space="preserve"><value>Cover</value></data>
+  <data name="ImageUploadContent" xml:space="preserve"><value>What to upload</value></data>
+  <data name="UploadCover" xml:space="preserve"><value>Cover</value></data>
+  <data name="UploadScreenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="UploadScreenshotGrid" xml:space="preserve"><value>Screenshot grid</value></data>
+  <data name="UploadScreenshotsHelp" xml:space="preserve"><value>Screenshots and the screenshot grid are uploaded once they have been created for the release.</value></data>
+  <data name="ImageUploadContentRequired" xml:space="preserve"><value>Select at least one image to upload.</value></data>
+  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>Some screenshots are no longer available locally and have no completed image upload. Image upload configurations added later only get screenshots after Regenerate.</value></data>
+  <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Regenerate needs a managed release whose release folder still exists.</value></data>
 </root>

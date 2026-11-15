@@ -172,6 +172,223 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
         upload.CreatedAt.ShouldBe(CreatedAt);
     }
 
+    [Test]
+    public async Task CreateMissingImageUploadsAsync_CoverOnlyConfigOfReleaseWithScreenshots_CreatesOnlyCoverUpload()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false
+        );
+
+        // Act
+        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
+
+        // Assert
+        var upload = (await GetImageUploadsAsync(config)).ShouldHaveSingleItem();
+        upload.ReleaseScreenshotId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task CreateMissingImageUploadsAsync_ConfigUploadsScreenshotsAndGrid_CreatesPendingUploadPerScreenshot()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: false,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true
+        );
+        var screenshotIds = await DbContext
+            .ReleaseScreenshots.Where(screenshot => screenshot.ReleaseId == config.ReleaseId)
+            .Select(screenshot => screenshot.Id)
+            .ToListAsync();
+
+        // Act
+        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
+
+        // Assert
+        var uploads = await GetImageUploadsAsync(config);
+        uploads
+            .Select(upload => upload.ReleaseScreenshotId)
+            .ShouldBe(screenshotIds.Select(id => (int?)id), ignoreOrder: true);
+        uploads.ShouldAllBe(upload => upload.UploadState == UploadState.Pending);
+    }
+
+    [Test]
+    public async Task CreateMissingImageUploadsAsync_ConfigUploadsOnlyScreenshots_SkipsScreenshotGrid()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: true,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: false
+        );
+        var screenshotGridId = await DbContext
+            .ReleaseScreenshots.Where(screenshot =>
+                screenshot.ReleaseId == config.ReleaseId
+                && screenshot.Kind == ReleaseScreenshotKind.ScreenshotGrid
+            )
+            .Select(screenshot => screenshot.Id)
+            .SingleAsync();
+
+        // Act
+        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
+
+        // Assert
+        var uploads = await GetImageUploadsAsync(config);
+        uploads.Count.ShouldBe(3);
+        uploads.ShouldContain(upload => upload.ReleaseScreenshotId == null);
+        uploads.ShouldNotContain(upload => upload.ReleaseScreenshotId == screenshotGridId);
+    }
+
+    [Test]
+    public async Task CreateMissingImageUploadsAsync_ScreenshotConfigCalledTwice_DoesNotCreateDuplicates()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: true,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true
+        );
+
+        // Act
+        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
+        await repository.CreateMissingImageUploadsAsync(
+            CreatedAt.AddMinutes(1),
+            CancellationToken.None
+        );
+
+        // Assert
+        var uploads = await GetImageUploadsAsync(config);
+        uploads.Count.ShouldBe(4);
+        uploads.ShouldAllBe(upload => upload.CreatedAt == CreatedAt);
+    }
+
+    [Test]
+    public async Task CreateMissingImageUploadsAsync_ScreenshotConfigWithInactiveImageHoster_DoesNotCreateUploads()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: true,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true,
+            imageHosterRegistrationIsActive: false
+        );
+
+        // Act
+        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
+
+        // Assert
+        (await GetImageUploadsAsync(config)).ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreateMissingImageUploadsAsync_ScreenshotFileDeleted_DoesNotCreateUploadForIt()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: false,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true
+        );
+        var deletedScreenshot = await DbContext.ReleaseScreenshots.FirstAsync(screenshot =>
+            screenshot.ReleaseId == config.ReleaseId
+        );
+        deletedScreenshot.FileDeletedAt = CreatedAt;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
+
+        // Assert
+        var uploads = await GetImageUploadsAsync(config);
+        uploads.Count.ShouldBe(2);
+        uploads.ShouldNotContain(upload => upload.ReleaseScreenshotId == deletedScreenshot.Id);
+    }
+
+    [Test]
+    public async Task GetScreenshotsWithFinishedUploadsAsync_AllMatchingConfigsCompleted_ReturnsScreenshots()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: false,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true
+        );
+        await AddScreenshotUploadsAsync(config, UploadState.Completed);
+
+        // Act
+        var result = await repository.GetScreenshotsWithFinishedUploadsAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Count.ShouldBe(3);
+    }
+
+    [Test]
+    public async Task GetScreenshotsWithFinishedUploadsAsync_OtherMatchingConfigStillPending_ReturnsNoScreenshots()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: false,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true
+        );
+        await AddScreenshotUploadsAsync(config, UploadState.Completed);
+        var otherConfig = await AddImageUploadConfigToReleaseAsync(config.ReleaseId!.Value);
+        await AddScreenshotUploadsAsync(otherConfig, UploadState.Pending);
+
+        // Act
+        var result = await repository.GetScreenshotsWithFinishedUploadsAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetScreenshotsWithFinishedUploadsAsync_UploadFailed_ReturnsNoScreenshots()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: false,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true
+        );
+        await AddScreenshotUploadsAsync(config, UploadState.Failed);
+
+        // Act
+        var result = await repository.GetScreenshotsWithFinishedUploadsAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetScreenshotsWithFinishedUploadsAsync_NoConfigUploadsScreenshots_ReturnsScreenshotsImmediately()
+    {
+        // Arrange
+        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false
+        );
+
+        // Act
+        var result = await repository.GetScreenshotsWithFinishedUploadsAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Count.ShouldBe(3);
+        result.ShouldAllBe(screenshot => screenshot.ReleaseId == config.ReleaseId);
+    }
+
     private async Task<List<ImageUpload>> GetImageUploadsAsync(ImageUploadConfig config)
     {
         DbContext.ChangeTracker.Clear();
@@ -217,6 +434,113 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
         DbContext.ChangeTracker.Clear();
 
         return config;
+    }
+
+    private async Task<ImageUploadConfig> AddReleaseWithScreenshotsImageUploadConfigAsync(
+        bool uploadCover,
+        bool uploadScreenshots,
+        bool uploadScreenshotGrid,
+        bool imageHosterRegistrationIsActive = true
+    )
+    {
+        var release = new Release
+        {
+            Name = "Bodies.2023.S01E01-GRP",
+            CreatedAt = CreatedAt,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/bodies",
+            ReleaseGroup = CreateReleaseGroup(),
+            CreateScreenshots = true,
+            CreateScreenshotGrid = true,
+            ScreenshotsGeneratedAt = CreatedAt,
+            Metadata = new ReleaseMetadata
+            {
+                MetadataDatabaseClassName = ReleaseMetadata.ManualSource,
+                Title = "Bodies",
+                CoverUrl = "https://cover.test/1.jpg",
+            },
+            Screenshots =
+            [
+                CreateScreenshot(ReleaseScreenshotKind.Screenshot, index: 1),
+                CreateScreenshot(ReleaseScreenshotKind.Screenshot, index: 2),
+                CreateScreenshot(ReleaseScreenshotKind.ScreenshotGrid, index: 1),
+            ],
+        };
+        var config = new ImageUploadConfig
+        {
+            Release = release,
+            Name = "Screens",
+            ImageHosterRegistration = CreateImageHosterRegistration(
+                imageHosterRegistrationIsActive
+            ),
+            UploadCover = uploadCover,
+            UploadScreenshots = uploadScreenshots,
+            UploadScreenshotGrid = uploadScreenshotGrid,
+            ImageUploads = [],
+        };
+
+        DbContext.ImageUploadConfigs.Add(config);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return config;
+    }
+
+    private async Task AddScreenshotUploadsAsync(ImageUploadConfig config, UploadState uploadState)
+    {
+        var screenshotIds = await DbContext
+            .ReleaseScreenshots.Where(screenshot => screenshot.ReleaseId == config.ReleaseId)
+            .Select(screenshot => screenshot.Id)
+            .ToListAsync();
+
+        DbContext.ImageUploads.AddRange(
+            screenshotIds.Select(screenshotId => new ImageUpload
+            {
+                ImageUploadConfigId = config.Id,
+                ReleaseScreenshotId = screenshotId,
+                CreatedAt = CreatedAt,
+                UploadState = uploadState,
+                ErrorMessages = [],
+                ImageUrls = [],
+            })
+        );
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+    }
+
+    private async Task<ImageUploadConfig> AddImageUploadConfigToReleaseAsync(int releaseId)
+    {
+        var config = new ImageUploadConfig
+        {
+            ReleaseId = releaseId,
+            Name = "Other screens",
+            ImageHosterRegistration = CreateImageHosterRegistration(isActive: true),
+            UploadCover = false,
+            UploadScreenshots = true,
+            UploadScreenshotGrid = true,
+            ImageUploads = [],
+        };
+
+        DbContext.ImageUploadConfigs.Add(config);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return config;
+    }
+
+    private static ReleaseScreenshot CreateScreenshot(ReleaseScreenshotKind kind, int index)
+    {
+        return new ReleaseScreenshot
+        {
+            Kind = kind,
+            Index = index,
+            RelativeFilePath = $"screenshots/1/{kind}-{index}.jpg",
+            Width = 1920,
+            Height = 1080,
+            SizeBytes = 1024,
+            CreatedAt = CreatedAt,
+        };
     }
 
     private async Task<ImageUploadConfig> AddCollectionImageUploadConfigAsync(string? coverUrl)

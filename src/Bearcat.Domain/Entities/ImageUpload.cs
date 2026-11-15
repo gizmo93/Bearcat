@@ -10,6 +10,10 @@ public class ImageUpload
 
     public ImageUploadConfig ImageUploadConfig { get; set; } = null!;
 
+    public int? ReleaseScreenshotId { get; set; }
+
+    public ReleaseScreenshot? ReleaseScreenshot { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UploadedAt { get; set; }

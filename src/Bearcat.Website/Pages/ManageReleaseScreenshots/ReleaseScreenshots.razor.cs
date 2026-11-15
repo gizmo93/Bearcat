@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Generation;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Controllers;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
@@ -11,8 +12,14 @@ namespace Bearcat.Website.Pages.ManageReleaseScreenshots;
 
 public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
     : ComponentBase,
-        IReloadableComponent
+        IReloadableComponent,
+        IAsyncDisposable
 {
+    private static readonly TimeSpan WaitingStateRefreshInterval = TimeSpan.FromSeconds(5);
+
+    private readonly CancellationTokenSource pollingCancellation = new();
+    private Task? pollingTask;
+
     [Parameter]
     [EditorRequired]
     public int ReleaseId { get; set; }
@@ -28,6 +35,14 @@ public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
         overview is { ReleaseType: ReleaseType.Managed, HasReleaseFolder: true };
 
     private bool CanRegenerate => IsEnabled && IsManagedWithReleaseFolder;
+
+    private bool ShowRegenerateUnavailableHint =>
+        IsEnabled
+        && !CanRegenerate
+        && State is ReleaseScreenshotState.Created or ReleaseScreenshotState.Failed;
+
+    private bool HasUnavailableScreenshots =>
+        overview?.Screenshots.Any(screenshot => GetImageUrl(screenshot) is null) ?? false;
 
     private ReleaseScreenshotState State => GetState();
 
@@ -45,6 +60,26 @@ public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
     protected override async Task OnInitializedAsync()
     {
         await ReloadAsync();
+        pollingTask = PollWhileWaitingAsync(pollingCancellation.Token);
+    }
+
+    private async Task PollWhileWaitingAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(WaitingStateRefreshInterval);
+
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                if (State is not ReleaseScreenshotState.Waiting)
+                {
+                    continue;
+                }
+
+                await InvokeAsync(ReloadAsync);
+            }
+        }
+        catch (OperationCanceledException) { }
     }
 
     public async Task ReloadAsync()
@@ -97,6 +132,11 @@ public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
             return ReleaseScreenshotState.Disabled;
         }
 
+        if (overview is { ScreenshotsGeneratedAt: not null, Screenshots.Count: > 0 })
+        {
+            return ReleaseScreenshotState.Created;
+        }
+
         if (!IsManagedWithReleaseFolder)
         {
             return ReleaseScreenshotState.NeedsManagedRelease;
@@ -117,9 +157,37 @@ public partial class ReleaseScreenshots(IScopedOperationRunner operationRunner)
             : ReleaseScreenshotState.Waiting;
     }
 
+    private static string? GetImageUrl(ReleaseScreenshotReadModel screenshot)
+    {
+        return screenshot.FileExists
+            ? ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)
+            : screenshot.HostedThumbnailUrl;
+    }
+
+    private static string? GetFullSizeUrl(ReleaseScreenshotReadModel screenshot)
+    {
+        return screenshot.FileExists
+            ? ReleaseScreenshotController.GetUrl(screenshot.ReleaseScreenshotId)
+            : screenshot.HostedFullUrl;
+    }
+
     private static string FormatTimestamp(TimeSpan? timestamp)
     {
         return timestamp?.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture) ?? string.Empty;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+
+        await pollingCancellation.CancelAsync();
+
+        if (pollingTask is not null)
+        {
+            await pollingTask;
+        }
+
+        pollingCancellation.Dispose();
     }
 
     private enum ReleaseScreenshotState

@@ -4,9 +4,11 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageImageUploads;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Storage;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.FileSystem;
 using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -23,12 +25,23 @@ public class ImageUploadServiceTest(DatabaseProvider databaseProvider)
 {
     private const string ImageHosterClassName = "ImgBb";
 
+    private string tempRootPath = null!;
+    private ReleaseScreenshotDirectory screenshotDirectory = null!;
     private Mock<IImageHoster> imageHosterMock = null!;
     private ImageUploadService service = null!;
 
     [SetUp]
     public void Setup()
     {
+        tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
+        screenshotDirectory = new ReleaseScreenshotDirectory(
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(
+                    new Dictionary<string, string?> { ["Bearcat:DataDirectory"] = tempRootPath }
+                )
+                .Build()
+        );
+
         imageHosterMock = new Mock<IImageHoster>();
         imageHosterMock
             .Setup(hoster => hoster.DeserializeConfig(It.IsAny<string>()))
@@ -47,9 +60,20 @@ public class ImageUploadServiceTest(DatabaseProvider databaseProvider)
         service = new ImageUploadService(
             new ImageUploadRepository(DbContext, NoOpSecretProtector.Instance),
             imageHosterFactoryMock.Object,
+            screenshotDirectory,
+            new FileSystemService(),
             CreateTimeProvider(),
             NullLogger<ImageUploadService>.Instance
         );
+    }
+
+    [TearDown]
+    public void DeleteTempRootPath()
+    {
+        if (Directory.Exists(tempRootPath))
+        {
+            Directory.Delete(tempRootPath, recursive: true);
+        }
     }
 
     [Test]
@@ -296,6 +320,205 @@ public class ImageUploadServiceTest(DatabaseProvider databaseProvider)
                 ),
             Times.Exactly(2)
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ConfigUploadsScreenshotsAndGrid_UploadsScreenshotFilesAsLocalFiles()
+    {
+        // Arrange
+        SetupSuccessfulUpload();
+        var release = await AddReleaseWithScreenshotImageConfigAsync(writeScreenshotFiles: true);
+        var screenshotFilePath = screenshotDirectory.GetFilePath(
+            ReleaseScreenshotDirectory.GetRelativeFilePath(release.Id, "screenshot-01.jpg")
+        );
+        var screenshotGridFilePath = screenshotDirectory.GetFilePath(
+            ReleaseScreenshotDirectory.GetRelativeFilePath(release.Id, "screenshot-grid.jpg")
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var imageUploads = await DbContext.ImageUploads.ToListAsync();
+        imageUploads.Count.ShouldBe(2);
+        imageUploads.ShouldAllBe(upload =>
+            upload.UploadState == UploadState.Completed && upload.ReleaseScreenshotId != null
+        );
+        (await DbContext.ReleaseScreenshots.ToListAsync()).ShouldAllBe(screenshot =>
+            screenshot.FileDeletedAt != null
+        );
+        File.Exists(screenshotFilePath).ShouldBeFalse();
+        Directory.Exists(screenshotDirectory.GetDirectoryPath(release.Id)).ShouldBeFalse();
+        imageHosterMock.Verify(
+            hoster =>
+                hoster.UploadImageAsync(
+                    It.Is<ImageToUploadDto>(image =>
+                        image.Source == screenshotFilePath
+                        && image.SourceType == ImageUploadSource.LocalFile
+                        && image.Name == "Bodies.2023.S01E03-GRP screenshot 01"
+                    ),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        imageHosterMock.Verify(
+            hoster =>
+                hoster.UploadImageAsync(
+                    It.Is<ImageToUploadDto>(image =>
+                        image.Source == screenshotGridFilePath
+                        && image.SourceType == ImageUploadSource.LocalFile
+                        && image.Name == "Bodies.2023.S01E03-GRP screenshot grid"
+                    ),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ScreenshotFileMissing_MarksFailedWithoutUploading()
+    {
+        // Arrange
+        var release = await AddReleaseWithScreenshotImageConfigAsync(writeScreenshotFiles: false);
+        var screenshotFilePath = screenshotDirectory.GetFilePath(
+            ReleaseScreenshotDirectory.GetRelativeFilePath(release.Id, "screenshot-01.jpg")
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var imageUploads = await DbContext.ImageUploads.ToListAsync();
+        imageUploads.Count.ShouldBe(2);
+        imageUploads.ShouldAllBe(upload => upload.UploadState == UploadState.Failed);
+        imageUploads.ShouldContain(upload =>
+            upload.ErrorMessages.Single()
+            == $"Screenshot file '{screenshotFilePath}' does not exist. Regenerate the screenshots to upload it."
+        );
+        imageHosterMock.Verify(
+            hoster =>
+                hoster.UploadImageAsync(
+                    It.IsAny<ImageToUploadDto>(),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_PendingUploadOfDeletedScreenshotFile_MarksFailedWithRegenerateMessage()
+    {
+        // Arrange
+        var release = await AddReleaseWithScreenshotImageConfigAsync(writeScreenshotFiles: false);
+        var screenshot = await DbContext.ReleaseScreenshots.FirstAsync(screenshot =>
+            screenshot.ReleaseId == release.Id
+        );
+        screenshot.FileDeletedAt = DateTime.UtcNow;
+        var imageUpload = new ImageUpload
+        {
+            ImageUploadConfigId = await DbContext
+                .ImageUploadConfigs.Select(config => config.Id)
+                .SingleAsync(),
+            ReleaseScreenshotId = screenshot.Id,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Pending,
+            ImageUrls = [],
+            ErrorMessages = [],
+        };
+        DbContext.ImageUploads.Add(imageUpload);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var persisted = await DbContext.ImageUploads.SingleAsync(upload =>
+            upload.Id == imageUpload.Id
+        );
+        persisted.UploadState.ShouldBe(UploadState.Failed);
+        persisted.ErrorMessages.ShouldBe([
+            "Screenshot file was deleted after its uploads completed. Regenerate the screenshots to upload it.",
+        ]);
+    }
+
+    private async Task<Release> AddReleaseWithScreenshotImageConfigAsync(bool writeScreenshotFiles)
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = $"Release group {Guid.NewGuid():N}",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+            Releases = [],
+        };
+
+        var release = new Release
+        {
+            Name = "Bodies.2023.S01E03-GRP",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/bodies-screenshots",
+            ReleaseGroup = releaseGroup,
+            CreateScreenshots = true,
+            CreateScreenshotGrid = true,
+            ScreenshotsGeneratedAt = DateTime.UtcNow,
+            ImageUploadConfigs = [],
+        };
+
+        var imageHosterRegistration = NewImageHosterRegistration();
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            Release = release,
+            Name = "ImgBB Screens",
+            ImageHosterRegistration = imageHosterRegistration,
+            UploadCover = false,
+            UploadScreenshots = true,
+            UploadScreenshotGrid = true,
+            ImageUploads = [],
+        };
+
+        DbContext.AddRange(releaseGroup, release, imageHosterRegistration, imageUploadConfig);
+        await DbContext.SaveChangesAsync();
+
+        var screenshotFileNames = new Dictionary<ReleaseScreenshotKind, string>
+        {
+            [ReleaseScreenshotKind.Screenshot] = "screenshot-01.jpg",
+            [ReleaseScreenshotKind.ScreenshotGrid] = "screenshot-grid.jpg",
+        };
+
+        foreach (var (kind, fileName) in screenshotFileNames)
+        {
+            var relativeFilePath = ReleaseScreenshotDirectory.GetRelativeFilePath(
+                release.Id,
+                fileName
+            );
+
+            release.Screenshots.Add(
+                new ReleaseScreenshot
+                {
+                    Kind = kind,
+                    Index = 1,
+                    RelativeFilePath = relativeFilePath,
+                    Width = 1920,
+                    Height = 1080,
+                    SizeBytes = 3,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
+
+            if (writeScreenshotFiles)
+            {
+                var filePath = screenshotDirectory.GetFilePath(relativeFilePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+                await File.WriteAllBytesAsync(filePath, [1, 2, 3]);
+            }
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        return release;
     }
 
     private async Task<ImageUpload> AddPendingUploadForReleaseWithoutCoverAsync()

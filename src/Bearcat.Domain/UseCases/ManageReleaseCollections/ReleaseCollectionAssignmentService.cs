@@ -208,6 +208,9 @@ public class ReleaseCollectionAssignmentService(
                         ? template.ImageHosterRegistration.Name
                         : template.Name.Trim(),
                     ImageHosterRegistrationId = template.ImageHosterRegistrationId,
+                    UploadCover = true,
+                    UploadScreenshots = false,
+                    UploadScreenshotGrid = false,
                     ImageUploads = [],
                 }
             );

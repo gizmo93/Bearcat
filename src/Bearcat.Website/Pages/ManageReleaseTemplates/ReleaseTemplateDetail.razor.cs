@@ -431,6 +431,9 @@ public partial class ReleaseTemplateDetail(
                 {
                     Name = imageUploadConfig.Name,
                     ImageHosterRegistrationId = imageUploadConfig.ImageHosterRegistrationId,
+                    UploadCover = imageUploadConfig.UploadCover,
+                    UploadScreenshots = imageUploadConfig.UploadScreenshots,
+                    UploadScreenshotGrid = imageUploadConfig.UploadScreenshotGrid,
                 },
         };
 

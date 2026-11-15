@@ -13,6 +13,10 @@ public interface IImageUploadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ReleaseScreenshot>> GetScreenshotsWithFinishedUploadsAsync(
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyDictionary<int, string>> GetConfigByImageHosterRegistrationIdAsync(
         CancellationToken cancellationToken = default
     );

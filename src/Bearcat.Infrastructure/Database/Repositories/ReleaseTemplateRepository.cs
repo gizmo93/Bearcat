@@ -335,11 +335,16 @@ public class ReleaseTemplateRepository(
                 .ImageUploadConfigTemplates.OrderBy(i => i.Name ?? i.ImageHosterRegistration.Name)
                 .ThenBy(i => i.Id)
                 .Select(i => new ImageUploadConfigTemplateReadModel(
-                    i.Id,
-                    i.Name,
-                    string.IsNullOrWhiteSpace(i.Name) ? i.ImageHosterRegistration.Name : i.Name,
-                    i.ImageHosterRegistrationId,
-                    i.ImageHosterRegistration.Name
+                    ImageUploadConfigTemplateId: i.Id,
+                    Name: i.Name,
+                    DisplayName: string.IsNullOrWhiteSpace(i.Name)
+                        ? i.ImageHosterRegistration.Name
+                        : i.Name,
+                    ImageHosterRegistrationId: i.ImageHosterRegistrationId,
+                    ImageHosterRegistrationName: i.ImageHosterRegistration.Name,
+                    UploadCover: i.UploadCover,
+                    UploadScreenshots: i.UploadScreenshots,
+                    UploadScreenshotGrid: i.UploadScreenshotGrid
                 ))
                 .ToList(),
             releaseTemplate
@@ -348,11 +353,16 @@ public class ReleaseTemplateRepository(
                 )
                 .ThenBy(i => i.Id)
                 .Select(i => new ImageUploadConfigTemplateReadModel(
-                    i.Id,
-                    i.Name,
-                    string.IsNullOrWhiteSpace(i.Name) ? i.ImageHosterRegistration.Name : i.Name,
-                    i.ImageHosterRegistrationId,
-                    i.ImageHosterRegistration.Name
+                    ImageUploadConfigTemplateId: i.Id,
+                    Name: i.Name,
+                    DisplayName: string.IsNullOrWhiteSpace(i.Name)
+                        ? i.ImageHosterRegistration.Name
+                        : i.Name,
+                    ImageHosterRegistrationId: i.ImageHosterRegistrationId,
+                    ImageHosterRegistrationName: i.ImageHosterRegistration.Name,
+                    UploadCover: true,
+                    UploadScreenshots: false,
+                    UploadScreenshotGrid: false
                 ))
                 .ToList()
         );

@@ -17,7 +17,7 @@ public class ImageUploadConfigTemplateServiceTest(DatabaseProvider databaseProvi
     }
 
     [Test]
-    public async Task UpdateAsync_TemplateExists_UpdatesNameAndImageHoster()
+    public async Task UpdateAsync_TemplateExists_UpdatesNameImageHosterAndUploadedImages()
     {
         // Arrange
         var releaseGroup = await AddReleaseGroupAsync();
@@ -25,19 +25,25 @@ public class ImageUploadConfigTemplateServiceTest(DatabaseProvider databaseProvi
         var imgbb = await AddImageHosterRegistrationAsync();
         var pixhost = await AddImageHosterRegistrationAsync("PiXhost");
         var imageUploadConfigTemplateId = await service.CreateAsync(
-            releaseTemplate.Id,
-            "Cover",
-            imgbb.Id,
-            CancellationToken.None
+            releaseTemplateId: releaseTemplate.Id,
+            name: "Cover",
+            imageHosterRegistrationId: imgbb.Id,
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false,
+            cancellationToken: CancellationToken.None
         );
         DbContext.ChangeTracker.Clear();
 
         // Act
         await service.UpdateAsync(
-            imageUploadConfigTemplateId,
-            "  Screens  ",
-            pixhost.Id,
-            CancellationToken.None
+            imageUploadConfigTemplateId: imageUploadConfigTemplateId,
+            name: "  Screens  ",
+            imageHosterRegistrationId: pixhost.Id,
+            uploadCover: false,
+            uploadScreenshots: true,
+            uploadScreenshotGrid: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -46,6 +52,9 @@ public class ImageUploadConfigTemplateServiceTest(DatabaseProvider databaseProvi
         template.Id.ShouldBe(imageUploadConfigTemplateId);
         template.Name.ShouldBe("Screens");
         template.ImageHosterRegistrationId.ShouldBe(pixhost.Id);
+        template.UploadCover.ShouldBeFalse();
+        template.UploadScreenshots.ShouldBeTrue();
+        template.UploadScreenshotGrid.ShouldBeTrue();
     }
 
     [Test]
@@ -56,16 +65,22 @@ public class ImageUploadConfigTemplateServiceTest(DatabaseProvider databaseProvi
         var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
         var imgbb = await AddImageHosterRegistrationAsync();
         var coverTemplateId = await service.CreateAsync(
-            releaseTemplate.Id,
-            "Cover",
-            imgbb.Id,
-            CancellationToken.None
+            releaseTemplateId: releaseTemplate.Id,
+            name: "Cover",
+            imageHosterRegistrationId: imgbb.Id,
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false,
+            cancellationToken: CancellationToken.None
         );
         var screensTemplateId = await service.CreateAsync(
-            releaseTemplate.Id,
-            "Screens",
-            imgbb.Id,
-            CancellationToken.None
+            releaseTemplateId: releaseTemplate.Id,
+            name: "Screens",
+            imageHosterRegistrationId: imgbb.Id,
+            uploadCover: true,
+            uploadScreenshots: false,
+            uploadScreenshotGrid: false,
+            cancellationToken: CancellationToken.None
         );
         DbContext.ChangeTracker.Clear();
 

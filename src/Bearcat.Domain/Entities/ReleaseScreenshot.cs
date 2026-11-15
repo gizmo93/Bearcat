@@ -25,4 +25,6 @@ public class ReleaseScreenshot
     public long SizeBytes { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public DateTime? FileDeletedAt { get; set; }
 }

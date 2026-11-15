@@ -9,5 +9,8 @@ public record ReleaseScreenshotReadModel(
     TimeSpan? Timestamp,
     int Width,
     int Height,
-    long SizeBytes
+    long SizeBytes,
+    bool FileExists,
+    string? HostedThumbnailUrl,
+    string? HostedFullUrl
 );

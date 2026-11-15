@@ -13,14 +13,7 @@ public class ReleaseScreenshotGenerationRepository(IBearcatWriteDbContext dbWrit
     )
     {
         return await dbWrite
-            .Releases.Where(release =>
-                release.ReleaseType == ReleaseType.Managed
-                && release.ReleaseFolderPath != null
-                && (release.CreateScreenshots || release.CreateScreenshotGrid)
-                && release.MediaFiles.Any()
-                && release.ScreenshotsGeneratedAt == null
-                && release.ScreenshotGenerationErrorMessage == null
-            )
+            .Releases.Where(ReleaseScreenshotExpressions.ScreenshotGenerationIsPending)
             .OrderBy(release => release.Id)
             .Select(release => release.Id)
             .ToListAsync(cancellationToken);

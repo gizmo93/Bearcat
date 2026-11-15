@@ -199,6 +199,9 @@ public class ReleaseFromFolderCreationService(
                     template.Name.TrimOrNullWhenWhitespace()
                     ?? template.ImageHosterRegistration.Name,
                 ImageHosterRegistrationId = template.ImageHosterRegistrationId,
+                UploadCover = template.UploadCover,
+                UploadScreenshots = template.UploadScreenshots,
+                UploadScreenshotGrid = template.UploadScreenshotGrid,
                 ImageUploads = [],
             })
             .ToList();
