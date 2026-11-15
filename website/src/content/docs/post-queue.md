@@ -23,8 +23,8 @@ The badge disappears when all entries are done.
 A release shows up in the queue once it has a finished upload that you have not marked as posted.
 Bearcat uses the latest completed upload per upload configuration. Older uploads are not listed separately.
 
-Image uploads must be settled first: no image upload may be pending or uploading, and screenshots that a
-configuration uploads must be created and uploaded. Failed image uploads do not block the queue.
+Bearcat waits until no image uploads are pending or running. If screenshots are configured for upload,
+it also waits for them to be created and uploaded. Failed image uploads do not block the queue.
 
 The queue has two sections:
 

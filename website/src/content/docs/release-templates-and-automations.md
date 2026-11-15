@@ -31,21 +31,30 @@ season. See [Release Collections](/Bearcat/release-collections/).
 
 ### Screenshots
 
-The **Screenshots** group in the template and in the release settings has two options:
+Under **Screenshots** in the template and release settings, you can enable two options:
+
+![Screenshot settings](images/release-screenshot-settings.png)
 
 | Option | Default | Result |
 | --- | --- | --- |
-| **Create screenshots** | Off, 6 screenshots | Single screenshots (1 to 20) at even intervals. |
-| **Create screenshot grid** | Off, 4 columns x 4 rows | One 1920 pixel wide image with up to 8 columns and 10 rows and a header with file, video, and audio details. |
+| **Create screenshots** | Off, 6 screenshots | 1 to 20 individual screenshots at even intervals. |
+| **Create screenshot grid** | Off, 4 columns × 4 rows | An image 1920 pixels wide with up to 8 columns and 10 rows. The header contains file, video, and audio details. |
 
-- Only managed releases with their release folder get screenshots.
+- Screenshots can only be created for managed releases whose release folder still exists.
 - Bearcat uses the largest video file in the release folder.
 - HDR10 and HLG videos are tonemapped to SDR. Dolby Vision without an HDR10 or HLG base layer is not supported.
-- The **Screenshot creation** background task creates them. ffmpeg is [downloaded on demand](/Bearcat/advanced-configuration/#ffmpeg).
-- The **Images** tab of a release shows the result or the error. **Regenerate** creates them again, for example after changing the options.
-- Screenshots and the screenshot grid are only created when an [image upload configuration](/Bearcat/account-settings/#image-upload-configuration) with an active image hoster uploads them (**Screenshots** or **Screenshot grid**). Regenerating replaces their image uploads.
-- Forum post templates can use the uploaded images, see [Screenshots in forum post templates](/Bearcat/forum-post-templates/#screenshots).
-- Screenshot files are temporary. Bearcat deletes them once every matching image upload configuration has uploaded them, or right away when no configuration uploads them any more. After that the **Images** tab shows the hosted images. **Regenerate** needs a managed release whose release folder still exists.
+- The **Screenshot creation** background task creates the images. ffmpeg is [downloaded on demand](/Bearcat/advanced-configuration/#ffmpeg).
+- Bearcat only creates images configured for upload. Enable **Screenshots** or **Screenshot grid** in an
+  [image upload configuration](/Bearcat/account-settings/#image-upload-configuration) with an active image hoster.
+
+The **Images** tab shows the result or an error message. Use **Regenerate** to replace the screenshots
+and their image uploads, for example after changing the settings. The release must still be managed,
+and its release folder must exist.
+
+You can use the uploaded images in [forum post templates](/Bearcat/forum-post-templates/#screenshots).
+Bearcat deletes the local screenshot files once every image upload configuration set up for them has
+uploaded them. If no upload is configured for them any more, it deletes them immediately.
+The **Images** tab then shows the images from the image hoster.
 
 ## Setting up folder automations
 

@@ -32,7 +32,7 @@ Standardmässig sind alle Aufgaben aktiv.
 | Auto cleanup | Alle 30 Minuten | Wendet aktivierte [Aufräumregeln](#automatisches-aufräumen) nach Ablauf ihrer Aufbewahrungsfristen an. Löscht [lokale Arbeitskopien](/Bearcat/de/archive-storage-folders/#reuploads) gespeicherter Archive, sobald ihre Uploads abgeschlossen sind. |
 | Archive upload | Alle 20 Sekunden | Lädt Archive zu den konfigurierten Hostern hoch. |
 | Image upload | Alle 30 Sekunden | Lädt Coverbilder von Releases zu konfigurierten Bildhostern hoch, wenn eine Cover-URL vorhanden ist. |
-| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/Bearcat/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, bei denen sie aktiviert sind. |
+| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/Bearcat/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, wenn die entsprechenden Optionen aktiv sind. |
 | Upload state check | Alle 20 Sekunden | Prüft Links und plant erste Uploads sowie automatische Reuploads. |
 | Link crypter container creation | Alle 20 Sekunden | Erstellt Linkcryptercontainer für abgeschlossene Uploads. |
 | SQLite query planner statistics | Beim Start, dann täglich | Nur mit SQLite. Aktualisiert die Statistiken, mit denen SQLite Indizes auswählt. Der erste Lauf kann bei grossen Datenbanken mehrere Sekunden dauern. |
@@ -184,17 +184,21 @@ Bei sehr niedrigen Geschwindigkeitslimits können Uploads wegen Zeitüberschreit
 
 ### ffmpeg
 
-Bearcat erstellt mit ffmpeg Screenshots und Screenshotraster aus Videodateien. ffmpeg ist nicht enthalten:
-Bearcat lädt es bei Bedarf nach `tools/ffmpeg` im [Datenverzeichnis](#datenbank) herunter.
-Die Karte **ffmpeg** am Ende der **Konfigurationen** zeigt die installierte Version und startet einen Download oder ein Update.
+Bearcat erstellt mit ffmpeg Screenshots und Screenshotraster aus Videodateien. ffmpeg wird nicht mitgeliefert.
+Bearcat lädt es bei Bedarf herunter und speichert es unter `tools/ffmpeg` im [Datenverzeichnis](#datenbank).
+Die Karte **ffmpeg** unten auf der Seite **Konfigurationen** zeigt die installierte Version.
+Dort kannst du ffmpeg herunterladen oder aktualisieren.
+
+![Karte ffmpeg](../images/ffmpeg-tool-card.png)
 
 | Plattform | Downloadquelle |
 | --- | --- |
 | Windows x64, Linux x64 (auch Docker) | [BtbN FFmpeg Builds](https://github.com/BtbN/FFmpeg-Builds) |
 | macOS mit Apple Silicon | [martin-riedl.de](https://ffmpeg.martin-riedl.de) |
 
-Setze `Media:FfmpegPath` (Umgebungsvariable `Media__FfmpegPath`), um ein eigenes ffmpeg zu verwenden.
-Andere Plattformen, etwa Linux ARM64 oder Intel-Macs, haben keinen Download und brauchen `Media:FfmpegPath`.
+Gib unter `Media:FfmpegPath` (Umgebungsvariable `Media__FfmpegPath`) den Pfad zu deiner eigenen
+Installation von ffmpeg an, wenn du diese verwenden möchtest. Auf anderen Plattformen, etwa Linux ARM64
+musst du ffmpeg selbst installieren und diesen Pfad setzen.
 
 ## Datenbank
 

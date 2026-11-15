@@ -32,7 +32,7 @@ All tasks are enabled by default.
 | Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/Bearcat/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
 | Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
-| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/Bearcat/release-templates-and-automations/#screenshots) for managed releases that have them enabled. |
+| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/Bearcat/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
 | SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. |
@@ -182,17 +182,21 @@ Very low speed limits can cause uploads to time out.
 
 ### ffmpeg
 
-Bearcat uses ffmpeg to create screenshots and screenshot grids from video files. ffmpeg is not bundled:
-Bearcat downloads it on demand into `tools/ffmpeg` in the [data directory](#database).
-The **ffmpeg** card at the end of **Configurations** shows the installed version and starts a download or update.
+Bearcat uses ffmpeg to create screenshots and screenshot grids from video files. ffmpeg is not bundled.
+Bearcat downloads it when needed and stores it in `tools/ffmpeg` in the [data directory](#database).
+The **ffmpeg** card at the bottom of **Configurations** shows the installed version.
+You can download or update ffmpeg there.
+
+![ffmpeg card](images/ffmpeg-tool-card.png)
 
 | Platform | Download source |
 | --- | --- |
 | Windows x64, Linux x64 (including Docker) | [BtbN FFmpeg builds](https://github.com/BtbN/FFmpeg-Builds) |
 | macOS Apple silicon | [martin-riedl.de](https://ffmpeg.martin-riedl.de) |
 
-Set `Media:FfmpegPath` (environment variable `Media__FfmpegPath`) to use your own ffmpeg instead.
-Other platforms, such as Linux ARM64 or Intel Macs, have no download and need `Media:FfmpegPath`.
+To use your own ffmpeg installation, set `Media:FfmpegPath` (environment variable `Media__FfmpegPath`)
+to its path. On other platforms, such as Linux ARM64, you must install ffmpeg yourself
+and set this path.
 
 ## Database
 

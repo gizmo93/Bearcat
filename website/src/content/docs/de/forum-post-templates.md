@@ -149,16 +149,16 @@ Bei Videouploads sind `upload.archive_format` und `upload.archive_password` leer
 
 ### Screenshots
 
-Hochgeladene [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots) stehen in
-Releasevorlagen und in `release.imagelinks` von Collectionvorlagen zur Verfügung, neben den
-Coverlinks jeder Bilduploadkonfiguration:
+Auf hochgeladene [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots) greifst du
+wie auf Coverlinks zu: in Releasevorlagen über `imagelinks`, in Collectionvorlagen über `release.imagelinks`.
+Jede Bilduploadkonfiguration hat dafür diese Felder:
 
-- `imagelinks.<name>.screenshots`: eine Liste der hochgeladenen Screenshots, nach Nummer sortiert.
-  Jeder Eintrag hat `full`, `medium` und `thumbnail` (die Grössen, die der Bildhoster liefert),
-  `index` (ab 1) und `timestamp` (Videoposition als `hh:mm:ss`). Die Liste ist leer, solange nichts
-  hochgeladen ist.
+- `imagelinks.<name>.screenshots`: die hochgeladenen Screenshots, nach Nummer sortiert.
+  Jeder Eintrag enthält die Bildlinks `full`, `medium` und `thumbnail` in den Grössen des Bildhosters.
+  `index` gibt die Nummer ab 1 an, `timestamp` die Videoposition als `hh:mm:ss`.
+  Die Liste bleibt leer, bis der erste Screenshot hochgeladen ist.
 - `imagelinks.<name>.screenshotgrid`: das Screenshotraster mit `full`, `medium` und `thumbnail`.
-  Leer, solange das Raster nicht hochgeladen ist.
+  Das Feld bleibt leer, bis das Raster hochgeladen ist.
 
 ```text
 {{~ for screenshot in imagelinks.pixhost.screenshots ~}}

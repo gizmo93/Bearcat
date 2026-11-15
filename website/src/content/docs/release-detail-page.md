@@ -28,6 +28,11 @@ Click a step to open its tab.
 **Copy all links** copies one link crypter's container links for all hosters.
 [Posted locations](/Bearcat/posting-to-forums/#posted-locations) are listed at the bottom.
 
+Under **Image uploads**, each image upload configuration shows its cover and screenshot previews.
+Use the copy buttons to copy the image links.
+
+![overview-image-uploads.png](images/overview-image-uploads.png)
+
 ## Release info
 
 ![release-infos-tab.png](images/release-infos-tab.png)
@@ -61,10 +66,14 @@ the name is followed by **local working copy**.
 
 ![image-upload-config.png](images/image-upload-config.png)
 
-Cover uploads need a cover URL, for example from TMDB or xREL. An [image upload configuration](/Bearcat/account-settings/#image-upload-configuration)
-can also upload the screenshots and the screenshot grid. The **Image uploads** list shows for each upload whether it is the cover, a screenshot, or the screenshot grid.
+Cover uploads need a cover URL, for example from TMDB or xREL.
+An [image upload configuration](/Bearcat/account-settings/#image-upload-configuration) can also upload
+screenshots and the screenshot grid. The **Image uploads** list shows each upload's image type:
+cover, screenshot, or screenshot grid.
 
 The **Screenshots** card shows the created [screenshots](/Bearcat/release-templates-and-automations/#screenshots).
-Click an image to open it in full size.
+Click an image to open it at full size.
+
+![release-screenshots.png](images/release-screenshots.png)
 
 ![image-uploads.png](images/image-uploads.png)

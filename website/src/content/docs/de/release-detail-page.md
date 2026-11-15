@@ -28,6 +28,11 @@ Klicke auf einen Schritt, um den passenden Tab zu öffnen.
 **Alle Links kopieren** kopiert die Containerlinks eines Linkcrypters für alle Hoster.
 Unten findest du die [Veröffentlichungsorte](/Bearcat/de/posting-to-forums/#veröffentlichungsorte).
 
+Unter **Bilduploads** siehst du pro Bilduploadkonfiguration das Cover und eine Vorschau der Screenshots.
+Mit den Kopierbuttons kopierst du die Bildlinks.
+
+![Bilduploads in der Übersicht](../images/overview-image-uploads.png)
+
 ## Releaseinfo
 
 ![Tab Releaseinfo](../images/release-infos-tab.png)
@@ -61,10 +66,14 @@ verwendet, folgt dem Namen **lokale Arbeitskopie**.
 
 ![Konfiguration für Bilduploads](../images/image-upload-config.png)
 
-Für Coveruploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL. Eine [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration)
-kann auch die Screenshots und das Screenshotraster hochladen. Die Liste **Bilduploads** zeigt bei jedem Upload, ob es das Cover, ein Screenshot oder das Screenshotraster ist.
+Für Coveruploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL.
+Eine [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration) kann auch Screenshots
+und das Screenshotraster hochladen. In der Liste **Bilduploads** siehst du den Bildtyp jedes Uploads:
+Cover, Screenshot oder Screenshotraster.
 
 Die Karte **Screenshots** zeigt die erstellten [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots).
 Klicke auf ein Bild, um es in voller Grösse zu öffnen.
+
+![Karte Screenshots](../images/release-screenshots.png)
 
 ![Bilduploads](../images/image-uploads.png)

@@ -23,8 +23,8 @@ Sind alle Einträge erledigt, verschwindet das Badge.
 Ein Release erscheint in der Warteschlange, sobald es einen fertigen Upload hat, den du nicht als gepostet
 markiert hast. Bearcat betrachtet pro Uploadkonfiguration den neuesten fertigen Upload. Ältere Uploads werden nicht einzeln aufgeführt.
 
-Vorher müssen die Bilduploads erledigt sein: Kein Bildupload darf warten oder laufen, und Screenshots, die eine
-Konfiguration hochlädt, müssen erstellt und hochgeladen sein. Fehlgeschlagene Bilduploads blockieren die Warteschlange nicht.
+Bearcat wartet, bis keine Bilduploads mehr ausstehen oder laufen. Sollen Screenshots hochgeladen werden,
+wartet es auch auf deren Erstellung und Upload. Fehlgeschlagene Bilduploads blockieren die Warteschlange nicht.
 
 Die Warteschlange hat zwei Bereiche:
 
