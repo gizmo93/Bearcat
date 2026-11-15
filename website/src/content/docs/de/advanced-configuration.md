@@ -181,6 +181,20 @@ Jede Hosterregistrierung kann zusätzlich ein eigenes Limit setzen. Siehe
 
 Bei sehr niedrigen Geschwindigkeitslimits können Uploads wegen Zeitüberschreitungen scheitern.
 
+### ffmpeg
+
+Bearcat erstellt mit ffmpeg Screenshots und Screenshotraster aus Videodateien. ffmpeg ist nicht enthalten:
+Bearcat lädt es bei Bedarf nach `tools/ffmpeg` im [Datenverzeichnis](#datenbank) herunter.
+Die Karte **ffmpeg** am Ende der **Konfigurationen** zeigt die installierte Version und startet einen Download oder ein Update.
+
+| Plattform | Downloadquelle |
+| --- | --- |
+| Windows x64, Linux x64 (auch Docker) | [BtbN FFmpeg Builds](https://github.com/BtbN/FFmpeg-Builds) |
+| macOS mit Apple Silicon | [martin-riedl.de](https://ffmpeg.martin-riedl.de) |
+
+Setze `Media:FfmpegPath` (Umgebungsvariable `Media__FfmpegPath`), um ein eigenes ffmpeg zu verwenden.
+Andere Plattformen, etwa Linux ARM64 oder Intel-Macs, haben keinen Download und brauchen `Media:FfmpegPath`.
+
 ## Datenbank
 
 Neue Installationen als Desktopanwendung, Windows-Dienst oder Docker verwenden SQLite. Bestehende PostgreSQL-Installationen verwenden weiterhin PostgreSQL.

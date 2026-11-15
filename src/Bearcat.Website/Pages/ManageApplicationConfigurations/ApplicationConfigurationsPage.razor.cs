@@ -38,6 +38,9 @@ public partial class ApplicationConfigurationsPage(
             ? L["NoChangedConfigurations"]
             : L["NoConfigurationsFound"];
 
+    private bool ShowsToolCards =>
+        settingFilter == ConfigurationSettingFilter.All && string.IsNullOrWhiteSpace(searchTerm);
+
     private IReadOnlyList<ConfigurationPageSection> VisibleSections =>
         configurations
             .OrderBy(configuration => ConfigurationSectionCatalog.GetPosition(configuration.Key))

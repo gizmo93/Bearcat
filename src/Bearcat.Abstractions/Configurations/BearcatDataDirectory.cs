@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace Bearcat.Infrastructure.Configuration;
+namespace Bearcat.Abstractions.Configurations;
 
 public static class BearcatDataDirectory
 {

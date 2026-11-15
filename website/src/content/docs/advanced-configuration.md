@@ -179,6 +179,20 @@ Each hoster registration can set its own limit as well. See
 
 Very low speed limits can cause uploads to time out.
 
+### ffmpeg
+
+Bearcat uses ffmpeg to create screenshots and screenshot grids from video files. ffmpeg is not bundled:
+Bearcat downloads it on demand into `tools/ffmpeg` in the [data directory](#database).
+The **ffmpeg** card at the end of **Configurations** shows the installed version and starts a download or update.
+
+| Platform | Download source |
+| --- | --- |
+| Windows x64, Linux x64 (including Docker) | [BtbN FFmpeg builds](https://github.com/BtbN/FFmpeg-Builds) |
+| macOS Apple silicon | [martin-riedl.de](https://ffmpeg.martin-riedl.de) |
+
+Set `Media:FfmpegPath` (environment variable `Media__FfmpegPath`) to use your own ffmpeg instead.
+Other platforms, such as Linux ARM64 or Intel Macs, have no download and need `Media:FfmpegPath`.
+
 ## Database
 
 New Desktop, Windows service, and Docker installations use SQLite. Existing PostgreSQL setups keep using PostgreSQL.

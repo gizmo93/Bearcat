@@ -1,6 +1,7 @@
 @page "/configurations"
 @using Bearcat.Website.Pages.ManageApplicationConfigurations.Navigation
 @using Bearcat.Website.Pages.ManageApplicationConfigurations.Sections
+@using Bearcat.Website.Pages.ManageApplicationConfigurations.Tools
 
 <PageTitle>@L["Configurations"] - Bearcat</PageTitle>
 
@@ -79,6 +80,11 @@
                                               Section="section"
                                               OnSave="SaveSettingAsync"
                                               OnReset="ResetSettingAsync" />
+                }
+
+                @if (ShowsToolCards)
+                {
+                    <FfmpegToolCard />
                 }
             </div>
         </div>

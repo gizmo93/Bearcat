@@ -1,0 +1,72 @@
+@using Bearcat.Abstractions.Media
+@using Humanizer
+
+<section id="ffmpeg" class="bearcat-configuration-section" aria-labelledby="ffmpeg-title">
+    <BbCard Class="border-border/70 shadow-sm">
+        <BbCardHeader Class="pb-4">
+            <div class="flex items-start gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted text-foreground/80">
+                    <LucideIcon Name="film" class="h-4 w-4" />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <BbCardTitle As="h2" Class="text-base font-semibold" id="ffmpeg-title">ffmpeg</BbCardTitle>
+                    <BbCardDescription Class="mt-1">@L["FfmpegDescription"]</BbCardDescription>
+                </div>
+                @if (CanDownload)
+                {
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="shrink-0"
+                              Disabled="installState.IsRunning || isWatchingInstallState"
+                              OnClick="DownloadAsync">
+                        <LucideIcon Name="download" class="h-4 w-4" />
+                        @(status?.Source == FfmpegExecutableSource.Installed ? L["FfmpegUpdate"] : L["FfmpegDownload"])
+                    </BbButton>
+                }
+            </div>
+        </BbCardHeader>
+        <BbCardContent Class="flex flex-col gap-3 text-sm">
+            @if (status is null)
+            {
+                <div class="flex items-center gap-2 text-muted-foreground">
+                    <BbSpinner Size="SpinnerSize.Small" />
+                    <span>@L["Loading"]</span>
+                </div>
+            }
+            else
+            {
+                <dl class="grid grid-cols-[minmax(0,1fr)] gap-x-6 gap-y-2 sm:grid-cols-[8rem_minmax(0,1fr)]">
+                    <dt class="text-muted-foreground">@L["Source"]</dt>
+                    <dd>@L[$"FfmpegSource.{status.Source}"]</dd>
+
+                    @if (status.ExecutablePath is not null)
+                    {
+                        <dt class="text-muted-foreground">@L["FfmpegPath"]</dt>
+                        <dd class="break-all font-mono text-xs">@status.ExecutablePath</dd>
+
+                        <dt class="text-muted-foreground">@L["FfmpegVersion"]</dt>
+                        <dd class="break-all">@(status.VersionLine ?? L["FfmpegVersionUnknown"])</dd>
+                    }
+
+                    @if (status.InstalledAt is not null)
+                    {
+                        <dt class="text-muted-foreground">@L["FfmpegInstalledAt"]</dt>
+                        <dd>@status.InstalledAt.Value.Humanize(culture: CultureInfo.CurrentCulture)</dd>
+                    }
+                </dl>
+            }
+
+            @if (installState.IsRunning)
+            {
+                <div class="flex items-center gap-2 text-muted-foreground">
+                    <BbSpinner Size="SpinnerSize.Small" />
+                    <span>@L["FfmpegDownloading"]</span>
+                </div>
+            }
+            else if (installState.LastErrorMessage is not null)
+            {
+                <p class="break-words text-destructive">@L["FfmpegInstallFailed", installState.LastErrorMessage]</p>
+            }
+        </BbCardContent>
+    </BbCard>
+</section>

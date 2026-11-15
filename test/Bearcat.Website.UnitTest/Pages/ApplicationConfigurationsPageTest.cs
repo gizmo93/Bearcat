@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -29,6 +30,7 @@ public class ApplicationConfigurationsPageTest
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<IJSRuntime, UnusedJsRuntime>();
         services.AddSingleton<NavigationManager, UnusedNavigationManager>();
+        services.AddSingleton<IFfmpegInstaller, UnusedFfmpegInstaller>();
         services.AddBearcatBlueprintComponents(configuration);
         services.AddApplicationConfiguration<InitialUploadConfiguration>();
         services.AddApplicationConfiguration<NotificationConfiguration>();
@@ -106,5 +108,19 @@ public class ApplicationConfigurationsPageTest
             CancellationToken cancellationToken,
             object?[]? args
         ) => throw new NotSupportedException();
+    }
+
+    private sealed class UnusedFfmpegInstaller : IFfmpegInstaller
+    {
+        public Task<FfmpegStatus> GetStatusAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public FfmpegInstallState GetInstallState() => throw new NotSupportedException();
+
+        public Task<string> InstallLatestAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<string> EnsureInstalledAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

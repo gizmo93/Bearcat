@@ -2131,4 +2131,17 @@
   <data name="ReleaseCollectionSearchSortOrder.NameDescending" xml:space="preserve"><value>Name Z to A</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Recently added</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtAscending" xml:space="preserve"><value>Oldest first</value></data>
+  <data name="FfmpegDescription" xml:space="preserve"><value>Creates screenshots and screenshot grids from video files.</value></data>
+  <data name="FfmpegSource.ConfiguredPath" xml:space="preserve"><value>Configured path (Media:FfmpegPath)</value></data>
+  <data name="FfmpegSource.Installed" xml:space="preserve"><value>Downloaded into the data directory</value></data>
+  <data name="FfmpegSource.Missing" xml:space="preserve"><value>Not installed. Bearcat downloads ffmpeg on first use, or you start the download here.</value></data>
+  <data name="FfmpegSource.UnsupportedPlatform" xml:space="preserve"><value>No download is available for this platform. Configure Media:FfmpegPath.</value></data>
+  <data name="FfmpegPath" xml:space="preserve"><value>Path</value></data>
+  <data name="FfmpegVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="FfmpegVersionUnknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="FfmpegInstalledAt" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="FfmpegDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="FfmpegUpdate" xml:space="preserve"><value>Update</value></data>
+  <data name="FfmpegDownloading" xml:space="preserve"><value>Downloading...</value></data>
+  <data name="FfmpegInstallFailed" xml:space="preserve"><value>Download failed: {0}</value></data>
 </root>

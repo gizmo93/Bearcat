@@ -1,4 +1,4 @@
-using Bearcat.Infrastructure.Configuration;
+using Bearcat.Abstractions.Configurations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 
