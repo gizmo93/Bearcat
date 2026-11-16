@@ -40,7 +40,8 @@ public partial class LinkCrypterImportsPage(
         return state
             is LinkCrypterImportState.ReadingContainers
                 or LinkCrypterImportState.CheckingFiles
-                or LinkCrypterImportState.Importing;
+                or LinkCrypterImportState.Importing
+                or LinkCrypterImportState.Reimporting;
     }
 
     private void OpenImport(LinkCrypterImportReadModel import)

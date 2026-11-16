@@ -26,9 +26,28 @@ public static partial class ArchivePartFileNames
     public static bool IsArchivePart(string fileName) =>
         GetArchiverFileExtension(fileName) is not null;
 
-    [GeneratedRegex(@"^.+\.(rar|r\d{2,3})$", RegexOptions.IgnoreCase)]
+    public static string? GetArchiveBaseName(string fileName)
+    {
+        Regex[] patterns =
+        [
+            RarPartWithPartNumberPattern(),
+            RarPartPattern(),
+            SevenZipPartPattern(),
+        ];
+
+        var match = patterns
+            .Select(pattern => pattern.Match(fileName))
+            .FirstOrDefault(match => match.Success);
+
+        return match?.Groups["baseName"].Value;
+    }
+
+    [GeneratedRegex(@"^(?<baseName>.+)\.part\d+\.rar$", RegexOptions.IgnoreCase)]
+    private static partial Regex RarPartWithPartNumberPattern();
+
+    [GeneratedRegex(@"^(?<baseName>.+)\.(rar|r\d{2,3})$", RegexOptions.IgnoreCase)]
     private static partial Regex RarPartPattern();
 
-    [GeneratedRegex(@"^.+\.7z(\.\d{3})?$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(?<baseName>.+)\.7z(\.\d{3})?$", RegexOptions.IgnoreCase)]
     private static partial Regex SevenZipPartPattern();
 }

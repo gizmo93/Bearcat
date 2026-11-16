@@ -9,6 +9,6 @@ public sealed record LinkCrypterImportReleaseReadModel(
     string? ReleaseFolderPath,
     string? ArchiveFolderPath,
     bool IsSelected,
-    bool HasImportableContainers,
+    bool HasSelectableContainers,
     IReadOnlyList<LinkCrypterImportContainerReadModel> Containers
 );

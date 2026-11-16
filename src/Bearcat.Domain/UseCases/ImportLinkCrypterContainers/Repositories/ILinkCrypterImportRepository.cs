@@ -48,6 +48,19 @@ public interface ILinkCrypterImportRepository
         CancellationToken cancellationToken
     );
 
+    Task<Release> GetReleaseForReimportAsync(int releaseId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<LinkCrypterImportContainer>> GetContainersImportedIntoReleaseAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    );
+
+    Task<LinkCrypterContainer?> GetCollectionLinkCrypterContainerOrDefaultAsync(
+        int collectionUploadSlotId,
+        int linkCrypterRegistrationId,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyList<int>> GetIdsOfSelectedImportableContainersAsync(
         int linkCrypterImportId,
         CancellationToken cancellationToken
@@ -68,7 +81,11 @@ public interface ILinkCrypterImportRepository
 
     void Add(LinkCrypterImport linkCrypterImport);
 
+    void Add(LinkCrypterContainer linkCrypterContainer);
+
     void Remove(LinkCrypterImport linkCrypterImport);
+
+    void DetectChanges();
 
     void ClearChangeTracker();
 

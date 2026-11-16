@@ -1,12 +1,9 @@
-using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.UnmanagedReleases;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
-using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -15,15 +12,18 @@ namespace Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 
 public class LinkCrypterImportContainerImportService(
     ILinkCrypterImportRepository repository,
-    IReleaseWriteRepository releaseWriteRepository,
-    ReleaseFromFolderCreationService releaseFromFolderCreationService,
-    UnmanagedReleaseArchiveInitializationService unmanagedReleaseArchiveInitializationService,
-    IFileSystemService fileSystemService,
+    LinkCrypterImportReleaseImportService releaseImportService,
+    CollectionContainerImportService collectionContainerImportService,
+    ArchivePartMover archivePartMover,
+    IReleaseCollectionAssigner releaseCollectionAssigner,
     INotificationService notificationService,
     TimeProvider timeProvider,
     ILogger<LinkCrypterImportContainerImportService> logger
 )
 {
+    private const string ContainerNotAdoptedBecauseOfReleaseCollectionMessage =
+        "The container was not adopted because the release belongs to a release collection whose upload slot uses this link crypter account. Bearcat adds the release to the collection container.";
+
     public async Task ImportSelectedContainersAsync(
         int linkCrypterImportId,
         CancellationToken cancellationToken
@@ -34,31 +34,46 @@ public class LinkCrypterImportContainerImportService(
             cancellationToken
         );
 
+        var releaseCountWithMovedArchiveParts = 0;
+
         foreach (var containerId in containerIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await ImportContainerOrMarkAsFailedAsync(containerId, cancellationToken);
+            releaseCountWithMovedArchiveParts += await ImportContainerOrMarkAsFailedAsync(
+                containerId,
+                cancellationToken
+            );
         }
 
-        await CompleteImportAsync(linkCrypterImportId, cancellationToken);
+        await CompleteImportAsync(
+            linkCrypterImportId: linkCrypterImportId,
+            releaseCountWithMovedArchiveParts: releaseCountWithMovedArchiveParts,
+            cancellationToken: cancellationToken
+        );
     }
 
-    private async Task ImportContainerOrMarkAsFailedAsync(
+    private async Task<int> ImportContainerOrMarkAsFailedAsync(
         int containerId,
         CancellationToken cancellationToken
     )
     {
         repository.ClearChangeTracker();
+        releaseCollectionAssigner.ClearCachedReleaseCollections();
 
         var container = await repository.GetContainerWithImportAsync(
             containerId,
             cancellationToken
         );
 
+        var releaseCountWithMovedArchiveParts = 0;
+
         try
         {
-            await ImportContainerAsync(container, cancellationToken);
+            releaseCountWithMovedArchiveParts = await ImportContainerAsync(
+                container,
+                cancellationToken
+            );
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -80,19 +95,54 @@ public class LinkCrypterImportContainerImportService(
 
         container.LinkCrypterImport.ProcessedContainerCount++;
         await repository.SaveChangesAsync(cancellationToken);
+
+        return releaseCountWithMovedArchiveParts;
     }
 
-    private async Task ImportContainerAsync(
+    private async Task<int> ImportContainerAsync(
         LinkCrypterImportContainer container,
         CancellationToken cancellationToken
     )
     {
-        var releaseName = container.ReleaseName;
         var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+
+        if (preview.Releases!.Count > 1)
+        {
+            var importResult = await collectionContainerImportService.ImportAsync(
+                container: container,
+                releasePreviews: preview.Releases,
+                uploadsToMove: [],
+                uploadsPostedAt: null,
+                cancellationToken: cancellationToken
+            );
+
+            archivePartMover.MoveArchiveParts(importResult.ArchivePartsMoves);
+            await repository.SaveChangesAsync(cancellationToken);
+
+            return importResult.ArchivePartsMoves.Count;
+        }
+
+        await ImportSingleReleaseContainerAsync(
+            container: container,
+            releasePreview: preview.Releases.Single(),
+            cancellationToken: cancellationToken
+        );
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        return 0;
+    }
+
+    private async Task ImportSingleReleaseContainerAsync(
+        LinkCrypterImportContainer container,
+        LinkCrypterImportReleasePreview releasePreview,
+        CancellationToken cancellationToken
+    )
+    {
         var localNow = timeProvider.GetLocalNow();
 
         var existingRelease = await repository.GetReleaseForImportByNameOrDefaultAsync(
-            releaseName,
+            container.ReleaseName,
             cancellationToken
         );
 
@@ -100,208 +150,66 @@ public class LinkCrypterImportContainerImportService(
             cancellationToken
         );
 
-        var release =
-            existingRelease
-            ?? await CreateReleaseAsync(
-                linkCrypterImport: container.LinkCrypterImport,
-                releaseName: releaseName,
-                preview: preview,
-                archiveStorageFolders: archiveStorageFolders,
-                localNow: localNow,
-                cancellationToken: cancellationToken
-            );
-
-        var mirrorsWithUploadConfigs = GetMirrorsWithUploadConfigs(preview, release);
-
-        EnsureContainerCanBeAdded(
-            container: container,
-            release: release,
-            mirrorsWithUploadConfigs: mirrorsWithUploadConfigs
-        );
-
-        AddImportedUploadsAndLinkCrypterContainer(
-            container: container,
-            release: release,
-            mirrorsWithUploadConfigs: mirrorsWithUploadConfigs,
-            isNewRelease: existingRelease is null,
-            archiveFolderPath: preview.ArchiveFolderPath,
+        var importedRelease = await releaseImportService.ImportReleaseAsync(
+            linkCrypterImport: container.LinkCrypterImport,
+            releasePreview: releasePreview,
+            existingRelease: existingRelease,
+            uploadsToMove: [],
             archiveStorageFolders: archiveStorageFolders,
-            localNow: localNow
-        );
-
-        container.ImportedRelease = release;
-        container.Status = LinkCrypterImportContainerStatus.Imported;
-        container.ErrorMessages = [];
-
-        await repository.SaveChangesAsync(cancellationToken);
-
-        logger.LogInformation(
-            "Imported container {ContainerUrl} into release {ReleaseName}",
-            container.ContainerUrl,
-            releaseName
-        );
-    }
-
-    private async Task<Release> CreateReleaseAsync(
-        LinkCrypterImport linkCrypterImport,
-        string releaseName,
-        LinkCrypterImportContainerPreview preview,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow,
-        CancellationToken cancellationToken
-    )
-    {
-        var isManaged = preview.ReleaseFolderPath is not null;
-        var hasAdoptedMirror = preview.Mirrors.Any(mirror =>
-            mirror.Decision is LinkCrypterImportMirrorDecision.Adopt
-        );
-
-        if (
-            !isManaged
-            && preview.ArchiveFolderPath is null
-            && (
-                !hasAdoptedMirror
-                || linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles is null
-            )
-        )
-        {
-            throw new InvalidLinkCrypterImportException(
-                $"Release {releaseName} cannot be created: there is no local release folder, no existing archive folder and no adopted mirror with an archive base folder."
-            );
-        }
-
-        var releaseTemplate =
-            await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
-                linkCrypterImport.ReleaseTemplateId,
-                cancellationToken
-            )
-            ?? throw new InvalidOperationException(
-                $"Release template {linkCrypterImport.ReleaseTemplateId} was not found."
-            );
-
-        var releaseData = await releaseFromFolderCreationService.CreateWithReleaseTypeAsync(
-            releaseTemplate: releaseTemplate,
-            releaseType: isManaged ? ReleaseType.Managed : ReleaseType.Unmanaged,
-            releaseName: releaseName,
-            releaseFolderPath: preview.ReleaseFolderPath,
-            createUnmanagedArchiveConfig: isManaged
-                ? null
-                : release =>
-                    CreateUnmanagedArchiveConfig(
-                        release: release,
-                        linkCrypterImport: linkCrypterImport,
-                        preview: preview,
-                        archiveStorageFolders: archiveStorageFolders,
-                        localNow: localNow
-                    ),
-            primaryLanguageCode: linkCrypterImport.PrimaryLanguageCode,
-            resolveReleaseInfo: false,
+            uploadsPostedAt: localNow,
             localNow: localNow,
             cancellationToken: cancellationToken
         );
 
-        releaseData.Release.UploadsPostedAt = localNow;
-        releaseWriteRepository.Add(releaseData.Release);
-
-        return releaseData.Release;
-    }
-
-    private ArchiveConfig CreateUnmanagedArchiveConfig(
-        Release release,
-        LinkCrypterImport linkCrypterImport,
-        LinkCrypterImportContainerPreview preview,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow
-    )
-    {
-        if (preview.ArchiveFolderPath is not null)
-        {
-            var archiveConfig = unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
-                release: release,
-                archiveFolderPath: preview.ArchiveFolderPath,
-                createdAt: localNow
-            );
-
-            UnmanagedReleaseArchiveInitializationService.AssignArchiveStorageFolderContainingArchiveFolder(
-                archiveConfig.Archives.Single(),
-                archiveStorageFolders
-            );
-
-            return archiveConfig;
-        }
-
-        return CreateArchiveConfigWithDeletedArchive(
-            release: release,
-            archiveFilesBasePath: linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles!,
-            preview: preview,
-            localNow: localNow
+        EnsureContainerCanBeAdded(
+            container: container,
+            release: importedRelease.Release,
+            mirrorsWithUploadConfigs: importedRelease.MirrorsWithUploadConfigs
         );
-    }
 
-    private ArchiveConfig CreateArchiveConfigWithDeletedArchive(
-        Release release,
-        string archiveFilesBasePath,
-        LinkCrypterImportContainerPreview preview,
-        DateTime localNow
-    )
-    {
-        var archiveFileNames = GetFileNames(
-            preview.Mirrors.First(mirror =>
-                mirror.Decision is LinkCrypterImportMirrorDecision.Adopt
+        var uploadConfigsWithLinkCrypter = GetUploadConfigsReceivingLinkCrypter(importedRelease);
+        var linkCrypterRegistrationId = container.LinkCrypterImport.LinkCrypterRegistrationId;
+
+        if (
+            uploadConfigsWithLinkCrypter.Any(uploadConfig =>
+                HasReleaseCollectionLinkCrypter(uploadConfig, linkCrypterRegistrationId)
             )
-        );
-
-        return unmanagedReleaseArchiveInitializationService.CreateArchiveConfigWithDeletedArchive(
-            release: release,
-            archiveFilesBasePath: archiveFilesBasePath,
-            archiveFileNames: archiveFileNames,
-            archiverFileExtension: ArchivePartFileNames.GetArchiverFileExtension(
-                archiveFileNames[0]
-            )!,
-            createdAt: localNow
-        );
-    }
-
-    private static List<(
-        LinkCrypterImportMirror Mirror,
-        UploadConfig UploadConfig
-    )> GetMirrorsWithUploadConfigs(LinkCrypterImportContainerPreview preview, Release release)
-    {
-        var unusedUploadConfigs = release
-            .UploadConfigs.Where(uploadConfig =>
-                uploadConfig.UploadSource is UploadSource.ArchiveFiles
-            )
-            .OrderBy(uploadConfig => uploadConfig.Id)
-            .ToList();
-
-        var mirrorsWithUploadConfigs = new List<(LinkCrypterImportMirror, UploadConfig)>();
-
-        foreach (
-            var mirror in preview
-                .Mirrors.Where(mirror => mirror.HosterClassName is not null)
-                .OrderBy(mirror => mirror.MirrorNumber)
         )
         {
-            var uploadConfig = unusedUploadConfigs.FirstOrDefault(uploadConfig =>
-                uploadConfig.GetHosterClassName() == mirror.HosterClassName
+            container.ErrorMessages = [ContainerNotAdoptedBecauseOfReleaseCollectionMessage];
+
+            logger.LogInformation(
+                "Imported the uploads of container {ContainerUrl} into release {ReleaseName} without adopting the container because the release collection uses this link crypter account",
+                container.ContainerUrl,
+                container.ReleaseName
+            );
+        }
+        else
+        {
+            AddLinkCryptersAndLinkCrypterContainer(
+                container: container,
+                importedRelease: importedRelease,
+                uploadConfigsWithLinkCrypter: uploadConfigsWithLinkCrypter,
+                localNow: localNow
             );
 
-            if (uploadConfig is null)
-            {
-                continue;
-            }
+            container.ErrorMessages = [];
 
-            unusedUploadConfigs.Remove(uploadConfig);
-            mirrorsWithUploadConfigs.Add((mirror, uploadConfig));
+            logger.LogInformation(
+                "Imported container {ContainerUrl} into release {ReleaseName}",
+                container.ContainerUrl,
+                container.ReleaseName
+            );
         }
 
-        return mirrorsWithUploadConfigs;
+        container.ImportedRelease = importedRelease.Release;
+        container.Status = LinkCrypterImportContainerStatus.Imported;
     }
 
     private static void EnsureContainerCanBeAdded(
         LinkCrypterImportContainer container,
         Release release,
-        List<(LinkCrypterImportMirror Mirror, UploadConfig UploadConfig)> mirrorsWithUploadConfigs
+        IReadOnlyList<LinkCrypterImportMirrorWithUploadConfig> mirrorsWithUploadConfigs
     )
     {
         if (mirrorsWithUploadConfigs.Count == 0)
@@ -342,149 +250,105 @@ public class LinkCrypterImportContainerImportService(
         }
     }
 
-    private void AddImportedUploadsAndLinkCrypterContainer(
-        LinkCrypterImportContainer container,
-        Release release,
-        List<(LinkCrypterImportMirror Mirror, UploadConfig UploadConfig)> mirrorsWithUploadConfigs,
-        bool isNewRelease,
-        string? archiveFolderPath,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow
+    private static List<UploadConfig> GetUploadConfigsReceivingLinkCrypter(
+        LinkCrypterImportedRelease importedRelease
     )
     {
-        var linkCrypterImport = container.LinkCrypterImport;
-
-        var containerScope =
-            mirrorsWithUploadConfigs.Count == 1
-                ? LinkCrypterContainerScope.Release
-                : LinkCrypterContainerScope.ReleaseAllHosters;
-
-        var sourceUploads = mirrorsWithUploadConfigs
-            .Select(mirrorWithUploadConfig =>
-                GetOrAddSourceUploadOrDefault(
-                    linkCrypterImport: linkCrypterImport,
-                    release: release,
-                    mirror: mirrorWithUploadConfig.Mirror,
-                    uploadConfig: mirrorWithUploadConfig.UploadConfig,
-                    archiveFolderPath: archiveFolderPath,
-                    archiveStorageFolders: archiveStorageFolders,
-                    localNow: localNow
-                )
-            )
-            .OfType<Upload>()
-            .ToList();
-
-        var linkCrypters = mirrorsWithUploadConfigs
-            .Select(mirrorWithUploadConfig =>
-                GetOrAddLinkCrypter(
-                    uploadConfig: mirrorWithUploadConfig.UploadConfig,
-                    linkCrypterRegistrationId: linkCrypterImport.LinkCrypterRegistrationId,
-                    containerScope: containerScope
-                )
+        var uploadConfigs = importedRelease
+            .MirrorsWithUploadConfigs.Select(mirrorWithUploadConfig =>
+                mirrorWithUploadConfig.UploadConfig
             )
             .ToList();
-
-        if (isNewRelease && containerScope is LinkCrypterContainerScope.ReleaseAllHosters)
-        {
-            foreach (
-                var uploadConfig in release.UploadConfigs.Where(uploadConfig =>
-                    uploadConfig.UploadSource is UploadSource.ArchiveFiles
-                )
-            )
-            {
-                GetOrAddLinkCrypter(
-                    uploadConfig: uploadConfig,
-                    linkCrypterRegistrationId: linkCrypterImport.LinkCrypterRegistrationId,
-                    containerScope: containerScope
-                );
-            }
-        }
-
-        AddLinkCrypterContainer(
-            container: container,
-            release: release,
-            containerScope: containerScope,
-            linkCrypters: linkCrypters,
-            sourceUploads: sourceUploads,
-            localNow: localNow
-        );
-    }
-
-    private Upload? GetOrAddSourceUploadOrDefault(
-        LinkCrypterImport linkCrypterImport,
-        Release release,
-        LinkCrypterImportMirror mirror,
-        UploadConfig uploadConfig,
-        string? archiveFolderPath,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow
-    )
-    {
-        var completedUploads = uploadConfig
-            .Uploads.Where(upload => upload.UploadState is UploadState.Completed)
-            .ToList();
-
-        var uploadWithSameLinks = completedUploads.FirstOrDefault(upload =>
-            HasSameLinks(upload, mirror)
-        );
-
-        if (uploadWithSameLinks is not null)
-        {
-            return uploadWithSameLinks;
-        }
 
         if (
-            completedUploads.Count > 0
-            || mirror.Decision is not LinkCrypterImportMirrorDecision.Adopt
+            !importedRelease.IsNewRelease
+            || GetContainerScope(importedRelease) is not LinkCrypterContainerScope.ReleaseAllHosters
         )
         {
-            return null;
+            return uploadConfigs;
         }
 
-        var archive = GetOrAddArchiveWithFileNamesOrDefault(
-            archiveConfig: uploadConfig.ArchiveConfig!,
-            fileNames: GetFileNames(mirror),
-            existingArchiveFolderPath: IsArchiveFolderUsedByArchiveOfRelease(
-                release,
-                archiveFolderPath
-            )
-                ? null
-                : archiveFolderPath,
-            archiveStorageFolders: archiveStorageFolders,
-            localNow: localNow
+        var archiveFilesUploadConfigs = importedRelease.Release.UploadConfigs.Where(uploadConfig =>
+            uploadConfig.UploadSource is UploadSource.ArchiveFiles
         );
 
-        if (archive is null)
-        {
-            return null;
-        }
-
-        return AddImportedUpload(
-            uploadConfig: uploadConfig,
-            archive: archive,
-            mirror: mirror,
-            hosterRegistrationId: GetChosenHosterRegistrationId(linkCrypterImport, mirror),
-            localNow: localNow
-        );
+        return uploadConfigs.Union(archiveFilesUploadConfigs).ToList();
     }
 
-    private static bool HasSameLinks(Upload upload, LinkCrypterImportMirror mirror)
-    {
-        return mirror.Files.All(file => file.OwnFormatLink is not null)
-            && upload
-                .UploadedFiles.Select(file => file.HosterFileLink)
-                .ToHashSet(StringComparer.Ordinal)
-                .SetEquals(mirror.Files.Select(file => file.OwnFormatLink!));
-    }
-
-    private static int GetChosenHosterRegistrationId(
-        LinkCrypterImport linkCrypterImport,
-        LinkCrypterImportMirror mirror
+    private static LinkCrypterContainerScope GetContainerScope(
+        LinkCrypterImportedRelease importedRelease
     )
     {
-        return linkCrypterImport
-            .HosterRegistrations.Single(choice => choice.HosterClassName == mirror.HosterClassName)
-            .HosterRegistrationId!.Value;
+        return importedRelease.MirrorsWithUploadConfigs.Count == 1
+            ? LinkCrypterContainerScope.Release
+            : LinkCrypterContainerScope.ReleaseAllHosters;
+    }
+
+    private static bool HasReleaseCollectionLinkCrypter(
+        UploadConfig uploadConfig,
+        int linkCrypterRegistrationId
+    )
+    {
+        return uploadConfig.LinkCrypters.Any(linkCrypter =>
+            linkCrypter.LinkCrypterRegistrationId == linkCrypterRegistrationId
+            && linkCrypter.ContainerScope is LinkCrypterContainerScope.ReleaseCollection
+        );
+    }
+
+    private static void AddLinkCryptersAndLinkCrypterContainer(
+        LinkCrypterImportContainer container,
+        LinkCrypterImportedRelease importedRelease,
+        List<UploadConfig> uploadConfigsWithLinkCrypter,
+        DateTime localNow
+    )
+    {
+        var containerScope = GetContainerScope(importedRelease);
+
+        var linkCrypters = uploadConfigsWithLinkCrypter
+            .Select(uploadConfig =>
+                GetOrAddLinkCrypter(
+                    uploadConfig: uploadConfig,
+                    linkCrypterRegistrationId: container
+                        .LinkCrypterImport
+                        .LinkCrypterRegistrationId,
+                    containerScope: containerScope
+                )
+            )
+            .ToList();
+
+        var linkCrypterContainer = new LinkCrypterContainer
+        {
+            Scope = containerScope,
+            LinkCrypterRegistrationId = container.LinkCrypterImport.LinkCrypterRegistrationId,
+            ContainerUrl = container.ContainerUrl,
+            ExternalReference = container.ExternalReference,
+            State = LinkCrypterContainerState.Created,
+            Errors = [],
+            CreatedAt = localNow,
+            SourceUploads = [],
+            Notifications = [],
+        };
+
+        linkCrypterContainer.CopySettingsFrom(linkCrypters[0]);
+
+        if (containerScope is LinkCrypterContainerScope.ReleaseAllHosters)
+        {
+            linkCrypterContainer.Release = importedRelease.Release;
+            linkCrypterContainer.SourceUploads = importedRelease
+                .SourceUploads.Select(upload => new LinkCrypterContainerSourceUpload
+                {
+                    LinkCrypterContainer = linkCrypterContainer,
+                    Upload = upload,
+                })
+                .ToList();
+
+            importedRelease.Release.LinkCrypterContainers.Add(linkCrypterContainer);
+            return;
+        }
+
+        linkCrypterContainer.UploadConfigLinkCrypter = linkCrypters[0];
+        linkCrypterContainer.Upload = importedRelease.SourceUploads.SingleOrDefault();
+        linkCrypters[0].LinkCrypterContainers.Add(linkCrypterContainer);
     }
 
     private static UploadConfigLinkCrypter GetOrAddLinkCrypter(
@@ -504,6 +368,7 @@ public class LinkCrypterImportContainerImportService(
                 LinkCrypterRegistrationId = linkCrypterRegistrationId,
                 LinkCrypterContainers = [],
             };
+
             uploadConfig.LinkCrypters.Add(linkCrypter);
         }
 
@@ -512,183 +377,9 @@ public class LinkCrypterImportContainerImportService(
         return linkCrypter;
     }
 
-    private static void AddLinkCrypterContainer(
-        LinkCrypterImportContainer container,
-        Release release,
-        LinkCrypterContainerScope containerScope,
-        List<UploadConfigLinkCrypter> linkCrypters,
-        List<Upload> sourceUploads,
-        DateTime localNow
-    )
-    {
-        var linkCrypterContainer = new LinkCrypterContainer
-        {
-            Scope = containerScope,
-            LinkCrypterRegistrationId = container.LinkCrypterImport.LinkCrypterRegistrationId,
-            ContainerUrl = container.ContainerUrl,
-            ExternalReference = container.ExternalReference,
-            State = LinkCrypterContainerState.Created,
-            Errors = [],
-            CreatedAt = localNow,
-            SourceUploads = [],
-            Notifications = [],
-        };
-        linkCrypterContainer.CopySettingsFrom(linkCrypters[0]);
-
-        if (containerScope is LinkCrypterContainerScope.ReleaseAllHosters)
-        {
-            linkCrypterContainer.Release = release;
-            linkCrypterContainer.SourceUploads = sourceUploads
-                .Select(upload => new LinkCrypterContainerSourceUpload
-                {
-                    LinkCrypterContainer = linkCrypterContainer,
-                    Upload = upload,
-                })
-                .ToList();
-            release.LinkCrypterContainers.Add(linkCrypterContainer);
-            return;
-        }
-
-        linkCrypterContainer.UploadConfigLinkCrypter = linkCrypters[0];
-        linkCrypterContainer.Upload = sourceUploads.SingleOrDefault();
-        linkCrypters[0].LinkCrypterContainers.Add(linkCrypterContainer);
-    }
-
-    private static Upload AddImportedUpload(
-        UploadConfig uploadConfig,
-        Archive archive,
-        LinkCrypterImportMirror mirror,
-        int hosterRegistrationId,
-        DateTime localNow
-    )
-    {
-        var archiveFilesByFileName = archive.ArchiveFiles.ToDictionary(
-            archiveFile => Path.GetFileName(archiveFile.FullFileName),
-            StringComparer.OrdinalIgnoreCase
-        );
-
-        var upload = new Upload
-        {
-            UploadConfig = uploadConfig,
-            HosterRegistrationId = hosterRegistrationId,
-            Archive = archive,
-            CreatedAt = localNow,
-            UploadedAt = localNow,
-            UploadState = UploadState.Completed,
-            OnlineState = OnlineState.Online,
-            PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
-            ErrorMessages = [],
-            LinkCrypterContainers = [],
-            Notifications = [],
-            UploadedFiles = mirror
-                .Files.Select(file => new UploadedFile
-                {
-                    HosterFileLink = file.OwnFormatLink!,
-                    ArchiveFile = archiveFilesByFileName[file.FileName!],
-                    OnlineState = OnlineState.Online,
-                    ErrorMessages = [],
-                    CreatedAt = localNow,
-                })
-                .ToList(),
-        };
-
-        uploadConfig.Uploads.Add(upload);
-
-        return upload;
-    }
-
-    private static bool IsArchiveFolderUsedByArchiveOfRelease(
-        Release release,
-        string? archiveFolderPath
-    )
-    {
-        return release
-            .UploadConfigs.Select(uploadConfig => uploadConfig.ArchiveConfig)
-            .OfType<ArchiveConfig>()
-            .SelectMany(archiveConfig => archiveConfig.Archives)
-            .Any(archive => archive.ArchiveFolderPath == archiveFolderPath);
-    }
-
-    private Archive? GetOrAddArchiveWithFileNamesOrDefault(
-        ArchiveConfig archiveConfig,
-        List<string> fileNames,
-        string? existingArchiveFolderPath,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow
-    )
-    {
-        var latestArchive = archiveConfig.Archives.MaxBy(archive => archive.Id);
-
-        if (latestArchive is not null)
-        {
-            return HasFileNames(latestArchive, fileNames) ? latestArchive : null;
-        }
-
-        var archive = existingArchiveFolderPath is null
-            ? UnmanagedReleaseArchiveInitializationService.BuildDeletedArchive(
-                archiveFolderPath: archiveConfig.ArchiveFilesBasePath,
-                archiveFileNames: fileNames,
-                archiveFileSizeMb: archiveConfig.ArchiveFileSizeMb,
-                createdAt: localNow
-            )
-            : BuildArchiveInExistingArchiveFolder(
-                existingArchiveFolderPath: existingArchiveFolderPath,
-                fileNames: fileNames,
-                archiveStorageFolders: archiveStorageFolders,
-                localNow: localNow
-            );
-        archiveConfig.Archives.Add(archive);
-
-        return archive;
-    }
-
-    private Archive BuildArchiveInExistingArchiveFolder(
-        string existingArchiveFolderPath,
-        List<string> fileNames,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow
-    )
-    {
-        var archive = UnmanagedReleaseArchiveInitializationService.BuildArchive(
-            archiveFolderPath: existingArchiveFolderPath,
-            archiveFilePaths: GetFilePathsWithFileNames(existingArchiveFolderPath, fileNames),
-            createdAt: localNow
-        );
-
-        UnmanagedReleaseArchiveInitializationService.AssignArchiveStorageFolderContainingArchiveFolder(
-            archive,
-            archiveStorageFolders
-        );
-
-        return archive;
-    }
-
-    private List<string> GetFilePathsWithFileNames(string folderPath, List<string> fileNames)
-    {
-        return fileSystemService
-            .GetFilesInPath(folderPath, recursive: false)
-            .Where(filePath =>
-                fileNames.Contains(Path.GetFileName(filePath), StringComparer.OrdinalIgnoreCase)
-            )
-            .Order(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private static bool HasFileNames(Archive archive, List<string> fileNames)
-    {
-        return archive
-            .ArchiveFiles.Select(archiveFile => Path.GetFileName(archiveFile.FullFileName))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase)
-            .SetEquals(fileNames);
-    }
-
-    private static List<string> GetFileNames(LinkCrypterImportMirror mirror)
-    {
-        return mirror.Files.Select(file => file.FileName!).ToList();
-    }
-
     private async Task CompleteImportAsync(
         int linkCrypterImportId,
+        int releaseCountWithMovedArchiveParts,
         CancellationToken cancellationToken
     )
     {
@@ -707,12 +398,17 @@ public class LinkCrypterImportContainerImportService(
             container.Status is LinkCrypterImportContainerStatus.ImportFailed
         );
 
+        var movedArchivePartsMessage =
+            releaseCountWithMovedArchiveParts > 0
+                ? $" The archive parts of {releaseCountWithMovedArchiveParts} releases were moved into subfolders named after the release."
+                : "";
+
         linkCrypterImport.ChangeState(LinkCrypterImportState.Completed, timeProvider.GetLocalNow());
         notificationService.Create(
             kind: failedContainerCount == 0
                 ? NotificationKind.LinkCrypterImportCompleted
                 : NotificationKind.LinkCrypterImportFailed,
-            message: $"Link crypter import {linkCrypterImportId} finished: {importedContainerCount} containers were imported, {failedContainerCount} containers failed."
+            message: $"Link crypter import {linkCrypterImportId} finished: {importedContainerCount} containers were imported, {failedContainerCount} containers failed.{movedArchivePartsMessage}"
         );
         await repository.SaveChangesAsync(cancellationToken);
     }

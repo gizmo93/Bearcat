@@ -13,6 +13,7 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
         LinkCrypterImportState.ReadingContainers,
         LinkCrypterImportState.CheckingFiles,
         LinkCrypterImportState.Importing,
+        LinkCrypterImportState.Reimporting,
     ];
 
     public async Task<LinkCrypterRegistration?> GetLinkCrypterRegistrationOrDefaultAsync(
@@ -127,6 +128,11 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
         return await dbWrite
             .Releases.AsSplitQuery()
             .Include(release => release.LinkCrypterContainers)
+            .Include(release => release.ReleaseCollection)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.CollectionUploadSlot)
+                    .ThenInclude(slot => slot!.UploadConfigs)
+                        .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
             .Include(release => release.UploadConfigs)
                 .ThenInclude(uploadConfig => uploadConfig.HosterRegistration)
             .Include(release => release.UploadConfigs)
@@ -150,6 +156,67 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
                 release => release.Name.ToLower() == lowerReleaseName,
                 cancellationToken
             );
+    }
+
+    public async Task<Release> GetReleaseForReimportAsync(
+        int releaseId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(release => release.PostedLocations)
+            .Include(release => release.LinkCrypterContainers)
+                .ThenInclude(container => container.SourceUploads)
+            .Include(release => release.ArchiveConfigs)
+                .ThenInclude(archiveConfig => archiveConfig.Archives)
+                    .ThenInclude(archive => archive.ArchiveFiles)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.HosterRegistration)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.HosterAccountPool)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.Uploads)
+                    .ThenInclude(upload => upload.HosterRegistration)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.Uploads)
+                    .ThenInclude(upload => upload.UploadedFiles)
+                        .ThenInclude(uploadedFile => uploadedFile.ArchiveFile)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.Uploads)
+                    .ThenInclude(upload => upload.LinkCrypterContainers)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+                    .ThenInclude(linkCrypter => linkCrypter.LinkCrypterContainers)
+                        .ThenInclude(container => container.SourceUploads)
+            .FirstAsync(release => release.Id == releaseId, cancellationToken);
+    }
+
+    public async Task<
+        IReadOnlyList<LinkCrypterImportContainer>
+    > GetContainersImportedIntoReleaseAsync(int releaseId, CancellationToken cancellationToken)
+    {
+        return await dbWrite
+            .LinkCrypterImportContainers.Where(container =>
+                container.ImportedReleaseId == releaseId
+            )
+            .OrderBy(container => container.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<LinkCrypterContainer?> GetCollectionLinkCrypterContainerOrDefaultAsync(
+        int collectionUploadSlotId,
+        int linkCrypterRegistrationId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.LinkCrypterContainers.FirstOrDefaultAsync(
+            container =>
+                container.Scope == LinkCrypterContainerScope.ReleaseCollection
+                && container.CollectionUploadSlotId == collectionUploadSlotId
+                && container.LinkCrypterRegistrationId == linkCrypterRegistrationId,
+            cancellationToken
+        );
     }
 
     public async Task<IReadOnlyList<int>> GetIdsOfSelectedImportableContainersAsync(
@@ -206,9 +273,19 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
         dbWrite.Add(linkCrypterImport);
     }
 
+    public void Add(LinkCrypterContainer linkCrypterContainer)
+    {
+        dbWrite.Add(linkCrypterContainer);
+    }
+
     public void Remove(LinkCrypterImport linkCrypterImport)
     {
         dbWrite.Remove(linkCrypterImport);
+    }
+
+    public void DetectChanges()
+    {
+        dbWrite.ChangeTracker.DetectChanges();
     }
 
     public void ClearChangeTracker()

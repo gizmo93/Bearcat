@@ -5,6 +5,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -208,11 +209,9 @@ public class LinkCrypterImportService(
             cancellationToken
         );
 
-        EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
-
         foreach (
-            var container in GetContainersOfRelease(linkCrypterImport, releaseName)
-                .Where(container => container.Status is LinkCrypterImportContainerStatus.Importable)
+            var container in GetSelectableContainers(linkCrypterImport)
+                .Where(container => HasReleaseName(container, releaseName))
         )
         {
             container.IsSelected = isSelected;
@@ -221,7 +220,7 @@ public class LinkCrypterImportService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SetSelectionOfAllImportableContainersAsync(
+    public async Task SetSelectionOfAllSelectableContainersAsync(
         int linkCrypterImportId,
         bool isSelected,
         CancellationToken cancellationToken = default
@@ -232,9 +231,7 @@ public class LinkCrypterImportService(
             cancellationToken
         );
 
-        EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
-
-        foreach (var container in GetImportableContainers(linkCrypterImport))
+        foreach (var container in GetSelectableContainers(linkCrypterImport))
         {
             container.IsSelected = isSelected;
         }
@@ -254,12 +251,55 @@ public class LinkCrypterImportService(
 
         EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
 
+        if (
+            GetImportableContainers(linkCrypterImport)
+                .Any(container =>
+                    LinkCrypterImportContainerPreview.FromJson(container.PreviewJson).Releases
+                        is null
+                )
+        )
+        {
+            await previewService.CreatePreviewsAsync(linkCrypterImport, cancellationToken);
+        }
+
         linkCrypterImport.ChangeState(LinkCrypterImportState.Importing, timeProvider.GetLocalNow());
 
         linkCrypterImport.StartProgress(
             GetImportableContainers(linkCrypterImport).Count(container => container.IsSelected)
         );
 
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task StartReimportAsync(
+        int linkCrypterImportId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var linkCrypterImport = await repository.GetWithContainersAsync(
+            linkCrypterImportId,
+            cancellationToken
+        );
+
+        EnsureState(linkCrypterImport, LinkCrypterImportState.Completed);
+
+        var selectedContainerCount = GetSelectableContainers(linkCrypterImport)
+            .Count(container => container.IsSelected);
+
+        if (selectedContainerCount == 0)
+        {
+            throw new InvalidLinkCrypterImportException(
+                "At least one container that can be re-imported must be selected."
+            );
+        }
+
+        linkCrypterImport.ChangeState(
+            LinkCrypterImportState.Reimporting,
+            timeProvider.GetLocalNow()
+        );
+
+        linkCrypterImport.ErrorMessages = [];
+        linkCrypterImport.StartProgress(selectedContainerCount);
         await repository.SaveChangesAsync(cancellationToken);
     }
 
@@ -278,6 +318,7 @@ public class LinkCrypterImportService(
             is LinkCrypterImportState.ReadingContainers
                 or LinkCrypterImportState.CheckingFiles
                 or LinkCrypterImportState.Importing
+                or LinkCrypterImportState.Reimporting
         )
         {
             throw new InvalidLinkCrypterImportException(
@@ -300,20 +341,39 @@ public class LinkCrypterImportService(
             .ToList();
     }
 
+    private static List<LinkCrypterImportContainer> GetSelectableContainers(
+        LinkCrypterImport linkCrypterImport
+    )
+    {
+        return linkCrypterImport.State switch
+        {
+            LinkCrypterImportState.ReadyForReview => GetImportableContainers(linkCrypterImport),
+            LinkCrypterImportState.Completed => linkCrypterImport
+                .Containers.Where(LinkCrypterImportContainerReimportCheck.CanBeReimported)
+                .ToList(),
+            _ => throw new InvalidLinkCrypterImportException(
+                $"The containers of link crypter import {linkCrypterImport.Id} cannot be selected in state {linkCrypterImport.State}."
+            ),
+        };
+    }
+
     private static List<LinkCrypterImportContainer> GetContainersOfRelease(
         LinkCrypterImport linkCrypterImport,
         string releaseName
     )
     {
         return linkCrypterImport
-            .Containers.Where(container =>
-                string.Equals(
-                    container.ReleaseName,
-                    releaseName,
-                    StringComparison.OrdinalIgnoreCase
-                )
-            )
+            .Containers.Where(container => HasReleaseName(container, releaseName))
             .ToList();
+    }
+
+    private static bool HasReleaseName(LinkCrypterImportContainer container, string releaseName)
+    {
+        return string.Equals(
+            container.ReleaseName,
+            releaseName,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     private static void EnsureState(

@@ -1,0 +1,114 @@
+<div class="space-y-6">
+    @if (plan is null && errorMessage is null)
+    {
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+            <BbSpinner Size="SpinnerSize.Small" />
+            <span>@L["LinkCrypterImportReimportPlanning"]</span>
+        </div>
+    }
+
+    @if (plan is not null)
+    {
+        <div class="space-y-1 text-sm">
+            <p class="[overflow-wrap:anywhere]">@L["LinkCrypterImportReimportSummary", plan.ImportedReleaseName]</p>
+            @if (plan.ReleaseCollectionName is { } releaseCollectionName)
+            {
+                <p class="text-muted-foreground [overflow-wrap:anywhere]">@L["LinkCrypterImportReleaseCollection", releaseCollectionName]</p>
+            }
+        </div>
+
+        @if (plan.Blockers.Count > 0)
+        {
+            <div class="space-y-1 rounded-md border border-destructive/50 px-3 py-2 text-sm text-destructive">
+                <p class="font-medium">@L["LinkCrypterImportReimportBlockers"]</p>
+                <ul class="list-disc space-y-0.5 pl-5">
+                    @foreach (var blocker in plan.Blockers)
+                    {
+                        <li class="[overflow-wrap:anywhere]">@GetBlockerText(blocker)</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="space-y-2">
+            @foreach (var release in plan.Releases)
+            {
+                <div class="space-y-1 rounded-md border border-border/70 px-3 py-2 text-sm">
+                    <p class="font-medium [overflow-wrap:anywhere]">@release.Preview.ReleaseName</p>
+                    <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                        @L.Localize(release.Preview.ReleaseAction) · @LinkCrypterImportLocalFilesText.Get(L, release.Preview, archivePartsWereMoved: false)
+                    </p>
+                    <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                        @GetMovedUploadsText(release)
+                    </p>
+                </div>
+            }
+        </div>
+
+        @if (plan.UploadsNotMoved.Count > 0)
+        {
+            <div class="space-y-1 text-sm">
+                <p class="font-medium">@L["LinkCrypterImportReimportUploadsNotMoved"]</p>
+                <ul class="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                    @foreach (var uploadNotMoved in plan.UploadsNotMoved)
+                    {
+                        <li class="[overflow-wrap:anywhere]">
+                            @L["LinkCrypterImportReimportUploadNotMoved", uploadNotMoved.UploadConfigName, uploadNotMoved.ArchiveBaseName ?? "-", uploadNotMoved.FileCount]
+                            · @L.Localize(uploadNotMoved.Reason)
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (plan.ConvertedContainerUrls.Count > 0)
+        {
+            <div class="space-y-1 text-sm">
+                <p class="font-medium">@L["LinkCrypterImportReimportConvertedContainers"]</p>
+                <ul class="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                    @foreach (var containerUrl in plan.ConvertedContainerUrls)
+                    {
+                        <li class="[overflow-wrap:anywhere]">@containerUrl</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (plan.ContainersNotConverted.Count > 0)
+        {
+            <div class="space-y-1 text-sm">
+                <p class="font-medium">@L["LinkCrypterImportReimportContainersNotConverted"]</p>
+                <ul class="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                    @foreach (var containerNotConverted in plan.ContainersNotConverted)
+                    {
+                        <li class="[overflow-wrap:anywhere]">
+                            @containerNotConverted.ContainerUrl · @L.Localize(containerNotConverted.Reason)
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    }
+
+    @if (errorMessage is not null)
+    {
+        <p class="text-sm text-destructive [overflow-wrap:anywhere]">@errorMessage</p>
+    }
+
+    <div class="flex flex-wrap items-center justify-end gap-2">
+        @if (isReimporting)
+        {
+            <div class="mr-auto flex items-center gap-2 text-sm text-muted-foreground">
+                <BbSpinner Size="SpinnerSize.Small" />
+                <span>@L["LinkCrypterImportReimportRunning"]</span>
+            </div>
+        }
+        <BbButton Variant="ButtonVariant.Outline" Disabled="isReimporting" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Disabled="@(isReimporting || plan is null || plan.Blockers.Count > 0)"
+                  OnClick="ReimportAsync">
+            @L["Reimport"]
+        </BbButton>
+    </div>
+</div>

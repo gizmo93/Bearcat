@@ -10,4 +10,6 @@ public interface IReleaseCollectionAssigner
         IReadOnlyList<ReleaseUploadConfigMatch> uploadConfigMatches,
         CancellationToken cancellationToken = default
     );
+
+    void ClearCachedReleaseCollections();
 }

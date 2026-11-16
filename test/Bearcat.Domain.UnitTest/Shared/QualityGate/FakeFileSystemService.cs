@@ -40,6 +40,9 @@ public sealed class FakeFileSystemService : IFileSystemService
     public void CopyFile(string sourceFilePath, string destinationFilePath) =>
         throw new NotSupportedException();
 
+    public void MoveFile(string sourceFilePath, string destinationFilePath) =>
+        throw new NotSupportedException();
+
     public Task CopyFileAsync(
         string sourceFilePath,
         string destinationFilePath,

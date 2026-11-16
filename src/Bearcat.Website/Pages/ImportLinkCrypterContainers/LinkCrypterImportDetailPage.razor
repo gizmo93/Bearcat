@@ -104,6 +104,16 @@
             </div>
         }
 
+        @if (detail.State is LinkCrypterImportState.Completed && detail.SelectableContainerCount > 0)
+        {
+            <div class="flex flex-wrap items-center gap-2">
+                <BbButton Class="sm:ml-auto" Disabled="@(isSubmitting || detail.SelectedContainerCount == 0)" OnClick="StartReimportAsync">
+                    <LucideIcon Name="split" class="h-4 w-4" />
+                    @L["ReimportSelectedLinkCrypterContainersWithCount", detail.SelectedContainerCount]
+                </BbButton>
+            </div>
+        }
+
         @if (ShowsReleases)
         {
             <LinkCrypterImportReleaseList Detail="detail"

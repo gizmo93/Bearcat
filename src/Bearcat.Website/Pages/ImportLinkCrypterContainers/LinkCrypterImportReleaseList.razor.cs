@@ -13,6 +13,7 @@ namespace Bearcat.Website.Pages.ImportLinkCrypterContainers;
 
 public partial class LinkCrypterImportReleaseList(
     ToastService toastService,
+    DialogService dialogService,
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
@@ -43,13 +44,15 @@ public partial class LinkCrypterImportReleaseList(
 
     private bool CanChangeReleases => Detail.State is LinkCrypterImportState.ReadyForReview;
 
-    private int ImportableContainerCount => GetImportableContainerCount();
+    private bool CanChangeSelection =>
+        Detail.State is LinkCrypterImportState.ReadyForReview or LinkCrypterImportState.Completed
+        && Detail.SelectableContainerCount > 0;
 
-    private bool AreAllImportableContainersSelected =>
-        Detail.SelectedContainerCount == ImportableContainerCount;
+    private bool AreAllSelectableContainersSelected =>
+        Detail.SelectedContainerCount == Detail.SelectableContainerCount;
 
-    private bool AreSomeImportableContainersSelected =>
-        Detail.SelectedContainerCount > 0 && !AreAllImportableContainersSelected;
+    private bool AreSomeSelectableContainersSelected =>
+        Detail.SelectedContainerCount > 0 && !AreAllSelectableContainersSelected;
 
     private int CurrentPage => pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / PageSize));
@@ -157,13 +160,13 @@ public partial class LinkCrypterImportReleaseList(
         await OnReleasesChanged.InvokeAsync();
     }
 
-    private async Task SetSelectionOfAllImportableContainersAsync(bool isSelected)
+    private async Task SetSelectionOfAllSelectableContainersAsync(bool isSelected)
     {
         try
         {
             await operationRunner.RunAsync(
                 (LinkCrypterImportService service) =>
-                    service.SetSelectionOfAllImportableContainersAsync(Detail.Id, isSelected)
+                    service.SetSelectionOfAllSelectableContainersAsync(Detail.Id, isSelected)
             );
         }
         catch (InvalidLinkCrypterImportException exception)
@@ -177,43 +180,88 @@ public partial class LinkCrypterImportReleaseList(
     private static bool IsReleasePartlySelected(LinkCrypterImportReleaseReadModel release)
     {
         return !release.IsSelected
-            && release.Containers.Any(container =>
-                container.Status is LinkCrypterImportContainerStatus.Importable
-                && container.IsSelected
-            );
+            && release.Containers.Any(container => container.IsSelectable && container.IsSelected);
     }
 
-    private int GetImportableContainerCount()
+    private static IReadOnlyList<LinkCrypterImportMirror> GetMirrorsOfSingleRelease(
+        LinkCrypterImportContainerPreview preview
+    )
     {
-        return Detail
-            .ContainerCountsByStatus.Where(count =>
-                count.Status is LinkCrypterImportContainerStatus.Importable
-            )
-            .Sum(count => count.Count);
+        return preview.Releases is { Count: 1 } releasePreviews
+            ? releasePreviews.Single().Mirrors
+            : preview.Mirrors;
+    }
+
+    private static List<LinkCrypterImportMirror> GetMirrorsWithoutRelease(
+        LinkCrypterImportContainerPreview preview
+    )
+    {
+        var mirrorNumbersOfReleases = preview
+            .Releases!.SelectMany(releasePreview => releasePreview.Mirrors)
+            .Select(mirror => mirror.MirrorNumber)
+            .ToHashSet();
+
+        return preview
+            .Mirrors.Where(mirror => !mirrorNumbersOfReleases.Contains(mirror.MirrorNumber))
+            .ToList();
     }
 
     private string GetLocalFilesText(LinkCrypterImportReleaseReadModel release)
     {
-        if (release.ReleaseAction is not LinkCrypterImportReleaseAction.CreateRelease)
+        return LinkCrypterImportLocalFilesText.Get(
+            localizer: L,
+            releaseAction: release.ReleaseAction,
+            releaseFolderPath: release.ReleaseFolderPath,
+            archiveFolderPath: release.ArchiveFolderPath
+        );
+    }
+
+    private string GetLocalFilesText(
+        LinkCrypterImportContainerReadModel container,
+        LinkCrypterImportReleasePreview releasePreview
+    )
+    {
+        return LinkCrypterImportLocalFilesText.Get(
+            localizer: L,
+            releasePreview: releasePreview,
+            archivePartsWereMoved: container.Status is LinkCrypterImportContainerStatus.Imported
+        );
+    }
+
+    private async Task ShowReimportDialogAsync(LinkCrypterImportContainerReadModel container)
+    {
+        var result = await dialogService.OpenAsync<LinkCrypterImportReimportDialog>(
+            new Dictionary<string, object?>
+            {
+                [nameof(LinkCrypterImportReimportDialog.LinkCrypterImportContainerId)] =
+                    container.Id,
+            },
+            new DialogOpenOptions
+            {
+                Title = L["ReimportLinkCrypterContainer"],
+                Description = L["ReimportLinkCrypterContainerDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (result.Cancelled)
         {
-            return "-";
+            return;
         }
 
-        List<string> localFolderTexts = [];
+        var releaseCountWithMovedArchiveParts = result.GetData<int>();
 
-        if (release.ReleaseFolderPath is { } releaseFolderPath)
-        {
-            localFolderTexts.Add(L["LinkCrypterImportReleaseFolder", releaseFolderPath]);
-        }
-
-        if (release.ArchiveFolderPath is { } archiveFolderPath)
-        {
-            localFolderTexts.Add(L["LinkCrypterImportArchiveFolder", archiveFolderPath]);
-        }
-
-        return localFolderTexts.Count == 0
-            ? L["LinkCrypterImportNoLocalFiles"]
-            : string.Join("; ", localFolderTexts);
+        toastService.Success(
+            releaseCountWithMovedArchiveParts > 0
+                ? L[
+                    "LinkCrypterContainerReimportedWithMovedArchiveParts",
+                    releaseCountWithMovedArchiveParts
+                ]
+                : L["LinkCrypterContainerReimported"]
+        );
+        await OnReleasesChanged.InvokeAsync();
     }
 
     private string GetHosterName(string? hosterClassName)

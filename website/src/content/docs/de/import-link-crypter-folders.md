@@ -68,6 +68,11 @@ und lädt nichts herunter. Ohne Releaseordner bleibt das Release auch mit vorhan
 
 Die letzten beiden Bedingungen gelten nur, wenn beim Import ein neues Release entsteht.
 
+Bei [Staffelordnern](#staffelordner) scheitert der Import auch in diesen Fällen:
+
+- Das Releasetemplate hat keine Collectionerkennung.
+- Die Folgen gehören nicht zur selben Collection.
+
 ## Bestehende Releases
 
 Bearcat erkennt bestehende Releases am Namen, unabhängig von der Gross- und Kleinschreibung.
@@ -78,6 +83,23 @@ Es verwendet den Ordnernamen oder den Namen, den du bei der Prüfung eingegeben 
 - Ein Mirror mit denselben Links wie ein bestehender Upload wird mit diesem Upload verknüpft.
 - Gibt es für einen Hoster schon einen neueren Upload, übernimmt der Container dessen Links beim nächsten Update.
 - Der Import eines Ordners schlägt fehl, wenn das Release für einen seiner Hoster schon einen Container desselben Crypteraccounts hat.
+
+## Staffelordner
+
+Ein Ordner kann mehrere Folgen enthalten, zum Beispiel eine ganze Staffel. Bearcat erkennt sie an den
+Archivdateinamen, etwa `Show.S01E01...part1.rar` und `Show.S01E02...part1.rar`. Enthält ein Mirror mehrere
+Archive, legt Bearcat für jedes ein Release an. Als Name dient der Archivname ohne Partnummer.
+Bei der Prüfung siehst du die Folgen unter dem Ordner.
+
+- Im Releasetemplate muss die [Collectionerkennung](/Bearcat/de/release-collections/#wie-eine-collection-entsteht) eingerichtet sein. Alle Folgen müssen derselben Collection zugeordnet werden.
+- Bearcat sucht die lokalen Dateien jeder Folge einzeln. Ein Ordner, der genau die Parts einer Folge enthält, wird unverändert verwendet.
+- Liegen alle Folgen in einem Ordner, verschiebt Bearcat die Parts jeder Folge in einen Unterordner mit dem Namen der Folge. Die Prüfung und die Benachrichtigung am Ende zeigen das an.
+- Bearcat übernimmt den Ordner als Container des [Uploadslots](/Bearcat/de/release-collections/#uploadslots) der Collection. Alle Mirrors des Ordners müssen zu diesem Slot gehören, sonst schlägt der Import fehl.
+- Mirrors mit unbekannten Dateinamen oder ohne Archivparts lassen sich keiner Folge zuordnen und werden übersprungen.
+- Der Import schlägt fehl, wenn der Uploadslot schon einen anderen Container desselben Crypteraccounts hat oder ein Release der Collection diesen Crypteraccount für eigene Container nutzt.
+
+Importierst du einen Ordner mit nur einer Folge und nutzt ihr Uploadslot bereits denselben Crypteraccount,
+übernimmt Bearcat den Ordner ohne seinen Container. Die Links der Folge kommen in den Container der Collection.
 
 ## Linkcryptercontainer
 
@@ -90,4 +112,24 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 
 - Neue Releases übernehmen die **Primärsprache** des Imports für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
 - Releaseinformationen (xrel, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
-- Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/).
+- Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/). Das gilt auch für Collections aus einem Staffelordner.
+
+## Staffelordner neu importieren
+
+Bevor Bearcat Staffelordner erkennen konnte, hat es für die ganze Staffel ein einziges Release angelegt.
+Solche Ordner kannst du mit **Neu importieren** aufteilen. Im Dialog siehst du vor dem Bestätigen, was sich ändert:
+
+- Bearcat legt pro Folge ein Release in einer Collection an, wie unter [Staffelordner](#staffelordner) beschrieben.
+- Abgeschlossene Uploads des alten Releases teilt Bearcat nach Archivnamen auf die Folgen auf. Links und Prüfhistorie bleiben erhalten.
+- Bearcat übernimmt auch weitere Container des alten Releases für die Collection, darunter Ordner von anderen Cryptern. Lässt sich ein Container nicht übernehmen, zeigt der Dialog seine URL.
+- Bearcat ordnet die Posts des alten Releases der Collection zu.
+- Danach löscht Bearcat das alte Release. Bei Hostern und Linkcryptern wird nichts gelöscht.
+
+Solange Bearcat einen Upload oder ein Archiv des alten Releases verarbeitet, kannst du den Ordner nicht neu importieren.
+
+Mehrere Ordner importierst du auf einmal neu, indem du sie auf der Importseite auswählst (standardmässig sind alle ausgewählt) und auf **Ausgewählte neu importieren** klickst.
+
+![Auswahl der neu zu importierenden Ordner](../images/link-crypter-import-reimport-selection.png)
+
+Bearcat importiert sie im Hintergrund neu und benachrichtigt dich, wenn es fertig ist. Ordner, die sich nicht neu importieren lassen, behalten ihr Release und zeigen den Grund an.
+Nur der Dialog von **Neu importieren** für einen einzelnen Ordner zeigt die Änderungen vor dem Bestätigen.

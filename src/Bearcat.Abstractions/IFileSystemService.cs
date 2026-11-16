@@ -17,6 +17,7 @@ public interface IFileSystemService
     long GetFileSizeBytes(string filePath);
     void CreateDirectory(string path);
     void CopyFile(string sourceFilePath, string destinationFilePath);
+    void MoveFile(string sourceFilePath, string destinationFilePath);
     Task CopyFileAsync(
         string sourceFilePath,
         string destinationFilePath,
