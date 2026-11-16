@@ -1121,6 +1121,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<bool>("HasBackupLinks")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("ImportedReleaseCollectionId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ImportedReleaseId")
                         .HasColumnType("integer");
 
@@ -1146,6 +1149,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImportedReleaseCollectionId");
 
                     b.HasIndex("ImportedReleaseId");
 
@@ -3227,6 +3232,11 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportContainer", b =>
                 {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ImportedReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ImportedReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bearcat.Domain.Entities.Release", "ImportedRelease")
                         .WithMany()
                         .HasForeignKey("ImportedReleaseId")
@@ -3239,6 +3249,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired();
 
                     b.Navigation("ImportedRelease");
+
+                    b.Navigation("ImportedReleaseCollection");
 
                     b.Navigation("LinkCrypterImport");
                 });

@@ -32,6 +32,7 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reading;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -282,6 +283,10 @@ public static class ServiceProviderConfig
             services.AddScoped<LinkCrypterImportContainerReadingService>();
             services.AddScoped<LinkCrypterImportPreviewService>();
             services.AddScoped<LinkCrypterImportContainerImportService>();
+            services.AddScoped<LinkCrypterImportReleaseImportService>();
+            services.AddScoped<CollectionContainerImportService>();
+            services.AddScoped<ArchivePartMover>();
+            services.AddScoped<LinkCrypterImportContainerReimportService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();

@@ -5,4 +5,6 @@ public enum LinkCrypterImportNotImportableReason
     NoMirrorForReleaseHoster = 1,
     NoAdoptedMirrorAndNoReleaseFolder = 2,
     ArchiveFilesBasePathMissing = 3,
+    ReleaseCollectionDetectionDisabled = 4,
+    ReleasesNotInSameReleaseCollection = 5,
 }

@@ -15,6 +15,7 @@ public sealed record LinkCrypterImportDetailReadModel(
     DateTime UpdatedAt,
     int ProcessedContainerCount,
     int ContainerCountToProcess,
+    int SelectableContainerCount,
     int SelectedContainerCount,
     int SelectedReleaseCount,
     IReadOnlyList<string> ErrorMessages,

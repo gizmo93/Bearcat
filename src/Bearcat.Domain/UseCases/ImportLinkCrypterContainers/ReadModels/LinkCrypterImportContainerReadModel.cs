@@ -9,9 +9,12 @@ public sealed record LinkCrypterImportContainerReadModel(
     string ContainerUrl,
     bool HasBackupLinks,
     bool IsSelected,
+    bool IsSelectable,
     LinkCrypterImportContainerStatus Status,
     LinkCrypterImportNotImportableReason? NotImportableReason,
     int? ImportedReleaseId,
+    int? ImportedReleaseCollectionId,
     IReadOnlyList<string> ErrorMessages,
-    LinkCrypterImportContainerPreview Preview
+    LinkCrypterImportContainerPreview Preview,
+    bool CanBeReimported
 );

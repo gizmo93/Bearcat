@@ -127,6 +127,11 @@ public class ReleaseCollectionAssignmentService(
         }
     }
 
+    public void ClearCachedReleaseCollections()
+    {
+        releaseCollectionsByKey.Clear();
+    }
+
     private async Task<ReleaseCollection?> GetByNameOrCreateAsync(
         Release release,
         ReleaseTemplate releaseTemplate,
