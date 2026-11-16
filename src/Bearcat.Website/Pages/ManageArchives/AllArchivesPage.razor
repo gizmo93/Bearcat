@@ -15,6 +15,35 @@
                        Query="searchQuery"
                        OnSearch="ApplySearchAsync" />
 
+    @if (selectedArchiveIds.Count > 0)
+    {
+        <div class="flex flex-wrap items-center gap-2 rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+            <span class="text-sm font-medium tabular-nums">@L["SelectedCount", selectedArchiveIds.Count]</span>
+            @if (!AreAllArchivesOnPageSelected)
+            {
+                <BbButton Variant="ButtonVariant.Ghost"
+                          Size="ButtonSize.Small"
+                          OnClick="ToggleSelectionOfAllArchivesOnPage">
+                    <LucideIcon Name="list-checks" class="h-4 w-4" />
+                    @L["SelectAllOnPage"]
+                </BbButton>
+            }
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      OnClick="ShowRelocateArchiveFoldersDialogAsync">
+                <LucideIcon Name="folder-search" class="h-4 w-4" />
+                @L["ChangeArchiveFolders"]
+            </BbButton>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.Small"
+                      Class="sm:ml-auto"
+                      OnClick="ClearSelection">
+                <LucideIcon Name="x" class="h-4 w-4" />
+                @L["DeselectAll"]
+            </BbButton>
+        </div>
+    }
+
     @if (archives.Count == 0)
     {
         <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
@@ -25,7 +54,13 @@
     {
         <div class="bearcat-config-list">
             <div class="bearcat-config-header @ArchiveListGridClass">
-                <span>@L["Release"]</span>
+                <div class="flex items-center gap-3">
+                    <BbCheckbox Checked="AreAllArchivesOnPageSelected"
+                                Indeterminate="AreSomeArchivesOnPageSelected"
+                                AriaLabel="@L["SelectAllOnPage"]"
+                                CheckedChanged="@(_ => ToggleSelectionOfAllArchivesOnPage())" />
+                    <span>@L["Release"]</span>
+                </div>
                 <span>@L["ArchiveConfig"]</span>
                 <span>@L["State"]</span>
                 <span>@L["OnDisk"]</span>
@@ -38,17 +73,24 @@
                 <div class="bearcat-config-item cursor-pointer transition hover:bg-muted/40"
                      @onclick="@(() => ShowArchiveDialogAsync(archive.ArchiveId))">
                     <div class="bearcat-config-row @ArchiveListGridClass">
-                        <div class="min-w-0 space-y-1">
-                            <p class="text-xs tabular-nums text-muted-foreground">#@archive.ArchiveId</p>
-                            <a class="block text-sm font-semibold text-primary transition hover:underline [overflow-wrap:anywhere]"
-                               href="@GetReleaseArchivesUrl(archive)"
-                               @onclick:stopPropagation="true">
-                                @archive.ReleaseName
-                            </a>
-                            <p class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground" title="@archive.ArchiveFolderPath">
-                                <LucideIcon Name="folder" class="h-3.5 w-3.5 shrink-0" />
-                                <span class="truncate">@archive.ArchiveFolderPath</span>
-                            </p>
+                        <div class="flex min-w-0 items-start gap-3">
+                            <div class="flex items-center" @onclick:stopPropagation="true">
+                                <BbCheckbox Checked="selectedArchiveIds.Contains(archive.ArchiveId)"
+                                            CheckedChanged="@(isSelected => SetArchiveSelection(archive.ArchiveId, isSelected))"
+                                            AriaLabel="@L["SelectArchive", archive.ArchiveId]" />
+                            </div>
+                            <div class="min-w-0 flex-1 space-y-1">
+                                <p class="text-xs tabular-nums text-muted-foreground">#@archive.ArchiveId</p>
+                                <a class="block text-sm font-semibold text-primary transition hover:underline [overflow-wrap:anywhere]"
+                                   href="@GetReleaseArchivesUrl(archive)"
+                                   @onclick:stopPropagation="true">
+                                    @archive.ReleaseName
+                                </a>
+                                <p class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground" title="@archive.ArchiveFolderPath">
+                                    <LucideIcon Name="folder" class="h-3.5 w-3.5 shrink-0" />
+                                    <span class="truncate">@archive.ArchiveFolderPath</span>
+                                </p>
+                            </div>
                         </div>
 
                         <div class="min-w-0 space-y-1">

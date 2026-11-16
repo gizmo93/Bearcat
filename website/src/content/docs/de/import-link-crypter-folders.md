@@ -114,6 +114,33 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 - Releaseinformationen (xrel, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
 - Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/). Das gilt auch für Collections aus einem Staffelordner.
 
+## Archive beim Import nicht gefunden
+
+Findet Bearcat beim Import die lokalen Archive nicht, erhalten sie den Status **Gelöscht**.
+Bearcat stellt sie bei Bedarf aus den Mirrors wieder her. Liegen die Archivdateien bereits auf der
+Festplatte, kannst du ihre Ordner nachträglich zuordnen:
+
+1. Öffne **Uploads und Archive** > **Archive** und wähle die Archive aus.
+2. Klicke auf **Archivordner ändern** und wähle einen Basispfad.
+
+   ![Ausgewählte Archive mit der Schaltfläche Archivordner ändern](../images/link-crypter-import-change-archive-folders-selection.png)
+
+3. Bearcat durchsucht den Basispfad und alle Unterordner. Prüfe die gefundenen Archivordner und bestätige mit **Archivordner ändern**.
+
+   ![Gefundene Archivordner unter dem Basispfad](../images/link-crypter-import-change-archive-folders-dialog.png)
+
+Bearcat muss für jedes Archiv einen eindeutigen Ordner finden, der genau dessen Archivteile enthält.
+Dann setzt es den Status auf **Erstellt** und verwendet den Ordner unverändert.
+Bearcat überspringt das Archiv in diesen Fällen:
+
+- Das Archiv ist weder **Gelöscht** noch **Dateien fehlen**.
+- Für die Archivkonfiguration gibt es bereits ein neueres Archiv.
+- Es wurde kein passender Ordner gefunden oder es passen mehrere Ordner.
+- Der Ordner enthält auch ein anderes Archiv.
+- Der Ordner wird bereits von einem anderen Archiv verwendet.
+- Derselbe Ordner wurde für mehrere ausgewählte Archive gefunden.
+- Das Release ist vom Typ Managed und der Archivordner liegt in seinem Releaseordner.
+
 ## Staffelordner neu importieren
 
 Bevor Bearcat Staffelordner erkennen konnte, hat es für die ganze Staffel ein einziges Release angelegt.

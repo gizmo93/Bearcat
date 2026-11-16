@@ -352,7 +352,7 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
         );
     }
 
-    private static void RepointArchive(Archive archive, string archiveFolderPath)
+    public static void RepointArchive(Archive archive, string archiveFolderPath)
     {
         foreach (var archiveFile in ArchiveLocalWorkingCopyFiles.GetLocalWorkingCopyFiles(archive))
         {
