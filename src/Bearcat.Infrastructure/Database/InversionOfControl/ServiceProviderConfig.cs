@@ -16,6 +16,7 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+using Bearcat.Domain.UseCases.ManageArchiveConfigs.PartSizeChange.Repositories;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageArchiveStorageFolders.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
@@ -252,6 +253,7 @@ public static class ServiceProviderConfig
                 ReleaseCollectionForumPostRepository
             >();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
+            services.AddScoped<IArchivePartSizeChangeRepository, ArchivePartSizeChangeRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
             services.AddScoped<
                 IApplicationConfigurationOverrideReadRepository,

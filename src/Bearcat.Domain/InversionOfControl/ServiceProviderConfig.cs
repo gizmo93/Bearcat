@@ -36,6 +36,7 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+using Bearcat.Domain.UseCases.ManageArchiveConfigs.PartSizeChange;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
@@ -262,6 +263,7 @@ public static class ServiceProviderConfig
             services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<HosterCredentialsRejectionService>();
             services.AddScoped<ArchiveConfigService>();
+            services.AddScoped<ArchivePartSizeChangeService>();
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();
             services.AddScoped<UploadSourceValidator>();
