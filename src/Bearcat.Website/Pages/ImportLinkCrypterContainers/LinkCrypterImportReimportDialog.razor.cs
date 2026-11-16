@@ -26,9 +26,11 @@ public partial class LinkCrypterImportReimportDialog(IScopedOperationRunner oper
     {
         try
         {
-            plan = await operationRunner.RunAsync(
-                (LinkCrypterImportContainerReimportService service) =>
-                    service.CreatePlanAsync(LinkCrypterImportContainerId)
+            plan = await Task.Run(() =>
+                operationRunner.RunAsync(
+                    (LinkCrypterImportContainerReimportService service) =>
+                        service.CreatePlanAsync(LinkCrypterImportContainerId)
+                )
             );
         }
         catch (InvalidLinkCrypterImportException exception)
@@ -44,9 +46,11 @@ public partial class LinkCrypterImportReimportDialog(IScopedOperationRunner oper
 
         try
         {
-            await operationRunner.RunAsync(
-                (LinkCrypterImportContainerReimportService service) =>
-                    service.ReimportAsync(LinkCrypterImportContainerId)
+            await Task.Run(() =>
+                operationRunner.RunAsync(
+                    (LinkCrypterImportContainerReimportService service) =>
+                        service.ReimportAsync(LinkCrypterImportContainerId)
+                )
             );
 
             await DialogRef.CloseAsync(DialogResult.Ok(LinkCrypterImportContainerId));

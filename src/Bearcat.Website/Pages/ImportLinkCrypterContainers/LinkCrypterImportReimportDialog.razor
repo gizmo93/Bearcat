@@ -3,7 +3,7 @@
     {
         <div class="flex items-center gap-2 text-sm text-muted-foreground">
             <BbSpinner Size="SpinnerSize.Small" />
-            <span>@L["Loading"]</span>
+            <span>@L["LinkCrypterImportReimportPlanning"]</span>
         </div>
     }
 
@@ -95,7 +95,14 @@
         <p class="text-sm text-destructive [overflow-wrap:anywhere]">@errorMessage</p>
     }
 
-    <div class="flex justify-end gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2">
+        @if (isReimporting)
+        {
+            <div class="mr-auto flex items-center gap-2 text-sm text-muted-foreground">
+                <BbSpinner Size="SpinnerSize.Small" />
+                <span>@L["LinkCrypterImportReimportRunning"]</span>
+            </div>
+        }
         <BbButton Variant="ButtonVariant.Outline" Disabled="isReimporting" OnClick="CancelAsync">
             @L["Cancel"]
         </BbButton>

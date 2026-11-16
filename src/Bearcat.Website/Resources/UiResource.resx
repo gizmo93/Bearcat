@@ -2087,6 +2087,8 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>files are no archive parts</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>file names differ from the first adopted mirror</value></data>
   <data name="Reimport" xml:space="preserve"><value>Re-import</value></data>
+  <data name="LinkCrypterImportReimportPlanning" xml:space="preserve"><value>Planning the re-import: Bearcat checks local files and simulates the import. This can take a while.</value></data>
+  <data name="LinkCrypterImportReimportRunning" xml:space="preserve"><value>Re-importing the container.</value></data>
   <data name="ReimportLinkCrypterContainer" xml:space="preserve"><value>Re-import container</value></data>
   <data name="ReimportLinkCrypterContainerDescription" xml:space="preserve"><value>Splits the release of an earlier import into one release per archive of the container. Nothing is deleted at hosters or crypters.</value></data>
   <data name="LinkCrypterContainerReimported" xml:space="preserve"><value>Container re-imported.</value></data>
