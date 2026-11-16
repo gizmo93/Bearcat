@@ -204,9 +204,10 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
         }
 
         if (
-            uploadTargetChoices.GetMaxFileSizeMb(FormModel.UploadTarget) is { } maxFileSizeMb
+            uploadTargetChoices.GetMaxArchiveFileSizeInPartSizeUnit(FormModel.UploadTarget)
+                is { } maxArchiveFileSize
             && SelectedArchiveConfigTemplate is { } archiveConfigTemplate
-            && archiveConfigTemplate.ArchiveFileSizeMb > maxFileSizeMb
+            && archiveConfigTemplate.ArchiveFileSizeMb > maxArchiveFileSize
         )
         {
             messageStore.Add(
@@ -214,7 +215,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunn
                 L[
                     "ArchiveFileSizeExceedsHosterLimit",
                     archiveConfigTemplate.ArchiveFileSizeMb,
-                    maxFileSizeMb
+                    maxArchiveFileSize
                 ]
             );
         }

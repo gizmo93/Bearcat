@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFolderRelocations;
 using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageArchives.Search;
@@ -14,6 +15,7 @@ namespace Bearcat.Website.Pages.ManageArchives;
 
 public partial class AllArchivesPage(
     DialogService dialogService,
+    ToastService toastService,
     IScopedOperationRunner operationRunner,
     NavigationManager navigationManager
 ) : IArchiveSearchUrlValues
@@ -22,6 +24,7 @@ public partial class AllArchivesPage(
         "lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.5fr)_minmax(0,0.8fr)_minmax(0,0.7fr)_56px]";
 
     private IReadOnlyList<ArchiveListItemReadModel> archives = [];
+    private HashSet<int> selectedArchiveIds = [];
     private IReadOnlyList<ArchiverDto> archivers = [];
     private Dictionary<string, string> archiverDisplayNameByClassName = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
@@ -55,6 +58,13 @@ public partial class AllArchivesPage(
 
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
 
+    private bool AreAllArchivesOnPageSelected =>
+        archives.Count > 0
+        && archives.All(archive => selectedArchiveIds.Contains(archive.ArchiveId));
+
+    private bool AreSomeArchivesOnPageSelected =>
+        selectedArchiveIds.Count > 0 && !AreAllArchivesOnPageSelected;
+
     protected override async Task OnInitializedAsync()
     {
         archivers = operationRunner.Run(
@@ -81,6 +91,7 @@ public partial class AllArchivesPage(
         searchQuery = state.Query;
         pageIndex = state.PageIndex;
         pageSize = state.PageSize;
+        ClearSelection();
         await RefreshArchivesAsync();
     }
 
@@ -147,6 +158,7 @@ public partial class AllArchivesPage(
 
         if (targetUri == navigationManager.Uri)
         {
+            ClearSelection();
             await RefreshArchivesAsync();
             return;
         }
@@ -159,6 +171,75 @@ public partial class AllArchivesPage(
         navigationManager.NavigateTo(
             ArchiveSearchUrl.Build(searchQuery, page: 1, selectedPageSize)
         );
+    }
+
+    private void SetArchiveSelection(int archiveId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            selectedArchiveIds.Add(archiveId);
+        }
+        else
+        {
+            selectedArchiveIds.Remove(archiveId);
+        }
+    }
+
+    private void ToggleSelectionOfAllArchivesOnPage()
+    {
+        selectedArchiveIds = AreAllArchivesOnPageSelected
+            ? []
+            : archives.Select(archive => archive.ArchiveId).ToHashSet();
+    }
+
+    private void ClearSelection()
+    {
+        selectedArchiveIds = [];
+    }
+
+    private async Task ShowRelocateArchiveFoldersDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(RelocateArchiveFoldersDialog.ArchiveIds)] = selectedArchiveIds.ToList(),
+        };
+
+        var dialog = await dialogService.OpenAsync<RelocateArchiveFoldersDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["ChangeArchiveFolders"],
+                Description = L["ChangeArchiveFoldersDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        var result = dialog.GetData<ArchiveFolderRelocationResult>()!;
+
+        if (result.NotRelocatedArchives.Count > 0)
+        {
+            toastService.Warning(
+                L[
+                    "ArchiveFoldersChangedWithNotChangedArchives",
+                    result.RelocatedArchiveCount,
+                    result.NotRelocatedArchives.Count
+                ]
+            );
+        }
+        else
+        {
+            toastService.Success(L["ArchiveFoldersChanged", result.RelocatedArchiveCount]);
+        }
+
+        ClearSelection();
+        await RefreshArchivesAsync();
     }
 
     private async Task ShowArchiveDialogAsync(int archiveId)

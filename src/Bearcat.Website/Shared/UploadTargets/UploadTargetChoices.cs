@@ -1,3 +1,6 @@
+using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosterAccountPools.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
@@ -10,7 +13,8 @@ namespace Bearcat.Website.Shared.UploadTargets;
 
 public class UploadTargetChoices(
     IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations,
-    IReadOnlyList<HosterAccountPoolReadModel> hosterAccountPools
+    IReadOnlyList<HosterAccountPoolReadModel> hosterAccountPools,
+    ArchivePartSizeUnit partSizeUnit
 )
 {
     private readonly IReadOnlyList<HosterAccountPoolReadModel> hosterAccountPools =
@@ -24,8 +28,18 @@ public class UploadTargetChoices(
         var hosterAccountPools = await operationRunner.RunAsync(
             (IHosterAccountPoolReadRepository repository) => repository.GetAllAsync()
         );
+        var partSizeUnit = operationRunner.Run(
+            (IApplicationConfigurationProvider configuration) =>
+                configuration.GetValue<ArchiveCreationConfiguration, ArchivePartSizeUnit>(c =>
+                    c.PartSizeUnit
+                )
+        );
 
-        return new UploadTargetChoices(hosterRegistrations, hosterAccountPools);
+        return new UploadTargetChoices(
+            hosterRegistrations: hosterRegistrations,
+            hosterAccountPools: hosterAccountPools,
+            partSizeUnit: partSizeUnit
+        );
     }
 
     public IReadOnlyList<HosterRegistrationReadModel> GetSelectableHosterRegistrations(
@@ -132,9 +146,9 @@ public class UploadTargetChoices(
         };
     }
 
-    public int? GetMaxFileSizeMb(UploadTarget? uploadTarget)
+    public int? GetMaxArchiveFileSizeInPartSizeUnit(UploadTarget? uploadTarget)
     {
-        return uploadTarget switch
+        var maxFileSizeMb = uploadTarget switch
         {
             null => null,
             { HosterAccountPoolId: { } hosterAccountPoolId } => FindHosterAccountPool(
@@ -142,6 +156,13 @@ public class UploadTargetChoices(
             ).MaxFileSizeMb,
             _ => FindHosterRegistration(uploadTarget.HosterRegistrationId!.Value).MaxFileSizeMb,
         };
+
+        return maxFileSizeMb is null
+            ? null
+            : ArchivePartSizeConversion.ConvertMegabytesToPartSizeUnit(
+                megabytes: maxFileSizeMb.Value,
+                partSizeUnit: partSizeUnit
+            );
     }
 
     public static bool HasActiveMember(HosterAccountPoolReadModel hosterAccountPool)

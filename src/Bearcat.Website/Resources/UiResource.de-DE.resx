@@ -642,6 +642,12 @@
   <data name="ReleaseOverview" xml:space="preserve"><value>Releaseübersicht</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Gruppe auswählen</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Releasegruppe auswählen</value></data>
+  <data name="ArchiveCreation" xml:space="preserve"><value>Archiverstellung</value></data>
+  <data name="ArchiveCreationDescription" xml:space="preserve"><value>Legt fest, wie neue Archive erstellt werden.</value></data>
+  <data name="ArchivePartSizeUnit" xml:space="preserve"><value>Einheit der Partgrösse</value></data>
+  <data name="ArchivePartSizeUnitDescription" xml:space="preserve"><value>Einheit der Partgrösse in Archivkonfigurationen. Megabytes: 1 MB = 1.000.000 Bytes (RAR -M). Mebibytes: 1 MB = 1.048.576 Bytes (RAR -m).</value></data>
+  <data name="ArchivePartSizeUnit.Megabytes" xml:space="preserve"><value>Megabytes (1.000.000 Bytes)</value></data>
+  <data name="ArchivePartSizeUnit.Mebibytes" xml:space="preserve"><value>Mebibytes (1.048.576 Bytes)</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann Releases in Unmanaged umgewandelt werden, ob ihre Releaseordner gelöscht werden und wann lokale Archivdateien gelöscht werden.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archivrepackaging</value></data>
@@ -2210,4 +2216,26 @@
   <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Neu erstellen braucht ein Release vom Typ Managed, dessen Releaseordner noch existiert.</value></data>
   <data name="ScreenshotsNoImageUploadConfigHint" xml:space="preserve"><value>Keine Bilduploadkonfiguration lädt Screenshots hoch. Füge oben unter Bilduploadkonfigurationen eine hinzu oder aktiviere Screenshots in einer vorhandenen.</value></data>
   <data name="ScreenshotsWithCount" xml:space="preserve"><value>Screenshots ({0})</value></data>
+  <data name="ChangeArchiveFolders" xml:space="preserve"><value>Archivordner ändern</value></data>
+  <data name="ChangeArchiveFoldersDescription" xml:space="preserve"><value>Durchsucht einen Basispfad nach den Ordnern der ausgewählten Archive und setzt sie wieder auf Erstellt.</value></data>
+  <data name="SelectArchive" xml:space="preserve"><value>Archiv {0} auswählen</value></data>
+  <data name="ArchiveFolderSearchBasePath" xml:space="preserve"><value>Basispfad</value></data>
+  <data name="ArchiveFolderSearchBasePathHelp" xml:space="preserve"><value>Bearcat durchsucht diesen Ordner und alle Unterordner. Für jedes Archiv braucht es genau einen Ordner, der genau seine Archivteile enthält.</value></data>
+  <data name="NoArchiveFolderSearchBasePathSelected" xml:space="preserve"><value>Kein Basispfad ausgewählt</value></data>
+  <data name="SelectArchiveFolderSearchBasePath" xml:space="preserve"><value>Basispfad auswählen</value></data>
+  <data name="SelectArchiveFolderSearchBasePathDescription" xml:space="preserve"><value>Wähle den Ordner, unterhalb dessen die Archivordner gesucht werden.</value></data>
+  <data name="SearchingArchiveFolders" xml:space="preserve"><value>Archivordner werden gesucht</value></data>
+  <data name="ArchiveFolderRelocationSummary" xml:space="preserve"><value>{0} von {1} Archiven können geändert werden.</value></data>
+  <data name="FoundArchiveFolder" xml:space="preserve"><value>Gefundener Ordner</value></data>
+  <data name="ChangingArchiveFolders" xml:space="preserve"><value>Archivordner werden geändert</value></data>
+  <data name="ArchiveFoldersChanged" xml:space="preserve"><value>Archivordner von {0} Archiven geändert.</value></data>
+  <data name="ArchiveFoldersChangedWithNotChangedArchives" xml:space="preserve"><value>Archivordner von {0} Archiven geändert, {1} Archive wurden nicht geändert.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.ArchiveIsNotDeletedOrMissingFiles" xml:space="preserve"><value>Nur Archive im Status Gelöscht oder Dateien fehlen können geändert werden.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.NewerArchiveExistsInArchiveConfig" xml:space="preserve"><value>Die Archivkonfiguration hat ein neueres Archiv.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.NoMatchingFolderFound" xml:space="preserve"><value>Kein Ordner enthält genau die Archivteile des Archivs.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.SeveralMatchingFoldersFound" xml:space="preserve"><value>Mehrere Ordner enthalten die Archivteile des Archivs.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderContainsOtherArchive" xml:space="preserve"><value>Der gefundene Ordner enthält auch ein anderes Archiv.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderUsedByCreatedArchive" xml:space="preserve"><value>Der gefundene Ordner wird bereits von einem anderen Archiv verwendet.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderFoundForSeveralSelectedArchives" xml:space="preserve"><value>Derselbe Ordner wurde für mehrere ausgewählte Archive gefunden.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderInsideReleaseFolderOfManagedRelease" xml:space="preserve"><value>Der gefundene Ordner liegt im Releaseordner dieses Releases.</value></data>
 </root>

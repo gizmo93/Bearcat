@@ -23,6 +23,11 @@ public class ArchivePackingSettingsService(
             c.Strategy
         );
 
+        var partSizeUnit = configurationProvider.GetValue<
+            ArchiveCreationConfiguration,
+            ArchivePartSizeUnit
+        >(c => c.PartSizeUnit);
+
         var incrementLastArchiveFileSize = await ShouldIncrementLastArchiveFileSizeAsync(
             strategy: strategy,
             archiveConfig: archiveConfig,
@@ -36,13 +41,18 @@ public class ArchivePackingSettingsService(
                 incrementLastArchiveFileSize: incrementLastArchiveFileSize,
                 cancellationToken: cancellationToken
             ),
-            Options: CreateArchiveOptions(strategy, archiveConfig)
+            Options: CreateArchiveOptions(
+                strategy: strategy,
+                archiveConfig: archiveConfig,
+                partSizeUnit: partSizeUnit
+            )
         );
     }
 
     private static ArchiveOptions CreateArchiveOptions(
         string? strategy,
-        ArchiveConfig archiveConfig
+        ArchiveConfig archiveConfig,
+        ArchivePartSizeUnit partSizeUnit
     )
     {
         return strategy switch
@@ -50,12 +60,14 @@ public class ArchivePackingSettingsService(
             ArchiveRepackagingStrategies.SolidCompression => new ArchiveOptions(
                 UseCompression: true,
                 UseSolidArchive: true,
-                PackSourceFolderAsRootFolder: archiveConfig.PackReleaseFolderAsRootFolder
+                PackSourceFolderAsRootFolder: archiveConfig.PackReleaseFolderAsRootFolder,
+                PartSizeUnit: partSizeUnit
             ),
             _ => new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: archiveConfig.PackReleaseFolderAsRootFolder
+                PackSourceFolderAsRootFolder: archiveConfig.PackReleaseFolderAsRootFolder,
+                PartSizeUnit: partSizeUnit
             ),
         };
     }

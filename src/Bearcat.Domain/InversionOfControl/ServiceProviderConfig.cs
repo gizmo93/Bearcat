@@ -39,6 +39,7 @@ using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFolderRelocations;
 using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
@@ -217,6 +218,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveStorageFolderMoveService>();
             services.AddScoped<ArchiveLocalWorkingCopyService>();
             services.AddScoped<ArchiveLocalWorkingCopyCleanupService>();
+            services.AddScoped<ArchiveFolderRelocationService>();
             services.AddScoped<ReleaseFolderRetirementService>();
             services.AddScoped<UnmanagedReleaseConverter>();
             services.AddScoped<MirrorCoverageEvaluator>();
@@ -290,6 +292,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();
+            services.AddApplicationConfiguration<ArchiveCreationConfiguration>();
             services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddApplicationConfiguration<FolderAutomationConfiguration>();
             services.AddApplicationConfiguration<RemoteSourceConfiguration>();

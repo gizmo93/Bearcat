@@ -212,6 +212,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IArchiveCleanupRepository, ArchiveCleanupRepository>();
             services.AddScoped<
+                IArchiveFolderRelocationRepository,
+                ArchiveFolderRelocationRepository
+            >();
+            services.AddScoped<
                 IReleaseFolderRetirementRepository,
                 ReleaseFolderRetirementRepository
             >();

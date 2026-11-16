@@ -136,13 +136,20 @@ public partial class RarArchiver(
         var solidArgument = options.UseSolidArchive ? "-s" : "-s-";
         var sourceArchivePath = Path.TrimEndingDirectorySeparator(sourceFolderPath);
 
+        var volumeSizeArgument = options.PartSizeUnit switch
+        {
+            ArchivePartSizeUnit.Megabytes => $"-v{targetFileSizeMb}M",
+            ArchivePartSizeUnit.Mebibytes => $"-v{targetFileSizeMb}m",
+            _ => throw new ArgumentOutOfRangeException(nameof(options), options.PartSizeUnit, null),
+        };
+
         List<string> arguments =
         [
             "a",
             "-ep1",
             compressionArgument,
             solidArgument,
-            $"-v{targetFileSizeMb}M",
+            volumeSizeArgument,
         ];
 
         if (!options.PackSourceFolderAsRootFolder)

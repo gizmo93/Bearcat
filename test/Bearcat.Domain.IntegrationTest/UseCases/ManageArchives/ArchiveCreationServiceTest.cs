@@ -90,6 +90,14 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             )
             .Returns(2);
 
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveCreationConfiguration, ArchivePartSizeUnit>(
+                    It.IsAny<Expression<Func<ArchiveCreationConfiguration, ArchivePartSizeUnit>>>()
+                )
+            )
+            .Returns(ArchivePartSizeUnit.Megabytes);
+
         progressTracker = new RecordingTransferProgressTracker();
         cancellationRegistry = new TransferCancellationRegistry();
         service = CreateService(new FileSystemService());
