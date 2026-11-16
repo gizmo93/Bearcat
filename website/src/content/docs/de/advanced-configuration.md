@@ -190,7 +190,7 @@ Jede Hosterregistrierung kann zusätzlich ein eigenes Limit setzen. Siehe
 
 Bei sehr niedrigen Geschwindigkeitslimits können Uploads wegen Zeitüberschreitungen scheitern.
 
-"Startreihenfolge der Uploads" legt fest, welche wartenden Uploads freie Plätze zuerst bekommen: "Älteste zuerst"
+Unter "Startreihenfolge der Uploads" wählst du, welche wartenden Uploads zuerst starten: "Älteste zuerst"
 (Standard) oder "Initiale Uploads vor Reuploads". Siehe [Startreihenfolge](/Bearcat/de/upload-lifecycle/#startreihenfolge).
 
 ### ffmpeg

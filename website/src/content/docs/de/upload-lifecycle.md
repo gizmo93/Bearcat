@@ -118,22 +118,22 @@ unter **Uploads** > **Verlauf**. **Übersicht** zeigt den neuesten Upload jeder 
 
 ### Startreihenfolge
 
-Wird ein Platz für Dateiuploads frei, wählt Bearcat die nächste Datei in dieser Reihenfolge:
+Sobald ein Uploadplatz frei wird, lädt Bearcat die nächste Datei hoch. Dabei gilt diese Reihenfolge:
 
 1. Manuell priorisierte Uploads, der zuletzt priorisierte zuerst.
-2. Uploads, die bereits laufende Dateien haben.
-3. Abhängig von **Startreihenfolge der Uploads** unter **Konfigurationen**:
-   - **Älteste zuerst** (Standard): die Reihenfolge, in der die Uploads erstellt wurden.
-   - **Initiale Uploads vor Reuploads**: alle anderen Uploads vor Reuploads, jede Gruppe älteste zuerst.
+2. Uploads, die bereits Dateien hochladen.
+3. Die übrigen Uploads, je nach Einstellung unter **Konfigurationen > Startreihenfolge der Uploads**:
+   - **Älteste zuerst** (Standard): Uploads starten in der Reihenfolge, in der sie erstellt wurden.
+   - **Initiale Uploads vor Reuploads**: Erst starten die initialen Uploads, dann die Reuploads. Innerhalb jeder Gruppe starten die ältesten zuerst.
 
-Ein Reupload ist ein Upload, der erstellt wurde, nachdem ein anderer Upload desselben Releases abgeschlossen war.
+Ein Upload gilt als Reupload, wenn beim Erstellen bereits ein anderer Upload desselben Releases abgeschlossen war.
 
 ![Einstellung Startreihenfolge der Uploads unter Konfigurationen > Uploadparallelität](../images/upload-start-order-setting.png)
 
-Um einen Upload nach vorne zu holen, klicke unter **Aktivität > Uploads** daneben auf **Upload priorisieren**
-oder wähle den Eintrag im Menü `...` unter **Uploads > Verlauf**. Das funktioniert für Uploads im Status `Pending`
-und `Uploading`. Die Änderung greift innerhalb weniger Sekunden. Laufende Dateiuploads werden nie unterbrochen.
-**Priorisierung entfernen** setzt den Upload zurück an seine normale Position.
+Klicke unter **Aktivität > Uploads** neben einem Upload auf **Upload priorisieren**, damit er Vorrang bekommt.
+Auf der Releasedetailseite findest du dieselbe Aktion unter **Uploads > Verlauf** im Menü `...`.
+Du kannst Uploads im Status `Pending` oder `Uploading` priorisieren. Die Änderung wirkt nach wenigen Sekunden.
+Laufende Dateiuploads werden nicht unterbrochen. Mit **Priorisierung entfernen** gilt für den Upload wieder die normale Reihenfolge.
 
 ![Priorisierter Upload und Button zum Priorisieren auf der Aktivitätsseite](../images/activity-upload-prioritization.png)
 

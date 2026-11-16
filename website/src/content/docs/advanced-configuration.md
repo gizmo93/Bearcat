@@ -188,7 +188,7 @@ Each hoster registration can set its own limit as well. See
 
 Very low speed limits can cause uploads to time out.
 
-"Upload start order" decides which pending uploads get free slots first: "Oldest first" (default) or
+Under "Upload start order", choose which waiting uploads start first: "Oldest first" (default) or
 "Initial uploads before reuploads". See [Start order](/Bearcat/upload-lifecycle/#start-order).
 
 ### ffmpeg

@@ -117,22 +117,22 @@ under **Uploads** > **History**. **Overview** shows the latest upload for each u
 
 ### Start order
 
-When a file upload slot becomes free, Bearcat picks the next file in this order:
+When an upload slot becomes free, Bearcat uploads the next file in this order:
 
 1. Manually prioritized uploads, the most recently prioritized first.
-2. Uploads that already have running files.
-3. Depending on **Upload start order** under **Configurations**:
-   - **Oldest first** (default): the order in which the uploads were created.
-   - **Initial uploads before reuploads**: all other uploads before reuploads, each group oldest first.
+2. Uploads already transferring files.
+3. The remaining uploads, based on **Configurations > Upload start order**:
+   - **Oldest first** (default): uploads start in the order they were created.
+   - **Initial uploads before reuploads**: initial uploads start first, then reuploads. Within each group, the oldest uploads start first.
 
-A reupload is an upload created after another upload of the same release finished.
+An upload counts as a reupload if another upload of the same release had already finished when it was created.
 
 ![Upload start order setting under Configurations > Upload concurrency](images/upload-start-order-setting.png)
 
-To move an upload to the front, click **Prioritize upload** next to it under **Activity > Uploads**,
-or select it in the `...` menu under **Uploads > History**. This works for `Pending` and `Uploading`
-uploads. The change takes effect within seconds. Running file uploads are never interrupted.
-**Remove prioritization** puts the upload back into its normal position.
+Click **Prioritize upload** next to an upload under **Activity > Uploads** to give it priority.
+On the release detail page, the same action is in the `...` menu under **Uploads > History**.
+You can prioritize uploads in the `Pending` or `Uploading` state. The change takes effect within seconds.
+Running file uploads are not interrupted. **Remove prioritization** returns the upload to the normal order.
 
 ![Prioritized upload and the prioritize button on the activity page](images/activity-upload-prioritization.png)
 
