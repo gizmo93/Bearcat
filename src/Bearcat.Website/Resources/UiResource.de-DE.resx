@@ -2042,11 +2042,11 @@
   <data name="StartLinkCrypterImportConfirmation" xml:space="preserve"><value>{0} ausgewählte Releases mit {1} Containern importieren? Bearcat legt jedes Release an oder hängt die Container an das bestehende Release an.</value></data>
   <data name="OpenCrypterFolder" xml:space="preserve"><value>Crypterordner öffnen</value></data>
   <data name="OpenImportedRelease" xml:space="preserve"><value>Importiertes Release öffnen</value></data>
+  <data name="OpenImportedReleaseCollection" xml:space="preserve"><value>Importierte Collection öffnen</value></data>
   <data name="MirrorNumber" xml:space="preserve"><value>Mirror {0}</value></data>
   <data name="LinkCrypterImportReleaseFolder" xml:space="preserve"><value>Releaseordner: {0}</value></data>
   <data name="LinkCrypterImportArchiveFolder" xml:space="preserve"><value>Archivordner: {0}</value></data>
   <data name="LinkCrypterImportNoLocalFiles" xml:space="preserve"><value>Keine lokalen Dateien, das Archiv wird aus den Mirrors wiederhergestellt.</value></data>
-  <data name="LinkCrypterImportArchiveFolderWithArchivesOfOtherReleases" xml:space="preserve"><value>Archivordner mit Archiven anderer Releases: {0}</value></data>
   <data name="LinkCrypterImportReleaseCollection" xml:space="preserve"><value>Collection: {0}</value></data>
   <data name="LinkCrypterImportMirrorsWithoutRelease" xml:space="preserve"><value>Die Dateien dieser Mirrors können keinem Release zugeordnet werden:</value></data>
   <data name="NoLinkCrypterImportReleasesFound" xml:space="preserve"><value>Keine Releases gefunden.</value></data>

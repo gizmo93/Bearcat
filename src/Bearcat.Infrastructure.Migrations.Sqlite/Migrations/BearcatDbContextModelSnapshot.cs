@@ -1044,6 +1044,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("HasBackupLinks")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ImportedReleaseCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("ImportedReleaseId")
                         .HasColumnType("INTEGER");
 
@@ -1069,6 +1072,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImportedReleaseCollectionId");
 
                     b.HasIndex("ImportedReleaseId");
 
@@ -2985,6 +2990,11 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportContainer", b =>
                 {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ImportedReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ImportedReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bearcat.Domain.Entities.Release", "ImportedRelease")
                         .WithMany()
                         .HasForeignKey("ImportedReleaseId")
@@ -2997,6 +3007,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("ImportedRelease");
+
+                    b.Navigation("ImportedReleaseCollection");
 
                     b.Navigation("LinkCrypterImport");
                 });

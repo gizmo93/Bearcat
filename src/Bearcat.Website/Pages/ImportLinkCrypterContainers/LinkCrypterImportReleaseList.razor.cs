@@ -220,8 +220,7 @@ public partial class LinkCrypterImportReleaseList(
         return GetLocalFilesText(
             releaseAction: release.ReleaseAction,
             releaseFolderPath: release.ReleaseFolderPath,
-            archiveFolderPath: release.ArchiveFolderPath,
-            archiveFolderContainsArchivesOfOtherReleases: false
+            archiveFolderPath: release.ArchiveFolderPath
         );
     }
 
@@ -230,16 +229,14 @@ public partial class LinkCrypterImportReleaseList(
         return GetLocalFilesText(
             releaseAction: releasePreview.ReleaseAction,
             releaseFolderPath: releasePreview.ReleaseFolderPath,
-            archiveFolderPath: releasePreview.ArchiveFolderPath,
-            archiveFolderContainsArchivesOfOtherReleases: releasePreview.ArchiveFolderContainsArchivesOfOtherReleases
+            archiveFolderPath: releasePreview.ArchiveFolderPath
         );
     }
 
     private string GetLocalFilesText(
         LinkCrypterImportReleaseAction? releaseAction,
         string? releaseFolderPath,
-        string? archiveFolderPath,
-        bool archiveFolderContainsArchivesOfOtherReleases
+        string? archiveFolderPath
     )
     {
         if (releaseAction is not LinkCrypterImportReleaseAction.CreateRelease)
@@ -256,14 +253,7 @@ public partial class LinkCrypterImportReleaseList(
 
         if (archiveFolderPath is not null)
         {
-            localFolderTexts.Add(
-                archiveFolderContainsArchivesOfOtherReleases
-                    ? L[
-                        "LinkCrypterImportArchiveFolderWithArchivesOfOtherReleases",
-                        archiveFolderPath
-                    ]
-                    : L["LinkCrypterImportArchiveFolder", archiveFolderPath]
-            );
+            localFolderTexts.Add(L["LinkCrypterImportArchiveFolder", archiveFolderPath]);
         }
 
         return localFolderTexts.Count == 0

@@ -12,6 +12,7 @@ public sealed record LinkCrypterImportContainerReadModel(
     LinkCrypterImportContainerStatus Status,
     LinkCrypterImportNotImportableReason? NotImportableReason,
     int? ImportedReleaseId,
+    int? ImportedReleaseCollectionId,
     IReadOnlyList<string> ErrorMessages,
     LinkCrypterImportContainerPreview Preview
 );

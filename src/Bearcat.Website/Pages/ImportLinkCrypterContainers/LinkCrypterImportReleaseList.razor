@@ -189,6 +189,14 @@
                                             @L["OpenImportedRelease"]
                                         </a>
                                     }
+                                    @if (container.ImportedReleaseCollectionId is { } importedReleaseCollectionId)
+                                    {
+                                        <a href="@($"/release-collections/{importedReleaseCollectionId}")"
+                                           class="inline-flex items-center gap-1 text-primary hover:underline">
+                                            <LucideIcon Name="library" class="h-3.5 w-3.5 shrink-0" />
+                                            @L["OpenImportedReleaseCollection"]
+                                        </a>
+                                    }
                                 </div>
                                 @if (container.Preview.Releases is { Count: > 1 } releasePreviews)
                                 {

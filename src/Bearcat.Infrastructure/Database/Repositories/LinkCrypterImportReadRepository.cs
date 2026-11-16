@@ -160,6 +160,7 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                 container.Status,
                 container.NotImportableReason,
                 container.ImportedReleaseId,
+                container.ImportedReleaseCollectionId,
                 container.ErrorMessages,
                 container.PreviewJson,
             })
@@ -178,6 +179,7 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                     Status: container.Status,
                     NotImportableReason: container.NotImportableReason,
                     ImportedReleaseId: container.ImportedReleaseId,
+                    ImportedReleaseCollectionId: container.ImportedReleaseCollectionId,
                     ErrorMessages: container.ErrorMessages,
                     Preview: LinkCrypterImportContainerPreview.FromJson(container.PreviewJson)
                 ),

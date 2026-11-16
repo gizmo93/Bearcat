@@ -25,6 +25,7 @@ public class LinkCrypterImportContainerConfiguration
         builder.Property(container => container.Status).IsRequired();
         builder.Property(container => container.NotImportableReason).IsRequired(false);
         builder.Property(container => container.ImportedReleaseId).IsRequired(false);
+        builder.Property(container => container.ImportedReleaseCollectionId).IsRequired(false);
         builder.Property(container => container.ErrorMessages).IsRequired();
         builder.Property(container => container.PreviewJson).IsRequired().HasColumnType("text");
 
@@ -36,7 +37,16 @@ public class LinkCrypterImportContainerConfiguration
             .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder
+            .HasOne(container => container.ImportedReleaseCollection)
+            .WithMany()
+            .HasForeignKey(container => container.ImportedReleaseCollectionId)
+            .HasPrincipalKey(releaseCollection => releaseCollection.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(container => new { container.LinkCrypterImportId, container.Status });
         builder.HasIndex(container => container.ImportedReleaseId);
+        builder.HasIndex(container => container.ImportedReleaseCollectionId);
     }
 }

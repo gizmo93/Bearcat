@@ -127,6 +127,11 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
         return await dbWrite
             .Releases.AsSplitQuery()
             .Include(release => release.LinkCrypterContainers)
+            .Include(release => release.ReleaseCollection)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.CollectionUploadSlot)
+                    .ThenInclude(slot => slot!.UploadConfigs)
+                        .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
             .Include(release => release.UploadConfigs)
                 .ThenInclude(uploadConfig => uploadConfig.HosterRegistration)
             .Include(release => release.UploadConfigs)
@@ -150,6 +155,21 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
                 release => release.Name.ToLower() == lowerReleaseName,
                 cancellationToken
             );
+    }
+
+    public async Task<LinkCrypterContainer?> GetCollectionLinkCrypterContainerOrDefaultAsync(
+        int collectionUploadSlotId,
+        int linkCrypterRegistrationId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.LinkCrypterContainers.FirstOrDefaultAsync(
+            container =>
+                container.Scope == LinkCrypterContainerScope.ReleaseCollection
+                && container.CollectionUploadSlotId == collectionUploadSlotId
+                && container.LinkCrypterRegistrationId == linkCrypterRegistrationId,
+            cancellationToken
+        );
     }
 
     public async Task<IReadOnlyList<int>> GetIdsOfSelectedImportableContainersAsync(
@@ -204,6 +224,11 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
     public void Add(LinkCrypterImport linkCrypterImport)
     {
         dbWrite.Add(linkCrypterImport);
+    }
+
+    public void Add(LinkCrypterContainer linkCrypterContainer)
+    {
+        dbWrite.Add(linkCrypterContainer);
     }
 
     public void Remove(LinkCrypterImport linkCrypterImport)

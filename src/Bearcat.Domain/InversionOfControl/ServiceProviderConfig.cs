@@ -278,6 +278,8 @@ public static class ServiceProviderConfig
             services.AddScoped<LinkCrypterImportContainerReadingService>();
             services.AddScoped<LinkCrypterImportPreviewService>();
             services.AddScoped<LinkCrypterImportContainerImportService>();
+            services.AddScoped<LinkCrypterImportReleaseImportService>();
+            services.AddScoped<CollectionContainerImportService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();

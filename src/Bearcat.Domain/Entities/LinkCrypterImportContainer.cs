@@ -32,6 +32,10 @@ public class LinkCrypterImportContainer
 
     public Release? ImportedRelease { get; set; }
 
+    public int? ImportedReleaseCollectionId { get; set; }
+
+    public ReleaseCollection? ImportedReleaseCollection { get; set; }
+
     public List<string> ErrorMessages { get; set; } = [];
 
     public string PreviewJson { get; set; } = null!;

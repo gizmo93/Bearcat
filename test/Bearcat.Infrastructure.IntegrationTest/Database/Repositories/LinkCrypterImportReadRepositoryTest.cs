@@ -206,7 +206,6 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                             Mirrors: [],
                             ReleaseFolderPath: $"/releases/{containerName}",
                             ArchiveFolderPath: null,
-                            ArchiveFolderContainsArchivesOfOtherReleases: false,
                             ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
                             ExistingReleaseId: null,
                             NotImportableReason: null

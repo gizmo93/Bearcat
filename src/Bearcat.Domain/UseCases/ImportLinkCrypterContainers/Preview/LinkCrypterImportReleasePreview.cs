@@ -7,7 +7,6 @@ public sealed record LinkCrypterImportReleasePreview(
     IReadOnlyList<LinkCrypterImportMirror> Mirrors,
     string? ReleaseFolderPath,
     string? ArchiveFolderPath,
-    bool ArchiveFolderContainsArchivesOfOtherReleases,
     LinkCrypterImportReleaseAction ReleaseAction,
     int? ExistingReleaseId,
     LinkCrypterImportNotImportableReason? NotImportableReason

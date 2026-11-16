@@ -8,7 +8,6 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
@@ -18,6 +17,7 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reading;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -50,6 +50,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     private const string SeasonContainerName = "Bearcat.Show.S01.German.1080p.WEB.x264-GRP";
     private const string FirstEpisodeReleaseName = "Bearcat.Show.S01E01.German.1080p.WEB.x264-GRP";
     private const string SecondEpisodeReleaseName = "Bearcat.Show.S01E02.German.1080p.WEB.x264-GRP";
+    private const string SeasonSlotKey = "season";
 
     private static readonly DateTime StartTime = new(
         2026,
@@ -334,19 +335,35 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     }
 
     [Test]
-    public async Task ProcessAsync_SeasonContainerWithSeasonArchiveFolder_CreatesReleasePreviewPerEpisodeInOneCollection()
+    public async Task ProcessAsync_SeasonContainerWithArchiveFolderPerEpisode_CreatesReleasePreviewPerEpisodeInOneCollection()
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync(
             ReleaseType.Unmanaged,
             ReleaseCollectionDetectionMode.SeriesEpisodePattern
         );
-        var seasonArchiveFolderPath = Path.Combine(workingDirectoryPath, SeasonContainerName);
-        Directory.CreateDirectory(seasonArchiveFolderPath);
+        var firstEpisodeArchiveFolderPath = Path.Combine(
+            workingDirectoryPath,
+            FirstEpisodeReleaseName
+        );
+        var secondEpisodeArchiveFolderPath = Path.Combine(
+            workingDirectoryPath,
+            SecondEpisodeReleaseName
+        );
+
         foreach (var fileName in GetSeasonArchiveFileNames())
         {
-            File.WriteAllText(Path.Combine(seasonArchiveFolderPath, fileName), fileName);
+            var archiveFolderPath = fileName.StartsWith(
+                FirstEpisodeReleaseName,
+                StringComparison.Ordinal
+            )
+                ? firstEpisodeArchiveFolderPath
+                : secondEpisodeArchiveFolderPath;
+
+            Directory.CreateDirectory(archiveFolderPath);
+            File.WriteAllText(Path.Combine(archiveFolderPath, fileName), fileName);
         }
+
         AddSeasonContainer();
         var linkCrypterImportId = await StartImportAsync(seed);
         await ProcessAsync();
@@ -369,7 +386,6 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                     releasePreview.ReleaseName,
                     releasePreview.ReleaseAction,
                     releasePreview.ArchiveFolderPath,
-                    releasePreview.ArchiveFolderContainsArchivesOfOtherReleases,
                     releasePreview.NotImportableReason
                 )
             )
@@ -377,15 +393,13 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 (
                     FirstEpisodeReleaseName,
                     LinkCrypterImportReleaseAction.CreateRelease,
-                    seasonArchiveFolderPath,
-                    true,
+                    firstEpisodeArchiveFolderPath,
                     null
                 ),
                 (
                     SecondEpisodeReleaseName,
                     LinkCrypterImportReleaseAction.CreateRelease,
-                    seasonArchiveFolderPath,
-                    true,
+                    secondEpisodeArchiveFolderPath,
                     null
                 ),
             ]);
@@ -437,6 +451,215 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         preview
             .Releases!.Select(releasePreview => releasePreview.ReleaseName)
             .ShouldBe([FirstEpisodeReleaseName, SecondEpisodeReleaseName]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_SeasonContainerWithoutLocalFiles_ImportsEpisodesIntoCollectionWithCollectionContainer()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey,
+            secondHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        AddSeasonContainer();
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
+        container.ErrorMessages.ShouldBeEmpty();
+        container.ImportedReleaseId.ShouldBeNull();
+        var releaseCollection = await LoadReleaseCollectionAsync();
+        container.ImportedReleaseCollectionId.ShouldBe(releaseCollection.Id);
+        releaseCollection.Name.ShouldBe(SeasonContainerName);
+        releaseCollection.UploadsPostedAt.ShouldBe(StartTime);
+
+        releaseCollection
+            .Releases.Select(release => (release.Name, release.UploadsPostedAt))
+            .OrderBy(release => release.Name)
+            .ShouldBe([
+                (FirstEpisodeReleaseName, StartTime),
+                (SecondEpisodeReleaseName, StartTime),
+            ]);
+
+        var slot = releaseCollection.UploadSlots.ShouldHaveSingleItem();
+        slot.UploadConfigs.Count.ShouldBe(4);
+
+        var linkCrypters = slot
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.LinkCrypters)
+            .ToList();
+
+        linkCrypters.Count.ShouldBe(4);
+
+        linkCrypters.ShouldAllBe(linkCrypter =>
+            linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+            && linkCrypter.Password == "template-secret"
+        );
+
+        var uploads = slot.UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads).ToList();
+        uploads.Count.ShouldBe(4);
+        uploads.ShouldAllBe(upload => upload.UploadedFiles.Count == 2);
+
+        var linkCrypterContainer = (await LoadLinkCrypterContainersAsync()).ShouldHaveSingleItem();
+        linkCrypterContainer.Scope.ShouldBe(LinkCrypterContainerScope.ReleaseCollection);
+        linkCrypterContainer.CollectionUploadSlotId.ShouldBe(slot.Id);
+        linkCrypterContainer.ContainerUrl.ShouldBe("https://crypter.test/season");
+        linkCrypterContainer.Password.ShouldBe("template-secret");
+
+        linkCrypterContainer
+            .SourceUploads.Select(source => source.UploadId)
+            .Order()
+            .ShouldBe(uploads.Select(upload => upload.Id).Order());
+    }
+
+    [Test]
+    public async Task ProcessAsync_SeasonContainerWithMirrorsInDifferentUploadSlots_FailsWithoutCreatingReleases()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey,
+            secondHosterCollectionUploadSlotKey: "other-slot"
+        );
+
+        AddSeasonContainer();
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.ImportFailed);
+
+        container.ErrorMessages.ShouldBe([
+            "The mirrors of the container belong to different collection upload slots.",
+        ]);
+
+        container.ImportedReleaseCollectionId.ShouldBeNull();
+        (await CreateDbContext().Releases.CountAsync()).ShouldBe(0);
+        (await CreateDbContext().ReleaseCollections.CountAsync()).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ProcessAsync_EpisodeContainerForUploadSlotWithSameLinkCrypterAccount_ImportsUploadsWithoutAdoptingContainer()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        AddEpisodeContainer("https://crypter.test/episode", FirstEpisodeReleaseName);
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
+
+        container.ErrorMessages.ShouldBe([
+            "The container was not adopted because the release belongs to a release collection whose upload slot uses this link crypter account. Bearcat adds the release to the collection container.",
+        ]);
+
+        var release = await LoadReleaseAsync(FirstEpisodeReleaseName);
+        container.ImportedReleaseId.ShouldBe(release.Id);
+
+        release
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads)
+            .ShouldHaveSingleItem()
+            .UploadedFiles.Count.ShouldBe(2);
+
+        release
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.LinkCrypters)
+            .ShouldHaveSingleItem()
+            .ContainerScope.ShouldBe(LinkCrypterContainerScope.ReleaseCollection);
+
+        (await LoadLinkCrypterContainersAsync()).ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_SeasonContainerForEpisodeWithReleaseScopedLinkCrypterOfSameAccount_Fails()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey,
+            secondHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        AddEpisodeContainer("https://crypter.test/episode", FirstEpisodeReleaseName);
+        await RunWholeImportAsync(seed);
+
+        await using (var dbContext = CreateDbContext())
+        {
+            foreach (var linkCrypter in await dbContext.UploadConfigLinkCrypters.ToListAsync())
+            {
+                linkCrypter.ContainerScope = LinkCrypterContainerScope.Release;
+            }
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        AddSeasonContainer();
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var seasonContainer = (await LoadImportAsync(linkCrypterImportId)).Containers.Single(
+            container => container.ContainerUrl == "https://crypter.test/season"
+        );
+
+        seasonContainer.Status.ShouldBe(LinkCrypterImportContainerStatus.ImportFailed);
+        seasonContainer.ErrorMessages.ShouldHaveSingleItem().ShouldContain("release containers");
+        (await CreateDbContext().Releases.CountAsync()).ShouldBe(1);
+
+        (await LoadLinkCrypterContainersAsync()).ShouldNotContain(linkCrypterContainer =>
+            linkCrypterContainer.Scope == LinkCrypterContainerScope.ReleaseCollection
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_TwoEpisodeContainersOfOneCollection_ImportsBothIntoTheSameCollection()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        AddEpisodeContainer("https://crypter.test/first-episode", FirstEpisodeReleaseName);
+        AddEpisodeContainer("https://crypter.test/second-episode", SecondEpisodeReleaseName);
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        (await LoadImportAsync(linkCrypterImportId))
+            .Containers.Select(container => container.Status)
+            .ShouldBe([
+                LinkCrypterImportContainerStatus.Imported,
+                LinkCrypterImportContainerStatus.Imported,
+            ]);
+
+        var releaseCollection = await LoadReleaseCollectionAsync();
+
+        releaseCollection
+            .Releases.Select(release => release.Name)
+            .Order()
+            .ShouldBe([FirstEpisodeReleaseName, SecondEpisodeReleaseName]);
+
+        releaseCollection.UploadSlots.ShouldHaveSingleItem().UploadConfigs.Count.ShouldBe(2);
     }
 
     [Test]
@@ -1219,6 +1442,26 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
             CreateNotificationConfigurationProvider()
         );
 
+        var releaseCollectionAssigner = new ReleaseCollectionAssignmentService(
+            new ReleaseCollectionRepository(
+                dbRead: dbContext,
+                dbWrite: dbContext,
+                metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
+            ),
+            timeProvider,
+            NullLogger<ReleaseCollectionAssignmentService>.Instance
+        );
+        var releaseImportService = new LinkCrypterImportReleaseImportService(
+            releaseWriteRepository,
+            CreateReleaseFromFolderCreationService(
+                dbContext: dbContext,
+                timeProvider: timeProvider,
+                releaseCollectionAssigner: releaseCollectionAssigner
+            ),
+            new UnmanagedReleaseArchiveInitializationService(new RealArchiverFactory()),
+            new FileSystemService()
+        );
+
         var service = new LinkCrypterImportProcessingService(
             repository,
             new LinkCrypterImportContainerReadingService(
@@ -1234,10 +1477,14 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
             CreatePreviewService(dbContext, timeProvider),
             new LinkCrypterImportContainerImportService(
                 repository,
-                releaseWriteRepository,
-                CreateReleaseFromFolderCreationService(dbContext, timeProvider),
-                new UnmanagedReleaseArchiveInitializationService(new RealArchiverFactory()),
-                new FileSystemService(),
+                releaseImportService,
+                new CollectionContainerImportService(
+                    repository,
+                    releaseImportService,
+                    timeProvider,
+                    NullLogger<CollectionContainerImportService>.Instance
+                ),
+                releaseCollectionAssigner,
                 notificationService,
                 timeProvider,
                 NullLogger<LinkCrypterImportContainerImportService>.Instance
@@ -1290,7 +1537,8 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
 
     private static ReleaseFromFolderCreationService CreateReleaseFromFolderCreationService(
         BearcatDbContext dbContext,
-        ControllableTimeProvider timeProvider
+        ControllableTimeProvider timeProvider,
+        ReleaseCollectionAssignmentService releaseCollectionAssigner
     )
     {
         var nfoDatabaseFactory = new Mock<INfoDatabaseFactory>();
@@ -1352,7 +1600,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 NullLogger<MediaMetadataService>.Instance
             ),
             new UnmanagedReleaseArchiveInitializationService(new RealArchiverFactory()),
-            Mock.Of<IReleaseCollectionAssigner>()
+            releaseCollectionAssigner
         );
     }
 
@@ -1410,6 +1658,46 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 )
                 .ToList()
         );
+    }
+
+    private void AddEpisodeContainer(string containerUrl, string releaseName)
+    {
+        AddListedContainer(
+            containerUrl,
+            releaseName,
+            [
+                OnlineArchiveLink(
+                    $"https://first.test/{releaseName}/1",
+                    $"{releaseName}.part1.rar"
+                ),
+                OnlineArchiveLink(
+                    $"https://first.test/{releaseName}/2",
+                    $"{releaseName}.part2.rar"
+                ),
+            ]
+        );
+    }
+
+    private async Task<ReleaseCollection> LoadReleaseCollectionAsync()
+    {
+        return await CreateDbContext()
+            .ReleaseCollections.AsSplitQuery()
+            .Include(releaseCollection => releaseCollection.Releases)
+            .Include(releaseCollection => releaseCollection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .Include(releaseCollection => releaseCollection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.Uploads)
+                        .ThenInclude(upload => upload.UploadedFiles)
+            .SingleAsync();
+    }
+
+    private async Task<List<LinkCrypterContainer>> LoadLinkCrypterContainersAsync()
+    {
+        return await CreateDbContext()
+            .LinkCrypterContainers.Include(container => container.SourceUploads)
+            .ToListAsync();
     }
 
     private Mock<IHosterWithFileInfo> CreateHosterMock()
@@ -1618,7 +1906,9 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     private async Task<TemplateSeed> AddReleaseTemplateAsync(
         ReleaseType releaseType,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
-            ReleaseCollectionDetectionMode.Disabled
+            ReleaseCollectionDetectionMode.Disabled,
+        string? firstHosterCollectionUploadSlotKey = null,
+        string? secondHosterCollectionUploadSlotKey = null
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1673,6 +1963,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 UploadSource = UploadSource.ArchiveFiles,
                 ArchiveConfigTemplate = archiveConfigTemplate,
                 HosterRegistration = firstHosterRegistration,
+                CollectionUploadSlotKey = firstHosterCollectionUploadSlotKey,
                 LinkCrypterTemplates =
                 [
                     new UploadConfigLinkCrypterTemplate
@@ -1688,6 +1979,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 UploadSource = UploadSource.ArchiveFiles,
                 ArchiveConfigTemplate = archiveConfigTemplate,
                 HosterRegistration = secondHosterRegistration,
+                CollectionUploadSlotKey = secondHosterCollectionUploadSlotKey,
             },
         ];
 
