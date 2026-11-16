@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleaseScreenshots;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -84,6 +85,14 @@ public partial class ReleaseTemplateDetail(
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
                 ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
                 ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,
+                ScreenshotSettings = new ReleaseScreenshotSettingsFormModel
+                {
+                    CreateScreenshots = releaseTemplate.CreateScreenshots,
+                    ScreenshotCount = releaseTemplate.ScreenshotCount,
+                    CreateScreenshotGrid = releaseTemplate.CreateScreenshotGrid,
+                    ScreenshotGridColumns = releaseTemplate.ScreenshotGridColumns,
+                    ScreenshotGridRows = releaseTemplate.ScreenshotGridRows,
+                },
                 IsEdit = true,
             },
         };
@@ -422,6 +431,9 @@ public partial class ReleaseTemplateDetail(
                 {
                     Name = imageUploadConfig.Name,
                     ImageHosterRegistrationId = imageUploadConfig.ImageHosterRegistrationId,
+                    UploadCover = imageUploadConfig.UploadCover,
+                    UploadScreenshots = imageUploadConfig.UploadScreenshots,
+                    UploadScreenshotGrid = imageUploadConfig.UploadScreenshotGrid,
                 },
         };
 

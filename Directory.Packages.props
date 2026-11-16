@@ -48,6 +48,7 @@
         <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
         <PackageVersion Include="Respawn" Version="7.0.0" />
         <PackageVersion Include="Scriban" Version="7.6.1" />
+        <PackageVersion Include="SharpCompress" Version="0.50.9" />
         <PackageVersion Include="Shane32.Analyzers" Version="2.0.2" />
         <PackageVersion Include="Shouldly" Version="4.3.0" />
         <PackageVersion Include="Spectre.Console" Version="0.57.2" />

@@ -65,7 +65,7 @@ public partial class ImageUploadConfigs(
             parameters,
             new DialogOpenOptions
             {
-                Title = L["EditImageUploadConfig"],
+                Title = L["EditNamedItem", config.Name],
                 Description = L["ImageUploadConfigDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,

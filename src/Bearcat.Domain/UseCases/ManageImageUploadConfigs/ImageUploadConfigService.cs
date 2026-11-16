@@ -9,6 +9,9 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
         int releaseId,
         string? name,
         int imageHosterRegistrationId,
+        bool uploadCover,
+        bool uploadScreenshots,
+        bool uploadScreenshotGrid,
         CancellationToken cancellationToken = default
     )
     {
@@ -17,6 +20,9 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
             ReleaseId = releaseId,
             Name = await ResolveNameAsync(name, imageHosterRegistrationId, cancellationToken),
             ImageHosterRegistrationId = imageHosterRegistrationId,
+            UploadCover = uploadCover,
+            UploadScreenshots = uploadScreenshots,
+            UploadScreenshotGrid = uploadScreenshotGrid,
         };
 
         writeRepository.Add(imageUploadConfig);
@@ -37,6 +43,9 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
             ReleaseCollectionId = releaseCollectionId,
             Name = await ResolveNameAsync(name, imageHosterRegistrationId, cancellationToken),
             ImageHosterRegistrationId = imageHosterRegistrationId,
+            UploadCover = true,
+            UploadScreenshots = false,
+            UploadScreenshotGrid = false,
         };
 
         writeRepository.Add(imageUploadConfig);
@@ -46,6 +55,35 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
     }
 
     public async Task UpdateAsync(
+        int imageUploadConfigId,
+        string? name,
+        int imageHosterRegistrationId,
+        bool uploadCover,
+        bool uploadScreenshots,
+        bool uploadScreenshotGrid,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var imageUploadConfig = await writeRepository.GetByIdAsync(
+            imageUploadConfigId,
+            cancellationToken
+        );
+
+        imageUploadConfig.Name = await ResolveNameAsync(
+            name,
+            imageHosterRegistrationId,
+            cancellationToken
+        );
+
+        imageUploadConfig.ImageHosterRegistrationId = imageHosterRegistrationId;
+        imageUploadConfig.UploadCover = uploadCover;
+        imageUploadConfig.UploadScreenshots = uploadScreenshots;
+        imageUploadConfig.UploadScreenshotGrid = uploadScreenshotGrid;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateForCollectionAsync(
         int imageUploadConfigId,
         string? name,
         int imageHosterRegistrationId,
@@ -62,6 +100,7 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
             imageHosterRegistrationId,
             cancellationToken
         );
+
         imageUploadConfig.ImageHosterRegistrationId = imageHosterRegistrationId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);

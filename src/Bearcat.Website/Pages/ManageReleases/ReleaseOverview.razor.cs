@@ -328,9 +328,80 @@ public partial class ReleaseOverview(
             _ => "bearcat-overview-online-segment-unknown",
         };
 
-    private static string? GetThumbnailUrl(ReleaseOverviewImageUploadReadModel imageUpload) =>
-        (
+    private static string? GetThumbnailUrl(ReleaseOverviewImageUploadReadModel imageUpload)
+    {
+        if (!imageUpload.UploadCover)
+        {
+            return imageUpload
+                .ScreenshotImageUploads.FirstOrDefault(screenshot =>
+                    screenshot.PreviewUrl is not null
+                )
+                ?.PreviewUrl;
+        }
+
+        return (
             imageUpload.ImageUrls.FirstOrDefault(url => url.ImageSize == ImageSize.Thumbnail)
             ?? imageUpload.ImageUrls.FirstOrDefault()
         )?.Url;
+    }
+
+    private static List<ReleaseOverviewScreenshotImageUploadReadModel> GetUploadedScreenshots(
+        ReleaseOverviewImageUploadReadModel imageUpload,
+        ReleaseScreenshotKind kind
+    )
+    {
+        return imageUpload
+            .ScreenshotImageUploads.Where(screenshot =>
+                screenshot.Kind == kind && screenshot.FullUrl is not null
+            )
+            .ToList();
+    }
+
+    private static UploadState? GetScreenshotUploadProblemState(
+        ReleaseOverviewImageUploadReadModel imageUpload
+    )
+    {
+        var states = imageUpload
+            .ScreenshotImageUploads.Select(screenshot => screenshot.UploadState)
+            .ToList();
+
+        if (states.Contains(UploadState.Failed))
+        {
+            return UploadState.Failed;
+        }
+
+        if (states.Contains(UploadState.Uploading))
+        {
+            return UploadState.Uploading;
+        }
+
+        return states.Contains(UploadState.Pending) ? UploadState.Pending : null;
+    }
+
+    private static List<string> GetFailedScreenshotUploadErrorMessages(
+        ReleaseOverviewImageUploadReadModel imageUpload
+    )
+    {
+        return imageUpload
+            .ScreenshotImageUploads.Where(screenshot =>
+                screenshot.UploadState is UploadState.Failed
+            )
+            .SelectMany(screenshot => screenshot.ErrorMessages)
+            .Distinct()
+            .ToList();
+    }
+
+    private string GetScreenshotTitle(ReleaseOverviewScreenshotImageUploadReadModel screenshot)
+    {
+        if (screenshot.Kind is ReleaseScreenshotKind.ScreenshotGrid)
+        {
+            return L["ScreenshotGrid"];
+        }
+
+        var timestamp =
+            screenshot.Timestamp?.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)
+            ?? string.Empty;
+
+        return $"{L["ScreenshotNumber", screenshot.Index]} · {timestamp}";
+    }
 }

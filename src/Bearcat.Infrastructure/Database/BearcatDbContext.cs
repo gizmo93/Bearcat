@@ -109,6 +109,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; } = null!;
 
+    public DbSet<ReleaseScreenshot> ReleaseScreenshots { get; set; } = null!;
+
     public DbSet<ReleaseClassification> ReleaseClassifications { get; set; } = null!;
 
     public DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; } = null!;

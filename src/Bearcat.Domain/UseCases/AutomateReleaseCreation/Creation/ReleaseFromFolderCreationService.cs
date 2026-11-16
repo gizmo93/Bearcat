@@ -104,6 +104,11 @@ public class ReleaseFromFolderCreationService(
             ReleaseType = releaseType,
             ReleaseContentType = releaseTemplate.ReleaseContentType,
             ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+            CreateScreenshots = releaseTemplate.CreateScreenshots,
+            ScreenshotCount = releaseTemplate.ScreenshotCount,
+            CreateScreenshotGrid = releaseTemplate.CreateScreenshotGrid,
+            ScreenshotGridColumns = releaseTemplate.ScreenshotGridColumns,
+            ScreenshotGridRows = releaseTemplate.ScreenshotGridRows,
             ArchiveConfigs = [],
             UploadConfigs = [],
             ImageUploadConfigs = [],
@@ -194,6 +199,9 @@ public class ReleaseFromFolderCreationService(
                     template.Name.TrimOrNullWhenWhitespace()
                     ?? template.ImageHosterRegistration.Name,
                 ImageHosterRegistrationId = template.ImageHosterRegistrationId,
+                UploadCover = template.UploadCover,
+                UploadScreenshots = template.UploadScreenshots,
+                UploadScreenshotGrid = template.UploadScreenshotGrid,
                 ImageUploads = [],
             })
             .ToList();

@@ -167,7 +167,9 @@ public class ReleaseInfoService(
 
         var uploadedImages = release
             .ImageUploadConfigs.SelectMany(config => config.ImageUploads)
-            .Where(upload => upload.UploadState == UploadState.Completed)
+            .Where(upload =>
+                upload.ReleaseScreenshotId == null && upload.UploadState == UploadState.Completed
+            )
             .ToList();
 
         foreach (var uploadedImage in uploadedImages)

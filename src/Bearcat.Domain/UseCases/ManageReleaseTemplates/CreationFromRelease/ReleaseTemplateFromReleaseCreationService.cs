@@ -26,6 +26,11 @@ public class ReleaseTemplateFromReleaseCreationService(
             ReleaseType = release.ReleaseType,
             ReleaseContentType = release.ReleaseContentType,
             ReleaseGroupId = release.ReleaseGroupId,
+            CreateScreenshots = release.CreateScreenshots,
+            ScreenshotCount = release.ScreenshotCount,
+            CreateScreenshotGrid = release.CreateScreenshotGrid,
+            ScreenshotGridColumns = release.ScreenshotGridColumns,
+            ScreenshotGridRows = release.ScreenshotGridRows,
         };
 
         if (release.ReleaseType is ReleaseType.Managed)
@@ -159,6 +164,9 @@ public class ReleaseTemplateFromReleaseCreationService(
             )
                 ? null
                 : imageUploadConfig.Name,
+            UploadCover = imageUploadConfig.UploadCover,
+            UploadScreenshots = imageUploadConfig.UploadScreenshots,
+            UploadScreenshotGrid = imageUploadConfig.UploadScreenshotGrid,
         };
     }
 }

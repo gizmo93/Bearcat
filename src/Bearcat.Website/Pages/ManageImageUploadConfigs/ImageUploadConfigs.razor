@@ -35,6 +35,20 @@
                         <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)_84px]">
                             <div class="min-w-0">
                                 <span class="text-sm font-semibold">@config.Name</span>
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    @if (config.UploadCover)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">@L["Cover"]</BbBadge>
+                                    }
+                                    @if (config.UploadScreenshots)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">@L["Screenshots"]</BbBadge>
+                                    }
+                                    @if (config.UploadScreenshotGrid)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">@L["ScreenshotGrid"]</BbBadge>
+                                    }
+                                </div>
                             </div>
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-medium">@config.ImageHosterRegistrationName</p>

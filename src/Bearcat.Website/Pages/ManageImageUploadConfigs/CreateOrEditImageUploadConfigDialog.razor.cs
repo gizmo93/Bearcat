@@ -54,17 +54,23 @@ public partial class CreateOrEditImageUploadConfigDialog(IScopedOperationRunner 
             if (IsEdit)
             {
                 await service.UpdateAsync(
-                    ImageUploadConfigId!.Value,
-                    formModel.Name,
-                    formModel.ImageHosterRegistrationId!.Value
+                    imageUploadConfigId: ImageUploadConfigId!.Value,
+                    name: formModel.Name,
+                    imageHosterRegistrationId: formModel.ImageHosterRegistrationId!.Value,
+                    uploadCover: formModel.UploadCover,
+                    uploadScreenshots: formModel.UploadScreenshots,
+                    uploadScreenshotGrid: formModel.UploadScreenshotGrid
                 );
                 return;
             }
 
             await service.CreateAsync(
-                ReleaseId,
-                formModel.Name,
-                formModel.ImageHosterRegistrationId!.Value
+                releaseId: ReleaseId,
+                name: formModel.Name,
+                imageHosterRegistrationId: formModel.ImageHosterRegistrationId!.Value,
+                uploadCover: formModel.UploadCover,
+                uploadScreenshots: formModel.UploadScreenshots,
+                uploadScreenshotGrid: formModel.UploadScreenshotGrid
             );
         });
 
@@ -81,6 +87,15 @@ public partial class CreateOrEditImageUploadConfigDialog(IScopedOperationRunner 
                 () => formModel.ImageHosterRegistrationId!,
                 L["ImageHosterRegistrationRequired"]
             );
+        }
+
+        if (
+            !formModel.UploadCover
+            && !formModel.UploadScreenshots
+            && !formModel.UploadScreenshotGrid
+        )
+        {
+            messageStore.Add(() => formModel.UploadCover, L["ImageUploadContentRequired"]);
         }
     }
 
@@ -101,6 +116,9 @@ public partial class CreateOrEditImageUploadConfigDialog(IScopedOperationRunner 
         {
             Name = config.Name,
             ImageHosterRegistrationId = config.ImageHosterRegistrationId,
+            UploadCover = config.UploadCover,
+            UploadScreenshots = config.UploadScreenshots,
+            UploadScreenshotGrid = config.UploadScreenshotGrid,
         };
     }
 

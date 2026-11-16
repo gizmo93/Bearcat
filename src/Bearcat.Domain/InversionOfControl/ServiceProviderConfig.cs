@@ -81,6 +81,8 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.MetadataMatchCorrection;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Generation;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Storage;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.CollectionImageUploadConfigTemplates;
@@ -177,6 +179,8 @@ public static class ServiceProviderConfig
             services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
             services.AddScoped<ReleaseClassificationService>();
+            services.AddScoped<ReleaseScreenshotDirectory>();
+            services.AddScoped<ReleaseScreenshotGenerationService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ReleaseTemplateFromReleaseCreationService>();
             services.AddScoped<ReleaseTemplateCopyService>();

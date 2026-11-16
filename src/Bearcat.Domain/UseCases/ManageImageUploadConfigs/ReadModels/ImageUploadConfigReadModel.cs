@@ -6,5 +6,8 @@ public record ImageUploadConfigReadModel(
     int ImageHosterRegistrationId,
     string ImageHosterRegistrationName,
     string ReleaseName,
-    int ImageUploadCount
+    int ImageUploadCount,
+    bool UploadCover,
+    bool UploadScreenshots,
+    bool UploadScreenshotGrid
 );

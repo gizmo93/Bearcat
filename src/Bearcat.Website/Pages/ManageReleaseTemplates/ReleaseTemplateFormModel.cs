@@ -1,4 +1,5 @@
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleaseScreenshots;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
@@ -22,6 +23,8 @@ public class ReleaseTemplateFormModel
     public string? ReleaseCollectionKeyTemplate { get; set; }
 
     public string? ReleaseCollectionNameTemplate { get; set; }
+
+    public ReleaseScreenshotSettingsFormModel ScreenshotSettings { get; set; } = new();
 
     public bool IsEdit { get; set; }
 

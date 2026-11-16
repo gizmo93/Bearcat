@@ -86,7 +86,9 @@ public static class MediaInfoOutputParser
             Height: ParseInt(GetString(track, "Height")),
             Fps: ParseDouble(GetString(track, "FrameRate")),
             PixelFormat: ComposePixelFormat(track),
-            BitrateKbps: ParseBitrateKbps(track)
+            BitrateKbps: ParseBitrateKbps(track),
+            TransferCharacteristics: GetString(track, "transfer_characteristics"),
+            HdrFormat: GetString(track, "HDR_Format")
         );
     }
 

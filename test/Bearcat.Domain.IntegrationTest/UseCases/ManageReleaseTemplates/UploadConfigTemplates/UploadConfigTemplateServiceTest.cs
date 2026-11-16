@@ -1,4 +1,5 @@
 using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ArchiveConfigTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigLinkCrypterTemplates;
@@ -15,6 +16,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseTemplates.UploadC
 public class UploadConfigTemplateServiceTest(DatabaseProvider databaseProvider)
     : ReleaseTemplateIntegrationTest(databaseProvider)
 {
+    private static readonly ReleaseScreenshotSettings ScreenshotsDisabled = new(
+        CreateScreenshots: false,
+        ScreenshotCount: 6,
+        CreateScreenshotGrid: false,
+        ScreenshotGridColumns: 4,
+        ScreenshotGridRows: 4
+    );
+
     private UploadConfigTemplateService service = null!;
     private ReleaseTemplateService releaseTemplateService = null!;
     private ArchiveConfigTemplateService archiveConfigTemplateService = null!;
@@ -160,6 +169,7 @@ public class UploadConfigTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            ScreenshotsDisabled,
             cancellationToken: CancellationToken.None
         );
         var hosterRegistration = await AddHosterRegistrationAsync();

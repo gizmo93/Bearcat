@@ -2175,6 +2175,47 @@
   <data name="ReleaseCollectionSearchSortOrder.NameDescending" xml:space="preserve"><value>Name Z to A</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Recently added</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtAscending" xml:space="preserve"><value>Oldest first</value></data>
+  <data name="FfmpegDescription" xml:space="preserve"><value>Creates screenshots and screenshot grids from video files.</value></data>
+  <data name="FfmpegSource.ConfiguredPath" xml:space="preserve"><value>Configured path (Media:FfmpegPath)</value></data>
+  <data name="FfmpegSource.Installed" xml:space="preserve"><value>Downloaded into the data directory</value></data>
+  <data name="FfmpegSource.Missing" xml:space="preserve"><value>Not installed. Bearcat downloads ffmpeg on first use, or you start the download here.</value></data>
+  <data name="FfmpegSource.UnsupportedPlatform" xml:space="preserve"><value>No download is available for this platform. Configure Media:FfmpegPath.</value></data>
+  <data name="FfmpegPath" xml:space="preserve"><value>Path</value></data>
+  <data name="FfmpegVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="FfmpegVersionUnknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="FfmpegInstalledAt" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="FfmpegDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="FfmpegUpdate" xml:space="preserve"><value>Update</value></data>
+  <data name="FfmpegDownloading" xml:space="preserve"><value>Downloading...</value></data>
+  <data name="FfmpegInstallFailed" xml:space="preserve"><value>Download failed: {0}</value></data>
+  <data name="Screenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="CreateScreenshots" xml:space="preserve"><value>Create screenshots</value></data>
+  <data name="CreateScreenshotsHelp" xml:space="preserve"><value>Creates single screenshots from the largest video file in the release folder.</value></data>
+  <data name="ScreenshotCount" xml:space="preserve"><value>Screenshot count</value></data>
+  <data name="CreateScreenshotGrid" xml:space="preserve"><value>Create screenshot grid</value></data>
+  <data name="CreateScreenshotGridHelp" xml:space="preserve"><value>Creates one 1920 pixel wide image with evenly spaced frames and a header with file, video, and audio details.</value></data>
+  <data name="ScreenshotGridColumns" xml:space="preserve"><value>Columns</value></data>
+  <data name="ScreenshotGridRows" xml:space="preserve"><value>Rows</value></data>
+  <data name="RegenerateScreenshots" xml:space="preserve"><value>Regenerate</value></data>
+  <data name="ScreenshotsCreatedAt" xml:space="preserve"><value>Created {0}</value></data>
+  <data name="ScreenshotsDisabledHint" xml:space="preserve"><value>Screenshots are off for this release. Turn them on in the release settings.</value></data>
+  <data name="ScreenshotsNeedManagedReleaseHint" xml:space="preserve"><value>Screenshots need a managed release with its release folder.</value></data>
+  <data name="ScreenshotsNoVideoFileHint" xml:space="preserve"><value>No video file was found in the release folder.</value></data>
+  <data name="ScreenshotsWaitingHint" xml:space="preserve"><value>Screenshots are created in the background shortly.</value></data>
+  <data name="ScreenshotCreationFailed" xml:space="preserve"><value>Screenshots could not be created</value></data>
+  <data name="ScreenshotNumber" xml:space="preserve"><value>Screenshot {0}</value></data>
+  <data name="ScreenshotGrid" xml:space="preserve"><value>Screenshot grid</value></data>
+  <data name="Cover" xml:space="preserve"><value>Cover</value></data>
+  <data name="ImageUploadContent" xml:space="preserve"><value>What to upload</value></data>
+  <data name="UploadCover" xml:space="preserve"><value>Cover</value></data>
+  <data name="UploadScreenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="UploadScreenshotGrid" xml:space="preserve"><value>Screenshot grid</value></data>
+  <data name="UploadScreenshotsHelp" xml:space="preserve"><value>Screenshots and the screenshot grid are uploaded once they have been created for the release.</value></data>
+  <data name="ImageUploadContentRequired" xml:space="preserve"><value>Select at least one image to upload.</value></data>
+  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>These screenshots were deleted after upload. Use Regenerate to upload them to additional image upload configurations.</value></data>
+  <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Regenerate needs a managed release whose release folder still exists.</value></data>
+  <data name="ScreenshotsNoImageUploadConfigHint" xml:space="preserve"><value>No image upload configuration uploads screenshots. Add one under Image upload configurations above or turn on screenshots in an existing one.</value></data>
+  <data name="ScreenshotsWithCount" xml:space="preserve"><value>Screenshots ({0})</value></data>
   <data name="ChangeArchiveFolders" xml:space="preserve"><value>Change archive folders</value></data>
   <data name="ChangeArchiveFoldersDescription" xml:space="preserve"><value>Search a base path for the folders of the selected archives and set them back to Created.</value></data>
   <data name="SelectArchive" xml:space="preserve"><value>Select archive {0}</value></data>

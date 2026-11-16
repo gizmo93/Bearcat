@@ -983,6 +983,20 @@ a {
     object-fit: cover;
 }
 
+.bearcat-overview-screenshot-preview {
+    display: block;
+    width: 4rem;
+    height: 2.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    background: var(--muted);
+    object-fit: cover;
+}
+
+.bearcat-overview-screenshot-preview.bearcat-overview-screenshot-grid-preview {
+    width: 5.5rem;
+}
+
 .bearcat-overview-image-thumbnail-empty {
     display: grid;
     place-items: center;

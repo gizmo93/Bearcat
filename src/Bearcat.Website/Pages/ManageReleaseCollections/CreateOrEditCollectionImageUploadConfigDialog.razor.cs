@@ -55,7 +55,7 @@ public partial class CreateOrEditCollectionImageUploadConfigDialog(
         {
             if (IsEdit)
             {
-                await service.UpdateAsync(
+                await service.UpdateForCollectionAsync(
                     ImageUploadConfigId!.Value,
                     formModel.Name,
                     formModel.ImageHosterRegistrationId!.Value

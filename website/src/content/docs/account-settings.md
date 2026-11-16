@@ -24,13 +24,25 @@ the required credentials.
 
 ## Image upload configuration
 
-On a release's **Images** tab, click **Add** under **Image upload configurations**. Choose a name and the image
-hoster registration that should receive the cover.
+On a release's **Images** tab, click **Add** under **Image upload configurations**. Choose a name and an
+image hoster registration. Then choose which images Bearcat should upload:
+
+![Image upload configuration](images/image-upload-config-dialog.png)
+
+| Option | Default | Uploads |
+| --- | --- | --- |
+| **Cover** | On | The cover, once a cover URL is available. |
+| **Screenshots** | Off | The release's individual [screenshots](/Bearcat/release-templates-and-automations/#screenshots). |
+| **Screenshot grid** | Off | The screenshot grid of the release. |
+
+Enable at least one option. Screenshots are uploaded once they have been created.
+Image upload configurations for collections only upload the cover.
 
 The name is also used in [forum post templates](/Bearcat/forum-post-templates/).
-For example, access an image named `ImgBB Cover` with `imagelinks.imgbb_cover.full`.
+For a configuration named `ImgBB Cover`, use `imagelinks.imgbb_cover.full` to access the cover.
 
-Bearcat uploads the image once a cover URL is available.
+Releases and collections enter the [post queue](/Bearcat/post-queue/) once no image uploads are pending
+or running. Failed image uploads do not block posting. Delete a failed upload on the **Images** tab to retry it.
 
 ## Automatic reuploads
 

@@ -5,5 +5,8 @@ public record ImageUploadConfigTemplateReadModel(
     string? Name,
     string DisplayName,
     int ImageHosterRegistrationId,
-    string ImageHosterRegistrationName
+    string ImageHosterRegistrationName,
+    bool UploadCover,
+    bool UploadScreenshots,
+    bool UploadScreenshotGrid
 );

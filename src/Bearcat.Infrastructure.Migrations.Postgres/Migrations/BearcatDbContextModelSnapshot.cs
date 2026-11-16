@@ -815,6 +815,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ImageUploadConfigId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ReleaseScreenshotId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UploadState")
                         .HasColumnType("integer");
 
@@ -824,6 +827,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("ImageUploadConfigId");
+
+                    b.HasIndex("ReleaseScreenshotId");
 
                     b.ToTable("ImageUploads");
                 });
@@ -848,6 +853,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.Property<int?>("ReleaseId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("UploadCover")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshotGrid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshots")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -879,6 +893,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("UploadCover")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshotGrid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UploadScreenshots")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -1492,6 +1515,12 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("CreateScreenshotGrid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CreateScreenshots")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
@@ -1545,6 +1574,22 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("ReleaseType")
                         .HasColumnType("integer");
+
+                    b.Property<int>("ScreenshotCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScreenshotGenerationErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ScreenshotGridColumns")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScreenshotGridRows")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ScreenshotsGeneratedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
 
                     b.Property<DateTime?>("UploadsPostedAt")
                         .HasPrecision(4)
@@ -2123,6 +2168,55 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.ToTable("ReleaseQualityIssues");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseScreenshot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<DateTime?>("FileDeletedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RelativeFilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<TimeSpan?>("Timestamp")
+                        .HasColumnType("interval");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId");
+
+                    b.ToTable("ReleaseScreenshots");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -2130,6 +2224,12 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CreateScreenshotGrid")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CreateScreenshots")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2158,6 +2258,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<int>("ReleaseType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScreenshotCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScreenshotGridColumns")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScreenshotGridRows")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -2979,7 +3088,14 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseScreenshot", "ReleaseScreenshot")
+                        .WithMany()
+                        .HasForeignKey("ReleaseScreenshotId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("ImageUploadConfig");
+
+                    b.Navigation("ReleaseScreenshot");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfig", b =>
@@ -3443,6 +3559,17 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("Release");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseScreenshot", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("Screenshots")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseGroup", "ReleaseGroup")
@@ -3788,6 +3915,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("ReleaseInfo");
 
                     b.Navigation("ReleaseNfo");
+
+                    b.Navigation("Screenshots");
 
                     b.Navigation("UploadConfigs");
                 });

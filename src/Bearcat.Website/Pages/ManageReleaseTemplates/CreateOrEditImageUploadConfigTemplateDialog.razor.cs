@@ -56,17 +56,23 @@ public partial class CreateOrEditImageUploadConfigTemplateDialog(
             if (IsEdit)
             {
                 await service.UpdateAsync(
-                    ImageUploadConfigTemplateId!.Value,
-                    FormModel.Name,
-                    FormModel.ImageHosterRegistrationId!.Value
+                    imageUploadConfigTemplateId: ImageUploadConfigTemplateId!.Value,
+                    name: FormModel.Name,
+                    imageHosterRegistrationId: FormModel.ImageHosterRegistrationId!.Value,
+                    uploadCover: FormModel.UploadCover,
+                    uploadScreenshots: FormModel.UploadScreenshots,
+                    uploadScreenshotGrid: FormModel.UploadScreenshotGrid
                 );
                 return;
             }
 
             await service.CreateAsync(
-                ReleaseTemplateId,
-                FormModel.Name,
-                FormModel.ImageHosterRegistrationId!.Value
+                releaseTemplateId: ReleaseTemplateId,
+                name: FormModel.Name,
+                imageHosterRegistrationId: FormModel.ImageHosterRegistrationId!.Value,
+                uploadCover: FormModel.UploadCover,
+                uploadScreenshots: FormModel.UploadScreenshots,
+                uploadScreenshotGrid: FormModel.UploadScreenshotGrid
             );
         });
 
@@ -83,6 +89,15 @@ public partial class CreateOrEditImageUploadConfigTemplateDialog(
                 () => FormModel.ImageHosterRegistrationId!,
                 L["ImageHosterRegistrationRequired"]
             );
+        }
+
+        if (
+            !FormModel.UploadCover
+            && !FormModel.UploadScreenshots
+            && !FormModel.UploadScreenshotGrid
+        )
+        {
+            messageStore.Add(() => FormModel.UploadCover, L["ImageUploadContentRequired"]);
         }
     }
 

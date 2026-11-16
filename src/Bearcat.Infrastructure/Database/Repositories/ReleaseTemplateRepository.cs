@@ -33,6 +33,11 @@ public class ReleaseTemplateRepository(
                 t.ReleaseCollectionPattern,
                 t.ReleaseCollectionKeyTemplate,
                 t.ReleaseCollectionNameTemplate,
+                t.CreateScreenshots,
+                t.ScreenshotCount,
+                t.CreateScreenshotGrid,
+                t.ScreenshotGridColumns,
+                t.ScreenshotGridRows,
                 t.ArchiveConfigTemplates.Count,
                 t.UploadConfigTemplates.Count,
                 t.ImageUploadConfigTemplates.Count,
@@ -246,6 +251,11 @@ public class ReleaseTemplateRepository(
             releaseTemplate.ReleaseCollectionPattern,
             releaseTemplate.ReleaseCollectionKeyTemplate,
             releaseTemplate.ReleaseCollectionNameTemplate,
+            releaseTemplate.CreateScreenshots,
+            releaseTemplate.ScreenshotCount,
+            releaseTemplate.CreateScreenshotGrid,
+            releaseTemplate.ScreenshotGridColumns,
+            releaseTemplate.ScreenshotGridRows,
             releaseTemplate
                 .ArchiveConfigTemplates.OrderBy(a => a.Name)
                 .ThenBy(a => a.Id)
@@ -325,11 +335,16 @@ public class ReleaseTemplateRepository(
                 .ImageUploadConfigTemplates.OrderBy(i => i.Name ?? i.ImageHosterRegistration.Name)
                 .ThenBy(i => i.Id)
                 .Select(i => new ImageUploadConfigTemplateReadModel(
-                    i.Id,
-                    i.Name,
-                    string.IsNullOrWhiteSpace(i.Name) ? i.ImageHosterRegistration.Name : i.Name,
-                    i.ImageHosterRegistrationId,
-                    i.ImageHosterRegistration.Name
+                    ImageUploadConfigTemplateId: i.Id,
+                    Name: i.Name,
+                    DisplayName: string.IsNullOrWhiteSpace(i.Name)
+                        ? i.ImageHosterRegistration.Name
+                        : i.Name,
+                    ImageHosterRegistrationId: i.ImageHosterRegistrationId,
+                    ImageHosterRegistrationName: i.ImageHosterRegistration.Name,
+                    UploadCover: i.UploadCover,
+                    UploadScreenshots: i.UploadScreenshots,
+                    UploadScreenshotGrid: i.UploadScreenshotGrid
                 ))
                 .ToList(),
             releaseTemplate
@@ -338,11 +353,16 @@ public class ReleaseTemplateRepository(
                 )
                 .ThenBy(i => i.Id)
                 .Select(i => new ImageUploadConfigTemplateReadModel(
-                    i.Id,
-                    i.Name,
-                    string.IsNullOrWhiteSpace(i.Name) ? i.ImageHosterRegistration.Name : i.Name,
-                    i.ImageHosterRegistrationId,
-                    i.ImageHosterRegistration.Name
+                    ImageUploadConfigTemplateId: i.Id,
+                    Name: i.Name,
+                    DisplayName: string.IsNullOrWhiteSpace(i.Name)
+                        ? i.ImageHosterRegistration.Name
+                        : i.Name,
+                    ImageHosterRegistrationId: i.ImageHosterRegistrationId,
+                    ImageHosterRegistrationName: i.ImageHosterRegistration.Name,
+                    UploadCover: true,
+                    UploadScreenshots: false,
+                    UploadScreenshotGrid: false
                 ))
                 .ToList()
         );

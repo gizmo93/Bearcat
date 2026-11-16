@@ -6,10 +6,12 @@ public record ReleaseOverviewImageUploadReadModel(
     int ImageUploadConfigId,
     string ImageUploadConfigName,
     string ImageHosterRegistrationName,
+    bool UploadCover,
     int? ImageUploadId,
     DateTime? CreatedAt,
     DateTime? UploadedAt,
     UploadState? UploadState,
     IReadOnlyList<string> ErrorMessages,
-    IReadOnlyList<ReleaseOverviewImageUploadUrlReadModel> ImageUrls
+    IReadOnlyList<ReleaseOverviewImageUploadUrlReadModel> ImageUrls,
+    IReadOnlyList<ReleaseOverviewScreenshotImageUploadReadModel> ScreenshotImageUploads
 );

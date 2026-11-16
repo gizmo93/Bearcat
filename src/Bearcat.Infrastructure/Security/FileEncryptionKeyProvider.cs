@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Bearcat.Infrastructure.Configuration;
+using Bearcat.Abstractions.Configurations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

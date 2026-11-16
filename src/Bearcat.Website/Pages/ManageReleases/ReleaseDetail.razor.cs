@@ -19,6 +19,7 @@ using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManagePostedLocations;
 using Bearcat.Website.Pages.ManageReleases.DetailTabs;
 using Bearcat.Website.Pages.ManageReleases.ProgressSteps;
+using Bearcat.Website.Pages.ManageReleaseScreenshots;
 using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
@@ -499,6 +500,14 @@ public partial class ReleaseDetail(
                 PrimaryLanguageCode = release.PrimaryLanguageCode ?? string.Empty,
                 ReleaseGroupId = release.ReleaseGroupId,
                 ExcludeFromAutoCleanup = release.ExcludeFromAutoCleanup,
+                ScreenshotSettings = new ReleaseScreenshotSettingsFormModel
+                {
+                    CreateScreenshots = release.CreateScreenshots,
+                    ScreenshotCount = release.ScreenshotCount,
+                    CreateScreenshotGrid = release.CreateScreenshotGrid,
+                    ScreenshotGridColumns = release.ScreenshotGridColumns,
+                    ScreenshotGridRows = release.ScreenshotGridRows,
+                },
                 IsEdit = true,
             },
         };
@@ -515,9 +524,18 @@ public partial class ReleaseDetail(
             }
         );
 
-        if (!dialog.Cancelled)
+        if (dialog.Cancelled)
         {
-            await ReloadReleaseAsync();
+            return;
+        }
+
+        await ReloadReleaseAsync();
+
+        if (
+            reloadableComponents.TryGetValue(nameof(ReleaseScreenshots), out var releaseScreenshots)
+        )
+        {
+            await releaseScreenshots.ReloadAsync();
         }
     }
 

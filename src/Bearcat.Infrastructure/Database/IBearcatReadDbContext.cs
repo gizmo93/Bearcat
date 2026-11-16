@@ -54,6 +54,7 @@ public interface IBearcatReadDbContext
     public DbSet<MediaDatabaseRegistration> MediaDatabaseRegistrations { get; set; }
     public DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; }
     public DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; }
+    public DbSet<ReleaseScreenshot> ReleaseScreenshots { get; set; }
     public DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; }
     public DbSet<ReleaseFolderAutomationIgnoredFolder> ReleaseFolderAutomationIgnoredFolders { get; set; }
     public DbSet<QualityProfile> QualityProfiles { get; set; }

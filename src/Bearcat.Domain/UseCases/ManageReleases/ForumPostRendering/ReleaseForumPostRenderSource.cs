@@ -14,7 +14,7 @@ public class ReleaseForumPostRenderSource(ReleaseForumPostRenderModelBuilder ren
         return
         [
             .. ForumPostTemplateVariableCatalog.GetVariables(typeof(ForumPostTemplateRenderModel)),
-            ForumPostImageLinkBuilder.CreateVariableNode("imagelinks"),
+            ForumPostImageLinkBuilder.CreateReleaseVariableNode("imagelinks"),
         ];
     }
 

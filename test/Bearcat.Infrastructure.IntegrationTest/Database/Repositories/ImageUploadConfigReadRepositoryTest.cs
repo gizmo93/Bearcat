@@ -39,7 +39,10 @@ public class ImageUploadConfigReadRepositoryTest(DatabaseProvider databaseProvid
                 seed.ImgBbRegistrationId,
                 "ImgBB",
                 "Bearcat.Release.2026-GRP",
-                2
+                2,
+                true,
+                false,
+                false
             ),
             new ImageUploadConfigReadModel(
                 seed.ScreensConfigId,
@@ -47,7 +50,10 @@ public class ImageUploadConfigReadRepositoryTest(DatabaseProvider databaseProvid
                 seed.PixHostRegistrationId,
                 "PixHost",
                 "Bearcat.Release.2026-GRP",
-                0
+                0,
+                true,
+                false,
+                false
             ),
         ]);
     }
@@ -72,7 +78,10 @@ public class ImageUploadConfigReadRepositoryTest(DatabaseProvider databaseProvid
                 seed.ImgBbRegistrationId,
                 "ImgBB",
                 "Bearcat.Release.2026-GRP",
-                2
+                2,
+                true,
+                false,
+                false
             )
         );
     }

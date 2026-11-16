@@ -1041,6 +1041,185 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetPostQueueAsync_ImageUploadPending_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.PendingImage.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs:
+            [
+                new PostQueueImageConfigSpec(HasUpload: true, UploadState: UploadState.Pending),
+            ]
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ImageUploadFailed_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.FailedImage.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs:
+            [
+                new PostQueueImageConfigSpec(HasUpload: true, UploadState: UploadState.Failed),
+            ]
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ScreenshotGenerationPendingForScreenshotImageConfig_HidesRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.PendingScreenshots.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true, UploadScreenshots: true)]
+        );
+        await MakeScreenshotGenerationPendingAsync(release);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ScreenshotsEnabledWithoutScreenshotImageConfig_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.ScreenshotsWithoutImageConfig.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true)]
+        );
+        await MakeScreenshotGenerationPendingAsync(release);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_UnmanagedReleaseWithScreenshotSettings_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.UnmanagedScreenshots.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true, UploadScreenshots: true)]
+        );
+        release.ReleaseType = ReleaseType.Unmanaged;
+        release.ReleaseFolderPath = null;
+        await MakeScreenshotGenerationPendingAsync(release);
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ScreenshotWithoutImageUpload_HidesRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.ScreenshotWithoutUpload.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true, UploadScreenshots: true)]
+        );
+        release.CreateScreenshots = true;
+        release.ScreenshotsGeneratedAt = DateTime.UtcNow;
+        release.Screenshots.Add(
+            new ReleaseScreenshot
+            {
+                Kind = ReleaseScreenshotKind.Screenshot,
+                Index = 1,
+                RelativeFilePath = "screenshots/1/screenshot-01.jpg",
+                Width = 1920,
+                Height = 1080,
+                SizeBytes = 1024,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ScreenshotFileDeletedWithoutImageUpload_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.DeletedScreenshotFile.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true, UploadScreenshots: true)]
+        );
+        release.CreateScreenshots = true;
+        release.ScreenshotsGeneratedAt = DateTime.UtcNow;
+        release.Screenshots.Add(
+            new ReleaseScreenshot
+            {
+                Kind = ReleaseScreenshotKind.Screenshot,
+                Index = 1,
+                RelativeFilePath = "screenshots/1/screenshot-01.jpg",
+                Width = 1920,
+                Height = 1080,
+                SizeBytes = 1024,
+                CreatedAt = DateTime.UtcNow,
+                FileDeletedAt = DateTime.UtcNow,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
     public async Task SearchUploadsAsync_HosterWithUnreadableSecrets_ProjectsFlagPerUpload()
     {
         // Arrange
@@ -1367,6 +1546,22 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         return release;
     }
 
+    private async Task MakeScreenshotGenerationPendingAsync(Release release)
+    {
+        release.CreateScreenshots = true;
+        release.MediaFiles.Add(
+            new ReleaseMediaFile
+            {
+                RelativePath = "movie.mkv",
+                SizeBytes = 1024,
+                MediaInfoJson = "{}",
+                MediaInfoText = "General",
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+    }
+
     private void AddLinkCrypterToConfig(
         string name,
         UploadConfig uploadConfig,
@@ -1419,6 +1614,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             Release = release,
             ImageHosterRegistration = imageHosterRegistration,
             Name = name,
+            UploadScreenshots = spec.UploadScreenshots,
             ImageUploads = [],
         };
         DbContext.AddRange(imageHosterRegistration, imageUploadConfig);
@@ -1431,7 +1627,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                     ImageUploadConfig = imageUploadConfig,
                     CreatedAt = DateTime.UtcNow,
                     UploadedAt = DateTime.UtcNow,
-                    UploadState = UploadState.Completed,
+                    UploadState = spec.UploadState,
                 }
             );
         }
@@ -1516,7 +1712,12 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         bool RegistrationActive = true
     );
 
-    private sealed record PostQueueImageConfigSpec(bool HasUpload, bool HosterActive = true);
+    private sealed record PostQueueImageConfigSpec(
+        bool HasUpload,
+        bool HosterActive = true,
+        UploadState UploadState = UploadState.Completed,
+        bool UploadScreenshots = false
+    );
 
     private sealed record InPostQueueFilterReleases(
         Release NotPostedRelease,

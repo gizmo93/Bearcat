@@ -19,6 +19,20 @@
                                Label="@L["ImageHosterRegistration"]"
                                Placeholder="@L["SelectImageHosterRegistration"]"
                                Options="ImageHosterRegistrationOptions" />
+
+            <div class="space-y-4 rounded-md border border-border/70 p-4">
+                <p class="text-sm font-semibold">@L["ImageUploadContent"]</p>
+
+                <BbFormFieldSwitch @bind-Checked="FormModel.UploadCover"
+                                   Label="@L["UploadCover"]" />
+
+                <BbFormFieldSwitch @bind-Checked="FormModel.UploadScreenshots"
+                                   Label="@L["UploadScreenshots"]" />
+
+                <BbFormFieldSwitch @bind-Checked="FormModel.UploadScreenshotGrid"
+                                   Label="@L["UploadScreenshotGrid"]"
+                                   HelperText="@L["UploadScreenshotsHelp"]" />
+            </div>
         </div>
 
         <div class="flex justify-end gap-2">

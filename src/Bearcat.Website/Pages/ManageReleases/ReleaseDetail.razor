@@ -5,6 +5,7 @@
 @using Bearcat.Website.Pages.ManageReleases.DetailTabs
 @using Bearcat.Website.Pages.ManageReleases.ProgressSteps
 @using Bearcat.Website.Pages.ManagePostedLocations
+@using Bearcat.Website.Pages.ManageReleaseScreenshots
 @using Bearcat.Website.Pages.ManageUploadConfigs
 @using Bearcat.Website.Pages.PostQueue
 @using Bearcat.Website.Pages.PostToForum
@@ -341,6 +342,9 @@
                 ReleaseId="@ReleaseId"
                 OnImageUploadConfigCountLoaded="count => imageUploadConfigCount = count" />
             <ReleaseImageUploads ReleaseId="@ReleaseId" />
+            <ReleaseScreenshots
+                @ref="@reloadableComponents[nameof(ReleaseScreenshots)]"
+                ReleaseId="@ReleaseId" />
         </BbTabsContent>
     </BbTabs>
 </section>

@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.Duplication;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleaseScreenshots;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -89,6 +90,14 @@ public partial class ReleaseTemplatesPage(
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
                 ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
                 ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,
+                ScreenshotSettings = new ReleaseScreenshotSettingsFormModel
+                {
+                    CreateScreenshots = releaseTemplate.CreateScreenshots,
+                    ScreenshotCount = releaseTemplate.ScreenshotCount,
+                    CreateScreenshotGrid = releaseTemplate.CreateScreenshotGrid,
+                    ScreenshotGridColumns = releaseTemplate.ScreenshotGridColumns,
+                    ScreenshotGridRows = releaseTemplate.ScreenshotGridRows,
+                },
                 IsEdit = true,
             },
         };

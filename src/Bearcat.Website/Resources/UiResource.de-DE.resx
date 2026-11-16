@@ -2175,6 +2175,47 @@
   <data name="ReleaseCollectionSearchSortOrder.NameDescending" xml:space="preserve"><value>Name Z bis A</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Zuletzt hinzugefügt</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtAscending" xml:space="preserve"><value>Älteste zuerst</value></data>
+  <data name="FfmpegDescription" xml:space="preserve"><value>Erstellt Screenshots und Screenshotraster aus Videodateien.</value></data>
+  <data name="FfmpegSource.ConfiguredPath" xml:space="preserve"><value>Konfigurierter Pfad (Media:FfmpegPath)</value></data>
+  <data name="FfmpegSource.Installed" xml:space="preserve"><value>In das Datenverzeichnis heruntergeladen</value></data>
+  <data name="FfmpegSource.Missing" xml:space="preserve"><value>Nicht installiert. Bearcat lädt ffmpeg bei der ersten Verwendung herunter, oder du startest den Download hier.</value></data>
+  <data name="FfmpegSource.UnsupportedPlatform" xml:space="preserve"><value>Für diese Plattform gibt es keinen Download. Konfiguriere Media:FfmpegPath.</value></data>
+  <data name="FfmpegPath" xml:space="preserve"><value>Pfad</value></data>
+  <data name="FfmpegVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="FfmpegVersionUnknown" xml:space="preserve"><value>Unbekannt</value></data>
+  <data name="FfmpegInstalledAt" xml:space="preserve"><value>Heruntergeladen</value></data>
+  <data name="FfmpegDownload" xml:space="preserve"><value>Herunterladen</value></data>
+  <data name="FfmpegUpdate" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="FfmpegDownloading" xml:space="preserve"><value>Wird heruntergeladen...</value></data>
+  <data name="FfmpegInstallFailed" xml:space="preserve"><value>Download fehlgeschlagen: {0}</value></data>
+  <data name="Screenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="CreateScreenshots" xml:space="preserve"><value>Screenshots erstellen</value></data>
+  <data name="CreateScreenshotsHelp" xml:space="preserve"><value>Erstellt einzelne Screenshots aus der grössten Videodatei im Releaseordner.</value></data>
+  <data name="ScreenshotCount" xml:space="preserve"><value>Screenshotanzahl</value></data>
+  <data name="CreateScreenshotGrid" xml:space="preserve"><value>Screenshotraster erstellen</value></data>
+  <data name="CreateScreenshotGridHelp" xml:space="preserve"><value>Erstellt ein 1920 Pixel breites Bild mit gleichmässig verteilten Einzelbildern und einer Kopfzeile mit Angaben zu Datei, Video und Audio.</value></data>
+  <data name="ScreenshotGridColumns" xml:space="preserve"><value>Spalten</value></data>
+  <data name="ScreenshotGridRows" xml:space="preserve"><value>Zeilen</value></data>
+  <data name="RegenerateScreenshots" xml:space="preserve"><value>Neu erstellen</value></data>
+  <data name="ScreenshotsCreatedAt" xml:space="preserve"><value>Erstellt am {0}</value></data>
+  <data name="ScreenshotsDisabledHint" xml:space="preserve"><value>Screenshots sind für dieses Release deaktiviert. Aktiviere sie in den Releaseeinstellungen.</value></data>
+  <data name="ScreenshotsNeedManagedReleaseHint" xml:space="preserve"><value>Screenshots brauchen ein Release vom Typ Managed mit Releaseordner.</value></data>
+  <data name="ScreenshotsNoVideoFileHint" xml:space="preserve"><value>Im Releaseordner wurde keine Videodatei gefunden.</value></data>
+  <data name="ScreenshotsWaitingHint" xml:space="preserve"><value>Screenshots werden in Kürze im Hintergrund erstellt.</value></data>
+  <data name="ScreenshotCreationFailed" xml:space="preserve"><value>Screenshots konnten nicht erstellt werden</value></data>
+  <data name="ScreenshotNumber" xml:space="preserve"><value>Screenshot {0}</value></data>
+  <data name="ScreenshotGrid" xml:space="preserve"><value>Screenshotraster</value></data>
+  <data name="Cover" xml:space="preserve"><value>Cover</value></data>
+  <data name="ImageUploadContent" xml:space="preserve"><value>Was hochgeladen wird</value></data>
+  <data name="UploadCover" xml:space="preserve"><value>Cover</value></data>
+  <data name="UploadScreenshots" xml:space="preserve"><value>Screenshots</value></data>
+  <data name="UploadScreenshotGrid" xml:space="preserve"><value>Screenshotraster</value></data>
+  <data name="UploadScreenshotsHelp" xml:space="preserve"><value>Screenshots und das Screenshotraster werden hochgeladen, sobald sie für das Release erstellt wurden.</value></data>
+  <data name="ImageUploadContentRequired" xml:space="preserve"><value>Wähle mindestens ein Bild zum Hochladen aus.</value></data>
+  <data name="ScreenshotsUnavailableHint" xml:space="preserve"><value>Diese Screenshots wurden nach dem Upload gelöscht. Mit „Neu erstellen“ lädst du sie zu weiteren Bilduploadkonfigurationen hoch.</value></data>
+  <data name="RegenerateScreenshotsUnavailableHint" xml:space="preserve"><value>Neu erstellen braucht ein Release vom Typ Managed, dessen Releaseordner noch existiert.</value></data>
+  <data name="ScreenshotsNoImageUploadConfigHint" xml:space="preserve"><value>Keine Bilduploadkonfiguration lädt Screenshots hoch. Füge oben unter Bilduploadkonfigurationen eine hinzu oder aktiviere Screenshots in einer vorhandenen.</value></data>
+  <data name="ScreenshotsWithCount" xml:space="preserve"><value>Screenshots ({0})</value></data>
   <data name="ChangeArchiveFolders" xml:space="preserve"><value>Archivordner ändern</value></data>
   <data name="ChangeArchiveFoldersDescription" xml:space="preserve"><value>Durchsucht einen Basispfad nach den Ordnern der ausgewählten Archive und setzt sie wieder auf Erstellt.</value></data>
   <data name="SelectArchive" xml:space="preserve"><value>Archiv {0} auswählen</value></data>

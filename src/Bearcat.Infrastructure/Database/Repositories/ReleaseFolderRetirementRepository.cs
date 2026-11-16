@@ -63,6 +63,7 @@ public class ReleaseFolderRetirementRepository(IBearcatWriteDbContext dbWrite)
                     )
                 )
             )
+            .Where(ReleaseScreenshotExpressions.ScreenshotGenerationIsNotPending)
             .OrderBy(r => r.Id)
             .Take(maximumReleaseCount)
             .ToListAsync(cancellationToken);

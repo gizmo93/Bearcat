@@ -147,6 +147,26 @@ Bei Videouploads sind `upload.archive_format` und `upload.archive_password` leer
 {{~ end ~}}
 ```
 
+### Screenshots
+
+Auf hochgeladene [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots) greifst du
+wie auf Coverlinks zu: in Releasevorlagen über `imagelinks`, in Collectionvorlagen über `release.imagelinks`.
+Jede Bilduploadkonfiguration hat dafür diese Felder:
+
+- `imagelinks.<name>.screenshots`: die hochgeladenen Screenshots, nach Nummer sortiert.
+  Jeder Eintrag enthält die Bildlinks `full`, `medium` und `thumbnail` in den Grössen des Bildhosters.
+  `index` gibt die Nummer ab 1 an, `timestamp` die Videoposition als `hh:mm:ss`.
+  Die Liste bleibt leer, bis der erste Screenshot hochgeladen ist.
+- `imagelinks.<name>.screenshotgrid`: das Screenshotraster mit `full`, `medium` und `thumbnail`.
+  Das Feld bleibt leer, bis das Raster hochgeladen ist.
+
+```text
+{{~ for screenshot in imagelinks.pixhost.screenshots ~}}
+[URL={{ screenshot.full }}][IMG]{{ screenshot.thumbnail }}[/IMG][/URL]
+{{~ end ~}}
+[IMG]{{ imagelinks.pixhost.screenshotgrid.full }}[/IMG]
+```
+
 ## Post rendern
 
 Öffne ein Release oder eine Releasecollection und klicke im Pfeilmenü von **Im Forum posten** auf

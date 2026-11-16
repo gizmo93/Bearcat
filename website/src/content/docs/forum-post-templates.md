@@ -147,6 +147,26 @@ For video uploads, `upload.archive_format` and `upload.archive_password` are emp
 {{~ end ~}}
 ```
 
+### Screenshots
+
+Access uploaded [screenshots](/Bearcat/release-templates-and-automations/#screenshots) like cover links:
+use `imagelinks` in release templates and `release.imagelinks` in collection templates.
+Each image upload configuration has these fields:
+
+- `imagelinks.<name>.screenshots`: the uploaded screenshots, sorted by number.
+  Each entry contains the image links `full`, `medium` and `thumbnail` in the sizes the image hoster provides.
+  `index` is the number starting at 1, and `timestamp` is the video position as `hh:mm:ss`.
+  The list stays empty until the first screenshot is uploaded.
+- `imagelinks.<name>.screenshotgrid`: the screenshot grid with `full`, `medium` and `thumbnail`.
+  The field stays empty until the grid is uploaded.
+
+```text
+{{~ for screenshot in imagelinks.pixhost.screenshots ~}}
+[URL={{ screenshot.full }}][IMG]{{ screenshot.thumbnail }}[/IMG][/URL]
+{{~ end ~}}
+[IMG]{{ imagelinks.pixhost.screenshotgrid.full }}[/IMG]
+```
+
 ## Render a post
 
 Open a release or release collection and click **Render forum post** in the arrow menu of

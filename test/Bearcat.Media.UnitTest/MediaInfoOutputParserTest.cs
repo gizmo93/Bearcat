@@ -31,6 +31,8 @@ public class MediaInfoOutputParserTest
                         "ColorSpace": "YUV",
                         "ChromaSubsampling": "4:2:0",
                         "BitDepth": "10",
+                        "transfer_characteristics": "PQ",
+                        "HDR_Format": "SMPTE ST 2086",
                         "Default": "Yes",
                         "Forced": "No"
                     },
@@ -95,6 +97,19 @@ public class MediaInfoOutputParserTest
         metadata.VideoStream.Fps.ShouldBe(23.976);
         metadata.VideoStream.PixelFormat.ShouldBe("YUV 4:2:0 10 bit");
         metadata.VideoStream.IsDefault.ShouldBeTrue();
+    }
+
+    [Test]
+    public void Parse_ReadsHdrTransferCharacteristicsAndFormat()
+    {
+        // Act
+        var metadata = MediaInfoOutputParser.Parse(MultiTrackJson);
+
+        // Assert
+        metadata.ShouldNotBeNull();
+        metadata.VideoStream.ShouldNotBeNull();
+        metadata.VideoStream.TransferCharacteristics.ShouldBe("PQ");
+        metadata.VideoStream.HdrFormat.ShouldBe("SMPTE ST 2086");
     }
 
     [Test]

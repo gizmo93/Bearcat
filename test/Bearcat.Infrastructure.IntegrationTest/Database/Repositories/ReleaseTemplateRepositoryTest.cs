@@ -78,6 +78,11 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
                 ReleaseCollectionPattern: null,
                 ReleaseCollectionKeyTemplate: null,
                 ReleaseCollectionNameTemplate: null,
+                CreateScreenshots: false,
+                ScreenshotCount: 6,
+                CreateScreenshotGrid: false,
+                ScreenshotGridColumns: 4,
+                ScreenshotGridRows: 4,
                 ArchiveConfigTemplateCount: 0,
                 UploadConfigTemplateCount: 0,
                 ImageUploadConfigTemplateCount: 0,
@@ -94,6 +99,11 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
                 ReleaseCollectionPattern: "S\\d{2}",
                 ReleaseCollectionKeyTemplate: "{title}.s{season}",
                 ReleaseCollectionNameTemplate: "{title} S{season}",
+                CreateScreenshots: false,
+                ScreenshotCount: 6,
+                CreateScreenshotGrid: false,
+                ScreenshotGridColumns: 4,
+                ScreenshotGridRows: 4,
                 ArchiveConfigTemplateCount: 2,
                 UploadConfigTemplateCount: 2,
                 ImageUploadConfigTemplateCount: 2,
@@ -230,14 +240,20 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
                 null,
                 "PiXhost",
                 seed.PixhostRegistrationId,
-                "PiXhost"
+                "PiXhost",
+                true,
+                false,
+                false
             ),
             new ImageUploadConfigTemplateReadModel(
                 seed.ScreensImageUploadConfigTemplateId,
                 "Screens",
                 "Screens",
                 seed.ImgbbRegistrationId,
-                "ImgBB"
+                "ImgBB",
+                true,
+                true,
+                true
             ),
         ]);
         result.CollectionImageUploadConfigTemplates.ShouldBe([
@@ -246,7 +262,10 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
                 "Series cover",
                 "Series cover",
                 seed.ImgbbRegistrationId,
-                "ImgBB"
+                "ImgBB",
+                true,
+                false,
+                false
             ),
         ]);
     }
@@ -460,6 +479,8 @@ public class ReleaseTemplateRepositoryTest(DatabaseProvider databaseProvider)
             ReleaseTemplate = releaseTemplate,
             ImageHosterRegistration = imgbb,
             Name = "Screens",
+            UploadScreenshots = true,
+            UploadScreenshotGrid = true,
         };
         var pixhostTemplate = new ImageUploadConfigTemplate
         {

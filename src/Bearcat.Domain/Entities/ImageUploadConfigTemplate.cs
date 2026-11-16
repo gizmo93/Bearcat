@@ -13,4 +13,10 @@ public class ImageUploadConfigTemplate
     public ImageHosterRegistration ImageHosterRegistration { get; set; } = null!;
 
     public string? Name { get; set; }
+
+    public bool UploadCover { get; set; } = true;
+
+    public bool UploadScreenshots { get; set; }
+
+    public bool UploadScreenshotGrid { get; set; }
 }

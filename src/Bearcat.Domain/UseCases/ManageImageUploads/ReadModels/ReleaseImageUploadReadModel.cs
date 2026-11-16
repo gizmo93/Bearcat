@@ -5,6 +5,8 @@ namespace Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 public record ReleaseImageUploadReadModel(
     int ImageUploadId,
     string ImageUploadConfigName,
+    ReleaseScreenshotKind? ScreenshotKind,
+    int? ScreenshotIndex,
     string ImageHosterRegistrationName,
     DateTime CreatedAt,
     DateTime? UploadedAt,

@@ -390,7 +390,12 @@ public class ReleaseProgressStepServiceTest
             onlineUploadConfigsCount,
             false,
             uploadsPostedAt,
-            false
+            false,
+            false,
+            6,
+            false,
+            4,
+            4
         );
 
     private static ReleaseInfoReadModel CreateReleaseInfo(string nfoDatabaseClassName) =>

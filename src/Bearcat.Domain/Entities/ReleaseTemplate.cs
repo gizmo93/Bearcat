@@ -25,6 +25,16 @@ public class ReleaseTemplate
 
     public string? ReleaseCollectionNameTemplate { get; set; }
 
+    public bool CreateScreenshots { get; set; }
+
+    public int ScreenshotCount { get; set; } = 6;
+
+    public bool CreateScreenshotGrid { get; set; }
+
+    public int ScreenshotGridColumns { get; set; } = 4;
+
+    public int ScreenshotGridRows { get; set; } = 4;
+
     public List<ArchiveConfigTemplate> ArchiveConfigTemplates { get; set; } = [];
 
     public List<UploadConfigTemplate> UploadConfigTemplates { get; set; } = [];

@@ -1,8 +1,10 @@
+using System.Globalization;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
 namespace Bearcat.Infrastructure.IntegrationTest.Database.Repositories;
@@ -153,6 +155,69 @@ public class ReleaseFolderRetirementRepositoryTest(DatabaseProvider databaseProv
 
         // Assert
         result.ShouldBeEmpty();
+    }
+
+    [TestCase(false, true, null, null, true)]
+    [TestCase(true, true, null, null, false)]
+    [TestCase(true, false, null, null, true)]
+    [TestCase(true, true, "2026-04-30", null, true)]
+    [TestCase(true, true, null, "ffmpeg failed", true)]
+    public async Task GetConversionCandidatesAsync_OverdueReleaseWithScreenshotState_ReturnsReleaseOnlyWhenScreenshotsAreNotPending(
+        bool createScreenshots,
+        bool hasScreenshotImageUploadConfig,
+        string? screenshotsGeneratedAt,
+        string? screenshotGenerationErrorMessage,
+        bool expectedToBeReturned
+    )
+    {
+        // Arrange
+        var release = await AddReleaseAsync(
+            "Release",
+            ReleaseType.Managed,
+            uploadsPostedAt: Cutoff.AddDays(-1)
+        );
+        var storedRelease = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        storedRelease.CreateScreenshots = createScreenshots;
+        storedRelease.ScreenshotsGeneratedAt = screenshotsGeneratedAt is null
+            ? null
+            : DateTime.Parse(screenshotsGeneratedAt, CultureInfo.InvariantCulture);
+        storedRelease.ScreenshotGenerationErrorMessage = screenshotGenerationErrorMessage;
+
+        if (hasScreenshotImageUploadConfig)
+        {
+            storedRelease.ImageUploadConfigs.Add(
+                new ImageUploadConfig
+                {
+                    Name = "Screens",
+                    ImageHosterRegistration = new ImageHosterRegistration
+                    {
+                        Name = "PiXhost",
+                        ImageHosterClassName = "PixHost",
+                        SerializedConfig = "{}",
+                        IsActive = true,
+                    },
+                    UploadScreenshots = true,
+                }
+            );
+        }
+
+        storedRelease.MediaFiles.Add(
+            new ReleaseMediaFile
+            {
+                RelativePath = "movie.mkv",
+                SizeBytes = 1_000,
+                MediaInfoJson = "{}",
+                MediaInfoText = "General",
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await GetConversionCandidatesAsync();
+
+        // Assert
+        result.Count.ShouldBe(expectedToBeReturned ? 1 : 0);
     }
 
     [Test]

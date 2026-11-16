@@ -379,12 +379,14 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
         DateTime createdAt,
         DateTime? uploadedAt,
         IReadOnlyList<ImageUploadUrl> imageUrls,
-        UploadState uploadState = UploadState.Completed
+        UploadState uploadState = UploadState.Completed,
+        ReleaseScreenshot? releaseScreenshot = null
     )
     {
         var imageUpload = new ImageUpload
         {
             ImageUploadConfig = imageUploadConfig,
+            ReleaseScreenshot = releaseScreenshot,
             CreatedAt = createdAt,
             UploadedAt = uploadedAt,
             UploadState = uploadState,
@@ -393,6 +395,30 @@ internal sealed class ReleaseReadRepositoryTestData(BearcatDbContext dbContext)
         dbContext.ImageUploads.Add(imageUpload);
 
         return imageUpload;
+    }
+
+    public ReleaseScreenshot AddReleaseScreenshot(
+        Release release,
+        ReleaseScreenshotKind kind,
+        int index,
+        TimeSpan? timestamp
+    )
+    {
+        var releaseScreenshot = new ReleaseScreenshot
+        {
+            Release = release,
+            Kind = kind,
+            Index = index,
+            Timestamp = timestamp,
+            RelativeFilePath = $"screenshots/{kind}-{index}.jpg",
+            Width = 1920,
+            Height = 1080,
+            SizeBytes = 1024,
+            CreatedAt = MidnightUtc,
+        };
+        dbContext.ReleaseScreenshots.Add(releaseScreenshot);
+
+        return releaseScreenshot;
     }
 
     public void AddOnlineStateReleases()

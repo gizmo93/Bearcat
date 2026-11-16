@@ -30,6 +30,33 @@ Unterordner lassen sich nicht auswählen.
 Aktiviere **Collectionerkennung** im Template, um zusammengehörige Releases zu gruppieren, etwa die Folgen
 einer TV-Staffel. Siehe [Releasecollections](/Bearcat/de/release-collections/).
 
+### Screenshots
+
+Unter **Screenshots** im Template und in den Releaseeinstellungen findest du zwei Optionen:
+
+![Screenshoteinstellungen](../images/release-screenshot-settings.png)
+
+| Option | Standard | Ergebnis |
+| --- | --- | --- |
+| **Screenshots erstellen** | Aus, 6 Screenshots | 1 bis 20 einzelne Screenshots in gleichmässigen Abständen. |
+| **Screenshotraster erstellen** | Aus, 4 Spalten × 4 Zeilen | Ein 1920 Pixel breites Bild mit bis zu 8 Spalten und 10 Zeilen. Die Kopfzeile enthält Angaben zu Datei, Video und Audio. |
+
+- Screenshots lassen sich nur für Releases vom Typ Managed erstellen, deren Releaseordner noch existiert.
+- Bearcat verwendet die grösste Videodatei im Releaseordner.
+- Videos mit HDR10 oder HLG werden auf SDR umgerechnet. Dolby Vision ohne Basisschicht in HDR10 oder HLG wird nicht unterstützt.
+- Die Hintergrundaufgabe **Screenshot creation** erstellt die Bilder. ffmpeg wird [bei Bedarf heruntergeladen](/Bearcat/de/advanced-configuration/#ffmpeg).
+- Bearcat erstellt nur Bilder, für die ein Upload eingerichtet ist. Aktiviere dafür **Screenshots** oder
+  **Screenshotraster** in einer [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration) mit aktivem Bildhoster.
+
+Im Tab **Bilder** siehst du das Ergebnis oder eine Fehlermeldung. Mit **Neu erstellen** ersetzt du die
+Screenshots und ihre Bilduploads, etwa nachdem du die Einstellungen geändert hast. Dafür muss der
+Releaseordner noch existieren und das Release vom Typ Managed sein.
+
+Du kannst die hochgeladenen Bilder in [Forenpostvorlagen verwenden](/Bearcat/de/forum-post-templates/#screenshots).
+Bearcat löscht die lokalen Screenshotdateien, sobald alle dafür eingerichteten Bilduploadkonfigurationen
+sie hochgeladen haben. Ist kein Upload mehr dafür eingerichtet, löscht es sie sofort.
+Der Tab **Bilder** zeigt danach die Bilder vom Bildhoster.
+
 ## Ordnerautomatisierungen einrichten
 
 1. Erstelle ein Releasetemplate, öffne dann **Ordnerautomatisierungen** und klicke auf **Neue Ordnerautomatisierung**.

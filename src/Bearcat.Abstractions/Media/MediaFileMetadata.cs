@@ -20,7 +20,9 @@ public sealed record MediaVideoStreamMetadata(
     int? Height,
     double? Fps,
     string? PixelFormat,
-    int? BitrateKbps
+    int? BitrateKbps,
+    string? TransferCharacteristics,
+    string? HdrFormat
 );
 
 public sealed record MediaAudioStreamMetadata(

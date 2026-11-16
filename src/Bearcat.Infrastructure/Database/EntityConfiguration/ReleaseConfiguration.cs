@@ -24,6 +24,13 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.QualityGateState).IsRequired();
         builder.Property(r => r.QualityGateEvaluatedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.OnlineState).IsRequired();
+        builder.Property(r => r.CreateScreenshots).IsRequired();
+        builder.Property(r => r.ScreenshotCount).IsRequired();
+        builder.Property(r => r.CreateScreenshotGrid).IsRequired();
+        builder.Property(r => r.ScreenshotGridColumns).IsRequired();
+        builder.Property(r => r.ScreenshotGridRows).IsRequired();
+        builder.Property(r => r.ScreenshotsGeneratedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(r => r.ScreenshotGenerationErrorMessage).IsRequired(false);
 
         builder.HasIndex(r => r.ReleaseFolderPath);
         builder.HasIndex(r => r.QualityGateState);
@@ -91,6 +98,14 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .HasMany(r => r.MediaFiles)
             .WithOne(file => file.Release)
             .HasForeignKey(file => file.ReleaseId)
+            .HasPrincipalKey(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasMany(r => r.Screenshots)
+            .WithOne(screenshot => screenshot.Release)
+            .HasForeignKey(screenshot => screenshot.ReleaseId)
             .HasPrincipalKey(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);

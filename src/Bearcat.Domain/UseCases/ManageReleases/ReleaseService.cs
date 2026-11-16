@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Bearcat.Abstractions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -11,6 +11,8 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots;
+using Bearcat.Domain.UseCases.ManageReleaseScreenshots.Storage;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -26,7 +28,8 @@ public class ReleaseService(
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     MirrorCoverageEvaluator mirrorCoverageEvaluator,
     LocalArchiveDeleter localArchiveDeleter,
-    ReleaseCollectionInfoResolutionService releaseCollectionInfoResolutionService
+    ReleaseCollectionInfoResolutionService releaseCollectionInfoResolutionService,
+    ReleaseScreenshotDirectory releaseScreenshotDirectory
 )
 {
     public async Task<int> CreateAsync(
@@ -36,6 +39,7 @@ public class ReleaseService(
         ReleaseContentType releaseContentType,
         int releaseGroupId,
         string? primaryLanguageCode,
+        ReleaseScreenshotSettings screenshotSettings,
         bool excludeFromAutoCleanup = false,
         CancellationToken cancellationToken = default
     )
@@ -63,6 +67,11 @@ public class ReleaseService(
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = isUnmanaged ? null : releaseFolderPath,
             ExcludeFromAutoCleanup = excludeFromAutoCleanup,
+            CreateScreenshots = screenshotSettings.CreateScreenshots,
+            ScreenshotCount = screenshotSettings.ScreenshotCount,
+            CreateScreenshotGrid = screenshotSettings.CreateScreenshotGrid,
+            ScreenshotGridColumns = screenshotSettings.ScreenshotGridColumns,
+            ScreenshotGridRows = screenshotSettings.ScreenshotGridRows,
             ArchiveConfigs = [],
             UploadConfigs = [],
             ImageUploadConfigs = [],
@@ -92,6 +101,7 @@ public class ReleaseService(
         ReleaseContentType releaseContentType,
         int releaseGroupId,
         string? primaryLanguageCode,
+        ReleaseScreenshotSettings screenshotSettings,
         bool excludeFromAutoCleanup = false,
         CancellationToken cancellationToken = default
     )
@@ -131,6 +141,12 @@ public class ReleaseService(
             .TrimOrNullWhenWhitespace()
             ?.ToLowerInvariant();
         release.ExcludeFromAutoCleanup = excludeFromAutoCleanup;
+
+        release.CreateScreenshots = screenshotSettings.CreateScreenshots;
+        release.ScreenshotCount = screenshotSettings.ScreenshotCount;
+        release.CreateScreenshotGrid = screenshotSettings.CreateScreenshotGrid;
+        release.ScreenshotGridColumns = screenshotSettings.ScreenshotGridColumns;
+        release.ScreenshotGridRows = screenshotSettings.ScreenshotGridRows;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -197,6 +213,13 @@ public class ReleaseService(
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        foreach (var releaseId in releaseIds)
+        {
+            fileSystemService.DeleteDirectoryIfExists(
+                releaseScreenshotDirectory.GetDirectoryPath(releaseId)
+            );
+        }
     }
 
     public async Task MarkUploadsPostedAsync(
