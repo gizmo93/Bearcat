@@ -120,7 +120,12 @@ you can assign their folders afterwards:
 
 1. Open **Uploads and archives** > **Archives** and select the archives.
 2. Click **Change archive folders** and select a base path.
+
+   ![Selected archives with the Change archive folders button](images/link-crypter-import-change-archive-folders-selection.png)
+
 3. Bearcat searches the base path and all subfolders. Review the archive folders it found, then click **Change archive folders** to confirm.
+
+   ![Archive folders found below the base path](images/link-crypter-import-change-archive-folders-dialog.png)
 
 Bearcat must find a single matching folder for each archive, containing exactly that archive's parts.
 It then sets the status to **Created** and uses the folder unchanged.

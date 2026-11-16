@@ -122,7 +122,12 @@ Festplatte, kannst du ihre Ordner nachträglich zuordnen:
 
 1. Öffne **Uploads und Archive** > **Archive** und wähle die Archive aus.
 2. Klicke auf **Archivordner ändern** und wähle einen Basispfad.
+
+   ![Ausgewählte Archive mit der Schaltfläche Archivordner ändern](../images/link-crypter-import-change-archive-folders-selection.png)
+
 3. Bearcat durchsucht den Basispfad und alle Unterordner. Prüfe die gefundenen Archivordner und bestätige mit **Archivordner ändern**.
+
+   ![Gefundene Archivordner unter dem Basispfad](../images/link-crypter-import-change-archive-folders-dialog.png)
 
 Bearcat muss für jedes Archiv einen eindeutigen Ordner finden, der genau dessen Archivteile enthält.
 Dann setzt es den Status auf **Erstellt** und verwendet den Ordner unverändert.
