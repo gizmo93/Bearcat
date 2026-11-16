@@ -128,5 +128,8 @@ Solche Ordner kannst du mit **Neu importieren** aufteilen. Im Dialog siehst du v
 Solange Bearcat einen Upload oder ein Archiv des alten Releases verarbeitet, kannst du den Ordner nicht neu importieren.
 
 Mehrere Ordner importierst du auf einmal neu, indem du sie auf der Importseite auswählst (standardmässig sind alle ausgewählt) und auf **Ausgewählte neu importieren** klickst.
+
+![Auswahl der neu zu importierenden Ordner](../images/link-crypter-import-reimport-selection.png)
+
 Bearcat importiert sie im Hintergrund neu und benachrichtigt dich, wenn es fertig ist. Ordner, die sich nicht neu importieren lassen, behalten ihr Release und zeigen den Grund an.
 Nur der Dialog von **Neu importieren** für einen einzelnen Ordner zeigt die Änderungen vor dem Bestätigen.

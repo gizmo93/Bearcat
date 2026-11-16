@@ -126,5 +126,8 @@ Use **Re-import** to split these folders into episodes. The dialog shows what wi
 You cannot re-import the folder while Bearcat is processing an upload or archive of the old release.
 
 To re-import several folders at once, select them on the import page (all are selected by default) and click **Re-import selected**.
+
+![Selection of folders to re-import](images/link-crypter-import-reimport-selection.png)
+
 Bearcat re-imports them in the background and notifies you when it is done. Folders that cannot be re-imported keep their release and show the reason.
 Only the dialog of **Re-import** for a single folder shows the changes before you confirm.
