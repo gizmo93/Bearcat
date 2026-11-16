@@ -90,7 +90,8 @@ several archives, Bearcat creates a release for each one, using the archive name
 During review, you can see the episodes below the folder.
 
 - Set up [collection detection](/Bearcat/release-collections/#how-a-collection-is-created) in the release template. All episodes must be assigned to the same collection.
-- Bearcat looks for each episode's local files separately. An archive folder must contain exactly that episode's archive parts.
+- Bearcat looks for each episode's local files separately. A folder that contains exactly the archive parts of one episode is used as it is.
+- If all episodes are in one folder, Bearcat moves each episode's archive parts into a subfolder named after the episode. The review and the notification at the end show this.
 - Bearcat adopts the folder as the container for the collection's [upload slot](/Bearcat/release-collections/#upload-slots). All mirrors in the folder must belong to this slot, or the import fails.
 - Bearcat skips mirrors with unknown file names or no archive parts because it cannot assign them to an episode.
 - The import fails if the upload slot already has another container of the same crypter account, or if a release in the collection uses this crypter account for its own containers.

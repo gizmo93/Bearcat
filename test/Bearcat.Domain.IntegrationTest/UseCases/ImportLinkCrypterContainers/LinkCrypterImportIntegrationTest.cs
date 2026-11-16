@@ -268,6 +268,7 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
                     timeProvider,
                     NullLogger<CollectionContainerImportService>.Instance
                 ),
+                CreateArchivePartMover(),
                 releaseCollectionAssigner,
                 notificationService,
                 timeProvider,
@@ -295,6 +296,11 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
             timeProvider,
             NullLogger<ReleaseCollectionAssignmentService>.Instance
         );
+    }
+
+    protected static ArchivePartMover CreateArchivePartMover()
+    {
+        return new ArchivePartMover(new FileSystemService(), NullLogger<ArchivePartMover>.Instance);
     }
 
     protected static LinkCrypterImportReleaseImportService CreateReleaseImportService(
@@ -442,6 +448,18 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
         Directory.CreateDirectory(folderPath);
         File.WriteAllText(Path.Combine(folderPath, FirstArchiveFileName), "first");
         File.WriteAllText(Path.Combine(folderPath, SecondArchiveFileName), "second");
+
+        return folderPath;
+    }
+
+    protected static string CreateSeasonArchivePartFiles(string folderPath)
+    {
+        Directory.CreateDirectory(folderPath);
+
+        foreach (var fileName in GetSeasonArchiveFileNames())
+        {
+            File.WriteAllText(Path.Combine(folderPath, fileName), fileName);
+        }
 
         return folderPath;
     }

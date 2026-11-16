@@ -46,14 +46,16 @@ public partial class LinkCrypterImportReimportDialog(IScopedOperationRunner oper
 
         try
         {
-            await Task.Run(() =>
+            var reimportPlan = await Task.Run(() =>
                 operationRunner.RunAsync(
                     (LinkCrypterImportContainerReimportService service) =>
                         service.ReimportAsync(LinkCrypterImportContainerId)
                 )
             );
 
-            await DialogRef.CloseAsync(DialogResult.Ok(LinkCrypterImportContainerId));
+            await DialogRef.CloseAsync(
+                DialogResult.Ok(GetReleaseCountWithMovedArchiveParts(reimportPlan))
+            );
         }
         catch (InvalidLinkCrypterImportException exception)
         {
@@ -63,6 +65,15 @@ public partial class LinkCrypterImportReimportDialog(IScopedOperationRunner oper
         {
             isReimporting = false;
         }
+    }
+
+    private static int GetReleaseCountWithMovedArchiveParts(
+        LinkCrypterImportReimportPlanReadModel reimportPlan
+    )
+    {
+        return reimportPlan.Releases.Count(release =>
+            release.Preview.ArchiveFolderContainsArchivesOfOtherReleases
+        );
     }
 
     private async Task CancelAsync()

@@ -2046,6 +2046,8 @@
   <data name="MirrorNumber" xml:space="preserve"><value>Mirror {0}</value></data>
   <data name="LinkCrypterImportReleaseFolder" xml:space="preserve"><value>Releaseordner: {0}</value></data>
   <data name="LinkCrypterImportArchiveFolder" xml:space="preserve"><value>Archivordner: {0}</value></data>
+  <data name="LinkCrypterImportArchivePartsAreMovedIntoSubfolder" xml:space="preserve"><value>Archivordner: {0}. Bearcat verschiebt die Archivteile dieses Releases in den Unterordner {1}.</value></data>
+  <data name="LinkCrypterImportArchivePartsMovedIntoSubfolder" xml:space="preserve"><value>Archivteile verschoben nach {0}.</value></data>
   <data name="LinkCrypterImportNoLocalFiles" xml:space="preserve"><value>Keine lokalen Dateien, das Archiv wird aus den Mirrors wiederhergestellt.</value></data>
   <data name="LinkCrypterImportReleaseCollection" xml:space="preserve"><value>Collection: {0}</value></data>
   <data name="LinkCrypterImportMirrorsWithoutRelease" xml:space="preserve"><value>Die Dateien dieser Mirrors können keinem Release zugeordnet werden:</value></data>
@@ -2092,6 +2094,7 @@
   <data name="ReimportLinkCrypterContainer" xml:space="preserve"><value>Container neu importieren</value></data>
   <data name="ReimportLinkCrypterContainerDescription" xml:space="preserve"><value>Teilt das Release eines früheren Imports in ein Release pro Archiv des Containers auf. Bei Hostern und Linkcryptern wird nichts gelöscht.</value></data>
   <data name="LinkCrypterContainerReimported" xml:space="preserve"><value>Container neu importiert.</value></data>
+  <data name="LinkCrypterContainerReimportedWithMovedArchiveParts" xml:space="preserve"><value>Container neu importiert. Die Archivteile von {0} Releases wurden in Unterordner verschoben.</value></data>
   <data name="LinkCrypterImportReimportSummary" xml:space="preserve"><value>Release {0} wird durch diese Releases ersetzt. Seine abgeschlossenen Uploads werden zu ihnen verschoben, seine Posts zur Collection.</value></data>
   <data name="LinkCrypterImportReimportBlockers" xml:space="preserve"><value>Der Container kann nicht neu importiert werden:</value></data>
   <data name="LinkCrypterImportReimportBlockerReason.UploadInProgress" xml:space="preserve"><value>Ein Upload von {0} läuft.</value></data>

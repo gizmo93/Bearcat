@@ -27,23 +27,34 @@ public class LinkCrypterImportReleaseImportService(
         CancellationToken cancellationToken
     )
     {
+        var archivePartsMove =
+            existingRelease is null && releasePreview.ArchiveFolderContainsArchivesOfOtherReleases
+                ? CreateArchivePartsMove(releasePreview)
+                : null;
+
         var release =
             existingRelease
             ?? await CreateReleaseAsync(
                 linkCrypterImport: linkCrypterImport,
                 releasePreview: releasePreview,
+                archivePartsMove: archivePartsMove,
                 archiveStorageFolders: archiveStorageFolders,
                 uploadsPostedAt: uploadsPostedAt,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
 
+        var archiveFolderPathWithOnlyArchiveOfRelease =
+            releasePreview.ArchiveFolderContainsArchivesOfOtherReleases
+                ? null
+                : releasePreview.ArchiveFolderPath;
+
         var uploadMoveResults = uploadsToMove
             .Select(uploadToMove =>
                 MoveUploadToRelease(
                     release: release,
                     uploadToMove: uploadToMove,
-                    archiveFolderPath: releasePreview.ArchiveFolderPath,
+                    archiveFolderPath: archiveFolderPathWithOnlyArchiveOfRelease,
                     archiveStorageFolders: archiveStorageFolders,
                     localNow: localNow
                 )
@@ -59,7 +70,7 @@ public class LinkCrypterImportReleaseImportService(
                     release: release,
                     mirror: mirrorWithUploadConfig.Mirror,
                     uploadConfig: mirrorWithUploadConfig.UploadConfig,
-                    archiveFolderPath: releasePreview.ArchiveFolderPath,
+                    archiveFolderPath: archiveFolderPathWithOnlyArchiveOfRelease,
                     archiveStorageFolders: archiveStorageFolders,
                     localNow: localNow
                 )
@@ -72,13 +83,45 @@ public class LinkCrypterImportReleaseImportService(
             IsNewRelease: existingRelease is null,
             MirrorsWithUploadConfigs: mirrorsWithUploadConfigs,
             SourceUploads: sourceUploads,
-            UploadMoveResults: uploadMoveResults
+            UploadMoveResults: uploadMoveResults,
+            ArchivePartsMove: archivePartsMove
+        );
+    }
+
+    private ArchivePartsMove CreateArchivePartsMove(LinkCrypterImportReleasePreview releasePreview)
+    {
+        var sharedArchiveFolderPath = releasePreview.ArchiveFolderPath!;
+
+        var sourceFilePaths = fileSystemService
+            .GetFilesInPath(sharedArchiveFolderPath, recursive: false)
+            .Where(filePath =>
+                string.Equals(
+                    ArchivePartFileNames.GetArchiveBaseName(Path.GetFileName(filePath)),
+                    releasePreview.ReleaseName,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (sourceFilePaths.Count == 0)
+        {
+            throw new InvalidLinkCrypterImportException(
+                $"Folder {sharedArchiveFolderPath} does not contain the archive parts of release {releasePreview.ReleaseName}."
+            );
+        }
+
+        return new ArchivePartsMove(
+            ReleaseName: releasePreview.ReleaseName,
+            TargetFolderPath: Path.Combine(sharedArchiveFolderPath, releasePreview.ReleaseName),
+            SourceFilePaths: sourceFilePaths
         );
     }
 
     private async Task<Release> CreateReleaseAsync(
         LinkCrypterImport linkCrypterImport,
         LinkCrypterImportReleasePreview releasePreview,
+        ArchivePartsMove? archivePartsMove,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime uploadsPostedAt,
         DateTime localNow,
@@ -126,6 +169,7 @@ public class LinkCrypterImportReleaseImportService(
                         release: release,
                         linkCrypterImport: linkCrypterImport,
                         releasePreview: releasePreview,
+                        archivePartsMove: archivePartsMove,
                         archiveStorageFolders: archiveStorageFolders,
                         localNow: localNow
                     ),
@@ -145,17 +189,24 @@ public class LinkCrypterImportReleaseImportService(
         Release release,
         LinkCrypterImport linkCrypterImport,
         LinkCrypterImportReleasePreview releasePreview,
+        ArchivePartsMove? archivePartsMove,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow
     )
     {
         if (releasePreview.ArchiveFolderPath is not null)
         {
-            var archiveConfig = unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
-                release: release,
-                archiveFolderPath: releasePreview.ArchiveFolderPath,
-                createdAt: localNow
-            );
+            var archiveConfig = archivePartsMove is null
+                ? unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
+                    release: release,
+                    archiveFolderPath: releasePreview.ArchiveFolderPath,
+                    createdAt: localNow
+                )
+                : CreateArchiveConfigInTargetFolderOfArchivePartsMove(
+                    release: release,
+                    archivePartsMove: archivePartsMove,
+                    localNow: localNow
+                );
 
             UnmanagedReleaseArchiveInitializationService.AssignArchiveStorageFolderContainingArchiveFolder(
                 archiveConfig.Archives.Single(),
@@ -170,6 +221,27 @@ public class LinkCrypterImportReleaseImportService(
             archiveFilesBasePath: linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles!,
             releasePreview: releasePreview,
             localNow: localNow
+        );
+    }
+
+    private ArchiveConfig CreateArchiveConfigInTargetFolderOfArchivePartsMove(
+        Release release,
+        ArchivePartsMove archivePartsMove,
+        DateTime localNow
+    )
+    {
+        var archiveFileNames = archivePartsMove
+            .SourceFilePaths.Select(filePath => Path.GetFileName(filePath))
+            .ToList();
+
+        return unmanagedReleaseArchiveInitializationService.CreateArchiveConfigWithArchiveFiles(
+            release: release,
+            archiveFolderPath: archivePartsMove.TargetFolderPath,
+            archiveFileNames: archiveFileNames,
+            archiverFileExtension: ArchivePartFileNames.GetArchiverFileExtension(
+                archiveFileNames[0]
+            )!,
+            createdAt: localNow
         );
     }
 

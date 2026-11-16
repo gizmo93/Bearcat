@@ -110,7 +110,11 @@ public class CollectionContainerImportService(
         return new CollectionContainerImportResult(
             ReleaseCollection: releaseCollection,
             CollectionUploadSlot: slot,
-            ImportedReleases: importedReleases
+            ImportedReleases: importedReleases,
+            ArchivePartsMoves: importedReleases
+                .Select(importedRelease => importedRelease.ArchivePartsMove)
+                .OfType<ArchivePartsMove>()
+                .ToList()
         );
     }
 

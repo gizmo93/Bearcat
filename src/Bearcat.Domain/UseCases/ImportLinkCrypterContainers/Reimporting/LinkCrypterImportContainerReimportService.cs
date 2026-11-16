@@ -17,6 +17,7 @@ public class LinkCrypterImportContainerReimportService(
     IReleaseWriteRepository releaseWriteRepository,
     LinkCrypterImportPreviewService previewService,
     CollectionContainerImportService collectionContainerImportService,
+    ArchivePartMover archivePartMover,
     IReleaseCollectionAssigner releaseCollectionAssigner,
     ILogger<LinkCrypterImportContainerReimportService> logger
 )
@@ -40,7 +41,7 @@ public class LinkCrypterImportContainerReimportService(
         CancellationToken cancellationToken = default
     )
     {
-        var plan = await ApplyReimportWithoutSavingAsync(
+        var appliedReimport = await ApplyReimportWithoutSavingAsync(
             linkCrypterImportContainerId,
             cancellationToken
         );
@@ -48,15 +49,15 @@ public class LinkCrypterImportContainerReimportService(
         repository.ClearChangeTracker();
         releaseCollectionAssigner.ClearCachedReleaseCollections();
 
-        return plan;
+        return appliedReimport.Plan;
     }
 
-    public async Task ReimportAsync(
+    public async Task<LinkCrypterImportReimportPlanReadModel> ReimportAsync(
         int linkCrypterImportContainerId,
         CancellationToken cancellationToken = default
     )
     {
-        var plan = await ApplyReimportWithoutSavingAsync(
+        var (plan, archivePartsMoves) = await ApplyReimportWithoutSavingAsync(
             linkCrypterImportContainerId,
             cancellationToken
         );
@@ -68,6 +69,7 @@ public class LinkCrypterImportContainerReimportService(
             );
         }
 
+        archivePartMover.MoveArchiveParts(archivePartsMoves);
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
@@ -77,9 +79,11 @@ public class LinkCrypterImportContainerReimportService(
             plan.Releases.Count,
             plan.ReleaseCollectionName
         );
+
+        return plan;
     }
 
-    private async Task<LinkCrypterImportReimportPlanReadModel> ApplyReimportWithoutSavingAsync(
+    private async Task<AppliedReimport> ApplyReimportWithoutSavingAsync(
         int linkCrypterImportContainerId,
         CancellationToken cancellationToken
     )
@@ -105,8 +109,9 @@ public class LinkCrypterImportContainerReimportService(
         );
 
         var previewResult = await previewService.CreatePreviewOfContainerAsync(
-            container,
-            cancellationToken
+            container: container,
+            folderPathsOfReplacedRelease: GetFolderPathsOfArchivesThatAreNotDeleted(release),
+            cancellationToken: cancellationToken
         );
 
         var releasePreviews = previewResult.Preview.Releases!;
@@ -126,14 +131,17 @@ public class LinkCrypterImportContainerReimportService(
             )
         )
         {
-            return CreatePlan(
-                container: container,
-                release: release,
-                preview: previewResult.Preview,
-                importedReleases: [],
-                uploadsNotMovedBeforeImport: uploadsNotMovedBeforeImport,
-                containerConversion: new LinkCrypterContainerConversion([], []),
-                blockers: blockers
+            return new AppliedReimport(
+                Plan: CreatePlan(
+                    container: container,
+                    release: release,
+                    preview: previewResult.Preview,
+                    importedReleases: [],
+                    uploadsNotMovedBeforeImport: uploadsNotMovedBeforeImport,
+                    containerConversion: new LinkCrypterContainerConversion([], []),
+                    blockers: blockers
+                ),
+                ArchivePartsMoves: []
             );
         }
 
@@ -153,22 +161,25 @@ public class LinkCrypterImportContainerReimportService(
         }
         catch (InvalidLinkCrypterImportException exception)
         {
-            return CreatePlan(
-                container: container,
-                release: release,
-                preview: previewResult.Preview,
-                importedReleases: [],
-                uploadsNotMovedBeforeImport: uploadsNotMovedBeforeImport,
-                containerConversion: new LinkCrypterContainerConversion([], []),
-                blockers:
-                [
-                    .. blockers,
-                    new LinkCrypterImportReimportBlocker(
-                        Reason: LinkCrypterImportReimportBlockerReason.ImportFailed,
-                        Detail: exception.Message,
-                        NotImportableReason: null
-                    ),
-                ]
+            return new AppliedReimport(
+                Plan: CreatePlan(
+                    container: container,
+                    release: release,
+                    preview: previewResult.Preview,
+                    importedReleases: [],
+                    uploadsNotMovedBeforeImport: uploadsNotMovedBeforeImport,
+                    containerConversion: new LinkCrypterContainerConversion([], []),
+                    blockers:
+                    [
+                        .. blockers,
+                        new LinkCrypterImportReimportBlocker(
+                            Reason: LinkCrypterImportReimportBlockerReason.ImportFailed,
+                            Detail: exception.Message,
+                            NotImportableReason: null
+                        ),
+                    ]
+                ),
+                ArchivePartsMoves: []
             );
         }
 
@@ -190,15 +201,28 @@ public class LinkCrypterImportContainerReimportService(
         MovePostedLocationsToReleaseCollection(release, importResult.ReleaseCollection);
         RemoveReleaseWithoutMovedEntities(release);
 
-        return CreatePlan(
-            container: container,
-            release: release,
-            preview: previewResult.Preview,
-            importedReleases: importResult.ImportedReleases,
-            uploadsNotMovedBeforeImport: uploadsNotMovedBeforeImport,
-            containerConversion: containerConversion,
-            blockers: blockers
+        return new AppliedReimport(
+            Plan: CreatePlan(
+                container: container,
+                release: release,
+                preview: previewResult.Preview,
+                importedReleases: importResult.ImportedReleases,
+                uploadsNotMovedBeforeImport: uploadsNotMovedBeforeImport,
+                containerConversion: containerConversion,
+                blockers: blockers
+            ),
+            ArchivePartsMoves: importResult.ArchivePartsMoves
         );
+    }
+
+    private static List<string> GetFolderPathsOfArchivesThatAreNotDeleted(Release release)
+    {
+        return release
+            .ArchiveConfigs.SelectMany(archiveConfig => archiveConfig.Archives)
+            .Where(archive => archive.ArchiveState is not ArchiveState.Deleted)
+            .Select(archive => archive.ArchiveFolderPath)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
     }
 
     private static void EnsureReleasePreviewsReplaceRelease(
@@ -658,6 +682,11 @@ public class LinkCrypterImportContainerReimportService(
         Upload Upload,
         string? ArchiveBaseName,
         List<UploadedFile> UploadedFiles
+    );
+
+    private sealed record AppliedReimport(
+        LinkCrypterImportReimportPlanReadModel Plan,
+        IReadOnlyList<ArchivePartsMove> ArchivePartsMoves
     );
 
     private sealed record LinkCrypterContainerConversion(

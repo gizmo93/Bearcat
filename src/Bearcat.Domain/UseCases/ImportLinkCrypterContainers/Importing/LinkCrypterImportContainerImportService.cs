@@ -14,6 +14,7 @@ public class LinkCrypterImportContainerImportService(
     ILinkCrypterImportRepository repository,
     LinkCrypterImportReleaseImportService releaseImportService,
     CollectionContainerImportService collectionContainerImportService,
+    ArchivePartMover archivePartMover,
     IReleaseCollectionAssigner releaseCollectionAssigner,
     INotificationService notificationService,
     TimeProvider timeProvider,
@@ -33,17 +34,26 @@ public class LinkCrypterImportContainerImportService(
             cancellationToken
         );
 
+        var releaseCountWithMovedArchiveParts = 0;
+
         foreach (var containerId in containerIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await ImportContainerOrMarkAsFailedAsync(containerId, cancellationToken);
+            releaseCountWithMovedArchiveParts += await ImportContainerOrMarkAsFailedAsync(
+                containerId,
+                cancellationToken
+            );
         }
 
-        await CompleteImportAsync(linkCrypterImportId, cancellationToken);
+        await CompleteImportAsync(
+            linkCrypterImportId: linkCrypterImportId,
+            releaseCountWithMovedArchiveParts: releaseCountWithMovedArchiveParts,
+            cancellationToken: cancellationToken
+        );
     }
 
-    private async Task ImportContainerOrMarkAsFailedAsync(
+    private async Task<int> ImportContainerOrMarkAsFailedAsync(
         int containerId,
         CancellationToken cancellationToken
     )
@@ -56,9 +66,14 @@ public class LinkCrypterImportContainerImportService(
             cancellationToken
         );
 
+        var releaseCountWithMovedArchiveParts = 0;
+
         try
         {
-            await ImportContainerAsync(container, cancellationToken);
+            releaseCountWithMovedArchiveParts = await ImportContainerAsync(
+                container,
+                cancellationToken
+            );
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -80,9 +95,11 @@ public class LinkCrypterImportContainerImportService(
 
         container.LinkCrypterImport.ProcessedContainerCount++;
         await repository.SaveChangesAsync(cancellationToken);
+
+        return releaseCountWithMovedArchiveParts;
     }
 
-    private async Task ImportContainerAsync(
+    private async Task<int> ImportContainerAsync(
         LinkCrypterImportContainer container,
         CancellationToken cancellationToken
     )
@@ -91,24 +108,29 @@ public class LinkCrypterImportContainerImportService(
 
         if (preview.Releases!.Count > 1)
         {
-            await collectionContainerImportService.ImportAsync(
+            var importResult = await collectionContainerImportService.ImportAsync(
                 container: container,
                 releasePreviews: preview.Releases,
                 uploadsToMove: [],
                 uploadsPostedAt: null,
                 cancellationToken: cancellationToken
             );
-        }
-        else
-        {
-            await ImportSingleReleaseContainerAsync(
-                container: container,
-                releasePreview: preview.Releases.Single(),
-                cancellationToken: cancellationToken
-            );
+
+            archivePartMover.MoveArchiveParts(importResult.ArchivePartsMoves);
+            await repository.SaveChangesAsync(cancellationToken);
+
+            return importResult.ArchivePartsMoves.Count;
         }
 
+        await ImportSingleReleaseContainerAsync(
+            container: container,
+            releasePreview: preview.Releases.Single(),
+            cancellationToken: cancellationToken
+        );
+
         await repository.SaveChangesAsync(cancellationToken);
+
+        return 0;
     }
 
     private async Task ImportSingleReleaseContainerAsync(
@@ -357,6 +379,7 @@ public class LinkCrypterImportContainerImportService(
 
     private async Task CompleteImportAsync(
         int linkCrypterImportId,
+        int releaseCountWithMovedArchiveParts,
         CancellationToken cancellationToken
     )
     {
@@ -375,12 +398,17 @@ public class LinkCrypterImportContainerImportService(
             container.Status is LinkCrypterImportContainerStatus.ImportFailed
         );
 
+        var movedArchivePartsMessage =
+            releaseCountWithMovedArchiveParts > 0
+                ? $" The archive parts of {releaseCountWithMovedArchiveParts} releases were moved into subfolders named after the release."
+                : "";
+
         linkCrypterImport.ChangeState(LinkCrypterImportState.Completed, timeProvider.GetLocalNow());
         notificationService.Create(
             kind: failedContainerCount == 0
                 ? NotificationKind.LinkCrypterImportCompleted
                 : NotificationKind.LinkCrypterImportFailed,
-            message: $"Link crypter import {linkCrypterImportId} finished: {importedContainerCount} containers were imported, {failedContainerCount} containers failed."
+            message: $"Link crypter import {linkCrypterImportId} finished: {importedContainerCount} containers were imported, {failedContainerCount} containers failed.{movedArchivePartsMessage}"
         );
         await repository.SaveChangesAsync(cancellationToken);
     }

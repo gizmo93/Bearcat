@@ -36,7 +36,7 @@
                 <div class="space-y-1 rounded-md border border-border/70 px-3 py-2 text-sm">
                     <p class="font-medium [overflow-wrap:anywhere]">@release.Preview.ReleaseName</p>
                     <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
-                        @L.Localize(release.Preview.ReleaseAction) · @LinkCrypterImportLocalFilesText.Get(L, release.Preview)
+                        @L.Localize(release.Preview.ReleaseAction) · @LinkCrypterImportLocalFilesText.Get(L, release.Preview, archivePartsWereMoved: false)
                     </p>
                     <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
                         @GetMovedUploadsText(release)

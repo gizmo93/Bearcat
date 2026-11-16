@@ -40,7 +40,46 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
     {
         EnsureReleaseIsUnmanaged(release);
 
-        var archiver = archiverFactory
+        return CreateArchiveConfig(
+            release: release,
+            archiveFilesBasePath: archiveFilesBasePath,
+            archiver: GetArchiverWithFileExtension(archiverFileExtension),
+            archive: BuildDeletedArchive(
+                archiveFolderPath: archiveFilesBasePath,
+                archiveFileNames: archiveFileNames,
+                archiveFileSizeMb: 0,
+                createdAt: createdAt
+            )
+        );
+    }
+
+    public ArchiveConfig CreateArchiveConfigWithArchiveFiles(
+        Release release,
+        string archiveFolderPath,
+        IReadOnlyList<string> archiveFileNames,
+        string archiverFileExtension,
+        DateTime createdAt
+    )
+    {
+        EnsureReleaseIsUnmanaged(release);
+
+        return CreateArchiveConfig(
+            release: release,
+            archiveFilesBasePath: archiveFolderPath,
+            archiver: GetArchiverWithFileExtension(archiverFileExtension),
+            archive: BuildArchive(
+                archiveFolderPath: archiveFolderPath,
+                archiveFilePaths: archiveFileNames
+                    .Select(fileName => Path.Combine(archiveFolderPath, fileName))
+                    .ToList(),
+                createdAt: createdAt
+            )
+        );
+    }
+
+    private ArchiverDto GetArchiverWithFileExtension(string archiverFileExtension)
+    {
+        return archiverFactory
             .GetArchivers()
             .Single(archiver =>
                 string.Equals(
@@ -49,18 +88,6 @@ public class UnmanagedReleaseArchiveInitializationService(IArchiverFactory archi
                     StringComparison.OrdinalIgnoreCase
                 )
             );
-
-        return CreateArchiveConfig(
-            release: release,
-            archiveFilesBasePath: archiveFilesBasePath,
-            archiver: archiver,
-            archive: BuildDeletedArchive(
-                archiveFolderPath: archiveFilesBasePath,
-                archiveFileNames: archiveFileNames,
-                archiveFileSizeMb: 0,
-                createdAt: createdAt
-            )
-        );
     }
 
     public static Archive BuildDeletedArchive(

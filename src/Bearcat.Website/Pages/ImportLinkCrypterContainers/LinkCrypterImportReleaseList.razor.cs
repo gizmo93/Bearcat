@@ -226,9 +226,16 @@ public partial class LinkCrypterImportReleaseList(
         );
     }
 
-    private string GetLocalFilesText(LinkCrypterImportReleasePreview releasePreview)
+    private string GetLocalFilesText(
+        LinkCrypterImportContainerReadModel container,
+        LinkCrypterImportReleasePreview releasePreview
+    )
     {
-        return LinkCrypterImportLocalFilesText.Get(L, releasePreview);
+        return LinkCrypterImportLocalFilesText.Get(
+            localizer: L,
+            releasePreview: releasePreview,
+            archivePartsWereMoved: container.Status is LinkCrypterImportContainerStatus.Imported
+        );
     }
 
     private async Task ShowReimportDialogAsync(LinkCrypterImportContainerReadModel container)
@@ -254,7 +261,16 @@ public partial class LinkCrypterImportReleaseList(
             return;
         }
 
-        toastService.Success(L["LinkCrypterContainerReimported"]);
+        var releaseCountWithMovedArchiveParts = result.GetData<int>();
+
+        toastService.Success(
+            releaseCountWithMovedArchiveParts > 0
+                ? L[
+                    "LinkCrypterContainerReimportedWithMovedArchiveParts",
+                    releaseCountWithMovedArchiveParts
+                ]
+                : L["LinkCrypterContainerReimported"]
+        );
         await OnReleasesChanged.InvokeAsync();
     }
 

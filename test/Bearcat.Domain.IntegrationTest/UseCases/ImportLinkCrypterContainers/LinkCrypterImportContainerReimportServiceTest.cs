@@ -259,7 +259,59 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
         container.PreviewJson.ShouldBe(originalPreviewJson);
     }
 
-    private async Task<SeasonImport> ImportSeasonContainerAsOneReleaseAsync()
+    [Test]
+    public async Task ReimportAsync_SeasonReleaseWithArchiveInFolderOfAllEpisodes_MovesPartsIntoEpisodeSubfoldersOnlyWhenReimporting()
+    {
+        // Arrange
+        var seasonFolderPath = CreateSeasonArchivePartFiles(
+            Path.Combine(WorkingDirectoryPath, SeasonContainerName)
+        );
+
+        var seasonImport = await ImportSeasonContainerAsOneReleaseAsync(seasonFolderPath);
+
+        // Act
+        var plan = await CreateReimportService().CreatePlanAsync(seasonImport.ContainerId);
+
+        var fileNamesInSeasonFolderAfterPlan = Directory
+            .GetFiles(seasonFolderPath)
+            .Select(filePath => Path.GetFileName(filePath))
+            .Order()
+            .ToList();
+
+        await CreateReimportService().ReimportAsync(seasonImport.ContainerId);
+
+        // Assert
+        plan.Blockers.ShouldBeEmpty();
+
+        plan.Releases.ShouldAllBe(release =>
+            release.Preview.ArchiveFolderPath == seasonFolderPath
+            && release.Preview.ArchiveFolderContainsArchivesOfOtherReleases
+        );
+
+        fileNamesInSeasonFolderAfterPlan.ShouldBe(GetSeasonArchiveFileNames());
+        Directory.GetFiles(seasonFolderPath).ShouldBeEmpty();
+
+        foreach (
+            var episodeReleaseName in new[] { FirstEpisodeReleaseName, SecondEpisodeReleaseName }
+        )
+        {
+            var episodeFolderPath = Path.Combine(seasonFolderPath, episodeReleaseName);
+            var episodeRelease = await LoadReleaseAsync(episodeReleaseName);
+            var archive = episodeRelease.ArchiveConfigs.Single().Archives.Single();
+
+            archive.ArchiveState.ShouldBe(ArchiveState.Created);
+            archive.ArchiveFolderPath.ShouldBe(episodeFolderPath);
+            archive.ArchiveFiles.ShouldAllBe(archiveFile => File.Exists(archiveFile.FullFileName));
+
+            episodeRelease
+                .UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads)
+                .ShouldAllBe(upload => upload.ArchiveId == archive.Id);
+        }
+    }
+
+    private async Task<SeasonImport> ImportSeasonContainerAsOneReleaseAsync(
+        string? archiveFolderPath = null
+    )
     {
         var seed = await AddReleaseTemplateAsync(
             releaseType: ReleaseType.Unmanaged,
@@ -275,7 +327,10 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
         await ProcessAsync();
         await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
         await ProcessAsync();
-        var containerId = await ReplacePreviewWithOneSeasonReleaseAsync(linkCrypterImportId);
+        var containerId = await ReplacePreviewWithOneSeasonReleaseAsync(
+            linkCrypterImportId,
+            archiveFolderPath
+        );
 
         await CreateLinkCrypterImportService(CreateDbContext())
             .StartImportAsync(linkCrypterImportId);
@@ -296,7 +351,10 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
         return new SeasonImport(seed, containerId, seasonRelease.Id);
     }
 
-    private async Task<int> ReplacePreviewWithOneSeasonReleaseAsync(int linkCrypterImportId)
+    private async Task<int> ReplacePreviewWithOneSeasonReleaseAsync(
+        int linkCrypterImportId,
+        string? archiveFolderPath
+    )
     {
         var dbContext = CreateDbContext();
 
@@ -323,7 +381,8 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
                             )
                             .ToList(),
                         ReleaseFolderPath: null,
-                        ArchiveFolderPath: null,
+                        ArchiveFolderPath: archiveFolderPath,
+                        ArchiveFolderContainsArchivesOfOtherReleases: false,
                         ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
                         ExistingReleaseId: null,
                         NotImportableReason: null
@@ -493,6 +552,7 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
                 timeProvider,
                 NullLogger<CollectionContainerImportService>.Instance
             ),
+            CreateArchivePartMover(),
             releaseCollectionAssigner,
             NullLogger<LinkCrypterImportContainerReimportService>.Instance
         );

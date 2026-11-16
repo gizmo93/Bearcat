@@ -823,6 +823,9 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         public void CopyFile(string sourceFilePath, string destinationFilePath) =>
             inner.CopyFile(sourceFilePath, destinationFilePath);
 
+        public void MoveFile(string sourceFilePath, string destinationFilePath) =>
+            inner.MoveFile(sourceFilePath, destinationFilePath);
+
         public async Task CopyFileAsync(
             string sourceFilePath,
             string destinationFilePath,

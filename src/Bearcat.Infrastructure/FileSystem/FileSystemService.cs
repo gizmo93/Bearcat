@@ -153,6 +153,11 @@ public class FileSystemService : IFileSystemService
         File.Copy(sourceFilePath, destinationFilePath, overwrite: false);
     }
 
+    public void MoveFile(string sourceFilePath, string destinationFilePath)
+    {
+        File.Move(sourceFilePath, destinationFilePath, overwrite: false);
+    }
+
     public async Task CopyFileAsync(
         string sourceFilePath,
         string destinationFilePath,

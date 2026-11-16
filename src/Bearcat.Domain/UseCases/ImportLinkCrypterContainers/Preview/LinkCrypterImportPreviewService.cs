@@ -136,6 +136,7 @@ public class LinkCrypterImportPreviewService(
                 releaseFolderBasePaths: releaseFolderBasePaths,
                 archivePartFileNamesByFolderPath: archivePartFileNamesByFolderPath,
                 releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                folderPathsOfReplacedRelease: [],
                 cancellationToken: cancellationToken
             );
 
@@ -162,6 +163,7 @@ public class LinkCrypterImportPreviewService(
 
     public async Task<LinkCrypterImportContainerPreviewResult> CreatePreviewOfContainerAsync(
         LinkCrypterImportContainer container,
+        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -197,6 +199,7 @@ public class LinkCrypterImportPreviewService(
             releaseNamesByChosenArchiveFolderPath: new Dictionary<string, string>(
                 StringComparer.Ordinal
             ),
+            folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
             cancellationToken: cancellationToken
         );
     }
@@ -474,6 +477,7 @@ public class LinkCrypterImportPreviewService(
         List<string> releaseFolderBasePaths,
         Dictionary<string, HashSet<string>> archivePartFileNamesByFolderPath,
         Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -507,6 +511,9 @@ public class LinkCrypterImportPreviewService(
                 releaseFolderBasePaths: releaseFolderBasePaths,
                 archivePartFileNamesByFolderPath: archivePartFileNamesByFolderPath,
                 releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
+                isCollectionContainer: isCollectionContainer,
+                releaseNamesOfContainer: releaseNamesOfContainer,
                 cancellationToken: cancellationToken
             );
 
@@ -570,6 +577,9 @@ public class LinkCrypterImportPreviewService(
         List<string> releaseFolderBasePaths,
         Dictionary<string, HashSet<string>> archivePartFileNamesByFolderPath,
         Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
+        bool isCollectionContainer,
+        List<string> releaseNamesOfContainer,
         CancellationToken cancellationToken
     )
     {
@@ -590,19 +600,29 @@ public class LinkCrypterImportPreviewService(
             )
             : null;
 
-        var archiveFolderPath = existingRelease is null
+        var (archiveFolderPath, archiveFolderContainsArchivesOfOtherReleases) = existingRelease
+            is null
             ? await FindUnusedArchiveFolderPathAsync(
+                container: container,
                 releaseName: releaseName,
                 mirrors: decidedMirrors,
+                canUseFolderWithArchivesOfOtherReleases: isCollectionContainer
+                    && releaseAction is LinkCrypterImportReleaseAction.CreateRelease
+                    && releaseFolderPath is null,
+                releaseNamesOfContainer: releaseNamesOfContainer,
                 archivePartFileNamesByFolderPath: archivePartFileNamesByFolderPath,
                 releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
                 cancellationToken: cancellationToken
             )
-            : null;
+            : (null, false);
 
         if (archiveFolderPath is not null)
         {
-            releaseNamesByChosenArchiveFolderPath.TryAdd(archiveFolderPath, releaseName);
+            releaseNamesByChosenArchiveFolderPath.TryAdd(
+                archiveFolderPath,
+                archiveFolderContainsArchivesOfOtherReleases ? container.ReleaseName : releaseName
+            );
         }
 
         if (archiveFolderPath is not null && archiveFolderPath == releaseFolderPath)
@@ -625,6 +645,7 @@ public class LinkCrypterImportPreviewService(
             Mirrors: decidedMirrors,
             ReleaseFolderPath: releaseFolderPath,
             ArchiveFolderPath: archiveFolderPath,
+            ArchiveFolderContainsArchivesOfOtherReleases: archiveFolderContainsArchivesOfOtherReleases,
             ReleaseAction: releaseAction,
             ExistingReleaseId: existingRelease?.Id,
             NotImportableReason: notImportableReason
@@ -737,11 +758,18 @@ public class LinkCrypterImportPreviewService(
         return archivePartFileNamesByFolderPath;
     }
 
-    private async Task<string?> FindUnusedArchiveFolderPathAsync(
+    private async Task<(
+        string? ArchiveFolderPath,
+        bool ContainsArchivesOfOtherReleases
+    )> FindUnusedArchiveFolderPathAsync(
+        LinkCrypterImportContainer container,
         string releaseName,
         List<LinkCrypterImportMirror> mirrors,
+        bool canUseFolderWithArchivesOfOtherReleases,
+        List<string> releaseNamesOfContainer,
         Dictionary<string, HashSet<string>> archivePartFileNamesByFolderPath,
         Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -751,14 +779,69 @@ public class LinkCrypterImportPreviewService(
 
         if (firstAdoptedMirror is null)
         {
-            return null;
+            return (null, false);
         }
 
         var fileNames = firstAdoptedMirror.Files.Select(file => file.FileName!).ToList();
 
-        var folderPathsWithSameArchiveParts = archivePartFileNamesByFolderPath
-            .Where(entry => entry.Value.SetEquals(fileNames))
-            .Select(entry => entry.Key)
+        var folderPathWithSameArchiveParts = await FindUnusedFolderPathAsync(
+            folderPaths: archivePartFileNamesByFolderPath
+                .Where(entry => entry.Value.SetEquals(fileNames))
+                .Select(entry => entry.Key)
+                .ToList(),
+            releaseName: releaseName,
+            releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+            folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
+            cancellationToken: cancellationToken
+        );
+
+        if (folderPathWithSameArchiveParts is not null || !canUseFolderWithArchivesOfOtherReleases)
+        {
+            return (folderPathWithSameArchiveParts, false);
+        }
+
+        var folderPathWithArchivePartsOfContainer = await FindUnusedFolderPathAsync(
+            folderPaths: archivePartFileNamesByFolderPath
+                .Where(entry =>
+                    entry.Value.IsSupersetOf(fileNames)
+                    && ContainsOnlyArchivesOfReleases(entry.Value, releaseNamesOfContainer)
+                )
+                .Select(entry => entry.Key)
+                .ToList(),
+            releaseName: container.ReleaseName,
+            releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+            folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
+            cancellationToken: cancellationToken
+        );
+
+        return (
+            folderPathWithArchivePartsOfContainer,
+            folderPathWithArchivePartsOfContainer is not null
+        );
+    }
+
+    private static bool ContainsOnlyArchivesOfReleases(
+        HashSet<string> archivePartFileNames,
+        List<string> releaseNames
+    )
+    {
+        return archivePartFileNames.All(fileName =>
+            releaseNames.Contains(
+                ArchivePartFileNames.GetArchiveBaseName(fileName)!,
+                StringComparer.OrdinalIgnoreCase
+            )
+        );
+    }
+
+    private async Task<string?> FindUnusedFolderPathAsync(
+        List<string> folderPaths,
+        string releaseName,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderPathsNotChosenForOtherRelease = folderPaths
             .Where(folderPath =>
                 !IsArchiveFolderChosenForOtherRelease(
                     folderPath: folderPath,
@@ -769,18 +852,20 @@ public class LinkCrypterImportPreviewService(
             .Order(StringComparer.Ordinal)
             .ToList();
 
-        if (folderPathsWithSameArchiveParts.Count == 0)
+        if (folderPathsNotChosenForOtherRelease.Count == 0)
         {
             return null;
         }
 
         var usedFolderPaths =
             await releaseFolderUsageRepository.GetUsedReleaseArchiveOrRemoteDownloadFolderPathsAsync(
-                folderPathsWithSameArchiveParts,
+                folderPathsNotChosenForOtherRelease,
                 cancellationToken
             );
 
-        return folderPathsWithSameArchiveParts.FirstOrDefault(folderPath =>
+        usedFolderPaths.ExceptWith(folderPathsOfReplacedRelease);
+
+        return folderPathsNotChosenForOtherRelease.FirstOrDefault(folderPath =>
             !usedFolderPaths.Contains(folderPath)
         );
     }

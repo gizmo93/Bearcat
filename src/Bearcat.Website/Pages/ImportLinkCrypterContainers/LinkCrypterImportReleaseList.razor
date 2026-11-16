@@ -241,7 +241,7 @@
                                                     {
                                                         <span>@L.Localize(releasePreview.ReleaseAction)</span>
                                                     }
-                                                    <span class="[overflow-wrap:anywhere]">@GetLocalFilesText(releasePreview)</span>
+                                                    <span class="[overflow-wrap:anywhere]">@GetLocalFilesText(container, releasePreview)</span>
                                                 </div>
                                                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                                                     @if (releasePreview.NotImportableReason is { } releaseNotImportableReason)

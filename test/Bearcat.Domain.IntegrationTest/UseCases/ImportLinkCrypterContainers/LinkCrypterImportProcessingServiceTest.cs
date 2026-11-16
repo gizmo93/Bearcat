@@ -244,6 +244,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                     releasePreview.ReleaseName,
                     releasePreview.ReleaseAction,
                     releasePreview.ArchiveFolderPath,
+                    releasePreview.ArchiveFolderContainsArchivesOfOtherReleases,
                     releasePreview.NotImportableReason
                 )
             )
@@ -252,12 +253,14 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                     FirstEpisodeReleaseName,
                     LinkCrypterImportReleaseAction.CreateRelease,
                     firstEpisodeArchiveFolderPath,
+                    false,
                     null
                 ),
                 (
                     SecondEpisodeReleaseName,
                     LinkCrypterImportReleaseAction.CreateRelease,
                     secondEpisodeArchiveFolderPath,
+                    false,
                     null
                 ),
             ]);
@@ -282,6 +285,116 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                     $"{SecondEpisodeReleaseName}.part1.rar, {SecondEpisodeReleaseName}.part2.rar"
                 ),
             ]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_SeasonContainerWithAllEpisodesInOneFolder_MovesPartsOfEachEpisodeIntoSubfolder()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey,
+            secondHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        var seasonFolderPath = CreateSeasonArchivePartFiles(
+            Path.Combine(WorkingDirectoryPath, SeasonContainerName)
+        );
+
+        AddSeasonContainer();
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
+
+        LinkCrypterImportContainerPreview
+            .FromJson(container.PreviewJson)
+            .Releases!.ShouldAllBe(releasePreview =>
+                releasePreview.ArchiveFolderPath == seasonFolderPath
+                && releasePreview.ArchiveFolderContainsArchivesOfOtherReleases
+            );
+
+        Directory.GetFiles(seasonFolderPath).ShouldBeEmpty();
+
+        foreach (
+            var episodeReleaseName in new[] { FirstEpisodeReleaseName, SecondEpisodeReleaseName }
+        )
+        {
+            var episodeFolderPath = Path.Combine(seasonFolderPath, episodeReleaseName);
+            List<string> expectedFilePaths =
+            [
+                Path.Combine(episodeFolderPath, $"{episodeReleaseName}.part1.rar"),
+                Path.Combine(episodeFolderPath, $"{episodeReleaseName}.part2.rar"),
+            ];
+
+            Directory.GetFiles(episodeFolderPath).Order().ShouldBe(expectedFilePaths);
+
+            var archive = (await LoadReleaseAsync(episodeReleaseName))
+                .ArchiveConfigs.Single()
+                .Archives.Single();
+
+            archive.ArchiveState.ShouldBe(ArchiveState.Created);
+            archive.ArchiveFolderPath.ShouldBe(episodeFolderPath);
+
+            archive
+                .ArchiveFiles.Select(archiveFile => archiveFile.FullFileName)
+                .Order()
+                .ShouldBe(expectedFilePaths);
+        }
+
+        (
+            await CreateDbContext()
+                .Notifications.OrderByDescending(notification => notification.Id)
+                .FirstAsync()
+        ).Message.ShouldEndWith(
+            "The archive parts of 2 releases were moved into subfolders named after the release."
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_SubfolderOfEpisodeInSharedFolderIsNotEmpty_FailsWithoutMovingParts()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey,
+            secondHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        var seasonFolderPath = CreateSeasonArchivePartFiles(
+            Path.Combine(WorkingDirectoryPath, SeasonContainerName)
+        );
+
+        var secondEpisodeFolderPath = Directory
+            .CreateDirectory(Path.Combine(seasonFolderPath, SecondEpisodeReleaseName))
+            .FullName;
+
+        File.WriteAllText(Path.Combine(secondEpisodeFolderPath, "notes.txt"), "notes");
+        AddSeasonContainer();
+
+        // Act
+        var linkCrypterImportId = await RunWholeImportAsync(seed);
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.ImportFailed);
+
+        container.ErrorMessages.ShouldHaveSingleItem().ShouldContain(secondEpisodeFolderPath);
+
+        Directory
+            .GetFiles(seasonFolderPath)
+            .Select(filePath => Path.GetFileName(filePath))
+            .Order()
+            .ShouldBe(GetSeasonArchiveFileNames());
+
+        Directory.Exists(Path.Combine(seasonFolderPath, FirstEpisodeReleaseName)).ShouldBeFalse();
+
+        (await CreateDbContext().Releases.CountAsync()).ShouldBe(0);
     }
 
     [Test]
