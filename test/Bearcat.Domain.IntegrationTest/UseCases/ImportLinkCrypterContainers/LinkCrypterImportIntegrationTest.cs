@@ -1,3 +1,4 @@
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
@@ -16,6 +17,7 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reading;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -75,6 +77,7 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
     private Mock<ILinkCrypterFactory> linkCrypterFactoryMock = null!;
     private Dictionary<string, Mock<IHosterWithFileInfo>> hosterMocksByClassName = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
+    private Mock<IFileSystemService> previewFileSystemServiceMock = null!;
 
     protected List<ListedContainer> ListedContainers => listedContainers;
 
@@ -86,6 +89,8 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
 
     protected Dictionary<string, Mock<IHosterWithFileInfo>> HosterMocksByClassName =>
         hosterMocksByClassName;
+
+    protected Mock<IFileSystemService> PreviewFileSystemServiceMock => previewFileSystemServiceMock;
 
     [SetUp]
     public void Setup()
@@ -156,6 +161,20 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
             .Setup(factory => factory.FindHosterByFileLink(It.IsAny<string>()))
             .Returns(
                 (string fileLink) => hostersByHostName.GetValueOrDefault(new Uri(fileLink).Host)
+            );
+
+        var fileSystemService = new FileSystemService();
+        previewFileSystemServiceMock = new Mock<IFileSystemService>(MockBehavior.Strict);
+        previewFileSystemServiceMock
+            .Setup(service => service.DirectoryExists(It.IsAny<string>()))
+            .Returns((string path) => fileSystemService.DirectoryExists(path));
+        previewFileSystemServiceMock
+            .Setup(service => service.GetFoldersInPath(It.IsAny<string>()))
+            .Returns((string path) => fileSystemService.GetFoldersInPath(path));
+        previewFileSystemServiceMock
+            .Setup(service => service.GetFilesInPath(It.IsAny<string>(), It.IsAny<bool>()))
+            .Returns(
+                (string path, bool recursive) => fileSystemService.GetFilesInPath(path, recursive)
             );
     }
 
@@ -274,12 +293,47 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
                 timeProvider,
                 NullLogger<LinkCrypterImportContainerImportService>.Instance
             ),
+            CreateReimportService(dbContext, timeProvider),
             notificationService,
             timeProvider,
             NullLogger<LinkCrypterImportProcessingService>.Instance
         );
 
         await service.ProcessAsync(CancellationToken.None);
+    }
+
+    protected LinkCrypterImportContainerReimportService CreateReimportService(
+        BearcatDbContext dbContext,
+        ControllableTimeProvider timeProvider
+    )
+    {
+        var repository = new LinkCrypterImportRepository(dbContext);
+        var releaseCollectionAssigner = CreateReleaseCollectionAssigner(dbContext, timeProvider);
+
+        return new LinkCrypterImportContainerReimportService(
+            repository,
+            new ReleaseWriteRepository(dbContext),
+            CreatePreviewService(dbContext, timeProvider),
+            new CollectionContainerImportService(
+                repository,
+                CreateReleaseImportService(
+                    dbContext: dbContext,
+                    timeProvider: timeProvider,
+                    releaseCollectionAssigner: releaseCollectionAssigner
+                ),
+                timeProvider,
+                NullLogger<CollectionContainerImportService>.Instance
+            ),
+            CreateArchivePartMover(),
+            releaseCollectionAssigner,
+            new NotificationService(
+                new NotificationRepository(dbContext),
+                timeProvider,
+                CreateNotificationConfigurationProvider()
+            ),
+            timeProvider,
+            NullLogger<LinkCrypterImportContainerReimportService>.Instance
+        );
     }
 
     protected static ReleaseCollectionAssignmentService CreateReleaseCollectionAssigner(
@@ -345,7 +399,7 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
             new ReleaseFolderUsageRepository(dbContext),
             hosterFactoryMock.Object,
             NoOpSecretProtector.Instance,
-            new FileSystemService(),
+            previewFileSystemServiceMock.Object,
             Options.Create(
                 new WorkingDirectoriesConfig { WorkingDirectories = [workingDirectoryPath] }
             ),

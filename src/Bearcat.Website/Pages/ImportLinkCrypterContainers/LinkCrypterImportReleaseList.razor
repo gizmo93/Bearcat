@@ -32,15 +32,15 @@
             </BbButton>
         }
 
-        @if (CanChangeReleases && ImportableContainerCount > 0)
+        @if (CanChangeSelection)
         {
             <div class="flex items-center gap-2 sm:ml-auto">
-                <BbCheckbox Id="link-crypter-import-select-all-importable"
-                            Checked="AreAllImportableContainersSelected"
-                            Indeterminate="AreSomeImportableContainersSelected"
-                            CheckedChanged="SetSelectionOfAllImportableContainersAsync" />
-                <label for="link-crypter-import-select-all-importable" class="text-sm font-medium">
-                    @L["SelectAllImportableContainers"]
+                <BbCheckbox Id="link-crypter-import-select-all-selectable"
+                            Checked="AreAllSelectableContainersSelected"
+                            Indeterminate="AreSomeSelectableContainersSelected"
+                            CheckedChanged="SetSelectionOfAllSelectableContainersAsync" />
+                <label for="link-crypter-import-select-all-selectable" class="text-sm font-medium">
+                    @(Detail.State is LinkCrypterImportState.Completed ? L["SelectAllReimportableContainers"] : L["SelectAllImportableContainers"])
                 </label>
             </div>
         }
@@ -67,7 +67,7 @@
                 <div class="bearcat-config-item">
                     <div class="@($"bearcat-config-row {ReleaseGridClass}")">
                         <div class="flex min-w-0 items-start gap-3">
-                            @if (CanChangeReleases && release.HasImportableContainers)
+                            @if (CanChangeSelection && release.HasSelectableContainers)
                             {
                                 <BbCheckbox Id="@checkboxId"
                                             Class="mt-0.5"
@@ -197,7 +197,7 @@
                                             @L["OpenImportedReleaseCollection"]
                                         </a>
                                     }
-                                    @if (container.CanBeReimported)
+                                    @if (container.CanBeReimported && Detail.State is not LinkCrypterImportState.Reimporting)
                                     {
                                         <BbButton Variant="ButtonVariant.Outline"
                                                   Size="ButtonSize.Small"

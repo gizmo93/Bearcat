@@ -1,14 +1,12 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
-using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
-using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ImportLinkCrypterContainers;
@@ -309,6 +307,115 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
         }
     }
 
+    [Test]
+    public async Task StartReimportAsync_TwoOfThreeSeasonReleasesSelected_ReimportsSelectedContainersInBackground()
+    {
+        // Arrange
+        var linkCrypterImportId = await ImportSeasonContainersAsOneReleaseEachAsync([1, 2, 3]);
+
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .SetReleaseSelectionAsync(
+                linkCrypterImportId,
+                GetSeasonContainerName(3),
+                isSelected: false
+            );
+
+        var thirdSeasonReleaseId = (await LoadReleaseAsync(GetSeasonContainerName(3))).Id;
+
+        // Act
+        await StartReimportAndProcessAsync(linkCrypterImportId);
+
+        // Assert
+        (await CreateDbContext().Releases.Select(release => release.Name).ToListAsync())
+            .Order()
+            .ShouldBe([
+                GetEpisodeReleaseName(1, 1),
+                GetEpisodeReleaseName(1, 2),
+                GetEpisodeReleaseName(2, 1),
+                GetEpisodeReleaseName(2, 2),
+                GetSeasonContainerName(3),
+            ]);
+
+        var containersByReleaseName = await LoadContainersByReleaseNameAsync(linkCrypterImportId);
+
+        foreach (var seasonNumber in new[] { 1, 2 })
+        {
+            var container = containersByReleaseName[GetSeasonContainerName(seasonNumber)];
+            container.ImportedReleaseId.ShouldBeNull();
+            container.ImportedReleaseCollectionId.ShouldNotBeNull();
+            container.ErrorMessages.ShouldBeEmpty();
+        }
+
+        var thirdSeasonContainer = containersByReleaseName[GetSeasonContainerName(3)];
+        thirdSeasonContainer.ImportedReleaseId.ShouldBe(thirdSeasonReleaseId);
+        thirdSeasonContainer.IsSelected.ShouldBeFalse();
+
+        var linkCrypterImport = await LoadImportAsync(linkCrypterImportId);
+        linkCrypterImport.State.ShouldBe(LinkCrypterImportState.Completed);
+        linkCrypterImport.ProcessedContainerCount.ShouldBe(2);
+        linkCrypterImport.ContainerCountToProcess.ShouldBe(2);
+
+        var notification = await LoadLatestNotificationAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.LinkCrypterImportCompleted);
+        notification.Message.ShouldContain("2 containers were re-imported, 0 containers failed.");
+    }
+
+    [Test]
+    public async Task StartReimportAsync_UploadOfOneSelectedReleaseInProgress_KeepsItsReleaseWithErrorAndReimportsOthers()
+    {
+        // Arrange
+        var linkCrypterImportId = await ImportSeasonContainersAsOneReleaseEachAsync([1, 2, 3]);
+        await SetFirstUploadOfReleaseToUploadingAsync(GetSeasonContainerName(2));
+        var secondSeasonReleaseId = (await LoadReleaseAsync(GetSeasonContainerName(2))).Id;
+
+        // Act
+        await StartReimportAndProcessAsync(linkCrypterImportId);
+
+        // Assert
+        var containersByReleaseName = await LoadContainersByReleaseNameAsync(linkCrypterImportId);
+
+        var blockedContainer = containersByReleaseName[GetSeasonContainerName(2)];
+        blockedContainer.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
+        blockedContainer.ImportedReleaseId.ShouldBe(secondSeasonReleaseId);
+        blockedContainer.ErrorMessages.ShouldHaveSingleItem().ShouldContain("UploadInProgress");
+
+        foreach (var seasonNumber in new[] { 1, 3 })
+        {
+            var container = containersByReleaseName[GetSeasonContainerName(seasonNumber)];
+            container.ImportedReleaseId.ShouldBeNull();
+            container.ImportedReleaseCollectionId.ShouldNotBeNull();
+        }
+
+        (await LoadImportAsync(linkCrypterImportId)).State.ShouldBe(
+            LinkCrypterImportState.Completed
+        );
+
+        var notification = await LoadLatestNotificationAsync();
+        notification.NotificationKind.ShouldBe(NotificationKind.LinkCrypterImportFailed);
+        notification.Message.ShouldContain("2 containers were re-imported, 1 containers failed.");
+    }
+
+    [Test]
+    public async Task StartReimportAsync_TwoSelectedContainers_SearchesLocalFilesOnce()
+    {
+        // Arrange
+        var linkCrypterImportId = await ImportSeasonContainersAsOneReleaseEachAsync([1, 2]);
+        PreviewFileSystemServiceMock.Invocations.Clear();
+
+        // Act
+        await StartReimportAndProcessAsync(linkCrypterImportId);
+
+        // Assert
+        PreviewFileSystemServiceMock.Verify(
+            service => service.GetFoldersInPath(WorkingDirectoryPath),
+            Times.Once
+        );
+
+        (await LoadImportAsync(linkCrypterImportId)).Containers.ShouldAllBe(container =>
+            container.ImportedReleaseId == null && container.ImportedReleaseCollectionId != null
+        );
+    }
+
     private async Task<SeasonImport> ImportSeasonContainerAsOneReleaseAsync(
         string? archiveFolderPath = null
     )
@@ -327,10 +434,12 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
         await ProcessAsync();
         await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
         await ProcessAsync();
-        var containerId = await ReplacePreviewWithOneSeasonReleaseAsync(
-            linkCrypterImportId,
-            archiveFolderPath
-        );
+        var containerId = (
+            await ReplacePreviewsWithOneSeasonReleaseEachAsync(
+                linkCrypterImportId,
+                archiveFolderPath
+            )
+        ).Single();
 
         await CreateLinkCrypterImportService(CreateDbContext())
             .StartImportAsync(linkCrypterImportId);
@@ -351,49 +460,166 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
         return new SeasonImport(seed, containerId, seasonRelease.Id);
     }
 
-    private async Task<int> ReplacePreviewWithOneSeasonReleaseAsync(
+    private async Task<List<int>> ReplacePreviewsWithOneSeasonReleaseEachAsync(
         int linkCrypterImportId,
         string? archiveFolderPath
     )
     {
         var dbContext = CreateDbContext();
 
-        var container = await dbContext.LinkCrypterImportContainers.SingleAsync(container =>
-            container.LinkCrypterImportId == linkCrypterImportId
-        );
+        var containers = await dbContext
+            .LinkCrypterImportContainers.Where(container =>
+                container.LinkCrypterImportId == linkCrypterImportId
+            )
+            .OrderBy(container => container.Id)
+            .ToListAsync();
 
-        var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+        foreach (var container in containers)
+        {
+            var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
 
-        container.PreviewJson = (
-            preview with
-            {
-                ReleaseCollectionName = null,
-                Releases =
-                [
-                    new LinkCrypterImportReleasePreview(
-                        ReleaseName: SeasonContainerName,
-                        Mirrors: preview
-                            .Mirrors.Select(mirror =>
-                                mirror with
-                                {
-                                    Decision = LinkCrypterImportMirrorDecision.Adopt,
-                                }
-                            )
-                            .ToList(),
-                        ReleaseFolderPath: null,
-                        ArchiveFolderPath: archiveFolderPath,
-                        ArchiveFolderContainsArchivesOfOtherReleases: false,
-                        ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
-                        ExistingReleaseId: null,
-                        NotImportableReason: null
-                    ),
-                ],
-            }
-        ).ToJson();
+            container.PreviewJson = (
+                preview with
+                {
+                    ReleaseCollectionName = null,
+                    Releases =
+                    [
+                        new LinkCrypterImportReleasePreview(
+                            ReleaseName: container.ReleaseName,
+                            Mirrors: preview
+                                .Mirrors.Select(mirror =>
+                                    mirror with
+                                    {
+                                        Decision = LinkCrypterImportMirrorDecision.Adopt,
+                                    }
+                                )
+                                .ToList(),
+                            ReleaseFolderPath: null,
+                            ArchiveFolderPath: archiveFolderPath,
+                            ArchiveFolderContainsArchivesOfOtherReleases: false,
+                            ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
+                            ExistingReleaseId: null,
+                            NotImportableReason: null
+                        ),
+                    ],
+                }
+            ).ToJson();
+        }
 
         await dbContext.SaveChangesAsync();
 
-        return container.Id;
+        return containers.Select(container => container.Id).ToList();
+    }
+
+    private async Task<int> ImportSeasonContainersAsOneReleaseEachAsync(
+        IReadOnlyList<int> seasonNumbers
+    )
+    {
+        var seed = await AddReleaseTemplateAsync(
+            releaseType: ReleaseType.Unmanaged,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            firstHosterCollectionUploadSlotKey: SeasonSlotKey,
+            secondHosterCollectionUploadSlotKey: SeasonSlotKey
+        );
+
+        foreach (var seasonNumber in seasonNumbers)
+        {
+            AddContainerOfSeason(seasonNumber);
+        }
+
+        var linkCrypterImportId = await StartImportAsync(seed);
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+        await ProcessAsync();
+
+        await ReplacePreviewsWithOneSeasonReleaseEachAsync(
+            linkCrypterImportId,
+            archiveFolderPath: null
+        );
+
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .StartImportAsync(linkCrypterImportId);
+
+        await ProcessAsync();
+
+        return linkCrypterImportId;
+    }
+
+    private void AddContainerOfSeason(int seasonNumber)
+    {
+        var fileNames = Enumerable
+            .Range(1, 2)
+            .SelectMany(episodeNumber =>
+                Enumerable
+                    .Range(1, 2)
+                    .Select(partNumber =>
+                        $"{GetEpisodeReleaseName(seasonNumber, episodeNumber)}.part{partNumber}.rar"
+                    )
+            )
+            .ToList();
+
+        AddListedContainer(
+            $"https://crypter.test/season-{seasonNumber}",
+            GetSeasonContainerName(seasonNumber),
+            fileNames
+                .Select(
+                    (fileName, index) =>
+                        OnlineArchiveLink($"https://first.test/s{seasonNumber}-{index}", fileName)
+                )
+                .ToList(),
+            fileNames
+                .Select(
+                    (fileName, index) =>
+                        OnlineArchiveLink($"https://second.test/s{seasonNumber}-{index}", fileName)
+                )
+                .ToList()
+        );
+    }
+
+    private static string GetSeasonContainerName(int seasonNumber)
+    {
+        return $"Bearcat.Show.S{seasonNumber:00}.German.1080p.WEB.x264-GRP";
+    }
+
+    private static string GetEpisodeReleaseName(int seasonNumber, int episodeNumber)
+    {
+        return $"Bearcat.Show.S{seasonNumber:00}E{episodeNumber:00}.German.1080p.WEB.x264-GRP";
+    }
+
+    private async Task StartReimportAndProcessAsync(int linkCrypterImportId)
+    {
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .StartReimportAsync(linkCrypterImportId);
+
+        await ProcessAsync();
+    }
+
+    private async Task<
+        Dictionary<string, LinkCrypterImportContainer>
+    > LoadContainersByReleaseNameAsync(int linkCrypterImportId)
+    {
+        return (await LoadImportAsync(linkCrypterImportId)).Containers.ToDictionary(container =>
+            container.ReleaseName
+        );
+    }
+
+    private async Task<Notification> LoadLatestNotificationAsync()
+    {
+        return await CreateDbContext()
+            .Notifications.OrderByDescending(notification => notification.Id)
+            .FirstAsync();
+    }
+
+    private async Task SetFirstUploadOfReleaseToUploadingAsync(string releaseName)
+    {
+        var dbContext = CreateDbContext();
+
+        var upload = await dbContext
+            .Uploads.OrderBy(upload => upload.Id)
+            .FirstAsync(upload => upload.UploadConfig.Release.Name == releaseName);
+
+        upload.UploadState = UploadState.Uploading;
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task AddThirdHosterUploadAsync(int seasonReleaseId, UploadState uploadState)
@@ -533,29 +759,7 @@ public class LinkCrypterImportContainerReimportServiceTest(DatabaseProvider data
 
     private LinkCrypterImportContainerReimportService CreateReimportService()
     {
-        var dbContext = CreateDbContext();
-        var timeProvider = new ControllableTimeProvider(StartTime);
-        var repository = new LinkCrypterImportRepository(dbContext);
-        var releaseCollectionAssigner = CreateReleaseCollectionAssigner(dbContext, timeProvider);
-
-        return new LinkCrypterImportContainerReimportService(
-            repository,
-            new ReleaseWriteRepository(dbContext),
-            CreatePreviewService(dbContext, timeProvider),
-            new CollectionContainerImportService(
-                repository,
-                CreateReleaseImportService(
-                    dbContext: dbContext,
-                    timeProvider: timeProvider,
-                    releaseCollectionAssigner: releaseCollectionAssigner
-                ),
-                timeProvider,
-                NullLogger<CollectionContainerImportService>.Instance
-            ),
-            CreateArchivePartMover(),
-            releaseCollectionAssigner,
-            NullLogger<LinkCrypterImportContainerReimportService>.Instance
-        );
+        return CreateReimportService(CreateDbContext(), new ControllableTimeProvider(StartTime));
     }
 
     private sealed record SeasonImport(TemplateSeed Seed, int ContainerId, int SeasonReleaseId);

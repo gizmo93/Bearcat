@@ -1325,7 +1325,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
         await ProcessAsync();
         await CreateLinkCrypterImportService(CreateDbContext())
-            .SetSelectionOfAllImportableContainersAsync(linkCrypterImportId, isSelected: false);
+            .SetSelectionOfAllSelectableContainersAsync(linkCrypterImportId, isSelected: false);
 
         // Act
         await CreateLinkCrypterImportService(CreateDbContext())

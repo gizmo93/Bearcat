@@ -161,9 +161,30 @@ public class LinkCrypterImportPreviewService(
         }
     }
 
+    public async Task<LinkCrypterImportLocalFileSearchResult> SearchLocalFilesAsync(
+        LinkCrypterImport linkCrypterImport,
+        CancellationToken cancellationToken
+    )
+    {
+        var releaseTemplate = await GetReleaseTemplateAsync(linkCrypterImport, cancellationToken);
+
+        return new LinkCrypterImportLocalFileSearchResult(
+            ArchivePartFileNamesByFolderPath: await GetArchivePartFileNamesByFolderPathAsync(
+                linkCrypterImport,
+                cancellationToken
+            ),
+            ReleaseFolderBasePaths: await GetReleaseFolderBasePathsAsync(
+                releaseTemplate,
+                cancellationToken
+            )
+        );
+    }
+
     public async Task<LinkCrypterImportContainerPreviewResult> CreatePreviewOfContainerAsync(
         LinkCrypterImportContainer container,
         IReadOnlyCollection<string> folderPathsOfReplacedRelease,
+        LinkCrypterImportLocalFileSearchResult localFileSearchResult,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
         CancellationToken cancellationToken
     )
     {
@@ -188,17 +209,9 @@ public class LinkCrypterImportPreviewService(
             existingReleasesByName: existingReleasesByName,
             releaseNamesOfEarlierContainers: new HashSet<string>(StringComparer.OrdinalIgnoreCase),
             templateHosterClassNames: GetTemplateHosterClassNames(releaseTemplate),
-            releaseFolderBasePaths: await GetReleaseFolderBasePathsAsync(
-                releaseTemplate,
-                cancellationToken
-            ),
-            archivePartFileNamesByFolderPath: await GetArchivePartFileNamesByFolderPathAsync(
-                container.LinkCrypterImport,
-                cancellationToken
-            ),
-            releaseNamesByChosenArchiveFolderPath: new Dictionary<string, string>(
-                StringComparer.Ordinal
-            ),
+            releaseFolderBasePaths: localFileSearchResult.ReleaseFolderBasePaths,
+            archivePartFileNamesByFolderPath: localFileSearchResult.ArchivePartFileNamesByFolderPath,
+            releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
             folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
             cancellationToken: cancellationToken
         );

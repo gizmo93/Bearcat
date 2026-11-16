@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
@@ -9,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 
@@ -19,6 +21,8 @@ public class LinkCrypterImportContainerReimportService(
     CollectionContainerImportService collectionContainerImportService,
     ArchivePartMover archivePartMover,
     IReleaseCollectionAssigner releaseCollectionAssigner,
+    INotificationService notificationService,
+    TimeProvider timeProvider,
     ILogger<LinkCrypterImportContainerReimportService> logger
 )
 {
@@ -41,7 +45,7 @@ public class LinkCrypterImportContainerReimportService(
         CancellationToken cancellationToken = default
     )
     {
-        var appliedReimport = await ApplyReimportWithoutSavingAsync(
+        var appliedReimport = await ApplyReimportOfSingleContainerWithoutSavingAsync(
             linkCrypterImportContainerId,
             cancellationToken
         );
@@ -57,18 +61,158 @@ public class LinkCrypterImportContainerReimportService(
         CancellationToken cancellationToken = default
     )
     {
-        var (plan, archivePartsMoves) = await ApplyReimportWithoutSavingAsync(
+        var (plan, archivePartsMoves) = await ApplyReimportOfSingleContainerWithoutSavingAsync(
             linkCrypterImportContainerId,
             cancellationToken
         );
 
         if (plan.Blockers.Count > 0)
         {
-            throw new InvalidLinkCrypterImportException(
-                $"Container {plan.ContainerUrl} cannot be re-imported: {string.Join("; ", plan.Blockers.Select(DescribeBlocker))}"
-            );
+            throw new InvalidLinkCrypterImportException(DescribeBlockers(plan));
         }
 
+        await MoveArchivePartsAndSaveAsync(plan, archivePartsMoves, cancellationToken);
+
+        return plan;
+    }
+
+    public async Task ReimportSelectedContainersAsync(
+        int linkCrypterImportId,
+        CancellationToken cancellationToken
+    )
+    {
+        var linkCrypterImport = await repository.GetWithContainersAsync(
+            linkCrypterImportId,
+            cancellationToken
+        );
+
+        var containerIds = linkCrypterImport
+            .Containers.Where(container =>
+                container.IsSelected
+                && LinkCrypterImportContainerReimportCheck.CanBeReimported(container)
+            )
+            .OrderBy(container => container.Id)
+            .Select(container => container.Id)
+            .ToList();
+
+        linkCrypterImport.StartProgress(containerIds.Count);
+        await repository.SaveChangesAsync(cancellationToken);
+
+        var localFileSearchResult = await previewService.SearchLocalFilesAsync(
+            linkCrypterImport,
+            cancellationToken
+        );
+
+        var releaseNamesByChosenArchiveFolderPath = new Dictionary<string, string>(
+            StringComparer.Ordinal
+        );
+
+        var reimportedContainerCount = 0;
+        var releaseCountWithMovedArchiveParts = 0;
+
+        foreach (var containerId in containerIds)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var containerReimport = await ReimportContainerOrSaveErrorAsync(
+                linkCrypterImportContainerId: containerId,
+                localFileSearchResult: localFileSearchResult,
+                releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                cancellationToken: cancellationToken
+            );
+
+            if (containerReimport.IsReimported)
+            {
+                reimportedContainerCount++;
+
+                releaseCountWithMovedArchiveParts +=
+                    containerReimport.ReleaseCountWithMovedArchiveParts;
+            }
+        }
+
+        await CompleteReimportAsync(
+            linkCrypterImportId: linkCrypterImportId,
+            reimportedContainerCount: reimportedContainerCount,
+            failedContainerCount: containerIds.Count - reimportedContainerCount,
+            releaseCountWithMovedArchiveParts: releaseCountWithMovedArchiveParts,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<ContainerReimport> ReimportContainerOrSaveErrorAsync(
+        int linkCrypterImportContainerId,
+        LinkCrypterImportLocalFileSearchResult localFileSearchResult,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        CancellationToken cancellationToken
+    )
+    {
+        repository.ClearChangeTracker();
+        releaseCollectionAssigner.ClearCachedReleaseCollections();
+
+        string? errorMessage = null;
+        var releaseCountWithMovedArchiveParts = 0;
+
+        try
+        {
+            var container = await repository.GetContainerWithImportAsync(
+                linkCrypterImportContainerId,
+                cancellationToken
+            );
+
+            var (plan, archivePartsMoves) = await ApplyReimportWithoutSavingAsync(
+                container: container,
+                localFileSearchResult: localFileSearchResult,
+                releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                cancellationToken: cancellationToken
+            );
+
+            if (plan.Blockers.Count > 0)
+            {
+                errorMessage = DescribeBlockers(plan);
+            }
+            else
+            {
+                await MoveArchivePartsAndSaveAsync(plan, archivePartsMoves, cancellationToken);
+                releaseCountWithMovedArchiveParts = archivePartsMoves.Count;
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(
+                exception,
+                "Could not re-import container {LinkCrypterImportContainerId}",
+                linkCrypterImportContainerId
+            );
+
+            errorMessage = exception.Message;
+        }
+
+        if (errorMessage is not null)
+        {
+            repository.ClearChangeTracker();
+        }
+
+        var reloadedContainer = await repository.GetContainerWithImportAsync(
+            linkCrypterImportContainerId,
+            cancellationToken
+        );
+
+        reloadedContainer.ErrorMessages = errorMessage is null ? [] : [errorMessage];
+        reloadedContainer.LinkCrypterImport.ProcessedContainerCount++;
+        await repository.SaveChangesAsync(cancellationToken);
+
+        return new ContainerReimport(
+            IsReimported: errorMessage is null,
+            ReleaseCountWithMovedArchiveParts: releaseCountWithMovedArchiveParts
+        );
+    }
+
+    private async Task MoveArchivePartsAndSaveAsync(
+        LinkCrypterImportReimportPlanReadModel plan,
+        IReadOnlyList<ArchivePartsMove> archivePartsMoves,
+        CancellationToken cancellationToken
+    )
+    {
         archivePartMover.MoveArchiveParts(archivePartsMoves);
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -79,11 +223,41 @@ public class LinkCrypterImportContainerReimportService(
             plan.Releases.Count,
             plan.ReleaseCollectionName
         );
-
-        return plan;
     }
 
-    private async Task<AppliedReimport> ApplyReimportWithoutSavingAsync(
+    private async Task CompleteReimportAsync(
+        int linkCrypterImportId,
+        int reimportedContainerCount,
+        int failedContainerCount,
+        int releaseCountWithMovedArchiveParts,
+        CancellationToken cancellationToken
+    )
+    {
+        repository.ClearChangeTracker();
+
+        var linkCrypterImport = await repository.GetByIdAsync(
+            linkCrypterImportId,
+            cancellationToken
+        );
+
+        var movedArchivePartsMessage =
+            releaseCountWithMovedArchiveParts > 0
+                ? $" The archive parts of {releaseCountWithMovedArchiveParts} releases were moved into subfolders named after the release."
+                : "";
+
+        linkCrypterImport.ChangeState(LinkCrypterImportState.Completed, timeProvider.GetLocalNow());
+
+        notificationService.Create(
+            kind: failedContainerCount == 0
+                ? NotificationKind.LinkCrypterImportCompleted
+                : NotificationKind.LinkCrypterImportFailed,
+            message: $"Re-import of link crypter import {linkCrypterImportId} finished: {reimportedContainerCount} containers were re-imported, {failedContainerCount} containers failed.{movedArchivePartsMessage}"
+        );
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<AppliedReimport> ApplyReimportOfSingleContainerWithoutSavingAsync(
         int linkCrypterImportContainerId,
         CancellationToken cancellationToken
     )
@@ -93,24 +267,45 @@ public class LinkCrypterImportContainerReimportService(
             cancellationToken
         );
 
-        if (
-            container.Status is not LinkCrypterImportContainerStatus.Imported
-            || container.ImportedReleaseId is null
-        )
+        var localFileSearchResult = await previewService.SearchLocalFilesAsync(
+            container.LinkCrypterImport,
+            cancellationToken
+        );
+
+        return await ApplyReimportWithoutSavingAsync(
+            container: container,
+            localFileSearchResult: localFileSearchResult,
+            releaseNamesByChosenArchiveFolderPath: new Dictionary<string, string>(
+                StringComparer.Ordinal
+            ),
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<AppliedReimport> ApplyReimportWithoutSavingAsync(
+        LinkCrypterImportContainer container,
+        LinkCrypterImportLocalFileSearchResult localFileSearchResult,
+        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!LinkCrypterImportContainerReimportCheck.CanBeReimported(container))
         {
             throw new InvalidLinkCrypterImportException(
-                $"Container {container.ContainerUrl} was not imported into a release."
+                $"Container {container.ContainerUrl} cannot be re-imported."
             );
         }
 
         var release = await repository.GetReleaseForReimportAsync(
-            container.ImportedReleaseId.Value,
+            container.ImportedReleaseId!.Value,
             cancellationToken
         );
 
         var previewResult = await previewService.CreatePreviewOfContainerAsync(
             container: container,
             folderPathsOfReplacedRelease: GetFolderPathsOfArchivesThatAreNotDeleted(release),
+            localFileSearchResult: localFileSearchResult,
+            releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
             cancellationToken: cancellationToken
         );
 
@@ -666,6 +861,11 @@ public class LinkCrypterImportContainerReimportService(
             .ToList();
     }
 
+    private static string DescribeBlockers(LinkCrypterImportReimportPlanReadModel plan)
+    {
+        return $"Container {plan.ContainerUrl} cannot be re-imported: {string.Join("; ", plan.Blockers.Select(DescribeBlocker))}";
+    }
+
     private static string DescribeBlocker(LinkCrypterImportReimportBlocker blocker)
     {
         List<string?> parts =
@@ -687,6 +887,11 @@ public class LinkCrypterImportContainerReimportService(
     private sealed record AppliedReimport(
         LinkCrypterImportReimportPlanReadModel Plan,
         IReadOnlyList<ArchivePartsMove> ArchivePartsMoves
+    );
+
+    private sealed record ContainerReimport(
+        bool IsReimported,
+        int ReleaseCountWithMovedArchiveParts
     );
 
     private sealed record LinkCrypterContainerConversion(

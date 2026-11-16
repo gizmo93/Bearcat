@@ -13,6 +13,7 @@ public class LinkCrypterImportRepository(IBearcatWriteDbContext dbWrite)
         LinkCrypterImportState.ReadingContainers,
         LinkCrypterImportState.CheckingFiles,
         LinkCrypterImportState.Importing,
+        LinkCrypterImportState.Reimporting,
     ];
 
     public async Task<LinkCrypterRegistration?> GetLinkCrypterRegistrationOrDefaultAsync(

@@ -36,14 +36,16 @@ public partial class LinkCrypterImportDetailPage(
         detail?.State
             is LinkCrypterImportState.ReadingContainers
                 or LinkCrypterImportState.CheckingFiles
-                or LinkCrypterImportState.Importing;
+                or LinkCrypterImportState.Importing
+                or LinkCrypterImportState.Reimporting;
 
     private bool ShowsReleases =>
         detail?.State
             is LinkCrypterImportState.ReadyForReview
                 or LinkCrypterImportState.Importing
                 or LinkCrypterImportState.Completed
-                or LinkCrypterImportState.Failed;
+                or LinkCrypterImportState.Failed
+                or LinkCrypterImportState.Reimporting;
 
     private bool AllHosterRegistrationsChosen =>
         detail is not null
@@ -179,6 +181,28 @@ public partial class LinkCrypterImportDetailPage(
 
         await RunAndReloadAsync(
             (LinkCrypterImportService service) => service.StartImportAsync(LinkCrypterImportId)
+        );
+    }
+
+    private async Task StartReimportAsync()
+    {
+        var confirmation = await dialogService.ConfirmAsync(
+            L["ReimportSelectedLinkCrypterContainers"],
+            L["ReimportSelectedLinkCrypterContainersConfirmation", detail!.SelectedContainerCount],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["ReimportSelectedLinkCrypterContainers"],
+                CancelText = L["Cancel"],
+            }
+        );
+
+        if (!confirmation.Confirmed)
+        {
+            return;
+        }
+
+        await RunAndReloadAsync(
+            (LinkCrypterImportService service) => service.StartReimportAsync(LinkCrypterImportId)
         );
     }
 

@@ -83,7 +83,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
             .Containers.Select(container => container.ContainerName)
             .ShouldBe(["Release.A", "release.a"]);
         releaseA.IsSelected.ShouldBeFalse();
-        releaseA.HasImportableContainers.ShouldBeTrue();
+        releaseA.HasSelectableContainers.ShouldBeTrue();
         releaseA.ReleaseFolderPath.ShouldBe("/releases/Release.A");
         var releaseB = result.Items[1];
         releaseB
@@ -92,7 +92,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                 LinkCrypterImportContainerStatus.NotImportable,
                 LinkCrypterImportContainerStatus.AlreadyInBearcat,
             ]);
-        releaseB.HasImportableContainers.ShouldBeFalse();
+        releaseB.HasSelectableContainers.ShouldBeFalse();
         result.Items[2].IsSelected.ShouldBeTrue();
     }
 
@@ -142,7 +142,39 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
             .ShouldBe(["Chosen account", "Other account"]);
     }
 
-    private static LinkCrypterImport AddImport(BearcatDbContext dbContext)
+    [Test]
+    public async Task GetDetailAsync_CompletedImport_CountsOnlyReimportableContainersAsSelectable()
+    {
+        // Arrange
+        await using var dbContext = CreateDbContext();
+        var linkCrypterImport = AddImport(dbContext, LinkCrypterImportState.Completed);
+        AddImportedContainer(linkCrypterImport, "Show.S01", ["Show.S01E01", "Show.S01E02"]);
+        AddImportedContainer(linkCrypterImport, "show.s01", ["Show.S01E03", "Show.S01E04"]);
+        AddImportedContainer(
+            linkCrypterImport,
+            "Show.S02",
+            ["Show.S02E01", "Show.S02E02"],
+            isSelected: false
+        );
+        AddImportedContainer(linkCrypterImport, "Movie", ["Movie"]);
+        AddContainer(linkCrypterImport, "Other.Movie", LinkCrypterImportContainerStatus.Importable);
+        await dbContext.SaveChangesAsync();
+        var repository = new LinkCrypterImportReadRepository(CreateDbContext());
+
+        // Act
+        var result = await repository.GetDetailAsync(linkCrypterImport.Id);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.SelectableContainerCount.ShouldBe(3);
+        result.SelectedContainerCount.ShouldBe(2);
+        result.SelectedReleaseCount.ShouldBe(1);
+    }
+
+    private static LinkCrypterImport AddImport(
+        BearcatDbContext dbContext,
+        LinkCrypterImportState state = LinkCrypterImportState.ReadyForReview
+    )
     {
         var linkCrypterImport = new LinkCrypterImport
         {
@@ -164,7 +196,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                     NumberOfHoursUntilReupload = 24,
                 },
             },
-            State = LinkCrypterImportState.ReadyForReview,
+            State = state,
             CreatedAt = CreatedAt,
             UpdatedAt = CreatedAt,
             ErrorMessages = [],
@@ -212,6 +244,57 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                             NotImportableReason: null
                         ),
                     ]
+                ).ToJson(),
+            }
+        );
+    }
+
+    private static void AddImportedContainer(
+        LinkCrypterImport linkCrypterImport,
+        string containerName,
+        IReadOnlyList<string> archiveBaseNames,
+        bool isSelected = true
+    )
+    {
+        linkCrypterImport.Containers.Add(
+            new LinkCrypterImportContainer
+            {
+                ContainerId = containerName,
+                ContainerUrl = $"https://crypter.test/{Guid.NewGuid():N}",
+                ContainerName = containerName,
+                ReleaseName = containerName,
+                ExternalReference = containerName,
+                Status = LinkCrypterImportContainerStatus.Imported,
+                IsSelected = isSelected,
+                ImportedRelease = new Release
+                {
+                    Name = $"{containerName} {Guid.NewGuid():N}",
+                    ReleaseType = ReleaseType.Unmanaged,
+                    ReleaseGroup = linkCrypterImport.ReleaseTemplate.ReleaseGroup,
+                    CreatedAt = CreatedAt,
+                },
+                ErrorMessages = [],
+                PreviewJson = new LinkCrypterImportContainerPreview(
+                    Mirrors:
+                    [
+                        new LinkCrypterImportMirror(
+                            MirrorNumber: 1,
+                            HosterClassName: "FirstHoster",
+                            Files: archiveBaseNames
+                                .Select(archiveBaseName => new LinkCrypterImportMirrorFile(
+                                    Link: $"https://first.test/{archiveBaseName}",
+                                    OwnFormatLink: null,
+                                    IsOnline: true,
+                                    FileName: $"{archiveBaseName}.part1.rar",
+                                    SizeBytes: 100
+                                ))
+                                .ToList(),
+                            Decision: null,
+                            UploadByBearcatReason: null
+                        ),
+                    ],
+                    ReleaseCollectionName: null,
+                    Releases: null
                 ).ToJson(),
             }
         );

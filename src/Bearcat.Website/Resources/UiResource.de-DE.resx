@@ -2036,6 +2036,7 @@
   <data name="CheckFiles" xml:space="preserve"><value>Dateien prüfen</value></data>
   <data name="LinkCrypterImportReleaseInfoHint" xml:space="preserve"><value>Releaseinformationen (xrel, PreDB, NFO) werden beim Import nicht abgerufen. Die Hintergrundaufgabe holt sie danach ab.</value></data>
   <data name="SelectAllImportableContainers" xml:space="preserve"><value>Alle importierbaren</value></data>
+  <data name="SelectAllReimportableContainers" xml:space="preserve"><value>Alle neu importierbaren</value></data>
   <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Import starten ({0} Releases)</value></data>
   <data name="StartLinkCrypterImportWithOneRelease" xml:space="preserve"><value>Import starten (1 Release)</value></data>
   <data name="StartLinkCrypterImport" xml:space="preserve"><value>Import starten</value></data>
@@ -2064,6 +2065,7 @@
   <data name="LinkCrypterImportState.Importing" xml:space="preserve"><value>Import läuft</value></data>
   <data name="LinkCrypterImportState.Completed" xml:space="preserve"><value>Abgeschlossen</value></data>
   <data name="LinkCrypterImportState.Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="LinkCrypterImportState.Reimporting" xml:space="preserve"><value>Neuimport läuft</value></data>
   <data name="LinkCrypterImportContainerStatus.AlreadyInBearcat" xml:space="preserve"><value>Bereits in Bearcat</value></data>
   <data name="LinkCrypterImportContainerStatus.WaitingForLinks" xml:space="preserve"><value>Wartet auf Links</value></data>
   <data name="LinkCrypterImportContainerStatus.ReadingLinksFailed" xml:space="preserve"><value>Lesen der Links fehlgeschlagen</value></data>
@@ -2095,6 +2097,9 @@
   <data name="ReimportLinkCrypterContainerDescription" xml:space="preserve"><value>Teilt das Release eines früheren Imports in ein Release pro Archiv des Containers auf. Bei Hostern und Linkcryptern wird nichts gelöscht.</value></data>
   <data name="LinkCrypterContainerReimported" xml:space="preserve"><value>Container neu importiert.</value></data>
   <data name="LinkCrypterContainerReimportedWithMovedArchiveParts" xml:space="preserve"><value>Container neu importiert. Die Archivteile von {0} Releases wurden in Unterordner verschoben.</value></data>
+  <data name="ReimportSelectedLinkCrypterContainersWithCount" xml:space="preserve"><value>Ausgewählte neu importieren ({0})</value></data>
+  <data name="ReimportSelectedLinkCrypterContainers" xml:space="preserve"><value>Ausgewählte Container neu importieren</value></data>
+  <data name="ReimportSelectedLinkCrypterContainersConfirmation" xml:space="preserve"><value>{0} ausgewählte Container im Hintergrund neu importieren? Bearcat teilt jedes Release in ein Release pro Archiv des Containers auf. Container, die nicht neu importiert werden können, behalten ihr Release und zeigen den Grund an.</value></data>
   <data name="LinkCrypterImportReimportSummary" xml:space="preserve"><value>Release {0} wird durch diese Releases ersetzt. Seine abgeschlossenen Uploads werden zu ihnen verschoben, seine Posts zur Collection.</value></data>
   <data name="LinkCrypterImportReimportBlockers" xml:space="preserve"><value>Der Container kann nicht neu importiert werden:</value></data>
   <data name="LinkCrypterImportReimportBlockerReason.UploadInProgress" xml:space="preserve"><value>Ein Upload von {0} läuft.</value></data>

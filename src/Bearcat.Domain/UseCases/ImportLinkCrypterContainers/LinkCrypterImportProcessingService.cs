@@ -2,6 +2,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reading;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class LinkCrypterImportProcessingService(
     LinkCrypterImportContainerReadingService containerReadingService,
     LinkCrypterImportPreviewService previewService,
     LinkCrypterImportContainerImportService containerImportService,
+    LinkCrypterImportContainerReimportService containerReimportService,
     INotificationService notificationService,
     TimeProvider timeProvider,
     ILogger<LinkCrypterImportProcessingService> logger
@@ -76,6 +78,12 @@ public class LinkCrypterImportProcessingService(
                     cancellationToken
                 );
                 break;
+            case LinkCrypterImportState.Reimporting:
+                await containerReimportService.ReimportSelectedContainersAsync(
+                    linkCrypterImportId,
+                    cancellationToken
+                );
+                break;
         }
     }
 
@@ -92,7 +100,19 @@ public class LinkCrypterImportProcessingService(
             cancellationToken
         );
 
-        linkCrypterImport.MarkAsFailed([exception.Message], timeProvider.GetLocalNow());
+        if (linkCrypterImport.State is LinkCrypterImportState.Reimporting)
+        {
+            linkCrypterImport.ChangeState(
+                LinkCrypterImportState.Completed,
+                timeProvider.GetLocalNow()
+            );
+
+            linkCrypterImport.ErrorMessages = [exception.Message];
+        }
+        else
+        {
+            linkCrypterImport.MarkAsFailed([exception.Message], timeProvider.GetLocalNow());
+        }
 
         notificationService.Create(
             kind: NotificationKind.LinkCrypterImportFailed,

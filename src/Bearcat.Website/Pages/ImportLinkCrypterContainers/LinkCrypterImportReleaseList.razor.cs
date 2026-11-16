@@ -44,13 +44,15 @@ public partial class LinkCrypterImportReleaseList(
 
     private bool CanChangeReleases => Detail.State is LinkCrypterImportState.ReadyForReview;
 
-    private int ImportableContainerCount => GetImportableContainerCount();
+    private bool CanChangeSelection =>
+        Detail.State is LinkCrypterImportState.ReadyForReview or LinkCrypterImportState.Completed
+        && Detail.SelectableContainerCount > 0;
 
-    private bool AreAllImportableContainersSelected =>
-        Detail.SelectedContainerCount == ImportableContainerCount;
+    private bool AreAllSelectableContainersSelected =>
+        Detail.SelectedContainerCount == Detail.SelectableContainerCount;
 
-    private bool AreSomeImportableContainersSelected =>
-        Detail.SelectedContainerCount > 0 && !AreAllImportableContainersSelected;
+    private bool AreSomeSelectableContainersSelected =>
+        Detail.SelectedContainerCount > 0 && !AreAllSelectableContainersSelected;
 
     private int CurrentPage => pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / PageSize));
@@ -158,13 +160,13 @@ public partial class LinkCrypterImportReleaseList(
         await OnReleasesChanged.InvokeAsync();
     }
 
-    private async Task SetSelectionOfAllImportableContainersAsync(bool isSelected)
+    private async Task SetSelectionOfAllSelectableContainersAsync(bool isSelected)
     {
         try
         {
             await operationRunner.RunAsync(
                 (LinkCrypterImportService service) =>
-                    service.SetSelectionOfAllImportableContainersAsync(Detail.Id, isSelected)
+                    service.SetSelectionOfAllSelectableContainersAsync(Detail.Id, isSelected)
             );
         }
         catch (InvalidLinkCrypterImportException exception)
@@ -178,19 +180,7 @@ public partial class LinkCrypterImportReleaseList(
     private static bool IsReleasePartlySelected(LinkCrypterImportReleaseReadModel release)
     {
         return !release.IsSelected
-            && release.Containers.Any(container =>
-                container.Status is LinkCrypterImportContainerStatus.Importable
-                && container.IsSelected
-            );
-    }
-
-    private int GetImportableContainerCount()
-    {
-        return Detail
-            .ContainerCountsByStatus.Where(count =>
-                count.Status is LinkCrypterImportContainerStatus.Importable
-            )
-            .Sum(count => count.Count);
+            && release.Containers.Any(container => container.IsSelectable && container.IsSelected);
     }
 
     private static IReadOnlyList<LinkCrypterImportMirror> GetMirrorsOfSingleRelease(
