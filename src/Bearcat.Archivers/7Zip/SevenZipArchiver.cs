@@ -169,13 +169,14 @@ public partial class SevenZipArchiver(
         var solidArgument = options.UseSolidArchive ? "-ms=on" : "-ms=off";
         var sourceArchivePath = Path.TrimEndingDirectorySeparator(sourceFolderPath);
 
-        List<string> arguments =
-        [
-            "a",
-            $"-v{targetFileSizeMb}m",
-            compressionArgument,
-            solidArgument,
-        ];
+        var volumeSizeArgument = options.PartSizeUnit switch
+        {
+            ArchivePartSizeUnit.Megabytes => $"-v{targetFileSizeMb * 1_000_000L}b",
+            ArchivePartSizeUnit.Mebibytes => $"-v{targetFileSizeMb}m",
+            _ => throw new ArgumentOutOfRangeException(nameof(options), options.PartSizeUnit, null),
+        };
+
+        List<string> arguments = ["a", volumeSizeArgument, compressionArgument, solidArgument];
 
         if (!string.IsNullOrWhiteSpace(password))
         {

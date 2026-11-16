@@ -105,6 +105,14 @@ Enable **Exclude from auto cleanup** when creating or editing a release to skip 
 [Remote downloads](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) have a separate cleanup option.
 Leave **Keep raw files** enabled in the automation if you want to keep the downloaded release folder.
 
+### Part size unit
+
+The part size of archive configurations is interpreted globally using **Part size unit** under **Configurations**.
+**Megabytes** (default) means 1 MB = `1,000,000` bytes, **Mebibytes** means 1 MB = `1,048,576` bytes.
+This applies to RAR and 7-Zip.
+
+![archive-part-size-unit.png](images/archive-part-size-unit.png)
+
 ### Archive repackaging
 
 Hosters can recognise files by their MD5 hash. Before reuploading to the same hoster type, Bearcat
