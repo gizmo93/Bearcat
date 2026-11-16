@@ -24,6 +24,8 @@ public class Upload
 
     public DateTime? UploadedAt { get; set; }
 
+    public DateTime? PrioritizedAt { get; set; }
+
     public UploadState UploadState { get; set; }
 
     public OnlineState OnlineState { get; set; }
@@ -91,6 +93,11 @@ public class Upload
                 or UploadState.Completed
                 or UploadState.Failed
                 or UploadState.Canceled;
+    }
+
+    public bool CanBePrioritized()
+    {
+        return UploadState is UploadState.Pending or UploadState.Uploading;
     }
 
     public bool CanBeManuallyReuploaded()

@@ -65,6 +65,13 @@
                                 {
                                     <UploadStateBadge State="upload.UploadState" />
                                 }
+                                @if (IsPrioritizationShown(upload))
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">
+                                        <LucideIcon Name="chevrons-up" class="h-3 w-3" />
+                                        @L["Prioritized"]
+                                    </BbBadge>
+                                }
                                 <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
                                 @if (upload.HosterHasUnreadableSecrets)
                                 {
@@ -125,6 +132,10 @@
                                     <BbDropdownMenuItem Disabled="@(!CanCreateManualReupload(upload))"
                                                         OnClick="@(async _ => await CreateManualReuploadAsync(upload))">
                                         @L["CreateManualReupload"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem Disabled="@(!upload.CanBePrioritized)"
+                                                        OnClick="@(async _ => await ToggleUploadPrioritizationAsync(upload))">
+                                        @(IsPrioritizationShown(upload) ? L["RemoveUploadPrioritization"] : L["PrioritizeUpload"])
                                     </BbDropdownMenuItem>
                                     <BbDropdownMenuItem Disabled="@(!CanCancelUpload(upload))"
                                                         OnClick="@(async _ => await CancelUploadAsync(upload))">

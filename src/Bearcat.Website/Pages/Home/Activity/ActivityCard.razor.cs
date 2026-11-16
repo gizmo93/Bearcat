@@ -42,6 +42,9 @@ public partial class ActivityCard : ComponentBase
     public RenderFragment? Files { get; set; }
 
     [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter]
     public string? CancelLabel { get; set; }
 
     [Parameter]

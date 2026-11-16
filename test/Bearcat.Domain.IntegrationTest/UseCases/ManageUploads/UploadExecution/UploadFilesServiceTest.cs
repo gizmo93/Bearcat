@@ -1329,6 +1329,74 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task ProcessAsync_UploadPrioritizedWhileOtherUploadIsRunning_StartsPrioritizedUploadBeforeRemainingFilesOfOtherUpload()
+    {
+        // Arrange
+        var firstArchiveFilePath = CreateArchiveFile("first.part1.rar");
+        var secondArchiveFilePath = CreateArchiveFile("first.part2.rar");
+        var prioritizedArchiveFilePath = CreateArchiveFile("prioritized.part1.rar");
+        await AddUploadAsync(UploadState.Pending, [firstArchiveFilePath, secondArchiveFilePath]);
+        var uploadToPrioritize = await AddUploadAsync(
+            UploadState.Pending,
+            [prioritizedArchiveFilePath]
+        );
+        var startedFilePaths = new List<string>();
+
+        service.UploadQueuePollDelay = TimeSpan.FromMilliseconds(1);
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.IsAny<FileDto>(),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    FileDto fileDto,
+                    IHosterConfig _,
+                    ITransferProgress _,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    startedFilePaths.Add(fileDto.FullFileName);
+
+                    if (startedFilePaths.Count == 1)
+                    {
+                        await using var updateDbContext = CreateDbContext();
+                        await updateDbContext
+                            .Uploads.Where(u => u.Id == uploadToPrioritize.Id)
+                            .ExecuteUpdateAsync(
+                                setters =>
+                                    setters.SetProperty(u => u.PrioritizedAt, DateTime.UtcNow),
+                                cancellationToken
+                            );
+
+                        await Task.Delay(50, cancellationToken);
+                    }
+
+                    return new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        $"https://hoster.test/{Path.GetFileName(fileDto.FullFileName)}"
+                    );
+                }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        startedFilePaths.ShouldBe([
+            firstArchiveFilePath,
+            prioritizedArchiveFilePath,
+            secondArchiveFilePath,
+        ]);
+    }
+
+    [Test]
     public async Task ProcessAsync_PendingUploadAlreadyHasAllFilesUploaded_CompletesWithoutUploading()
     {
         // Arrange
@@ -1984,7 +2052,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             fileUploadExecutionService,
             concurrencyService,
             uploadPreparationService,
-            progressTracker
+            progressTracker,
+            new DefaultConfigurationProvider()
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,
@@ -2036,6 +2105,24 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         )
         {
             return Task.FromResult<IReadOnlyList<Upload>>([]);
+        }
+
+        public Task<IReadOnlySet<int>> GetReuploadIdsAsync(
+            IReadOnlyList<int> uploadIds,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult<IReadOnlySet<int>>(new HashSet<int>());
+        }
+
+        public Task<IReadOnlyDictionary<int, DateTime?>> GetPrioritizedAtByUploadIdAsync(
+            IReadOnlyList<int> uploadIds,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult<IReadOnlyDictionary<int, DateTime?>>(
+                new Dictionary<int, DateTime?>()
+            );
         }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken)

@@ -15,6 +15,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         builder.Property(u => u.HosterFolderId).IsRequired(false);
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(u => u.UploadedAt).IsRequired(false).HasPrecision(4);
+        builder.Property(u => u.PrioritizedAt).IsRequired(false).HasPrecision(4);
         builder.Property(u => u.UploadState).IsRequired();
         builder.Property(u => u.OnlineState).IsRequired();
         builder.Property(u => u.NotFullyOnlineSince).IsRequired(false).HasPrecision(4);

@@ -115,6 +115,27 @@ The **Archive upload** background task starts `Pending` uploads and changes thei
 Bearcat records a timestamp for successful uploads. Follow progress on the release detail page
 under **Uploads** > **History**. **Overview** shows the latest upload for each upload configuration.
 
+### Start order
+
+When an upload slot becomes free, Bearcat uploads the next file in this order:
+
+1. Manually prioritized uploads, the most recently prioritized first.
+2. Uploads already transferring files.
+3. The remaining uploads, based on **Configurations > Upload start order**:
+   - **Oldest first** (default): uploads start in the order they were created.
+   - **Initial uploads before reuploads**: initial uploads start first, then reuploads. Within each group, the oldest uploads start first.
+
+An upload counts as a reupload if another upload of the same release had already finished when it was created.
+
+![Upload start order setting under Configurations > Upload concurrency](images/upload-start-order-setting.png)
+
+Click **Prioritize upload** next to an upload under **Activity > Uploads** to give it priority.
+On the release detail page, the same action is in the `...` menu under **Uploads > History**.
+You can prioritize uploads in the `Pending` or `Uploading` state. The change takes effect within seconds.
+Running file uploads are not interrupted. **Remove prioritization** returns the upload to the normal order.
+
+![Prioritized upload and the prioritize button on the activity page](images/activity-upload-prioritization.png)
+
 ## 5. Link crypter containers
 
 After a successful upload, Bearcat creates a container with the download links for each active link

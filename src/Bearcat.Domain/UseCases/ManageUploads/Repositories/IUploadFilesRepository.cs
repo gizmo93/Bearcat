@@ -10,6 +10,16 @@ public interface IUploadFilesRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlySet<int>> GetReuploadIdsAsync(
+        IReadOnlyList<int> uploadIds,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<int, DateTime?>> GetPrioritizedAtByUploadIdAsync(
+        IReadOnlyList<int> uploadIds,
+        CancellationToken cancellationToken
+    );
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<int>> GetCancellationRequestedUploadIdsAsync(

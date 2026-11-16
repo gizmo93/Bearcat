@@ -2493,6 +2493,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("PremiumOnlyDownload")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("PrioritizedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("UploadConfigId")
                         .HasColumnType("INTEGER");
 

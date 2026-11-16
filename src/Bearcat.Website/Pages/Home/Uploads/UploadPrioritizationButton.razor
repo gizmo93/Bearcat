@@ -1,0 +1,7 @@
+<BbButton Variant="ButtonVariant.Ghost"
+          Size="ButtonSize.IconSmall"
+          AriaLabel="@Label"
+          title="@Label"
+          OnClick="@(() => OnClick.InvokeAsync())">
+    <LucideIcon Name="@(IsPrioritized ? "arrow-down-from-line" : "arrow-up-to-line")" class="h-4 w-4" />
+</BbButton>

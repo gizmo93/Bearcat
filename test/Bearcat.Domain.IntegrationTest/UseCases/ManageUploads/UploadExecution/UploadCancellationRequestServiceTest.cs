@@ -54,7 +54,10 @@ public class UploadCancellationRequestServiceTest(DatabaseProvider databaseProvi
             successfulFileCount: 0,
             failedFileCount: 0,
             plannedFiles: [],
-            CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None)
+            isReupload: false,
+            cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
+                CancellationToken.None
+            )
         );
         var uploadsInProgress = new UploadsInProgress(
             Mock.Of<ITransferProgressTracker>(),

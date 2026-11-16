@@ -290,6 +290,79 @@ public class UploadFilesRepositoryTest(DatabaseProvider databaseProvider)
         resultForUnresolvedNotification.ShouldBeTrue();
     }
 
+    [Test]
+    public async Task GetReuploadIdsAsync_UploadsOfSeveralReleases_ReturnsOnlyUploadsCreatedAfterAnotherUploadOfTheSameReleaseWasFinished()
+    {
+        // Arrange
+        var testData = new MaterializedValuesTestData(DbContext);
+        var initialBatchCreatedAt = MaterializedValuesTestData.LocalNow;
+        var releaseWithFinishedUpload = testData.AddRelease("Release with finished upload");
+        var firstUploadConfig = testData.AddUploadConfig(
+            releaseWithFinishedUpload,
+            testData.AddHosterRegistration("First")
+        );
+        var secondUploadConfig = testData.AddUploadConfig(
+            releaseWithFinishedUpload,
+            testData.AddHosterRegistration("Second")
+        );
+        var finishedInitialUpload = testData.AddUnassignedUpload(
+            firstUploadConfig,
+            UploadState.Completed
+        );
+        finishedInitialUpload.UploadedAt = initialBatchCreatedAt.AddHours(2);
+        var pendingInitialUpload = testData.AddUnassignedUpload(
+            secondUploadConfig,
+            UploadState.Pending
+        );
+        var reupload = testData.AddUnassignedUpload(firstUploadConfig, UploadState.Pending);
+        reupload.CreatedAt = initialBatchCreatedAt.AddHours(3);
+        var uploadOfOtherRelease = testData.AddUnassignedUpload(
+            testData.AddUploadConfig(
+                testData.AddRelease("Other release"),
+                testData.AddHosterRegistration("Third")
+            ),
+            UploadState.Pending
+        );
+        uploadOfOtherRelease.CreatedAt = initialBatchCreatedAt.AddHours(3);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetReuploadIdsAsync(
+            [pendingInitialUpload.Id, reupload.Id, uploadOfOtherRelease.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([reupload.Id]);
+    }
+
+    [Test]
+    public async Task GetPrioritizedAtByUploadIdAsync_PrioritizedAndUnprioritizedUploads_ReturnsPrioritizedAtOfRequestedUploads()
+    {
+        // Arrange
+        var prioritizedAt = new DateTime(2026, 11, 16, 10, 30, 0);
+        var prioritizedUpload = await AddUploadAsync(UploadState.Uploading);
+        var unprioritizedUpload = await AddUploadAsync(UploadState.Pending);
+        var notRequestedUpload = await AddUploadAsync(UploadState.Pending);
+        await DbContext
+            .Uploads.Where(u => u.Id == prioritizedUpload.Id || u.Id == notRequestedUpload.Id)
+            .ExecuteUpdateAsync(setters =>
+                setters.SetProperty(u => u.PrioritizedAt, prioritizedAt)
+            );
+
+        // Act
+        var result = await repository.GetPrioritizedAtByUploadIdAsync(
+            [prioritizedUpload.Id, unprioritizedUpload.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result[prioritizedUpload.Id].ShouldBe(prioritizedAt);
+        result[unprioritizedUpload.Id].ShouldBeNull();
+    }
+
     private static Notification CreateNotification(
         int uploadId,
         NotificationKind kind,

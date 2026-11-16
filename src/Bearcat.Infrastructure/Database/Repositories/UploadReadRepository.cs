@@ -96,6 +96,8 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
         CancellationToken cancellationToken = default
     )
     {
+        var uploadIsReupload = UploadExpressions.UploadIsReupload(dbRead);
+
         var uploads = await dbRead
             .Uploads.Where(u =>
                 u.UploadState == UploadState.Pending
@@ -115,6 +117,10 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                     ? u.UploadConfig.HosterAccountPool!.Name
                     : null,
                 u.UploadState,
+                u.PrioritizedAt,
+                IsReupload = dbRead
+                    .Uploads.Where(otherUpload => otherUpload.Id == u.Id)
+                    .Any(uploadIsReupload),
                 ArchiveFiles = dbRead
                     .ArchiveFiles.Where(af => af.ArchiveId == u.ArchiveId)
                     .Select(af => new { af.Id, af.FullFileName })
@@ -168,6 +174,8 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
                     HosterRegistrationName: upload.HosterRegistrationName,
                     HosterAccountPoolName: upload.HosterAccountPoolName,
                     UploadState: upload.UploadState,
+                    PrioritizedAt: upload.PrioritizedAt,
+                    IsReupload: upload.IsReupload,
                     Files: [.. archiveFiles, .. videoFiles]
                 );
             })

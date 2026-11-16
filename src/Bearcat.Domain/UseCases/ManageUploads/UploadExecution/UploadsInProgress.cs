@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -71,6 +72,25 @@ public sealed class UploadsInProgress(ITransferProgressTracker progressTracker, 
                 logger.LogError(ex, "Unexpected error in file upload worker");
             }
         }
+    }
+
+    public List<UploadExecutionContext> GetUploadsWithPendingFilesInStartOrder(
+        UploadStartOrder uploadStartOrder
+    )
+    {
+        var uploadsWithPendingFiles = contextsByUploadId
+            .Values.Where(context =>
+                !context.CancellationRequested && context.PendingFiles.Count > 0
+            )
+            .OrderByDescending(context => context.PrioritizedAt)
+            .ThenByDescending(context => context.RunningFileCount > 0);
+
+        if (uploadStartOrder == UploadStartOrder.InitialUploadsBeforeReuploads)
+        {
+            uploadsWithPendingFiles = uploadsWithPendingFiles.ThenBy(context => context.IsReupload);
+        }
+
+        return uploadsWithPendingFiles.ThenBy(context => context.UploadId).ToList();
     }
 
     public Dictionary<int, long> GetRemainingBytesOfRunningUploadsByHosterRegistrationId()

@@ -615,6 +615,12 @@
   <data name="DownloadCancellationRequested" xml:space="preserve"><value>Abbruch für den Mirrordownload von Archiv #{0} angefragt.</value></data>
   <data name="DownloadAlreadyFinished" xml:space="preserve"><value>Der Mirrordownload von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} wiederaufgenommen.</value></data>
+  <data name="PrioritizeUpload" xml:space="preserve"><value>Upload priorisieren</value></data>
+  <data name="RemoveUploadPrioritization" xml:space="preserve"><value>Priorisierung entfernen</value></data>
+  <data name="Prioritized" xml:space="preserve"><value>Priorisiert</value></data>
+  <data name="UploadPrioritized" xml:space="preserve"><value>Upload #{0} priorisiert.</value></data>
+  <data name="UploadPrioritizationRemoved" xml:space="preserve"><value>Priorisierung von Upload #{0} entfernt.</value></data>
+  <data name="UploadPrioritizationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr priorisiert werden.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht wiederaufgenommen werden.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Onlinestatus für Upload #{0} geprüft.</value></data>
   <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Für Upload #{0} gibt es keine Links zum Prüfen.</value></data>
@@ -687,6 +693,10 @@
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>Das globale Limit gleichzeitig laufender Dateiuploads über alle Hoster hinweg.</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Uploadgeschwindigkeit</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>Die globale Obergrenze der Uploadgeschwindigkeit in MB/s, geteilt von allen laufenden Uploads über alle Hoster hinweg. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für unbegrenzt. Sehr niedrige Limits können Uploads zu Hostern mit Zeitlimits pro Anfrage scheitern lassen, zum Beispiel brechen Hoster hinter Cloudflare Anfragen nach etwa 100 Sekunden ab.</value></data>
+  <data name="UploadStartOrder" xml:space="preserve"><value>Startreihenfolge der Uploads</value></data>
+  <data name="UploadStartOrderDescription" xml:space="preserve"><value>Sortiert wartende Uploads nach Erstellungszeit oder stellt Reuploads hinten an. Ein Upload gilt als Reupload, wenn beim Erstellen bereits ein anderer Upload desselben Releases abgeschlossen war. Vorrang haben manuell priorisierte Uploads, danach solche, die bereits Dateien hochladen. Laufende Dateiuploads werden nicht unterbrochen.</value></data>
+  <data name="UploadStartOrder.OldestFirst" xml:space="preserve"><value>Älteste zuerst</value></data>
+  <data name="UploadStartOrder.InitialUploadsBeforeReuploads" xml:space="preserve"><value>Initiale Uploads vor Reuploads</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hosterstandard</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hosterstandard ({0}) zu verwenden.</value></data>

@@ -615,6 +615,12 @@
   <data name="DownloadCancellationRequested" xml:space="preserve"><value>Cancellation requested for the mirror download of archive #{0}.</value></data>
   <data name="DownloadAlreadyFinished" xml:space="preserve"><value>The mirror download of archive #{0} already finished.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} resumed.</value></data>
+  <data name="PrioritizeUpload" xml:space="preserve"><value>Prioritize upload</value></data>
+  <data name="RemoveUploadPrioritization" xml:space="preserve"><value>Remove prioritization</value></data>
+  <data name="Prioritized" xml:space="preserve"><value>Prioritized</value></data>
+  <data name="UploadPrioritized" xml:space="preserve"><value>Upload #{0} prioritized.</value></data>
+  <data name="UploadPrioritizationRemoved" xml:space="preserve"><value>Prioritization removed for upload #{0}.</value></data>
+  <data name="UploadPrioritizationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be prioritized.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} can not be resumed in its current state.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Online state checked for upload #{0}.</value></data>
   <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Upload #{0} has no links to check.</value></data>
@@ -687,6 +693,10 @@
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>The global upper limit of file uploads running at the same time across all hosters.</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum upload speed</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>The global upper limit of the upload speed in MB/s, shared by all running uploads across all hosters. Decimal values are allowed, for example 0.5. Leave empty for unlimited. Very low limits can make uploads to hosters with request time limits fail, for example hosters behind Cloudflare abort requests after about 100 seconds.</value></data>
+  <data name="UploadStartOrder" xml:space="preserve"><value>Upload start order</value></data>
+  <data name="UploadStartOrderDescription" xml:space="preserve"><value>Orders waiting uploads by creation time, or puts reuploads last. An upload counts as a reupload if another upload of the same release had already finished when it was created. Manually prioritized uploads come first, followed by uploads already transferring files. Running file uploads are not interrupted.</value></data>
+  <data name="UploadStartOrder.OldestFirst" xml:space="preserve"><value>Oldest first</value></data>
+  <data name="UploadStartOrder.InitialUploadsBeforeReuploads" xml:space="preserve"><value>Initial uploads before reuploads</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximum parallel uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster default</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Overrides the assumed parallel upload limit for this hoster. Leave empty to use the hoster default ({0}).</value></data>

@@ -2611,6 +2611,10 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<bool>("PremiumOnlyDownload")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("PrioritizedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
                     b.Property<int>("UploadConfigId")
                         .HasColumnType("integer");
 

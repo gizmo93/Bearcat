@@ -11,10 +11,12 @@ public record ReleaseUploadReadModel(
     DateTime? UploadedAt,
     UploadState UploadState,
     OnlineState OnlineState,
+    DateTime? PrioritizedAt,
     DateTime? NotFullyOnlineSince,
     int LinkCount,
     int ContainerCount,
     bool CanCreateReupload,
+    bool CanBePrioritized,
     bool HosterHasUnreadableSecrets,
     IReadOnlyList<string> ErrorMessages
 );

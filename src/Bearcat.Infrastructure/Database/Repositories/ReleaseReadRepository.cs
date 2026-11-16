@@ -1674,6 +1674,7 @@ public class ReleaseReadRepository(
                 u.UploadedAt,
                 u.UploadState,
                 u.OnlineState,
+                u.PrioritizedAt,
                 u.NotFullyOnlineSince,
                 u.UploadedFiles.Count,
                 u.LinkCrypterContainers.Count
@@ -1700,6 +1701,7 @@ public class ReleaseReadRepository(
                             || (ru.Id > u.Id && ru.UploadState == UploadState.Failed)
                         )
                     ),
+                u.UploadState == UploadState.Pending || u.UploadState == UploadState.Uploading,
                 u.HosterRegistrationId != null && u.HosterRegistration!.HasUnreadableSecrets,
                 u.ErrorMessages
             ))
