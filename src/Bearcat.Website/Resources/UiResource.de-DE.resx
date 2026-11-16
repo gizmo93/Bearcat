@@ -2169,4 +2169,26 @@
   <data name="ReleaseCollectionSearchSortOrder.NameDescending" xml:space="preserve"><value>Name Z bis A</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtDescending" xml:space="preserve"><value>Zuletzt hinzugefügt</value></data>
   <data name="ReleaseCollectionSearchSortOrder.CreatedAtAscending" xml:space="preserve"><value>Älteste zuerst</value></data>
+  <data name="ChangeArchiveFolders" xml:space="preserve"><value>Archivordner ändern</value></data>
+  <data name="ChangeArchiveFoldersDescription" xml:space="preserve"><value>Durchsucht einen Basispfad nach den Ordnern der ausgewählten Archive und setzt sie wieder auf Erstellt.</value></data>
+  <data name="SelectArchive" xml:space="preserve"><value>Archiv {0} auswählen</value></data>
+  <data name="ArchiveFolderSearchBasePath" xml:space="preserve"><value>Basispfad</value></data>
+  <data name="ArchiveFolderSearchBasePathHelp" xml:space="preserve"><value>Bearcat durchsucht diesen Ordner und alle Unterordner. Für jedes Archiv braucht es genau einen Ordner, der genau seine Archivteile enthält.</value></data>
+  <data name="NoArchiveFolderSearchBasePathSelected" xml:space="preserve"><value>Kein Basispfad ausgewählt</value></data>
+  <data name="SelectArchiveFolderSearchBasePath" xml:space="preserve"><value>Basispfad auswählen</value></data>
+  <data name="SelectArchiveFolderSearchBasePathDescription" xml:space="preserve"><value>Wähle den Ordner, unterhalb dessen die Archivordner gesucht werden.</value></data>
+  <data name="SearchingArchiveFolders" xml:space="preserve"><value>Archivordner werden gesucht</value></data>
+  <data name="ArchiveFolderRelocationSummary" xml:space="preserve"><value>{0} von {1} Archiven können geändert werden.</value></data>
+  <data name="FoundArchiveFolder" xml:space="preserve"><value>Gefundener Ordner</value></data>
+  <data name="ChangingArchiveFolders" xml:space="preserve"><value>Archivordner werden geändert</value></data>
+  <data name="ArchiveFoldersChanged" xml:space="preserve"><value>Archivordner von {0} Archiven geändert.</value></data>
+  <data name="ArchiveFoldersChangedWithNotChangedArchives" xml:space="preserve"><value>Archivordner von {0} Archiven geändert, {1} Archive wurden nicht geändert.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.ArchiveIsNotDeletedOrMissingFiles" xml:space="preserve"><value>Nur Archive im Status Gelöscht oder Dateien fehlen können geändert werden.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.NewerArchiveExistsInArchiveConfig" xml:space="preserve"><value>Die Archivkonfiguration hat ein neueres Archiv.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.NoMatchingFolderFound" xml:space="preserve"><value>Kein Ordner enthält genau die Archivteile des Archivs.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.SeveralMatchingFoldersFound" xml:space="preserve"><value>Mehrere Ordner enthalten die Archivteile des Archivs.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderContainsOtherArchive" xml:space="preserve"><value>Der gefundene Ordner enthält auch ein anderes Archiv.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderUsedByCreatedArchive" xml:space="preserve"><value>Der gefundene Ordner wird bereits von einem anderen Archiv verwendet.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderFoundForSeveralSelectedArchives" xml:space="preserve"><value>Derselbe Ordner wurde für mehrere ausgewählte Archive gefunden.</value></data>
+  <data name="ArchiveFolderNotRelocatableReason.MatchingFolderInsideReleaseFolderOfManagedRelease" xml:space="preserve"><value>Der gefundene Ordner liegt im Releaseordner dieses Releases.</value></data>
 </root>

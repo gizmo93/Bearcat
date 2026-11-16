@@ -112,6 +112,28 @@ See [Link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 - Bearcat fetches release information (xrel, PreDB, NFO) after the import through the release information background task.
 - Imported releases count as posted and do not appear in the [post queue](/Bearcat/post-queue/). This also applies to collections created from a season folder.
 
+## Archives not found during the import
+
+If Bearcat cannot find the local archives during import, it marks them as **Deleted**.
+Bearcat restores them from the mirrors when needed. If the archive files are already on disk,
+you can assign their folders afterwards:
+
+1. Open **Uploads and archives** > **Archives** and select the archives.
+2. Click **Change archive folders** and select a base path.
+3. Bearcat searches the base path and all subfolders. Review the archive folders it found, then click **Change archive folders** to confirm.
+
+Bearcat must find a single matching folder for each archive, containing exactly that archive's parts.
+It then sets the status to **Created** and uses the folder unchanged.
+Bearcat skips the archive in these cases:
+
+- The archive is neither **Deleted** nor **Missing files**.
+- A newer archive already exists for the archive configuration.
+- No matching folder was found, or more than one folder matches.
+- The folder also contains another archive.
+- The folder is already used by another archive.
+- The same folder was found for several selected archives.
+- The release is managed and the archive folder is inside its release folder.
+
 ## Re-import a season folder
 
 Before Bearcat could detect season folders, it created one release for the whole season.

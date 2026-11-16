@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
+using Bearcat.Domain.UseCases.ManageArchives.ArchiveFolderRelocations;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
@@ -132,6 +133,11 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         LinkCrypterContainerState state
     ) => localizer[$"LinkCrypterContainerState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ArchiveFolderNotRelocatableReason reason
+    ) => localizer[$"ArchiveFolderNotRelocatableReason.{reason}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
