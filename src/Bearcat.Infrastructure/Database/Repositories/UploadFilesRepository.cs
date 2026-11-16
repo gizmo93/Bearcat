@@ -47,14 +47,8 @@ public class UploadFilesRepository(
     )
     {
         var reuploadIds = await dbRead
-            .Uploads.Where(upload =>
-                uploadIds.Contains(upload.Id)
-                && dbRead.Uploads.Any(otherUpload =>
-                    otherUpload.UploadConfig.ReleaseId == upload.UploadConfig.ReleaseId
-                    && otherUpload.UploadedAt != null
-                    && otherUpload.UploadedAt < upload.CreatedAt
-                )
-            )
+            .Uploads.Where(upload => uploadIds.Contains(upload.Id))
+            .Where(UploadExpressions.UploadIsReupload(dbRead))
             .Select(upload => upload.Id)
             .ToListAsync(cancellationToken);
 

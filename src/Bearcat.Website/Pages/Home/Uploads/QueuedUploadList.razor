@@ -15,13 +15,24 @@
                 <span class="bearcat-activity-queue-target" title="@($"{L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName)} · {upload.UploadConfigName}")">
                     @L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName) · @upload.UploadConfigName
                 </span>
-                <BbButton Variant="ButtonVariant.Ghost"
-                          Size="ButtonSize.IconSmall"
-                          AriaLabel="@L["CancelUpload"]"
-                          title="@L["CancelUpload"]"
-                          OnClick="@(() => OnCancel.InvokeAsync(upload))">
-                    <LucideIcon Name="ban" class="h-4 w-4" />
-                </BbButton>
+                <div class="bearcat-activity-queue-actions">
+                    @if (upload.PrioritizedAt is not null)
+                    {
+                        <span class="bearcat-overview-count-pill" title="@L["Prioritized"]">
+                            <LucideIcon Name="chevrons-up" class="h-3 w-3" />
+                            <span class="sr-only">@L["Prioritized"]</span>
+                        </span>
+                    }
+                    <UploadPrioritizationButton IsPrioritized="@(upload.PrioritizedAt is not null)"
+                                                OnClick="@(() => OnToggleUploadPrioritization.InvokeAsync(upload))" />
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              AriaLabel="@L["CancelUpload"]"
+                              title="@L["CancelUpload"]"
+                              OnClick="@(() => OnCancel.InvokeAsync(upload))">
+                        <LucideIcon Name="ban" class="h-4 w-4" />
+                    </BbButton>
+                </div>
             </li>
         }
     </ul>

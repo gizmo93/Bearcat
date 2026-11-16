@@ -20,11 +20,22 @@
                 <ActivityChip IconName="server" Text="@L.FormatUploadHosterAccount(upload.HosterRegistrationName, upload.HosterAccountPoolName)" />
                 <ActivityChip IconName="sliders-horizontal" Text="@upload.UploadConfigName" />
                 <ProxyServerChip ProxyServerNames="@(snapshot?.ProxyServerNames ?? [])" />
+                @if (IsPrioritizationShown(upload))
+                {
+                    <ActivityChip IconName="chevrons-up" Text="@L["Prioritized"]" />
+                }
                 @if (snapshot is not null && upload.UploadState is not UploadState.Uploading)
                 {
                     <UploadStateBadge State="upload.UploadState" />
                 }
             </Chips>
+            <Actions>
+                @if (CanBePrioritized(upload))
+                {
+                    <UploadPrioritizationButton IsPrioritized="@(upload.PrioritizedAt is not null)"
+                                                OnClick="@(() => ToggleUploadPrioritizationAsync(upload))" />
+                }
+            </Actions>
             <StateBadge>
                 <UploadStateBadge State="upload.UploadState" />
             </StateBadge>
@@ -39,6 +50,8 @@
 
     @if (QueuedUploads.Count > 0)
     {
-        <QueuedUploadList Uploads="QueuedUploads" OnCancel="CancelUploadAsync" />
+        <QueuedUploadList Uploads="QueuedUploads"
+                          OnCancel="CancelUploadAsync"
+                          OnToggleUploadPrioritization="ToggleUploadPrioritizationAsync" />
     }
 </section>

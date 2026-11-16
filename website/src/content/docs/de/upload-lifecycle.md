@@ -116,6 +116,27 @@ Die Hintergrundaufgabe **Archive upload** startet Uploads im Status `Pending` un
 Bearcat speichert für erfolgreiche Uploads einen Zeitstempel. Den Fortschritt verfolgst du auf der Releasedetailseite
 unter **Uploads** > **Verlauf**. **Übersicht** zeigt den neuesten Upload jeder Uploadkonfiguration.
 
+### Startreihenfolge
+
+Wird ein Platz für Dateiuploads frei, wählt Bearcat die nächste Datei in dieser Reihenfolge:
+
+1. Manuell priorisierte Uploads, der zuletzt priorisierte zuerst.
+2. Uploads, die bereits laufende Dateien haben.
+3. Abhängig von **Startreihenfolge der Uploads** unter **Konfigurationen**:
+   - **Älteste zuerst** (Standard): die Reihenfolge, in der die Uploads erstellt wurden.
+   - **Initiale Uploads vor Reuploads**: alle anderen Uploads vor Reuploads, jede Gruppe älteste zuerst.
+
+Ein Reupload ist ein Upload, der erstellt wurde, nachdem ein anderer Upload desselben Releases abgeschlossen war.
+
+![Einstellung Startreihenfolge der Uploads unter Konfigurationen > Uploadparallelität](../images/upload-start-order-setting.png)
+
+Um einen Upload nach vorne zu holen, klicke unter **Aktivität > Uploads** daneben auf **Upload priorisieren**
+oder wähle den Eintrag im Menü `...` unter **Uploads > Verlauf**. Das funktioniert für Uploads im Status `Pending`
+und `Uploading`. Die Änderung greift innerhalb weniger Sekunden. Laufende Dateiuploads werden nie unterbrochen.
+**Priorisierung entfernen** setzt den Upload zurück an seine normale Position.
+
+![Priorisierter Upload und Button zum Priorisieren auf der Aktivitätsseite](../images/activity-upload-prioritization.png)
+
 ## 5. Linkcryptercontainer
 
 Nach einem erfolgreichen Upload erstellt Bearcat für jede aktive Linkcrypterkonfiguration einen

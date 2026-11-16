@@ -57,7 +57,7 @@
         {
             <UploadLane Uploads="runningUploads"
                         UploadProgress="uploadProgress"
-                        OnUploadCanceled="LoadDataAsync" />
+                        OnUploadChanged="LoadDataAsync" />
         }
 
         @if (restoringArchives.Count > 0 || remoteDownloads.Count > 0)

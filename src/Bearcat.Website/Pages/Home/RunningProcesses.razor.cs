@@ -3,8 +3,8 @@ using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
-using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.Home.Summary;
 using Bearcat.Website.ScopedOperations;
@@ -142,9 +142,9 @@ public sealed partial class RunningProcesses(
     private async Task LoadRunningUploadsAsync(CancellationToken cancellationToken)
     {
         runningUploads = await operationRunner.RunAsync<
-            IUploadReadRepository,
+            RunningUploadReadService,
             IReadOnlyList<RunningUploadReadModel>
-        >((repository, token) => repository.GetRunningUploadsAsync(token), cancellationToken);
+        >((service, token) => service.GetRunningUploadsInStartOrderAsync(token), cancellationToken);
 
         uploadProgress = GetProgressSnapshots(
             TransferType.Upload,

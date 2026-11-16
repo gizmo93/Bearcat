@@ -12,4 +12,8 @@ public partial class QueuedUploadList : ComponentBase
     [Parameter]
     [EditorRequired]
     public EventCallback<RunningUploadReadModel> OnCancel { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback<RunningUploadReadModel> OnToggleUploadPrioritization { get; set; }
 }

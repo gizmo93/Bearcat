@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
 using Bearcat.Domain.ValueObjects;
@@ -238,6 +239,45 @@ public partial class ReleaseUploads(
         await RefreshUploadsAsync();
     }
 
+    private async Task ToggleUploadPrioritizationAsync(ReleaseUploadReadModel upload)
+    {
+        if (IsPrioritizationShown(upload))
+        {
+            await RemoveUploadPrioritizationAsync(upload);
+        }
+        else
+        {
+            await PrioritizeUploadAsync(upload);
+        }
+
+        await RefreshUploadsAsync();
+    }
+
+    private async Task PrioritizeUploadAsync(ReleaseUploadReadModel upload)
+    {
+        try
+        {
+            await operationRunner.RunAsync(
+                (UploadStateService service) => service.PrioritizeUploadAsync(upload.UploadId)
+            );
+
+            toastService.Success(L["UploadPrioritized", upload.UploadId]);
+        }
+        catch (InvalidUploadStateException)
+        {
+            toastService.Error(L["UploadPrioritizationNotAvailable", upload.UploadId]);
+        }
+    }
+
+    private async Task RemoveUploadPrioritizationAsync(ReleaseUploadReadModel upload)
+    {
+        await operationRunner.RunAsync(
+            (UploadStateService service) => service.RemoveUploadPrioritizationAsync(upload.UploadId)
+        );
+
+        toastService.Success(L["UploadPrioritizationRemoved", upload.UploadId]);
+    }
+
     private async Task CancelUploadAsync(ReleaseUploadReadModel upload)
     {
         var result = await dialogService.ConfirmAsync(
@@ -412,6 +452,9 @@ public partial class ReleaseUploads(
 
     private static bool CanCreateManualReupload(ReleaseUploadReadModel upload) =>
         upload.CanCreateReupload;
+
+    private static bool IsPrioritizationShown(ReleaseUploadReadModel upload) =>
+        upload.PrioritizedAt is not null && upload.CanBePrioritized;
 
     private static bool CanCancelUpload(ReleaseUploadReadModel upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;

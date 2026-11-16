@@ -1,5 +1,6 @@
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
@@ -23,7 +24,7 @@ public partial class UploadLane(
     public IReadOnlyDictionary<int, TransferProgressSnapshot> UploadProgress { get; set; } = null!;
 
     [Parameter]
-    public EventCallback OnUploadCanceled { get; set; }
+    public EventCallback OnUploadChanged { get; set; }
 
     private IReadOnlyList<RunningUploadReadModel> ActiveUploads =>
         Uploads.Where(upload => upload.UploadState is not UploadState.Pending).ToList();
@@ -33,6 +34,51 @@ public partial class UploadLane(
 
     private static bool CanCancelUpload(RunningUploadReadModel upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;
+
+    private static bool CanBePrioritized(RunningUploadReadModel upload) =>
+        upload.UploadState is UploadState.Pending or UploadState.Uploading;
+
+    private static bool IsPrioritizationShown(RunningUploadReadModel upload) =>
+        upload.PrioritizedAt is not null && CanBePrioritized(upload);
+
+    private async Task ToggleUploadPrioritizationAsync(RunningUploadReadModel upload)
+    {
+        if (upload.PrioritizedAt is null)
+        {
+            await PrioritizeUploadAsync(upload);
+        }
+        else
+        {
+            await RemoveUploadPrioritizationAsync(upload);
+        }
+
+        await OnUploadChanged.InvokeAsync();
+    }
+
+    private async Task PrioritizeUploadAsync(RunningUploadReadModel upload)
+    {
+        try
+        {
+            await operationRunner.RunAsync(
+                (UploadStateService service) => service.PrioritizeUploadAsync(upload.UploadId)
+            );
+
+            toastService.Success(L["UploadPrioritized", upload.UploadId]);
+        }
+        catch (InvalidUploadStateException)
+        {
+            toastService.Error(L["UploadPrioritizationNotAvailable", upload.UploadId]);
+        }
+    }
+
+    private async Task RemoveUploadPrioritizationAsync(RunningUploadReadModel upload)
+    {
+        await operationRunner.RunAsync(
+            (UploadStateService service) => service.RemoveUploadPrioritizationAsync(upload.UploadId)
+        );
+
+        toastService.Success(L["UploadPrioritizationRemoved", upload.UploadId]);
+    }
 
     private async Task CancelUploadAsync(RunningUploadReadModel upload)
     {
@@ -59,7 +105,7 @@ public partial class UploadLane(
         if (cancellationRequested)
         {
             toastService.Success(L["UploadCancellationRequested", upload.UploadId]);
-            await OnUploadCanceled.InvokeAsync();
+            await OnUploadChanged.InvokeAsync();
         }
         else
         {

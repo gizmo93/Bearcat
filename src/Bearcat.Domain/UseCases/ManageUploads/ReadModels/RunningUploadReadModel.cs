@@ -10,6 +10,8 @@ public record RunningUploadReadModel(
     string? HosterRegistrationName,
     string? HosterAccountPoolName,
     UploadState UploadState,
+    DateTime? PrioritizedAt,
+    bool IsReupload,
     IReadOnlyList<RunningUploadReadModel.FileReadModel> Files
 )
 {

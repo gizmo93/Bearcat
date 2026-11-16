@@ -524,6 +524,71 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task GetRunningUploadsAsync_UploadsCreatedBeforeAndAfterFinishedUploadOfSameRelease_ReturnsReuploadFlagAndPrioritizedAt()
+    {
+        // Arrange
+        var hoster = CreateHosterRegistration("Reupload hoster");
+        var release = CreateRelease("Bearcat.Reupload.2026-GRP");
+        var archiveConfig = CreateArchiveConfig(release);
+        var uploadConfig = CreateUploadConfig(release, archiveConfig, hoster, "Reupload upload");
+        var otherRelease = CreateRelease("Bearcat.Initial.2026-GRP");
+        var otherUploadConfig = CreateUploadConfig(
+            otherRelease,
+            CreateArchiveConfig(otherRelease),
+            hoster,
+            "Initial upload"
+        );
+        DbContext.AddRange(uploadConfig, otherUploadConfig);
+        await DbContext.SaveChangesAsync();
+
+        var uploadCreatedBeforeFinishedUpload = await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddMinutes(-1),
+            uploadedAt: null,
+            UploadState.Pending,
+            OnlineState.Unknown
+        );
+        await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddMinutes(-2),
+            uploadedAt: Midnight,
+            UploadState.Completed,
+            OnlineState.Offline
+        );
+        var reupload = await AddUploadAsync(
+            uploadConfig,
+            createdAt: Midnight.AddMinutes(1),
+            uploadedAt: null,
+            UploadState.Pending,
+            OnlineState.Unknown,
+            upload => upload.PrioritizedAt = Midnight.AddMinutes(2)
+        );
+        var uploadOfOtherRelease = await AddUploadAsync(
+            otherUploadConfig,
+            createdAt: Midnight.AddMinutes(1),
+            uploadedAt: null,
+            UploadState.Uploading,
+            OnlineState.Unknown
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
+
+        // Assert
+        result
+            .Select(item => (item.UploadId, item.IsReupload, item.PrioritizedAt))
+            .ShouldBe(
+                [
+                    (uploadCreatedBeforeFinishedUpload.Id, false, null),
+                    (reupload.Id, true, Midnight.AddMinutes(2)),
+                    (uploadOfOtherRelease.Id, false, null),
+                ],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
     public async Task GetUploadAsync_UnassignedUploadOfHosterAccountPool_ReturnsPoolWithoutHosterRegistration()
     {
         // Arrange

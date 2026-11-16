@@ -615,6 +615,12 @@
   <data name="DownloadCancellationRequested" xml:space="preserve"><value>Abbruch für den Mirrordownload von Archiv #{0} angefragt.</value></data>
   <data name="DownloadAlreadyFinished" xml:space="preserve"><value>Der Mirrordownload von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} wiederaufgenommen.</value></data>
+  <data name="PrioritizeUpload" xml:space="preserve"><value>Upload priorisieren</value></data>
+  <data name="RemoveUploadPrioritization" xml:space="preserve"><value>Priorisierung entfernen</value></data>
+  <data name="Prioritized" xml:space="preserve"><value>Priorisiert</value></data>
+  <data name="UploadPrioritized" xml:space="preserve"><value>Upload #{0} priorisiert.</value></data>
+  <data name="UploadPrioritizationRemoved" xml:space="preserve"><value>Priorisierung von Upload #{0} entfernt.</value></data>
+  <data name="UploadPrioritizationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr priorisiert werden.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht wiederaufgenommen werden.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Onlinestatus für Upload #{0} geprüft.</value></data>
   <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Für Upload #{0} gibt es keine Links zum Prüfen.</value></data>

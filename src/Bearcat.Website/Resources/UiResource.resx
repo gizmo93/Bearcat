@@ -615,6 +615,12 @@
   <data name="DownloadCancellationRequested" xml:space="preserve"><value>Cancellation requested for the mirror download of archive #{0}.</value></data>
   <data name="DownloadAlreadyFinished" xml:space="preserve"><value>The mirror download of archive #{0} already finished.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} resumed.</value></data>
+  <data name="PrioritizeUpload" xml:space="preserve"><value>Prioritize upload</value></data>
+  <data name="RemoveUploadPrioritization" xml:space="preserve"><value>Remove prioritization</value></data>
+  <data name="Prioritized" xml:space="preserve"><value>Prioritized</value></data>
+  <data name="UploadPrioritized" xml:space="preserve"><value>Upload #{0} prioritized.</value></data>
+  <data name="UploadPrioritizationRemoved" xml:space="preserve"><value>Prioritization of upload #{0} removed.</value></data>
+  <data name="UploadPrioritizationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be prioritized.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} can not be resumed in its current state.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Online state checked for upload #{0}.</value></data>
   <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Upload #{0} has no links to check.</value></data>
