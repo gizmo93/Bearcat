@@ -74,16 +74,16 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
         );
     }
 
-    public async Task<int?> GetLastArchiveFileSizeMbAsync(
+    public async Task<IReadOnlyList<int>> GetUsedArchiveFileSizesMbAsync(
         int archiveConfigId,
         CancellationToken cancellationToken
     )
     {
         return await dbWrite
             .Archives.Where(a => a.ArchiveConfigId == archiveConfigId)
-            .OrderByDescending(a => a.Id)
-            .Select(a => (int?)a.ArchiveFileSizeMb)
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .Select(a => a.ArchiveFileSizeMb)
+            .Distinct()
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<IReadOnlyList<string>> GetKnownArchiveFileHashesAsync(

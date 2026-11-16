@@ -1,0 +1,33 @@
+<div class="space-y-2">
+    <h3 class="flex items-center gap-2 text-sm font-semibold text-destructive">
+        <LucideIcon Name="triangle-alert" class="h-4 w-4 shrink-0" />
+        @L["ChangeArchivePartSizeSkippedArchiveConfigsInTemplates", ArchiveConfigTemplates.Count]
+    </h3>
+    <div class="bearcat-config-list">
+        <div class="@($"bearcat-config-header {RowGridClass}")">
+            <span>@L["ReleaseTemplate"]</span>
+            <span>@L["ArchiveConfiguration"]</span>
+            <span>@L["ChangeArchivePartSizeSkipReasonHeading"]</span>
+        </div>
+        @foreach (var archiveConfigTemplate in ArchiveConfigTemplates)
+        {
+            <div class="bearcat-config-item" @key="archiveConfigTemplate.ArchiveConfigTemplateId">
+                <div class="@($"bearcat-config-row {RowGridClass}")">
+                    <div class="min-w-0">
+                        <a class="block truncate text-sm text-primary hover:underline"
+                           href="@($"/release-templates/{archiveConfigTemplate.ReleaseTemplateId}")"
+                           title="@archiveConfigTemplate.ReleaseTemplateName">@archiveConfigTemplate.ReleaseTemplateName</a>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="bearcat-mobile-label">@L["ArchiveConfiguration"]</p>
+                        <p class="truncate text-sm" title="@archiveConfigTemplate.ArchiveConfigTemplateName">@archiveConfigTemplate.ArchiveConfigTemplateName</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="bearcat-mobile-label">@L["ChangeArchivePartSizeSkipReasonHeading"]</p>
+                        <p class="text-sm text-muted-foreground">@L["ChangeArchivePartSizeSkipReason", archiveConfigTemplate.HosterName, archiveConfigTemplate.MaxArchiveFileSize]</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

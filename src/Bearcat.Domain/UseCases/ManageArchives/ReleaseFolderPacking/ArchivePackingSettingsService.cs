@@ -130,13 +130,18 @@ public class ArchivePackingSettingsService(
             return archiveConfig.ArchiveFileSizeMb;
         }
 
-        var lastArchiveFileSizeMb = await repository.GetLastArchiveFileSizeMbAsync(
+        var usedArchiveFileSizesMb = await repository.GetUsedArchiveFileSizesMbAsync(
             archiveConfigId: archiveConfig.Id,
             cancellationToken: cancellationToken
         );
 
-        return lastArchiveFileSizeMb is null
-            ? archiveConfig.ArchiveFileSizeMb
-            : lastArchiveFileSizeMb.Value + 1;
+        var archiveFileSizeMb = archiveConfig.ArchiveFileSizeMb;
+
+        while (usedArchiveFileSizesMb.Contains(archiveFileSizeMb))
+        {
+            archiveFileSizeMb++;
+        }
+
+        return archiveFileSizeMb;
     }
 }

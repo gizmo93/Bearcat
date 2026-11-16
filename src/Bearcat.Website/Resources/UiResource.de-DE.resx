@@ -2238,4 +2238,23 @@
   <data name="ArchiveFolderNotRelocatableReason.MatchingFolderUsedByCreatedArchive" xml:space="preserve"><value>Der gefundene Ordner wird bereits von einem anderen Archiv verwendet.</value></data>
   <data name="ArchiveFolderNotRelocatableReason.MatchingFolderFoundForSeveralSelectedArchives" xml:space="preserve"><value>Derselbe Ordner wurde für mehrere ausgewählte Archive gefunden.</value></data>
   <data name="ArchiveFolderNotRelocatableReason.MatchingFolderInsideReleaseFolderOfManagedRelease" xml:space="preserve"><value>Der gefundene Ordner liegt im Releaseordner dieses Releases.</value></data>
+  <data name="ChangeArchivePartSize" xml:space="preserve"><value>Partgrösse ändern</value></data>
+  <data name="ChangeArchivePartSizeOnlyFuturePacking" xml:space="preserve"><value>Wirkt nur auf Archive, die ab jetzt gepackt werden. Bestehende Archive und Uploads behalten ihre Partgrösse.</value></data>
+  <data name="ChangeArchivePartSizeNoChoices" xml:space="preserve"><value>Noch keine Archivkonfigurationen mit Partgrösse.</value></data>
+  <data name="ChangeArchivePartSizeCurrent" xml:space="preserve"><value>Aktuelle Partgrösse</value></data>
+  <data name="ChangeArchivePartSizeSelectCurrent" xml:space="preserve"><value>Partgrösse auswählen</value></data>
+  <data name="ChangeArchivePartSizeChoice" xml:space="preserve"><value>{0} MB ({1} Archivkonfigurationen, {2} in Vorlagen)</value></data>
+  <data name="ChangeArchivePartSizeNew" xml:space="preserve"><value>Neue Partgrösse (MB)</value></data>
+  <data name="ChangeArchivePartSizeNewMustBePositive" xml:space="preserve"><value>Gib eine Partgrösse von mindestens 1 MB ein.</value></data>
+  <data name="ChangeArchivePartSizeNewMustDiffer" xml:space="preserve"><value>Die neue Partgrösse muss sich von der aktuellen unterscheiden.</value></data>
+  <data name="ChangeArchivePartSizeIncludeTemplates" xml:space="preserve"><value>Auch Releasetemplates ändern</value></data>
+  <data name="ChangeArchivePartSizeIncludeTemplatesDescription" xml:space="preserve"><value>Ändert auch die Archivkonfigurationen in Releasetemplates, damit neue Releases die neue Partgrösse verwenden.</value></data>
+  <data name="ChangeArchivePartSizeArchiveConfigsToChange" xml:space="preserve"><value>Zu ändernde Archivkonfigurationen</value></data>
+  <data name="ChangeArchivePartSizeArchiveConfigsInTemplatesToChange" xml:space="preserve"><value>Zu ändernde Archivkonfigurationen in Vorlagen</value></data>
+  <data name="ChangeArchivePartSizeSkippedArchiveConfigs" xml:space="preserve"><value>Übersprungene Archivkonfigurationen ({0})</value></data>
+  <data name="ChangeArchivePartSizeSkippedArchiveConfigsInTemplates" xml:space="preserve"><value>Übersprungene Archivkonfigurationen in Vorlagen ({0})</value></data>
+  <data name="ChangeArchivePartSizeSkipReasonHeading" xml:space="preserve"><value>Grund</value></data>
+  <data name="ChangeArchivePartSizeSkipReason" xml:space="preserve"><value>Übersprungen: {0} erlaubt höchstens {1} MB</value></data>
+  <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen wechseln von {2} MB auf {3} MB.</value></data>
+  <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen geändert. {2} Archivkonfigurationen und {3} Archivkonfigurationen in Vorlagen übersprungen.</value></data>
 </root>

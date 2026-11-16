@@ -111,6 +111,7 @@ Leave **Keep raw files** enabled in the automation if you want to keep the downl
 The part size of archive configurations is interpreted globally using **Part size unit** under **Configurations**.
 **Megabytes** (default) means 1 MB = `1,000,000` bytes, **Mebibytes** means 1 MB = `1,048,576` bytes.
 This applies to RAR and 7-Zip.
+To change the part size of many archive configurations at once, see [Change part size](/Bearcat/change-archive-part-size/).
 
 ![archive-part-size-unit.png](images/archive-part-size-unit.png)
 

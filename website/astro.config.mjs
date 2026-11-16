@@ -118,6 +118,7 @@ export default defineConfig({
 						{ label: 'Metadata and cover images', translations: { de: 'Metadaten und Coverbilder' }, slug: 'release-information-and-metadata' },
 						{ label: 'Additional archive contents', translations: { de: 'Zusätzliche Archivinhalte' }, slug: 'additional-archive-contents' },
 						{ label: 'Archive storage folders', translations: { de: 'Archivspeicherordner' }, slug: 'archive-storage-folders' },
+						{ label: 'Change part size', translations: { de: 'Partgrösse ändern' }, slug: 'change-archive-part-size' },
 						{ label: 'Mirror downloads', translations: { de: 'Mirrordownloads' }, slug: 'mirror-downloads' },
 					],
 				},

@@ -113,6 +113,7 @@ Lass **Rohdateien behalten** in der Automatisierung aktiviert, wenn du den herun
 Die Partgrösse in Archivkonfigurationen richtet sich global nach **Einheit der Partgrösse** unter **Konfigurationen**.
 **Megabytes** (Standard) bedeutet 1 MB = `1.000.000` Bytes, **Mebibytes** bedeutet 1 MB = `1.048.576` Bytes.
 Das gilt für RAR und 7-Zip.
+Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Partgrösse ändern](/Bearcat/de/change-archive-part-size/).
 
 ![archive-part-size-unit.png](../images/archive-part-size-unit.png)
 

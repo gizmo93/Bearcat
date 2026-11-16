@@ -1097,6 +1097,42 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         );
     }
 
+    [TestCase(2000, new[] { 1000, 1001 }, 2000)]
+    [TestCase(1000, new[] { 1000, 1001, 2000 }, 1002)]
+    public async Task ProcessAsync_ArchiveFileSizeIncrementedAfterArchiveConfigSizeChange_UsesSmallestUnusedSizeFromConfiguredSize(
+        int configuredArchiveFileSizeMb,
+        int[] usedArchiveFileSizesMb,
+        int expectedArchiveFileSizeMb
+    )
+    {
+        // Arrange
+        SetupArchiveRepackagingStrategy(ArchiveRepackagingStrategies.NonceOnly);
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        upload.UploadConfig.ArchiveConfig!.CreateNonceFile = false;
+        upload.UploadConfig.ArchiveConfig.ArchiveFileSizeMb = configuredArchiveFileSizeMb;
+
+        foreach (var usedArchiveFileSizeMb in usedArchiveFileSizesMb)
+        {
+            await AddPreviousArchiveAsync(
+                archiveConfigId: upload.UploadConfig.ArchiveConfigId!.Value,
+                archiveFileSizeMb: usedArchiveFileSizeMb,
+                md5Hash: PreviouslyComputedMd5Hash
+            );
+        }
+
+        SetupArchiverWritingVolumes(("bearcat-release.7z.001", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(expectedArchiveFileSizeMb);
+    }
+
     [Test]
     public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCannotChangeHashInPlaceWithoutPreviousArchive_UsesConfiguredArchiveFileSize()
     {

@@ -23,7 +23,7 @@ public interface IArchiveCreationRepository
 
     Task<bool> HasActiveUploadAsync(int archiveId, CancellationToken cancellationToken);
 
-    Task<int?> GetLastArchiveFileSizeMbAsync(
+    Task<IReadOnlyList<int>> GetUsedArchiveFileSizesMbAsync(
         int archiveConfigId,
         CancellationToken cancellationToken
     );
