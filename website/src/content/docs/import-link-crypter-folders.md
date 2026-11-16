@@ -67,6 +67,11 @@ Without a release folder, the release remains unmanaged even if an archive is av
 
 The last two conditions only apply when the import creates a new release.
 
+For [season folders](#season-folders), the import also fails in these cases:
+
+- The release template has no collection detection.
+- The episodes do not belong to the same collection.
+
 ## Existing releases
 
 Bearcat matches existing releases by name, ignoring case. It uses the folder name or the name you entered during review.
@@ -76,6 +81,22 @@ Bearcat matches existing releases by name, ignoring case. It uses the folder nam
 - A mirror with the same links as an existing upload is linked to this upload.
 - If a hoster already has a newer upload, the container gets that upload's links on its next update.
 - A folder's import fails if the release already has a container from the same crypter account for one of its hosters.
+
+## Season folders
+
+A folder can contain several episodes, for example a whole season. Bearcat identifies them by their
+archive file names, such as `Show.S01E01...part1.rar` and `Show.S01E02...part1.rar`. If a mirror contains
+several archives, Bearcat creates a release for each one, using the archive name without the part number.
+During review, you can see the episodes below the folder.
+
+- Set up [collection detection](/Bearcat/release-collections/#how-a-collection-is-created) in the release template. All episodes must be assigned to the same collection.
+- Bearcat looks for each episode's local files separately. An archive folder must contain exactly that episode's archive parts.
+- Bearcat adopts the folder as the container for the collection's [upload slot](/Bearcat/release-collections/#upload-slots). All mirrors in the folder must belong to this slot, or the import fails.
+- Bearcat skips mirrors with unknown file names or no archive parts because it cannot assign them to an episode.
+- The import fails if the upload slot already has another container of the same crypter account, or if a release in the collection uses this crypter account for its own containers.
+
+If you import a folder with just one episode and its upload slot already uses the same crypter account,
+Bearcat imports it without its container. The episode's links go into the collection's container.
 
 ## Link crypter containers
 
@@ -88,4 +109,17 @@ See [Link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 
 - New releases use the import's **primary language** for their release information. Existing releases keep their language.
 - Bearcat fetches release information (xrel, PreDB, NFO) after the import through the release information background task.
-- Imported releases count as posted and do not appear in the [post queue](/Bearcat/post-queue/).
+- Imported releases count as posted and do not appear in the [post queue](/Bearcat/post-queue/). This also applies to collections created from a season folder.
+
+## Re-import a season folder
+
+Before Bearcat could detect season folders, it created one release for the whole season.
+Use **Re-import** to split these folders into episodes. The dialog shows what will change before you confirm:
+
+- Bearcat creates one release per episode in a collection, as described in [Season folders](#season-folders).
+- Bearcat splits the old release's completed uploads by archive name and assigns them to the episodes. Their links and check history are preserved.
+- Bearcat also adopts the old release's other containers for the collection, including folders from other crypters. If a container cannot be adopted, the dialog shows its URL.
+- Bearcat assigns the old release's posts to the collection.
+- Bearcat then deletes the old release. Nothing is deleted at hosters or link crypters.
+
+You cannot re-import the folder while Bearcat is processing an upload or archive of the old release.
