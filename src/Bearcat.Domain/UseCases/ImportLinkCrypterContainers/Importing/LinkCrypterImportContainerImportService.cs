@@ -89,6 +89,7 @@ public class LinkCrypterImportContainerImportService(
     {
         var releaseName = container.ReleaseName;
         var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+        var releasePreview = preview.Releases!.Single();
         var localNow = timeProvider.GetLocalNow();
 
         var existingRelease = await repository.GetReleaseForImportByNameOrDefaultAsync(
@@ -105,13 +106,13 @@ public class LinkCrypterImportContainerImportService(
             ?? await CreateReleaseAsync(
                 linkCrypterImport: container.LinkCrypterImport,
                 releaseName: releaseName,
-                preview: preview,
+                releasePreview: releasePreview,
                 archiveStorageFolders: archiveStorageFolders,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
 
-        var mirrorsWithUploadConfigs = GetMirrorsWithUploadConfigs(preview, release);
+        var mirrorsWithUploadConfigs = GetMirrorsWithUploadConfigs(releasePreview, release);
 
         EnsureContainerCanBeAdded(
             container: container,
@@ -124,7 +125,7 @@ public class LinkCrypterImportContainerImportService(
             release: release,
             mirrorsWithUploadConfigs: mirrorsWithUploadConfigs,
             isNewRelease: existingRelease is null,
-            archiveFolderPath: preview.ArchiveFolderPath,
+            archiveFolderPath: releasePreview.ArchiveFolderPath,
             archiveStorageFolders: archiveStorageFolders,
             localNow: localNow
         );
@@ -145,20 +146,20 @@ public class LinkCrypterImportContainerImportService(
     private async Task<Release> CreateReleaseAsync(
         LinkCrypterImport linkCrypterImport,
         string releaseName,
-        LinkCrypterImportContainerPreview preview,
+        LinkCrypterImportReleasePreview releasePreview,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow,
         CancellationToken cancellationToken
     )
     {
-        var isManaged = preview.ReleaseFolderPath is not null;
-        var hasAdoptedMirror = preview.Mirrors.Any(mirror =>
+        var isManaged = releasePreview.ReleaseFolderPath is not null;
+        var hasAdoptedMirror = releasePreview.Mirrors.Any(mirror =>
             mirror.Decision is LinkCrypterImportMirrorDecision.Adopt
         );
 
         if (
             !isManaged
-            && preview.ArchiveFolderPath is null
+            && releasePreview.ArchiveFolderPath is null
             && (
                 !hasAdoptedMirror
                 || linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles is null
@@ -183,14 +184,14 @@ public class LinkCrypterImportContainerImportService(
             releaseTemplate: releaseTemplate,
             releaseType: isManaged ? ReleaseType.Managed : ReleaseType.Unmanaged,
             releaseName: releaseName,
-            releaseFolderPath: preview.ReleaseFolderPath,
+            releaseFolderPath: releasePreview.ReleaseFolderPath,
             createUnmanagedArchiveConfig: isManaged
                 ? null
                 : release =>
                     CreateUnmanagedArchiveConfig(
                         release: release,
                         linkCrypterImport: linkCrypterImport,
-                        preview: preview,
+                        releasePreview: releasePreview,
                         archiveStorageFolders: archiveStorageFolders,
                         localNow: localNow
                     ),
@@ -209,16 +210,16 @@ public class LinkCrypterImportContainerImportService(
     private ArchiveConfig CreateUnmanagedArchiveConfig(
         Release release,
         LinkCrypterImport linkCrypterImport,
-        LinkCrypterImportContainerPreview preview,
+        LinkCrypterImportReleasePreview releasePreview,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow
     )
     {
-        if (preview.ArchiveFolderPath is not null)
+        if (releasePreview.ArchiveFolderPath is not null)
         {
             var archiveConfig = unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
                 release: release,
-                archiveFolderPath: preview.ArchiveFolderPath,
+                archiveFolderPath: releasePreview.ArchiveFolderPath,
                 createdAt: localNow
             );
 
@@ -233,7 +234,7 @@ public class LinkCrypterImportContainerImportService(
         return CreateArchiveConfigWithDeletedArchive(
             release: release,
             archiveFilesBasePath: linkCrypterImport.ArchiveFilesBasePathForReleasesWithoutLocalFiles!,
-            preview: preview,
+            releasePreview: releasePreview,
             localNow: localNow
         );
     }
@@ -241,12 +242,12 @@ public class LinkCrypterImportContainerImportService(
     private ArchiveConfig CreateArchiveConfigWithDeletedArchive(
         Release release,
         string archiveFilesBasePath,
-        LinkCrypterImportContainerPreview preview,
+        LinkCrypterImportReleasePreview releasePreview,
         DateTime localNow
     )
     {
         var archiveFileNames = GetFileNames(
-            preview.Mirrors.First(mirror =>
+            releasePreview.Mirrors.First(mirror =>
                 mirror.Decision is LinkCrypterImportMirrorDecision.Adopt
             )
         );
@@ -265,7 +266,7 @@ public class LinkCrypterImportContainerImportService(
     private static List<(
         LinkCrypterImportMirror Mirror,
         UploadConfig UploadConfig
-    )> GetMirrorsWithUploadConfigs(LinkCrypterImportContainerPreview preview, Release release)
+    )> GetMirrorsWithUploadConfigs(LinkCrypterImportReleasePreview releasePreview, Release release)
     {
         var unusedUploadConfigs = release
             .UploadConfigs.Where(uploadConfig =>
@@ -277,7 +278,7 @@ public class LinkCrypterImportContainerImportService(
         var mirrorsWithUploadConfigs = new List<(LinkCrypterImportMirror, UploadConfig)>();
 
         foreach (
-            var mirror in preview
+            var mirror in releasePreview
                 .Mirrors.Where(mirror => mirror.HosterClassName is not null)
                 .OrderBy(mirror => mirror.MirrorNumber)
         )

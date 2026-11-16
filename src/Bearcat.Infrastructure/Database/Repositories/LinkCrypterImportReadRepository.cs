@@ -205,19 +205,20 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
         List<LinkCrypterImportContainerReadModel> containers
     )
     {
-        var previewWithReleaseAction = containers
-            .Select(container => container.Preview)
-            .FirstOrDefault(preview => preview.ReleaseAction is not null);
+        var releasePreview = containers
+            .Select(container => container.Preview.Releases)
+            .FirstOrDefault(releasePreviews => releasePreviews?.Count == 1)
+            ?.Single();
         var importableContainers = containers
             .Where(container => container.Status is LinkCrypterImportContainerStatus.Importable)
             .ToList();
 
         return new LinkCrypterImportReleaseReadModel(
             ReleaseName: releaseName,
-            ReleaseAction: previewWithReleaseAction?.ReleaseAction,
-            ExistingReleaseId: previewWithReleaseAction?.ExistingReleaseId,
-            ReleaseFolderPath: previewWithReleaseAction?.ReleaseFolderPath,
-            ArchiveFolderPath: previewWithReleaseAction?.ArchiveFolderPath,
+            ReleaseAction: releasePreview?.ReleaseAction,
+            ExistingReleaseId: releasePreview?.ExistingReleaseId,
+            ReleaseFolderPath: releasePreview?.ReleaseFolderPath,
+            ArchiveFolderPath: releasePreview?.ArchiveFolderPath,
             IsSelected: importableContainers.Count > 0
                 && importableContainers.All(container => container.IsSelected),
             HasImportableContainers: importableContainers.Count > 0,

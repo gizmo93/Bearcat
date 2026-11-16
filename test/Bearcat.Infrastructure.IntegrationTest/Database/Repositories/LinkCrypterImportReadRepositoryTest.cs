@@ -198,10 +198,20 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                 ErrorMessages = [],
                 PreviewJson = new LinkCrypterImportContainerPreview(
                     Mirrors: [],
-                    ReleaseFolderPath: $"/releases/{containerName}",
-                    ArchiveFolderPath: null,
-                    ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
-                    ExistingReleaseId: null
+                    ReleaseCollectionName: null,
+                    Releases:
+                    [
+                        new LinkCrypterImportReleasePreview(
+                            ReleaseName: containerName,
+                            Mirrors: [],
+                            ReleaseFolderPath: $"/releases/{containerName}",
+                            ArchiveFolderPath: null,
+                            ArchiveFolderContainsArchivesOfOtherReleases: false,
+                            ReleaseAction: LinkCrypterImportReleaseAction.CreateRelease,
+                            ExistingReleaseId: null,
+                            NotImportableReason: null
+                        ),
+                    ]
                 ).ToJson(),
             }
         );

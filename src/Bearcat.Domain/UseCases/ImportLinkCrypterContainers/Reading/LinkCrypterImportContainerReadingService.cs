@@ -147,10 +147,8 @@ public class LinkCrypterImportContainerReadingService(
         );
         var emptyPreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: [],
-            ReleaseFolderPath: null,
-            ArchiveFolderPath: null,
-            ReleaseAction: null,
-            ExistingReleaseId: null
+            ReleaseCollectionName: null,
+            Releases: null
         ).ToJson();
 
         foreach (var listedContainer in listedContainers)
@@ -225,10 +223,8 @@ public class LinkCrypterImportContainerReadingService(
         container.Status = LinkCrypterImportContainerStatus.WaitingForFileCheck;
         container.PreviewJson = new LinkCrypterImportContainerPreview(
             Mirrors: mirrors,
-            ReleaseFolderPath: null,
-            ArchiveFolderPath: null,
-            ReleaseAction: null,
-            ExistingReleaseId: null
+            ReleaseCollectionName: null,
+            Releases: null
         ).ToJson();
     }
 

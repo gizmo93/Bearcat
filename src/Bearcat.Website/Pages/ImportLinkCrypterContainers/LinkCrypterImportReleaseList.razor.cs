@@ -192,23 +192,78 @@ public partial class LinkCrypterImportReleaseList(
             .Sum(count => count.Count);
     }
 
+    private static IReadOnlyList<LinkCrypterImportMirror> GetMirrorsOfSingleRelease(
+        LinkCrypterImportContainerPreview preview
+    )
+    {
+        return preview.Releases is { Count: 1 } releasePreviews
+            ? releasePreviews.Single().Mirrors
+            : preview.Mirrors;
+    }
+
+    private static List<LinkCrypterImportMirror> GetMirrorsWithoutRelease(
+        LinkCrypterImportContainerPreview preview
+    )
+    {
+        var mirrorNumbersOfReleases = preview
+            .Releases!.SelectMany(releasePreview => releasePreview.Mirrors)
+            .Select(mirror => mirror.MirrorNumber)
+            .ToHashSet();
+
+        return preview
+            .Mirrors.Where(mirror => !mirrorNumbersOfReleases.Contains(mirror.MirrorNumber))
+            .ToList();
+    }
+
     private string GetLocalFilesText(LinkCrypterImportReleaseReadModel release)
     {
-        if (release.ReleaseAction is not LinkCrypterImportReleaseAction.CreateRelease)
+        return GetLocalFilesText(
+            releaseAction: release.ReleaseAction,
+            releaseFolderPath: release.ReleaseFolderPath,
+            archiveFolderPath: release.ArchiveFolderPath,
+            archiveFolderContainsArchivesOfOtherReleases: false
+        );
+    }
+
+    private string GetLocalFilesText(LinkCrypterImportReleasePreview releasePreview)
+    {
+        return GetLocalFilesText(
+            releaseAction: releasePreview.ReleaseAction,
+            releaseFolderPath: releasePreview.ReleaseFolderPath,
+            archiveFolderPath: releasePreview.ArchiveFolderPath,
+            archiveFolderContainsArchivesOfOtherReleases: releasePreview.ArchiveFolderContainsArchivesOfOtherReleases
+        );
+    }
+
+    private string GetLocalFilesText(
+        LinkCrypterImportReleaseAction? releaseAction,
+        string? releaseFolderPath,
+        string? archiveFolderPath,
+        bool archiveFolderContainsArchivesOfOtherReleases
+    )
+    {
+        if (releaseAction is not LinkCrypterImportReleaseAction.CreateRelease)
         {
             return "-";
         }
 
         List<string> localFolderTexts = [];
 
-        if (release.ReleaseFolderPath is { } releaseFolderPath)
+        if (releaseFolderPath is not null)
         {
             localFolderTexts.Add(L["LinkCrypterImportReleaseFolder", releaseFolderPath]);
         }
 
-        if (release.ArchiveFolderPath is { } archiveFolderPath)
+        if (archiveFolderPath is not null)
         {
-            localFolderTexts.Add(L["LinkCrypterImportArchiveFolder", archiveFolderPath]);
+            localFolderTexts.Add(
+                archiveFolderContainsArchivesOfOtherReleases
+                    ? L[
+                        "LinkCrypterImportArchiveFolderWithArchivesOfOtherReleases",
+                        archiveFolderPath
+                    ]
+                    : L["LinkCrypterImportArchiveFolder", archiveFolderPath]
+            );
         }
 
         return localFolderTexts.Count == 0

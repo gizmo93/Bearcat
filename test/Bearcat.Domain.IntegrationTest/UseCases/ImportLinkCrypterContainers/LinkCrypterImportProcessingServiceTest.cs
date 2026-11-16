@@ -47,6 +47,9 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     private const string ThirdReleaseName = "Bearcat.Third.2026.German.1080p.WEB.x264-GRP";
     private const string FirstArchiveFileName = "Bearcat.Movie.part1.rar";
     private const string SecondArchiveFileName = "Bearcat.Movie.part2.rar";
+    private const string SeasonContainerName = "Bearcat.Show.S01.German.1080p.WEB.x264-GRP";
+    private const string FirstEpisodeReleaseName = "Bearcat.Show.S01E01.German.1080p.WEB.x264-GRP";
+    private const string SecondEpisodeReleaseName = "Bearcat.Show.S01E02.German.1080p.WEB.x264-GRP";
 
     private static readonly DateTime StartTime = new(
         2026,
@@ -331,6 +334,112 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
     }
 
     [Test]
+    public async Task ProcessAsync_SeasonContainerWithSeasonArchiveFolder_CreatesReleasePreviewPerEpisodeInOneCollection()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(
+            ReleaseType.Unmanaged,
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern
+        );
+        var seasonArchiveFolderPath = Path.Combine(workingDirectoryPath, SeasonContainerName);
+        Directory.CreateDirectory(seasonArchiveFolderPath);
+        foreach (var fileName in GetSeasonArchiveFileNames())
+        {
+            File.WriteAllText(Path.Combine(seasonArchiveFolderPath, fileName), fileName);
+        }
+        AddSeasonContainer();
+        var linkCrypterImportId = await StartImportAsync(seed);
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.Importable);
+        container.IsSelected.ShouldBeTrue();
+        var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+        preview.ReleaseCollectionName.ShouldBe(SeasonContainerName);
+        preview.Mirrors.Count.ShouldBe(2);
+        preview.Mirrors.ShouldAllBe(mirror => mirror.Decision == null);
+        preview
+            .Releases!.Select(releasePreview =>
+                (
+                    releasePreview.ReleaseName,
+                    releasePreview.ReleaseAction,
+                    releasePreview.ArchiveFolderPath,
+                    releasePreview.ArchiveFolderContainsArchivesOfOtherReleases,
+                    releasePreview.NotImportableReason
+                )
+            )
+            .ShouldBe([
+                (
+                    FirstEpisodeReleaseName,
+                    LinkCrypterImportReleaseAction.CreateRelease,
+                    seasonArchiveFolderPath,
+                    true,
+                    null
+                ),
+                (
+                    SecondEpisodeReleaseName,
+                    LinkCrypterImportReleaseAction.CreateRelease,
+                    seasonArchiveFolderPath,
+                    true,
+                    null
+                ),
+            ]);
+        preview
+            .Releases!.Last()
+            .Mirrors.Select(mirror =>
+                (
+                    mirror.MirrorNumber,
+                    mirror.Decision,
+                    string.Join(", ", mirror.Files.Select(file => file.FileName))
+                )
+            )
+            .ShouldBe([
+                (
+                    1,
+                    LinkCrypterImportMirrorDecision.Adopt,
+                    $"{SecondEpisodeReleaseName}.part1.rar, {SecondEpisodeReleaseName}.part2.rar"
+                ),
+                (
+                    2,
+                    LinkCrypterImportMirrorDecision.Adopt,
+                    $"{SecondEpisodeReleaseName}.part1.rar, {SecondEpisodeReleaseName}.part2.rar"
+                ),
+            ]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_SeasonContainerWithDisabledCollectionDetection_IsNotImportable()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        AddSeasonContainer();
+        var linkCrypterImportId = await StartImportAsync(seed);
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
+        container.Status.ShouldBe(LinkCrypterImportContainerStatus.NotImportable);
+        container.IsSelected.ShouldBeFalse();
+        container.NotImportableReason.ShouldBe(
+            LinkCrypterImportNotImportableReason.ReleaseCollectionDetectionDisabled
+        );
+        var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+        preview.ReleaseCollectionName.ShouldBeNull();
+        preview
+            .Releases!.Select(releasePreview => releasePreview.ReleaseName)
+            .ShouldBe([FirstEpisodeReleaseName, SecondEpisodeReleaseName]);
+    }
+
+    [Test]
     public async Task ProcessAsync_TwoContainersWithSameNameForDifferentHosters_ImportsBothIntoOneRelease()
     {
         // Arrange
@@ -365,7 +474,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 (
                     container.Status,
                     container.ImportedReleaseId,
-                    LinkCrypterImportContainerPreview.FromJson(container.PreviewJson).ReleaseAction
+                    GetReleasePreview(container).ReleaseAction
                 )
             )
             .ShouldBe([
@@ -431,8 +540,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         var importContainer = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
         importContainer.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
         importContainer.ImportedReleaseId.ShouldBe(release.Id);
-        LinkCrypterImportContainerPreview
-            .FromJson(importContainer.PreviewJson)
+        GetReleasePreview(importContainer)
             .ReleaseAction.ShouldBe(LinkCrypterImportReleaseAction.AttachToExistingRelease);
         var firstUpload = release
             .UploadConfigs.Single(uploadConfig =>
@@ -668,9 +776,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         // Assert
         var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
         container.Status.ShouldBe(LinkCrypterImportContainerStatus.Imported);
-        LinkCrypterImportContainerPreview
-            .FromJson(container.PreviewJson)
-            .ArchiveFolderPath.ShouldBe(archiveFolderPath);
+        GetReleasePreview(container).ArchiveFolderPath.ShouldBe(archiveFolderPath);
 
         var release = await LoadReleaseAsync(ReleaseName);
         release.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
@@ -817,9 +923,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         // Assert
         var container = (await LoadImportAsync(linkCrypterImportId)).Containers.Single();
         container.Status.ShouldBe(LinkCrypterImportContainerStatus.Importable);
-        LinkCrypterImportContainerPreview
-            .FromJson(container.PreviewJson)
-            .ArchiveFolderPath.ShouldBe(unusedArchiveFolderPath);
+        GetReleasePreview(container).ArchiveFolderPath.ShouldBe(unusedArchiveFolderPath);
     }
 
     [Test]
@@ -930,7 +1034,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                     container.ReleaseName,
                     container.Status,
                     container.ImportedReleaseId,
-                    LinkCrypterImportContainerPreview.FromJson(container.PreviewJson).ReleaseAction
+                    GetReleasePreview(container).ReleaseAction
                 )
             )
             .ShouldBe([
@@ -992,7 +1096,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         container.ReleaseName.ShouldBe(ReleaseName);
         container.Status.ShouldBe(LinkCrypterImportContainerStatus.Importable);
         container.IsSelected.ShouldBeTrue();
-        var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+        var preview = GetReleasePreview(container);
         preview.ReleaseAction.ShouldBe(LinkCrypterImportReleaseAction.AttachToExistingRelease);
         preview.ExistingReleaseId.ShouldBe(release.Id);
     }
@@ -1276,6 +1380,38 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         return folderPath;
     }
 
+    private static List<string> GetSeasonArchiveFileNames()
+    {
+        return
+        [
+            $"{FirstEpisodeReleaseName}.part1.rar",
+            $"{FirstEpisodeReleaseName}.part2.rar",
+            $"{SecondEpisodeReleaseName}.part1.rar",
+            $"{SecondEpisodeReleaseName}.part2.rar",
+        ];
+    }
+
+    private void AddSeasonContainer()
+    {
+        var fileNames = GetSeasonArchiveFileNames();
+
+        AddListedContainer(
+            "https://crypter.test/season",
+            SeasonContainerName,
+            fileNames
+                .Select(
+                    (fileName, index) => OnlineArchiveLink($"https://first.test/s{index}", fileName)
+                )
+                .ToList(),
+            fileNames
+                .Select(
+                    (fileName, index) =>
+                        OnlineArchiveLink($"https://second.test/s{index}", fileName)
+                )
+                .ToList()
+        );
+    }
+
     private Mock<IHosterWithFileInfo> CreateHosterMock()
     {
         var hosterMock = new Mock<IHosterWithFileInfo>();
@@ -1382,10 +1518,18 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         LinkCrypterImportUploadByBearcatReason?
     )> GetMirrorDecisions(LinkCrypterImportContainer container)
     {
-        return LinkCrypterImportContainerPreview
-            .FromJson(container.PreviewJson)
+        return GetReleasePreview(container)
             .Mirrors.Select(mirror => (mirror.Decision, mirror.UploadByBearcatReason))
             .ToList();
+    }
+
+    private static LinkCrypterImportReleasePreview GetReleasePreview(
+        LinkCrypterImportContainer container
+    )
+    {
+        return LinkCrypterImportContainerPreview
+            .FromJson(container.PreviewJson)
+            .Releases!.ShouldHaveSingleItem();
     }
 
     private async Task<Release> LoadReleaseAsync(string releaseName)
@@ -1471,7 +1615,11 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task<TemplateSeed> AddReleaseTemplateAsync(ReleaseType releaseType)
+    private async Task<TemplateSeed> AddReleaseTemplateAsync(
+        ReleaseType releaseType,
+        ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.Disabled
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -1514,6 +1662,7 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
             ReleaseType = releaseType,
             ReleaseContentType = ReleaseContentType.Movie,
             ReleaseGroup = releaseGroup,
+            ReleaseCollectionDetectionMode = releaseCollectionDetectionMode,
             ArchiveConfigTemplates = [archiveConfigTemplate],
         };
         releaseTemplate.UploadConfigTemplates =

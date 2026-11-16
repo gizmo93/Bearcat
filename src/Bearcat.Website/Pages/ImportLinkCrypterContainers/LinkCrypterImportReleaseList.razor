@@ -1,3 +1,21 @@
+@using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview
+
+@{
+    RenderFragment<LinkCrypterImportMirror> mirrorSummary = mirror =>
+        @<span class="[overflow-wrap:anywhere]">
+            <span class="font-medium text-foreground">@L["MirrorNumber", mirror.MirrorNumber]</span>
+            · @GetHosterName(mirror.HosterClassName)
+            @if (mirror.Decision is { } decision)
+            {
+                <span> · @L.Localize(decision)</span>
+            }
+            @if (mirror.UploadByBearcatReason is { } uploadByBearcatReason)
+            {
+                <span> (@L.Localize(uploadByBearcatReason))</span>
+            }
+        </span>;
+}
+
 <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-2" role="group" aria-label="@L["Status"]">
         <BbButton Variant="@(selectedStatus is null ? ButtonVariant.Default : ButtonVariant.Outline)"
@@ -149,20 +167,19 @@
                                     {
                                         <span>@L.Localize(notImportableReason)</span>
                                     }
-                                    @foreach (var mirror in container.Preview.Mirrors)
+                                    @if (container.Preview.Releases is { Count: > 1 })
                                     {
-                                        <span class="[overflow-wrap:anywhere]">
-                                            <span class="font-medium text-foreground">@L["MirrorNumber", mirror.MirrorNumber]</span>
-                                            · @GetHosterName(mirror.HosterClassName)
-                                            @if (mirror.Decision is { } decision)
-                                            {
-                                                <span> · @L.Localize(decision)</span>
-                                            }
-                                            @if (mirror.UploadByBearcatReason is { } uploadByBearcatReason)
-                                            {
-                                                <span> (@L.Localize(uploadByBearcatReason))</span>
-                                            }
-                                        </span>
+                                        @if (container.Preview.ReleaseCollectionName is { } releaseCollectionName)
+                                        {
+                                            <span class="[overflow-wrap:anywhere]">@L["LinkCrypterImportReleaseCollection", releaseCollectionName]</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @foreach (var mirror in GetMirrorsOfSingleRelease(container.Preview))
+                                        {
+                                            @mirrorSummary(mirror)
+                                        }
                                     }
                                     @if (container.ImportedReleaseId is { } importedReleaseId)
                                     {
@@ -173,6 +190,55 @@
                                         </a>
                                     }
                                 </div>
+                                @if (container.Preview.Releases is { Count: > 1 } releasePreviews)
+                                {
+                                    var mirrorsWithoutRelease = GetMirrorsWithoutRelease(container.Preview);
+
+                                    @if (mirrorsWithoutRelease.Count > 0)
+                                    {
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                            <span>@L["LinkCrypterImportMirrorsWithoutRelease"]</span>
+                                            @foreach (var mirror in mirrorsWithoutRelease)
+                                            {
+                                                @mirrorSummary(mirror)
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="space-y-2 border-l border-border/70 pl-3">
+                                        @foreach (var releasePreview in releasePreviews)
+                                        {
+                                            <div class="space-y-0.5 text-xs text-muted-foreground">
+                                                <div class="@($"grid gap-x-3 gap-y-0.5 {ReleaseGridClass}")">
+                                                    <span class="font-medium text-foreground [overflow-wrap:anywhere]">@releasePreview.ReleaseName</span>
+                                                    @if (releasePreview.ExistingReleaseId is { } existingReleaseId)
+                                                    {
+                                                        <a href="@($"/releases/{existingReleaseId}")"
+                                                           class="inline-flex items-center gap-1 text-primary hover:underline">
+                                                            <LucideIcon Name="package" class="h-3.5 w-3.5 shrink-0" />
+                                                            @L.Localize(releasePreview.ReleaseAction)
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@L.Localize(releasePreview.ReleaseAction)</span>
+                                                    }
+                                                    <span class="[overflow-wrap:anywhere]">@GetLocalFilesText(releasePreview)</span>
+                                                </div>
+                                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                    @if (releasePreview.NotImportableReason is { } releaseNotImportableReason)
+                                                    {
+                                                        <span>@L.Localize(releaseNotImportableReason)</span>
+                                                    }
+                                                    @foreach (var mirror in releasePreview.Mirrors)
+                                                    {
+                                                        @mirrorSummary(mirror)
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
                                 @if (container.ErrorMessages.Count > 0)
                                 {
                                     <p class="text-xs whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">

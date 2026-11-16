@@ -2046,6 +2046,9 @@
   <data name="LinkCrypterImportReleaseFolder" xml:space="preserve"><value>Releaseordner: {0}</value></data>
   <data name="LinkCrypterImportArchiveFolder" xml:space="preserve"><value>Archivordner: {0}</value></data>
   <data name="LinkCrypterImportNoLocalFiles" xml:space="preserve"><value>Keine lokalen Dateien, das Archiv wird aus den Mirrors wiederhergestellt.</value></data>
+  <data name="LinkCrypterImportArchiveFolderWithArchivesOfOtherReleases" xml:space="preserve"><value>Archivordner mit Archiven anderer Releases: {0}</value></data>
+  <data name="LinkCrypterImportReleaseCollection" xml:space="preserve"><value>Collection: {0}</value></data>
+  <data name="LinkCrypterImportMirrorsWithoutRelease" xml:space="preserve"><value>Die Dateien dieser Mirrors können keinem Release zugeordnet werden:</value></data>
   <data name="NoLinkCrypterImportReleasesFound" xml:space="preserve"><value>Keine Releases gefunden.</value></data>
   <data name="ReleaseAction" xml:space="preserve"><value>Releaseaktion</value></data>
   <data name="LocalFiles" xml:space="preserve"><value>Lokale Dateien</value></data>
@@ -2070,6 +2073,8 @@
   <data name="LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster" xml:space="preserve"><value>Kein Mirror gehört zu einem Hoster des Releases.</value></data>
   <data name="LinkCrypterImportNotImportableReason.NoAdoptedMirrorAndNoReleaseFolder" xml:space="preserve"><value>Kein Mirror kann übernommen werden und es gibt keinen lokalen Releaseordner.</value></data>
   <data name="LinkCrypterImportNotImportableReason.ArchiveFilesBasePathMissing" xml:space="preserve"><value>Kein lokaler Releaseordner, kein vorhandenes Archiv und kein Archivbasisordner für Releases ohne lokale Dateien.</value></data>
+  <data name="LinkCrypterImportNotImportableReason.ReleaseCollectionDetectionDisabled" xml:space="preserve"><value>Der Container enthält mehrere Releases, aber das Releasetemplate hat keine Collectionerkennung.</value></data>
+  <data name="LinkCrypterImportNotImportableReason.ReleasesNotInSameReleaseCollection" xml:space="preserve"><value>Die Releases des Containers gehören nicht zur selben Collection.</value></data>
   <data name="LinkCrypterImportMirrorDecision.Adopt" xml:space="preserve"><value>Wird übernommen</value></data>
   <data name="LinkCrypterImportMirrorDecision.UploadByBearcat" xml:space="preserve"><value>Bearcat lädt diesen Hoster selbst hoch</value></data>
   <data name="LinkCrypterImportMirrorDecision.UnsupportedHoster" xml:space="preserve"><value>Nicht unterstützter Hoster</value></data>
