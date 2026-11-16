@@ -115,9 +115,10 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
 
         if (
             UsesArchiveFiles
-            && uploadTargetChoices.GetMaxFileSizeMb(formModel.UploadTarget) is { } maxFileSizeMb
+            && uploadTargetChoices.GetMaxArchiveFileSizeInPartSizeUnit(formModel.UploadTarget)
+                is { } maxArchiveFileSize
             && SelectedArchiveConfig is { } archiveConfig
-            && archiveConfig.ArchiveFileSizeMb > maxFileSizeMb
+            && archiveConfig.ArchiveFileSizeMb > maxArchiveFileSize
         )
         {
             messageStore.Add(
@@ -125,7 +126,7 @@ public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner opera
                 L[
                     "ArchiveFileSizeExceedsHosterLimit",
                     archiveConfig.ArchiveFileSizeMb,
-                    maxFileSizeMb
+                    maxArchiveFileSize
                 ]
             );
         }

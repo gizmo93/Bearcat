@@ -1,5 +1,7 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.FirstStartSetup.ArchiveOutputFolders;
 using Bearcat.Domain.UseCases.FirstStartSetup.Exceptions;
@@ -127,10 +129,22 @@ public partial class FirstStartSetupReleaseTemplateStep(
             .Single(archiver => archiver.FileExtension == RarArchiveFileExtension)
             .ClassName;
 
-        formModel.ArchiveFileSizeMb =
-            selectedArchiveHosterRegistrations.Min(hosterRegistration =>
-                hosterRegistration.MaxFileSizeMb
-            ) ?? 0;
+        var smallestMaxFileSizeMb = selectedArchiveHosterRegistrations.Min(hosterRegistration =>
+            hosterRegistration.MaxFileSizeMb
+        );
+        var partSizeUnit = operationRunner.Run(
+            (IApplicationConfigurationProvider configuration) =>
+                configuration.GetValue<ArchiveCreationConfiguration, ArchivePartSizeUnit>(c =>
+                    c.PartSizeUnit
+                )
+        );
+
+        formModel.ArchiveFileSizeMb = smallestMaxFileSizeMb is null
+            ? 0
+            : ArchivePartSizeConversion.ConvertMegabytesToPartSizeUnit(
+                megabytes: smallestMaxFileSizeMb.Value,
+                partSizeUnit: partSizeUnit
+            );
 
         formModel.ArchiveOutputFolderPath = operationRunner.Run(
             (FirstStartArchiveOutputFolderService service) =>

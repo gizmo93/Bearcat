@@ -281,6 +281,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();
+            services.AddApplicationConfiguration<ArchiveCreationConfiguration>();
             services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddApplicationConfiguration<FolderAutomationConfiguration>();
             services.AddApplicationConfiguration<RemoteSourceConfiguration>();

@@ -107,6 +107,14 @@ um beide Regeln zu überspringen.
 [Remotedownloads](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) haben eine eigene Aufräumoption.
 Lass **Rohdateien behalten** in der Automatisierung aktiviert, wenn du den heruntergeladenen Releaseordner behalten willst.
 
+### Einheit der Partgrösse
+
+Die Partgrösse in Archivkonfigurationen richtet sich global nach **Einheit der Partgrösse** unter **Konfigurationen**.
+**Megabytes** (Standard) bedeutet 1 MB = `1.000.000` Bytes, **Mebibytes** bedeutet 1 MB = `1.048.576` Bytes.
+Das gilt für RAR und 7-Zip.
+
+![archive-part-size-unit.png](../images/archive-part-size-unit.png)
+
 ### Archivrepackaging
 
 Hoster erkennen Dateien an ihrem MD5-Hash. Vor einem Reupload zum selben Hostertyp gibt Bearcat den

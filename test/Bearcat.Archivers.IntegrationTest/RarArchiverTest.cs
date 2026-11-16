@@ -53,7 +53,8 @@ public class RarArchiverTest
             new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             CancellationToken.None
         );
@@ -87,7 +88,8 @@ public class RarArchiverTest
             new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             CancellationToken.None
         );
@@ -128,7 +130,8 @@ public class RarArchiverTest
             new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             CancellationToken.None
         );
@@ -169,7 +172,8 @@ public class RarArchiverTest
             new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: false
+                PackSourceFolderAsRootFolder: false,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             CancellationToken.None
         );
@@ -209,7 +213,8 @@ public class RarArchiverTest
             new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             CancellationToken.None
         );
@@ -248,7 +253,8 @@ public class RarArchiverTest
             options: new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             cancellationToken: CancellationToken.None
         );
@@ -273,6 +279,43 @@ public class RarArchiverTest
         ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
     }
 
+    [TestCase(ArchivePartSizeUnit.Megabytes, 1_000_000L)]
+    [TestCase(ArchivePartSizeUnit.Mebibytes, 1_048_576L)]
+    public async Task ArchiveAsync_PartSizeUnitSelected_FirstVolumeHasPartSizeInSelectedUnit(
+        ArchivePartSizeUnit partSizeUnit,
+        long expectedFirstVolumeLength
+    )
+    {
+        // Arrange
+        await ArchiveExtractionTestHelper.WriteRandomSourceFileAsync(sourceFolderPath);
+
+        // Act
+        var result = await service.ArchiveAsync(
+            sourceFolderPath: sourceFolderPath,
+            destinationPath: destinationPath,
+            archiveNamePrefix: "archive",
+            targetFileSizeMb: 1,
+            password: null,
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: partSizeUnit
+            ),
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var firstVolumeFilePath = service
+            .FindArchivesToExtract(destinationPath)
+            .ShouldHaveSingleItem()
+            .FirstVolumeFilePath;
+
+        new FileInfo(firstVolumeFilePath).Length.ShouldBe(expectedFirstVolumeLength);
+    }
+
     [Test]
     public async Task ArchiveAsync_SourceFolderDoesNotExist_ReturnsFailedResult()
     {
@@ -289,7 +332,8 @@ public class RarArchiverTest
             new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             CancellationToken.None
         );
@@ -564,7 +608,8 @@ public class RarArchiverTest
             options: new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             cancellationToken: CancellationToken.None
         );
@@ -609,7 +654,8 @@ public class RarArchiverTest
             options: new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             cancellationToken: CancellationToken.None
         );
@@ -657,7 +703,8 @@ public class RarArchiverTest
             options: new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             cancellationToken: CancellationToken.None
         );
@@ -693,7 +740,8 @@ public class RarArchiverTest
             options: new ArchiveOptions(
                 UseCompression: false,
                 UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true
+                PackSourceFolderAsRootFolder: true,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
             ),
             cancellationToken: CancellationToken.None
         );
