@@ -2086,6 +2086,29 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>file states unknown</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>files are no archive parts</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>file names differ from the first adopted mirror</value></data>
+  <data name="Reimport" xml:space="preserve"><value>Re-import</value></data>
+  <data name="ReimportLinkCrypterContainer" xml:space="preserve"><value>Re-import container</value></data>
+  <data name="ReimportLinkCrypterContainerDescription" xml:space="preserve"><value>Splits the release of an earlier import into one release per archive of the container. Nothing is deleted at hosters or crypters.</value></data>
+  <data name="LinkCrypterContainerReimported" xml:space="preserve"><value>Container re-imported.</value></data>
+  <data name="LinkCrypterImportReimportSummary" xml:space="preserve"><value>Release {0} is replaced by these releases. Its completed uploads are moved to them, its posts to the collection.</value></data>
+  <data name="LinkCrypterImportReimportBlockers" xml:space="preserve"><value>The container cannot be re-imported:</value></data>
+  <data name="LinkCrypterImportReimportBlockerReason.UploadInProgress" xml:space="preserve"><value>An upload of {0} is running.</value></data>
+  <data name="LinkCrypterImportReimportBlockerReason.ArchiveInProgress" xml:space="preserve"><value>An archive of {0} is being created or restored.</value></data>
+  <data name="LinkCrypterImportReimportBlockerReason.ImportFailed" xml:space="preserve"><value>The import fails: {0}</value></data>
+  <data name="LinkCrypterImportReimportMovedUploads" xml:space="preserve"><value>Moved uploads: {0}</value></data>
+  <data name="LinkCrypterImportReimportMovedUpload" xml:space="preserve"><value>{0} ({1} files)</value></data>
+  <data name="LinkCrypterImportReimportNoMovedUploads" xml:space="preserve"><value>No uploads are moved to this release.</value></data>
+  <data name="LinkCrypterImportReimportUploadsNotMoved" xml:space="preserve"><value>These uploads are not moved and are removed from Bearcat with the old release:</value></data>
+  <data name="LinkCrypterImportReimportUploadNotMoved" xml:space="preserve"><value>{0}: {1} ({2} files)</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.NoReleaseWithArchiveName" xml:space="preserve"><value>no release has this archive name</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.UploadedFileWithoutArchiveFile" xml:space="preserve"><value>files without archive file</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.NoUploadConfigForHoster" xml:space="preserve"><value>the release has no upload config for this hoster</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.ArchiveFileNamesDiffer" xml:space="preserve"><value>the archive file names of the release differ</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.SameLinksAlreadyOnRelease" xml:space="preserve"><value>the release already has an upload with these links</value></data>
+  <data name="LinkCrypterImportReimportConvertedContainers" xml:space="preserve"><value>These containers become containers of the collection:</value></data>
+  <data name="LinkCrypterImportReimportContainersNotConverted" xml:space="preserve"><value>These containers are removed from Bearcat, they stay at the crypter:</value></data>
+  <data name="LinkCrypterImportReimportContainerNotConvertedReason.CollectionUploadSlotHasContainerOfLinkCrypterAccount" xml:space="preserve"><value>the upload slot already has a container of this link crypter account</value></data>
+  <data name="LinkCrypterImportReimportContainerNotConvertedReason.CollectionUploadSlotUsesLinkCrypterAccountForReleaseContainers" xml:space="preserve"><value>the upload slot uses this link crypter account for release containers</value></data>
   <data name="ReplaceHosters" xml:space="preserve"><value>Replace hosters</value></data>
   <data name="ReplaceHostersSourceHeading" xml:space="preserve"><value>Hoster to replace</value></data>
   <data name="ReplaceHostersSelectHoster" xml:space="preserve"><value>Select hoster</value></data>

@@ -17,13 +17,16 @@ public class CollectionContainerImportService(
     ILogger<CollectionContainerImportService> logger
 )
 {
-    public async Task ImportAsync(
+    public async Task<CollectionContainerImportResult> ImportAsync(
         LinkCrypterImportContainer container,
         IReadOnlyList<LinkCrypterImportReleasePreview> releasePreviews,
+        IReadOnlyList<LinkCrypterImportUploadToMove> uploadsToMove,
+        DateTime? uploadsPostedAt,
         CancellationToken cancellationToken
     )
     {
         var localNow = timeProvider.GetLocalNow();
+        var uploadsPostedAtOrNow = uploadsPostedAt ?? localNow;
 
         var archiveStorageFolders = await repository.GetArchiveStorageFoldersAsync(
             cancellationToken
@@ -42,7 +45,17 @@ public class CollectionContainerImportService(
                 linkCrypterImport: container.LinkCrypterImport,
                 releasePreview: releasePreview,
                 existingRelease: existingRelease,
+                uploadsToMove: uploadsToMove
+                    .Where(uploadToMove =>
+                        string.Equals(
+                            uploadToMove.ReleaseName,
+                            releasePreview.ReleaseName,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList(),
                 archiveStorageFolders: archiveStorageFolders,
+                uploadsPostedAt: uploadsPostedAtOrNow,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
@@ -53,14 +66,22 @@ public class CollectionContainerImportService(
         var releaseCollection = GetReleaseCollectionOfAllReleases(importedReleases);
         var slot = GetCollectionUploadSlotOfAllMirrors(importedReleases);
 
-        var linkCrypter = AddReleaseCollectionLinkCryptersToSlot(
+        var linkCrypterRegistrationId = container.LinkCrypterImport.LinkCrypterRegistrationId;
+
+        AddReleaseCollectionLinkCryptersToSlot(
             slot: slot,
-            linkCrypterRegistrationId: container.LinkCrypterImport.LinkCrypterRegistrationId,
-            uploadConfigOfFirstMirror: importedReleases
-                .SelectMany(importedRelease => importedRelease.MirrorsWithUploadConfigs)
-                .First()
-                .UploadConfig
+            linkCrypterRegistrationId: linkCrypterRegistrationId,
+            settings: CollectionLinkCrypterSync
+                .GetSettingsFromSlot(slot)
+                .GetValueOrDefault(linkCrypterRegistrationId)
         );
+
+        var linkCrypter = importedReleases
+            .SelectMany(importedRelease => importedRelease.MirrorsWithUploadConfigs)
+            .First()
+            .UploadConfig.LinkCrypters.Single(linkCrypter =>
+                linkCrypter.LinkCrypterRegistrationId == linkCrypterRegistrationId
+            );
 
         await AddLinkCrypterContainerUnlessSlotHasItAsync(
             container: container,
@@ -74,7 +95,7 @@ public class CollectionContainerImportService(
             cancellationToken: cancellationToken
         );
 
-        releaseCollection.UploadsPostedAt ??= localNow;
+        releaseCollection.UploadsPostedAt ??= uploadsPostedAtOrNow;
         container.ImportedReleaseCollection = releaseCollection;
         container.Status = LinkCrypterImportContainerStatus.Imported;
         container.ErrorMessages = [];
@@ -85,6 +106,28 @@ public class CollectionContainerImportService(
             importedReleases.Count,
             releaseCollection.Name
         );
+
+        return new CollectionContainerImportResult(
+            ReleaseCollection: releaseCollection,
+            CollectionUploadSlot: slot,
+            ImportedReleases: importedReleases
+        );
+    }
+
+    public static void AddReleaseCollectionLinkCryptersToSlot(
+        CollectionUploadSlot slot,
+        int linkCrypterRegistrationId,
+        CollectionUploadSlotLinkCrypterSettings? settings
+    )
+    {
+        foreach (var uploadConfig in slot.UploadConfigs)
+        {
+            GetOrAddReleaseCollectionLinkCrypter(
+                uploadConfig: uploadConfig,
+                linkCrypterRegistrationId: linkCrypterRegistrationId,
+                settings: settings
+            );
+        }
     }
 
     private static ReleaseCollection GetReleaseCollectionOfAllReleases(
@@ -149,30 +192,6 @@ public class CollectionContainerImportService(
         }
 
         return slots.Single();
-    }
-
-    private static UploadConfigLinkCrypter AddReleaseCollectionLinkCryptersToSlot(
-        CollectionUploadSlot slot,
-        int linkCrypterRegistrationId,
-        UploadConfig uploadConfigOfFirstMirror
-    )
-    {
-        var settings = CollectionLinkCrypterSync
-            .GetSettingsFromSlot(slot)
-            .GetValueOrDefault(linkCrypterRegistrationId);
-
-        foreach (var uploadConfig in slot.UploadConfigs)
-        {
-            GetOrAddReleaseCollectionLinkCrypter(
-                uploadConfig: uploadConfig,
-                linkCrypterRegistrationId: linkCrypterRegistrationId,
-                settings: settings
-            );
-        }
-
-        return uploadConfigOfFirstMirror.LinkCrypters.Single(linkCrypter =>
-            linkCrypter.LinkCrypterRegistrationId == linkCrypterRegistrationId
-        );
     }
 
     private static void GetOrAddReleaseCollectionLinkCrypter(

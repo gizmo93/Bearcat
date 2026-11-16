@@ -94,6 +94,8 @@ public class LinkCrypterImportContainerImportService(
             await collectionContainerImportService.ImportAsync(
                 container: container,
                 releasePreviews: preview.Releases,
+                uploadsToMove: [],
+                uploadsPostedAt: null,
                 cancellationToken: cancellationToken
             );
         }
@@ -130,7 +132,9 @@ public class LinkCrypterImportContainerImportService(
             linkCrypterImport: container.LinkCrypterImport,
             releasePreview: releasePreview,
             existingRelease: existingRelease,
+            uploadsToMove: [],
             archiveStorageFolders: archiveStorageFolders,
+            uploadsPostedAt: localNow,
             localNow: localNow,
             cancellationToken: cancellationToken
         );

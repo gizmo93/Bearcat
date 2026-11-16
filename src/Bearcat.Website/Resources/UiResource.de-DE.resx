@@ -2086,6 +2086,29 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>Dateistatus unbekannt</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>Dateien sind keine Archivteile</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>Dateinamen weichen vom ersten übernommenen Mirror ab</value></data>
+  <data name="Reimport" xml:space="preserve"><value>Neu importieren</value></data>
+  <data name="ReimportLinkCrypterContainer" xml:space="preserve"><value>Container neu importieren</value></data>
+  <data name="ReimportLinkCrypterContainerDescription" xml:space="preserve"><value>Teilt das Release eines früheren Imports in ein Release pro Archiv des Containers auf. Bei Hostern und Linkcryptern wird nichts gelöscht.</value></data>
+  <data name="LinkCrypterContainerReimported" xml:space="preserve"><value>Container neu importiert.</value></data>
+  <data name="LinkCrypterImportReimportSummary" xml:space="preserve"><value>Release {0} wird durch diese Releases ersetzt. Seine abgeschlossenen Uploads werden zu ihnen verschoben, seine Posts zur Collection.</value></data>
+  <data name="LinkCrypterImportReimportBlockers" xml:space="preserve"><value>Der Container kann nicht neu importiert werden:</value></data>
+  <data name="LinkCrypterImportReimportBlockerReason.UploadInProgress" xml:space="preserve"><value>Ein Upload von {0} läuft.</value></data>
+  <data name="LinkCrypterImportReimportBlockerReason.ArchiveInProgress" xml:space="preserve"><value>Ein Archiv von {0} wird erstellt oder wiederhergestellt.</value></data>
+  <data name="LinkCrypterImportReimportBlockerReason.ImportFailed" xml:space="preserve"><value>Der Import schlägt fehl: {0}</value></data>
+  <data name="LinkCrypterImportReimportMovedUploads" xml:space="preserve"><value>Verschobene Uploads: {0}</value></data>
+  <data name="LinkCrypterImportReimportMovedUpload" xml:space="preserve"><value>{0} ({1} Dateien)</value></data>
+  <data name="LinkCrypterImportReimportNoMovedUploads" xml:space="preserve"><value>Keine Uploads werden zu diesem Release verschoben.</value></data>
+  <data name="LinkCrypterImportReimportUploadsNotMoved" xml:space="preserve"><value>Diese Uploads werden nicht verschoben und mit dem alten Release aus Bearcat entfernt:</value></data>
+  <data name="LinkCrypterImportReimportUploadNotMoved" xml:space="preserve"><value>{0}: {1} ({2} Dateien)</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.NoReleaseWithArchiveName" xml:space="preserve"><value>kein Release hat diesen Archivnamen</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.UploadedFileWithoutArchiveFile" xml:space="preserve"><value>Dateien ohne Archivdatei</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.NoUploadConfigForHoster" xml:space="preserve"><value>das Release hat keine Uploadkonfiguration für diesen Hoster</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.ArchiveFileNamesDiffer" xml:space="preserve"><value>die Archivdateinamen des Releases weichen ab</value></data>
+  <data name="LinkCrypterImportUploadNotMovedReason.SameLinksAlreadyOnRelease" xml:space="preserve"><value>das Release hat bereits einen Upload mit diesen Links</value></data>
+  <data name="LinkCrypterImportReimportConvertedContainers" xml:space="preserve"><value>Diese Container werden zu Containern der Collection:</value></data>
+  <data name="LinkCrypterImportReimportContainersNotConverted" xml:space="preserve"><value>Diese Container werden aus Bearcat entfernt, beim Linkcrypter bleiben sie erhalten:</value></data>
+  <data name="LinkCrypterImportReimportContainerNotConvertedReason.CollectionUploadSlotHasContainerOfLinkCrypterAccount" xml:space="preserve"><value>der Uploadslot hat bereits einen Container dieses Linkcrypteraccounts</value></data>
+  <data name="LinkCrypterImportReimportContainerNotConvertedReason.CollectionUploadSlotUsesLinkCrypterAccountForReleaseContainers" xml:space="preserve"><value>der Uploadslot nutzt diesen Linkcrypteraccount für Releasecontainer</value></data>
   <data name="ReplaceHosters" xml:space="preserve"><value>Hoster ersetzen</value></data>
   <data name="ReplaceHostersSourceHeading" xml:space="preserve"><value>Zu ersetzender Hoster</value></data>
   <data name="ReplaceHostersSelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>

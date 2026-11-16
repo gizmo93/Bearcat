@@ -167,22 +167,32 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             .ToListAsync(cancellationToken);
 
         var releases = containers
-            .Select(container => new
+            .Select(container =>
             {
-                container.ReleaseName,
-                ReadModel = new LinkCrypterImportContainerReadModel(
-                    Id: container.Id,
-                    ContainerName: container.ContainerName,
-                    ContainerUrl: container.ContainerUrl,
-                    HasBackupLinks: container.HasBackupLinks,
-                    IsSelected: container.IsSelected,
-                    Status: container.Status,
-                    NotImportableReason: container.NotImportableReason,
-                    ImportedReleaseId: container.ImportedReleaseId,
-                    ImportedReleaseCollectionId: container.ImportedReleaseCollectionId,
-                    ErrorMessages: container.ErrorMessages,
-                    Preview: LinkCrypterImportContainerPreview.FromJson(container.PreviewJson)
-                ),
+                var preview = LinkCrypterImportContainerPreview.FromJson(container.PreviewJson);
+
+                return new
+                {
+                    container.ReleaseName,
+                    ReadModel = new LinkCrypterImportContainerReadModel(
+                        Id: container.Id,
+                        ContainerName: container.ContainerName,
+                        ContainerUrl: container.ContainerUrl,
+                        HasBackupLinks: container.HasBackupLinks,
+                        IsSelected: container.IsSelected,
+                        Status: container.Status,
+                        NotImportableReason: container.NotImportableReason,
+                        ImportedReleaseId: container.ImportedReleaseId,
+                        ImportedReleaseCollectionId: container.ImportedReleaseCollectionId,
+                        ErrorMessages: container.ErrorMessages,
+                        Preview: preview,
+                        CanBeReimported: CanBeReimported(
+                            status: container.Status,
+                            importedReleaseId: container.ImportedReleaseId,
+                            preview: preview
+                        )
+                    ),
+                };
             })
             .GroupBy(container => container.ReleaseName, StringComparer.OrdinalIgnoreCase)
             .OrderBy(release => lowerReleaseNamesOfPage.IndexOf(release.Key.ToLowerInvariant()))
@@ -200,6 +210,17 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             PageIndex: pageIndex,
             PageSize: pageSize
         );
+    }
+
+    private static bool CanBeReimported(
+        LinkCrypterImportContainerStatus status,
+        int? importedReleaseId,
+        LinkCrypterImportContainerPreview preview
+    )
+    {
+        return status is LinkCrypterImportContainerStatus.Imported
+            && importedReleaseId is not null
+            && LinkCrypterImportMirrorSplitter.SplitByArchiveBaseName(preview.Mirrors).Count > 0;
     }
 
     private static LinkCrypterImportReleaseReadModel CreateReleaseReadModel(

@@ -6,5 +6,6 @@ public sealed record LinkCrypterImportedRelease(
     Release Release,
     bool IsNewRelease,
     IReadOnlyList<LinkCrypterImportMirrorWithUploadConfig> MirrorsWithUploadConfigs,
-    IReadOnlyList<Upload> SourceUploads
+    IReadOnlyList<Upload> SourceUploads,
+    IReadOnlyList<LinkCrypterImportUploadMoveResult> UploadMoveResults
 );

@@ -197,6 +197,16 @@
                                             @L["OpenImportedReleaseCollection"]
                                         </a>
                                     }
+                                    @if (container.CanBeReimported)
+                                    {
+                                        <BbButton Variant="ButtonVariant.Outline"
+                                                  Size="ButtonSize.Small"
+                                                  Class="h-6 px-2 text-xs"
+                                                  OnClick="@(() => ShowReimportDialogAsync(container))">
+                                            <LucideIcon Name="split" class="h-3.5 w-3.5" />
+                                            @L["Reimport"]
+                                        </BbButton>
+                                    }
                                 </div>
                                 @if (container.Preview.Releases is { Count: > 1 } releasePreviews)
                                 {

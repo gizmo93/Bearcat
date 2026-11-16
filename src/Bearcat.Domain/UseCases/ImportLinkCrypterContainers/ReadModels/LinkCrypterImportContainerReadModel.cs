@@ -14,5 +14,6 @@ public sealed record LinkCrypterImportContainerReadModel(
     int? ImportedReleaseId,
     int? ImportedReleaseCollectionId,
     IReadOnlyList<string> ErrorMessages,
-    LinkCrypterImportContainerPreview Preview
+    LinkCrypterImportContainerPreview Preview,
+    bool CanBeReimported
 );

@@ -13,6 +13,7 @@ namespace Bearcat.Website.Pages.ImportLinkCrypterContainers;
 
 public partial class LinkCrypterImportReleaseList(
     ToastService toastService,
+    DialogService dialogService,
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
@@ -217,7 +218,8 @@ public partial class LinkCrypterImportReleaseList(
 
     private string GetLocalFilesText(LinkCrypterImportReleaseReadModel release)
     {
-        return GetLocalFilesText(
+        return LinkCrypterImportLocalFilesText.Get(
+            localizer: L,
             releaseAction: release.ReleaseAction,
             releaseFolderPath: release.ReleaseFolderPath,
             archiveFolderPath: release.ArchiveFolderPath
@@ -226,39 +228,34 @@ public partial class LinkCrypterImportReleaseList(
 
     private string GetLocalFilesText(LinkCrypterImportReleasePreview releasePreview)
     {
-        return GetLocalFilesText(
-            releaseAction: releasePreview.ReleaseAction,
-            releaseFolderPath: releasePreview.ReleaseFolderPath,
-            archiveFolderPath: releasePreview.ArchiveFolderPath
-        );
+        return LinkCrypterImportLocalFilesText.Get(L, releasePreview);
     }
 
-    private string GetLocalFilesText(
-        LinkCrypterImportReleaseAction? releaseAction,
-        string? releaseFolderPath,
-        string? archiveFolderPath
-    )
+    private async Task ShowReimportDialogAsync(LinkCrypterImportContainerReadModel container)
     {
-        if (releaseAction is not LinkCrypterImportReleaseAction.CreateRelease)
+        var result = await dialogService.OpenAsync<LinkCrypterImportReimportDialog>(
+            new Dictionary<string, object?>
+            {
+                [nameof(LinkCrypterImportReimportDialog.LinkCrypterImportContainerId)] =
+                    container.Id,
+            },
+            new DialogOpenOptions
+            {
+                Title = L["ReimportLinkCrypterContainer"],
+                Description = L["ReimportLinkCrypterContainerDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (result.Cancelled)
         {
-            return "-";
+            return;
         }
 
-        List<string> localFolderTexts = [];
-
-        if (releaseFolderPath is not null)
-        {
-            localFolderTexts.Add(L["LinkCrypterImportReleaseFolder", releaseFolderPath]);
-        }
-
-        if (archiveFolderPath is not null)
-        {
-            localFolderTexts.Add(L["LinkCrypterImportArchiveFolder", archiveFolderPath]);
-        }
-
-        return localFolderTexts.Count == 0
-            ? L["LinkCrypterImportNoLocalFiles"]
-            : string.Join("; ", localFolderTexts);
+        toastService.Success(L["LinkCrypterContainerReimported"]);
+        await OnReleasesChanged.InvokeAsync();
     }
 
     private string GetHosterName(string? hosterClassName)
