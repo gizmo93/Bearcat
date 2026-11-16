@@ -41,6 +41,41 @@ public class UploadFilesRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlySet<int>> GetReuploadIdsAsync(
+        IReadOnlyList<int> uploadIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var reuploadIds = await dbRead
+            .Uploads.Where(upload =>
+                uploadIds.Contains(upload.Id)
+                && dbRead.Uploads.Any(otherUpload =>
+                    otherUpload.UploadConfig.ReleaseId == upload.UploadConfig.ReleaseId
+                    && otherUpload.UploadedAt != null
+                    && otherUpload.UploadedAt < upload.CreatedAt
+                )
+            )
+            .Select(upload => upload.Id)
+            .ToListAsync(cancellationToken);
+
+        return reuploadIds.ToHashSet();
+    }
+
+    public async Task<IReadOnlyDictionary<int, DateTime?>> GetPrioritizedAtByUploadIdAsync(
+        IReadOnlyList<int> uploadIds,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead
+            .Uploads.Where(upload => uploadIds.Contains(upload.Id))
+            .Select(upload => new { upload.Id, upload.PrioritizedAt })
+            .ToDictionaryAsync(
+                upload => upload.Id,
+                upload => upload.PrioritizedAt,
+                cancellationToken
+            );
+    }
+
     public async Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(
         CancellationToken cancellationToken
     )

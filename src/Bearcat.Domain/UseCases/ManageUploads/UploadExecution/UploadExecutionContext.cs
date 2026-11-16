@@ -10,6 +10,7 @@ public sealed class UploadExecutionContext(
     int successfulFileCount,
     int failedFileCount,
     IReadOnlyList<TransferFile> plannedFiles,
+    bool isReupload,
     CancellationTokenSource cancellationTokenSource
 ) : IDisposable
 {
@@ -22,6 +23,10 @@ public sealed class UploadExecutionContext(
     public int TotalFileCount => SourceFiles.Count;
 
     public IReadOnlyList<TransferFile> PlannedFiles { get; } = plannedFiles;
+
+    public bool IsReupload { get; } = isReupload;
+
+    public DateTime? PrioritizedAt { get; set; } = upload.PrioritizedAt;
 
     public int SuccessfulFileCount { get; set; } = successfulFileCount;
 

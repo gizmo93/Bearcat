@@ -14,4 +14,7 @@ public class UploadConcurrencyConfiguration : IApplicationConfiguration
     )]
     [ApplicationConfigurationUnit(ApplicationConfigurationUnit.MegabytesPerSecond)]
     public decimal? UploadSpeedLimitMegabytesPerSecond { get; set; }
+
+    [ApplicationConfigurationProperty("UploadStartOrder", "UploadStartOrderDescription")]
+    public UploadStartOrder UploadStartOrder { get; set; } = UploadStartOrder.OldestFirst;
 }

@@ -687,6 +687,10 @@
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>The global upper limit of file uploads running at the same time across all hosters.</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum upload speed</value></data>
   <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>The global upper limit of the upload speed in MB/s, shared by all running uploads across all hosters. Decimal values are allowed, for example 0.5. Leave empty for unlimited. Very low limits can make uploads to hosters with request time limits fail, for example hosters behind Cloudflare abort requests after about 100 seconds.</value></data>
+  <data name="UploadStartOrder" xml:space="preserve"><value>Upload start order</value></data>
+  <data name="UploadStartOrderDescription" xml:space="preserve"><value>Decides which pending uploads get free upload slots first. Oldest first starts uploads in the order they were created. Initial uploads before reuploads starts all other uploads before reuploads. A reupload is an upload created after another upload of the same release was finished. Manually prioritized uploads always start first, and uploads with running files continue before other uploads start. Running file uploads are never interrupted.</value></data>
+  <data name="UploadStartOrder.OldestFirst" xml:space="preserve"><value>Oldest first</value></data>
+  <data name="UploadStartOrder.InitialUploadsBeforeReuploads" xml:space="preserve"><value>Initial uploads before reuploads</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximum parallel uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster default</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Overrides the assumed parallel upload limit for this hoster. Leave empty to use the hoster default ({0}).</value></data>

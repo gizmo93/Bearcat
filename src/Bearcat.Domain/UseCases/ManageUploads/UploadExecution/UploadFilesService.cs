@@ -1,4 +1,6 @@
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -19,7 +21,8 @@ public class UploadFilesService(
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
     UploadPreparationService uploadPreparationService,
-    ITransferProgressTracker progressTracker
+    ITransferProgressTracker progressTracker,
+    IApplicationConfigurationProvider configurationProvider
 )
 {
     public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
@@ -80,6 +83,11 @@ public class UploadFilesService(
             while (uploadsInProgress.HasUploadsOrRunningFileUploads)
             {
                 await uploadCancellationRequestService.ApplyCancellationRequestsToUploadsInProgressAsync(
+                    uploadsInProgress,
+                    cancellationToken
+                );
+
+                await UpdatePrioritizedAtOfUploadsInProgressAsync(
                     uploadsInProgress,
                     cancellationToken
                 );
@@ -181,10 +189,16 @@ public class UploadFilesService(
             cancellationToken
         );
 
+        var reuploadIds = await repository.GetReuploadIdsAsync(
+            uploads.Select(upload => upload.Id).ToList(),
+            cancellationToken
+        );
+
         foreach (var upload in uploads)
         {
             var context = await uploadPreparationService.PrepareUploadForUploadingAsync(
                 upload: upload,
+                isReupload: reuploadIds.Contains(upload.Id),
                 hostersByName: hostersByName,
                 hosterConfigsByRegistrationId: hosterConfigsByRegistrationId,
                 uploadsInProgress: uploadsInProgress,
@@ -220,9 +234,14 @@ public class UploadFilesService(
         CancellationToken cancellationToken
     )
     {
+        var uploadStartOrder = configurationProvider.GetValue<
+            UploadConcurrencyConfiguration,
+            UploadStartOrder
+        >(c => c.UploadStartOrder);
+
         foreach (
-            var context in GetUploadsWithPendingFilesRunningUploadsFirstThenOldest(
-                uploadsInProgress
+            var context in uploadsInProgress.GetUploadsWithPendingFilesInStartOrder(
+                uploadStartOrder
             )
         )
         {
@@ -264,17 +283,20 @@ public class UploadFilesService(
         }
     }
 
-    private static List<UploadExecutionContext> GetUploadsWithPendingFilesRunningUploadsFirstThenOldest(
-        UploadsInProgress uploadsInProgress
+    private async Task UpdatePrioritizedAtOfUploadsInProgressAsync(
+        UploadsInProgress uploadsInProgress,
+        CancellationToken cancellationToken
     )
     {
-        return uploadsInProgress
-            .ContextsByUploadId.Values.Where(context =>
-                !context.CancellationRequested && context.PendingFiles.Count > 0
-            )
-            .OrderByDescending(context => context.RunningFileCount > 0)
-            .ThenBy(context => context.UploadId)
-            .ToList();
+        var prioritizedAtByUploadId = await repository.GetPrioritizedAtByUploadIdAsync(
+            uploadsInProgress.ContextsByUploadId.Keys.ToList(),
+            cancellationToken
+        );
+
+        foreach (var (uploadId, prioritizedAt) in prioritizedAtByUploadId)
+        {
+            uploadsInProgress.ContextsByUploadId[uploadId].PrioritizedAt = prioritizedAt;
+        }
     }
 
     private async Task WaitBeforeNextQueuePollAsync(CancellationToken cancellationToken)

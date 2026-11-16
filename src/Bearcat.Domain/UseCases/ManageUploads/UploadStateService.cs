@@ -1,4 +1,5 @@
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -75,6 +76,42 @@ public class UploadStateService(
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    public async Task PrioritizeUploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetByIdAsync(uploadId, cancellationToken);
+
+        if (upload is null || !upload.CanBePrioritized())
+        {
+            throw new InvalidUploadStateException(
+                "Only pending or uploading uploads can be prioritized."
+            );
+        }
+
+        upload.PrioritizedAt = timeProvider.GetLocalNow();
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveUploadPrioritizationAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetByIdAsync(uploadId, cancellationToken);
+
+        if (upload is null)
+        {
+            return;
+        }
+
+        upload.PrioritizedAt = null;
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<bool> SetUploadOfflineAsync(

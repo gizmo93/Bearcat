@@ -26,6 +26,7 @@ public class UploadPreparationService(
 {
     public async Task<UploadExecutionContext?> PrepareUploadForUploadingAsync(
         Upload upload,
+        bool isReupload,
         IReadOnlyDictionary<string, IHoster> hostersByName,
         IReadOnlyDictionary<int, string> hosterConfigsByRegistrationId,
         UploadsInProgress uploadsInProgress,
@@ -102,6 +103,7 @@ public class UploadPreparationService(
         {
             return await CreateUploadExecutionContextAsync(
                 upload: upload,
+                isReupload: isReupload,
                 sourceFiles: sourceFiles,
                 hoster: hoster,
                 hosterConfig: hosterConfig,
@@ -263,6 +265,7 @@ public class UploadPreparationService(
 
     private async Task<UploadExecutionContext> CreateUploadExecutionContextAsync(
         Upload upload,
+        bool isReupload,
         IReadOnlyList<UploadSourceFile> sourceFiles,
         IHoster hoster,
         IHosterConfig hosterConfig,
@@ -320,6 +323,7 @@ public class UploadPreparationService(
             successfulFileCount: successfulFileCount,
             failedFileCount: failedFileCount,
             plannedFiles: plannedFiles,
+            isReupload: isReupload,
             cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken
             )
