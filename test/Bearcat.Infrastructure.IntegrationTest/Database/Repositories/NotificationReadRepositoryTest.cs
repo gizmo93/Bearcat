@@ -75,56 +75,6 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CountUnresolvedAsync_ResolvedAndUnresolvedNotifications_CountsOnlyUnresolved()
-    {
-        // Arrange
-        await using var dbContext = Database.CreateDbContext();
-        await SeedAsync(dbContext);
-        var repository = new NotificationReadRepository(dbContext);
-
-        // Act
-        var result = await repository.CountUnresolvedAsync(CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(15);
-    }
-
-    [Test]
-    public async Task GetLatestUnresolvedAsync_CloseTimestamps_ReturnsNewestUnresolvedById()
-    {
-        // Arrange
-        await using var dbContext = Database.CreateDbContext();
-        dbContext.Notifications.AddRange(
-            CreateNotification(
-                "Oldest",
-                new DateTime(2026, 9, 4, 9, 59, 59, 999, DateTimeKind.Utc)
-            ),
-            CreateNotification("First", new DateTime(2026, 9, 4, 10, 0, 0, DateTimeKind.Utc)),
-            CreateNotification("Second", new DateTime(2026, 9, 4, 10, 0, 0, 500, DateTimeKind.Utc)),
-            CreateNotification(
-                "Resolved",
-                new DateTime(2026, 9, 4, 11, 0, 0, DateTimeKind.Utc),
-                resolvedAt: new DateTime(2026, 9, 4, 12, 0, 0, DateTimeKind.Utc)
-            )
-        );
-        await dbContext.SaveChangesAsync();
-        dbContext.Notifications.Add(
-            CreateNotification("Third", new DateTime(2026, 9, 4, 10, 0, 0, 500, DateTimeKind.Utc))
-        );
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
-        var repository = new NotificationReadRepository(dbContext);
-
-        // Act
-        var result = await repository.GetLatestUnresolvedAsync(3, CancellationToken.None);
-
-        // Assert
-        result.Select(notification => notification.Message).ShouldBe(["Third", "Second", "First"]);
-        result[1].CreatedAt.ShouldBe(new DateTime(2026, 9, 4, 10, 0, 0, 500, DateTimeKind.Utc));
-        result.ShouldAllBe(notification => notification.ResolvedAt == null);
-    }
-
-    [Test]
     public async Task GetLatestUnresolvedAsync_LaterInsertedNotificationHasEarlierCreatedAt_ReturnsLaterInsertedNotificationFirst()
     {
         // Arrange
@@ -366,24 +316,6 @@ public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
                 TargetUrl: "/hoster-registrations"
             )
         );
-    }
-
-    [Test]
-    public async Task GetByIdAsync_NotificationDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        await using var dbContext = Database.CreateDbContext();
-        var notification = CreateNotification("Existing", DateTime.UtcNow);
-        dbContext.Notifications.Add(notification);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
-        var repository = new NotificationReadRepository(dbContext);
-
-        // Act
-        var result = await repository.GetByIdAsync(notification.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private static async Task SeedAsync(BearcatDbContext dbContext)

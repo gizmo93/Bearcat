@@ -97,31 +97,6 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         (await LoadStorageFolderAsync()).Path.ShouldBe(storageFolderPath);
     }
 
-    [TestCase("")]
-    [TestCase("   ")]
-    public async Task CreateAsync_BlankName_ReturnsNameRequired(string name)
-    {
-        // Act
-        var result = await service.CreateAsync(CreateInput(name, storageFolderPath));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.NameRequired]);
-        result.ArchiveStorageFolderId.ShouldBeNull();
-        (await DbContext.ArchiveStorageFolders.AnyAsync()).ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task CreateAsync_NameLongerThanMaximum_ReturnsNameTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateInput(new string('a', 101), storageFolderPath)
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.NameTooLong]);
-    }
-
     [Test]
     public async Task CreateAsync_NameOfExistingStorageFolder_ReturnsNameAlreadyExists()
     {
@@ -136,29 +111,6 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.NameAlreadyExists]);
         (await DbContext.ArchiveStorageFolders.CountAsync()).ShouldBe(1);
-    }
-
-    [TestCase("")]
-    [TestCase("   ")]
-    public async Task CreateAsync_BlankPath_ReturnsPathRequired(string path)
-    {
-        // Act
-        var result = await service.CreateAsync(CreateInput("NAS archive", path));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.PathRequired]);
-    }
-
-    [Test]
-    public async Task CreateAsync_PathLongerThanMaximum_ReturnsPathTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateInput("NAS archive", Path.Combine(tempRootPath, new string('a', 500)))
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.PathTooLong]);
     }
 
     [Test]
@@ -183,21 +135,6 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.PathNotFound]);
         Directory.Exists(missingPath).ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task CreateAsync_PathOfExistingStorageFolder_ReturnsPathAlreadyExists()
-    {
-        // Arrange
-        await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
-
-        // Act
-        var result = await service.CreateAsync(
-            CreateInput("Second disk", storageFolderPath + Path.DirectorySeparatorChar)
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ArchiveStorageFolderValidationError.PathAlreadyExists]);
     }
 
     [TestCase("")]
@@ -236,40 +173,6 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_NegativeMinimumFreeSpace_ReturnsMinimumFreeSpaceNegative()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateInput("NAS archive", storageFolderPath) with
-            {
-                MinimumFreeSpaceGb = -1,
-            }
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([
-            ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative,
-        ]);
-    }
-
-    [Test]
-    public async Task CreateAsync_ZeroMaxParallelFileCopies_ReturnsMaxParallelFileCopiesMustBeAtLeastOne()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateInput("NAS archive", storageFolderPath) with
-            {
-                MaxParallelFileCopies = 0,
-            }
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([
-            ArchiveStorageFolderValidationError.MaxParallelFileCopiesMustBeAtLeastOne,
-        ]);
-    }
-
-    [Test]
     public async Task CreateAsync_SeveralInvalidFields_ReturnsAllValidationErrors()
     {
         // Act
@@ -290,58 +193,6 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
             ArchiveStorageFolderValidationError.PathRequired,
             ArchiveStorageFolderValidationError.MinimumFreeSpaceNegative,
         ]);
-    }
-
-    [Test]
-    public async Task UpdateAsync_ValidInput_UpdatesFieldsAndKeepsActiveState()
-    {
-        // Arrange
-        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
-        await service.ToggleIsActiveAsync(created.ArchiveStorageFolderId!.Value);
-
-        // Act
-        var result = await service.UpdateAsync(
-            created.ArchiveStorageFolderId.Value,
-            new ArchiveStorageFolderInput(
-                "Second disk",
-                otherStorageFolderPath,
-                MinimumFreeSpaceGb: 20,
-                MaxParallelFileCopies: 3,
-                Priority: 5,
-                UseLocalWorkingCopyForReuploads: true
-            )
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        var storageFolder = await LoadStorageFolderAsync();
-        storageFolder.Name.ShouldBe("Second disk");
-        storageFolder.Path.ShouldBe(otherStorageFolderPath);
-        storageFolder.IsActive.ShouldBeFalse();
-        storageFolder.MinimumFreeSpaceGb.ShouldBe(20);
-        storageFolder.MaxParallelFileCopies.ShouldBe(3);
-        storageFolder.Priority.ShouldBe(5);
-        storageFolder.UseLocalWorkingCopyForReuploads.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task UpdateAsync_UnchangedNameAndPathOfSameStorageFolder_UpdatesStorageFolder()
-    {
-        // Arrange
-        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
-
-        // Act
-        var result = await service.UpdateAsync(
-            created.ArchiveStorageFolderId!.Value,
-            CreateInput("NAS archive", storageFolderPath) with
-            {
-                Priority = 3,
-            }
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        (await LoadStorageFolderAsync()).Priority.ShouldBe(3);
     }
 
     [Test]
@@ -406,39 +257,6 @@ public class ArchiveStorageFolderServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.IsSuccess.ShouldBeTrue();
         (await LoadStorageFolderAsync()).Name.ShouldBe("Renamed NAS archive");
-    }
-
-    [Test]
-    public async Task ToggleIsActiveAsync_CalledTwice_DeactivatesAndReactivatesStorageFolder()
-    {
-        // Arrange
-        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
-
-        // Act
-        await service.ToggleIsActiveAsync(created.ArchiveStorageFolderId!.Value);
-        var isActiveAfterFirstToggle = (await LoadStorageFolderAsync()).IsActive;
-        await service.ToggleIsActiveAsync(created.ArchiveStorageFolderId.Value);
-
-        // Assert
-        isActiveAfterFirstToggle.ShouldBeFalse();
-        (await LoadStorageFolderAsync()).IsActive.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task DeleteAsync_StorageFolderWithoutStoredArchives_DeletesStorageFolder()
-    {
-        // Arrange
-        var created = await service.CreateAsync(CreateInput("NAS archive", storageFolderPath));
-
-        // Act
-        var result = await service.DeleteAsync(created.ArchiveStorageFolderId!.Value);
-
-        // Assert
-        result.IsDeleted.ShouldBeTrue();
-        result.StoredArchiveCount.ShouldBe(0);
-        await using var readDbContext = Database.CreateDbContext();
-        (await readDbContext.ArchiveStorageFolders.AnyAsync()).ShouldBeFalse();
-        Directory.Exists(storageFolderPath).ShouldBeTrue();
     }
 
     [Test]

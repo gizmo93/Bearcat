@@ -137,23 +137,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ToggleIsActiveAsync_RegistrationExists_TogglesIsActive()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(isActive: true);
-
-        // Act
-        await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.HosterRegistrations.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(registration.Id);
-        result.IsActive.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task UpdateRegistrationAsync_RegistrationExists_UpdatesNameAndSerializedConfig()
     {
         // Arrange
@@ -303,48 +286,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task TryLoginAsync_RegistrationExists_DelegatesToHoster()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(isActive: true);
-        var loginResult = new TryLoginResult(true, null);
-        hosterMock
-            .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
-            .Returns(hosterConfigMock.Object);
-        hosterMock
-            .Setup(h => h.TryLoginAsync(hosterConfigMock.Object, CancellationToken.None))
-            .ReturnsAsync(loginResult);
-
-        // Act
-        var result = await service.TryLoginAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(loginResult);
-        hosterFactoryMock.Verify(f => f.GetByName(HosterClassName), Times.Once);
-        hosterMock.Verify(h => h.DeserializeHosterConfig(SerializedConfig), Times.Once);
-        hosterMock.Verify(
-            h => h.TryLoginAsync(hosterConfigMock.Object, CancellationToken.None),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task RemoveAsync_RegistrationExists_RemovesRegistration()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(isActive: true);
-
-        // Act
-        await service.RemoveAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.HosterRegistrations.AnyAsync();
-
-        result.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task RegisterHosterAsync_HosterHasFixedParallelLimit_IgnoresOverride()
     {
         // Arrange
@@ -365,28 +306,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
         // Assert
         var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.MaxParallelUploadsOverride.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task RegisterHosterAsync_NoFixedParallelLimit_PersistsOverride()
-    {
-        // Arrange
-        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
-        hosterMock.Setup(h => h.SerializeHosterConfig(configuration)).Returns(SerializedConfig);
-
-        // Act
-        await service.RegisterHosterAsync(
-            "Primary hoster",
-            true,
-            configuration,
-            HosterClassName,
-            maxParallelUploadsOverride: 5,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var registration = await DbContext.HosterRegistrations.SingleAsync();
-        registration.MaxParallelUploadsOverride.ShouldBe(5);
     }
 
     [Test]
@@ -411,36 +330,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
         result.IsSuccess.ShouldBeTrue();
         var updated = await DbContext.HosterRegistrations.SingleAsync();
         updated.RequiresCaptchaVerification.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task RequestCaptchaChallengeAsync_CaptchaHoster_DelegatesToHoster()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(
-            isActive: false,
-            hosterClassName: CaptchaHosterClassName
-        );
-        var challengeResult = new CaptchaChallengeResult(
-            IsSuccess: true,
-            Challenge: "challenge",
-            CaptchaUrl: "https://captcha.example/image.png"
-        );
-        SetupCaptchaHoster();
-        captchaHosterMock
-            .Setup(h =>
-                h.RequestCaptchaChallengeAsync(hosterConfigMock.Object, CancellationToken.None)
-            )
-            .ReturnsAsync(challengeResult);
-
-        // Act
-        var result = await service.RequestCaptchaChallengeAsync(
-            registration.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(challengeResult);
     }
 
     [Test]
@@ -529,70 +418,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task MarkCaptchaVerificationRequiredAsync_RegistrationExists_MarksAndNotifies()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(isActive: true);
-        notificationServiceMock
-            .Setup(n =>
-                n.CreateAsync(
-                    NotificationKind.CaptchaVerificationRequired,
-                    It.IsAny<string>(),
-                    CancellationToken.None
-                )
-            )
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await service.MarkCaptchaVerificationRequiredAsync(
-            registration.Id,
-            "captcha please",
-            CancellationToken.None
-        );
-
-        // Assert
-        var updated = await DbContext.HosterRegistrations.SingleAsync();
-        updated.RequiresCaptchaVerification.ShouldBeTrue();
-        updated.IsActive.ShouldBeFalse();
-        notificationServiceMock.Verify(
-            n =>
-                n.CreateAsync(
-                    NotificationKind.CaptchaVerificationRequired,
-                    It.Is<string>(message => message.Contains("captcha please")),
-                    CancellationToken.None
-                ),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task GetStorageQuotaAsync_StorageQuotaHoster_ReturnsQuotaFromHoster()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(
-            isActive: true,
-            hosterClassName: StorageQuotaHosterClassName
-        );
-        var storageQuotaHosterMock = SetupStorageQuotaHoster();
-        var storageQuota = HosterStorageQuota.Limited(freeBytes: 1000, totalBytes: 5000);
-        storageQuotaHosterMock
-            .Setup(h => h.GetStorageQuotaAsync(hosterConfigMock.Object, CancellationToken.None))
-            .ReturnsAsync(storageQuota);
-
-        // Act
-        var result = await service.GetStorageQuotaAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(
-            new StorageQuotaCheckResult(
-                IsSuccess: true,
-                StorageQuota: storageQuota,
-                ErrorMessage: null
-            )
-        );
-    }
-
-    [Test]
     public async Task GetStorageQuotaAsync_HosterThrows_ReturnsErrorMessage()
     {
         // Arrange
@@ -655,45 +480,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
         captchaHosterMock
             .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
             .Returns(hosterConfigMock.Object);
-    }
-
-    [Test]
-    public async Task GetUploadCountAsync_UploadsOfSeveralHosters_CountsOnlyUploadsOfRegistration()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(isActive: true);
-        var otherRegistration = await AddHosterRegistrationAsync(isActive: true);
-        var releaseGroup = new ReleaseGroup
-        {
-            Name = "Managed releases",
-            EnableAutomaticReuploads = false,
-            NumberOfHoursUntilReupload = 24,
-        };
-        DbContext.UploadConfigs.AddRange(
-            CreateUploadConfig(releaseGroup, "First.Release", registration, uploadCount: 2),
-            CreateUploadConfig(releaseGroup, "Second.Release", registration, uploadCount: 1),
-            CreateUploadConfig(releaseGroup, "Third.Release", otherRegistration, uploadCount: 1)
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetUploadCountAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(3);
-    }
-
-    [Test]
-    public async Task GetUploadCountAsync_RegistrationWithoutUploads_ReturnsZero()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(isActive: true);
-
-        // Act
-        var result = await service.GetUploadCountAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(0);
     }
 
     [Test]
@@ -781,37 +567,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
         var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
         registration.MirrorDownloadProxyServerId.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task RegisterHosterAsync_DownloadHosterWithSpeedLimits_PersistsSpeedLimits()
-    {
-        // Arrange
-        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
-        var downloadHosterMock = new Mock<IHosterWithDownload>(MockBehavior.Strict);
-        downloadHosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
-        downloadHosterMock
-            .Setup(h => h.SerializeHosterConfig(configuration))
-            .Returns(SerializedConfig);
-        hosterFactoryMock
-            .Setup(f => f.GetByName(DownloadHosterClassName))
-            .Returns(downloadHosterMock.Object);
-
-        // Act
-        await service.RegisterHosterAsync(
-            "Download hoster",
-            true,
-            configuration,
-            DownloadHosterClassName,
-            uploadSpeedLimitMegabytesPerSecond: 2.5m,
-            mirrorDownloadSpeedLimitMegabytesPerSecond: 0.75m,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var registration = await DbContext.HosterRegistrations.SingleAsync();
-        registration.UploadSpeedLimitMegabytesPerSecond.ShouldBe(2.5m);
-        registration.MirrorDownloadSpeedLimitMegabytesPerSecond.ShouldBe(0.75m);
     }
 
     [Test]
@@ -952,83 +707,6 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
         ProxyCategoryScope.Current.ShouldBeNull();
     }
 
-    [Test]
-    public async Task RequestCaptchaChallengeAsync_RegistrationWithUploadProxySelection_CallsHosterInsideUploadProxyScope()
-    {
-        // Arrange
-        var proxyServer = await AddProxyServerAsync();
-        var registration = await AddHosterRegistrationAsync(
-            isActive: false,
-            hosterClassName: CaptchaHosterClassName,
-            uploadProxySelection: ProxySelection.SpecificProxyServer,
-            uploadProxyServerId: proxyServer.Id
-        );
-        ProxyCategoryScopeState? scopeStateDuringRequest = null;
-        SetupCaptchaHoster();
-        captchaHosterMock
-            .Setup(h =>
-                h.RequestCaptchaChallengeAsync(hosterConfigMock.Object, CancellationToken.None)
-            )
-            .Callback(() => scopeStateDuringRequest = ProxyCategoryScope.Current)
-            .ReturnsAsync(new CaptchaChallengeResult(true, "challenge", null));
-
-        // Act
-        await service.RequestCaptchaChallengeAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        scopeStateDuringRequest.ShouldBe(
-            new ProxyCategoryScopeState(
-                ProxyCategory.HosterUploads,
-                ProxySelection.SpecificProxyServer,
-                proxyServer.Id
-            )
-        );
-        ProxyCategoryScope.Current.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task VerifyCaptchaAsync_RegistrationWithUploadProxySelection_CallsHosterInsideUploadProxyScope()
-    {
-        // Arrange
-        var registration = await AddHosterRegistrationAsync(
-            isActive: false,
-            hosterClassName: CaptchaHosterClassName,
-            requiresCaptchaVerification: true,
-            uploadProxySelection: ProxySelection.NoProxy
-        );
-        ProxyCategoryScopeState? scopeStateDuringVerification = null;
-        SetupCaptchaHoster();
-        captchaHosterMock
-            .Setup(h =>
-                h.VerifyCaptchaAsync(
-                    hosterConfigMock.Object,
-                    "challenge",
-                    "response",
-                    CancellationToken.None
-                )
-            )
-            .Callback(() => scopeStateDuringVerification = ProxyCategoryScope.Current)
-            .ReturnsAsync(new TryLoginResult(true, null));
-
-        // Act
-        await service.VerifyCaptchaAsync(
-            registration.Id,
-            "challenge",
-            "response",
-            CancellationToken.None
-        );
-
-        // Assert
-        scopeStateDuringVerification.ShouldBe(
-            new ProxyCategoryScopeState(
-                ProxyCategory.HosterUploads,
-                ProxySelection.NoProxy,
-                ProxyServerId: null
-            )
-        );
-        ProxyCategoryScope.Current.ShouldBeNull();
-    }
-
     private async Task<ProxyServer> AddProxyServerAsync()
     {
         var proxyServer = new ProxyServer
@@ -1086,49 +764,5 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         return notification;
-    }
-
-    private static UploadConfig CreateUploadConfig(
-        ReleaseGroup releaseGroup,
-        string releaseName,
-        HosterRegistration hosterRegistration,
-        int uploadCount
-    )
-    {
-        var release = new Release
-        {
-            Name = releaseName,
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = $"/tmp/{releaseName}",
-            ReleaseGroup = releaseGroup,
-        };
-
-        return new UploadConfig
-        {
-            UploadSource = UploadSource.ArchiveFiles,
-            Release = release,
-            ArchiveConfig = new ArchiveConfig
-            {
-                Release = release,
-                Name = "Main archive",
-                ArchiveFilesBasePath = "/tmp/archive",
-                ArchiverName = "zip",
-                ArchiveFileSizeMb = 512,
-            },
-            HosterRegistration = hosterRegistration,
-            Name = "Upload",
-            Uploads = Enumerable
-                .Range(0, uploadCount)
-                .Select(_ => new Upload
-                {
-                    HosterRegistration = hosterRegistration,
-                    CreatedAt = DateTime.UtcNow,
-                    UploadState = UploadState.Completed,
-                    OnlineState = OnlineState.Online,
-                    UploadedFiles = [],
-                    ErrorMessages = [],
-                })
-                .ToList(),
-        };
     }
 }

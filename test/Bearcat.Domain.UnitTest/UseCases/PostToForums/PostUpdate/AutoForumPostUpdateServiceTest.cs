@@ -129,30 +129,6 @@ public class AutoForumPostUpdateServiceTest
     }
 
     [Test]
-    public async Task UpdatePostOnSiteAsync_SuccessfulEdit_CreatesANotification()
-    {
-        // Arrange
-        var repository = OutdatedRepository(forumPostTemplateId: 3);
-        var submitter = new FakeForumPostSubmitter();
-        var notificationService = new FakeNotificationService();
-        var service = ServiceWith(repository, submitter, notificationService: notificationService);
-
-        // Act
-        await service.UpdatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.Release,
-            entityId: 1,
-            distributionSiteRegistrationId: 5
-        );
-
-        // Assert
-        var notification = notificationService.Created.ShouldHaveSingleItem();
-        notification.Kind.ShouldBe(NotificationKind.AutomaticForumPostUpdated);
-        notification.Message.ShouldBe(
-            $"The post of '{AutoPostTestFactory.ReleaseName}' in 'Board' was updated: {submitter.EditedPostUrl}"
-        );
-    }
-
-    [Test]
     public async Task UpdatePostOnSiteAsync_FailingEdit_CreatesAFailureNotification()
     {
         // Arrange

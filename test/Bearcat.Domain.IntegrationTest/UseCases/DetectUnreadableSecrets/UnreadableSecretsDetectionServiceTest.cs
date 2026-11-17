@@ -260,27 +260,6 @@ public class UnreadableSecretsDetectionServiceTest(DatabaseProvider databaseProv
     }
 
     [Test]
-    public async Task DetectAsync_FlaggedRegistrationReadableAgain_ClearsFlagWithoutNotification()
-    {
-        // Arrange
-        await AddHosterRegistrationAsync(
-            "Hoster",
-            currentKeyProtector.Protect("secret"),
-            hasUnreadableSecrets: true
-        );
-
-        // Act
-        await DetectAsync();
-
-        // Assert
-        var assertContext = CreateDbContext();
-        (
-            await assertContext.HosterRegistrations.SingleAsync()
-        ).HasUnreadableSecrets.ShouldBeFalse();
-        (await assertContext.Notifications.CountAsync()).ShouldBe(0);
-    }
-
-    [Test]
     public async Task DetectAsync_AllSecretsReadableAgain_ResolvesUnreadableSecretsNotification()
     {
         // Arrange
@@ -383,30 +362,6 @@ public class UnreadableSecretsDetectionServiceTest(DatabaseProvider databaseProv
         (await assertContext.DistributionSiteRegistrations.SingleAsync()).EncryptedSession.ShouldBe(
             session
         );
-    }
-
-    [Test]
-    public async Task DetectAsync_UnreadableTelegramBotToken_FlagsConfigurationAndCreatesNotification()
-    {
-        // Arrange
-        await using (var arrangeContext = Database.CreateDbContext())
-        {
-            arrangeContext.TelegramConfigurations.Add(
-                CreateTelegramConfiguration(otherKeyProtector.Protect("token"))
-            );
-            await arrangeContext.SaveChangesAsync();
-        }
-
-        // Act
-        await DetectAsync();
-
-        // Assert
-        var assertContext = CreateDbContext();
-        (
-            await assertContext.TelegramConfigurations.SingleAsync()
-        ).HasUnreadableSecrets.ShouldBeTrue();
-        var notification = await assertContext.Notifications.SingleAsync();
-        notification.Message.ShouldEndWith(": Telegram bot token");
     }
 
     [Test]

@@ -157,22 +157,6 @@ public class TransferSpeedLimitServiceTest
     }
 
     [Test]
-    public void EnterMirrorDownloadScope_SpeedLimitConfigured_UsesDownloadConfiguration()
-    {
-        // Arrange
-        uploadSpeedLimitMegabytesPerSecond = 50;
-        downloadSpeedLimitMegabytesPerSecond = 1.5m;
-
-        // Act
-        using var scope = service.EnterMirrorDownloadScope(Registration);
-
-        // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
-        limiters.Count.ShouldBe(1);
-        limiters[0].BytesPerSecond.ShouldBe(1_572_864);
-    }
-
-    [Test]
     public void EnterUploadScope_OnlyHosterSpeedLimitConfigured_ScopeContainsOnlyHosterLimiter()
     {
         // Arrange

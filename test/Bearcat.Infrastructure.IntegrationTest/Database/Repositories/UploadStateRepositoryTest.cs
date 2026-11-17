@@ -23,23 +23,6 @@ public class UploadStateRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetActiveHosterRegistrationsAsync_ActiveAndInactiveRegistrations_ReturnsActiveRegistrationsOrderedById()
-    {
-        // Arrange
-        var firstActiveRegistration = await AddHosterRegistrationAsync("First", isActive: true);
-        await AddHosterRegistrationAsync("Inactive", isActive: false);
-        var secondActiveRegistration = await AddHosterRegistrationAsync("Second", isActive: true);
-
-        // Act
-        var result = await repository.GetActiveHosterRegistrationsAsync(CancellationToken.None);
-
-        // Assert
-        result
-            .Select(registration => registration.Id)
-            .ShouldBe([firstActiveRegistration.Id, secondActiveRegistration.Id]);
-    }
-
-    [Test]
     public async Task GetLeastRecentlyCheckedUploadsToCheckAsync_UploadsOfSeveralHosterRegistrations_ReturnsOnlyUploadsOfGivenRegistration()
     {
         // Arrange

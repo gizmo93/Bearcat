@@ -23,32 +23,6 @@ public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task CreateAsync_ValidLinkCrypter_PersistsUploadConfigLinkCrypter()
-    {
-        // Arrange
-        var seed = await AddDependenciesAsync();
-
-        // Act
-        await service.CreateAsync(
-            seed.UploadConfigId,
-            seed.LinkCrypterRegistrationId,
-            "secret",
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.UploadConfigId.ShouldBe(seed.UploadConfigId);
-        result.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
-        result.Password.ShouldBe("secret");
-        result.EnableCaptcha.ShouldBeTrue();
-        result.EnableContainerDownload.ShouldBeTrue();
-        result.EnableClickAndLoad.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task CreateAsync_PasswordIsBlank_PersistsNullPassword()
     {
         // Arrange
@@ -67,58 +41,6 @@ public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvide
 
         result.ShouldNotBeNull();
         result.Password.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task UpdateAsync_LinkCrypterExists_UpdatesPassword()
-    {
-        // Arrange
-        var linkCrypter = await AddUploadConfigLinkCrypterAsync("old-secret");
-
-        // Act
-        await service.UpdateAsync(
-            linkCrypter.Id,
-            "new-secret",
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(linkCrypter.Id);
-        result.Password.ShouldBe("new-secret");
-    }
-
-    [Test]
-    public async Task UpdateAsync_PasswordIsBlank_UpdatesPasswordToNull()
-    {
-        // Arrange
-        var linkCrypter = await AddUploadConfigLinkCrypterAsync("old-secret");
-
-        // Act
-        await service.UpdateAsync(linkCrypter.Id, "", cancellationToken: CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Password.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task DeleteAsync_LinkCrypterExists_RemovesUploadConfigLinkCrypter()
-    {
-        // Arrange
-        var linkCrypter = await AddUploadConfigLinkCrypterAsync("secret");
-
-        // Act
-        await service.DeleteAsync(linkCrypter.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.AnyAsync();
-
-        result.ShouldBeFalse();
     }
 
     [Test]

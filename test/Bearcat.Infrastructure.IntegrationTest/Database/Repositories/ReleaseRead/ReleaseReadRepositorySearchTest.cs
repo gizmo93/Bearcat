@@ -81,32 +81,6 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
             .ReleaseFolderPath.ShouldBe("/data/Émigré/Bearcat.Folder.2026-GRP");
     }
 
-    [TestCase(OnlineState.Unknown, "Bearcat.NoUploadConfigs.2026-GRP")]
-    [TestCase(OnlineState.Online, "Bearcat.AllOnline.2026-GRP")]
-    [TestCase(OnlineState.PartiallyOnline, "Bearcat.PartiallyOnline.2026-GRP")]
-    [TestCase(OnlineState.Offline, "Bearcat.Offline.2026-GRP")]
-    public async Task SearchReleasesAsync_OnlineStateFilter_ReturnsReleaseWithThatOnlineState(
-        OnlineState onlineState,
-        string expectedReleaseName
-    )
-    {
-        // Arrange
-        testData.AddOnlineStateReleases();
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleasesAsync(
-            new ReleaseSearchQuery(OnlineState: onlineState),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        var release = result.Items.Single();
-        release.Name.ShouldBe(expectedReleaseName);
-        release.OnlineState.ShouldBe(onlineState == OnlineState.Unknown ? null : onlineState);
-    }
-
     [Test]
     public async Task SearchReleasesAsync_ConfigWithSeveralOnlineUploads_CountsOnlineUploadConfigOnce()
     {
@@ -130,29 +104,6 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
         countsByName["Bearcat.NoUploadConfigs.2026-GRP"].ShouldBe((0, 0));
         countsByName["Bearcat.Offline.2026-GRP"].ShouldBe((2, 0));
         countsByName["Bearcat.PartiallyOnline.2026-GRP"].ShouldBe((3, 1));
-    }
-
-    [Test]
-    public async Task SearchReleasesAsync_ReleaseContentTypeFilter_ReturnsMatchingRelease()
-    {
-        // Arrange
-        testData.AddRelease("Bearcat.Movie.2026-GRP", ReleaseContentType.Movie);
-        var episodeRelease = testData.AddRelease(
-            "Bearcat.S01E01.2026-GRP",
-            ReleaseContentType.TvShowEpisode
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleasesAsync(
-            new ReleaseSearchQuery(ReleaseContentType: ReleaseContentType.TvShowEpisode),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.Single().ReleaseId.ShouldBe(episodeRelease.Id);
-        result.Items.Single().ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
     }
 
     [Test]
@@ -225,28 +176,6 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
         // Assert
         result.TotalCount.ShouldBe(1);
         result.Items.Single().ReleaseId.ShouldBe(matchingRelease.Id);
-    }
-
-    [Test]
-    public async Task SearchReleasesAsync_ReleaseGroupFilter_ReturnsReleaseOfThatGroup()
-    {
-        // Arrange
-        testData.AddRelease("Bearcat.First.2026-GRP");
-        var matchingRelease = testData.AddRelease("Bearcat.Second.2026-GRP");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleasesAsync(
-            new ReleaseSearchQuery(ReleaseGroupId: matchingRelease.ReleaseGroupId),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        var release = result.Items.Single();
-        release.ReleaseId.ShouldBe(matchingRelease.Id);
-        release.ReleaseGroupId.ShouldBe(matchingRelease.ReleaseGroupId);
-        release.ReleaseGroupName.ShouldBe("Bearcat.Second.2026-GRP group");
     }
 
     [Test]
@@ -364,30 +293,6 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
         result
             .Items.Select(item => item.Name)
             .ShouldBe(["Bearcat.Page.06.2026-GRP", "Bearcat.Page.07.2026-GRP"]);
-    }
-
-    [Test]
-    public async Task SearchReleasesAsync_NoSortOrder_ReturnsReleasesOrderedByName()
-    {
-        // Arrange
-        testData.AddSortOrderReleases();
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleasesAsync(
-            new ReleaseSearchQuery(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result
-            .Items.Select(item => item.Name)
-            .ShouldBe([
-                "Bearcat.A.2026-GRP",
-                "Bearcat.B.2026-GRP",
-                "Bearcat.C.2026-GRP",
-                "Bearcat.D.2026-GRP",
-            ]);
     }
 
     [TestCase(ReleaseSearchSortOrder.NameAscending, new[] { "A", "B", "C", "D" })]

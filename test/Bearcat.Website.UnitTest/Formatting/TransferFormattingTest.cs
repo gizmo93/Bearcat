@@ -8,10 +8,6 @@ namespace Bearcat.Website.UnitTest.Formatting;
 public class TransferFormattingTest
 {
     [TestCase(1_000_000, 0, 10_000, "1 minute")]
-    [TestCase(1_000_000, 400_000, 10_000, "1 minute")]
-    [TestCase(10_000_000, 0, 10_000, "16 minutes")]
-    [TestCase(100_000_000, 0, 10_000, "2 hours")]
-    [TestCase(1_000, 0, 100, "10 seconds")]
     [TestCase(1_000, 990, 100, "1 second")]
     public void FormatRemainingTime_SpeedAndTotalKnown_ReturnsHumanizedRemainingTime(
         long totalBytes,

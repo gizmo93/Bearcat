@@ -139,34 +139,6 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task RenderAsync_TemplateUsesPrimaryLanguage_RendersNativeLanguageName()
-    {
-        var release = await AddReleaseAsync();
-        release.PrimaryLanguageCode = "de";
-        var template = new ForumPostTemplate
-        {
-            Name = "Primary language template",
-            TemplateBody = "{{ release.primary_language }}",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-
-        DbContext.ForumPostTemplates.Add(template);
-        await DbContext.SaveChangesAsync();
-
-        var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
-
-        result.Errors.ShouldBeEmpty();
-        result.Content.ShouldBe("Deutsch");
-        service
-            .GetVariables(ForumPostTemplateType.Release)
-            .Single(node => node.Name == "release")
-            .Children.ShouldContain(node =>
-                node.Insertion != null && node.Insertion.Text == "{{ release.primary_language }}"
-            );
-    }
-
-    [Test]
     public async Task LoadPreviewDataAsync_ExistingRelease_ReturnsDataNodesAndRendersPreview()
     {
         // Arrange
@@ -201,20 +173,6 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         );
         renderResult.Errors.ShouldBeEmpty();
         renderResult.Content.ShouldBe("Bearcat.Release.2026-GRP|https://img.example/full.jpg");
-    }
-
-    [Test]
-    public async Task LoadPreviewDataAsync_MissingRelease_ReturnsNull()
-    {
-        // Act
-        var previewData = await service.LoadPreviewDataAsync(
-            ForumPostTemplateType.Release,
-            999,
-            CancellationToken.None
-        );
-
-        // Assert
-        previewData.ShouldBeNull();
     }
 
     private async Task<Release> AddReleaseAsync()

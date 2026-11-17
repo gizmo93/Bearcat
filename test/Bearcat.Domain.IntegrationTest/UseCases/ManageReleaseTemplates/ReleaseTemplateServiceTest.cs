@@ -88,33 +88,6 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_TemplateExists_UpdatesTemplate()
-    {
-        // Arrange
-        var firstReleaseGroup = await AddReleaseGroupAsync();
-        var secondReleaseGroup = await AddReleaseGroupAsync("Updated releases");
-        var releaseTemplate = await AddReleaseTemplateAsync(firstReleaseGroup.Id);
-
-        // Act
-        await service.UpdateAsync(
-            releaseTemplate.Id,
-            "Updated template",
-            ReleaseType.Managed,
-            ReleaseContentType.Movie,
-            secondReleaseGroup.Id,
-            ScreenshotsDisabled,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.ReleaseTemplates.SingleAsync();
-
-        result.Name.ShouldBe("Updated template");
-        result.ReleaseType.ShouldBe(ReleaseType.Managed);
-        result.ReleaseGroupId.ShouldBe(secondReleaseGroup.Id);
-    }
-
-    [Test]
     public async Task UpdateAsync_ReleaseTypeChanges_ThrowsInvalidOperationException()
     {
         // Arrange

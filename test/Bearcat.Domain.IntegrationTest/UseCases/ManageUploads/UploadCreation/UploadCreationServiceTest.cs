@@ -71,21 +71,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateMissingInitialUploadsAsync_InactiveHosterRegistrationWithoutUploads_DoesNotCreateInitialUpload()
-    {
-        // Arrange
-        await AddUploadConfigAsync(enableAutomaticReuploads: false, hosterIsActive: false);
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        var uploadExists = await DbContext.Uploads.AnyAsync();
-
-        uploadExists.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task CreateMissingInitialUploadsAsync_HosterAccountPoolUploadConfigWithActiveMember_CreatesInitialUploadWithoutHosterRegistration()
     {
         // Arrange
@@ -102,22 +87,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
         result.UploadConfigId.ShouldBe(uploadConfig.Id);
         result.HosterRegistrationId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
-    }
-
-    [Test]
-    public async Task CreateMissingInitialUploadsAsync_HosterAccountPoolUploadConfigWithoutActiveMember_DoesNotCreateInitialUpload()
-    {
-        // Arrange
-        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads: false);
-        await MoveUploadConfigToHosterAccountPoolAsync(uploadConfig, memberIsActive: false);
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        var uploadExists = await DbContext.Uploads.AnyAsync();
-
-        uploadExists.ShouldBeFalse();
     }
 
     [Test]
@@ -217,34 +186,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_MoreDueAutomaticReuploadsThanOneRunCreates_CreatesOneHundredReuploads()
-    {
-        // Arrange
-        foreach (var uploadNumber in Enumerable.Range(1, 101))
-        {
-            await AddCompletedUploadAsync(
-                OnlineState.Offline,
-                checkedAt: LocalNow.AddHours(-25),
-                uploadedFileLinks: [$"https://hoster.test/{uploadNumber}"],
-                enableAutomaticReuploads: true
-            );
-        }
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var reuploadCount = await DbContext.Uploads.CountAsync(u =>
-            u.UploadState == UploadState.WaitingForArchive
-        );
-        reuploadCount.ShouldBe(100);
-    }
-
-    [Test]
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadIsDue_CreatesWaitingForArchiveUpload()
     {
         // Arrange
@@ -271,32 +212,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
         reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         reupload.OnlineState.ShouldBe(OnlineState.Unknown);
-    }
-
-    [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_HosterHoursOverrideShorterThanReleaseGroup_CreatesReuploadEarlier()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-2),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true,
-            numberOfHoursUntilReuploadOverride: 1
-        );
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
-
-        uploads.Count.ShouldBe(2);
-        uploads.Single(u => u.Id != upload.Id).UploadState.ShouldBe(UploadState.WaitingForArchive);
     }
 
     [Test]
@@ -350,57 +265,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_OnlyWhenFullyOfflineTriggerAndFullyOffline_CreatesReupload()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-25),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true,
-            reuploadTriggerOverride: ReuploadTrigger.OnlyWhenFullyOffline
-        );
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
-
-        uploads.Count.ShouldBe(2);
-        uploads.Single(u => u.Id != upload.Id).UploadState.ShouldBe(UploadState.WaitingForArchive);
-    }
-
-    [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_InactiveHosterRegistrationAutomaticReuploadIsDue_DoesNotCreateReupload()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-25),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true,
-            hosterIsActive: false
-        );
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploads = await DbContext.Uploads.ToListAsync();
-
-        uploads.Count.ShouldBe(1);
-        uploads.Single().Id.ShouldBe(upload.Id);
-    }
-
-    [Test]
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_CanceledUploadIsDueForAutomaticReupload_DoesNotCreateReupload()
     {
         // Arrange
@@ -424,43 +288,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
 
         uploads.Count.ShouldBe(1);
         uploads.Single().Id.ShouldBe(upload.Id);
-    }
-
-    [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_OfflineUploadWithCanceledReupload_DoesNotCreateAnotherReupload()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-25),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true
-        );
-        var canceledReupload = new Upload
-        {
-            UploadConfigId = upload.UploadConfigId,
-            HosterRegistrationId = upload.HosterRegistrationId,
-            CreatedAt = LocalNow.AddHours(-24),
-            UploadedAt = null,
-            UploadState = UploadState.Canceled,
-            OnlineState = OnlineState.Unknown,
-            UploadedFiles = [],
-            ErrorMessages = [],
-        };
-        DbContext.Uploads.Add(canceledReupload);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
-
-        uploads.Count.ShouldBe(2);
-        uploads.Select(u => u.Id).ShouldBe([upload.Id, canceledReupload.Id]);
     }
 
     [Test]
@@ -651,31 +478,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateManualReuploadAsync_FailedUpload_CreatesWaitingForArchiveUpload()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Unknown,
-            checkedAt: null,
-            uploadedFileLinks: []
-        );
-        upload.UploadState = UploadState.Failed;
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
-
-        reupload.ShouldNotBeNull();
-        reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
-        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
-        reupload.OnlineState.ShouldBe(OnlineState.Unknown);
-    }
-
-    [Test]
     public async Task CreateManualReuploadAsync_OfflineUploadWithOlderFailedUpload_CreatesWaitingForArchiveUpload()
     {
         // Arrange
@@ -729,40 +531,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
                 CreatedAt = DateTime.UtcNow,
                 UploadState = UploadState.Pending,
                 OnlineState = OnlineState.Unknown,
-                ErrorMessages = [],
-            }
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidUploadStateException>(async () =>
-            await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Message.ShouldBe(
-            "A replacement upload already exists or is pending for this upload config."
-        );
-    }
-
-    [Test]
-    public async Task CreateManualReuploadAsync_OnlineBlockingUploadExists_ThrowsInvalidUploadStateException()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow,
-            uploadedFileLinks: ["https://hoster.test/1"]
-        );
-        DbContext.Uploads.Add(
-            new Upload
-            {
-                UploadConfigId = upload.UploadConfigId,
-                HosterRegistrationId = upload.HosterRegistrationId,
-                CreatedAt = DateTime.UtcNow,
-                UploadState = UploadState.Completed,
-                OnlineState = OnlineState.Online,
                 ErrorMessages = [],
             }
         );
@@ -904,52 +672,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadHasNoUploadedFiles_DoesNotCreateReupload()
-    {
-        // Arrange
-        await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: null,
-            uploadedFileLinks: [],
-            enableAutomaticReuploads: true
-        );
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploads = await DbContext.Uploads.ToListAsync();
-
-        uploads.Count.ShouldBe(1);
-    }
-
-    [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadNotFullyOnlineSinceWithinThreshold_DoesNotCreateReupload()
-    {
-        // Arrange
-        await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-1),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true
-        );
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploads = await DbContext.Uploads.ToListAsync();
-
-        uploads.Count.ShouldBe(1);
-    }
-
-    [Test]
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_PartiallyOnlineUploadStillBeingRechecked_CreatesReuploadBasedOnNotFullyOnlineSince()
     {
         // Arrange
@@ -1032,106 +754,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateMissingInitialUploadsAsync_QualityGatePasses_CreatesInitialUploadAndMarksPassed()
-    {
-        // Arrange
-        await AddUploadConfigAsync(
-            enableAutomaticReuploads: false,
-            qualityProfile: CreateRequireNfoProfile(),
-            releaseInfo: CreateReleaseInfo(),
-            hasNfo: true
-        );
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var upload = await DbContext.Uploads.SingleAsync();
-        upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
-        var release = await DbContext.Releases.SingleAsync();
-        release.QualityGateState.ShouldBe(QualityGateState.Passed);
-    }
-
-    [Test]
-    public async Task CreateMissingInitialUploadsAsync_ManuallyApprovedFailingRelease_CreatesUploadAndKeepsApproval()
-    {
-        // Arrange
-        await AddUploadConfigAsync(
-            enableAutomaticReuploads: false,
-            qualityProfile: CreateRequireNfoProfile()
-        );
-        var release = await DbContext.Releases.SingleAsync();
-        release.QualityGateState = QualityGateState.ManuallyApproved;
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        (await DbContext.Uploads.AnyAsync()).ShouldBeTrue();
-        var updated = await DbContext.Releases.SingleAsync();
-        updated.QualityGateState.ShouldBe(QualityGateState.ManuallyApproved);
-    }
-
-    [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadDueButQualityGateFailed_DoesNotCreateReupload()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-25),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true,
-            qualityProfile: CreateRequireNfoProfile()
-        );
-        var release = await DbContext.Releases.SingleAsync();
-        release.QualityGateState = QualityGateState.Failed;
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploads = await DbContext.Uploads.ToListAsync();
-        uploads.Count.ShouldBe(1);
-        uploads.Single().Id.ShouldBe(upload.Id);
-    }
-
-    [Test]
-    public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadDueAndQualityGatePasses_CreatesReupload()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.Offline,
-            checkedAt: LocalNow.AddHours(-25),
-            uploadedFileLinks: ["https://hoster.test/1"],
-            enableAutomaticReuploads: true,
-            qualityProfile: CreateRequireNfoProfile(),
-            releaseInfo: CreateReleaseInfo(),
-            hasNfo: true
-        );
-
-        // Act
-        await service.CreateAutomaticReuploadsForOfflineUploadsAsync(
-            LocalNow,
-            CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
-        uploads.Count.ShouldBe(2);
-        uploads.Single(u => u.Id != upload.Id).UploadConfigId.ShouldBe(upload.UploadConfigId);
-        var release = await DbContext.Releases.SingleAsync();
-        release.QualityGateState.ShouldBe(QualityGateState.Passed);
-    }
-
-    [Test]
     public async Task CreateAutomaticReuploadsForOfflineUploadsAsync_AutomaticReuploadDueButGateNotYetEvaluatedAndFails_SkipsAndStoresFailure()
     {
         // Arrange
@@ -1159,94 +781,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
         release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
     }
 
-    [Test]
-    public async Task CreateMissingInitialUploadsAsync_ReleaseGroupWithoutProfile_CreatesInitialUploadAndMarksPassed()
-    {
-        // Arrange
-        await AddUploadConfigAsync(enableAutomaticReuploads: false);
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        (await DbContext.Uploads.AnyAsync()).ShouldBeTrue();
-        var release = await DbContext.Releases.SingleAsync();
-        release.QualityGateState.ShouldBe(QualityGateState.Passed);
-        release.QualityGateEvaluatedAt.ShouldBe(LocalNow);
-    }
-
-    [Test]
-    public async Task CreateMissingInitialUploadsAsync_UnmanagedReleaseWithoutNfo_DoesNotCreateInitialUploadAndMarksFailed()
-    {
-        // Arrange
-        await AddUploadConfigAsync(
-            enableAutomaticReuploads: false,
-            qualityProfile: CreateRequireNfoProfile(),
-            releaseType: ReleaseType.Unmanaged
-        );
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        (await DbContext.Uploads.AnyAsync()).ShouldBeFalse();
-        var release = await DbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
-        release.QualityGateState.ShouldBe(QualityGateState.Failed);
-        release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
-    }
-
-    [Test]
-    public async Task CreateMissingInitialUploadsAsync_UnmanagedReleaseWithOnlyFolderBasedRules_CreatesInitialUploadAndMarksPassed()
-    {
-        // Arrange
-        await AddUploadConfigAsync(
-            enableAutomaticReuploads: false,
-            qualityProfile: CreateFolderBasedProfile(),
-            releaseType: ReleaseType.Unmanaged
-        );
-
-        // Act
-        await service.CreateMissingInitialUploadsAsync(LocalNow, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var upload = await DbContext.Uploads.SingleAsync();
-        upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
-        var release = await DbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
-        release.QualityGateState.ShouldBe(QualityGateState.Passed);
-        release.QualityIssues.ShouldBeEmpty();
-    }
-
-    private static QualityProfile CreateFolderBasedProfile() =>
-        new()
-        {
-            Name = "Folder based",
-            Rules =
-            [
-                new QualityCheckRule
-                {
-                    RuleType = QualityCheckRuleType.FilePatternPresent,
-                    ParametersJson = QualityCheckParameterValues.Serialize(
-                        new Dictionary<string, object?> { ["pattern"] = "*.nfo" }
-                    ),
-                },
-                new QualityCheckRule
-                {
-                    RuleType = QualityCheckRuleType.MinimumFolderSize,
-                    ParametersJson = QualityCheckParameterValues.Serialize(
-                        new Dictionary<string, object?> { ["minimumMegabytes"] = 100 }
-                    ),
-                },
-                new QualityCheckRule
-                {
-                    RuleType = QualityCheckRuleType.MediaInfoPresent,
-                    ParametersJson = "{}",
-                },
-            ],
-        };
-
     private static QualityProfile CreateRequireNfoProfile() =>
         new()
         {
@@ -1266,13 +800,6 @@ public class UploadCreationServiceTest(DatabaseProvider databaseProvider)
                     ),
                 },
             ],
-        };
-
-    private static ReleaseInfo CreateReleaseInfo() =>
-        new()
-        {
-            NfoDatabaseClassName = ReleaseInfo.ManualSource,
-            ReleaseName = "Bearcat.Release.001",
         };
 
     private async Task MoveUploadConfigToHosterAccountPoolAsync(

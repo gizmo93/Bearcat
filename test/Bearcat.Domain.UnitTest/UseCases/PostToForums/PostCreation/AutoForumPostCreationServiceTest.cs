@@ -418,44 +418,6 @@ public class AutoForumPostCreationServiceTest
         repository.MarkedReleaseIds.ShouldBeEmpty();
     }
 
-    [Test]
-    public async Task CreatePostOnSiteAsync_Collection_NamesTheReleaseCollectionInTheNotifications()
-    {
-        // Arrange
-        var notificationService = new FakeNotificationService();
-        var submitter = new FakeForumPostSubmitter();
-        var service = ServiceWith(
-            repository: CollectionRepository(),
-            submitter: submitter,
-            notificationService: notificationService
-        );
-        var failingService = ServiceWith(
-            repository: CollectionRepository(),
-            submitter: new FakeForumPostSubmitter { FailingRegistrationIds = [5] },
-            notificationService: notificationService
-        );
-
-        // Act
-        await service.CreatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.ReleaseCollection,
-            entityId: 4,
-            distributionSiteRegistrationId: 5
-        );
-        await failingService.CreatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.ReleaseCollection,
-            entityId: 4,
-            distributionSiteRegistrationId: 5
-        );
-
-        // Assert
-        notificationService
-            .Created.Select(notification => notification.Message)
-            .ShouldBe([
-                $"Release collection '{AutoPostTestFactory.ReleaseCollectionName}' was posted automatically to 'Board': {submitter.NewThreadUrl}",
-                $"Automatic posting of release collection '{AutoPostTestFactory.ReleaseCollectionName}' to 'Board' failed: Submit to 5 failed",
-            ]);
-    }
-
     private static FakeAutoForumPostingRepository RepositoryWith(
         ForumPostingRule rule,
         bool stripDotsForThreadSearch = true

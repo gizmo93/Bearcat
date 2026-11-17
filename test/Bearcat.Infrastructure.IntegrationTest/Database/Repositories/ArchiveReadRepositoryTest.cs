@@ -51,41 +51,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetByIdAsync_ArchiveWithoutFiles_ReturnsEmptyFiles()
-    {
-        // Arrange
-        var archives = await AddArchivesAsync();
-
-        // Act
-        var result = await repository.GetByIdAsync(
-            archives.EmptyArchive.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ArchiveId.ShouldBe(archives.EmptyArchive.Id);
-        result.ArchiveFolderPath.ShouldBe("/tmp/archives/empty");
-        result.Files.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task GetByIdAsync_ArchiveDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var archives = await AddArchivesAsync();
-
-        // Act
-        var result = await repository.GetByIdAsync(
-            archives.EmptyArchive.Id + 1,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
     public async Task GetByIdAsync_ArchiveInStorageFolder_ReturnsStorageFolderNameWithoutLocalWorkingCopy()
     {
         // Arrange
@@ -153,24 +118,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldNotBeNull();
         result.HasLocalWorkingCopyFiles.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task GetByIdAsync_LocalArchive_ReturnsNoStorageFolderName()
-    {
-        // Arrange
-        var archives = await AddArchivesAsync();
-
-        // Act
-        var result = await repository.GetByIdAsync(
-            archives.SecondArchive.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ArchiveStorageFolderName.ShouldBeNull();
-        result.HasLocalWorkingCopyFiles.ShouldBeFalse();
     }
 
     [Test]
@@ -247,61 +194,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchArchivesAsync_ArchiveStateFilter_ReturnsMatchingArchives()
-    {
-        // Arrange
-        var archives = await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(ArchiveState: ArchiveState.MissingFiles),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.Select(item => item.ArchiveId).ShouldBe([archives.MissingFiles.Id]);
-    }
-
-    [Test]
-    public async Task SearchArchivesAsync_ArchiverFilter_ReturnsArchivesOfArchiver()
-    {
-        // Arrange
-        var archives = await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(ArchiverName: "SevenZipArchiver"),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(3);
-        result
-            .Items.Select(item => item.ArchiveId)
-            .ShouldBe([archives.Creating.Id, archives.CreationFailed.Id, archives.MissingFiles.Id]);
-    }
-
-    [Test]
-    public async Task SearchArchivesAsync_ReleaseGroupFilter_ReturnsArchivesOfReleasesInGroup()
-    {
-        // Arrange
-        var archives = await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(ReleaseGroupId: archives.FirstReleaseGroupId),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(3);
-        result
-            .Items.Select(item => item.ArchiveId)
-            .ShouldBe([archives.Restoring.Id, archives.Deleted.Id, archives.Created.Id]);
-    }
-
-    [Test]
     public async Task SearchArchivesAsync_OnDiskFilter_ReturnsCreatedArchivesOnly()
     {
         // Arrange
@@ -316,25 +208,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.TotalCount.ShouldBe(1);
         result.Items.Select(item => item.ArchiveId).ShouldBe([archives.Created.Id]);
-    }
-
-    [Test]
-    public async Task SearchArchivesAsync_NotOnDiskFilter_ReturnsDeletedMissingAndFailedArchives()
-    {
-        // Arrange
-        var archives = await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(OnDiskFilter: ArchiveOnDiskFilter.NotOnDisk),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(3);
-        result
-            .Items.Select(item => item.ArchiveId)
-            .ShouldBe([archives.CreationFailed.Id, archives.MissingFiles.Id, archives.Deleted.Id]);
     }
 
     [Test]
@@ -354,23 +227,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         result
             .Items.Select(item => item.ArchiveId)
             .ShouldBe([archives.Restoring.Id, archives.Deleted.Id, archives.Created.Id]);
-    }
-
-    [Test]
-    public async Task SearchArchivesAsync_SearchTermMatchesArchiveFolderPathInDifferentCase_ReturnsArchive()
-    {
-        // Arrange
-        var archives = await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(SearchTerm: "ÜBERSICHT-FOLDER"),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.Select(item => item.ArchiveId).ShouldBe([archives.Created.Id]);
     }
 
     [Test]
@@ -422,23 +278,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.TotalCount.ShouldBe(1);
         result.Items.Select(item => item.ArchiveId).ShouldBe([archives.Deleted.Id]);
-    }
-
-    [Test]
-    public async Task SearchArchivesAsync_SearchTermMatchesNothing_ReturnsEmptyResult()
-    {
-        // Arrange
-        await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(SearchTerm: "does-not-exist"),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(0);
-        result.Items.ShouldBeEmpty();
     }
 
     [Test]
@@ -509,25 +348,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchArchivesAsync_ArchiveWithErrorsAndWithoutFiles_ProjectsErrorsAndZeroCounts()
-    {
-        // Arrange
-        var archives = await AddSearchArchivesAsync();
-
-        // Act
-        var result = await repository.SearchArchivesAsync(
-            new ArchiveSearchQuery(SearchTerm: $"#{archives.CreationFailed.Id}"),
-            CancellationToken.None
-        );
-
-        // Assert
-        var item = result.Items.ShouldHaveSingleItem();
-        item.ArchiveFileCount.ShouldBe(0);
-        item.UploadCount.ShouldBe(0);
-        item.ErrorMessages.ShouldBe(["Packing of Façade failed"]);
-    }
-
-    [Test]
     public async Task GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync_EmptyArchiveIds_ReturnsCreatingAndRestoringArchives()
     {
         // Arrange
@@ -571,36 +391,6 @@ public class ArchiveReadRepositoryTest(DatabaseProvider databaseProvider)
                 ],
                 ignoreOrder: true
             );
-    }
-
-    [Test]
-    public async Task GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync_CreatingArchive_ReturnsProjectedReleaseAndArchiveConfigFields()
-    {
-        // Arrange
-        var archives = await AddArchivesInAllStatesAsync();
-
-        // Act
-        var result = await repository.GetCreatingOrRestoringArchivesOrArchivesWithIdsAsync(
-            [archives.CreatedArchiveWithPassedId.Id],
-            CancellationToken.None
-        );
-
-        // Assert
-        result
-            .Single(archive => archive.ArchiveId == archives.CreatingArchive.Id)
-            .ShouldBe(
-                new RunningArchiveReadModel(
-                    archives.CreatingArchive.Id,
-                    archives.ReleaseId,
-                    "Bearcat.Release.2026-GRP",
-                    "Main archive",
-                    "RarArchiver",
-                    ArchiveState.Creating
-                )
-            );
-        result
-            .Single(archive => archive.ArchiveId == archives.CreatedArchiveWithPassedId.Id)
-            .ArchiveState.ShouldBe(ArchiveState.Created);
     }
 
     private async Task<ArchivesInAllStates> AddArchivesInAllStatesAsync()

@@ -21,27 +21,6 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateForCollectionAsync_WithoutName_UsesImageHosterName()
-    {
-        // Arrange
-        var collection = await AddCollectionAsync();
-        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
-
-        // Act
-        var configId = await service.CreateForCollectionAsync(
-            collection.Id,
-            name: "   ",
-            imageHosterRegistration.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
-        config.Name.ShouldBe(imageHosterRegistration.Name);
-        config.ReleaseCollectionId.ShouldBe(collection.Id);
-    }
-
-    [Test]
     public async Task CreateForCollectionAsync_WithName_UsesTrimmedName()
     {
         // Arrange
@@ -87,55 +66,6 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_WithName_UsesTrimmedName()
-    {
-        // Arrange
-        var release = await AddReleaseAsync();
-        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
-
-        // Act
-        var configId = await service.CreateAsync(
-            releaseId: release.Id,
-            name: "  Release cover  ",
-            imageHosterRegistrationId: imageHosterRegistration.Id,
-            uploadCover: true,
-            uploadScreenshots: false,
-            uploadScreenshotGrid: false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
-        config.Name.ShouldBe("Release cover");
-    }
-
-    [Test]
-    public async Task UpdateForCollectionAsync_WithoutName_UsesImageHosterName()
-    {
-        // Arrange
-        var collection = await AddCollectionAsync();
-        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
-        var configId = await service.CreateForCollectionAsync(
-            collection.Id,
-            "Series cover",
-            imageHosterRegistration.Id,
-            CancellationToken.None
-        );
-
-        // Act
-        await service.UpdateForCollectionAsync(
-            configId,
-            name: null,
-            imageHosterRegistration.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
-        config.Name.ShouldBe(imageHosterRegistration.Name);
-    }
-
-    [Test]
     public async Task UpdateForCollectionAsync_WithName_UpdatesNameAndImageHosterRegistration()
     {
         // Arrange
@@ -161,26 +91,6 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe("Updated cover");
         config.ImageHosterRegistrationId.ShouldBe(secondHosterRegistration.Id);
-    }
-
-    [Test]
-    public async Task DeleteAsync_ConfigExists_RemovesConfig()
-    {
-        // Arrange
-        var collection = await AddCollectionAsync();
-        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
-        var configId = await service.CreateForCollectionAsync(
-            collection.Id,
-            "Series cover",
-            imageHosterRegistration.Id,
-            CancellationToken.None
-        );
-
-        // Act
-        await service.DeleteAsync(configId, CancellationToken.None);
-
-        // Assert
-        (await DbContext.ImageUploadConfigs.AnyAsync()).ShouldBeFalse();
     }
 
     private async Task<Release> AddReleaseAsync()

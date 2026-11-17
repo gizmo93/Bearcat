@@ -202,13 +202,21 @@ public class SteamMetadataDatabaseTest
         exception.ResetAt.ShouldBeNull();
     }
 
-    [Test]
-    public async Task GetByExternalIdAsync_GermanLanguageCode_RequestsGermanLanguage()
+    [TestCase("de", "german")]
+    [TestCase(null, "english")]
+    public async Task GetByExternalIdAsync_LanguageCode_RequestsMatchingSteamLanguage(
+        string? languageCode,
+        string expectedSteamLanguage
+    )
     {
         // Arrange
         var api = new Mock<ISteamApi>(MockBehavior.Strict);
         api.Setup(item =>
-                item.GetAppDetailsAsync("1172710", "german", It.IsAny<CancellationToken>())
+                item.GetAppDetailsAsync(
+                    "1172710",
+                    expectedSteamLanguage,
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(CreateApiResponse(CreateAppDetails("1172710", CreateGameData())));
         var database = new SteamMetadataDatabase(api.Object);
@@ -216,36 +224,17 @@ public class SteamMetadataDatabaseTest
         // Act
         await database.GetByExternalIdAsync(
             new SteamConfig(),
-            CreateLookup(steamAppId: "1172710", title: null, languageCode: "de")
+            CreateLookup(steamAppId: "1172710", title: null, languageCode: languageCode)
         );
 
         // Assert
         api.Verify(
-            item => item.GetAppDetailsAsync("1172710", "german", It.IsAny<CancellationToken>()),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task GetByExternalIdAsync_NoLanguageCode_RequestsEnglishLanguage()
-    {
-        // Arrange
-        var api = new Mock<ISteamApi>(MockBehavior.Strict);
-        api.Setup(item =>
-                item.GetAppDetailsAsync("1172710", "english", It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(CreateApiResponse(CreateAppDetails("1172710", CreateGameData())));
-        var database = new SteamMetadataDatabase(api.Object);
-
-        // Act
-        await database.GetByExternalIdAsync(
-            new SteamConfig(),
-            CreateLookup(steamAppId: "1172710", title: null, languageCode: null)
-        );
-
-        // Assert
-        api.Verify(
-            item => item.GetAppDetailsAsync("1172710", "english", It.IsAny<CancellationToken>()),
+            item =>
+                item.GetAppDetailsAsync(
+                    "1172710",
+                    expectedSteamLanguage,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }

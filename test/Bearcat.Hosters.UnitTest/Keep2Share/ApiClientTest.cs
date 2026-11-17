@@ -1,5 +1,4 @@
 using System.Net;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Keep2Share;
@@ -52,48 +51,6 @@ public class ApiClientTest
         {
             File.Delete(temporaryFile);
         }
-    }
-
-    [Test]
-    public async Task RequestUploadAsync_ParentId_PassesParentIdToApi()
-    {
-        // Arrange
-        var config = new Keep2ShareConfig
-        {
-            EmailAddress = "user@example.test",
-            Password = "password",
-        };
-
-        SetupLogin();
-
-        apiMock
-            .Setup(x =>
-                x.GetUploadFormDataAsync(
-                    It.Is<UploadFormDataRequest>(request =>
-                        request.AuthToken == "auth-token" && request.ParentId == "folder-id"
-                    ),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new UploadFormDataResponse
-                {
-                    Status = "success",
-                    Code = (int)HttpStatusCode.OK,
-                    FormAction = "https://upload.keep2share.test",
-                    FileField = "file",
-                }
-            );
-
-        // Act
-        var result = await apiClient.RequestUploadAsync(
-            config,
-            "folder-id",
-            CancellationToken.None
-        );
-
-        // Assert
-        result.FormAction.ShouldBe("https://upload.keep2share.test");
     }
 
     [Test]

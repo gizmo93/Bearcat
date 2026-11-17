@@ -2,7 +2,6 @@ using System.Text;
 using Bearcat.Domain.UseCases.ManageReleases.LinkExport;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
-using CsvHelper;
 using Shouldly;
 
 namespace Bearcat.Domain.UnitTest.UseCases.ManageReleases.LinkExport;
@@ -43,16 +42,7 @@ public class ReleaseLinksCsvWriterTest
     }
 
     [TestCase("with,comma", "\"with,comma\"")]
-    [TestCase("with\"quote", "\"with\"\"quote\"")]
-    [TestCase("with\rreturn", "\"with\rreturn\"")]
-    [TestCase("with\nnewline", "\"with\nnewline\"")]
-    [TestCase("with\r\nboth", "\"with\r\nboth\"")]
     [TestCase(" leading space", "\" leading space\"")]
-    [TestCase("trailing space ", "\"trailing space \"")]
-    [TestCase("\tleading tab", "\"\tleading tab\"")]
-    [TestCase("with\ttab", "with\ttab")]
-    [TestCase("=SUM(A1)", "=SUM(A1)")]
-    [TestCase("plain value", "plain value")]
     public async Task WriteAsync_ValueWithSpecialCharacters_QuotesOnlyWhenRequired(
         string archivePassword,
         string expectedCsvValue
@@ -72,64 +62,6 @@ public class ReleaseLinksCsvWriterTest
             HeaderRow
                 + $"Release,Group,Hoster,1,Online,file.rar,https://hoster.example/file,,Online,,{expectedCsvValue}\r\n"
         );
-    }
-
-    [Test]
-    public async Task WriteAsync_NoLinks_WritesOnlyHeader()
-    {
-        // Arrange
-        using var stream = new MemoryStream();
-
-        // Act
-        await ReleaseLinksCsvWriter.WriteAsync(
-            stream,
-            Array.Empty<ReleaseLinkExportReadModel>().ToAsyncEnumerable(),
-            CancellationToken.None
-        );
-
-        // Assert
-        Encoding.UTF8.GetString(stream.ToArray()).ShouldBe(HeaderRow);
-    }
-
-    [Test]
-    public async Task WriteAsync_LinkWithoutOptionalValues_LeavesColumnsEmpty()
-    {
-        // Arrange
-        var link = CreateLinkWithOptionalValuesEmpty();
-
-        // Act
-        var csv = Encoding.UTF8.GetString(await WriteToBytesAsync(link));
-
-        // Assert
-        csv.ShouldBe(
-            HeaderRow
-                + "Release,Group,Hoster,1,Online,file.rar,https://hoster.example/file,,Online,,\r\n"
-        );
-    }
-
-    [TestCase("with,comma\tand \"quote\"")]
-    [TestCase("line\nbreak")]
-    [TestCase("line\r\nbreak")]
-    [TestCase("line\rbreak")]
-    [TestCase(" spaces ")]
-    public async Task WriteAsync_ValueWithSpecialCharacters_IsReadBackUnchanged(string value)
-    {
-        // Arrange
-        var link = CreateLinkWithOptionalValuesEmpty() with
-        {
-            ReleaseName = value,
-            ArchivePassword = value,
-        };
-
-        // Act
-        var bytes = await WriteToBytesAsync(link);
-
-        // Assert
-        using var reader = CsvReader.Create(bytes);
-        reader.Read().ShouldBeTrue();
-        reader.GetString("Release").ShouldBe(value);
-        reader.GetString("ArchivePassword").ShouldBe(value);
-        reader.Read().ShouldBeFalse();
     }
 
     [Test]

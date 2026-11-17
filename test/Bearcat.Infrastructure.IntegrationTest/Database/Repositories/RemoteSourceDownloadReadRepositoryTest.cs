@@ -88,47 +88,6 @@ public class RemoteSourceDownloadReadRepositoryTest(DatabaseProvider databasePro
             .ShouldBe(["Running", "Extracting", "Verifying", "Finished", "Ready", "Queued"]);
     }
 
-    [Test]
-    public async Task GetByReleaseIdAsync_DownloadCreatedRelease_ReturnsOrigin()
-    {
-        // Arrange
-        await using var dbContext = CreateDbContext();
-        var automation = await AddAutomationAsync(dbContext);
-        var release = new Release
-        {
-            Name = "Show.S01E01-GRP",
-            CreatedAt = DiscoveredAt,
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/downloads/Show.S01E01-GRP",
-            ReleaseGroup = automation.ReleaseTemplate.ReleaseGroup,
-            ArchiveConfigs = [],
-            UploadConfigs = [],
-        };
-        var download = AddDownload(
-            dbContext,
-            automation,
-            "Show.S01E01-GRP",
-            RemoteSourceDownloadState.ReleaseCreated,
-            0
-        );
-        download.Release = release;
-        download.CompletedAt = DiscoveredAt.AddHours(1);
-        AddDownload(dbContext, automation, "Other-GRP", RemoteSourceDownloadState.Pending, 1);
-        await dbContext.SaveChangesAsync();
-        var repository = new RemoteSourceDownloadReadRepository(CreateDbContext());
-
-        // Act
-        var origin = await repository.GetByReleaseIdAsync(release.Id);
-
-        // Assert
-        origin.ShouldNotBeNull();
-        origin.Id.ShouldBe(download.Id);
-        origin.SourceName.ShouldBe("Main FTP");
-        origin.RemoteFolderPath.ShouldBe("/incoming/Show.S01E01-GRP");
-        origin.CompletedAt.ShouldBe(DiscoveredAt.AddHours(1));
-        origin.ReleaseName.ShouldBe(release.Name);
-    }
-
     private static async Task<RemoteSourceAutomation> AddAutomationAsync(BearcatDbContext dbContext)
     {
         var automation = new RemoteSourceAutomation

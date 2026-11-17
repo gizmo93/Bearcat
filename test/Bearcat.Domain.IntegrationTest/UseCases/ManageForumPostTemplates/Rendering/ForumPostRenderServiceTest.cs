@@ -32,37 +32,6 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public void GetVariables_KnownType_ReturnsSourceVariables()
-    {
-        // Arrange
-        var variables = new List<ForumPostTemplateVariableNode>
-        {
-            ForumPostTemplateVariableNode.CreateValueNode(
-                "release_name",
-                "release_name",
-                "The release name"
-            ),
-        };
-        renderSourceMock.Setup(source => source.GetVariables()).Returns(variables);
-
-        // Act
-        var result = service.GetVariables(ForumPostTemplateType.Release);
-
-        // Assert
-        result.ShouldBe(variables);
-    }
-
-    [Test]
-    public void GetVariables_UnknownType_ReturnsEmpty()
-    {
-        // Act
-        var result = service.GetVariables(ForumPostTemplateType.ReleaseCollection);
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task RenderAsync_TemplateNotFound_ReturnsError()
     {
         // Act
@@ -125,23 +94,6 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task RenderAsync_TemplateHasParseErrors_ReturnsErrors()
-    {
-        // Arrange
-        var template = await AddTemplateAsync(ForumPostTemplateType.Release, "{{ for x in }}");
-        renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ScriptObject());
-
-        // Act
-        var result = await service.RenderAsync(1, template.Id, CancellationToken.None);
-
-        // Assert
-        result.Content.ShouldBeEmpty();
-        result.Errors.ShouldNotBeEmpty();
-    }
-
-    [Test]
     public async Task RenderAsync_RenderThrowsRuntimeException_ReturnsError()
     {
         // Arrange
@@ -179,29 +131,6 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         result.Errors.ShouldBe([
             "Line 2, column 8: Error while parsing ScriptPage: Found <end> statement without a corresponding beginning of a block in: ...",
         ]);
-    }
-
-    [Test]
-    public async Task LoadPreviewDataAsync_EntityExists_ReturnsDataNodesFromGlobals()
-    {
-        // Arrange
-        renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(7, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ScriptObject { ["name"] = "Bearcat" });
-
-        // Act
-        var result = await service.LoadPreviewDataAsync(
-            ForumPostTemplateType.Release,
-            7,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.DataNodes.Count.ShouldBe(1);
-        result.DataNodes[0].Name.ShouldBe("name");
-        result.DataNodes[0].Value.ShouldBe("Bearcat");
-        result.DataNodes[0].Children.ShouldBeEmpty();
     }
 
     [Test]

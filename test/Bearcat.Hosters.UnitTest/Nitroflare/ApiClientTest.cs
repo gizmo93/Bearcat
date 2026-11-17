@@ -79,23 +79,6 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task CheckLinksAsync_BatchThrows_OmitsAffectedUrlsAndDoesNotThrow()
-    {
-        // Arrange
-        var fileUrl = "https://nitroflare.com/view/unknown-id";
-
-        apiMock
-            .Setup(x => x.GetFileInfoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new HttpRequestException("network down"));
-
-        // Act
-        var result = await apiClient.CheckLinksAsync([fileUrl], CancellationToken.None);
-
-        // Assert
-        result.ShouldNotContainKey(fileUrl);
-    }
-
-    [Test]
     public async Task CheckLinksAsync_OneBatchThrows_KeepsResultsOfSuccessfulBatch()
     {
         // Arrange

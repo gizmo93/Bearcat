@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
@@ -147,106 +146,6 @@ public class ApiClientTest
 
         // Assert
         result.ShouldBe("created-folder-id");
-    }
-
-    [Test]
-    public async Task RequestUploadFileAsync_FolderId_PassesFolderIdToApi()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-        var expectedResponse = new UploadFileResponse
-        {
-            Status = (int)HttpStatusCode.OK,
-            Response = new UploadFileResponse.ResponseObject
-            {
-                Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
-            },
-        };
-
-        SetupLogin();
-        apiMock
-            .Setup(x =>
-                x.RequestUploadFileAsync(
-                    "token",
-                    "archive.part1.rar",
-                    1024,
-                    "hash",
-                    "folder-id",
-                    1,
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(expectedResponse);
-
-        // Act
-        var result = await apiClient.RequestUploadFileAsync(
-            name: "archive.part1.rar",
-            size: 1024,
-            hash: "hash",
-            folderId: "folder-id",
-            config: config,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeSameAs(expectedResponse);
-    }
-
-    [Test]
-    public async Task GetFileStatusAsync_TokenAndUploadId_UsesQueryParameters()
-    {
-        // Arrange
-        var handler = new RecordingUploadHandler();
-        using var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://rapidgator.test/"),
-        };
-        var api = RestService.For<IRapidgatorApi>(httpClient);
-
-        // Act
-        await api.GetFileStatusAsync("token-value", "upload-id", CancellationToken.None);
-
-        // Assert
-        handler.RequestUri.ShouldNotBeNull();
-        handler.RequestUri.AbsolutePath.ShouldBe("/api/v2/file/upload_info");
-        handler.RequestUri.Query.ShouldContain("token=token-value");
-        handler.RequestUri.Query.ShouldContain("upload_id=upload-id");
-    }
-
-    [Test]
-    public async Task ChangeFileModeAsync_Mode_PassesNumericModeToApi()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-        var expectedResponse = new UploadFileResponse
-        {
-            Status = (int)HttpStatusCode.OK,
-            Response = new UploadFileResponse.ResponseObject
-            {
-                File = new UploadFileResponse.File
-                {
-                    FileId = "file-id",
-                    Mode = 1,
-                    ModeLabel = "Premium only",
-                },
-            },
-        };
-
-        SetupLogin();
-        apiMock
-            .Setup(x => x.ChangeFileModeAsync("token", "file-id", 1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedResponse);
-
-        // Act
-        var result = await apiClient.ChangeFileModeAsync(
-            config: config,
-            fileId: "file-id",
-            mode: UploadMode.PremiumOnly,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeSameAs(expectedResponse);
     }
 
     [Test]

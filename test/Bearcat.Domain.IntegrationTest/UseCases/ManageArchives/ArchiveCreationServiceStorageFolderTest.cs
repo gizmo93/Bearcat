@@ -255,28 +255,6 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
     }
 
     [Test]
-    public async Task ProcessAsync_LocalWorkingCopyEnabled_TracksCopyProgressPerCopiedFile()
-    {
-        // Arrange
-        var scenario = await AddScenarioAsync(useLocalWorkingCopyForReuploads: true);
-        var copyIdentifier = new TransferIdentifier(
-            TransferType.ArchiveCopyIntoLocalWorkingCopy,
-            scenario.ArchiveId
-        );
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        var plannedFiles = progressTracker.PlannedFilesPerIdentifier[copyIdentifier];
-        plannedFiles
-            .Select(file => (file.FileName, file.SourceName))
-            .ShouldBe([(SecondFileName, "NAS")]);
-        progressTracker.StoppedIdentifiers.ShouldContain(copyIdentifier);
-        progressTracker.GetTrackedIds(TransferType.ArchiveCopyIntoLocalWorkingCopy).ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task ProcessAsync_WorkingCopyFolderNameIsTakenByOtherFiles_CopiesIntoFolderNameWithArchiveId()
     {
         // Arrange

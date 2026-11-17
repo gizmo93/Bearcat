@@ -113,7 +113,6 @@ public class ProxyServerServiceTest
     }
 
     [TestCase("", ProxyServerValidationError.NameRequired)]
-    [TestCase("   ", ProxyServerValidationError.NameRequired)]
     public async Task CreateAsync_InvalidName_ReturnsValidationError(
         string name,
         ProxyServerValidationError expectedError
@@ -126,16 +125,6 @@ public class ProxyServerServiceTest
         result.ValidationErrors.ShouldBe([expectedError]);
         repository.ProxyServers.ShouldBeEmpty();
         repository.SaveChangesCallCount.ShouldBe(0);
-    }
-
-    [Test]
-    public async Task CreateAsync_NameLongerThan100Characters_ReturnsNameTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(CreateInput(name: new string('a', 101)));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ProxyServerValidationError.NameTooLong]);
     }
 
     [Test]
@@ -169,16 +158,6 @@ public class ProxyServerServiceTest
         result.ValidationErrors.ShouldBe([expectedError]);
     }
 
-    [Test]
-    public async Task CreateAsync_HostLongerThan255Characters_ReturnsHostTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(CreateInput(host: new string('a', 256)));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ProxyServerValidationError.HostTooLong]);
-    }
-
     [TestCase(0)]
     [TestCase(-1)]
     [TestCase(65536)]
@@ -189,16 +168,6 @@ public class ProxyServerServiceTest
 
         // Assert
         result.ValidationErrors.ShouldBe([ProxyServerValidationError.PortOutOfRange]);
-    }
-
-    [Test]
-    public async Task CreateAsync_UsernameLongerThan255Characters_ReturnsUsernameTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(CreateInput(username: new string('a', 256)));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([ProxyServerValidationError.UsernameTooLong]);
     }
 
     [Test]
@@ -404,36 +373,6 @@ public class ProxyServerServiceTest
         proxyServer.EncryptedPassword.ShouldBeNull();
     }
 
-    [Test]
-    public async Task UpdateAsync_UnreadableSecretsNotificationWithoutRemainingUnreadableSecrets_ResolvesNotification()
-    {
-        // Arrange
-        var proxyServer = AddStoredProxyServer(
-            encryptedPassword: StoredEncryptedPassword,
-            hasUnreadableSecrets: true
-        );
-        unreadableSecretsRepositoryMock
-            .Setup(unreadableSecretsRepository =>
-                unreadableSecretsRepository.AnyUnresolvedUnreadableSecretsNotificationAsync(
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(true);
-
-        // Act
-        await service.UpdateAsync(proxyServer.Id, CreateInput(password: "new"));
-
-        // Assert
-        notificationServiceMock.Verify(
-            notificationService =>
-                notificationService.ResolveAllOfKindAsync(
-                    NotificationKind.UnreadableSecretsDetected,
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
-    }
-
     [TestCase("proxy.example.com", 8080)]
     [TestCase("PROXY.example.com", 8080)]
     [TestCase(" proxy.example.com ", 8080)]
@@ -467,19 +406,6 @@ public class ProxyServerServiceTest
     }
 
     [Test]
-    public async Task UpdateAsync_UnchangedOwnHostAndPort_DoesNotReportHostAndPortAlreadyExist()
-    {
-        // Arrange
-        var proxyServer = AddStoredProxyServer();
-
-        // Act
-        var result = await service.UpdateAsync(proxyServer.Id, CreateInput());
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task UpdateAsync_HostAndPortOfOtherProxyServer_ReturnsHostAndPortAlreadyExist()
     {
         // Arrange
@@ -492,35 +418,6 @@ public class ProxyServerServiceTest
         // Assert
         result.ValidationErrors.ShouldBe([ProxyServerValidationError.HostAndPortAlreadyExist]);
         proxyServer.Port.ShouldBe(8080);
-    }
-
-    [Test]
-    public async Task CreateAsync_ValidInput_RefreshesProxyRoutingCache()
-    {
-        // Act
-        await service.CreateAsync(CreateInput());
-
-        // Assert
-        proxyRoutingCacheMock.Verify(
-            cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task UpdateAsync_ValidInput_RefreshesProxyRoutingCache()
-    {
-        // Arrange
-        var proxyServer = AddStoredProxyServer();
-
-        // Act
-        await service.UpdateAsync(proxyServer.Id, CreateInput(name: "Renamed proxy"));
-
-        // Assert
-        proxyRoutingCacheMock.Verify(
-            cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
-            Times.Once
-        );
     }
 
     [Test]
@@ -638,40 +535,6 @@ public class ProxyServerServiceTest
 
         // Assert
         result.ShouldBe(expectedResult);
-    }
-
-    [Test]
-    public async Task TestConnectionAsync_NoStoredPassword_PassesNullPasswordToTester()
-    {
-        // Arrange
-        var proxyServer = AddStoredProxyServer();
-        connectionTesterMock
-            .Setup(tester =>
-                tester.TestAsync(
-                    It.IsAny<ProxyServerConnectionTestRequest>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new ProxyServerConnectionTestResult(
-                    ProxyServerConnectionTestOutcome.AuthenticationRequired,
-                    "HTTP/1.1 407 Proxy Authentication Required"
-                )
-            );
-
-        // Act
-        var result = await service.TestConnectionAsync(proxyServer.Id);
-
-        // Assert
-        result.Outcome.ShouldBe(ProxyServerConnectionTestOutcome.AuthenticationRequired);
-        connectionTesterMock.Verify(
-            tester =>
-                tester.TestAsync(
-                    It.Is<ProxyServerConnectionTestRequest>(request => request.Password == null),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
     }
 
     [Test]

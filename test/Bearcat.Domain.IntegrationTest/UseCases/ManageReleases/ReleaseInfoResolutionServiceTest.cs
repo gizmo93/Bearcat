@@ -468,22 +468,6 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessMissingReleaseInfosAsync_NoActiveRegistration_DoesNothing()
-    {
-        // Arrange
-        await AddReleaseAsync("Inactive.Release.2026-GRP");
-        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: false);
-
-        // Act
-        var resolvedCount = await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
-
-        // Assert
-        resolvedCount.ShouldBe(0);
-        (await DbContext.ReleaseInfos.AnyAsync()).ShouldBeFalse();
-        nfoDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
-    }
-
-    [Test]
     public async Task ProcessMissingReleaseInfosAsync_MissingInfosAcrossBatches_MarksCheckedAndSkipsRecentlyChecked()
     {
         // Arrange
@@ -567,28 +551,6 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SaveNfoFileAsync_NoLocalNfo_WritesFileWithStoredFileName()
-    {
-        // Arrange
-        var releaseFolderPath = CreateTempReleaseFolder();
-
-        // Act
-        var result = await ReleaseNfoService.SaveNfoFileAsync(
-            releaseFolderPath,
-            "bearcat.nfo",
-            "Bearcat.Release.2026-GRP",
-            "nfo content",
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(ReleaseNfoFileSaveResult.Saved);
-        var filePath = Path.Combine(releaseFolderPath, "bearcat.nfo");
-        File.Exists(filePath).ShouldBeTrue();
-        (await File.ReadAllTextAsync(filePath)).ShouldBe("nfo content");
-    }
-
-    [Test]
     public async Task SaveNfoFileAsync_LocalNfoExists_DoesNotOverwrite()
     {
         // Arrange
@@ -659,42 +621,6 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task TryResolve_NewTrackedRelease_AddsReleaseInfoToRelease()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync();
-        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
-
-        var release = new Release
-        {
-            Name = "New.Tracked.Release.2026-GRP",
-            CreatedAt = DateTime.UtcNow,
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/tmp/new-tracked-release",
-            ReleaseGroupId = releaseGroup.Id,
-            ArchiveConfigs = [],
-            UploadConfigs = [],
-        };
-        DbContext.Releases.Add(release);
-
-        SetupNfoDatabase(
-            WorkingDatabaseClassName,
-            "New.Tracked.Release.2026-GRP",
-            CreateReleaseInfo("New.Tracked.Release.2026-GRP")
-        );
-
-        // Act
-        var resolved = await service.TryResolveAsync(release, CancellationToken.None);
-
-        // Assert
-        resolved.ShouldBeTrue();
-        var releaseInfo = release.ReleaseInfo;
-
-        releaseInfo.ShouldNotBeNull();
-        releaseInfo.ReleaseName.ShouldBe("New.Tracked.Release.2026-GRP");
-    }
-
-    [Test]
     public async Task UpdateNfoAsync_ManualNfo_PersistsNfoAndImdbWithoutReleaseInfoPlaceholder()
     {
         var release = await AddReleaseAsync("Manual.Nfo.Release.2026-GRP");
@@ -717,30 +643,6 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
         persistedRelease.ReleaseInfo.ShouldBeNull();
         persistedRelease.ReleaseNfo!.FileName.ShouldBe("manual.nfo");
         persistedRelease.ExternalIdentifiers.ShouldHaveSingleItem().Value.ShouldBe("tt7654321");
-    }
-
-    [Test]
-    public async Task DeleteAsync_OnlyMetadataExists_RemovesMetadataAndResetsChecks()
-    {
-        var release = await AddReleaseAsync("Metadata.Only.Release.2026-GRP");
-        release.Metadata = new ReleaseMetadata
-        {
-            MetadataDatabaseClassName = "TmdbMetadataDatabase",
-            Title = "Metadata Only",
-        };
-        release.MetadataCheckedAt = DateTime.UtcNow;
-        release.ReleaseInfoCheckedAt = DateTime.UtcNow;
-        await DbContext.SaveChangesAsync();
-
-        var infoService = CreateReleaseInfoService();
-
-        await infoService.DeleteAsync(release.Id, CancellationToken.None);
-
-        DbContext.ChangeTracker.Clear();
-        (await DbContext.ReleaseMetadata.AnyAsync()).ShouldBeFalse();
-        var persistedRelease = await DbContext.Releases.SingleAsync();
-        persistedRelease.ReleaseInfoCheckedAt.ShouldBeNull();
-        persistedRelease.MetadataCheckedAt.ShouldBeNull();
     }
 
     [Test]

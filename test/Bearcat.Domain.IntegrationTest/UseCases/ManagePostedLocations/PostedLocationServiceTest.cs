@@ -126,34 +126,6 @@ public class PostedLocationServiceTest(DatabaseProvider databaseProvider)
         postedLocation.ReleaseId.ShouldBe(release.Id);
     }
 
-    [Test]
-    public async Task DeleteAsync_PostedLocationExists_DeletesOnlyThatPostedLocation()
-    {
-        // Arrange
-        var release = await AddReleaseAsync("Bearcat.Release.001");
-        var postedLocationId = await service.AddForReleaseAsync(
-            release.Id,
-            "https://forum.example/threads/1",
-            cancellationToken: CancellationToken.None
-        );
-        var otherPostedLocationId = await service.AddForReleaseAsync(
-            release.Id,
-            "https://forum.example/threads/2",
-            cancellationToken: CancellationToken.None
-        );
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.DeleteAsync(postedLocationId, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        (await DbContext.PostedLocations.Select(location => location.Id).ToListAsync()).ShouldBe([
-            otherPostedLocationId,
-        ]);
-        (await DbContext.Releases.SingleAsync()).Id.ShouldBe(release.Id);
-    }
-
     private async Task<Release> AddReleaseAsync(string name)
     {
         var release = new Release

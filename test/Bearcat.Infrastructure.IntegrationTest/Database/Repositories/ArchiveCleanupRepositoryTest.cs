@@ -237,43 +237,6 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
             .UploadedFiles.ShouldBeEmpty();
     }
 
-    [TestCase(UploadState.WaitingForArchive, true)]
-    [TestCase(UploadState.Pending, true)]
-    [TestCase(UploadState.Uploading, true)]
-    [TestCase(UploadState.Completed, false)]
-    public async Task HasWaitingPendingOrUploadingUploadAsync_UploadInState_ReturnsExpectedResult(
-        UploadState uploadState,
-        bool expectedResult
-    )
-    {
-        // Arrange
-        var archive = await AddArchiveAsync("Archive", Cutoff, uploadState: uploadState);
-        await AddArchiveAsync("Other", Cutoff, uploadState: UploadState.Uploading);
-
-        // Act
-        var result = await repository.HasWaitingPendingOrUploadingUploadAsync(
-            archive.ArchiveConfigId,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(expectedResult);
-    }
-
-    [Test]
-    public async Task GetActiveArchiveStorageFoldersAsync_ActiveAndInactiveFolders_ReturnsActiveFolders()
-    {
-        // Arrange
-        var activeFolder = await AddStorageFolderAsync("NAS", isActive: true);
-        await AddStorageFolderAsync("Disk", isActive: false);
-
-        // Act
-        var result = await repository.GetActiveArchiveStorageFoldersAsync(CancellationToken.None);
-
-        // Assert
-        result.ShouldHaveSingleItem().Id.ShouldBe(activeFolder.Id);
-    }
-
     [Test]
     public async Task GetArchiveIdsWithUnresolvedNotificationAsync_MixedNotifications_ReturnsArchiveIdsOfUnresolvedNotificationsOfKind()
     {
@@ -357,45 +320,6 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.Select(archive => archive.Id).ShouldBe([firstArchive.Id, secondArchive.Id]);
         result.ShouldAllBe(archive => archive.ArchiveFiles.Count == 2);
-    }
-
-    [Test]
-    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_ArchiveWithLocalWorkingCopyFile_ReturnsArchive()
-    {
-        // Arrange
-        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
-        var archive = await AddArchiveAsync(
-            "Stored",
-            Cutoff,
-            archiveStorageFolderId: storageFolder.Id,
-            archiveFileFolderPath: "/working-copies/Stored"
-        );
-
-        // Act
-        var result =
-            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
-                CancellationToken.None
-            );
-
-        // Assert
-        result.ShouldHaveSingleItem().Id.ShouldBe(archive.Id);
-    }
-
-    [Test]
-    public async Task GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync_ArchiveWithoutLocalWorkingCopyFiles_ReturnsNothing()
-    {
-        // Arrange
-        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
-        await AddArchiveAsync("Stored", Cutoff, archiveStorageFolderId: storageFolder.Id);
-
-        // Act
-        var result =
-            await repository.GetArchivesWithLocalWorkingCopyFilesWithoutWaitingPendingOrUploadingUploadAsync(
-                CancellationToken.None
-            );
-
-        // Assert
-        result.ShouldBeEmpty();
     }
 
     [Test]

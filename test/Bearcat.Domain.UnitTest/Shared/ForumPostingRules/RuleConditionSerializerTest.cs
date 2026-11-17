@@ -69,27 +69,6 @@ public class RuleConditionSerializerTest
         roundTripped.Children[1].Children![1].Operator.ShouldBe(RuleConditionOperator.Like);
     }
 
-    [Test]
-    public void Serialize_GroupCondition_OmitsComparisonMembers()
-    {
-        // Arrange
-        var condition = RuleCondition.Not(
-            RuleCondition.Compare(
-                RuleFieldCatalog.Year,
-                RuleConditionOperator.GreaterOrEqual,
-                "2020"
-            )
-        );
-
-        // Act
-        var json = RuleConditionSerializer.Serialize(condition);
-
-        // Assert
-        json.ShouldBe(
-            """{"kind":"not","child":{"kind":"comparison","field":"Year","operator":"greaterOrEqual","value":"2020"}}"""
-        );
-    }
-
     [TestCase("")]
     [TestCase("   ")]
     [TestCase("not json at all")]

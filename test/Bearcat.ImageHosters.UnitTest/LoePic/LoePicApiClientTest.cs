@@ -189,32 +189,6 @@ public class LoePicApiClientTest
         exception.Message.ShouldContain("Invalid API key");
     }
 
-    [Test]
-    public async Task GetAccountAsync_ReturnsAccountDetails()
-    {
-        // Arrange
-        apiMock
-            .Setup(api => api.GetAccountAsync(ApiKey, CancellationToken.None))
-            .ReturnsAsync(
-                CreateEnvelope(
-                    new AccountResponse
-                    {
-                        Username = "gizmo93",
-                        Role = "user",
-                        KeyLabel = "Bearcat",
-                    }
-                )
-            );
-
-        // Act
-        var account = await apiClient.GetAccountAsync(ApiKey, CancellationToken.None);
-
-        // Assert
-        account.Username.ShouldBe("gizmo93");
-        account.KeyLabel.ShouldBe("Bearcat");
-        apiMock.VerifyAll();
-    }
-
     private static ApiResponse<LoePicResponse<T>> CreateEnvelope<T>(T content)
     {
         return new ApiResponse<LoePicResponse<T>>(

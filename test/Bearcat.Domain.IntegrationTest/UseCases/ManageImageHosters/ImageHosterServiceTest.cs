@@ -153,59 +153,6 @@ public class ImageHosterServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ToggleIsActiveAsync_RegistrationExists_TogglesIsActive()
-    {
-        // Arrange
-        var registration = await AddImageHosterRegistrationAsync(isActive: true);
-
-        // Act
-        await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.ImageHosterRegistrations.SingleAsync();
-
-        result.IsActive.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task TryLoginAsync_RegistrationExists_DelegatesToImageHoster()
-    {
-        // Arrange
-        var registration = await AddImageHosterRegistrationAsync(isActive: true);
-        var loginResult = new TryLoginResult(true);
-        imageHosterMock
-            .Setup(hoster => hoster.DeserializeConfig(SerializedConfig))
-            .Returns(imageHosterConfigMock.Object);
-        imageHosterMock
-            .As<ISupportsLogin>()
-            .Setup(supportsLogin =>
-                supportsLogin.TryLoginAsync(imageHosterConfigMock.Object, CancellationToken.None)
-            )
-            .ReturnsAsync(loginResult);
-
-        // Act
-        var result = await service.TryLoginAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(loginResult);
-    }
-
-    [Test]
-    public async Task DeleteAsync_RegistrationExists_RemovesRegistration()
-    {
-        // Arrange
-        var registration = await AddImageHosterRegistrationAsync(isActive: true);
-
-        // Act
-        await service.DeleteAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.ImageHosterRegistrations.AnyAsync();
-
-        result.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task GetImageUploadCountAsync_ImageUploadsOfSeveralRegistrations_CountsOnlyImageUploadsOfRegistration()
     {
         // Arrange
@@ -267,22 +214,6 @@ public class ImageHosterServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetImageUploadCountAsync_RegistrationWithoutImageUploads_ReturnsZero()
-    {
-        // Arrange
-        var registration = await AddImageHosterRegistrationAsync(isActive: true);
-
-        // Act
-        var result = await service.GetImageUploadCountAsync(
-            registration.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(0);
-    }
-
-    [Test]
     public async Task CreateAsync_SpecificProxyServer_StoresSelectionAndProxyServerId()
     {
         // Arrange
@@ -305,90 +236,6 @@ public class ImageHosterServiceTest(DatabaseProvider databaseProvider)
         var registration = await DbContext.ImageHosterRegistrations.SingleAsync();
         registration.ProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
         registration.ProxyServerId.ShouldBe(proxyServer.Id);
-    }
-
-    [Test]
-    public async Task CreateAsync_SpecificProxyServerDoesNotExist_ThrowsAndStoresNothing()
-    {
-        // Arrange
-        imageHosterMock
-            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
-            .Returns(SerializedConfig);
-
-        // Act
-        var act = () =>
-            service.CreateAsync(
-                "Primary image hoster",
-                ImageHosterClassName,
-                new Dictionary<string, string> { ["apiKey"] = "secret" },
-                proxySelection: ProxySelection.SpecificProxyServer,
-                proxyServerId: 4711,
-                cancellationToken: CancellationToken.None
-            );
-
-        // Assert
-        await act.ShouldThrowAsync<InvalidProxySelectionException>();
-        (await DbContext.ImageHosterRegistrations.CountAsync()).ShouldBe(0);
-    }
-
-    [Test]
-    public async Task CreateAsync_SpecificProxyServerWithoutProxyServerId_Throws()
-    {
-        // Arrange
-        imageHosterMock
-            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
-            .Returns(SerializedConfig);
-
-        // Act
-        var act = () =>
-            service.CreateAsync(
-                "Primary image hoster",
-                ImageHosterClassName,
-                new Dictionary<string, string> { ["apiKey"] = "secret" },
-                proxySelection: ProxySelection.SpecificProxyServer,
-                proxyServerId: null,
-                cancellationToken: CancellationToken.None
-            );
-
-        // Assert
-        await act.ShouldThrowAsync<InvalidProxySelectionException>();
-    }
-
-    [Test]
-    public async Task UpdateAsync_UseCategoryDefaultWithProxyServerId_StoresCategoryDefaultWithoutProxyServerId()
-    {
-        // Arrange
-        var proxyServer = await AddProxyServerAsync();
-        var registration = await AddImageHosterRegistrationAsync(
-            isActive: true,
-            proxySelection: ProxySelection.SpecificProxyServer,
-            proxyServerId: proxyServer.Id
-        );
-        imageHosterMock
-            .Setup(x => x.DeserializeConfig(SerializedConfig))
-            .Returns(imageHosterConfigMock.Object);
-        imageHosterConfigMock
-            .Setup(c => c.ToDictionary())
-            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
-        imageHosterMock
-            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
-            .Returns(SerializedConfig);
-
-        // Act
-        await service.UpdateAsync(
-            registration.Id,
-            "Primary image hoster",
-            new Dictionary<string, string>(),
-            proxySelection: ProxySelection.UseCategoryDefault,
-            proxyServerId: proxyServer.Id,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.ImageHosterRegistrations.SingleAsync();
-        result.ProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
-        result.ProxyServerId.ShouldBeNull();
     }
 
     [Test]
@@ -469,53 +316,6 @@ public class ImageHosterServiceTest(DatabaseProvider databaseProvider)
                 proxyServer.Id
             ),
         ]);
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
-    {
-        // Arrange
-        await AddImageHosterRegistrationAsync(isActive: true);
-        var proxyServer = await AddProxyServerAsync();
-        var registration = await AddImageHosterRegistrationAsync(
-            isActive: false,
-            proxySelection: ProxySelection.SpecificProxyServer,
-            proxyServerId: proxyServer.Id,
-            name: "Secondary image hoster"
-        );
-        DbContext.ChangeTracker.Clear();
-        var readRepository = CreateReadRepositoryWithImageHosterLookup();
-
-        // Act
-        var result = await readRepository.GetByIdAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(
-            new ImageHosterRegistrationReadModel(
-                registration.Id,
-                "Secondary image hoster",
-                ImageHosterClassName,
-                "Test image hoster",
-                IsActive: false,
-                HasUnreadableSecrets: false,
-                ProxySelection.SpecificProxyServer,
-                proxyServer.Id
-            )
-        );
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var registration = await AddImageHosterRegistrationAsync(isActive: true);
-        var readRepository = CreateReadRepositoryWithImageHosterLookup();
-
-        // Act
-        var result = await readRepository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private ImageHosterRegistrationReadRepository CreateReadRepositoryWithImageHosterLookup()

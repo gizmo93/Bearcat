@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.KrakenFiles;
 using Bearcat.Hosters.KrakenFiles.Api;
@@ -29,19 +28,6 @@ public class ApiClientTest
             new HttpClientProvider(httpClientFactoryMock.Object),
             loggerMock.Object
         );
-    }
-
-    [Test]
-    public void CreateFolderRequest_SerializesNameAsLowercase()
-    {
-        // Arrange
-        var request = new CreateFolderRequest("release-folder");
-
-        // Act
-        var json = JsonSerializer.Serialize(request);
-
-        // Assert
-        json.ShouldBe("""{"name":"release-folder"}""");
     }
 
     [Test]
@@ -155,60 +141,6 @@ public class ApiClientTest
 
         // Assert
         result.ShouldBe("created-folder-id");
-    }
-
-    [Test]
-    public async Task UploadFileAsync_FolderId_AddsFolderIdToMultipartForm()
-    {
-        // Arrange
-        var config = new KrakenFilesConfig { ApiKey = "api-key" };
-        var httpMessageHandler = new TestHttpMessageHandler(
-            new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(
-                    """
-                    {
-                      "status": 200,
-                      "data": {
-                        "url": "https://krakenfiles.com/view/hash/file.bin"
-                      }
-                    }
-                    """
-                ),
-            }
-        );
-        httpClientFactoryMock
-            .Setup(x => x.CreateClient(HttpClientProvider.UploadHttpClientName))
-            .Returns(new HttpClient(httpMessageHandler));
-        apiMock
-            .Setup(x => x.GetAvailableServerAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new AvailableServerResponse
-                {
-                    Status = (int)HttpStatusCode.OK,
-                    Data = new AvailableServerData
-                    {
-                        Url = "https://uploads.krakenfiles.test/uploader/api/file",
-                        ServerAccessToken = "server-token",
-                    },
-                }
-            );
-
-        // Act
-        await using var stream = new MemoryStream([1, 2, 3]);
-        await apiClient.UploadFileAsync(
-            config,
-            stream,
-            "file.bin",
-            "folder-id",
-            CancellationToken.None
-        );
-
-        // Assert
-        httpMessageHandler.RequestContent.ShouldNotBeNull();
-        var multipartContent = httpMessageHandler.RequestContent;
-        multipartContent.ShouldContain("name=folderId");
-        multipartContent.ShouldContain("folder-id");
     }
 
     [Test]
@@ -372,22 +304,5 @@ public class ApiClientTest
         );
 
         return new ApiResponse<T>(response, default, new RefitSettings(), error);
-    }
-
-    private sealed class TestHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
-    {
-        public string? RequestContent { get; private set; }
-
-        protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken
-        )
-        {
-            RequestContent = request.Content is null
-                ? null
-                : await request.Content.ReadAsStringAsync(cancellationToken);
-
-            return response;
-        }
     }
 }

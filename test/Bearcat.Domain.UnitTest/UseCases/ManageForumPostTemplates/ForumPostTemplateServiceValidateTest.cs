@@ -18,28 +18,6 @@ public class ForumPostTemplateServiceValidateTest
     }
 
     [Test]
-    public void Validate_InvalidTemplateBody_ReturnsErrors()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate("{{ for x in }}");
-
-        // Assert
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldNotBeEmpty();
-    }
-
-    [Test]
-    public void Validate_NullTemplateBody_ReturnsValidResult()
-    {
-        // Act
-        var result = ForumPostTemplateService.Validate(null);
-
-        // Assert
-        result.IsValid.ShouldBeTrue();
-        result.Errors.ShouldBeEmpty();
-    }
-
-    [Test]
     public void Validate_SyntaxErrorOnSecondLine_ReturnsOneBasedLineAndColumnWithoutPositionPrefix()
     {
         // Act

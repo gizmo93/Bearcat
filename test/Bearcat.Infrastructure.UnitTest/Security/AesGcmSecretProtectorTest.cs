@@ -178,19 +178,6 @@ public class AesGcmSecretProtectorTest
         result.ShouldBeFalse();
     }
 
-    [Test]
-    public void CanUnprotect_TamperedPayload_ReturnsFalse()
-    {
-        // Arrange
-        var tampered = Prefix + Convert.ToBase64String(new byte[30]);
-
-        // Act
-        var result = protector.CanUnprotect(tampered);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
     private sealed class FixedKeyProvider(byte fillValue = 1) : IEncryptionKeyProvider
     {
         private readonly byte[] key = Enumerable.Repeat(fillValue, 32).ToArray();

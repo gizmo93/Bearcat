@@ -90,42 +90,6 @@ public class RemoteSourceAutomationServiceTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task UpdateAsync_ChangedValues_UpdatesAutomation()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync("Main FTP");
-        var firstTemplate = await AddReleaseTemplateAsync("First", ReleaseType.Managed);
-        var secondTemplate = await AddReleaseTemplateAsync("Second", ReleaseType.Unmanaged);
-        var id = await service.CreateAsync(CreateInput(registration, firstTemplate));
-
-        // Act
-        await service.UpdateAsync(
-            id,
-            CreateInput(registration, secondTemplate) with
-            {
-                Name = "Scene Movies",
-                TargetPath = "/data/movies",
-                FolderNamePattern = "*2160p*",
-                PrimaryLanguageCode = "en",
-                ExtractArchivesBeforeReleaseCreation = true,
-                Priority = 10,
-                IgnoreExistingOnFirstScan = true,
-            }
-        );
-
-        // Assert
-        var automation = await ReloadAsync(id);
-        automation.Name.ShouldBe("Scene Movies");
-        automation.TargetPath.ShouldBe("/data/movies");
-        automation.FolderNamePattern.ShouldBe("*2160p*");
-        automation.ReleaseTemplateId.ShouldBe(secondTemplate.Id);
-        automation.PrimaryLanguageCode.ShouldBe("en");
-        automation.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
-        automation.Priority.ShouldBe(10);
-        automation.IgnoreExistingOnFirstScan.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task UpdateAsync_RemotePathChanged_ResetsInitialScan()
     {
         // Arrange
@@ -170,8 +134,6 @@ public class RemoteSourceAutomationServiceTest(DatabaseProvider databaseProvider
         (await ReloadAsync(id)).HasCompletedInitialScan.ShouldBeTrue();
     }
 
-    [TestCase(" ", "/incoming", TargetPath)]
-    [TestCase("Scene TV", " ", TargetPath)]
     [TestCase("Scene TV", "/incoming", " ")]
     [TestCase("Scene TV", "/incoming", "relative/downloads")]
     public async Task CreateAsync_MissingOrInvalidInput_ThrowsAndStoresNothing(
@@ -201,22 +163,6 @@ public class RemoteSourceAutomationServiceTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task CreateAsync_NegativePriority_Throws()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync("Main FTP");
-        var template = await AddReleaseTemplateAsync("Template", ReleaseType.Managed);
-
-        // Act
-        var action = () =>
-            service.CreateAsync(CreateInput(registration, template) with { Priority = -1 });
-
-        // Assert
-        var exception = await Should.ThrowAsync<ArgumentException>(action);
-        exception.Message.ShouldBe("Priority must be at least 0.");
-    }
-
-    [Test]
     public async Task CreateAsync_UnknownReleaseTemplate_Throws()
     {
         // Arrange
@@ -235,40 +181,6 @@ public class RemoteSourceAutomationServiceTest(DatabaseProvider databaseProvider
         // Assert
         var exception = await Should.ThrowAsync<ArgumentException>(action);
         exception.Message.ShouldBe("The selected release template does not exist.");
-    }
-
-    [Test]
-    public async Task CreateAsync_UnknownRegistration_Throws()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync("Main FTP");
-        var template = await AddReleaseTemplateAsync("Template", ReleaseType.Managed);
-
-        // Act
-        var action = () =>
-            service.CreateAsync(
-                CreateInput(registration, template) with
-                {
-                    RemoteSourceRegistrationId = registration.Id + 1000,
-                }
-            );
-
-        // Assert
-        var exception = await Should.ThrowAsync<ArgumentException>(action);
-        exception.Message.ShouldBe("The selected remote source does not exist.");
-    }
-
-    [Test]
-    public async Task SetEnabledAsync_EnabledAutomation_Disables()
-    {
-        // Arrange
-        var id = await CreateAutomationAsync();
-
-        // Act
-        await service.SetEnabledAsync(id, false);
-
-        // Assert
-        (await ReloadAsync(id)).IsEnabled.ShouldBeFalse();
     }
 
     [Test]

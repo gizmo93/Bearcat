@@ -6,20 +6,11 @@ namespace Bearcat.Website.UnitTest.Pages.ManageReleases;
 
 public class ReleaseSearchUrlTest
 {
-    [Test]
-    public void Parse_SortOrderMissing_ReturnsCreatedAtDescending()
-    {
-        // Act
-        var state = ReleaseSearchUrl.Parse(new ReleaseSearchUrlValues(SortOrder: null));
-
-        // Assert
-        state.Query.SortOrder.ShouldBe(ReleaseSearchSortOrder.CreatedAtDescending);
-    }
-
+    [TestCase(null)]
     [TestCase("Popularity")]
     [TestCase("99")]
     [TestCase("")]
-    public void Parse_SortOrderInvalid_ReturnsCreatedAtDescending(string sortOrder)
+    public void Parse_SortOrderInvalid_ReturnsCreatedAtDescending(string? sortOrder)
     {
         // Act
         var state = ReleaseSearchUrl.Parse(new ReleaseSearchUrlValues(SortOrder: sortOrder));

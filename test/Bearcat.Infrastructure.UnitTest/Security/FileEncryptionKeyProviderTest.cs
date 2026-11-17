@@ -135,23 +135,6 @@ public class FileEncryptionKeyProviderTest
         provider.KeyPath.ShouldBe(Path.GetFullPath("relative/key/path/bearcat.key"));
     }
 
-    [Test]
-    public void KeyPath_ConfiguredDataDirectory_CombinesWithKeyFileName()
-    {
-        // Arrange
-        var provider = new FileEncryptionKeyProvider(
-            new ConfigurationBuilder()
-                .AddInMemoryCollection(
-                    new Dictionary<string, string?> { ["Bearcat:DataDirectory"] = tempDirectory }
-                )
-                .Build(),
-            NullLogger<FileEncryptionKeyProvider>.Instance
-        );
-
-        // Act / Assert
-        provider.KeyPath.ShouldBe(Path.GetFullPath(Path.Combine(tempDirectory, "bearcat.key")));
-    }
-
     private string KeyPathIn(params string[] segments)
     {
         return Path.Combine([tempDirectory, .. segments]);

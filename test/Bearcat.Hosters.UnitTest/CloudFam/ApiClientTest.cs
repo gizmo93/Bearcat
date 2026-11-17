@@ -569,34 +569,16 @@ public class ApiClientTest
         result.ShouldBeEmpty();
     }
 
-    [Test]
-    public void ExtractFileCode_DownloadUrl_ReturnsFileCode()
+    [TestCase("https://cloudfam.io/" + FileCode, FileCode)]
+    [TestCase("https://cloudfam.io/" + FileCode + ".html", FileCode)]
+    [TestCase("https://cloudfam.io/", null)]
+    public void ExtractFileCode_Url_ReturnsFileCodeOrNull(string url, string? expected)
     {
         // Act
-        var result = ApiClient.ExtractFileCode($"https://cloudfam.io/{FileCode}");
+        var result = ApiClient.ExtractFileCode(url);
 
         // Assert
-        result.ShouldBe(FileCode);
-    }
-
-    [Test]
-    public void ExtractFileCode_UrlWithHtmlSuffix_ReturnsFileCode()
-    {
-        // Act
-        var result = ApiClient.ExtractFileCode($"https://cloudfam.io/{FileCode}.html");
-
-        // Assert
-        result.ShouldBe(FileCode);
-    }
-
-    [Test]
-    public void ExtractFileCode_UrlWithoutPath_ReturnsNull()
-    {
-        // Act
-        var result = ApiClient.ExtractFileCode("https://cloudfam.io/");
-
-        // Assert
-        result.ShouldBeNull();
+        result.ShouldBe(expected);
     }
 
     private void SetupValidApiKey()

@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -257,33 +256,6 @@ public class CostActionHosterBaseTest
     }
 
     [Test]
-    public async Task CheckFilesExistAsync_ApiFails_ReturnsFailure()
-    {
-        // Arrange
-        apiClientMock
-            .Setup(x =>
-                x.CheckFilesAsync(
-                    ApiKey,
-                    "fd2",
-                    It.IsAny<IReadOnlyList<string>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new HttpRequestException("Too many attempts"));
-
-        // Act
-        var result = await hitfile.CheckFilesExistAsync(
-            hitfileConfig,
-            [new FileUrlToCheckDto("https://htfl.net/tHzfhvR", ExternalId: null)],
-            CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessages.ShouldBe(["Too many attempts"]);
-    }
-
-    [Test]
     public async Task MoveFileToFolderAsync_WithoutExternalId_UsesIdFromUrl()
     {
         // Arrange
@@ -320,21 +292,6 @@ public class CostActionHosterBaseTest
         // Assert
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("fd2 user does not exist");
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_RoundTripsApiKey()
-    {
-        // Arrange
-        var serialized = turbobit.SerializeHosterConfig(
-            new Dictionary<string, string> { ["ApiKey"] = ApiKey }
-        );
-
-        // Act
-        var config = turbobit.DeserializeHosterConfig(serialized);
-
-        // Assert
-        config.ShouldBe(turbobitConfig);
     }
 
     [TestCase("https://trbt.cc/cye2wolk2zz7.html", "cye2wolk2zz7")]

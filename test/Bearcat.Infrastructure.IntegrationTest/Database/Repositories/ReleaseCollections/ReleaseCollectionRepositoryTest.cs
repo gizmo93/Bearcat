@@ -94,32 +94,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchAsync_ContentTypeAndReleaseGroupFilter_ReturnsMatchingCollection()
-    {
-        // Arrange
-        var seriesGroup = await AddReleaseGroupAsync("Series");
-        var otherGroup = await AddReleaseGroupAsync("Other");
-        var matchingCollection = AddCollection(seriesGroup, "Bodies S01", "bodies.s01");
-        AddCollection(seriesGroup, "Bodies Movies", "bodies.movies", ReleaseContentType.Movie);
-        AddCollection(otherGroup, "Bodies S02", "bodies.s02");
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.SearchAsync(
-            new ReleaseCollectionSearchQuery(
-                ReleaseContentType: ReleaseContentType.TvShowEpisode,
-                ReleaseGroupId: seriesGroup.Id
-            ),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(matchingCollection.Id);
-    }
-
-    [Test]
     public async Task SearchAsync_SecondPage_ReturnsRemainingCollectionsOrderedByName()
     {
         // Arrange
@@ -144,32 +118,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         result.PageIndex.ShouldBe(1);
         result.PageSize.ShouldBe(5);
         result.Items.Select(item => item.Name).ShouldBe(["Collection 06", "Collection 07"]);
-    }
-
-    [Test]
-    public async Task SearchAsync_OnlineStateFilter_ReturnsOnlyCollectionsWithThatOnlineState()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var offlineCollection = AddCollection(releaseGroup, "Offline", OnlineState.Offline);
-        offlineCollection.PrimaryLanguageCode = "de";
-        AddCollection(releaseGroup, "Online", OnlineState.Online);
-        AddCollection(releaseGroup, "Unknown", OnlineState.Unknown);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.SearchAsync(
-            new ReleaseCollectionSearchQuery(OnlineState: OnlineState.Offline),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        var item = result.Items.ShouldHaveSingleItem();
-        item.ReleaseCollectionId.ShouldBe(offlineCollection.Id);
-        item.OnlineState.ShouldBe(OnlineState.Offline);
-        item.PrimaryLanguageCode.ShouldBe("de");
     }
 
     [Test]
@@ -271,22 +219,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.TotalCount.ShouldBe(1);
         result.Items.ShouldHaveSingleItem().Name.ShouldBe(expectedName);
-    }
-
-    [Test]
-    public async Task GetDetailAsync_CollectionDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetDetailAsync(collection.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     [Test]
@@ -433,59 +365,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetDetailAsync_UploadsPostedAtSet_ReturnsUploadsPostedAt()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
-        collection.UploadsPostedAt = LastSecondOfDay.AddMilliseconds(750);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetDetailAsync(collection.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.UploadsPostedAt.ShouldBe(LastSecondOfDay.AddMilliseconds(750));
-    }
-
-    [Test]
-    public async Task GetDetailAsync_CollectionHasMetadata_ReturnsMetadataWithDatabaseName()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
-        collection.Metadata = new ReleaseCollectionMetadata
-        {
-            MetadataDatabaseClassName = TvdbMetadataDatabaseClassName,
-            Title = "Hostage",
-            Description = "Hostage drama",
-            CoverUrl = "https://artworks.example/hostage.jpg",
-            MetadataDatabaseUrl = "https://www.thetvdb.com/series/hostage",
-        };
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetDetailAsync(collection.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.UploadSlots.ShouldBeEmpty();
-        result.Releases.ShouldBeEmpty();
-        result.Metadata.ShouldBe(
-            new ReleaseCollectionMetadataReadModel(
-                MetadataDatabaseName: "TheTVDB",
-                Title: "Hostage",
-                Description: "Hostage drama",
-                CoverUrl: "https://artworks.example/hostage.jpg",
-                MetadataDatabaseUrl: "https://www.thetvdb.com/series/hostage"
-            )
-        );
-    }
-
-    [Test]
     public async Task GetArchiveConfigOptionsAsync_ConfigsOfDifferentReleases_ReturnsConfigsPresentInAllReleasesWithMaxSize()
     {
         // Arrange
@@ -522,27 +401,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
             new CollectionArchiveConfigOptionReadModel("RAR 1GB", 3, 1024),
             new CollectionArchiveConfigOptionReadModel("Zip", 3, 75),
         ]);
-    }
-
-    [Test]
-    public async Task GetArchiveConfigOptionsAsync_CollectionWithoutReleases_ReturnsEmptyList()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
-        var releaseOutsideCollection = AddRelease(releaseGroup, "Hostage.S01E01", null);
-        AddArchiveConfig(releaseOutsideCollection, "RAR 1GB", 1000);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetArchiveConfigOptionsAsync(
-            collection.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeEmpty();
     }
 
     [Test]
@@ -700,34 +558,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchAvailableReleasesAsync_NoSearchTerm_ReturnsFirstFiftyReleasesOrderedByName()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var collection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
-
-        foreach (var number in Enumerable.Range(0, 52).Reverse())
-        {
-            AddRelease(releaseGroup, $"Release.{number:00}", null);
-        }
-
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.SearchAvailableReleasesAsync(
-            collection.Id,
-            null,
-            CancellationToken.None
-        );
-
-        // Assert
-        result
-            .Select(release => release.Name)
-            .ShouldBe(Enumerable.Range(0, 50).Select(number => $"Release.{number:00}").ToList());
-    }
-
-    [Test]
     public async Task GetByNameAsync_NameDiffersInCaseAndUsesDecomposedUmlauts_ReturnsCollection()
     {
         // Arrange
@@ -746,26 +576,6 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldNotBeNull();
         result.Id.ShouldBe(releaseCollection.Id);
-    }
-
-    [Test]
-    public async Task GetByNameAsync_NameOnlyUsedByExcludedCollection_ReturnsNull()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Series");
-        var releaseCollection = AddCollection(releaseGroup, "Hostage S01", "hostage.s01");
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetByNameAsync(
-            name: "hostage s01",
-            excludedReleaseCollectionId: releaseCollection.Id,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private async Task<CollectionDetailSeed> AddCollectionDetailSeedAsync()

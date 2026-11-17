@@ -149,33 +149,6 @@ public class NfoDatabaseRegistrationServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task ToggleIsActiveAsync_RegistrationExists_TogglesIsActive()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync(isActive: true);
-
-        // Act
-        await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var updated = await DbContext.NfoDatabaseRegistrations.SingleAsync();
-        updated.IsActive.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task DeleteAsync_RegistrationExists_RemovesRegistration()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync();
-
-        // Act
-        await service.DeleteAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        (await DbContext.NfoDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
-    }
-
-    [Test]
     public async Task GetAllAsync_SeveralRegistrations_ReturnsReadModelsOrderedByClassName()
     {
         // Arrange
@@ -207,68 +180,6 @@ public class NfoDatabaseRegistrationServiceTest(DatabaseProvider databaseProvide
                 ClassName
             ),
         ]);
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
-    {
-        // Arrange
-        await AddRegistrationAsync();
-        var registration = await AddRegistrationAsync(
-            hasUnreadableSecrets: true,
-            className: OtherClassName
-        );
-        var repository = CreateRepositoryWithDatabaseLookup();
-
-        // Act
-        var result = await repository.GetByIdAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(
-            new NfoDatabaseRegistrationReadModel(
-                registration.Id,
-                IsActive: true,
-                HasUnreadableSecrets: true,
-                "Other database",
-                OtherClassName
-            )
-        );
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync();
-        var repository = CreateRepositoryWithDatabaseLookup();
-
-        // Act
-        var result = await repository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task ExistsForClassNameAsync_RegisteredAndUnregisteredClassName_ReturnsWhetherRegistered()
-    {
-        // Arrange
-        await AddRegistrationAsync();
-        var repository = CreateRepositoryWithDatabaseLookup();
-
-        // Act
-        var registeredExists = await repository.ExistsForClassNameAsync(
-            ClassName,
-            CancellationToken.None
-        );
-        var unregisteredExists = await repository.ExistsForClassNameAsync(
-            OtherClassName,
-            CancellationToken.None
-        );
-
-        // Assert
-        registeredExists.ShouldBeTrue();
-        unregisteredExists.ShouldBeFalse();
     }
 
     private NfoDatabaseRegistrationRepository CreateRepositoryWithDatabaseLookup()

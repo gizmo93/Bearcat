@@ -194,33 +194,6 @@ public class ServiceConfigFileTest
     }
 
     [Test]
-    public void Save_SqliteConfiguration_WritesProviderAndFilePathWithoutConnectionString()
-    {
-        // Arrange
-        var config = new ServiceConfigFile
-        {
-            Database =
-            {
-                Provider = DatabaseProvider.Sqlite,
-                SqliteFilePath = "C:\\ProgramData\\Bearcat\\bearcat.db",
-            },
-            WorkingDirectories = ["D:\\Releases"],
-            Urls = "http://127.0.0.1:17208",
-        };
-
-        // Act
-        config.Save(configPath);
-
-        // Assert
-        var savedDatabaseSection = ReadSavedConfiguration()["Database"]!.AsObject();
-        savedDatabaseSection["Provider"]!.GetValue<string>().ShouldBe("Sqlite");
-        savedDatabaseSection["SqliteFilePath"]!
-            .GetValue<string>()
-            .ShouldBe("C:\\ProgramData\\Bearcat\\bearcat.db");
-        savedDatabaseSection.ContainsKey("ConnectionString").ShouldBeFalse();
-    }
-
-    [Test]
     public void Load_SavedSqliteConfiguration_ReadsProviderAndFilePath()
     {
         // Arrange

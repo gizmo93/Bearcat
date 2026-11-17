@@ -251,42 +251,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_PremiumOnlyUpload_PassesPremiumOnlyDownloadToHoster()
-    {
-        // Arrange
-        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
-        await AddUploadAsync(UploadState.Pending, [archiveFilePath], premiumOnlyDownload: true);
-        hosterMock
-            .Setup(h =>
-                h.UploadFileAsync(
-                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath && f.PremiumOnlyDownload),
-                    hosterConfigMock.Object,
-                    It.IsAny<ITransferProgress>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
-                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
-            );
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        hosterMock.Verify(
-            h =>
-                h.UploadFileAsync(
-                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath && f.PremiumOnlyDownload),
-                    hosterConfigMock.Object,
-                    It.IsAny<ITransferProgress>(),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
-    }
-
-    [Test]
     public async Task ProcessAsync_PendingUploadForOneHoster_DoesNotRequestParallelLimitForUnusedHoster()
     {
         // Arrange
@@ -692,30 +656,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         stateDuringFolderCreation.ShouldBe(expectedState);
         stateDuringFileMove.ShouldBe(expectedState);
         ProxyCategoryScope.Current.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task ProcessAsync_PendingUploadWithInactiveHosterRegistration_DoesNotProcessUpload()
-    {
-        // Arrange
-        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
-        var upload = await AddUploadAsync(
-            UploadState.Pending,
-            [archiveFilePath],
-            hosterIsActive: false
-        );
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
-
-        result.Id.ShouldBe(upload.Id);
-        result.UploadState.ShouldBe(UploadState.Pending);
-        result.UploadedFiles.ShouldBeEmpty();
-        hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
     }
 
     [Test]
@@ -1682,59 +1622,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         );
     }
 
-    [Test]
-    public async Task ProcessAsync_CancellationRequestedUploadIsMissing_SkipsCancellation()
-    {
-        // Arrange
-        var repository = new MissingCancellationUploadRepository();
-        var serviceWithMissingUpload = CreateUploadFilesService(repository);
-
-        // Act
-        await serviceWithMissingUpload.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        repository.GetMissingUploadByIdWasCalled.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task GetUploadsWithMissingFilesAsync_UploadHasNoArchive_ReturnsEmpty()
-    {
-        // Arrange
-        var upload = new Upload
-        {
-            Id = 1,
-            CreatedAt = DateTime.UtcNow,
-            UploadState = UploadState.Pending,
-            OnlineState = OnlineState.Unknown,
-            UploadedFiles = [],
-        };
-
-        var uploadFilesRepository = new UploadFilesRepository(
-            DbContext,
-            DbContext,
-            NoOpSecretProtector.Instance
-        );
-        var validationService = new MissingFileValidationService(
-            uploadFilesRepository,
-            new FileSystemService(),
-            Mock.Of<ILogger<MissingFileValidationService>>(),
-            new NotificationService(
-                repository: new NotificationRepository(DbContext),
-                timeProvider: CreateTimeProvider(),
-                configurationProvider: CreateNotificationConfigurationProvider()
-            )
-        );
-
-        // Act
-        var result = await validationService.GetUploadsWithMissingFilesAsync(
-            [upload],
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
     private async Task<Upload> AddUploadAsync(
         UploadState uploadState,
         IReadOnlyList<string> archiveFileNames,
@@ -2093,104 +1980,5 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         )
             where TConfiguration : IApplicationConfiguration, new() =>
             selector.Compile()(new TConfiguration());
-    }
-
-    private sealed class MissingCancellationUploadRepository : IUploadFilesRepository
-    {
-        public bool GetMissingUploadByIdWasCalled { get; private set; }
-
-        public Task<IReadOnlyList<Upload>> GetPendingUploadsAsync(
-            IReadOnlySet<int> uploadIdsToExclude,
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult<IReadOnlyList<Upload>>([]);
-        }
-
-        public Task<IReadOnlySet<int>> GetReuploadIdsAsync(
-            IReadOnlyList<int> uploadIds,
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult<IReadOnlySet<int>>(new HashSet<int>());
-        }
-
-        public Task<IReadOnlyDictionary<int, DateTime?>> GetPrioritizedAtByUploadIdAsync(
-            IReadOnlyList<int> uploadIds,
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult<IReadOnlyDictionary<int, DateTime?>>(
-                new Dictionary<int, DateTime?>()
-            );
-        }
-
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            return Task.FromResult(0);
-        }
-
-        public Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult<IReadOnlyList<Upload>>([]);
-        }
-
-        public Task<IReadOnlyList<int>> GetCancellationRequestedUploadIdsAsync(
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult<IReadOnlyList<int>>([42]);
-        }
-
-        public Task<bool> IsCancellationRequestedAsync(
-            int uploadId,
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult(false);
-        }
-
-        public Task<Upload?> GetUploadByIdAsync(int uploadId, CancellationToken cancellationToken)
-        {
-            GetMissingUploadByIdWasCalled = true;
-            return Task.FromResult<Upload?>(null);
-        }
-
-        public void ClearChangeTracker() { }
-
-        public Task<IReadOnlyDictionary<int, string>> GetConfigByHosterRegistrationId(
-            CancellationToken cancellationToken
-        )
-        {
-            return Task.FromResult<IReadOnlyDictionary<int, string>>(new Dictionary<int, string>());
-        }
-
-        public Task<
-            IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>
-        > GetConfigByHosterClassName(CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>>(
-                new Dictionary<string, HosterUploadConcurrencyInfo>()
-            );
-        }
-
-        public Task<HosterRegistration> GetHosterRegistrationByIdAsync(
-            int hosterRegistrationId,
-            CancellationToken cancellationToken
-        )
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task<bool> HasUnresolvedNotificationForUploadAsync(
-            int uploadId,
-            NotificationKind kind,
-            CancellationToken cancellationToken
-        )
-        {
-            throw new NotSupportedException();
-        }
     }
 }

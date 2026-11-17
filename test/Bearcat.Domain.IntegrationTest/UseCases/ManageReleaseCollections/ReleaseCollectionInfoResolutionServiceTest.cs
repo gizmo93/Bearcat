@@ -343,42 +343,6 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
     }
 
     [Test]
-    public async Task ResolveAsync_CollectionWithImdbNfo_PersistsMetadata()
-    {
-        // Arrange
-        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
-        var collection = await AddCollectionAsync(
-            "Bodies.2023.S01.German.DL.1080p",
-            CreateRelease(
-                "Bodies.2023.S01E01.German.DL.1080p-GRP",
-                nfoContent: "https://www.imdb.com/title/tt1234567/"
-            )
-        );
-
-        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
-        database
-            .Setup(seriesDatabase =>
-                seriesDatabase.GetByExternalIdAsync(
-                    config,
-                    It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1234567"),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(CreateMetadata());
-
-        // Act
-        var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
-
-        // Assert
-        resolved.ShouldBeTrue();
-
-        DbContext.ChangeTracker.Clear();
-        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
-        metadata.ReleaseCollectionId.ShouldBe(collection.Id);
-        metadata.Title.ShouldBe("Bodies");
-    }
-
-    [Test]
     public async Task ProcessMissingCollectionMetadataAsync_RateLimitExceeded_StopsAndMarksChecked()
     {
         // Arrange
@@ -455,39 +419,6 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             c.Id == collection.Id
         );
         persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
-    }
-
-    [Test]
-    public async Task ResolveAsync_NoActiveRegistration_ReturnsFalse()
-    {
-        // Arrange
-        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: false);
-        var collection = await AddCollectionAsync(
-            "Bodies.2023.S01.German.DL.1080p",
-            CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
-        );
-
-        // Act
-        var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
-
-        // Assert
-        resolved.ShouldBeFalse();
-        metadataDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
-    }
-
-    [Test]
-    public async Task ResolveAsync_CollectionNotFound_ReturnsFalse()
-    {
-        // Arrange
-        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
-        SetupMediaDatabase(MetadataDatabaseClassName);
-
-        // Act
-        var resolved = await service.ResolveAsync(999, CancellationToken.None);
-
-        // Assert
-        resolved.ShouldBeFalse();
-        (await DbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]

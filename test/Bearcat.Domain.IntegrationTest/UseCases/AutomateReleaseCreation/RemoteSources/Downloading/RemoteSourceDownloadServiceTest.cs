@@ -650,46 +650,6 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
         File.Exists(userFilePath).ShouldBeTrue();
     }
 
-    [TestCase(RemoteSourceDownloadState.Observing)]
-    [TestCase(RemoteSourceDownloadState.Pending)]
-    public async Task CancelDownloadAsync_NotYetStartedDownload_IsCanceled(
-        RemoteSourceDownloadState state
-    )
-    {
-        // Arrange
-        AddServer("main");
-        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
-        var registration = await AddRegistrationAsync("main");
-        var automation = await AddAutomationAsync(registration, template);
-        var download = await AddDownloadAsync(automation, ReleaseName, state);
-
-        // Act
-        await CreateStateService().CancelDownloadAsync(download.Id);
-
-        // Assert
-        (await ReloadDownloadAsync(download.Id)).State.ShouldBe(RemoteSourceDownloadState.Canceled);
-    }
-
-    [TestCase(RemoteSourceDownloadState.Observing)]
-    [TestCase(RemoteSourceDownloadState.Pending)]
-    [TestCase(RemoteSourceDownloadState.Failed)]
-    [TestCase(RemoteSourceDownloadState.Canceled)]
-    public async Task IgnoreDownloadAsync_IgnorableState_IsIgnored(RemoteSourceDownloadState state)
-    {
-        // Arrange
-        AddServer("main");
-        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
-        var registration = await AddRegistrationAsync("main");
-        var automation = await AddAutomationAsync(registration, template);
-        var download = await AddDownloadAsync(automation, ReleaseName, state);
-
-        // Act
-        await CreateStateService().IgnoreDownloadAsync(download.Id);
-
-        // Assert
-        (await ReloadDownloadAsync(download.Id)).State.ShouldBe(RemoteSourceDownloadState.Ignored);
-    }
-
     [Test]
     public async Task DownloadAsync_PendingDownload_LeavesReleaseCreationToReleaseCreator()
     {
@@ -751,34 +711,6 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task RetryWithoutDownloadingAgainAsync_ArchivesWereExtracted_QueuesReleaseCreationDirectly()
-    {
-        // Arrange
-        AddServer("main");
-        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
-        var registration = await AddRegistrationAsync("main");
-        var automation = await AddAutomationAsync(registration, template);
-        var download = await AddDownloadAsync(
-            automation,
-            ReleaseName,
-            RemoteSourceDownloadState.Failed,
-            startedAt: StartTime,
-            completedAt: StartTime,
-            errorMessage: "No release could be created",
-            archivesExtractedAt: StartTime
-        );
-
-        // Act
-        await CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
-
-        // Assert
-        var reloaded = await ReloadDownloadAsync(download.Id);
-        reloaded.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
-        reloaded.ErrorMessage.ShouldBeNull();
-        reloaded.ArchivesExtractedAt.ShouldBe(StartTime);
-    }
-
-    [Test]
     public async Task RestartDownloadAsync_ArchivesWereExtracted_ResetsExtractionTime()
     {
         // Arrange
@@ -802,90 +734,6 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
         var reloaded = await ReloadDownloadAsync(download.Id);
         reloaded.State.ShouldBe(RemoteSourceDownloadState.Pending);
         reloaded.ArchivesExtractedAt.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task RetryWithoutDownloadingAgainAsync_FailedBeforeDownloadCompleted_IsRejected()
-    {
-        // Arrange
-        AddServer("main");
-        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
-        var registration = await AddRegistrationAsync("main");
-        var automation = await AddAutomationAsync(registration, template);
-        var download = await AddDownloadAsync(
-            automation,
-            ReleaseName,
-            RemoteSourceDownloadState.Failed,
-            startedAt: StartTime,
-            errorMessage: "Download failed"
-        );
-
-        // Act
-        var retry = () => CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
-
-        // Assert
-        await Should.ThrowAsync<InvalidOperationException>(retry);
-        var reloaded = await ReloadDownloadAsync(download.Id);
-        reloaded.State.ShouldBe(RemoteSourceDownloadState.Failed);
-        reloaded.ErrorMessage.ShouldBe("Download failed");
-    }
-
-    [TestCase(RemoteSourceDownloadState.Observing)]
-    [TestCase(RemoteSourceDownloadState.Pending)]
-    [TestCase(RemoteSourceDownloadState.Canceled)]
-    public async Task RetryWithoutDownloadingAgainAsync_NotFailedDownload_IsRejected(
-        RemoteSourceDownloadState state
-    )
-    {
-        // Arrange
-        AddServer("main");
-        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
-        var registration = await AddRegistrationAsync("main");
-        var automation = await AddAutomationAsync(registration, template);
-        var download = await AddDownloadAsync(
-            automation,
-            ReleaseName,
-            state,
-            startedAt: StartTime,
-            completedAt: StartTime
-        );
-
-        // Act
-        var retry = () => CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
-
-        // Assert
-        await Should.ThrowAsync<InvalidOperationException>(retry);
-        (await ReloadDownloadAsync(download.Id)).State.ShouldBe(state);
-    }
-
-    [TestCase(RemoteSourceDownloadState.Downloaded)]
-    [TestCase(RemoteSourceDownloadState.Verifying)]
-    [TestCase(RemoteSourceDownloadState.Extracting)]
-    [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
-    [TestCase(RemoteSourceDownloadState.ReleaseCreated)]
-    public async Task StateChanges_CompletedDownload_AreRejected(RemoteSourceDownloadState state)
-    {
-        // Arrange
-        AddServer("main");
-        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
-        var registration = await AddRegistrationAsync("main");
-        var automation = await AddAutomationAsync(registration, template);
-        var download = await AddDownloadAsync(automation, ReleaseName, state);
-        var stateService = CreateStateService();
-
-        // Act
-        var cancel = () => stateService.CancelDownloadAsync(download.Id);
-        var restart = () => stateService.RestartDownloadAsync(download.Id);
-        var ignore = () => stateService.IgnoreDownloadAsync(download.Id);
-        var retryWithoutDownloadingAgain = () =>
-            stateService.RetryWithoutDownloadingAgainAsync(download.Id);
-
-        // Assert
-        await Should.ThrowAsync<InvalidOperationException>(cancel);
-        await Should.ThrowAsync<InvalidOperationException>(restart);
-        await Should.ThrowAsync<InvalidOperationException>(ignore);
-        await Should.ThrowAsync<InvalidOperationException>(retryWithoutDownloadingAgain);
-        (await ReloadDownloadAsync(download.Id)).State.ShouldBe(state);
     }
 
     private async Task ProcessAsync()

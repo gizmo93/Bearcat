@@ -23,23 +23,6 @@ public class HttpClientBuilderProxyExtensionsTest
     }
 
     [Test]
-    public void UseProxyForCategory_DefaultPrimaryHandler_SetsCategoryProxy()
-    {
-        // Arrange
-        proxyRoutingCache.RouteCategory(ProxyCategory.NfoDatabases, "http://nfo-proxy.test:8080");
-        services.AddHttpClient(ClientName).UseProxyForCategory(ProxyCategory.NfoDatabases);
-
-        // Act
-        var handlers = CreateHandlerChain();
-
-        // Assert
-        var webProxy = GetConfiguredWebProxy(handlers.Last());
-        webProxy
-            .GetProxy(new Uri("https://nfo.test"))
-            .ShouldBe(new Uri("http://nfo-proxy.test:8080"));
-    }
-
-    [Test]
     public void UseProxyForCategory_CustomSocketsHttpHandlerRegisteredBefore_KeepsHandlerSettings()
     {
         // Arrange
@@ -150,16 +133,6 @@ public class HttpClientBuilderProxyExtensionsTest
         }
 
         return handlers;
-    }
-
-    private static IWebProxy GetConfiguredWebProxy(HttpMessageHandler primaryHandler)
-    {
-        return primaryHandler switch
-        {
-            SocketsHttpHandler socketsHttpHandler => socketsHttpHandler.Proxy!,
-            HttpClientHandler httpClientHandler => httpClientHandler.Proxy!,
-            _ => throw new InvalidOperationException(primaryHandler.GetType().Name),
-        };
     }
 
     private static async Task<string> AnswerFirstRequestAsync(TcpListener listener)

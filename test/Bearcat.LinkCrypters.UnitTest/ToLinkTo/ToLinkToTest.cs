@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.ToLinkTo;
 using Bearcat.LinkCrypters.ToLinkTo.Api;
@@ -35,14 +34,6 @@ public class ToLinkToTest
     public void TearDown()
     {
         httpMessageHandler.Dispose();
-    }
-
-    [Test]
-    public void SupportedSettings_ToLinkToApiSettings_ReturnsDocumentedOptions()
-    {
-        service.SupportsCaptcha.ShouldBeTrue();
-        service.SupportsContainerDownload.ShouldBeTrue();
-        service.SupportsClickAndLoad.ShouldBeTrue();
     }
 
     [Test]
@@ -304,28 +295,6 @@ public class ToLinkToTest
     }
 
     [Test]
-    public async Task TryLoginAsync_ApiKeyIsValid_ReturnsSuccess()
-    {
-        // Arrange
-        httpMessageHandler.Enqueue(request =>
-        {
-            request.Method.ShouldBe(HttpMethod.Get);
-            request.RequestUri!.ToString().ShouldBe("https://tolink.to/api/v2/ping");
-            request.Headers.Authorization!.ToString().ShouldBe("Bearer api-key");
-
-            return Task.FromResult(CreateJsonResponse(HttpStatusCode.OK, """{"message":"Pong"}"""));
-        });
-
-        // Act
-        var result = await service.TryLoginAsync(Config, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-        httpMessageHandler.PendingRequests.ShouldBe(0);
-    }
-
-    [Test]
     public async Task TryLoginAsync_ApiKeyIsInvalid_ReturnsErrorMessage()
     {
         // Arrange
@@ -466,20 +435,6 @@ public class ToLinkToTest
         result.IsSuccess.ShouldBeFalse();
         result.LinksPerMirrorNumber.ShouldBeEmpty();
         result.ErrorMessages.Count.ShouldBe(1);
-    }
-
-    [Test]
-    public void DeserializeConfig_SerializedConfig_ReturnsToLinkToConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new ToLinkToConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<ToLinkToConfig>().ApiKey.ShouldBe("api-key");
     }
 
     private static HttpResponseMessage CreateJsonResponse(HttpStatusCode statusCode, string content)

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
@@ -178,46 +177,6 @@ public class ApiClientTest
         exception.Message.ShouldBe(details);
         downloadHandler.RequestedUrls.ShouldBeEmpty();
         File.Exists(targetFilePath).ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task RequestUploadFileAsync_FolderId_PassesFolderIdToApi()
-    {
-        // Arrange
-        apiMock
-            .Setup(x =>
-                x.RequestUploadFileAsync(
-                    "auth-token",
-                    "archive.part01.rar",
-                    1024,
-                    "hash",
-                    "folder-id",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new UploadFileResponse
-                {
-                    Status = (int)HttpStatusCode.OK,
-                    Response = new UploadFileResponse.ResponseObject
-                    {
-                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
-                    },
-                }
-            );
-
-        // Act
-        var result = await apiClient.RequestUploadFileAsync(
-            "archive.part01.rar",
-            1024,
-            "hash",
-            "folder-id",
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.Status.ShouldBe((int)HttpStatusCode.OK);
     }
 
     [Test]

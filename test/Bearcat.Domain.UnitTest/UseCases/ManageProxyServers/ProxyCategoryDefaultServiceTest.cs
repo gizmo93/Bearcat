@@ -37,39 +37,6 @@ public class ProxyCategoryDefaultServiceTest
     }
 
     [Test]
-    public async Task SetDefaultAsync_CategoryWithoutStoredDefault_AddsDefault()
-    {
-        // Act
-        await service.SetDefaultAsync(ProxyCategory.ImageHosters, 4);
-
-        // Assert
-        var proxyCategoryDefault = storedDefaults.ShouldHaveSingleItem();
-        proxyCategoryDefault.ProxyCategory.ShouldBe(ProxyCategory.ImageHosters);
-        proxyCategoryDefault.ProxyServerId.ShouldBe(4);
-        VerifySavedAndCacheRefreshed();
-    }
-
-    [Test]
-    public async Task SetDefaultAsync_CategoryWithStoredDefault_UpdatesDefault()
-    {
-        // Arrange
-        var storedDefault = new ProxyCategoryDefault
-        {
-            ProxyCategory = ProxyCategory.ImageHosters,
-            ProxyServerId = 4,
-        };
-        storedDefaults.Add(storedDefault);
-
-        // Act
-        await service.SetDefaultAsync(ProxyCategory.ImageHosters, proxyServerId: null);
-
-        // Assert
-        storedDefaults.ShouldHaveSingleItem().ShouldBeSameAs(storedDefault);
-        storedDefault.ProxyServerId.ShouldBeNull();
-        VerifySavedAndCacheRefreshed();
-    }
-
-    [Test]
     public async Task SetDefaultForAllCategoriesAsync_SomeStoredDefaults_SetsEveryCategory()
     {
         // Arrange

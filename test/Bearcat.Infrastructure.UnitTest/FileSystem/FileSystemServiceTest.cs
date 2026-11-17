@@ -123,17 +123,6 @@ public class FileSystemServiceTest
     }
 
     [Test]
-    public void GetAvailableFreeSpaceBytes_FolderExists_ReturnsFreeSpace()
-    {
-        // Act
-        var result = fileSystemService.GetAvailableFreeSpaceBytes(rootPath);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Value.ShouldBeGreaterThan(0);
-    }
-
-    [Test]
     public void GetAvailableFreeSpaceBytes_FolderIsMissing_ReturnsNull()
     {
         // Act

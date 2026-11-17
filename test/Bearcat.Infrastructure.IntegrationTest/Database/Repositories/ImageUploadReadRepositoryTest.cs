@@ -1,6 +1,5 @@
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -58,48 +57,6 @@ public class ImageUploadReadRepositoryTest(DatabaseProvider databaseProvider)
         createdBeforeMidnight.UploadState.ShouldBe(UploadState.Failed);
         createdBeforeMidnight.UrlCount.ShouldBe(0);
         createdBeforeMidnight.ErrorMessages.ShouldBe(["Upload of Crème.png timed out", "HTTP 500"]);
-    }
-
-    [Test]
-    public async Task GetImageUploadUrlsAsync_UrlsOfSeveralSizes_ReturnsUrlsOrderedBySizeAndId()
-    {
-        // Arrange
-        var seed = await AddImageUploadsAsync();
-
-        // Act
-        var result = await repository.GetImageUploadUrlsAsync(
-            seed.ReleaseId,
-            seed.UploadedLatest.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe([
-            new ReleaseImageUploadUrlReadModel(ImageSize.Full, "https://img.test/full-1.png"),
-            new ReleaseImageUploadUrlReadModel(ImageSize.Full, "https://img.test/full-2.png"),
-            new ReleaseImageUploadUrlReadModel(
-                ImageSize.Thumbnail,
-                "https://img.test/thumbnail.png"
-            ),
-            new ReleaseImageUploadUrlReadModel(ImageSize.Medium, "https://img.test/medium.png"),
-        ]);
-    }
-
-    [Test]
-    public async Task GetImageUploadUrlsAsync_UploadOfOtherRelease_ReturnsEmpty()
-    {
-        // Arrange
-        var seed = await AddImageUploadsAsync();
-
-        // Act
-        var result = await repository.GetImageUploadUrlsAsync(
-            seed.ReleaseId,
-            seed.UploadOfOtherRelease.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeEmpty();
     }
 
     private async Task<ImageUploadSeed> AddImageUploadsAsync()

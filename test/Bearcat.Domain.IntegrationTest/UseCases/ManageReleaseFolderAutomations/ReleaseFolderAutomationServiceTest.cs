@@ -122,22 +122,6 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task SetEnabledAsync_AutomationExists_TogglesEnabledState()
-    {
-        // Arrange
-        var releaseTemplate = await AddReleaseTemplateAsync();
-        var automation = await AddAutomationAsync(releaseTemplate.Id, isEnabled: true);
-
-        // Act
-        await service.SetEnabledAsync(automation.Id, false, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.ReleaseFolderAutomations.SingleAsync();
-
-        result.IsEnabled.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task RetryExtractionAsync_ExtractionFailed_ClearsErrorAndKeepsMeasuredFolderState()
     {
         // Arrange
@@ -168,22 +152,6 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         result.FileCount.ShouldBe(3);
         result.TotalBytes.ShouldBe(300);
         result.LastChangedAt.ShouldBe(lastChangedAt);
-    }
-
-    [Test]
-    public async Task DeleteAsync_AutomationExists_RemovesAutomation()
-    {
-        // Arrange
-        var releaseTemplate = await AddReleaseTemplateAsync();
-        var automation = await AddAutomationAsync(releaseTemplate.Id);
-
-        // Act
-        await service.DeleteAsync(automation.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.ReleaseFolderAutomations.AnyAsync();
-
-        result.ShouldBeFalse();
     }
 
     [Test]

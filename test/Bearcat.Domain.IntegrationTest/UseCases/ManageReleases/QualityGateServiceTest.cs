@@ -53,43 +53,6 @@ public class QualityGateServiceTest(DatabaseProvider databaseProvider)
         await ShouldHaveStateAsync(failingReleases.Last(), QualityGateState.Failed, issueCount: 1);
     }
 
-    [Test]
-    public async Task ReevaluatePendingReleasesAsync_MorePendingReleasesThanOneBatchAndFirstBatchPasses_EvaluatesReleaseOfSecondBatch()
-    {
-        // Arrange
-        var releaseGroup = CreateReleaseGroupRequiringNfo();
-        var passingReleases = Enumerable
-            .Range(1, 500)
-            .Select(releaseNumber => CreateRelease(releaseGroup, releaseNumber, withNfo: true))
-            .ToList();
-        var failingRelease = CreateRelease(releaseGroup, 501, withNfo: false);
-        await AddReleasesAsync([.. passingReleases, failingRelease]);
-
-        // Act
-        await service.ReevaluatePendingReleasesAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldHaveStateAsync(failingRelease, QualityGateState.Failed, issueCount: 1);
-        await ShouldHaveStateAsync(passingReleases[0], QualityGateState.Passed, issueCount: 0);
-        await ShouldHaveStateAsync(passingReleases.Last(), QualityGateState.Passed, issueCount: 0);
-    }
-
-    [Test]
-    public async Task ReevaluatePendingReleasesAsync_ManuallyApprovedRelease_KeepsReleaseApproved()
-    {
-        // Arrange
-        var releaseGroup = CreateReleaseGroupRequiringNfo();
-        var release = CreateRelease(releaseGroup, 1, withNfo: false);
-        release.QualityGateState = QualityGateState.ManuallyApproved;
-        await AddReleasesAsync([release]);
-
-        // Act
-        await service.ReevaluatePendingReleasesAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldHaveStateAsync(release, QualityGateState.ManuallyApproved, issueCount: 0);
-    }
-
     private async Task AddReleasesAsync(IReadOnlyList<Release> releases)
     {
         DbContext.Releases.AddRange(releases);

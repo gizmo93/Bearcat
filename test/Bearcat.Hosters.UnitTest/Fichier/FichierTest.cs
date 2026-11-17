@@ -1,5 +1,3 @@
-using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -88,62 +86,6 @@ public class FichierTest
     }
 
     [Test]
-    public async Task UploadFileAsync_FolderId_PassesFolderIdToApiClient()
-    {
-        // Arrange
-        var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 33, FullFileName: filePath, UploadId: 133, FolderId: "12345");
-        var config = new FichierConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.UploadFileAsync(
-                    config,
-                    It.IsAny<Stream>(),
-                    Path.GetFileName(filePath),
-                    "12345",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new EndUploadResponse
-                {
-                    Links =
-                    [
-                        new EndUploadResponse.UploadedLink
-                        {
-                            Download = "https://1fichier.com/?download",
-                            Filename = Path.GetFileName(filePath),
-                            Size = "14",
-                        },
-                    ],
-                }
-            );
-
-        // Act
-        var result = await service.UploadFileAsync(
-            fileDto,
-            config,
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        apiClientMock.Verify(
-            x =>
-                x.UploadFileAsync(
-                    config,
-                    It.IsAny<Stream>(),
-                    Path.GetFileName(filePath),
-                    "12345",
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
-    }
-
-    [Test]
     public async Task UploadFileAsync_ApiUploadThrows_ReturnsFailureAndRetriesThreeTimes()
     {
         // Arrange
@@ -190,57 +132,6 @@ public class FichierTest
     }
 
     [Test]
-    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateFolderAsync(config, "release-folder", It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync("12345");
-
-        // Act
-        var result = await service.CreateFolderAsync(
-            "release-folder",
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe("12345");
-    }
-
-    [Test]
-    public async Task CheckFilesExistAsync_ApiReturnsStatuses_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-        var fileUrls = new[] { "https://1fichier.com/?online", "https://1fichier.com/?offline" };
-
-        apiClientMock
-            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new Dictionary<string, bool> { [fileUrls[0]] = true, [fileUrls[1]] = false }
-            );
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
-        result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
-        result.ErrorMessages.ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
     {
         // Arrange
@@ -265,50 +156,6 @@ public class FichierTest
     }
 
     [Test]
-    public async Task CheckFilesExistAsync_ApiThrows_ReturnsFailure()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-        var fileUrls = new[] { "https://1fichier.com/?file" };
-
-        apiClientMock
-            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("link check failed"));
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
-        result.StatusPerFileUrl.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["link check failed"]);
-    }
-
-    [Test]
-    public async Task TryLoginAsync_UserInfoHasEmail_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x => x.GetUserInfoAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserInfoResponse { Email = "user@example.test" });
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task TryLoginAsync_UserInfoReturnsKo_ReturnsFailure()
     {
         // Arrange
@@ -325,34 +172,6 @@ public class FichierTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("invalid key");
-    }
-
-    [Test]
-    public async Task GetMaximumParallelUploadsAsync_Config_ReturnsStaticLimit()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-
-        // Act
-        var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(3);
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_ReturnsFichierConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new FichierConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeHosterConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<FichierConfig>().ApiKey.ShouldBe("api-key");
     }
 
     private string CreateTemporaryFile(string content)

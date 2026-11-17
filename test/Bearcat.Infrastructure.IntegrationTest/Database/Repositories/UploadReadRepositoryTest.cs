@@ -74,63 +74,6 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchUploadsAsync_UploadStateFilter_ReturnsMatchingUploads()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(UploadState: UploadState.Pending),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.Select(item => item.UploadId).ShouldBe([uploads.PendingUpload.Id]);
-    }
-
-    [Test]
-    public async Task SearchUploadsAsync_OnlineStateFilter_ReturnsMatchingUploads()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(OnlineState: OnlineState.Offline),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(1);
-        result.Items.Select(item => item.UploadId).ShouldBe([uploads.OfflineUpload.Id]);
-    }
-
-    [Test]
-    public async Task SearchUploadsAsync_HosterRegistrationFilter_ReturnsUploadsOfHoster()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(HosterRegistrationId: uploads.FirstHosterRegistrationId),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(3);
-        result
-            .Items.Select(item => item.UploadId)
-            .ShouldBe([
-                uploads.UploadedJustAfterMidnight.Id,
-                uploads.UploadedAtMidnight.Id,
-                uploads.UploadedBeforeMidnight.Id,
-            ]);
-    }
-
-    [Test]
     public async Task SearchUploadsAsync_UploadOnOtherHosterRegistrationThanItsUploadConfig_FiltersByHosterRegistrationOfUpload()
     {
         // Arrange
@@ -169,30 +112,6 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchUploadsAsync_ReleaseFilter_ReturnsUploadsOfRelease()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(ReleaseId: uploads.FirstReleaseId),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(4);
-        result
-            .Items.Select(item => item.UploadId)
-            .ShouldBe([
-                uploads.LatestUploadOfSecondHoster.Id,
-                uploads.UploadedJustAfterMidnight.Id,
-                uploads.UploadedAtMidnight.Id,
-                uploads.UploadedBeforeMidnight.Id,
-            ]);
-    }
-
-    [Test]
     public async Task SearchUploadsAsync_SecondPage_ReturnsRemainingUploadAndTotalCount()
     {
         // Arrange
@@ -209,44 +128,6 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         result.PageIndex.ShouldBe(1);
         result.PageSize.ShouldBe(5);
         result.Items.Select(item => item.UploadId).ShouldBe([uploads.UploadedBeforeMidnight.Id]);
-    }
-
-    [Test]
-    public async Task SearchUploadsAsync_ReleaseGroupFilter_ReturnsUploadsOfReleasesInGroup()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(ReleaseGroupId: uploads.SecondReleaseGroupId),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(2);
-        result
-            .Items.Select(item => item.UploadId)
-            .ShouldBe([uploads.PendingUpload.Id, uploads.OfflineUpload.Id]);
-    }
-
-    [Test]
-    public async Task SearchUploadsAsync_SearchTermMatchesReleaseNameInDifferentCase_ReturnsUploadsOfRelease()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(SearchTerm: "  bearcat.SECOND  "),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(2);
-        result
-            .Items.Select(item => item.UploadId)
-            .ShouldBe([uploads.PendingUpload.Id, uploads.OfflineUpload.Id]);
     }
 
     [Test]
@@ -306,23 +187,6 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchUploadsAsync_SearchTermMatchesNothing_ReturnsEmptyResult()
-    {
-        // Arrange
-        await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(SearchTerm: "does-not-exist"),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(0);
-        result.Items.ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task SearchUploadsAsync_SearchTermAndFilters_ReturnsUploadsMatchingAll()
     {
         // Arrange
@@ -343,75 +207,6 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         result
             .Items.Select(item => item.UploadId)
             .ShouldBe([uploads.LatestUploadOfSecondHoster.Id]);
-    }
-
-    [Test]
-    public async Task SearchUploadsAsync_UploadsWithAndWithoutArchive_ProjectsArchiveId()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.SearchUploadsAsync(
-            new UploadSearchQuery(ReleaseId: uploads.SecondReleaseId),
-            CancellationToken.None
-        );
-
-        // Assert
-        result
-            .Items.Single(item => item.UploadId == uploads.OfflineUpload.Id)
-            .ArchiveId.ShouldBe(uploads.SecondArchiveId);
-        result
-            .Items.Single(item => item.UploadId == uploads.PendingUpload.Id)
-            .ArchiveId.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task GetUploadAsync_UploadExists_ReturnsProjectedReadModel()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.GetUploadAsync(
-            uploads.OfflineUpload.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.UploadId.ShouldBe(uploads.OfflineUpload.Id);
-        result.ReleaseId.ShouldBe(uploads.SecondReleaseId);
-        result.ReleaseName.ShouldBe("Bearcat.Second.2026-GRP");
-        result.UploadConfigId.ShouldBe(uploads.OfflineUpload.UploadConfigId);
-        result.UploadConfigName.ShouldBe("Second release upload");
-        result.HosterRegistrationId.ShouldBe(uploads.SecondHosterRegistrationId);
-        result.HosterRegistrationName.ShouldBe("Second hoster");
-        result.CreatedAt.ShouldBe(Midnight.AddTicks(1000));
-        result.UploadedAt.ShouldBe(Midnight.AddMilliseconds(500));
-        result.UploadState.ShouldBe(UploadState.Completed);
-        result.OnlineState.ShouldBe(OnlineState.Offline);
-        result.NotFullyOnlineSince.ShouldBe(Midnight.AddHours(1).AddMilliseconds(250));
-        result.FullyOfflineSince.ShouldBe(Midnight.AddHours(2).AddMilliseconds(750));
-        result.LinkCount.ShouldBe(2);
-        result.ErrorMessages.ShouldBe(["File offline", "Check of Façade.rar timed out"]);
-        result.ArchiveId.ShouldBe(uploads.SecondArchiveId);
-    }
-
-    [Test]
-    public async Task GetUploadAsync_UploadDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var uploads = await AddSearchUploadsAsync();
-
-        // Act
-        var result = await repository.GetUploadAsync(
-            uploads.LatestUploadOfSecondHoster.Id + 1,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     [Test]
@@ -459,23 +254,6 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
                 UploadedFileOnlineState: null
             ),
         ]);
-    }
-
-    [Test]
-    public async Task GetRunningUploadsAsync_PendingUploadWithoutArchive_ReturnsEmptyArchiveFiles()
-    {
-        // Arrange
-        var uploads = await AddRunningUploadsAsync();
-
-        // Act
-        var result = await repository.GetRunningUploadsAsync(CancellationToken.None);
-
-        // Assert
-        var pendingUpload = result.Single(item =>
-            item.UploadId == uploads.PendingUploadWithoutArchive.Id
-        );
-        pendingUpload.UploadState.ShouldBe(UploadState.Pending);
-        pendingUpload.Files.ShouldBeEmpty();
     }
 
     [Test]

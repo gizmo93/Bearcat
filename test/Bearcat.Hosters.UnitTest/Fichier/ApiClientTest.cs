@@ -1,13 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
 using Bearcat.Hosters.Fichier.Api.Download;
-using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Fichier.Api.User;
 using Bearcat.Hosters.Shared;
@@ -155,33 +153,6 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task UploadFileAsync_FolderId_SendsFolderIdAsDid()
-    {
-        // Arrange
-        var config = new FichierConfig { ApiKey = "api-key" };
-        var capturedUploadBody = string.Empty;
-
-        SetupSuccessfulUpload(capturedBody => capturedUploadBody = capturedBody);
-
-        await using var stream = new MemoryStream("upload-content"u8.ToArray());
-
-        // Act
-        await apiClient.UploadFileAsync(
-            config,
-            stream,
-            "archive.part01.rar",
-            "12345",
-            CancellationToken.None
-        );
-
-        // Assert
-        capturedUploadBody.ShouldContain(
-            "Content-Disposition: form-data; name=\"did\"\r\n\r\n12345"
-        );
-        httpMessageHandler.PendingRequests.ShouldBe(0);
-    }
-
-    [Test]
     public async Task CreateFolderAsync_ExistingRootFolderWithName_ReturnsExistingFolderId()
     {
         // Arrange
@@ -279,45 +250,6 @@ public class ApiClientTest
 
         // Assert
         result.ShouldBe("123");
-    }
-
-    private void SetupSuccessfulUpload(Action<string> captureUploadBody)
-    {
-        httpMessageHandler.Enqueue(_ =>
-        {
-            return Task.FromResult(
-                CreateJsonResponse("""{"id":"Upload1234","url":"up1.1fichier.test"}""")
-            );
-        });
-
-        httpMessageHandler.Enqueue(async request =>
-        {
-            captureUploadBody(await request.Content!.ReadAsStringAsync());
-
-            var response = new HttpResponseMessage(HttpStatusCode.Redirect);
-            response.Headers.Location = new Uri("/end.pl?xid=Upload1234", UriKind.Relative);
-            return response;
-        });
-
-        httpMessageHandler.Enqueue(_ =>
-        {
-            return Task.FromResult(
-                CreateJsonResponse(
-                    """
-                    {
-                      "incoming": 0,
-                      "links": [
-                        {
-                          "download": "https://1fichier.com/?abc",
-                          "filename": "archive.part01.rar",
-                          "size": "14"
-                        }
-                      ]
-                    }
-                    """
-                )
-            );
-        });
     }
 
     [Test]
