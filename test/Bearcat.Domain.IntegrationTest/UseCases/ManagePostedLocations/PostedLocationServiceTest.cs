@@ -173,6 +173,32 @@ public class PostedLocationServiceTest(DatabaseProvider databaseProvider)
         );
     }
 
+    [Test]
+    public async Task DeleteAsync_ForumPostingFailureExists_DeletesFailureOfSameReleaseAndForum()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Release.001");
+        var registration = await AddRegistrationAsync("Forum A");
+
+        var postedLocationId = await service.AddForReleaseAsync(
+            releaseId: release.Id,
+            url: "https://forum.example/threads/1",
+            distributionSiteRegistrationId: registration.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        DbContext.ForumPostingFailures.Add(CreateGaveUpFailure(release.Id, registration.Id));
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.DeleteAsync(postedLocationId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ForumPostingFailures.CountAsync()).ShouldBe(0);
+        (await DbContext.PostedLocations.CountAsync()).ShouldBe(0);
+    }
+
     private static ForumPostingFailure CreateGaveUpFailure(
         int releaseId,
         int distributionSiteRegistrationId

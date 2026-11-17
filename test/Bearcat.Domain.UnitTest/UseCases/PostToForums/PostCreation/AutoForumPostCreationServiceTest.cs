@@ -124,6 +124,35 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
+    public async Task CreatePostWithChosenThreadAsync_PostedMeanwhile_SkipsWithoutPosting()
+    {
+        // Arrange
+        var repository = RepositoryWith(AutoPostTestFactory.Rule());
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(repository, submitter);
+
+        var plan = await new AutoForumPostingPlanService(repository).GetPlanAsync(
+            ForumPostTemplateType.Release,
+            1
+        );
+
+        repository.PostedLocations.Add(AutoPostTestFactory.PostedLocation());
+
+        // Act
+        var result = await service.CreatePostWithChosenThreadAsync(
+            plan: plan,
+            site: plan.FindSite(5)!,
+            threadUrl: null
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.SkipReason.ShouldBe(AutoPostSkipReason.AlreadyPosted);
+        submitter.NewThreads.ShouldBeEmpty();
+        submitter.Replies.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task CreatePostOnSiteAsync_ReplyModeWithoutExistingThread_StartsNewThread()
     {
         // Arrange

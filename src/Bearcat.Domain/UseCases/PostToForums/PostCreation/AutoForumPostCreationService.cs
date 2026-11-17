@@ -275,6 +275,11 @@ public class AutoForumPostCreationService(
         CancellationToken cancellationToken
     )
     {
+        if (await IsAlreadyPostedAsync(plan, site, cancellationToken))
+        {
+            return AutoPostExecutionResult.Skipped(AutoPostSkipReason.AlreadyPosted);
+        }
+
         var submittedPost = await SubmitReplyOrNewThreadAsync(
             plan: plan,
             site: site,
@@ -301,6 +306,23 @@ public class AutoForumPostCreationService(
             );
 
         return AutoPostExecutionResult.Posted(submittedPost.Url, uploadsMarkedPosted);
+    }
+
+    private async Task<bool> IsAlreadyPostedAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        CancellationToken cancellationToken
+    )
+    {
+        var postedLocations = await repository.GetPostedLocationsAsync(
+            entityType: plan.EntityType,
+            entityIds: [plan.EntityId],
+            cancellationToken: cancellationToken
+        );
+
+        return postedLocations.Any(location =>
+            location.DistributionSiteRegistrationId == site.DistributionSiteRegistrationId
+        );
     }
 
     private async Task<SubmittedPost> SubmitReplyOrNewThreadAsync(

@@ -32,8 +32,10 @@ public partial class ForumPostingRulesPage(
         "lg:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.9fr)_11rem_5rem_4rem]";
 
     private DistributionSiteRegistrationReadModel registration = null!;
+
     private DistributionSiteServiceRestrictions serviceRestrictions =
         DistributionSiteServiceRestrictions.Empty;
+
     private IReadOnlyList<SelectOption<string>> hosterOptions = [];
     private IReadOnlyList<SelectOption<string>> linkCrypterOptions = [];
     private IReadOnlyList<SelectOption<string>> imageHosterOptions = [];
@@ -249,6 +251,96 @@ public partial class ForumPostingRulesPage(
         };
 
         toastService.Success(L["MinimumSecondsBetweenPostsSaved", registration.Name]);
+    }
+
+    private Task SetRequiredHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                RequiredHosterClassNames = classNames,
+                ForbiddenHosterClassNames = serviceRestrictions
+                    .ForbiddenHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetForbiddenHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                ForbiddenHosterClassNames = classNames,
+                RequiredHosterClassNames = serviceRestrictions
+                    .RequiredHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetRequiredLinkCrypterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                RequiredLinkCrypterClassNames = classNames,
+                ForbiddenLinkCrypterClassNames = serviceRestrictions
+                    .ForbiddenLinkCrypterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetForbiddenLinkCrypterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                ForbiddenLinkCrypterClassNames = classNames,
+                RequiredLinkCrypterClassNames = serviceRestrictions
+                    .RequiredLinkCrypterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetRequiredImageHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                RequiredImageHosterClassNames = classNames,
+                ForbiddenImageHosterClassNames = serviceRestrictions
+                    .ForbiddenImageHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetForbiddenImageHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                ForbiddenImageHosterClassNames = classNames,
+                RequiredImageHosterClassNames = serviceRestrictions
+                    .RequiredImageHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
     }
 
     private async Task SetServiceRestrictionsAsync(DistributionSiteServiceRestrictions restrictions)

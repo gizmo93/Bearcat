@@ -31,10 +31,12 @@ public partial class AutoPostPlanSection(
 
     private readonly HashSet<int> busyRegistrationIds = [];
     private readonly Dictionary<int, string> siteErrors = [];
+
     private readonly Dictionary<
         int,
         IReadOnlyList<ExistingThread>
     > threadCandidatesByRegistrationId = [];
+
     private readonly Dictionary<int, string> threadSelectionsByRegistrationId = [];
 
     private bool IsAnySiteBusy => busyRegistrationIds.Count > 0;

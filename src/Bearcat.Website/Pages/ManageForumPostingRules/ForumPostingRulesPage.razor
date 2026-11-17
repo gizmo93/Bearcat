@@ -98,7 +98,7 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <BbFormFieldMultiSelect TValue="string"
                                         Values="serviceRestrictions.RequiredHosterClassNames"
-                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { RequiredHosterClassNames = values?.ToList() ?? [] }))"
+                                        ValuesChanged="@(values => SetRequiredHosterClassNamesAsync(values))"
                                         Label="@L["RequiredFileHosters"]"
                                         Placeholder="@L["SelectHoster"]"
                                         SearchPlaceholder="@L["Search"]"
@@ -107,7 +107,7 @@
                                         Options="hosterOptions" />
                 <BbFormFieldMultiSelect TValue="string"
                                         Values="serviceRestrictions.ForbiddenHosterClassNames"
-                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { ForbiddenHosterClassNames = values?.ToList() ?? [] }))"
+                                        ValuesChanged="@(values => SetForbiddenHosterClassNamesAsync(values))"
                                         Label="@L["ForbiddenFileHosters"]"
                                         Placeholder="@L["SelectHoster"]"
                                         SearchPlaceholder="@L["Search"]"
@@ -116,7 +116,7 @@
                                         Options="hosterOptions" />
                 <BbFormFieldMultiSelect TValue="string"
                                         Values="serviceRestrictions.RequiredLinkCrypterClassNames"
-                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { RequiredLinkCrypterClassNames = values?.ToList() ?? [] }))"
+                                        ValuesChanged="@(values => SetRequiredLinkCrypterClassNamesAsync(values))"
                                         Label="@L["RequiredLinkCrypters"]"
                                         Placeholder="@L["SelectLinkCrypter"]"
                                         SearchPlaceholder="@L["Search"]"
@@ -125,7 +125,7 @@
                                         Options="linkCrypterOptions" />
                 <BbFormFieldMultiSelect TValue="string"
                                         Values="serviceRestrictions.ForbiddenLinkCrypterClassNames"
-                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { ForbiddenLinkCrypterClassNames = values?.ToList() ?? [] }))"
+                                        ValuesChanged="@(values => SetForbiddenLinkCrypterClassNamesAsync(values))"
                                         Label="@L["ForbiddenLinkCrypters"]"
                                         Placeholder="@L["SelectLinkCrypter"]"
                                         SearchPlaceholder="@L["Search"]"
@@ -134,7 +134,7 @@
                                         Options="linkCrypterOptions" />
                 <BbFormFieldMultiSelect TValue="string"
                                         Values="serviceRestrictions.RequiredImageHosterClassNames"
-                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { RequiredImageHosterClassNames = values?.ToList() ?? [] }))"
+                                        ValuesChanged="@(values => SetRequiredImageHosterClassNamesAsync(values))"
                                         Label="@L["RequiredImageHosters"]"
                                         Placeholder="@L["SelectImageHoster"]"
                                         SearchPlaceholder="@L["Search"]"
@@ -143,7 +143,7 @@
                                         Options="imageHosterOptions" />
                 <BbFormFieldMultiSelect TValue="string"
                                         Values="serviceRestrictions.ForbiddenImageHosterClassNames"
-                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { ForbiddenImageHosterClassNames = values?.ToList() ?? [] }))"
+                                        ValuesChanged="@(values => SetForbiddenImageHosterClassNamesAsync(values))"
                                         Label="@L["ForbiddenImageHosters"]"
                                         Placeholder="@L["SelectImageHoster"]"
                                         SearchPlaceholder="@L["Search"]"
