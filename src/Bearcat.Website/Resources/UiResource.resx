@@ -676,6 +676,8 @@
   <data name="ArchiveRetentionAction.MoveToStorageFolder" xml:space="preserve"><value>Move to storage folder</value></data>
   <data name="ArchiveRetentionDays" xml:space="preserve"><value>Archive retention</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Days since the last upload of an archive config finished. Every reupload restarts this period.</value></data>
+  <data name="MaximumLocalArchiveSizeGb" xml:space="preserve"><value>Maximum size of local archives</value></data>
+  <data name="MaximumLocalArchiveSizeGbDescription" xml:space="preserve"><value>Total size of local archives in GB. Set to 0 to turn off the limit. Before writing an archive, Bearcat deletes local archives as needed, starting with those last uploaded longest ago. Only archives that can be restored from an online mirror or repacked from a release folder are deleted. Archives in storage folders are kept. If Bearcat cannot free enough space, it writes the archive anyway and notifies you. The limit does not apply when "Local archives after retention" is set to "Move to storage folder".</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initial uploads</value></data>
   <data name="InitialUploadDescription" xml:space="preserve"><value>Controls when the first upload is created for a newly created release.</value></data>
@@ -1275,6 +1277,8 @@
   <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Copying an archive into a storage folder failed. The copied files were removed and the archive stays local.</value></data>
   <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed" xml:space="preserve"><value>Copying archive into local working copy failed</value></data>
   <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description" xml:space="preserve"><value>Copying archive files from a storage folder into a local working copy before a reupload failed. The copied files were removed and the upload reads the archive files from the storage folder.</value></data>
+  <data name="NotificationKind.LocalArchiveSizeLimitExceeded" xml:space="preserve"><value>Local archive size limit exceeded</value></data>
+  <data name="NotificationKind.LocalArchiveSizeLimitExceeded.Description" xml:space="preserve"><value>Bearcat could not free enough space by deleting local archives to stay within the size limit. The new archive was written anyway.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release created from remote download</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>A release was created automatically from a folder that was downloaded from a remote source.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remote download failed</value></data>
@@ -1753,6 +1757,7 @@
   <data name="ConfigurationUnit.Seconds" xml:space="preserve"><value>s</value></data>
   <data name="ConfigurationUnit.Megabytes" xml:space="preserve"><value>MB</value></data>
   <data name="ConfigurationUnit.MegabytesPerSecond" xml:space="preserve"><value>MB/s</value></data>
+  <data name="ConfigurationUnit.Gigabytes" xml:space="preserve"><value>GB</value></data>
   <data name="ReleaseTotalCount" xml:space="preserve"><value>{0} releases</value></data>
   <data name="ReleaseTotalCountOne" xml:space="preserve"><value>{0} release</value></data>
   <data name="ReleaseSearchBarPlaceholder" xml:space="preserve"><value>Search by name or folder. Paste a link, archive file or upload ID to search those.</value></data>

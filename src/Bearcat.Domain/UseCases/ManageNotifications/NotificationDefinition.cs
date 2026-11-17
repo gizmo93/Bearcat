@@ -92,6 +92,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description"
         ),
         new(
+            Kind: NotificationKind.LocalArchiveSizeLimitExceeded,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Archives,
+            DisplayName: "NotificationKind.LocalArchiveSizeLimitExceeded",
+            Description: "NotificationKind.LocalArchiveSizeLimitExceeded.Description"
+        ),
+        new(
             Kind: NotificationKind.InitialUploadCreated,
             Severity: NotificationSeverity.Info,
             Group: NotificationGroup.Uploads,

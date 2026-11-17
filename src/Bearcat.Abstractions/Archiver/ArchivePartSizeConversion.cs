@@ -10,13 +10,21 @@ public static class ArchivePartSizeConversion
         ArchivePartSizeUnit partSizeUnit
     )
     {
-        var bytesPerPartSizeUnit = partSizeUnit switch
+        return (int)(megabytes * BytesPerMegabyte / GetBytesPerPartSizeUnit(partSizeUnit));
+    }
+
+    public static long ConvertPartSizeToBytes(int partSize, ArchivePartSizeUnit partSizeUnit)
+    {
+        return partSize * GetBytesPerPartSizeUnit(partSizeUnit);
+    }
+
+    private static long GetBytesPerPartSizeUnit(ArchivePartSizeUnit partSizeUnit)
+    {
+        return partSizeUnit switch
         {
             ArchivePartSizeUnit.Megabytes => BytesPerMegabyte,
             ArchivePartSizeUnit.Mebibytes => BytesPerMebibyte,
             _ => throw new ArgumentOutOfRangeException(nameof(partSizeUnit), partSizeUnit, null),
         };
-
-        return (int)(megabytes * BytesPerMegabyte / bytesPerPartSizeUnit);
     }
 }

@@ -21,53 +21,52 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
         CancellationToken cancellationToken
     )
     {
-        var mirrorDownloadHosterRegistrationIds = await GetMirrorDownloadHosterRegistrationIdsAsync(
-            cancellationToken
-        );
+        var deletableLocalArchives = await GetDeletableLocalArchivesQueryAsync(cancellationToken);
 
-        return await dbWrite
-            .Archives.AsSplitQuery()
-            .Include(a => a.Uploads)
-            .Include(a => a.ArchiveFiles)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.Release)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u => u.HosterRegistration)
-            .Include(a => a.ArchiveConfig)
-                .ThenInclude(c => c.UploadConfigs)
-                    .ThenInclude(uc => uc.Uploads)
-                        .ThenInclude(u =>
-                            u.UploadedFiles.Where(f =>
-                                EF.Parameter(mirrorDownloadHosterRegistrationIds)
-                                    .Contains(f.Upload.HosterRegistrationId!.Value)
-                            )
-                        )
+        return await deletableLocalArchives
             .Where(a =>
                 a.Id > afterArchiveId
-                && a.ArchiveState == ArchiveState.Created
-                && a.ArchiveStorageFolderId == null
-                && a.Uploads.Any(u => u.UploadedAt != null)
-                && a.Uploads.All(u =>
-                    u.UploadedAt != null
-                    || u.UploadConfig.Uploads.Any(laterUpload =>
-                        laterUpload.Id > u.Id && laterUpload.UploadedAt != null
-                    )
-                )
-                && !a.ArchiveConfig.Release.ExcludeFromAutoCleanup
                 && dbWrite
                     .Uploads.Where(u =>
                         u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId && u.UploadedAt != null
                     )
                     .Max(u => u.UploadedAt) <= cutoff
-                && !dbWrite.Uploads.Any(u =>
-                    u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId
-                    && WaitingPendingOrUploadingStates.Contains(u.UploadState)
-                )
             )
             .OrderBy(a => a.Id)
             .Take(maximumArchiveCount)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<
+        IReadOnlyList<Archive>
+    > GetDeletableLocalArchivesOrderedByLastUploadOfArchiveConfigAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var deletableLocalArchives = await GetDeletableLocalArchivesQueryAsync(cancellationToken);
+
+        return await deletableLocalArchives
+            .OrderBy(a =>
+                dbWrite
+                    .Uploads.Where(u =>
+                        u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId && u.UploadedAt != null
+                    )
+                    .Max(u => u.UploadedAt)
+            )
+            .ThenBy(a => a.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> GetLocalCreatedArchiveFilePathsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .ArchiveFiles.Where(af =>
+                af.Archive.ArchiveState == ArchiveState.Created
+                && af.Archive.ArchiveStorageFolderId == null
+            )
+            .Select(af => af.FullFileName)
             .ToListAsync(cancellationToken);
     }
 
@@ -134,6 +133,17 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<bool> HasUnresolvedNotificationAsync(
+        NotificationKind notificationKind,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.Notifications.AnyAsync(
+            n => n.NotificationKind == notificationKind && n.ResolvedAt == null,
+            cancellationToken
+        );
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);
@@ -142,6 +152,51 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
     public void ClearChangeTracker()
     {
         dbWrite.ChangeTracker.Clear();
+    }
+
+    private async Task<IQueryable<Archive>> GetDeletableLocalArchivesQueryAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var mirrorDownloadHosterRegistrationIds = await GetMirrorDownloadHosterRegistrationIdsAsync(
+            cancellationToken
+        );
+
+        return dbWrite
+            .Archives.AsSplitQuery()
+            .Include(a => a.Uploads)
+            .Include(a => a.ArchiveFiles)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.Release)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u => u.HosterRegistration)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u =>
+                            u.UploadedFiles.Where(f =>
+                                EF.Parameter(mirrorDownloadHosterRegistrationIds)
+                                    .Contains(f.Upload.HosterRegistrationId!.Value)
+                            )
+                        )
+            .Where(a =>
+                a.ArchiveState == ArchiveState.Created
+                && a.ArchiveStorageFolderId == null
+                && a.Uploads.Any(u => u.UploadedAt != null)
+                && a.Uploads.All(u =>
+                    u.UploadedAt != null
+                    || u.UploadConfig.Uploads.Any(laterUpload =>
+                        laterUpload.Id > u.Id && laterUpload.UploadedAt != null
+                    )
+                )
+                && !a.ArchiveConfig.Release.ExcludeFromAutoCleanup
+                && !dbWrite.Uploads.Any(u =>
+                    u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId
+                    && WaitingPendingOrUploadingStates.Contains(u.UploadState)
+                )
+            );
     }
 
     private async Task<List<int>> GetMirrorDownloadHosterRegistrationIdsAsync(

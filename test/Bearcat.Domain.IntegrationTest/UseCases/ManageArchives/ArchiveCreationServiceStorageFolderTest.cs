@@ -2,16 +2,19 @@ using System.Security.Cryptography;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
@@ -80,6 +83,16 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
+        var localArchiveSizeLimitService = new LocalArchiveSizeLimitService(
+            new ArchiveCleanupRepository(DbContext),
+            Mock.Of<IApplicationConfigurationProvider>(),
+            fileSystemService,
+            new MirrorCoverageEvaluator(Mock.Of<IHosterFactory>()),
+            new LocalArchiveDeleter(fileSystemService),
+            notificationService,
+            Mock.Of<ILogger<LocalArchiveSizeLimitService>>()
+        );
+
         service = CreateArchiveCreationService(
             fileSystemService,
             notificationService,
@@ -96,8 +109,10 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
                     Mock.Of<ILogger<ArchiveFileCopyService>>()
                 ),
                 cancellationRegistry,
+                localArchiveSizeLimitService,
                 Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
-            )
+            ),
+            localArchiveSizeLimitService
         );
     }
 
@@ -107,7 +122,8 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
         IApplicationConfigurationProvider configurationProvider,
         ITransferProgressTracker progressTracker,
         ITransferCancellationRegistry cancellationRegistry,
-        ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService
+        ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService,
+        LocalArchiveSizeLimitService localArchiveSizeLimitService
     )
     {
         var repository = new ArchiveCreationRepository(DbContext);
@@ -169,7 +185,8 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
                 progressTracker,
                 new FolderSizeProgressReporter()
             ),
-            archiveFileHashService
+            archiveFileHashService,
+            localArchiveSizeLimitService
         );
     }
 

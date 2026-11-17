@@ -136,6 +136,8 @@ public class NotificationService(
                 configuration.ArchiveMoveToStorageFolderFailed,
             NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed =>
                 configuration.ArchiveCopyIntoLocalWorkingCopyFailed,
+            NotificationKind.LocalArchiveSizeLimitExceeded =>
+                configuration.LocalArchiveSizeLimitExceeded,
             NotificationKind.InitialUploadCreated => configuration.InitialUploadCreated,
             NotificationKind.UploadCompleted => configuration.UploadCompleted,
             NotificationKind.UploadFailed => configuration.UploadFailed,

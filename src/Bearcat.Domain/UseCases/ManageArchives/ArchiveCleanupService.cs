@@ -93,7 +93,7 @@ public class ArchiveCleanupService(
 
         foreach (var archive in archives)
         {
-            if (!IsRecoverable(archive))
+            if (!mirrorCoverageEvaluator.IsArchiveRecoverable(archive))
             {
                 logger.LogDebug(
                     "Archive {ArchiveId} stays on disk because it has neither an online mirror nor a release folder to repack from",
@@ -131,16 +131,5 @@ public class ArchiveCleanupService(
         }
 
         await repository.SaveChangesAsync(cancellationToken);
-    }
-
-    private bool IsRecoverable(Archive archive)
-    {
-        var release = archive.ArchiveConfig.Release;
-
-        return mirrorCoverageEvaluator.FindMirrorUpload(archive.ArchiveConfig) is not null
-            || (
-                release.ReleaseType is ReleaseType.Managed
-                && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath)
-            );
     }
 }

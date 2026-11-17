@@ -3,6 +3,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ public class ArchiveLocalWorkingCopyService(
     INotificationService notificationService,
     ArchiveFileCopyService archiveFileCopyService,
     ITransferCancellationRegistry cancellationRegistry,
+    LocalArchiveSizeLimitService localArchiveSizeLimitService,
     ILogger<ArchiveLocalWorkingCopyService> logger
 )
 {
@@ -121,6 +123,11 @@ public class ArchiveLocalWorkingCopyService(
 
             var archiveFilesWithSize = archiveFileCopyService.GetArchiveFilesWithSize(
                 archiveFilesToCopy
+            );
+
+            await localArchiveSizeLimitService.DeleteOldestArchivesToFitAsync(
+                requiredBytes: archiveFilesWithSize.Sum(archiveFile => archiveFile.SizeBytes),
+                cancellationToken: cancellationToken
             );
 
             var workingCopyFolderPath = GetWorkingCopyFolderPath(archiveFilesBasePath, archive);

@@ -6,6 +6,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
@@ -30,7 +31,8 @@ public class ArchiveCreationService(
     ExistingArchiveAssignmentService existingArchiveAssignmentService,
     ArchivePackingSettingsService archivePackingSettingsService,
     ReleaseFolderPackingService releaseFolderPackingService,
-    ArchiveFileHashService archiveFileHashService
+    ArchiveFileHashService archiveFileHashService,
+    LocalArchiveSizeLimitService localArchiveSizeLimitService
 )
 {
     public async Task ProcessAsync(CancellationToken cancellationToken)
@@ -159,6 +161,13 @@ public class ArchiveCreationService(
 
             return;
         }
+
+        await localArchiveSizeLimitService.DeleteOldestArchivesToFitAsync(
+            requiredBytes: fileSystemService
+                .GetFolderFileCountAndSize(releaseFolderPath)
+                .TotalBytes,
+            cancellationToken: cancellationToken
+        );
 
         var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(

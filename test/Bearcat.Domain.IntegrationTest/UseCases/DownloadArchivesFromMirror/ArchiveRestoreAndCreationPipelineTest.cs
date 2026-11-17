@@ -11,6 +11,7 @@ using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
@@ -20,6 +21,7 @@ using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
@@ -97,6 +99,16 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             NullLogger<MirrorFileSizeService>.Instance
         );
 
+        var localArchiveSizeLimitService = new LocalArchiveSizeLimitService(
+            new ArchiveCleanupRepository(DbContext),
+            new DefaultConfigurationProvider(),
+            new FileSystemService(),
+            new MirrorCoverageEvaluator(hosterFactoryMock.Object),
+            new LocalArchiveDeleter(new FileSystemService()),
+            notificationService,
+            NullLogger<LocalArchiveSizeLimitService>.Instance
+        );
+
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(DbContext),
             hosterFactoryMock.Object,
@@ -123,6 +135,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 transferProgressTracker,
                 NullLogger<ArchiveFileCopyService>.Instance
             ),
+            localArchiveSizeLimitService,
             NullLogger<ArchiveRestoreService>.Instance
         );
 
@@ -142,8 +155,10 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                     NullLogger<ArchiveFileCopyService>.Instance
                 ),
                 new TransferCancellationRegistry(),
+                localArchiveSizeLimitService,
                 NullLogger<ArchiveLocalWorkingCopyService>.Instance
-            )
+            ),
+            localArchiveSizeLimitService
         );
     }
 
@@ -153,7 +168,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         IApplicationConfigurationProvider configurationProvider,
         ITransferProgressTracker progressTracker,
         ITransferCancellationRegistry cancellationRegistry,
-        ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService
+        ArchiveLocalWorkingCopyService archiveLocalWorkingCopyService,
+        LocalArchiveSizeLimitService localArchiveSizeLimitService
     )
     {
         var repository = new ArchiveCreationRepository(DbContext);
@@ -215,7 +231,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 progressTracker,
                 new FolderSizeProgressReporter()
             ),
-            archiveFileHashService
+            archiveFileHashService,
+            localArchiveSizeLimitService
         );
     }
 

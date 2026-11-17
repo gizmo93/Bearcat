@@ -29,6 +29,17 @@ public class MirrorCoverageEvaluator(IHosterFactory hosterFactory)
             && GetMirrorUploadsPerArchiveConfig(release).Count == release.ArchiveConfigs.Count;
     }
 
+    public bool IsArchiveRecoverable(Archive archive)
+    {
+        var release = archive.ArchiveConfig.Release;
+
+        return FindMirrorUpload(archive.ArchiveConfig) is not null
+            || (
+                release.ReleaseType is ReleaseType.Managed
+                && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath)
+            );
+    }
+
     public Upload? FindMirrorUpload(ArchiveConfig archiveConfig)
     {
         return archiveConfig

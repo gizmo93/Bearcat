@@ -12,6 +12,14 @@ public interface IArchiveCleanupRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<Archive>> GetDeletableLocalArchivesOrderedByLastUploadOfArchiveConfigAsync(
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<string>> GetLocalCreatedArchiveFilePathsAsync(
+        CancellationToken cancellationToken
+    );
+
     Task<bool> HasWaitingPendingOrUploadingUploadAsync(
         int archiveConfigId,
         CancellationToken cancellationToken
@@ -28,6 +36,11 @@ public interface IArchiveCleanupRepository
     );
 
     Task<IReadOnlyList<int>> GetArchiveIdsWithUnresolvedNotificationAsync(
+        NotificationKind notificationKind,
+        CancellationToken cancellationToken
+    );
+
+    Task<bool> HasUnresolvedNotificationAsync(
         NotificationKind notificationKind,
         CancellationToken cancellationToken
     );

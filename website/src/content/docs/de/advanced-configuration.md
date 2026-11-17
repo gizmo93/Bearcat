@@ -98,10 +98,32 @@ Archive in Speicherordnern werden nie automatisch gelöscht.
 
 War die automatische Archivlöschung bereits aktiviert, bleibt nach dem Update die Aktion **Löschen** ausgewählt.
 
+#### Maximale Grösse lokaler Archive
+
+Mit **Maximale Grösse lokaler Archive** legst du fest, wie viel Speicherplatz lokale Archive insgesamt belegen dürfen (in GB).
+Standardmässig ist die Grenze ausgeschaltet (`0`). Sie gilt unabhängig von der Aufbewahrungsfrist.
+
+Bevor Bearcat ein lokales Archiv schreibt, löscht es bei Bedarf andere lokale Archive, um Platz innerhalb der Grenze zu schaffen.
+Das gilt beim Packen, beim Wiederherstellen von einem Mirror und beim Erstellen einer
+[lokalen Arbeitskopie](/Bearcat/de/archive-storage-folders/#reuploads).
+Bearcat beginnt mit den Archiven, bei denen der letzte Upload der Archivkonfiguration am längsten zurückliegt.
+
+Dabei gelten dieselben Bedingungen wie bei der Aktion **Löschen**:
+
+- Das Archiv lässt sich von einem vollständig verfügbaren Mirror wiederherstellen oder aus dem Ordner eines Managed Releases neu packen.
+- Kein Upload der Archivkonfiguration wartet, steht an oder läuft.
+- Das Release ist nicht vom automatischen Aufräumen ausgeschlossen.
+
+Archive in Speicherordnern bleiben erhalten und zählen nicht zur Gesamtgrösse.
+Reicht der freigegebene Platz nicht aus, schreibt Bearcat das Archiv trotzdem und benachrichtigt dich.
+Die Grenze gilt nicht, wenn **Lokale Archive nach Aufbewahrung** auf **In Speicherordner verschieben** steht.
+
+Plane zusätzlichen freien Speicherplatz ein: Bearcat prüft die Grenze nur vor dem Schreiben und kann sie überschreiten.
+
 #### Einzelne Releases ausschliessen
 
 Aktiviere beim Erstellen oder Bearbeiten eines Releases **Vom automatischen Aufräumen ausschliessen**,
-um beide Regeln zu überspringen.
+damit beide Aufräumregeln und die Grössengrenze für dieses Release nicht gelten.
 
 ![exclude-from-auto-cleanup.png](../images/exclude-from-auto-cleanup.png)
 
