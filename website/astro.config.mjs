@@ -158,6 +158,7 @@ export default defineConfig({
 					collapsed: true,
 					items: [
 						{ label: 'Keep2Share', slug: 'keep2share' },
+						{ label: 'FileFactory', slug: 'filefactory' },
 						{ label: 'filecrypt.cc', slug: 'filecrypt' },
 					],
 				},

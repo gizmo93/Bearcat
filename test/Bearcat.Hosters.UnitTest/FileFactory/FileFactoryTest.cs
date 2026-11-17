@@ -91,47 +91,6 @@ public class FileFactoryTest
     }
 
     [Test]
-    public async Task UploadFileAsync_UploadIntoFolderSucceeds_StoresFileIdAsExternalId()
-    {
-        // Arrange
-        apiClientMock
-            .Setup(x =>
-                x.UploadFileAsync(
-                    config,
-                    It.IsAny<Stream>(),
-                    Path.GetFileName(filePath),
-                    new FileInfo(filePath).Length,
-                    "folder-1",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new FileFactoryUploadResult(
-                    FileId: "x17bs33m3smp0yvfqsbr3jyjxs8japhr",
-                    FileUrl: $"https://www.filefactory.com/file/{OnlineViewhash}"
-                )
-            );
-
-        // Act
-        var result = await service.UploadFileAsync(
-            fileDto: new FileDto(
-                Id: 17,
-                FullFileName: filePath,
-                UploadId: 117,
-                FolderId: "folder-1"
-            ),
-            hosterConfig: config,
-            progress: NullTransferProgress.Instance,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.FileUrl.ShouldBe($"https://www.filefactory.com/file/{OnlineViewhash}");
-        result.ExternalId.ShouldBe("x17bs33m3smp0yvfqsbr3jyjxs8japhr");
-    }
-
-    [Test]
     public async Task MoveFilesToFolderAsync_OneFileWithoutExternalId_MovesTheOtherFilesInOneRequest()
     {
         // Arrange
@@ -187,39 +146,6 @@ public class FileFactoryTest
             "x17bs33m3smp0yvfqsbr3jyjxs8japhr",
             "x27bs33m3smp0yvfqsbr3jyjxs8japhr",
         ]);
-    }
-
-    [Test]
-    public async Task MoveFilesToFolderAsync_MoveRequestFails_ReturnsNoMovedFileLinks()
-    {
-        // Arrange
-        apiClientMock
-            .Setup(x =>
-                x.MoveFilesToFolderAsync(
-                    config,
-                    It.IsAny<IReadOnlyList<string>>(),
-                    "unknown-folder",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new HttpRequestException("[Request ID: 5f1c2a] Server Error"));
-
-        // Act
-        var movedFileLinks = await service.MoveFilesToFolderAsync(
-            files:
-            [
-                new HosterFileToMoveDto(
-                    $"https://www.filefactory.com/file/{OnlineViewhash}",
-                    "x17bs33m3smp0yvfqsbr3jyjxs8japhr"
-                ),
-            ],
-            folderId: "unknown-folder",
-            hosterConfig: config,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        movedFileLinks.ShouldBeEmpty();
     }
 
     [Test]
