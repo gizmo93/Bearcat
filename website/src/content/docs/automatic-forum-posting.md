@@ -39,6 +39,25 @@ Change the interval under [Background tasks](/Bearcat/advanced-configuration/#ba
 for threads and naming new ones. For collections, it uses the collection name.
 Turn it off to keep dots in searches and new thread titles.
 
+## Hosters, link crypters and image hosters
+
+Below the site-wide settings, choose required and forbidden hosters, link crypters and image hosters for the forum.
+They apply to every post to this forum, automatic and manual.
+
+- **Required**: at least one of the selected types must be in the post.
+- **Forbidden**: Bearcat removes these uploads, containers and images from the post.
+  It blocks the post only if that kind had entries before and none is left.
+
+Bearcat checks a release or collection as a whole: all uploads, upload slots and member releases together.
+Containers with several hosters (all hosters of a release, collection upload slots) are filtered only by the link crypter lists.
+A forbidden hoster inside such a container is ignored.
+
+Templates that use `imagelinks.<config>` directly render an empty value when that image hoster is filtered.
+Check the value with `if` or use a separate template for this forum.
+
+When the post does not meet these settings, automatic posting skips the forum without a notification.
+**Post** in the post queue shows the reason. A [manual forum draft](/Bearcat/posting-to-forums/) shows it as a warning, and you can still post.
+
 ## Adding a rule
 
 Click **New posting rule** and fill in these fields:
@@ -206,7 +225,7 @@ The entry must be linked to a distribution site; posts you confirmed by hand als
 ## Notifications
 
 Bearcat notifies you of successful and failed posts. You can disable notifications for successful
-and failed updates separately.
+and failed updates separately. Posts skipped because of the hoster and link crypter settings create no notification.
 
 ## Posted locations and duplicates
 

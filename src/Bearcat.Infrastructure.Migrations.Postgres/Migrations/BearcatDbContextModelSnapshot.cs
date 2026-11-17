@@ -489,6 +489,18 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(8000)
                         .HasColumnType("character varying(8000)");
 
+                    b.PrimitiveCollection<List<string>>("ForbiddenHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("ForbiddenImageHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("ForbiddenLinkCrypterClassNames")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<bool>("HasUnreadableSecrets")
                         .HasColumnType("boolean");
 
@@ -499,6 +511,18 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.PrimitiveCollection<List<string>>("RequiredHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("RequiredImageHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("RequiredLinkCrypterClassNames")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("SerializedConfig")
                         .IsRequired()

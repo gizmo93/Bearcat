@@ -148,8 +148,14 @@ public class AutoForumPostUpdateService(
         var rendered = await contentRenderer.RenderAsync(
             entityId: target.EntityId,
             forumPostTemplateId: forumPostTemplateId,
+            distributionSiteRegistrationId: target.DistributionSiteRegistrationId,
             cancellationToken: cancellationToken
         );
+
+        if (rendered.BlockedReasons.Count > 0)
+        {
+            return AutoPostUpdateResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
+        }
 
         if (!rendered.IsSuccess)
         {
@@ -186,6 +192,11 @@ public class AutoForumPostUpdateService(
         CancellationToken cancellationToken
     )
     {
+        if (result.Status == AutoPostUpdateStatus.Skipped)
+        {
+            return;
+        }
+
         if (result.Status == AutoPostUpdateStatus.Updated)
         {
             await notificationService.CreateAsync(

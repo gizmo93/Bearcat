@@ -66,6 +66,75 @@
         </BbCardContent>
     </BbCard>
 
+    <BbCard Class="border-border/70 shadow-sm">
+        <BbCardContent Class="space-y-4 p-4">
+            <div class="flex items-start gap-2">
+                <LucideIcon Name="shield-check" class="mt-0.5 h-4 w-4 text-muted-foreground" />
+                <div class="space-y-1">
+                    <p class="text-sm font-semibold">@L["ForumServiceRestrictions"]</p>
+                    <p class="text-xs text-muted-foreground">@L["ForumServiceRestrictionsHelp"]</p>
+                </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <BbFormFieldMultiSelect TValue="string"
+                                        Values="serviceRestrictions.RequiredHosterClassNames"
+                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { RequiredHosterClassNames = values?.ToList() ?? [] }))"
+                                        Label="@L["RequiredFileHosters"]"
+                                        Placeholder="@L["SelectHoster"]"
+                                        SearchPlaceholder="@L["Search"]"
+                                        ShowSelectAll="false"
+                                        MatchTriggerWidth="true"
+                                        Options="hosterOptions" />
+                <BbFormFieldMultiSelect TValue="string"
+                                        Values="serviceRestrictions.ForbiddenHosterClassNames"
+                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { ForbiddenHosterClassNames = values?.ToList() ?? [] }))"
+                                        Label="@L["ForbiddenFileHosters"]"
+                                        Placeholder="@L["SelectHoster"]"
+                                        SearchPlaceholder="@L["Search"]"
+                                        ShowSelectAll="false"
+                                        MatchTriggerWidth="true"
+                                        Options="hosterOptions" />
+                <BbFormFieldMultiSelect TValue="string"
+                                        Values="serviceRestrictions.RequiredLinkCrypterClassNames"
+                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { RequiredLinkCrypterClassNames = values?.ToList() ?? [] }))"
+                                        Label="@L["RequiredLinkCrypters"]"
+                                        Placeholder="@L["SelectLinkCrypter"]"
+                                        SearchPlaceholder="@L["Search"]"
+                                        ShowSelectAll="false"
+                                        MatchTriggerWidth="true"
+                                        Options="linkCrypterOptions" />
+                <BbFormFieldMultiSelect TValue="string"
+                                        Values="serviceRestrictions.ForbiddenLinkCrypterClassNames"
+                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { ForbiddenLinkCrypterClassNames = values?.ToList() ?? [] }))"
+                                        Label="@L["ForbiddenLinkCrypters"]"
+                                        Placeholder="@L["SelectLinkCrypter"]"
+                                        SearchPlaceholder="@L["Search"]"
+                                        ShowSelectAll="false"
+                                        MatchTriggerWidth="true"
+                                        Options="linkCrypterOptions" />
+                <BbFormFieldMultiSelect TValue="string"
+                                        Values="serviceRestrictions.RequiredImageHosterClassNames"
+                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { RequiredImageHosterClassNames = values?.ToList() ?? [] }))"
+                                        Label="@L["RequiredImageHosters"]"
+                                        Placeholder="@L["SelectImageHoster"]"
+                                        SearchPlaceholder="@L["Search"]"
+                                        ShowSelectAll="false"
+                                        MatchTriggerWidth="true"
+                                        Options="imageHosterOptions" />
+                <BbFormFieldMultiSelect TValue="string"
+                                        Values="serviceRestrictions.ForbiddenImageHosterClassNames"
+                                        ValuesChanged="@(values => SetServiceRestrictionsAsync(serviceRestrictions with { ForbiddenImageHosterClassNames = values?.ToList() ?? [] }))"
+                                        Label="@L["ForbiddenImageHosters"]"
+                                        Placeholder="@L["SelectImageHoster"]"
+                                        SearchPlaceholder="@L["Search"]"
+                                        ShowSelectAll="false"
+                                        MatchTriggerWidth="true"
+                                        Options="imageHosterOptions" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
     @if (rules.Count == 0)
     {
         <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">

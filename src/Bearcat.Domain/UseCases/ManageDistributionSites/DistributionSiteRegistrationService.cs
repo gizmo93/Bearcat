@@ -3,6 +3,7 @@ using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ConfigurationFields;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 
@@ -150,6 +151,32 @@ public class DistributionSiteRegistrationService(
         var registration = await repository.GetByIdAsync(id, cancellationToken);
 
         registration.StripDotsForThreadSearch = isEnabled;
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetServiceRestrictionsAsync(
+        int id,
+        DistributionSiteServiceRestrictions restrictions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await repository.GetByIdAsync(id, cancellationToken);
+
+        registration.RequiredHosterClassNames = restrictions.RequiredHosterClassNames.ToList();
+        registration.ForbiddenHosterClassNames = restrictions.ForbiddenHosterClassNames.ToList();
+
+        registration.RequiredLinkCrypterClassNames =
+            restrictions.RequiredLinkCrypterClassNames.ToList();
+
+        registration.ForbiddenLinkCrypterClassNames =
+            restrictions.ForbiddenLinkCrypterClassNames.ToList();
+
+        registration.RequiredImageHosterClassNames =
+            restrictions.RequiredImageHosterClassNames.ToList();
+
+        registration.ForbiddenImageHosterClassNames =
+            restrictions.ForbiddenImageHosterClassNames.ToList();
 
         await repository.SaveChangesAsync(cancellationToken);
     }

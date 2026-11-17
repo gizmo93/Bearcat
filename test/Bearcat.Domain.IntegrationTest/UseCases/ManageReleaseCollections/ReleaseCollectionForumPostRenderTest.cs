@@ -4,6 +4,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
@@ -41,19 +42,18 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
                 == Mock.Of<IHoster>(hoster => hoster.Name == "Rapidgator")
             )
         );
-        var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);
-
         var releaseRenderModelBuilder = new ReleaseForumPostRenderModelBuilder(
             releaseReadRepository: releaseReadRepository,
-            uploadBuilder: new ReleaseForumPostUploadBuilder(releaseReadRepository),
-            imageLinkBuilder: imageLinkBuilder
+            uploadRepository: releaseReadRepository,
+            imageLinkRepository: releaseReadRepository
         );
 
         var collectionSource = new ReleaseCollectionForumPostRenderSource(
             repository: new ReleaseCollectionForumPostRepository(DbContext),
             releaseRenderModelBuilder: releaseRenderModelBuilder,
             releaseReadRepository: releaseReadRepository,
-            imageLinkBuilder: imageLinkBuilder
+            imageLinkRepository: releaseReadRepository,
+            distributionSiteRegistrationReadRepository: Mock.Of<IDistributionSiteRegistrationReadRepository>()
         );
 
         service = new ForumPostRenderService(
@@ -84,7 +84,12 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            collection.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -113,7 +118,12 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            collection.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -174,7 +184,12 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            collection.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -200,7 +215,12 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         DbContext.ForumPostTemplates.Add(template);
         await DbContext.SaveChangesAsync();
 
-        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            collection.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         result.Errors.ShouldBeEmpty();
         result.Content.ShouldBe("Deutsch");
@@ -241,7 +261,12 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            collection.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -314,7 +339,12 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            collection.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();

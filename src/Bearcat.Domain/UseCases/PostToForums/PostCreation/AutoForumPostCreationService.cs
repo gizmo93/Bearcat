@@ -106,8 +106,14 @@ public class AutoForumPostCreationService(
         var rendered = await contentRenderer.RenderAsync(
             entityId: plan.EntityId,
             forumPostTemplateId: match.ForumPostTemplateId,
+            distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
             cancellationToken: cancellationToken
         );
+
+        if (rendered.BlockedReasons.Count > 0)
+        {
+            return AutoPostExecutionResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
+        }
 
         if (!rendered.IsSuccess)
         {
@@ -193,6 +199,11 @@ public class AutoForumPostCreationService(
         CancellationToken cancellationToken
     )
     {
+        if (result.Status == AutoPostExecutionStatus.Skipped)
+        {
+            return;
+        }
+
         var entityLabel =
             entityType == ForumPostTemplateType.Release ? "Release" : "Release collection";
 

@@ -2273,4 +2273,15 @@
   <data name="ChangeArchivePartSizeSkipReason" xml:space="preserve"><value>Skipped: {0} allows at most {1} MB</value></data>
   <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} archive configurations and {1} archive configurations in templates change from {2} MB to {3} MB.</value></data>
   <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>Changed {0} archive configurations and {1} archive configurations in templates. Skipped {2} archive configurations and {3} archive configurations in templates.</value></data>
+  <data name="ForumServiceRestrictions" xml:space="preserve"><value>Hosters, link crypters and image hosters</value></data>
+  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Required: at least one of the selected ones must stay in the post. Forbidden: removed from the post. Automatic posting skips this forum when a kind had entries and none is left, or when no required one is present.</value></data>
+  <data name="RequiredFileHosters" xml:space="preserve"><value>Required hosters</value></data>
+  <data name="ForbiddenFileHosters" xml:space="preserve"><value>Forbidden hosters</value></data>
+  <data name="RequiredLinkCrypters" xml:space="preserve"><value>Required link crypters</value></data>
+  <data name="ForbiddenLinkCrypters" xml:space="preserve"><value>Forbidden link crypters</value></data>
+  <data name="RequiredImageHosters" xml:space="preserve"><value>Required image hosters</value></data>
+  <data name="ForbiddenImageHosters" xml:space="preserve"><value>Forbidden image hosters</value></data>
+  <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Hoster and link crypter settings saved for {0}</value></data>
+  <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>This post does not meet the hoster and link crypter settings of this forum. Automatic posting would skip it.</value></data>
+  <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Skipped because the hoster and link crypter settings of this forum are not met: {0}</value></data>
 </root>

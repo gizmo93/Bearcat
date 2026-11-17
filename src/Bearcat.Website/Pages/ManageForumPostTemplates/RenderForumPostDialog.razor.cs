@@ -74,7 +74,11 @@ public partial class RenderForumPostDialog(IScopedOperationRunner operationRunne
         {
             var result = await operationRunner.RunAsync(
                 (ForumPostRenderService service) =>
-                    service.RenderAsync(EntityId, selectedTemplateId)
+                    service.RenderAsync(
+                        entityId: EntityId,
+                        forumPostTemplateId: selectedTemplateId,
+                        distributionSiteRegistrationId: null
+                    )
             );
             renderedContent = result.Content;
             renderErrors = result.Errors;

@@ -60,6 +60,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     private string postName = string.Empty;
     private string body = string.Empty;
     private IReadOnlyList<string> renderErrors = [];
+    private IReadOnlyList<string> blockedReasons = [];
 
     private IReadOnlyList<ThreadPrefix> prefixes = [];
     private IReadOnlyList<string> selectedPrefixIds = [];
@@ -284,15 +285,21 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         }
 
         renderErrors = [];
+        blockedReasons = [];
 
         try
         {
             var result = await operationRunner.RunAsync(
                 (ForumPostRenderService service) =>
-                    service.RenderAsync(EntityId, selectedTemplateId)
+                    service.RenderAsync(
+                        entityId: EntityId,
+                        forumPostTemplateId: selectedTemplateId,
+                        distributionSiteRegistrationId: selectedRegistrationId
+                    )
             );
             body = result.Content;
             renderErrors = result.Errors;
+            blockedReasons = result.BlockedReasons;
         }
         catch (Exception exception)
         {

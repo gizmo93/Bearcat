@@ -6,4 +6,5 @@ public enum AutoPostSkipReason
     SiteNotConfigured = 2,
     AlreadyPosted = 3,
     NoMatch = 4,
+    ServiceRestrictionNotMet = 5,
 }

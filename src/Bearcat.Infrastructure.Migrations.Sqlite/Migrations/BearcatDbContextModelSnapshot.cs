@@ -461,6 +461,18 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(8000)
                         .HasColumnType("TEXT");
 
+                    b.PrimitiveCollection<string>("ForbiddenHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("ForbiddenImageHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("ForbiddenLinkCrypterClassNames")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("HasUnreadableSecrets")
                         .HasColumnType("INTEGER");
 
@@ -470,6 +482,18 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("RequiredHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("RequiredImageHosterClassNames")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("RequiredLinkCrypterClassNames")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SerializedConfig")

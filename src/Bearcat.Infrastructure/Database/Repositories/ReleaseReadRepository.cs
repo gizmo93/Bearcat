@@ -653,6 +653,7 @@ public class ReleaseReadRepository(
                         linkCrypter.LinkCrypterRegistrationId,
                         linkCrypter.ContainerScope,
                         Name = linkCrypter.LinkCrypterRegistration.Name,
+                        linkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
                         linkCrypter.Password,
                     })
                     .ToList(),
@@ -830,6 +831,7 @@ public class ReleaseReadRepository(
                                 );
 
                         return new ReleaseForumPostLinkCrypterReadModel(
+                            LinkCrypterClassName: linkCrypter.LinkCrypterClassName,
                             Name: linkCrypter.Name,
                             Password: linkCrypter.Password,
                             ContainerUrl: container.ContainerUrl ?? string.Empty,
@@ -848,6 +850,7 @@ public class ReleaseReadRepository(
                     config.ReleaseId,
                     Upload: new ReleaseForumPostUploadReadModel(
                         UploadConfigName: config.UploadConfigName,
+                        HosterClassName: hosterClassName,
                         HosterName: hosterFactory.GetByName(hosterClassName).Name,
                         HosterRegistrationName: upload?.HosterRegistrationName ?? string.Empty,
                         IsVideoUpload: config.UploadSource == UploadSource.VideoFiles,
@@ -897,11 +900,12 @@ public class ReleaseReadRepository(
             {
                 ReleaseId = c.ReleaseId!.Value,
                 LinkCrypter = new ReleaseForumPostLinkCrypterReadModel(
-                    c.LinkCrypterRegistration.Name,
-                    c.Password,
-                    c.ContainerUrl,
-                    c.StatusImageId,
-                    c.CreatedAt
+                    LinkCrypterClassName: c.LinkCrypterRegistration.LinkCrypterClassName,
+                    Name: c.LinkCrypterRegistration.Name,
+                    Password: c.Password,
+                    ContainerUrl: c.ContainerUrl,
+                    StatusImageId: c.StatusImageId,
+                    CreatedAt: c.CreatedAt
                 ),
             })
             .ToListAsync(cancellationToken);
@@ -1206,6 +1210,7 @@ public class ReleaseReadRepository(
                 config.Id,
                 config.ReleaseId,
                 config.Name,
+                config.ImageHosterRegistration.ImageHosterClassName,
                 Urls = config
                     .ImageUploads.Where(upload =>
                         upload.Id
@@ -1240,6 +1245,7 @@ public class ReleaseReadRepository(
                     config.Id,
                     new ForumPostImageLinkReadModel(
                         ImageUploadConfigName: config.Name,
+                        ImageHosterClassName: config.ImageHosterClassName,
                         Urls: config
                             .Urls.OrderBy(url => url.ImageSize)
                             .ThenBy(url => url.Id)

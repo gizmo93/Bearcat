@@ -195,6 +195,10 @@ public partial class AutoPostPlanSection(
                 ? L["AutoPostSkippedAlreadyPosted"]
                 : L["AutoPostSkippedCollectionAlreadyPosted"],
             AutoPostSkipReason.NoMatch => L["AutoPostNoMatchingRule"],
+            AutoPostSkipReason.ServiceRestrictionNotMet => L[
+                "AutoPostSkippedServiceRestrictionNotMet",
+                string.Join(" ", result.Errors)
+            ],
             _ => L["AutoPostSkippedSiteUnavailable"],
         };
     }
@@ -207,6 +211,11 @@ public partial class AutoPostPlanSection(
         if (result.BlockedReason is not null)
         {
             return L.Localize(result.BlockedReason.Value, entityType);
+        }
+
+        if (result.SkipReason == AutoPostUpdateSkipReason.ServiceRestrictionNotMet)
+        {
+            return L["AutoPostSkippedServiceRestrictionNotMet", string.Join(" ", result.Errors)];
         }
 
         if (result.SkipReason != AutoPostUpdateSkipReason.NotPosted)

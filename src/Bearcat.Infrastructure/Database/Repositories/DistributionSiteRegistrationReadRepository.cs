@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +97,24 @@ public class DistributionSiteRegistrationReadRepository(
             rule => rule.DistributionSiteRegistrationId == id,
             cancellationToken
         );
+    }
+
+    public async Task<DistributionSiteServiceRestrictions> GetServiceRestrictionsAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .DistributionSiteRegistrations.Where(registration => registration.Id == id)
+            .Select(registration => new DistributionSiteServiceRestrictions(
+                RequiredHosterClassNames: registration.RequiredHosterClassNames,
+                ForbiddenHosterClassNames: registration.ForbiddenHosterClassNames,
+                RequiredLinkCrypterClassNames: registration.RequiredLinkCrypterClassNames,
+                ForbiddenLinkCrypterClassNames: registration.ForbiddenLinkCrypterClassNames,
+                RequiredImageHosterClassNames: registration.RequiredImageHosterClassNames,
+                ForbiddenImageHosterClassNames: registration.ForbiddenImageHosterClassNames
+            ))
+            .SingleAsync(cancellationToken);
     }
 
     private IReadOnlyDictionary<string, DistributionSiteDto> DistributionSitesByClassName()

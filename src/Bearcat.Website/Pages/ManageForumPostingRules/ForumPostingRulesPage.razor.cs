@@ -1,4 +1,8 @@
 using Bearcat.Abstractions.DistributionSite;
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.ImageHoster;
+using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
@@ -9,6 +13,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageForumPostingRules;
@@ -27,6 +32,11 @@ public partial class ForumPostingRulesPage(
         "lg:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.9fr)_11rem_5rem_4rem]";
 
     private DistributionSiteRegistrationReadModel registration = null!;
+    private DistributionSiteServiceRestrictions serviceRestrictions =
+        DistributionSiteServiceRestrictions.Empty;
+    private IReadOnlyList<SelectOption<string>> hosterOptions = [];
+    private IReadOnlyList<SelectOption<string>> linkCrypterOptions = [];
+    private IReadOnlyList<SelectOption<string>> imageHosterOptions = [];
     private List<ForumPostingRuleSummaryReadModel> rules = [];
     private IReadOnlyList<ForumPostingRulePreviewReadModel>? previewResults;
     private ForumPostTemplateType previewEntityType = ForumPostTemplateType.Release;
@@ -51,8 +61,39 @@ public partial class ForumPostingRulesPage(
         }
 
         registration = detail;
+
+        serviceRestrictions = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) =>
+                repository.GetServiceRestrictionsAsync(DistributionSiteRegistrationId)
+        );
+
+        LoadServiceOptions();
         await LoadRulesAsync();
         isInitialized = true;
+    }
+
+    private void LoadServiceOptions()
+    {
+        hosterOptions = operationRunner
+            .Run((IHosterFactory factory) => factory.GetHosterReadModels())
+            .Select(hoster => new SelectOption<string>(hoster.HosterClassName, hoster.Name))
+            .ToList();
+
+        linkCrypterOptions = operationRunner
+            .Run((ILinkCrypterFactory factory) => factory.GetLinkCrypters())
+            .Select(linkCrypter => new SelectOption<string>(
+                linkCrypter.ClassName,
+                linkCrypter.Name
+            ))
+            .ToList();
+
+        imageHosterOptions = operationRunner
+            .Run((IImageHosterFactory factory) => factory.GetImageHosters())
+            .Select(imageHoster => new SelectOption<string>(
+                imageHoster.ClassName,
+                imageHoster.Name
+            ))
+            .ToList();
     }
 
     private async Task LoadRulesAsync()
@@ -190,6 +231,17 @@ public partial class ForumPostingRulesPage(
                 ? L["StripDotsForThreadSearchEnabled", registration.Name]
                 : L["StripDotsForThreadSearchDisabled", registration.Name]
         );
+    }
+
+    private async Task SetServiceRestrictionsAsync(DistributionSiteServiceRestrictions restrictions)
+    {
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.SetServiceRestrictionsAsync(DistributionSiteRegistrationId, restrictions)
+        );
+
+        serviceRestrictions = restrictions;
+        toastService.Success(L["ForumServiceRestrictionsSaved", registration.Name]);
     }
 
     private async Task ReorderByDragAsync((int OldIndex, int NewIndex) move)

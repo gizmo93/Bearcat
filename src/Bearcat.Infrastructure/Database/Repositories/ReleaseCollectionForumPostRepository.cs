@@ -61,11 +61,14 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
                     .OrderBy(container => container.LinkCrypterRegistration.Name)
                     .ThenBy(container => container.Id)
                     .Select(container => new ReleaseForumPostLinkCrypterReadModel(
-                        container.LinkCrypterRegistration.Name,
-                        container.Password,
-                        container.ContainerUrl,
-                        container.StatusImageId,
-                        container.CreatedAt
+                        LinkCrypterClassName: container
+                            .LinkCrypterRegistration
+                            .LinkCrypterClassName,
+                        Name: container.LinkCrypterRegistration.Name,
+                        Password: container.Password,
+                        ContainerUrl: container.ContainerUrl,
+                        StatusImageId: container.StatusImageId,
+                        CreatedAt: container.CreatedAt
                     ))
                     .ToList()
             ))

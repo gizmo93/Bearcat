@@ -23,6 +23,7 @@ public class ForumPostRenderService(
     public async Task<ForumPostTemplateRenderResult> RenderAsync(
         int entityId,
         int forumPostTemplateId,
+        int? distributionSiteRegistrationId,
         CancellationToken cancellationToken = default
     )
     {
@@ -35,7 +36,8 @@ public class ForumPostRenderService(
         {
             return new ForumPostTemplateRenderResult(
                 Content: string.Empty,
-                Errors: ["Forum post template not found."]
+                Errors: ["Forum post template not found."],
+                BlockedReasons: []
             );
         }
 
@@ -45,18 +47,26 @@ public class ForumPostRenderService(
         {
             return new ForumPostTemplateRenderResult(
                 Content: string.Empty,
-                Errors: [$"No render source available for template type {template.Type}."]
+                Errors: [$"No render source available for template type {template.Type}."],
+                BlockedReasons: []
             );
         }
 
-        var globals =
-            await source.BuildGlobalsAsync(entityId, cancellationToken) ?? new ScriptObject();
+        var renderGlobals = await source.BuildGlobalsAsync(
+            entityId: entityId,
+            distributionSiteRegistrationId: distributionSiteRegistrationId,
+            cancellationToken: cancellationToken
+        );
 
-        var result = await RenderTemplateBodyAsync(template.TemplateBody, [globals]);
+        var result = await RenderTemplateBodyAsync(
+            templateBody: template.TemplateBody,
+            globalsInPushOrder: [renderGlobals?.Globals ?? new ScriptObject()]
+        );
 
         return new ForumPostTemplateRenderResult(
             Content: result.Content,
-            Errors: result.Errors.Select(FormatError).ToList()
+            Errors: result.Errors.Select(FormatError).ToList(),
+            BlockedReasons: renderGlobals?.BlockedReasons ?? []
         );
     }
 
@@ -67,13 +77,17 @@ public class ForumPostRenderService(
     )
     {
         var source = renderSources.Single(renderSource => renderSource.Type == type);
-        var globals = await source.BuildGlobalsAsync(entityId, cancellationToken);
+        var renderGlobals = await source.BuildGlobalsAsync(
+            entityId: entityId,
+            distributionSiteRegistrationId: null,
+            cancellationToken: cancellationToken
+        );
 
-        return globals is null
+        return renderGlobals is null
             ? null
             : new ForumPostTemplatePreviewData(
-                globals: globals,
-                dataNodes: ForumPostTemplateDataNodeBuilder.Build(globals)
+                globals: renderGlobals.Globals,
+                dataNodes: ForumPostTemplateDataNodeBuilder.Build(renderGlobals.Globals)
             );
     }
 

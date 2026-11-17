@@ -39,6 +39,25 @@ Das Intervall änderst du unter [Hintergrundaufgaben](/Bearcat/de/advanced-confi
 nach Themen sucht und neue Themen benennt. Bei Collections verwendet es den Collectionnamen.
 Schalte die Einstellung aus, um die Punkte bei der Suche und in neuen Themennamen zu behalten.
 
+## Hoster, Linkcrypter und Bildhoster
+
+Unter den Einstellungen pro Forum wählst du erforderliche und verbotene Hoster, Linkcrypter und Bildhoster für das Forum.
+Sie gelten für jeden Post in dieses Forum, automatisch und manuell.
+
+- **Erforderlich**: mindestens einer der gewählten Typen muss im Post sein.
+- **Verboten**: Bearcat entfernt diese Uploads, Container und Bilder aus dem Post.
+  Blockiert wird der Post nur, wenn es von dieser Art vorher Einträge gab und keiner übrig bleibt.
+
+Bearcat prüft ein Release oder eine Collection als Ganzes: alle Uploads, Uploadslots und enthaltenen Releases zusammen.
+Container mit mehreren Hostern (alle Hoster eines Releases, Uploadslots von Collections) werden nur nach den Linkcrypterlisten gefiltert.
+Ein verbotener Hoster in einem solchen Container wird ignoriert.
+
+Vorlagen, die `imagelinks.<config>` direkt verwenden, liefern einen leeren Wert, wenn dieser Bildhoster gefiltert wird.
+Prüfe den Wert mit `if` oder verwende für dieses Forum eine eigene Vorlage.
+
+Erfüllt der Post diese Einstellungen nicht, überspringt das automatische Posten das Forum ohne Benachrichtigung.
+**Posten** in der Postwarteschlange zeigt den Grund an. Ein [manueller Forenentwurf](/Bearcat/de/posting-to-forums/) zeigt ihn als Warnung, posten kannst du trotzdem.
+
 ## Regel hinzufügen
 
 Klicke auf **Neue Postingregel**. Fülle die folgenden Felder aus:
@@ -207,7 +226,7 @@ Der Eintrag muss mit einer Verteilungsseite verknüpft sein; auch von Hand best�
 ## Benachrichtigungen
 
 Bearcat meldet erfolgreiche und fehlgeschlagene Posts. Die Benachrichtigungen für erfolgreiche und
-fehlgeschlagene Aktualisierungen kannst du separat deaktivieren.
+fehlgeschlagene Aktualisierungen kannst du separat deaktivieren. Posts, die wegen der Einstellungen für Hoster und Linkcrypter übersprungen werden, erzeugen keine Benachrichtigung.
 
 ## Veröffentlichungsorte und Duplikate
 

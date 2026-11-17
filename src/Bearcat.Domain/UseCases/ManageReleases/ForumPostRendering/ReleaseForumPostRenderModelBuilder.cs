@@ -8,15 +8,51 @@ namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
 public class ReleaseForumPostRenderModelBuilder(
     IReleaseReadRepository releaseReadRepository,
-    ReleaseForumPostUploadBuilder uploadBuilder,
-    ForumPostImageLinkBuilder imageLinkBuilder
+    IReleaseForumPostUploadRepository uploadRepository,
+    IForumPostImageLinkRepository imageLinkRepository
 )
 {
-    public async Task<IReadOnlyDictionary<int, ReleaseForumPostRenderData>> BuildAsync(
+    public async Task<IReadOnlyDictionary<int, ReleaseForumPostServiceLinks>> LoadServiceLinksAsync(
         IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     )
     {
+        var uploadsByReleaseId = await uploadRepository.GetForumPostUploadsByReleaseIdAsync(
+            releaseIds,
+            cancellationToken
+        );
+
+        var allHostersLinkCryptersByReleaseId =
+            await uploadRepository.GetForumPostAllHostersLinkCryptersByReleaseIdAsync(
+                releaseIds,
+                cancellationToken
+            );
+
+        var imageLinksByReleaseId = await imageLinkRepository.GetReleaseImageLinksByReleaseIdAsync(
+            releaseIds,
+            cancellationToken
+        );
+
+        return releaseIds.ToDictionary(
+            releaseId => releaseId,
+            releaseId => new ReleaseForumPostServiceLinks(
+                Uploads: uploadsByReleaseId.GetValueOrDefault(releaseId, []),
+                AllHostersLinkCrypters: allHostersLinkCryptersByReleaseId.GetValueOrDefault(
+                    releaseId,
+                    []
+                ),
+                ImageLinks: imageLinksByReleaseId.GetValueOrDefault(releaseId, [])
+            )
+        );
+    }
+
+    public async Task<IReadOnlyDictionary<int, ReleaseForumPostRenderData>> BuildAsync(
+        IReadOnlyDictionary<int, ReleaseForumPostServiceLinks> serviceLinksByReleaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseIds = serviceLinksByReleaseId.Keys.ToList();
+
         var releasesById = await releaseReadRepository.GetReleasesByIdAsync(
             releaseIds,
             cancellationToken
@@ -44,17 +80,6 @@ public class ReleaseForumPostRenderModelBuilder(
             cancellationToken
         );
 
-        var uploadsByReleaseId = await uploadBuilder.BuildByReleaseIdAsync(
-            existingReleaseIds,
-            cancellationToken
-        );
-
-        var allHostersLinkCryptersByReleaseId =
-            await uploadBuilder.BuildAllHostersLinkCryptersByReleaseIdAsync(
-                existingReleaseIds,
-                cancellationToken
-            );
-
         var mediaFilesByReleaseId = await releaseReadRepository.GetMediaFilesByReleaseIdAsync(
             existingReleaseIds,
             cancellationToken
@@ -72,11 +97,6 @@ public class ReleaseForumPostRenderModelBuilder(
                 cancellationToken
             );
 
-        var imageLinksByReleaseId = await imageLinkBuilder.BuildForReleasesAsync(
-            existingReleaseIds,
-            cancellationToken
-        );
-
         var renderDataByReleaseId = new Dictionary<int, ReleaseForumPostRenderData>();
 
         foreach (var release in releasesById.Values)
@@ -85,6 +105,7 @@ public class ReleaseForumPostRenderModelBuilder(
             var info = infosByReleaseId.GetValueOrDefault(releaseId);
             var metadata = metadataByReleaseId.GetValueOrDefault(releaseId);
             var classification = classificationsByReleaseId.GetValueOrDefault(releaseId);
+            var serviceLinks = serviceLinksByReleaseId[releaseId];
 
             var renderModel = new ForumPostTemplateRenderModel
             {
@@ -104,13 +125,17 @@ public class ReleaseForumPostRenderModelBuilder(
                 Classification = classification is null
                     ? ForumPostTemplateClassificationModel.Empty
                     : ToClassificationModel(classification),
-                Uploads = uploadsByReleaseId.GetValueOrDefault(releaseId, []),
-                LinkCrypters = allHostersLinkCryptersByReleaseId.GetValueOrDefault(releaseId, []),
+                Uploads = serviceLinks
+                    .Uploads.Select(ReleaseForumPostUploadBuilder.ToUploadModel)
+                    .ToList(),
+                LinkCrypters = serviceLinks
+                    .AllHostersLinkCrypters.Select(ReleaseForumPostUploadBuilder.ToLinkCrypterModel)
+                    .ToList(),
             };
 
             renderDataByReleaseId[releaseId] = new ReleaseForumPostRenderData(
                 RenderModel: renderModel,
-                ImageLinks: imageLinksByReleaseId[releaseId]
+                ImageLinks: ForumPostImageLinkBuilder.ToReleaseScriptObject(serviceLinks.ImageLinks)
             );
         }
 
