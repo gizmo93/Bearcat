@@ -46,6 +46,12 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             cancellationToken: cancellationToken
         );
 
+        var failures = await repository.GetForumPostingFailuresAsync(
+            entityType: entityType,
+            entityIds: entityIds,
+            cancellationToken: cancellationToken
+        );
+
         return entityIds
             .Select(entityId =>
                 BuildPlan(
@@ -54,6 +60,11 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                     registrations: registrations,
                     postedLocations: postedLocations
                         .Where(location => location.EntityId == entityId)
+                        .ToList(),
+                    failures: failures
+                        .Where(failure =>
+                            (failure.ReleaseId ?? failure.ReleaseCollectionId) == entityId
+                        )
                         .ToList(),
                     latestUploadCompletedAt: latestUploadTimes.TryGetValue(
                         entityId,
@@ -110,6 +121,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         EntityToPlan entityToPlan,
         IReadOnlyList<AutoPostRegistration> registrations,
         IReadOnlyList<AutoPostPostedLocation> postedLocations,
+        IReadOnlyList<ForumPostingFailure> failures,
         DateTime? latestUploadCompletedAt
     )
     {
@@ -131,6 +143,10 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                     entityType: entityType,
                     context: entityToPlan.RoutingContext,
                     postedLocations: postedLocations,
+                    failure: failures.FirstOrDefault(failure =>
+                        failure.DistributionSiteRegistrationId
+                        == registration.DistributionSiteRegistrationId
+                    ),
                     latestUploadCompletedAt: latestUploadCompletedAt
                 )
             )
@@ -179,6 +195,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         ForumPostTemplateType entityType,
         ReleaseRoutingContext context,
         IReadOnlyList<AutoPostPostedLocation> postedLocations,
+        ForumPostingFailure? failure,
         DateTime? latestUploadCompletedAt
     )
     {
@@ -211,12 +228,17 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 DistributionSiteRegistrationName: registration.Name,
                 AutomaticPostingEnabled: registration.EnableAutomaticPosting,
                 StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+                MinimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
                 Status: AutoPostSiteStatus.AlreadyPosted,
                 PostedUrl: postedLocation.Url,
                 Match: match,
                 PostedLocationId: postedLocation.PostedLocationId,
                 StoredForumPostTemplateId: postedLocation.ForumPostTemplateId,
-                NeedsContentUpdate: IsOutdated(postedLocation, latestUploadCompletedAt)
+                NeedsContentUpdate: IsOutdated(postedLocation, latestUploadCompletedAt),
+                FailureState: failure?.State,
+                FailedAttemptCount: failure?.FailedAttemptCount ?? 0,
+                NextAttemptAt: failure?.NextAttemptAt,
+                LastErrorMessage: failure?.LastErrorMessage
             );
         }
 
@@ -225,12 +247,17 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             DistributionSiteRegistrationName: registration.Name,
             AutomaticPostingEnabled: registration.EnableAutomaticPosting,
             StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+            MinimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
             Status: match is null ? AutoPostSiteStatus.NoMatch : AutoPostSiteStatus.Matched,
             PostedUrl: null,
             Match: match,
             PostedLocationId: null,
             StoredForumPostTemplateId: null,
-            NeedsContentUpdate: false
+            NeedsContentUpdate: false,
+            FailureState: failure?.State,
+            FailedAttemptCount: failure?.FailedAttemptCount ?? 0,
+            NextAttemptAt: failure?.NextAttemptAt,
+            LastErrorMessage: failure?.LastErrorMessage
         );
     }
 

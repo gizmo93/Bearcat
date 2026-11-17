@@ -26,6 +26,20 @@
         </div>
     }
 
+    @if (BlockedReasons.Count > 0)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <LucideIcon Name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+            <div class="space-y-1">
+                <p class="font-medium">@L["ForumServiceRestrictionsNotMet"]</p>
+                @foreach (var blockedReason in BlockedReasons)
+                {
+                    <p>@blockedReason</p>
+                }
+            </div>
+        </div>
+    }
+
     @if (IsNewThread)
     {
         <BbFormFieldInput TValue="string"
@@ -73,6 +87,9 @@
 
     [Parameter]
     public IReadOnlyList<string> RenderErrors { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> BlockedReasons { get; set; } = [];
 
     [Parameter]
     public bool IsNewThread { get; set; }

@@ -33,6 +33,22 @@ public class PostedLocationWriteRepository(IBearcatWriteDbContext dbWrite)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task DeleteForumPostingFailureAsync(
+        int? releaseId,
+        int? releaseCollectionId,
+        int distributionSiteRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await dbWrite
+            .ForumPostingFailures.Where(failure =>
+                failure.DistributionSiteRegistrationId == distributionSiteRegistrationId
+                && failure.ReleaseId == releaseId
+                && failure.ReleaseCollectionId == releaseCollectionId
+            )
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     public void Add(PostedLocation postedLocation)
     {
         dbWrite.Add(postedLocation);

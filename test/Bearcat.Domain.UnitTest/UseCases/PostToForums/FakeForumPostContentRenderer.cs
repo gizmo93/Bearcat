@@ -14,11 +14,14 @@ public sealed class FakeForumPostContentRenderer : IForumPostContentRenderer
     public Task<ForumPostTemplateRenderResult> RenderAsync(
         int entityId,
         int forumPostTemplateId,
+        int? distributionSiteRegistrationId,
         CancellationToken cancellationToken = default
     )
     {
         RenderedTemplateIds.Add(forumPostTemplateId);
 
-        return Task.FromResult(new ForumPostTemplateRenderResult(Content, Errors));
+        return Task.FromResult(
+            new ForumPostTemplateRenderResult(Content, Errors, BlockedReasons: [])
+        );
     }
 }

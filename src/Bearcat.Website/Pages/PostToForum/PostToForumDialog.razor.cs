@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
@@ -60,6 +61,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     private string postName = string.Empty;
     private string body = string.Empty;
     private IReadOnlyList<string> renderErrors = [];
+    private IReadOnlyList<string> blockedReasons = [];
 
     private IReadOnlyList<ThreadPrefix> prefixes = [];
     private IReadOnlyList<string> selectedPrefixIds = [];
@@ -227,7 +229,13 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                         releaseName: postName
                     )
             );
-            threadSelection = existingThreads.FirstOrDefault()?.Url ?? NewThreadValue;
+
+            var matchingThreads = ForumThreadTitleMatcher.FindMatchingThreads(
+                postName,
+                existingThreads
+            );
+
+            threadSelection = matchingThreads.Count == 1 ? matchingThreads[0].Url : NewThreadValue;
             step = WizardStep.Thread;
         });
     }
@@ -284,15 +292,21 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         }
 
         renderErrors = [];
+        blockedReasons = [];
 
         try
         {
             var result = await operationRunner.RunAsync(
                 (ForumPostRenderService service) =>
-                    service.RenderAsync(EntityId, selectedTemplateId)
+                    service.RenderAsync(
+                        entityId: EntityId,
+                        forumPostTemplateId: selectedTemplateId,
+                        distributionSiteRegistrationId: selectedRegistrationId
+                    )
             );
             body = result.Content;
             renderErrors = result.Errors;
+            blockedReasons = result.BlockedReasons;
         }
         catch (Exception exception)
         {

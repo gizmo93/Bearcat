@@ -1,5 +1,4 @@
 using Bearcat.Domain.ValueObjects;
-using Scriban.Runtime;
 
 namespace Bearcat.Domain.Shared.ForumPostRendering;
 
@@ -13,8 +12,9 @@ public interface IForumPostRenderSource
 
     IReadOnlyList<ForumPostTemplateVariableNode> GetVariables();
 
-    Task<ScriptObject?> BuildGlobalsAsync(
+    Task<ForumPostRenderGlobals?> BuildGlobalsAsync(
         int entityId,
+        int? distributionSiteRegistrationId,
         CancellationToken cancellationToken = default
     );
 }

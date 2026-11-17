@@ -1,4 +1,6 @@
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
@@ -13,7 +15,8 @@ public class ReleaseCollectionForumPostRenderSource(
     IReleaseCollectionForumPostRepository repository,
     ReleaseForumPostRenderModelBuilder releaseRenderModelBuilder,
     IReleaseReadRepository releaseReadRepository,
-    ForumPostImageLinkBuilder imageLinkBuilder
+    IForumPostImageLinkRepository imageLinkRepository,
+    IDistributionSiteRegistrationReadRepository distributionSiteRegistrationReadRepository
 ) : IForumPostRenderSource
 {
     private const string CollectionVariableName = "collection";
@@ -43,8 +46,9 @@ public class ReleaseCollectionForumPostRenderSource(
         ];
     }
 
-    public async Task<ScriptObject?> BuildGlobalsAsync(
+    public async Task<ForumPostRenderGlobals?> BuildGlobalsAsync(
         int entityId,
+        int? distributionSiteRegistrationId,
         CancellationToken cancellationToken = default
     )
     {
@@ -55,8 +59,50 @@ public class ReleaseCollectionForumPostRenderSource(
             return null;
         }
 
-        var renderDataByReleaseId = await releaseRenderModelBuilder.BuildAsync(
+        var serviceLinksByReleaseId = await releaseRenderModelBuilder.LoadServiceLinksAsync(
             collection.ReleaseIds,
+            cancellationToken
+        );
+
+        var collectionImageLinks = await imageLinkRepository.GetCollectionImageLinksAsync(
+            entityId,
+            cancellationToken
+        );
+
+        var restrictions = distributionSiteRegistrationId is null
+            ? DistributionSiteServiceRestrictions.Empty
+            : await distributionSiteRegistrationReadRepository.GetServiceRestrictionsAsync(
+                distributionSiteRegistrationId.Value,
+                cancellationToken
+            );
+
+        var memberServiceLinks = serviceLinksByReleaseId.Values.ToList();
+
+        var memberUploads = memberServiceLinks
+            .SelectMany(serviceLinks => serviceLinks.Uploads)
+            .ToList();
+
+        var multiHosterLinkCrypters = memberServiceLinks
+            .SelectMany(serviceLinks => serviceLinks.AllHostersLinkCrypters)
+            .Concat(collection.UploadSlots.SelectMany(uploadSlot => uploadSlot.LinkCrypters))
+            .ToList();
+
+        var imageLinks = memberServiceLinks
+            .SelectMany(serviceLinks => serviceLinks.ImageLinks)
+            .Concat(collectionImageLinks)
+            .ToList();
+
+        var blockedReasons = restrictions.FindBlockedReasons(
+            uploads: memberUploads,
+            multiHosterLinkCrypters: multiHosterLinkCrypters,
+            imageLinks: imageLinks
+        );
+
+        var renderDataByReleaseId = await releaseRenderModelBuilder.BuildAsync(
+            serviceLinksByReleaseId.ToDictionary(
+                pair => pair.Key,
+                pair => restrictions.RemoveForbiddenServiceLinks(pair.Value)
+            ),
             cancellationToken
         );
 
@@ -117,15 +163,16 @@ public class ReleaseCollectionForumPostRenderSource(
             },
             [SeriesVariableName] = ToSeriesModel(collection.Series),
             [ReleasesVariablePath] = releaseScriptObjects,
-            [UploadSlotsVariableName] = collection.UploadSlots.Select(ToUploadSlotModel).ToList(),
+            [UploadSlotsVariableName] = collection
+                .UploadSlots.Select(uploadSlot => ToUploadSlotModel(uploadSlot, restrictions))
+                .ToList(),
         };
 
-        scriptObject[ImageLinksVariableName] = await imageLinkBuilder.BuildForCollectionAsync(
-            entityId,
-            cancellationToken
+        scriptObject[ImageLinksVariableName] = ForumPostImageLinkBuilder.ToCollectionScriptObject(
+            restrictions.RemoveForbiddenImageLinks(collectionImageLinks)
         );
 
-        return scriptObject;
+        return new ForumPostRenderGlobals(scriptObject, blockedReasons);
     }
 
     private static string FindIdentifierValue(
@@ -187,15 +234,17 @@ public class ReleaseCollectionForumPostRenderSource(
     }
 
     private static ForumPostTemplateCollectionUploadSlotModel ToUploadSlotModel(
-        CollectionForumPostUploadSlotReadModel uploadSlot
+        CollectionForumPostUploadSlotReadModel uploadSlot,
+        DistributionSiteServiceRestrictions restrictions
     )
     {
         return new ForumPostTemplateCollectionUploadSlotModel
         {
             Name = uploadSlot.Name,
             Key = uploadSlot.Key,
-            LinkCrypters = uploadSlot
-                .LinkCrypters.Select(ReleaseForumPostUploadBuilder.ToLinkCrypterModel)
+            LinkCrypters = restrictions
+                .RemoveForbiddenLinkCrypters(uploadSlot.LinkCrypters)
+                .Select(ReleaseForumPostUploadBuilder.ToLinkCrypterModel)
                 .ToList(),
         };
     }

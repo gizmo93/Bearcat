@@ -11,7 +11,7 @@ namespace Bearcat.Domain.UnitTest.UseCases.PostToForums.PostCreation;
 public class AutoForumPostCreationServiceTest
 {
     [Test]
-    public async Task CreatePostOnSiteAsync_ReplyModeWithExistingThread_RepliesToFirstThread()
+    public async Task CreatePostOnSiteAsync_ReplyModeWithOneMatchingThread_RepliesToMatchingThread()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -21,8 +21,11 @@ public class AutoForumPostCreationServiceTest
         {
             ExistingThreads =
             [
-                new ExistingThread("First", "https://forum.test/threads/first"),
-                new ExistingThread("Second", "https://forum.test/threads/second"),
+                new ExistingThread("Other Movie 2020 720p", "https://forum.test/threads/other"),
+                new ExistingThread(
+                    "Some Movie 2021 1080p BluRay GROUP",
+                    "https://forum.test/threads/matching"
+                ),
             ],
         };
         var service = ServiceWith(repository, submitter);
@@ -44,8 +47,109 @@ public class AutoForumPostCreationServiceTest
 
         var reply = submitter.Replies.ShouldHaveSingleItem();
         reply.RegistrationId.ShouldBe(5);
-        reply.ThreadUrl.ShouldBe("https://forum.test/threads/first");
+        reply.ThreadUrl.ShouldBe("https://forum.test/threads/matching");
         reply.Body.ShouldBe("Rendered body");
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_ReplyModeWithSeveralMatchingThreads_ReturnsCandidatesWithoutPosting()
+    {
+        // Arrange
+        var repository = RepositoryWith(
+            AutoPostTestFactory.Rule(postMode: ForumPostPostMode.ReplyToExistingElseNewThread)
+        );
+        var submitter = new FakeForumPostSubmitter
+        {
+            ExistingThreads =
+            [
+                new ExistingThread(
+                    "Some Movie 2021 1080p BluRay GROUP PROPER",
+                    "https://forum.test/threads/1"
+                ),
+                new ExistingThread(
+                    "Some Movie 2021 1080p BluRay GROUP REPACK",
+                    "https://forum.test/threads/2"
+                ),
+            ],
+        };
+        var contentRenderer = new FakeForumPostContentRenderer();
+        var service = ServiceWith(repository, submitter, contentRenderer);
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.ThreadSelectionNeeded);
+        result
+            .ThreadCandidates.Select(thread => thread.Url)
+            .ShouldBe(["https://forum.test/threads/1", "https://forum.test/threads/2"]);
+        submitter.NewThreads.ShouldBeEmpty();
+        submitter.Replies.ShouldBeEmpty();
+        repository.RecordedPostedLocations.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostWithChosenThreadAsync_ThreadUrl_RepliesWithoutSearching()
+    {
+        // Arrange
+        var repository = RepositoryWith(
+            AutoPostTestFactory.Rule(postMode: ForumPostPostMode.ReplyToExistingElseNewThread)
+        );
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(repository, submitter);
+
+        var plan = await new AutoForumPostingPlanService(repository).GetPlanAsync(
+            ForumPostTemplateType.Release,
+            1
+        );
+
+        // Act
+        var result = await service.CreatePostWithChosenThreadAsync(
+            plan: plan,
+            site: plan.FindSite(5)!,
+            threadUrl: "https://forum.test/threads/chosen"
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        submitter.SearchedReleaseNames.ShouldBeEmpty();
+        submitter
+            .Replies.ShouldHaveSingleItem()
+            .ThreadUrl.ShouldBe("https://forum.test/threads/chosen");
+        repository.RecordedPostedLocations.ShouldHaveSingleItem().Url.ShouldBe(submitter.ReplyUrl);
+    }
+
+    [Test]
+    public async Task CreatePostWithChosenThreadAsync_PostedMeanwhile_SkipsWithoutPosting()
+    {
+        // Arrange
+        var repository = RepositoryWith(AutoPostTestFactory.Rule());
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(repository, submitter);
+
+        var plan = await new AutoForumPostingPlanService(repository).GetPlanAsync(
+            ForumPostTemplateType.Release,
+            1
+        );
+
+        repository.PostedLocations.Add(AutoPostTestFactory.PostedLocation());
+
+        // Act
+        var result = await service.CreatePostWithChosenThreadAsync(
+            plan: plan,
+            site: plan.FindSite(5)!,
+            threadUrl: null
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.SkipReason.ShouldBe(AutoPostSkipReason.AlreadyPosted);
+        submitter.NewThreads.ShouldBeEmpty();
+        submitter.Replies.ShouldBeEmpty();
     }
 
     [Test]
@@ -395,6 +499,35 @@ public class AutoForumPostCreationServiceTest
         repository.PostedLocations.ShouldBeEmpty();
         repository.MarkedReleaseCollectionIds.ShouldBe([4]);
         repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_SiteWithRecordedFailures_DeletesTheFailureRecord()
+    {
+        // Arrange
+        var repository = RepositoryWith(AutoPostTestFactory.Rule());
+        repository.ForumPostingFailures.Add(
+            new ForumPostingFailure
+            {
+                ReleaseId = 1,
+                DistributionSiteRegistrationId = 5,
+                FailedAttemptCount = 5,
+                LastErrorMessage = "Flood control",
+                State = ForumPostingFailureState.GaveUp,
+            }
+        );
+        var service = ServiceWith(repository, new FakeForumPostSubmitter());
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        repository.ForumPostingFailures.ShouldBeEmpty();
     }
 
     private static FakeAutoForumPostingRepository RepositoryWith(

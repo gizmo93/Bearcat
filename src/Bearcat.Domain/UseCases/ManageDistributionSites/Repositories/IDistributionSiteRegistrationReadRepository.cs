@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
@@ -14,4 +15,9 @@ public interface IDistributionSiteRegistrationReadRepository
     );
 
     Task<int> GetForumPostingRuleCountAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<DistributionSiteServiceRestrictions> GetServiceRestrictionsAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    );
 }

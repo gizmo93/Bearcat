@@ -105,7 +105,21 @@ public class AutoForumPostUpdateService(
             cancellationToken: cancellationToken
         );
 
-        await CreateUpdateResultNotificationAsync(target, result, cancellationToken);
+        if (result.Status == AutoPostUpdateStatus.Updated)
+        {
+            await repository.DeleteForumPostingFailureAsync(
+                entityType: target.EntityType,
+                entityId: target.EntityId,
+                distributionSiteRegistrationId: target.DistributionSiteRegistrationId,
+                cancellationToken: cancellationToken
+            );
+
+            await notificationService.CreateAsync(
+                kind: NotificationKind.AutomaticForumPostUpdated,
+                message: $"The post of '{target.EntityName}' in '{target.DistributionSiteRegistrationName}' was updated: {result.PostedUrl}",
+                cancellationToken: cancellationToken
+            );
+        }
 
         return result;
     }
@@ -148,8 +162,14 @@ public class AutoForumPostUpdateService(
         var rendered = await contentRenderer.RenderAsync(
             entityId: target.EntityId,
             forumPostTemplateId: forumPostTemplateId,
+            distributionSiteRegistrationId: target.DistributionSiteRegistrationId,
             cancellationToken: cancellationToken
         );
+
+        if (rendered.BlockedReasons.Count > 0)
+        {
+            return AutoPostUpdateResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
+        }
 
         if (!rendered.IsSuccess)
         {
@@ -178,29 +198,5 @@ public class AutoForumPostUpdateService(
             );
 
         return AutoPostUpdateResult.Updated(editedPost.Url, uploadsMarkedPosted);
-    }
-
-    private async Task CreateUpdateResultNotificationAsync(
-        AutoPostUpdateTarget target,
-        AutoPostUpdateResult result,
-        CancellationToken cancellationToken
-    )
-    {
-        if (result.Status == AutoPostUpdateStatus.Updated)
-        {
-            await notificationService.CreateAsync(
-                kind: NotificationKind.AutomaticForumPostUpdated,
-                message: $"The post of '{target.EntityName}' in '{target.DistributionSiteRegistrationName}' was updated: {result.PostedUrl}",
-                cancellationToken: cancellationToken
-            );
-
-            return;
-        }
-
-        await notificationService.CreateAsync(
-            kind: NotificationKind.AutomaticForumPostUpdateFailed,
-            message: $"Updating the post of '{target.EntityName}' in '{target.DistributionSiteRegistrationName}' failed: {string.Join(" ", result.Errors)}",
-            cancellationToken: cancellationToken
-        );
     }
 }

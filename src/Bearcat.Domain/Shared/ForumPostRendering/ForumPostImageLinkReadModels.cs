@@ -4,6 +4,7 @@ namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 public record ForumPostImageLinkReadModel(
     string ImageUploadConfigName,
+    string ImageHosterClassName,
     IReadOnlyList<ForumPostImageLinkUrlReadModel> Urls,
     IReadOnlyList<ForumPostScreenshotImageLinkReadModel> Screenshots,
     IReadOnlyList<ForumPostImageLinkUrlReadModel> ScreenshotGridUrls

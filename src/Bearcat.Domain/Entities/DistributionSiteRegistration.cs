@@ -18,6 +18,20 @@ public class DistributionSiteRegistration : IEntityWithEncryptedSecrets, IActiva
 
     public bool StripDotsForThreadSearch { get; set; } = true;
 
+    public int MinimumSecondsBetweenPosts { get; set; } = 30;
+
+    public List<string> RequiredHosterClassNames { get; set; } = [];
+
+    public List<string> ForbiddenHosterClassNames { get; set; } = [];
+
+    public List<string> RequiredLinkCrypterClassNames { get; set; } = [];
+
+    public List<string> ForbiddenLinkCrypterClassNames { get; set; } = [];
+
+    public List<string> RequiredImageHosterClassNames { get; set; } = [];
+
+    public List<string> ForbiddenImageHosterClassNames { get; set; } = [];
+
     public string? EncryptedSession { get; set; }
 
     public bool HasUnreadableSecrets { get; set; }

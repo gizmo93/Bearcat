@@ -36,6 +36,20 @@ public sealed record AutoPostUpdateResult(
         );
     }
 
+    public static AutoPostUpdateResult SkippedForServiceRestrictions(
+        IReadOnlyList<string> blockedReasons
+    )
+    {
+        return new AutoPostUpdateResult(
+            Status: AutoPostUpdateStatus.Skipped,
+            PostedUrl: null,
+            UploadsMarkedPosted: false,
+            SkipReason: AutoPostUpdateSkipReason.ServiceRestrictionNotMet,
+            BlockedReason: null,
+            Errors: blockedReasons
+        );
+    }
+
     public static AutoPostUpdateResult Failed(IReadOnlyList<string> errors)
     {
         return new AutoPostUpdateResult(

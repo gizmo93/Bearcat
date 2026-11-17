@@ -4,7 +4,7 @@ using Scriban.Runtime;
 
 namespace Bearcat.Domain.Shared.ForumPostRendering;
 
-public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
+public static class ForumPostImageLinkBuilder
 {
     public static ForumPostTemplateVariableNode CreateReleaseVariableNode(string path)
     {
@@ -100,36 +100,17 @@ public class ForumPostImageLinkBuilder(IForumPostImageLinkRepository repository)
         );
     }
 
-    public async Task<IReadOnlyDictionary<int, ScriptObject>> BuildForReleasesAsync(
-        IReadOnlyList<int> releaseIds,
-        CancellationToken cancellationToken = default
+    public static ScriptObject ToReleaseScriptObject(
+        IReadOnlyList<ForumPostImageLinkReadModel> imageLinks
     )
     {
-        var imageLinksByReleaseId = await repository.GetReleaseImageLinksByReleaseIdAsync(
-            releaseIds,
-            cancellationToken
-        );
-
-        return releaseIds.ToDictionary(
-            releaseId => releaseId,
-            releaseId =>
-                ToScriptObject(
-                    imageLinks: imageLinksByReleaseId.GetValueOrDefault(releaseId, []),
-                    createConfigLinks: CreateReleaseConfigLinks
-                )
-        );
+        return ToScriptObject(imageLinks: imageLinks, createConfigLinks: CreateReleaseConfigLinks);
     }
 
-    public async Task<ScriptObject> BuildForCollectionAsync(
-        int releaseCollectionId,
-        CancellationToken cancellationToken = default
+    public static ScriptObject ToCollectionScriptObject(
+        IReadOnlyList<ForumPostImageLinkReadModel> imageLinks
     )
     {
-        var imageLinks = await repository.GetCollectionImageLinksAsync(
-            releaseCollectionId,
-            cancellationToken
-        );
-
         return ToScriptObject(
             imageLinks: imageLinks,
             createConfigLinks: imageLink => CreateSizeLinks(imageLink.Urls)

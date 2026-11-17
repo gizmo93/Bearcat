@@ -92,6 +92,8 @@ public class PostedLocationService(
 
         writeRepository.Remove(postedLocation);
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        await DeleteForumPostingFailureOfPostedLocationAsync(postedLocation, cancellationToken);
     }
 
     private async Task<int> AddAsync(
@@ -112,6 +114,26 @@ public class PostedLocationService(
         writeRepository.Add(postedLocation);
         await writeRepository.SaveChangesAsync(cancellationToken);
 
+        await DeleteForumPostingFailureOfPostedLocationAsync(postedLocation, cancellationToken);
+
         return postedLocation.Id;
+    }
+
+    private async Task DeleteForumPostingFailureOfPostedLocationAsync(
+        PostedLocation postedLocation,
+        CancellationToken cancellationToken
+    )
+    {
+        if (postedLocation.DistributionSiteRegistrationId is not { } distributionSiteRegistrationId)
+        {
+            return;
+        }
+
+        await writeRepository.DeleteForumPostingFailureAsync(
+            releaseId: postedLocation.ReleaseId,
+            releaseCollectionId: postedLocation.ReleaseCollectionId,
+            distributionSiteRegistrationId: distributionSiteRegistrationId,
+            cancellationToken: cancellationToken
+        );
     }
 }

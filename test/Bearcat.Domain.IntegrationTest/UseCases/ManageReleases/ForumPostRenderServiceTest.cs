@@ -4,6 +4,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.ValueObjects;
@@ -30,14 +31,15 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             Mock.Of<ILinkCrypterFactory>(),
             Mock.Of<IHosterFactory>()
         );
-        var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
-        var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);
         var renderModelBuilder = new ReleaseForumPostRenderModelBuilder(
-            releaseReadRepository,
-            uploadBuilder,
-            imageLinkBuilder
+            releaseReadRepository: releaseReadRepository,
+            uploadRepository: releaseReadRepository,
+            imageLinkRepository: releaseReadRepository
         );
-        var renderSource = new ReleaseForumPostRenderSource(renderModelBuilder);
+        var renderSource = new ReleaseForumPostRenderSource(
+            renderModelBuilder,
+            Mock.Of<IDistributionSiteRegistrationReadRepository>()
+        );
 
         service = new ForumPostRenderService(forumPostTemplateRepository, [renderSource]);
     }
@@ -60,7 +62,12 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            release.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -126,7 +133,12 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(
+            release.Id,
+            template.Id,
+            null,
+            CancellationToken.None
+        );
 
         // Assert
         result.Errors.ShouldBeEmpty();

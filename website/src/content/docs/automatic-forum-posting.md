@@ -39,6 +39,32 @@ Change the interval under [Background tasks](/Bearcat/advanced-configuration/#ba
 for threads and naming new ones. For collections, it uses the collection name.
 Turn it off to keep dots in searches and new thread titles.
 
+**Minimum seconds between posts** defaults to 30. The background task waits at least this long between
+two posts or updates to the same forum, including failed attempts. Clicking **Post** or **Update post** skips the wait.
+
+## Hosters, link crypters and image hosters
+
+On the **Posting rules** page, below the site-wide settings, choose which hosters, link crypters and image hosters
+are allowed in posts. These hoster rules apply to automatic posts and manual drafts.
+
+Each of the three categories has two lists:
+
+- **Required**: the post must include at least one selected provider.
+- **Forbidden**: Bearcat removes uploads, containers and images from these providers.
+
+An empty list adds no restrictions. Automatic posting skips the forum if a **Required** list has no provider left in the post
+or if all uploads, all containers or all images were removed.
+
+Bearcat checks all uploads, upload slots and member releases together.
+Containers with several hosters, such as those for all hosters of a release or for collection upload slots,
+are checked only against the link crypter lists. Forbidden hosters inside these containers are not filtered out.
+
+The template variable `imagelinks.<config>` is empty if its image hoster is forbidden.
+Check the value with `if` or use a separate template for this forum.
+
+Skipped posts do not trigger a notification. Click **Post** in the post queue to see the reason.
+A [manual forum draft](/Bearcat/posting-to-forums/) shows a warning. You can still submit the draft.
+
 ## Adding a rule
 
 Click **New posting rule** and fill in these fields:
@@ -203,10 +229,44 @@ Older posts may have no stored template. Choose one in the dialog or make sure a
 You can also update a post from **Posted locations** on a release or collection. Click the update button and confirm the replacement.
 The entry must be linked to a distribution site; posts you confirmed by hand also qualify.
 
+## Finding an existing thread
+
+In *Reply to an existing thread, otherwise start a new one* mode, Bearcat searches the subforum and compares
+thread titles with the release or collection name. It ignores thread prefixes, case and punctuation.
+
+- Threads with an exactly matching title take priority.
+- If there is no exact match, Bearcat looks for titles containing all words of the name in the same order.
+- No match: Bearcat starts a new thread. One match: Bearcat replies to it.
+- Several matches: Bearcat waits for your choice and notifies you once.
+  Click **Post** in the **Automatic posting** section. Choose an existing thread or start a new one.
+
+## Failed automatic posts
+
+When an automatic post or update fails, Bearcat waits before trying again.
+The delay applies only to this release or collection in the affected forum:
+
+| Failed attempts | Wait before the next attempt |
+| --- | --- |
+| 1 | 15 minutes |
+| 2 | 1 hour |
+| 3 | 4 hours |
+| 4 | 12 hours |
+| 5 | No further automatic attempts |
+
+Bearcat counts failed posts and updates together. The **Automatic posting** section shows the last error
+and whether Bearcat is waiting to retry or has stopped automatic posting.
+
+Click **Post** or **Update post** to try again immediately.
+A successful manual attempt resets the counter. A failed manual attempt leaves it unchanged.
+
 ## Notifications
 
-Bearcat notifies you of successful and failed posts. You can disable notifications for successful
-and failed updates separately.
+Bearcat notifies you after successful posts and updates.
+For failed automatic attempts, you receive a notification only after the fifth failure. Earlier failures only appear in the log.
+Bearcat also notifies you once when you need to choose between several matching threads.
+
+You can disable notifications for posts and updates separately.
+Posts skipped because of the hoster rules do not trigger a notification.
 
 ## Posted locations and duplicates
 

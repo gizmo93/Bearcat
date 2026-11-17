@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.DistributionSite.Dto;
+
 namespace Bearcat.Domain.UseCases.PostToForums.Models;
 
 public sealed record AutoPostExecutionResult(
@@ -6,7 +8,8 @@ public sealed record AutoPostExecutionResult(
     bool UploadsMarkedPosted,
     AutoPostSkipReason? SkipReason,
     AutoPostBlockedReason? BlockedReason,
-    IReadOnlyList<string> Errors
+    IReadOnlyList<string> Errors,
+    IReadOnlyList<ExistingThread> ThreadCandidates
 )
 {
     public static AutoPostExecutionResult Posted(string url, bool uploadsMarkedPosted)
@@ -17,7 +20,8 @@ public sealed record AutoPostExecutionResult(
             UploadsMarkedPosted: uploadsMarkedPosted,
             SkipReason: null,
             BlockedReason: null,
-            Errors: []
+            Errors: [],
+            ThreadCandidates: []
         );
     }
 
@@ -32,7 +36,23 @@ public sealed record AutoPostExecutionResult(
             UploadsMarkedPosted: false,
             SkipReason: reason,
             BlockedReason: blockedReason,
-            Errors: []
+            Errors: [],
+            ThreadCandidates: []
+        );
+    }
+
+    public static AutoPostExecutionResult SkippedForServiceRestrictions(
+        IReadOnlyList<string> blockedReasons
+    )
+    {
+        return new AutoPostExecutionResult(
+            Status: AutoPostExecutionStatus.Skipped,
+            PostedUrl: null,
+            UploadsMarkedPosted: false,
+            SkipReason: AutoPostSkipReason.ServiceRestrictionNotMet,
+            BlockedReason: null,
+            Errors: blockedReasons,
+            ThreadCandidates: []
         );
     }
 
@@ -44,7 +64,23 @@ public sealed record AutoPostExecutionResult(
             UploadsMarkedPosted: false,
             SkipReason: null,
             BlockedReason: null,
-            Errors: errors
+            Errors: errors,
+            ThreadCandidates: []
+        );
+    }
+
+    public static AutoPostExecutionResult ThreadSelectionNeeded(
+        IReadOnlyList<ExistingThread> candidates
+    )
+    {
+        return new AutoPostExecutionResult(
+            Status: AutoPostExecutionStatus.ThreadSelectionNeeded,
+            PostedUrl: null,
+            UploadsMarkedPosted: false,
+            SkipReason: null,
+            BlockedReason: null,
+            Errors: [],
+            ThreadCandidates: candidates
         );
     }
 }

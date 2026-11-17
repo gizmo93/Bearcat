@@ -35,7 +35,7 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     public async Task RenderAsync_TemplateNotFound_ReturnsError()
     {
         // Act
-        var result = await service.RenderAsync(1, 999, CancellationToken.None);
+        var result = await service.RenderAsync(1, 999, null, CancellationToken.None);
 
         // Assert
         result.Content.ShouldBeEmpty();
@@ -49,7 +49,7 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         var template = await AddTemplateAsync(ForumPostTemplateType.ReleaseCollection, "anything");
 
         // Act
-        var result = await service.RenderAsync(1, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(1, template.Id, null, CancellationToken.None);
 
         // Assert
         result.Content.ShouldBeEmpty();
@@ -64,11 +64,11 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var template = await AddTemplateAsync(ForumPostTemplateType.Release, "Just static text");
         renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(42, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ScriptObject?)null);
+            .Setup(source => source.BuildGlobalsAsync(42, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ForumPostRenderGlobals?)null);
 
         // Act
-        var result = await service.RenderAsync(42, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(42, template.Id, null, CancellationToken.None);
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -82,11 +82,11 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         var template = await AddTemplateAsync(ForumPostTemplateType.Release, "Hello {{ name }}");
         var globals = new ScriptObject { ["name"] = "Bearcat" };
         renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(7, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(globals);
+            .Setup(source => source.BuildGlobalsAsync(7, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ForumPostRenderGlobals(globals, BlockedReasons: []));
 
         // Act
-        var result = await service.RenderAsync(7, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(7, template.Id, null, CancellationToken.None);
 
         // Assert
         result.Errors.ShouldBeEmpty();
@@ -104,11 +104,11 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             new Func<string>(() => throw new InvalidOperationException("kaboom"))
         );
         renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(globals);
+            .Setup(source => source.BuildGlobalsAsync(1, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ForumPostRenderGlobals(globals, BlockedReasons: []));
 
         // Act
-        var result = await service.RenderAsync(1, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(1, template.Id, null, CancellationToken.None);
 
         // Assert
         result.Content.ShouldBeEmpty();
@@ -121,11 +121,11 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var template = await AddTemplateAsync(ForumPostTemplateType.Release, "first\n  {{ end }}");
         renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ScriptObject());
+            .Setup(source => source.BuildGlobalsAsync(1, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ForumPostRenderGlobals(new ScriptObject(), BlockedReasons: []));
 
         // Act
-        var result = await service.RenderAsync(1, template.Id, CancellationToken.None);
+        var result = await service.RenderAsync(1, template.Id, null, CancellationToken.None);
 
         // Assert
         result.Errors.ShouldBe([
@@ -138,8 +138,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(404, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ScriptObject?)null);
+            .Setup(source => source.BuildGlobalsAsync(404, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ForumPostRenderGlobals?)null);
 
         // Act
         var result = await service.LoadPreviewDataAsync(
@@ -268,8 +268,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     private async Task<ForumPostTemplatePreviewData> LoadPreviewDataAsync(ScriptObject globals)
     {
         renderSourceMock
-            .Setup(source => source.BuildGlobalsAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(globals);
+            .Setup(source => source.BuildGlobalsAsync(1, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ForumPostRenderGlobals(globals, BlockedReasons: []));
 
         var previewData = await service.LoadPreviewDataAsync(
             ForumPostTemplateType.Release,

@@ -1,11 +1,15 @@
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Scriban.Runtime;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
-public class ReleaseForumPostRenderSource(ReleaseForumPostRenderModelBuilder renderModelBuilder)
-    : IForumPostRenderSource
+public class ReleaseForumPostRenderSource(
+    ReleaseForumPostRenderModelBuilder renderModelBuilder,
+    IDistributionSiteRegistrationReadRepository distributionSiteRegistrationReadRepository
+) : IForumPostRenderSource
 {
     public ForumPostTemplateType Type => ForumPostTemplateType.Release;
 
@@ -18,13 +22,37 @@ public class ReleaseForumPostRenderSource(ReleaseForumPostRenderModelBuilder ren
         ];
     }
 
-    public async Task<ScriptObject?> BuildGlobalsAsync(
+    public async Task<ForumPostRenderGlobals?> BuildGlobalsAsync(
         int entityId,
+        int? distributionSiteRegistrationId,
         CancellationToken cancellationToken = default
     )
     {
-        var renderDataByReleaseId = await renderModelBuilder.BuildAsync(
+        var serviceLinksByReleaseId = await renderModelBuilder.LoadServiceLinksAsync(
             [entityId],
+            cancellationToken
+        );
+
+        var serviceLinks = serviceLinksByReleaseId[entityId];
+
+        var restrictions = distributionSiteRegistrationId is null
+            ? DistributionSiteServiceRestrictions.Empty
+            : await distributionSiteRegistrationReadRepository.GetServiceRestrictionsAsync(
+                distributionSiteRegistrationId.Value,
+                cancellationToken
+            );
+
+        var blockedReasons = restrictions.FindBlockedReasons(
+            uploads: serviceLinks.Uploads,
+            multiHosterLinkCrypters: serviceLinks.AllHostersLinkCrypters,
+            imageLinks: serviceLinks.ImageLinks
+        );
+
+        var renderDataByReleaseId = await renderModelBuilder.BuildAsync(
+            new Dictionary<int, ReleaseForumPostServiceLinks>
+            {
+                [entityId] = restrictions.RemoveForbiddenServiceLinks(serviceLinks),
+            },
             cancellationToken
         );
 
@@ -42,6 +70,6 @@ public class ReleaseForumPostRenderSource(ReleaseForumPostRenderModelBuilder ren
 
         scriptObject["imagelinks"] = renderData.ImageLinks;
 
-        return scriptObject;
+        return new ForumPostRenderGlobals(scriptObject, blockedReasons);
     }
 }

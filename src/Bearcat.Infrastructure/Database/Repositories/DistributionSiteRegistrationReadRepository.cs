@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.HasUnreadableSecrets,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
+                registration.MinimumSecondsBetweenPosts,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .ToListAsync(cancellationToken);
@@ -42,6 +44,7 @@ public class DistributionSiteRegistrationReadRepository(
                     hasUnreadableSecrets: registration.HasUnreadableSecrets,
                     enableAutomaticPosting: registration.EnableAutomaticPosting,
                     stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+                    minimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
                     postingRuleCount: registration.PostingRuleCount,
                     distributionSitesByClassName: distributionSitesByClassName
                 )
@@ -65,6 +68,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.HasUnreadableSecrets,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
+                registration.MinimumSecondsBetweenPosts,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -82,6 +86,7 @@ public class DistributionSiteRegistrationReadRepository(
             hasUnreadableSecrets: registration.HasUnreadableSecrets,
             enableAutomaticPosting: registration.EnableAutomaticPosting,
             stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+            minimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
             postingRuleCount: registration.PostingRuleCount,
             distributionSitesByClassName: DistributionSitesByClassName()
         );
@@ -96,6 +101,24 @@ public class DistributionSiteRegistrationReadRepository(
             rule => rule.DistributionSiteRegistrationId == id,
             cancellationToken
         );
+    }
+
+    public async Task<DistributionSiteServiceRestrictions> GetServiceRestrictionsAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .DistributionSiteRegistrations.Where(registration => registration.Id == id)
+            .Select(registration => new DistributionSiteServiceRestrictions(
+                RequiredHosterClassNames: registration.RequiredHosterClassNames,
+                ForbiddenHosterClassNames: registration.ForbiddenHosterClassNames,
+                RequiredLinkCrypterClassNames: registration.RequiredLinkCrypterClassNames,
+                ForbiddenLinkCrypterClassNames: registration.ForbiddenLinkCrypterClassNames,
+                RequiredImageHosterClassNames: registration.RequiredImageHosterClassNames,
+                ForbiddenImageHosterClassNames: registration.ForbiddenImageHosterClassNames
+            ))
+            .SingleAsync(cancellationToken);
     }
 
     private IReadOnlyDictionary<string, DistributionSiteDto> DistributionSitesByClassName()
@@ -113,6 +136,7 @@ public class DistributionSiteRegistrationReadRepository(
         bool hasUnreadableSecrets,
         bool enableAutomaticPosting,
         bool stripDotsForThreadSearch,
+        int minimumSecondsBetweenPosts,
         int postingRuleCount,
         IReadOnlyDictionary<string, DistributionSiteDto> distributionSitesByClassName
     )
@@ -129,6 +153,7 @@ public class DistributionSiteRegistrationReadRepository(
             HasUnreadableSecrets: hasUnreadableSecrets,
             EnableAutomaticPosting: enableAutomaticPosting,
             StripDotsForThreadSearch: stripDotsForThreadSearch,
+            MinimumSecondsBetweenPosts: minimumSecondsBetweenPosts,
             PostingRuleCount: postingRuleCount
         );
     }

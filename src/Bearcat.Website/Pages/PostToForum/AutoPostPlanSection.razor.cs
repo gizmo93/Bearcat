@@ -1,3 +1,5 @@
+using System.Globalization;
+using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
@@ -25,8 +27,17 @@ public partial class AutoPostPlanSection(
     [Parameter]
     public EventCallback OnUploadsMarkedPosted { get; set; }
 
+    private const string NewThreadValue = "new";
+
     private readonly HashSet<int> busyRegistrationIds = [];
     private readonly Dictionary<int, string> siteErrors = [];
+
+    private readonly Dictionary<
+        int,
+        IReadOnlyList<ExistingThread>
+    > threadCandidatesByRegistrationId = [];
+
+    private readonly Dictionary<int, string> threadSelectionsByRegistrationId = [];
 
     private bool IsAnySiteBusy => busyRegistrationIds.Count > 0;
 
@@ -38,6 +49,44 @@ public partial class AutoPostPlanSection(
     private static bool CanUpdatePost(AutoPostSiteEntry site)
     {
         return site.PostedLocationId is not null && site.ResolvedForumPostTemplateId is not null;
+    }
+
+    private string? FailureText(AutoPostSiteEntry site)
+    {
+        var isPending =
+            site.Status == AutoPostSiteStatus.Matched
+            || (site.Status == AutoPostSiteStatus.AlreadyPosted && site.NeedsContentUpdate);
+
+        if (!isPending)
+        {
+            return null;
+        }
+
+        if (site.FailureState == ForumPostingFailureState.RetryScheduled)
+        {
+            return L[
+                "AutoPostPausedAfterFailedAttempts",
+                site.NextAttemptAt!.Value.ToString("g", CultureInfo.CurrentCulture),
+                site.FailedAttemptCount,
+                site.LastErrorMessage!
+            ].Value;
+        }
+
+        if (site.FailureState == ForumPostingFailureState.GaveUp)
+        {
+            return L[
+                "AutoPostGaveUpAfterFailedAttempts",
+                site.FailedAttemptCount,
+                site.LastErrorMessage!
+            ].Value;
+        }
+
+        if (site.FailureState == ForumPostingFailureState.WaitingForThreadSelection)
+        {
+            return L["AutoPostWaitingForThreadSelection"].Value;
+        }
+
+        return null;
     }
 
     private async Task PostToSiteAsync(AutoPostSiteEntry site)
@@ -130,6 +179,43 @@ public partial class AutoPostPlanSection(
         }
     }
 
+    private string ThreadSelection(AutoPostSiteEntry site)
+    {
+        return threadSelectionsByRegistrationId.GetValueOrDefault(
+            site.DistributionSiteRegistrationId,
+            string.Empty
+        );
+    }
+
+    private void SelectThread(AutoPostSiteEntry site, string threadSelection)
+    {
+        threadSelectionsByRegistrationId[site.DistributionSiteRegistrationId] = threadSelection;
+    }
+
+    private async Task PostToChosenThreadAsync(AutoPostSiteEntry site)
+    {
+        var plan = Plan;
+        var threadSelection = ThreadSelection(site);
+        var threadUrl = threadSelection == NewThreadValue ? null : threadSelection;
+
+        busyRegistrationIds.Add(site.DistributionSiteRegistrationId);
+        siteErrors.Remove(site.DistributionSiteRegistrationId);
+
+        try
+        {
+            var result = await operationRunner.RunAsync(
+                (AutoForumPostCreationService service) =>
+                    service.CreatePostWithChosenThreadAsync(plan, site, threadUrl)
+            );
+
+            await ApplyResultAsync(site, result);
+        }
+        finally
+        {
+            busyRegistrationIds.Remove(site.DistributionSiteRegistrationId);
+        }
+    }
+
     private async Task<bool> ExecuteAndApplyAsync(AutoPostSiteEntry site)
     {
         var entityType = Plan.EntityType;
@@ -145,6 +231,35 @@ public partial class AutoPostPlanSection(
                     distributionSiteRegistrationId: site.DistributionSiteRegistrationId
                 )
         );
+
+        return await ApplyResultAsync(site, result);
+    }
+
+    private async Task<bool> ApplyResultAsync(
+        AutoPostSiteEntry site,
+        AutoPostExecutionResult result
+    )
+    {
+        var entityType = Plan.EntityType;
+        var entityId = Plan.EntityId;
+
+        if (result.Status != AutoPostExecutionStatus.Failed)
+        {
+            threadCandidatesByRegistrationId.Remove(site.DistributionSiteRegistrationId);
+            threadSelectionsByRegistrationId.Remove(site.DistributionSiteRegistrationId);
+        }
+
+        if (result.Status == AutoPostExecutionStatus.ThreadSelectionNeeded)
+        {
+            threadCandidatesByRegistrationId[site.DistributionSiteRegistrationId] =
+                result.ThreadCandidates;
+
+            toastService.Info(
+                L["AutoPostThreadSelectionNeeded", site.DistributionSiteRegistrationName]
+            );
+
+            return true;
+        }
 
         if (result.Status == AutoPostExecutionStatus.Posted)
         {
@@ -195,6 +310,10 @@ public partial class AutoPostPlanSection(
                 ? L["AutoPostSkippedAlreadyPosted"]
                 : L["AutoPostSkippedCollectionAlreadyPosted"],
             AutoPostSkipReason.NoMatch => L["AutoPostNoMatchingRule"],
+            AutoPostSkipReason.ServiceRestrictionNotMet => L[
+                "AutoPostSkippedServiceRestrictionNotMet",
+                string.Join(" ", result.Errors)
+            ],
             _ => L["AutoPostSkippedSiteUnavailable"],
         };
     }
@@ -207,6 +326,11 @@ public partial class AutoPostPlanSection(
         if (result.BlockedReason is not null)
         {
             return L.Localize(result.BlockedReason.Value, entityType);
+        }
+
+        if (result.SkipReason == AutoPostUpdateSkipReason.ServiceRestrictionNotMet)
+        {
+            return L["AutoPostSkippedServiceRestrictionNotMet", string.Join(" ", result.Errors)];
         }
 
         if (result.SkipReason != AutoPostUpdateSkipReason.NotPosted)

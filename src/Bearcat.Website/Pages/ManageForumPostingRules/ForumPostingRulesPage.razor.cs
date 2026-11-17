@@ -1,4 +1,8 @@
 using Bearcat.Abstractions.DistributionSite;
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.ImageHoster;
+using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
@@ -9,6 +13,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageForumPostingRules;
@@ -27,6 +32,13 @@ public partial class ForumPostingRulesPage(
         "lg:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.9fr)_11rem_5rem_4rem]";
 
     private DistributionSiteRegistrationReadModel registration = null!;
+
+    private DistributionSiteServiceRestrictions serviceRestrictions =
+        DistributionSiteServiceRestrictions.Empty;
+
+    private IReadOnlyList<SelectOption<string>> hosterOptions = [];
+    private IReadOnlyList<SelectOption<string>> linkCrypterOptions = [];
+    private IReadOnlyList<SelectOption<string>> imageHosterOptions = [];
     private List<ForumPostingRuleSummaryReadModel> rules = [];
     private IReadOnlyList<ForumPostingRulePreviewReadModel>? previewResults;
     private ForumPostTemplateType previewEntityType = ForumPostTemplateType.Release;
@@ -51,8 +63,39 @@ public partial class ForumPostingRulesPage(
         }
 
         registration = detail;
+
+        serviceRestrictions = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) =>
+                repository.GetServiceRestrictionsAsync(DistributionSiteRegistrationId)
+        );
+
+        LoadServiceOptions();
         await LoadRulesAsync();
         isInitialized = true;
+    }
+
+    private void LoadServiceOptions()
+    {
+        hosterOptions = operationRunner
+            .Run((IHosterFactory factory) => factory.GetHosterReadModels())
+            .Select(hoster => new SelectOption<string>(hoster.HosterClassName, hoster.Name))
+            .ToList();
+
+        linkCrypterOptions = operationRunner
+            .Run((ILinkCrypterFactory factory) => factory.GetLinkCrypters())
+            .Select(linkCrypter => new SelectOption<string>(
+                linkCrypter.ClassName,
+                linkCrypter.Name
+            ))
+            .ToList();
+
+        imageHosterOptions = operationRunner
+            .Run((IImageHosterFactory factory) => factory.GetImageHosters())
+            .Select(imageHoster => new SelectOption<string>(
+                imageHoster.ClassName,
+                imageHoster.Name
+            ))
+            .ToList();
     }
 
     private async Task LoadRulesAsync()
@@ -190,6 +233,125 @@ public partial class ForumPostingRulesPage(
                 ? L["StripDotsForThreadSearchEnabled", registration.Name]
                 : L["StripDotsForThreadSearchDisabled", registration.Name]
         );
+    }
+
+    private async Task SetMinimumSecondsBetweenPostsAsync(int minimumSecondsBetweenPosts)
+    {
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.SetMinimumSecondsBetweenPostsAsync(
+                    DistributionSiteRegistrationId,
+                    minimumSecondsBetweenPosts
+                )
+        );
+
+        registration = registration with
+        {
+            MinimumSecondsBetweenPosts = minimumSecondsBetweenPosts,
+        };
+
+        toastService.Success(L["MinimumSecondsBetweenPostsSaved", registration.Name]);
+    }
+
+    private Task SetRequiredHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                RequiredHosterClassNames = classNames,
+                ForbiddenHosterClassNames = serviceRestrictions
+                    .ForbiddenHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetForbiddenHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                ForbiddenHosterClassNames = classNames,
+                RequiredHosterClassNames = serviceRestrictions
+                    .RequiredHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetRequiredLinkCrypterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                RequiredLinkCrypterClassNames = classNames,
+                ForbiddenLinkCrypterClassNames = serviceRestrictions
+                    .ForbiddenLinkCrypterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetForbiddenLinkCrypterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                ForbiddenLinkCrypterClassNames = classNames,
+                RequiredLinkCrypterClassNames = serviceRestrictions
+                    .RequiredLinkCrypterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetRequiredImageHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                RequiredImageHosterClassNames = classNames,
+                ForbiddenImageHosterClassNames = serviceRestrictions
+                    .ForbiddenImageHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private Task SetForbiddenImageHosterClassNamesAsync(IEnumerable<string>? values)
+    {
+        var classNames = values?.ToList() ?? [];
+
+        return SetServiceRestrictionsAsync(
+            serviceRestrictions with
+            {
+                ForbiddenImageHosterClassNames = classNames,
+                RequiredImageHosterClassNames = serviceRestrictions
+                    .RequiredImageHosterClassNames.Except(classNames)
+                    .ToList(),
+            }
+        );
+    }
+
+    private async Task SetServiceRestrictionsAsync(DistributionSiteServiceRestrictions restrictions)
+    {
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.SetServiceRestrictionsAsync(DistributionSiteRegistrationId, restrictions)
+        );
+
+        serviceRestrictions = restrictions;
+        toastService.Success(L["ForumServiceRestrictionsSaved", registration.Name]);
     }
 
     private async Task ReorderByDragAsync((int OldIndex, int NewIndex) move)
