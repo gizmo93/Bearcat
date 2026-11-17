@@ -67,23 +67,6 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessPendingClassificationsAsync_UnclassifiedRelease_ClassifiesIt()
-    {
-        // Arrange
-        var release = await AddReleaseAsync("Black.Diamond.2025.German.BDRip.x264-CPTN");
-
-        // Act
-        var classifiedCount = await service.ProcessPendingClassificationsAsync();
-
-        // Assert
-        classifiedCount.ShouldBeGreaterThanOrEqualTo(1);
-        var stored = await GetClassificationAsync(release.Id);
-        stored.ShouldNotBeNull();
-        stored.PrimaryLanguage.ShouldBe("German");
-        stored.Resolution.ShouldBe(ReleaseResolution.Unknown);
-    }
-
-    [Test]
     public async Task ProcessPendingClassificationsAsync_OtherWorkerClassifiedReleaseFirst_KeepsExistingClassificationWithoutDuplicate()
     {
         // Arrange

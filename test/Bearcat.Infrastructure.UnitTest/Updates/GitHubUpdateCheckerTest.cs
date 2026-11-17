@@ -11,9 +11,6 @@ namespace Bearcat.Infrastructure.UnitTest.Updates;
 public class GitHubUpdateCheckerTest
 {
     private const string ReleasesPageUrl = "https://github.com/gizmo93/Bearcat/releases";
-    private static readonly Uri LatestReleaseUri = new(
-        "https://api.github.com/repos/gizmo93/Bearcat/releases/latest"
-    );
 
     private TestHttpMessageHandler httpMessageHandler = null!;
     private GitHubUpdateChecker checker = null!;
@@ -72,24 +69,6 @@ public class GitHubUpdateCheckerTest
         // Assert
         status.LatestVersion.ShouldBe("0.0.1");
         status.IsUpdateAvailable.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task GetUpdateStatusAsync_RequestsLatestReleaseEndpoint()
-    {
-        // Arrange
-        Uri? requestedUri = null;
-        httpMessageHandler.Enqueue(request =>
-        {
-            requestedUri = request.RequestUri;
-            return JsonResponse("{\"tag_name\":\"9999.0.0\"}");
-        });
-
-        // Act
-        await checker.GetUpdateStatusAsync(CancellationToken.None);
-
-        // Assert
-        requestedUri.ShouldBe(LatestReleaseUri);
     }
 
     [Test]

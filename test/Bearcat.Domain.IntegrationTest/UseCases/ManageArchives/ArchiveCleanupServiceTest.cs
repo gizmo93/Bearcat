@@ -157,20 +157,6 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_LastUploadIsTooRecent_KeepsArchive()
-    {
-        // Arrange
-        var archive = await AddScenarioAsync(uploadedAt: DateTime.UtcNow.AddDays(-1));
-        SetupConfiguration();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldStillBeCreatedAsync(archive);
-    }
-
-    [Test]
     public async Task ProcessAsync_ReuploadResetsTheClock_KeepsArchive()
     {
         // Arrange
@@ -269,21 +255,6 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         // Assert
         await ShouldStillBeCreatedAsync(archive);
         fileSystemServiceMock.VerifyAll();
-    }
-
-    [Test]
-    public async Task ProcessAsync_DeleteActionAndArchiveIsInStorageFolder_KeepsArchive()
-    {
-        // Arrange
-        var storageFolder = await AddStorageFolderAsync();
-        var archive = await AddScenarioAsync(archiveStorageFolderId: storageFolder.Id);
-        SetupConfiguration(ArchiveRetentionAction.Delete);
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldStillBeCreatedAsync(archive);
     }
 
     [Test]

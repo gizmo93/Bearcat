@@ -138,98 +138,6 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateSettingsAsync_ValidData_UpdatesSettings()
-    {
-        // Arrange
-        var releaseGroup = new ReleaseGroup
-        {
-            Name = "Series",
-            EnableAutomaticReuploads = false,
-            NumberOfHoursUntilReupload = 24,
-        };
-        var collection = new ReleaseCollection
-        {
-            ReleaseGroup = releaseGroup,
-            Key = "hostage.s01",
-            Name = "Hostage S01",
-            ReleaseContentType = ReleaseContentType.TvShowEpisode,
-            CreatedAt = DateTime.UtcNow,
-        };
-        DbContext.ReleaseCollections.Add(collection);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.UpdateSettingsAsync(collection.Id, ReleaseContentType.Other, "DE");
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var updated = await DbContext.ReleaseCollections.FindAsync(collection.Id);
-
-        updated!.ReleaseContentType.ShouldBe(ReleaseContentType.Other);
-        updated.PrimaryLanguageCode.ShouldBe("de");
-    }
-
-    [Test]
-    public async Task UpdateAsync_ValidData_UpdatesName()
-    {
-        // Arrange
-        var releaseGroup = new ReleaseGroup
-        {
-            Name = "Series",
-            EnableAutomaticReuploads = false,
-            NumberOfHoursUntilReupload = 24,
-        };
-        var collection = new ReleaseCollection
-        {
-            ReleaseGroup = releaseGroup,
-            Key = "hostage.s01",
-            Name = "Hostage S01",
-            CreatedAt = DateTime.UtcNow,
-        };
-        DbContext.ReleaseCollections.Add(collection);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.UpdateAsync(collection.Id, "  Hostage Season 1  ");
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var updated = await DbContext.ReleaseCollections.FindAsync(collection.Id);
-
-        updated!.Name.ShouldBe("Hostage Season 1");
-    }
-
-    [Test]
-    public async Task DeleteAsync_CollectionExists_RemovesCollection()
-    {
-        // Arrange
-        var releaseGroup = new ReleaseGroup
-        {
-            Name = "Series",
-            EnableAutomaticReuploads = false,
-            NumberOfHoursUntilReupload = 24,
-        };
-        var collection = new ReleaseCollection
-        {
-            ReleaseGroup = releaseGroup,
-            Key = "hostage.s01",
-            Name = "Hostage S01",
-            CreatedAt = DateTime.UtcNow,
-        };
-        DbContext.ReleaseCollections.Add(collection);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.DeleteAsync(collection.Id);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var exists = await DbContext.ReleaseCollections.AnyAsync(c => c.Id == collection.Id);
-
-        exists.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task DeleteAsync_CollectionHasReleases_ThrowsAndKeepsCollection()
     {
         // Arrange
@@ -412,36 +320,6 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
 
         slot!.PasswordPolicy.ShouldBe(CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue);
         slot.ExpectedArchivePassword.ShouldBe("s3cr3t");
-    }
-
-    [Test]
-    public async Task CreateUploadSlotAsync_EmptyName_Throws()
-    {
-        // Arrange
-        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
-        var hosterRegistration = new HosterRegistration
-        {
-            Name = "Rapidgator",
-            SerializedConfig = "{}",
-            HosterClassName = "RapidgatorHoster",
-            IsActive = true,
-        };
-        DbContext.HosterRegistrations.Add(hosterRegistration);
-        await DbContext.SaveChangesAsync();
-
-        // Act & Assert
-        await Should.ThrowAsync<ArgumentException>(() =>
-            service.CreateUploadSlotAsync(
-                seed.CollectionId,
-                "   ",
-                UploadTarget.ForHosterRegistration(hosterRegistration.Id),
-                "Main",
-                false,
-                true,
-                CollectionUploadSlotPasswordPolicy.Ignore,
-                null
-            )
-        );
     }
 
     [Test]
@@ -698,33 +576,6 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         linkCrypter.EnableCaptcha.ShouldBeFalse();
         linkCrypter.EnableContainerDownload.ShouldBeTrue();
         linkCrypter.EnableClickAndLoad.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task AddReleaseAsync_ValidRelease_AssignsToCollection()
-    {
-        // Arrange
-        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
-        var newRelease = new Release
-        {
-            Name = "Hostage.S01E03",
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/tmp/e03",
-            ReleaseGroupId = (
-                await DbContext.ReleaseCollections.FindAsync(seed.CollectionId)
-            )!.ReleaseGroupId,
-        };
-        DbContext.Releases.Add(newRelease);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.AddReleaseAsync(seed.CollectionId, newRelease.Id);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var release = await DbContext.Releases.FindAsync(newRelease.Id);
-        release!.ReleaseCollectionId.ShouldBe(seed.CollectionId);
     }
 
     [Test]

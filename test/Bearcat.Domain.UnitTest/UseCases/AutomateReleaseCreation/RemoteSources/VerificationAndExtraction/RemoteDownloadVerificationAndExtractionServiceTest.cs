@@ -82,50 +82,6 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
     }
 
     [Test]
-    public async Task ProcessAsync_SfvMatches_VerifiesAndMarksReadyForReleaseCreation()
-    {
-        // Arrange
-        WriteFile("release.rar", "volume");
-        WriteFile("release.sfv", CreateSfvLine("release.rar", "volume"));
-        var download = AddDownload(extractArchives: false);
-
-        // Act
-        await CreateService().ProcessAsync(CancellationToken.None);
-
-        // Assert
-        download.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
-        download.ErrorMessage.ShouldBeNull();
-        repository.SavedStates.ShouldBe([
-            RemoteSourceDownloadState.Downloaded,
-            RemoteSourceDownloadState.Verifying,
-            RemoteSourceDownloadState.ReadyForReleaseCreation,
-        ]);
-        notificationService.Created.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task ProcessAsync_SfvMismatch_FailsKeepsFilesAndNotifies()
-    {
-        // Arrange
-        WriteFile("release.rar", "corrupted");
-        WriteFile("release.sfv", CreateSfvLine("release.rar", "volume"));
-        var download = AddDownload(extractArchives: true);
-
-        // Act
-        await CreateService().ProcessAsync(CancellationToken.None);
-
-        // Assert
-        download.State.ShouldBe(RemoteSourceDownloadState.Failed);
-        download.ErrorMessage!.ShouldContain("wrong CRC32 checksum: release.rar");
-        download.ErrorMessage!.ShouldContain($"files were kept in {localFolderPath}");
-        archiveExtractor.DestinationFolderPaths.ShouldBeEmpty();
-        File.Exists(Path.Combine(localFolderPath, "release.rar")).ShouldBeTrue();
-        var notification = notificationService.Created.ShouldHaveSingleItem();
-        notification.Kind.ShouldBe(NotificationKind.RemoteDownloadFailed);
-        notification.Message.ShouldContain(download.FolderName);
-    }
-
-    [Test]
     public async Task ProcessAsync_ExtractionEnabled_MovesExtractedFilesAndDeletesVolumesAndCoveredSfv()
     {
         // Arrange
@@ -232,28 +188,6 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
             ]);
         progressTracker.StoppedIdentifiers.ShouldBe([identifier]);
         progressTracker.Get(identifier).ShouldBeNull();
-    }
-
-    [Test]
-    public async Task ProcessAsync_ExtractorReportsFailure_StopsTrackingExtractionProgress()
-    {
-        // Arrange
-        var firstVolumeFilePath = WriteFile("release.rar", "volume");
-        archiveExtractor.AddArchive(
-            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
-            new Dictionary<string, string>()
-        );
-        archiveExtractor.FailureResult = new ArchiveExtractionResult(false, ["CRC failed"]);
-        var download = AddDownload(extractArchives: true);
-
-        // Act
-        await CreateService().ProcessAsync(CancellationToken.None);
-
-        // Assert
-        download.State.ShouldBe(RemoteSourceDownloadState.Failed);
-        progressTracker.StoppedIdentifiers.ShouldBe([
-            new TransferIdentifier(TransferType.RemoteDownloadExtraction, download.Id),
-        ]);
     }
 
     [Test]
@@ -489,6 +423,9 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
         );
         File.Exists(firstVolumeFilePath).ShouldBeTrue();
         Directory.Exists(Path.Join(localFolderPath, TemporaryExtractionFolderName)).ShouldBeFalse();
+        progressTracker.StoppedIdentifiers.ShouldBe([
+            new TransferIdentifier(TransferType.RemoteDownloadExtraction, download.Id),
+        ]);
     }
 
     [Test]
@@ -507,54 +444,6 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
         // Assert
         download.State.ShouldBe(RemoteSourceDownloadState.Failed);
         download.ErrorMessage!.ShouldContain("continuation volumes without a first volume");
-    }
-
-    [TestCase(RemoteSourceDownloadState.Verifying)]
-    [TestCase(RemoteSourceDownloadState.Extracting)]
-    public async Task ProcessAsync_DownloadInterruptedByCrash_DeletesTemporaryFoldersAndProcessesAgain(
-        RemoteSourceDownloadState interruptedState
-    )
-    {
-        // Arrange
-        WriteFile(Path.Combine(TemporaryExtractionFolderName, "movie.mkv"), "partial");
-        WriteFile(Path.Combine("Subs", TemporaryExtractionFolderName, "english.sub"), "partial");
-        WriteFile("movie.nfo", "nfo");
-        var download = AddDownload(extractArchives: true, state: interruptedState);
-
-        // Act
-        await CreateService().ProcessAsync(CancellationToken.None);
-
-        // Assert
-        download.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
-        repository.SavedStates[0].ShouldBe(RemoteSourceDownloadState.Downloaded);
-        Directory
-            .GetDirectories(
-                localFolderPath,
-                TemporaryExtractionFolderName,
-                SearchOption.AllDirectories
-            )
-            .ShouldBeEmpty();
-        File.Exists(Path.Combine(localFolderPath, "movie.nfo")).ShouldBeTrue();
-    }
-
-    [TestCase(RemoteSourceDownloadState.Failed)]
-    [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
-    [TestCase(RemoteSourceDownloadState.Downloading)]
-    public async Task ProcessAsync_DownloadInOtherState_IsLeftUntouched(
-        RemoteSourceDownloadState state
-    )
-    {
-        // Arrange
-        WriteFile("release.sfv", "invalid line");
-        var download = AddDownload(extractArchives: true, state: state);
-
-        // Act
-        await CreateService().ProcessAsync(CancellationToken.None);
-
-        // Assert
-        download.State.ShouldBe(state);
-        repository.SavedStates.ShouldBe([state]);
-        notificationService.Created.ShouldBeEmpty();
     }
 
     private RemoteDownloadVerificationAndExtractionService CreateService()

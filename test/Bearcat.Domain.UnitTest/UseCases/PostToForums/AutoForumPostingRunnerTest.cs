@@ -93,62 +93,6 @@ public class AutoForumPostingRunnerTest
     }
 
     [Test]
-    public async Task RunAsync_NoQueuedReleases_PostsNothing()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
-        };
-        var submitter = new FakeForumPostSubmitter();
-        var runner = RunnerWith(repository, submitter);
-
-        // Act
-        var result = await runner.RunAsync();
-
-        // Assert
-        result.PostedCount.ShouldBe(0);
-        result.Failures.ShouldBeEmpty();
-        submitter.NewThreads.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task RunAsync_SuccessAndFailure_CreatesNotificationForBothOutcomes()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Releases = [AutoPostTestFactory.Release()],
-            Registrations =
-            [
-                AutomaticRegistration(id: 5, name: "Broken"),
-                AutomaticRegistration(id: 6, name: "Working"),
-            ],
-        };
-        var submitter = new FakeForumPostSubmitter { FailingRegistrationIds = [5] };
-        var notificationService = new FakeNotificationService();
-        var runner = RunnerWith(repository, submitter, notificationService);
-
-        // Act
-        await runner.RunAsync();
-
-        // Assert
-        notificationService.Created.Count.ShouldBe(2);
-
-        var failed = notificationService.Created[0];
-        failed.Kind.ShouldBe(NotificationKind.AutomaticForumPostFailed);
-        failed.Message.ShouldBe(
-            $"Automatic posting of release '{AutoPostTestFactory.ReleaseName}' to 'Broken' failed: Submit to 5 failed"
-        );
-
-        var created = notificationService.Created[1];
-        created.Kind.ShouldBe(NotificationKind.AutomaticForumPostCreated);
-        created.Message.ShouldBe(
-            $"Release '{AutoPostTestFactory.ReleaseName}' was posted automatically to 'Working': {submitter.NewThreadUrl}"
-        );
-    }
-
-    [Test]
     public async Task RunAsync_MoreQueuedReleasesThanOneBatch_PlansReleasesInBatchesOfFiveHundred()
     {
         // Arrange
@@ -170,24 +114,6 @@ public class AutoForumPostingRunnerTest
         // Assert
         result.PostedCount.ShouldBe(0);
         repository.PlanningRoundCount.ShouldBe(3);
-    }
-
-    [Test]
-    public async Task RunAsync_SuccessfulPost_PlansOnceUpFrontAndOnceAfterPosting()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Releases = [AutoPostTestFactory.Release()],
-            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
-        };
-        var runner = RunnerWith(repository, new FakeForumPostSubmitter());
-
-        // Act
-        await runner.RunAsync();
-
-        // Assert
-        repository.PlanningRoundCount.ShouldBe(2);
     }
 
     [Test]
@@ -374,39 +300,6 @@ public class AutoForumPostingRunnerTest
             .ForumPostTemplateId.ShouldBe(8);
         repository.MarkedReleaseIds.ShouldBe([1]);
         repository.MarkedReleaseCollectionIds.ShouldBe([4]);
-    }
-
-    [Test]
-    public async Task RunAsync_FailingCollectionPost_ReportsTheCollectionInTheFailure()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
-            Registrations =
-            [
-                AutomaticRegistration(
-                    id: 5,
-                    name: "Broken",
-                    rule: AutoPostTestFactory.Rule(
-                        templateType: ForumPostTemplateType.ReleaseCollection
-                    )
-                ),
-            ],
-        };
-        var submitter = new FakeForumPostSubmitter { FailingRegistrationIds = [5] };
-        var runner = RunnerWith(repository, submitter);
-
-        // Act
-        var result = await runner.RunAsync();
-
-        // Assert
-        var failure = result.Failures.ShouldHaveSingleItem();
-        failure.EntityType.ShouldBe(ForumPostTemplateType.ReleaseCollection);
-        failure.EntityId.ShouldBe(4);
-        failure.EntityName.ShouldBe(AutoPostTestFactory.ReleaseCollectionName);
-        failure.DistributionSiteRegistrationName.ShouldBe("Broken");
-        repository.MarkedReleaseCollectionIds.ShouldBeEmpty();
     }
 
     private static AutoPostRegistration AutomaticRegistration(

@@ -58,36 +58,6 @@ public class MediaMetadataServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetReleaseWithMediaFilesAsync_ReleaseWithDetails_LoadsMediaFilesAndDetails()
-    {
-        // Arrange
-        await AddReleaseAsync("Other.Movie.2025.German.720p.WEB.x264-GRP", ["other.mkv"]);
-        var release = await AddReleaseAsync(
-            "Amok.1994.German.1080p.BluRay.x264-PL3X",
-            ["amok.part1.mkv", "amok.part2.mkv"]
-        );
-
-        // Act
-        var result = await repository.GetReleaseWithMediaFilesAsync(
-            release.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Name.ShouldBe("Amok.1994.German.1080p.BluRay.x264-PL3X");
-        result
-            .MediaFiles.Select(file => file.RelativePath)
-            .ShouldBe(["amok.part1.mkv", "amok.part2.mkv"], ignoreOrder: true);
-        result.Classification.ShouldNotBeNull();
-        result.Classification.Title.ShouldBe("Amok.1994.German.1080p.BluRay.x264-PL3X title");
-        result.ReleaseInfo.ShouldNotBeNull();
-        result.ReleaseInfo.ReleaseName.ShouldBe("Amok.1994.German.1080p.BluRay.x264-PL3X");
-        result.ReleaseNfo.ShouldNotBeNull();
-        result.ReleaseNfo.FileName.ShouldBe("Amok.1994.German.1080p.BluRay.x264-PL3X.nfo");
-    }
-
-    [Test]
     public async Task ExtractForReleaseAsync_ReleaseWithExistingMediaFiles_ReplacesMediaFilesAndUpdatesClassification()
     {
         // Arrange

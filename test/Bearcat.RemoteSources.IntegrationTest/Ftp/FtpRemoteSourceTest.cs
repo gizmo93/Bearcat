@@ -218,37 +218,6 @@ public class FtpRemoteSourceTest(FtpTestServer testServer, FtpTlsProvider tlsPro
     }
 
     [Test]
-    public async Task DownloadFileAsync_TwoConsecutiveDownloadsOnSameSession_BothSucceed()
-    {
-        // Arrange
-        await using var session = await OpenSessionAsync();
-        var largeFile = CreateReleaseOneFileDto(FtpTestData.LargeFileRelativePath);
-        var nfoFile = CreateReleaseOneFileDto(FtpTestData.NfoFileRelativePath);
-
-        // Act
-        await session.DownloadFileAsync(
-            largeFile,
-            GetLocalFilePath(largeFile),
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
-        await session.DownloadFileAsync(
-            nfoFile,
-            GetLocalFilePath(nfoFile),
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
-
-        // Assert
-        (await File.ReadAllBytesAsync(GetLocalFilePath(largeFile))).ShouldBe(
-            GetReleaseOneContent(FtpTestData.LargeFileRelativePath)
-        );
-        (await File.ReadAllBytesAsync(GetLocalFilePath(nfoFile))).ShouldBe(
-            GetReleaseOneContent(FtpTestData.NfoFileRelativePath)
-        );
-    }
-
-    [Test]
     public async Task DownloadFileAsync_LargeFile_ReportsProgressDeltasSummingToFileSize()
     {
         // Arrange

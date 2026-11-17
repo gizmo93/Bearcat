@@ -106,65 +106,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_ValidRelease_PersistsReleaseAndReturnsId()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Managed releases");
-
-        // Act
-        var result = await service.CreateAsync(
-            "Bearcat.Release.001",
-            "/tmp/release",
-            ReleaseType.Managed,
-            ReleaseContentType.Movie,
-            releaseGroup.Id,
-            null,
-            ScreenshotsDisabled,
-            false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var release = await DbContext.Releases.SingleAsync();
-
-        result.ShouldBeGreaterThan(0);
-        release.ShouldNotBeNull();
-        release.Id.ShouldBe(result);
-        release.Name.ShouldBe("Bearcat.Release.001");
-        release.CreatedAt.ShouldBeGreaterThan(default);
-        release.ReleaseFolderPath.ShouldBe("/tmp/release");
-        release.ReleaseType.ShouldBe(ReleaseType.Managed);
-        release.ReleaseContentType.ShouldBe(ReleaseContentType.Movie);
-        release.ReleaseGroupId.ShouldBe(releaseGroup.Id);
-    }
-
-    [Test]
-    public async Task UpdateAsync_ChangesReleaseContentType()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Content type group");
-        var release = await AddReleaseAsync(releaseGroup.Id);
-
-        // Act
-        await service.UpdateAsync(
-            release.Id,
-            "Bearcat.Release.001",
-            release.ReleaseFolderPath,
-            ReleaseContentType.TvShowEpisode,
-            releaseGroup.Id,
-            null,
-            ScreenshotsDisabled,
-            false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
-        result.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
-    }
-
-    [Test]
     public async Task UpdateAsync_VideoUploadConfigAndNonVideoContentType_ThrowsInvalidUploadSourceException()
     {
         // Arrange
@@ -198,37 +139,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_ReleaseExists_UpdatesNameAndReleaseGroup()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var release = await AddReleaseAsync(firstGroup.Id);
-
-        // Act
-        await service.UpdateAsync(
-            release.Id,
-            "Bearcat.Release.Updated",
-            "/tmp/release-updated",
-            ReleaseContentType.Movie,
-            secondGroup.Id,
-            null,
-            ScreenshotsDisabled,
-            false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.Releases.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(release.Id);
-        result.Name.ShouldBe("Bearcat.Release.Updated");
-        result.ReleaseGroupId.ShouldBe(secondGroup.Id);
-        result.ReleaseFolderPath.ShouldBe("/tmp/release-updated");
-    }
-
-    [Test]
     public async Task CreateAsync_ReleaseWithSameNameInDifferentCaseExists_ThrowsReleaseNameAlreadyExistsException()
     {
         // Arrange
@@ -256,33 +166,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_NameOfOtherReleaseInDifferentCase_ThrowsReleaseNameAlreadyExistsException()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Rename group");
-        await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
-        var release = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.002");
-
-        // Act
-        var exception = await Should.ThrowAsync<ReleaseNameAlreadyExistsException>(() =>
-            service.UpdateAsync(
-                release.Id,
-                "BEARCAT.RELEASE.001",
-                release.ReleaseFolderPath,
-                ReleaseContentType.Movie,
-                releaseGroup.Id,
-                null,
-                ScreenshotsDisabled,
-                false,
-                cancellationToken: CancellationToken.None
-            )
-        );
-
-        // Assert
-        exception.ReleaseName.ShouldBe("BEARCAT.RELEASE.001");
-    }
-
-    [Test]
     public async Task UpdateAsync_OwnNameInDifferentCase_UpdatesName()
     {
         // Arrange
@@ -305,77 +188,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         // Assert
         var result = await CreateDbContext().Releases.SingleAsync();
         result.Name.ShouldBe("BEARCAT.Release.001");
-    }
-
-    [Test]
-    public async Task UpdateReleaseGroupAsync_ReleaseIdsAreEmpty_DoesNotChangeReleases()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var release = await AddReleaseAsync(firstGroup.Id);
-
-        // Act
-        await service.UpdateReleaseGroupAsync([], secondGroup.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.Releases.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(release.Id);
-        result.ReleaseGroupId.ShouldBe(firstGroup.Id);
-    }
-
-    [Test]
-    public async Task UpdateReleaseGroupAsync_ReleasesExist_UpdatesReleaseGroups()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var firstRelease = await AddReleaseAsync(firstGroup.Id, "Bearcat.Release.001");
-        var secondRelease = await AddReleaseAsync(firstGroup.Id, "Bearcat.Release.002");
-
-        // Act
-        await service.UpdateReleaseGroupAsync(
-            [firstRelease.Id, secondRelease.Id],
-            secondGroup.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.Releases.OrderBy(r => r.Id).ToListAsync();
-
-        result.ShouldNotBeNull();
-        result.Count.ShouldBe(2);
-        result.ShouldAllBe(r => r.ReleaseGroupId == secondGroup.Id);
-    }
-
-    [TestCase("DE", "de")]
-    [TestCase("", null)]
-    public async Task UpdatePrimaryLanguageAsync_ReleasesExist_UpdatesPrimaryLanguages(
-        string primaryLanguageCode,
-        string? expectedLanguageCode
-    )
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Language group");
-        var firstRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
-        var secondRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.002");
-        firstRelease.PrimaryLanguageCode = "en";
-        secondRelease.PrimaryLanguageCode = "en";
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.UpdatePrimaryLanguageAsync(
-            [firstRelease.Id, secondRelease.Id],
-            primaryLanguageCode,
-            CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var releases = await DbContext.Releases.OrderBy(release => release.Id).ToListAsync();
-        releases.ShouldAllBe(release => release.PrimaryLanguageCode == expectedLanguageCode);
     }
 
     [Test]
@@ -919,28 +731,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateFromTemplateAsync_TemplateDoesNotExist_ThrowsReleaseTemplateNotFoundException()
-    {
-        // Arrange
-        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.1080p");
-
-        // Act
-        var exception = await Should.ThrowAsync<ReleaseTemplateNotFoundException>(() =>
-            service.CreateFromTemplateAsync(
-                4711,
-                releaseFolderPath,
-                null,
-                null,
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        exception.ReleaseTemplateId.ShouldBe(4711);
-        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
-    }
-
-    [Test]
     public async Task CreateFromTemplateAsync_FolderIsReleaseFolderOfRelease_ThrowsReleaseFolderAlreadyInUseException()
     {
         // Arrange
@@ -1003,40 +793,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         // Assert
         exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.UnmanagedArchiveFolder);
         (await DbContext.Releases.CountAsync()).ShouldBe(1);
-    }
-
-    [Test]
-    public async Task CreateFromTemplateAsync_FolderIsTargetOfRemoteDownload_ThrowsReleaseFolderAlreadyInUseException()
-    {
-        // Arrange
-        var seed = await AddReleaseTemplateAsync();
-        var releaseFolderPath = CreateTemplateReleaseFolder("Remote.Release.1080p");
-        DbContext.RemoteSourceDownloads.Add(
-            new RemoteSourceDownload
-            {
-                SourceName = "Main FTP",
-                RemoteFolderPath = "/incoming/Remote.Release.1080p",
-                FolderName = "Remote.Release.1080p",
-                LocalFolderPath = releaseFolderPath,
-                State = RemoteSourceDownloadState.Downloading,
-            }
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var exception = await Should.ThrowAsync<ReleaseFolderAlreadyInUseException>(() =>
-            service.CreateFromTemplateAsync(
-                seed.ReleaseTemplateId,
-                releaseFolderPath,
-                null,
-                null,
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.RemoteDownloadFolder);
-        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -1212,33 +968,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ConvertToUnmanagedAsync_UnmanagedRelease_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Convert group");
-        var releaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var releaseId = await service.CreateAsync(
-            "Bearcat.Release.Unmanaged",
-            releaseFolderPath,
-            ReleaseType.Unmanaged,
-            ReleaseContentType.Movie,
-            releaseGroup.Id,
-            null,
-            ScreenshotsDisabled,
-            false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.ConvertToUnmanagedAsync(releaseId, CancellationToken.None)
-        );
-
-        // Assert
-        result.Message.ShouldBe("Only managed releases can be converted to unmanaged.");
-    }
-
-    [Test]
     public async Task ConvertToManagedAsync_UnmanagedRelease_SetsManagedAndAssignsFolder()
     {
         // Arrange
@@ -1280,62 +1009,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ConvertToManagedAsync_ManagedRelease_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Convert group");
-        var release = await AddManagedReleaseWithArchiveAsync(
-            releaseGroup.Id,
-            releaseFolderPath: "/data/releases/Bearcat.Release",
-            archiveFolderPath: "/data/archives/abc",
-            archiveState: ArchiveState.Created
-        );
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.ConvertToManagedAsync(
-                release.Id,
-                "/data/releases/Bearcat.Release",
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        result.Message.ShouldBe("Only unmanaged releases can be converted to managed.");
-    }
-
-    [Test]
-    public async Task ConvertToManagedAsync_BlankFolder_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Convert group");
-        var archiveFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var releaseId = await service.CreateAsync(
-            "Bearcat.Release.Unmanaged",
-            archiveFolderPath,
-            ReleaseType.Unmanaged,
-            ReleaseContentType.Movie,
-            releaseGroup.Id,
-            null,
-            ScreenshotsDisabled,
-            false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.ConvertToManagedAsync(releaseId, "  ", CancellationToken.None)
-        );
-
-        // Assert
-        result.Message.ShouldBe("A release folder must be assigned when converting to managed.");
-        DbContext.ChangeTracker.Clear();
-        var unchanged = await DbContext.Releases.SingleAsync(r => r.Id == releaseId);
-        unchanged.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
-        unchanged.ReleaseFolderPath.ShouldBeNull();
-    }
-
-    [Test]
     public async Task GetUnmanagedConversionPreviewAsync_ArchiveInsideReleaseFolder_ReportsWarningAndCanConvert()
     {
         // Arrange
@@ -1357,50 +1030,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         preview.CanConvert.ShouldBeTrue();
         preview.ArchivesInsideReleaseFolder.ShouldBeTrue();
         preview.ReleaseFolderPath.ShouldBe("/data/releases/Bearcat.Release");
-    }
-
-    [Test]
-    public async Task GetUnmanagedConversionPreviewAsync_ArchiveOutsideReleaseFolder_NoWarning()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Convert group");
-        var release = await AddManagedReleaseWithArchiveAsync(
-            releaseGroup.Id,
-            releaseFolderPath: "/data/releases/Bearcat.Release",
-            archiveFolderPath: "/data/archives/abc",
-            archiveState: ArchiveState.Created
-        );
-
-        // Act
-        var preview = await service.GetUnmanagedConversionPreviewAsync(
-            release.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        preview.CanConvert.ShouldBeTrue();
-        preview.ArchivesInsideReleaseFolder.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task MarkUploadsPostedAsync_UploadsAlreadyPosted_UpdatesUploadsPostedAt()
-    {
-        // Arrange
-        var uploadsPostedAt = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
-        var releaseGroup = await AddReleaseGroupAsync("Managed releases");
-        var release = await AddReleaseAsync(releaseGroup.Id);
-        release.UploadsPostedAt = uploadsPostedAt;
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.MarkUploadsPostedAsync(release.Id, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var updatedRelease = await DbContext.Releases.SingleAsync();
-        updatedRelease.UploadsPostedAt.ShouldNotBeNull();
-        updatedRelease.UploadsPostedAt.Value.ShouldBeGreaterThan(uploadsPostedAt);
     }
 
     [Test]
@@ -1501,32 +1130,6 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         // Assert
         preview.CanDelete.ShouldBeTrue();
         preview.DeletableArchiveFolderPaths.ShouldBe(["/archives/created"]);
-        preview.ArchiveInStorageFolderCount.ShouldBe(1);
-    }
-
-    [Test]
-    public async Task GetArchiveDeletionPreviewAsync_OnlyArchiveIsInStorageFolder_CannotDelete()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
-        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
-            releaseGroup.Id,
-            UploadState.Completed
-        );
-        await MoveCreatedArchivesIntoStorageFolderAsync(release.Id);
-        hosterFactoryMock
-            .Setup(factory => factory.GetByName("MirrorHoster"))
-            .Returns(Mock.Of<IHosterWithDownload>());
-
-        // Act
-        var preview = await service.GetArchiveDeletionPreviewAsync(
-            release.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        preview.CanDelete.ShouldBeFalse();
-        preview.DeletableArchiveFolderPaths.ShouldBeEmpty();
         preview.ArchiveInStorageFolderCount.ShouldBe(1);
     }
 

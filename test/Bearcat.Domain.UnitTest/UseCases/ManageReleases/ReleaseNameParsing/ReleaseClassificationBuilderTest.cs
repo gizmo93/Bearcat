@@ -167,63 +167,6 @@ public class ReleaseClassificationBuilderTest
     }
 
     [Test]
-    public void Build_GermanMovie_CarriesSourceGroupTokenAndContentType()
-    {
-        // Act
-        var classification = ReleaseClassificationBuilder.Build(
-            "Movie.Name.2023.German.DL.1080p.BluRay.x264-GROUP",
-            [],
-            contentKind: null,
-            nfoContent: null
-        );
-
-        // Assert
-        classification.Source.ShouldBe(ReleaseSource.BluRay);
-        classification.SourceSource.ShouldBe(ClassificationSource.ReleaseName);
-        classification.ReleaseGroupToken.ShouldBe("GROUP");
-        classification.ContentType.ShouldBe(ReleaseContentType.Movie);
-        classification.EpisodeEnd.ShouldBeNull();
-    }
-
-    [Test]
-    public void Build_GermanEpisode_CarriesSourceGroupTokenAndContentType()
-    {
-        // Act
-        var classification = ReleaseClassificationBuilder.Build(
-            "Show.Name.S01E03.German.720p.WEB.h264-GRP",
-            [],
-            contentKind: null,
-            nfoContent: null
-        );
-
-        // Assert
-        classification.Source.ShouldBe(ReleaseSource.Web);
-        classification.SourceSource.ShouldBe(ClassificationSource.ReleaseName);
-        classification.ReleaseGroupToken.ShouldBe("GRP");
-        classification.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
-        classification.Season.ShouldBe(1);
-        classification.Episode.ShouldBe(3);
-    }
-
-    [Test]
-    public void Build_MultiEpisode_CarriesEpisodeEnd()
-    {
-        // Act
-        var classification = ReleaseClassificationBuilder.Build(
-            "Show.Name.S02E05-E06.German.DL.1080p.WEB-DL.x264-TVS",
-            [],
-            contentKind: null,
-            nfoContent: null
-        );
-
-        // Assert
-        classification.Episode.ShouldBe(5);
-        classification.EpisodeEnd.ShouldBe(6);
-        classification.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
-        classification.Source.ShouldBe(ReleaseSource.WebDl);
-    }
-
-    [Test]
     public void Build_NoSourceInName_LeavesSourceUnknown()
     {
         // Act

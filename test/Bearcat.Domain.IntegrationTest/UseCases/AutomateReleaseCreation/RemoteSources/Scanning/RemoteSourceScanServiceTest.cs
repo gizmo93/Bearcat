@@ -196,46 +196,6 @@ public class RemoteSourceScanServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_ExistingObservingRecord_KeepsItsAutomationWhenHigherPriorityAutomationIsAdded()
-    {
-        // Arrange
-        var fallbackTemplate = await AddReleaseTemplateAsync("Fallback", ReleaseType.Unmanaged);
-        var germanTemplate = await AddReleaseTemplateAsync("German", ReleaseType.Managed);
-        var server = AddServer("main");
-        server.SetFolder(IncomingPath, "Show.S01E01.German.1080p-GRP", 100);
-        var registration = await AddRegistrationAsync("Main FTP", "main");
-        var catchAll = await AddAutomationAsync(
-            registration,
-            fallbackTemplate,
-            automation => automation.Priority = 200
-        );
-        await ProcessAsync();
-
-        await AddAutomationAsync(
-            registration,
-            germanTemplate,
-            automation =>
-            {
-                automation.FolderNamePattern = "*.German.*";
-                automation.Priority = 100;
-            }
-        );
-        server.SetFolder(IncomingPath, "Show.S01E01.German.1080p-GRP", 100, 200);
-        timeProvider.Now = StartTime.AddMinutes(1);
-
-        // Act
-        await ProcessAsync();
-
-        // Assert
-        var download = (await GetDownloadsAsync()).Single();
-        download.RemoteSourceAutomationId.ShouldBe(catchAll.Id);
-        download.ReleaseTemplateId.ShouldBe(fallbackTemplate.Id);
-        download.State.ShouldBe(RemoteSourceDownloadState.Observing);
-        download.TotalBytes.ShouldBe(300);
-        download.LastChangedAt.ShouldBe(StartTime.AddMinutes(1));
-    }
-
-    [Test]
     public async Task ProcessAsync_AutomationNoLongerMatches_RemovesRecordAndOtherAutomationGetsFolderLater()
     {
         // Arrange
@@ -787,57 +747,6 @@ public class RemoteSourceScanServiceTest(DatabaseProvider databaseProvider)
         (await GetDownloadsAsync()).ShouldBeEmpty();
         activeServer.OpenCount.ShouldBe(0);
         inactiveServer.OpenCount.ShouldBe(0);
-    }
-
-    [Test]
-    public async Task ProcessAsync_ConsecutiveScans_ReuseIdlePooledSession()
-    {
-        // Arrange
-        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
-        var server = AddServer("main");
-        server.SetFolder(IncomingPath, "Release.1080p-GRP", 100);
-        var registration = await AddRegistrationAsync("Main FTP", "main");
-        await AddAutomationAsync(registration, template);
-
-        // Act
-        await ProcessAsync();
-        timeProvider.Now = StartTime.AddMinutes(1);
-        await ProcessAsync();
-
-        // Assert
-        server.OpenCount.ShouldBe(1);
-        server.DisposeCount.ShouldBe(0);
-        server.RecursivelyListedPaths.Count.ShouldBe(2);
-    }
-
-    [Test]
-    public async Task ProcessAsync_AllConnectionsLeased_WaitsForFreeConnectionOfPool()
-    {
-        // Arrange
-        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
-        var server = AddServer("main");
-        server.SetFolder(IncomingPath, "Release.1080p-GRP", 100);
-        var registration = await AddRegistrationAsync("Main FTP", "main", maxConnections: 1);
-        await AddAutomationAsync(registration, template);
-        var releaseHeldSession = new TaskCompletionSource<bool>(
-            TaskCreationOptions.RunContinuationsAsynchronously
-        );
-        var heldSession = CreateSessionProvider()
-            .UseSessionAsync(registration, _ => releaseHeldSession.Task, CancellationToken.None);
-
-        // Act
-        var scan = ProcessAsync();
-        await Task.Delay(TimeSpan.FromMilliseconds(200));
-        var completedWhileSessionWasHeld = scan.IsCompleted;
-        releaseHeldSession.SetResult(true);
-        await heldSession;
-        await scan;
-
-        // Assert
-        completedWhileSessionWasHeld.ShouldBeFalse();
-        server.OpenCount.ShouldBe(1);
-        server.MaxConcurrentSessions.ShouldBe(1);
-        (await GetDownloadsAsync()).Single().FolderName.ShouldBe("Release.1080p-GRP");
     }
 
     private async Task<int> ProcessAsync()

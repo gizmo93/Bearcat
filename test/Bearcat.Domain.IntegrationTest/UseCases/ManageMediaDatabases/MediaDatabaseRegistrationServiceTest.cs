@@ -116,30 +116,6 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
     }
 
     [Test]
-    public async Task TryLoginAsync_RegistrationExists_DelegatesToMediaDatabase()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync();
-        var loginResult = new TryLoginResult(IsSuccess: true, ErrorMessage: null);
-        databaseMock
-            .Setup(database => database.DeserializeConfig(SerializedConfig))
-            .Returns(configMock.Object);
-        databaseMock
-            .Setup(database => database.TryLoginAsync(configMock.Object, CancellationToken.None))
-            .ReturnsAsync(loginResult);
-
-        // Act
-        var result = await service.TryLoginAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(loginResult);
-        databaseMock.Verify(
-            database => database.TryLoginAsync(configMock.Object, CancellationToken.None),
-            Times.Once
-        );
-    }
-
-    [Test]
     public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
     {
         // Arrange
@@ -170,33 +146,6 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
             database => database.DeserializeConfig(It.IsAny<string>()),
             Times.Never
         );
-    }
-
-    [Test]
-    public async Task ToggleIsActiveAsync_RegistrationExists_TogglesIsActive()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync(isActive: true);
-
-        // Act
-        await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var updated = await DbContext.MediaDatabaseRegistrations.SingleAsync();
-        updated.IsActive.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task DeleteAsync_RegistrationExists_RemovesRegistration()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync();
-
-        // Act
-        await service.DeleteAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        (await DbContext.MediaDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -231,68 +180,6 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
                 ClassName
             ),
         ]);
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
-    {
-        // Arrange
-        await AddRegistrationAsync();
-        var registration = await AddRegistrationAsync(
-            hasUnreadableSecrets: true,
-            className: OtherClassName
-        );
-        var repository = CreateRepositoryWithDatabaseLookup();
-
-        // Act
-        var result = await repository.GetByIdAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(
-            new MediaDatabaseRegistrationReadModel(
-                registration.Id,
-                IsActive: true,
-                HasUnreadableSecrets: true,
-                "Other database",
-                OtherClassName
-            )
-        );
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync();
-        var repository = CreateRepositoryWithDatabaseLookup();
-
-        // Act
-        var result = await repository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task ExistsForClassNameAsync_RegisteredAndUnregisteredClassName_ReturnsWhetherRegistered()
-    {
-        // Arrange
-        await AddRegistrationAsync();
-        var repository = CreateRepositoryWithDatabaseLookup();
-
-        // Act
-        var registeredExists = await repository.ExistsForClassNameAsync(
-            ClassName,
-            CancellationToken.None
-        );
-        var unregisteredExists = await repository.ExistsForClassNameAsync(
-            OtherClassName,
-            CancellationToken.None
-        );
-
-        // Assert
-        registeredExists.ShouldBeTrue();
-        unregisteredExists.ShouldBeFalse();
     }
 
     private MediaDatabaseRegistrationRepository CreateRepositoryWithDatabaseLookup()

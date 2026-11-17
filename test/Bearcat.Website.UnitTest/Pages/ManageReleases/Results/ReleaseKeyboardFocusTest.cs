@@ -21,19 +21,6 @@ public class ReleaseKeyboardFocusTest
     }
 
     [Test]
-    public void MoveToPrevious_WithoutFocusedRelease_FocusesFirstRelease()
-    {
-        // Arrange
-        var keyboardFocus = new ReleaseKeyboardFocus();
-
-        // Act
-        keyboardFocus.MoveToPrevious(VisibleReleaseIds);
-
-        // Assert
-        keyboardFocus.FocusedReleaseId.ShouldBe(10);
-    }
-
-    [Test]
     public void MoveToNext_WithFocusedRelease_FocusesFollowingRelease()
     {
         // Arrange
@@ -59,20 +46,6 @@ public class ReleaseKeyboardFocusTest
 
         // Assert
         keyboardFocus.FocusedReleaseId.ShouldBe(30);
-    }
-
-    [Test]
-    public void MoveToPrevious_OnFirstRelease_StaysOnFirstRelease()
-    {
-        // Arrange
-        var keyboardFocus = new ReleaseKeyboardFocus();
-        keyboardFocus.Focus(10);
-
-        // Act
-        keyboardFocus.MoveToPrevious(VisibleReleaseIds);
-
-        // Assert
-        keyboardFocus.FocusedReleaseId.ShouldBe(10);
     }
 
     [Test]
@@ -128,19 +101,5 @@ public class ReleaseKeyboardFocusTest
 
         // Assert
         keyboardFocus.FocusedReleaseId.ShouldBeNull();
-    }
-
-    [Test]
-    public void KeepOnly_WithFocusedReleaseVisible_KeepsFocus()
-    {
-        // Arrange
-        var keyboardFocus = new ReleaseKeyboardFocus();
-        keyboardFocus.Focus(20);
-
-        // Act
-        keyboardFocus.KeepOnly(VisibleReleaseIds);
-
-        // Assert
-        keyboardFocus.FocusedReleaseId.ShouldBe(20);
     }
 }

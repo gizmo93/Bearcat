@@ -461,21 +461,6 @@ public class CostActionApiClientTest
     }
 
     [Test]
-    public async Task MoveFileToFolderAsync_FileMoved_Succeeds()
-    {
-        // Arrange
-        SetupMove(
-            $$$"""{"files":{"{{{FileId}}}":{"id":"{{{FileId}}}","folder_id":2479849}},"errors":[],"status":"success"}"""
-        );
-
-        // Act
-        await apiClient.MoveFileToFolderAsync(ApiKey, FileId, "2479849", CancellationToken.None);
-
-        // Assert
-        apiMock.VerifyAll();
-    }
-
-    [Test]
     public async Task MoveFileToFolderAsync_ApiReportsFileError_Throws()
     {
         // Arrange

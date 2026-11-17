@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -475,37 +474,16 @@ public class ApiClientTest
         result.ShouldNotContainKey(fileUrl);
     }
 
-    [Test]
-    public void ExtractUuid_ShareUrl_ReturnsUuid()
-    {
-        // Arrange
-        var fileUrl = $"https://f2s.im/f/{Uuid}";
-
-        // Act
-        var result = ApiClient.ExtractUuid(fileUrl);
-
-        // Assert
-        result.ShouldBe(Uuid);
-    }
-
-    [Test]
-    public void ExtractUuid_LegacyDomainShareUrl_ReturnsUuid()
+    [TestCase("https://f2s.im/f/" + Uuid, Uuid)]
+    [TestCase("https://fast2share.com/f/" + Uuid, Uuid)]
+    [TestCase("https://fast2share.com/checker", null)]
+    public void ExtractUuid_Url_ReturnsUuidOrNull(string url, string? expected)
     {
         // Act
-        var result = ApiClient.ExtractUuid($"https://fast2share.com/f/{Uuid}");
+        var result = ApiClient.ExtractUuid(url);
 
         // Assert
-        result.ShouldBe(Uuid);
-    }
-
-    [Test]
-    public void ExtractUuid_UrlWithoutFileSegment_ReturnsNull()
-    {
-        // Act
-        var result = ApiClient.ExtractUuid("https://fast2share.com/checker");
-
-        // Assert
-        result.ShouldBeNull();
+        result.ShouldBe(expected);
     }
 
     [Test]

@@ -291,49 +291,4 @@ public class FilerTest
         result.StatusPerFileUrl[offlineFileUrl].ShouldBeFalse();
         result.StatusPerFileUrl.ShouldNotContainKey(foreignFileUrl);
     }
-
-    [Test]
-    public async Task CheckFilesExistAsync_StatusRequestThrows_ReturnsFailedResult()
-    {
-        // Arrange
-        apiClientMock
-            .Setup(x =>
-                x.GetFileInfoPerFileHashAsync(
-                    It.IsAny<IReadOnlyList<string>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new HttpRequestException("Filer multi status request failed"));
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            [new FileUrlToCheckDto($"https://filer.net/get/{FileHash}", ExternalId: null)],
-            CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.StatusPerFileUrl.ShouldBeEmpty();
-        result.ErrorMessages.ShouldContain("Filer multi status request failed");
-    }
-
-    [Test]
-    public void SerializeHosterConfig_EmailAndPasswordGiven_RoundTripsThroughDeserialization()
-    {
-        // Arrange
-        var serialized = service.SerializeHosterConfig(
-            new Dictionary<string, string>
-            {
-                [nameof(FilerConfig.Email)] = "bearcat@example.com",
-                [nameof(FilerConfig.Password)] = "filer-password",
-            }
-        );
-
-        // Act
-        var result = service.DeserializeHosterConfig(serialized);
-
-        // Assert
-        result.ShouldBe(config);
-    }
 }

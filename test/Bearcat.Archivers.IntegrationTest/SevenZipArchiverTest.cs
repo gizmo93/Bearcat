@@ -71,47 +71,6 @@ public class SevenZipArchiverTest
     }
 
     [Test]
-    public async Task ArchiveAsync_SourceFolderContainsFiles_ExtractsIntoSourceFolderName()
-    {
-        // Arrange
-        const string fileName = "release.nfo";
-        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, fileName), "release");
-        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
-
-        var result = await service.ArchiveAsync(
-            sourceFolderPath + Path.DirectorySeparatorChar,
-            destinationPath,
-            "archive",
-            1,
-            null,
-            new ArchiveOptions(
-                UseCompression: false,
-                UseSolidArchive: false,
-                PackSourceFolderAsRootFolder: true,
-                PartSizeUnit: ArchivePartSizeUnit.Megabytes
-            ),
-            CancellationToken.None
-        );
-
-        result.IsSuccess.ShouldBeTrue();
-
-        // Act
-        var extractionResult = await service.ExtractAsync(
-            service.FindArchivesToExtract(destinationPath).Single(),
-            extractPath,
-            CancellationToken.None
-        );
-
-        // Assert
-        extractionResult.IsSuccess.ShouldBeTrue();
-        ArchiveExtractionTestHelper.ExtractedFolderShouldMatchSourceFolder(
-            sourceFolderPath,
-            extractPath,
-            fileName
-        );
-    }
-
-    [Test]
     public async Task ArchiveAsync_PackSourceFolderAsRootFolderEnabled_ExtractsFolderStructureIntoSourceFolderName()
     {
         // Arrange

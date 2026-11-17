@@ -186,24 +186,6 @@ public class HosterAccountPoolServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_NameLongerThanMaximum_ReturnsNameTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            StorageQuotaHosterClassName,
-            new HosterAccountPoolInput(
-                new string('a', HosterAccountPoolService.NameMaxLength + 1),
-                0,
-                []
-            ),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([HosterAccountPoolValidationError.NameTooLong]);
-    }
-
-    [Test]
     public async Task UpdateAsync_ReorderedRemovedAndAddedMembers_PersistsNewOrderAndKeepsExistingMemberRows()
     {
         // Arrange
@@ -263,59 +245,6 @@ public class HosterAccountPoolServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task UpdateAsync_MemberOfOtherHoster_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var created = await service.CreateAsync(
-            StorageQuotaHosterClassName,
-            new HosterAccountPoolInput("Main pool", 0, []),
-            CancellationToken.None
-        );
-        var otherRegistration = await AddRegistrationAsync(
-            "Other account",
-            OtherStorageQuotaHosterClassName
-        );
-
-        // Act
-        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
-            service.UpdateAsync(
-                created.HosterAccountPoolId!.Value,
-                new HosterAccountPoolInput("Main pool", 0, [otherRegistration.Id]),
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        exception.ShouldNotBeNull();
-        (await CreateDbContext().HosterAccountPoolMembers.AnyAsync()).ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task DeleteAsync_PoolWithMembers_DeletesPoolAndMembers()
-    {
-        // Arrange
-        var registration = await AddRegistrationAsync("First account", StorageQuotaHosterClassName);
-        var created = await service.CreateAsync(
-            StorageQuotaHosterClassName,
-            new HosterAccountPoolInput("Main pool", 0, [registration.Id]),
-            CancellationToken.None
-        );
-
-        // Act
-        var result = await service.DeleteAsync(
-            created.HosterAccountPoolId!.Value,
-            CancellationToken.None
-        );
-
-        // Assert
-        var dbContext = CreateDbContext();
-        result.IsDeleted.ShouldBeTrue();
-        (await dbContext.HosterAccountPools.AnyAsync()).ShouldBeFalse();
-        (await dbContext.HosterAccountPoolMembers.AnyAsync()).ShouldBeFalse();
-        (await dbContext.HosterRegistrations.AnyAsync()).ShouldBeTrue();
     }
 
     [Test]

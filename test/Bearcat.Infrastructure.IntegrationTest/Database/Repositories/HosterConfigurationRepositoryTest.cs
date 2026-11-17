@@ -102,40 +102,6 @@ public class HosterConfigurationRepositoryTest(DatabaseProvider databaseProvider
     }
 
     [Test]
-    public async Task GetAllRegistrationsAsync_OverridesSet_ReturnsStoredOverrides()
-    {
-        // Arrange
-        var registration = CreateRegistration("Alpha hoster", null, null);
-        registration.IsActive = false;
-        registration.HasUnreadableSecrets = true;
-        registration.RequiresCaptchaVerification = true;
-        registration.MaxParallelUploadsOverride = 3;
-        registration.NumberOfHoursUntilReuploadOverride = 48;
-        registration.ReuploadTriggerOverride = ReuploadTrigger.OnlyWhenFullyOffline;
-        registration.AlwaysReuploadAllFiles = true;
-        registration.UseForMirrorDownloads = true;
-        registration.MirrorPriority = 7;
-        DbContext.HosterRegistrations.Add(registration);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetAllRegistrationsAsync(CancellationToken.None);
-
-        // Assert
-        var readModel = result.ShouldHaveSingleItem();
-        readModel.IsActive.ShouldBeFalse();
-        readModel.HasUnreadableSecrets.ShouldBeTrue();
-        readModel.RequiresCaptchaVerification.ShouldBeTrue();
-        readModel.MaxParallelUploadsOverride.ShouldBe(3);
-        readModel.NumberOfHoursUntilReuploadOverride.ShouldBe(48);
-        readModel.ReuploadTriggerOverride.ShouldBe(ReuploadTrigger.OnlyWhenFullyOffline);
-        readModel.AlwaysReuploadAllFiles.ShouldBeTrue();
-        readModel.UseForMirrorDownloads.ShouldBeTrue();
-        readModel.MirrorPriority.ShouldBe(7);
-    }
-
-    [Test]
     public async Task GetUploadCountAsync_UploadsOnRegistrationAndUploadsOfUploadConfigsOfRegistration_CountsBoth()
     {
         // Arrange

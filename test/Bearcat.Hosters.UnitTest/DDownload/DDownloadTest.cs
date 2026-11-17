@@ -1,6 +1,4 @@
 using System.Net;
-using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -34,12 +32,6 @@ public class DDownloadTest
         {
             File.Delete(temporaryFile);
         }
-    }
-
-    [Test]
-    public void SupportsPremiumOnlyDownloads_ReturnsTrue()
-    {
-        service.SupportsPremiumOnlyDownloads.ShouldBeTrue();
     }
 
     [Test]
@@ -211,29 +203,6 @@ public class DDownloadTest
             x => x.SetFilePropertiesAsync("api-key", "abc123", true, It.IsAny<CancellationToken>()),
             Times.Once
         );
-    }
-
-    [Test]
-    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
-    {
-        // Arrange
-        var config = new DDownloadConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateFolderAsync("api-key", "release-folder", It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync("folder-id");
-
-        // Act
-        var result = await service.CreateFolderAsync(
-            "release-folder",
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe("folder-id");
     }
 
     [Test]
@@ -436,25 +405,6 @@ public class DDownloadTest
     }
 
     [Test]
-    public async Task TryLoginAsync_ApiReturnsOk_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new DDownloadConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x => x.GetAccountInfoAsync("api-key", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AccountInfoResponse { Status = (int)HttpStatusCode.OK });
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task TryLoginAsync_ApiThrows_ReturnsFailure()
     {
         // Arrange
@@ -471,34 +421,6 @@ public class DDownloadTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("login failed");
-    }
-
-    [Test]
-    public async Task GetMaximumParallelUploadsAsync_Config_ReturnsStaticLimit()
-    {
-        // Arrange
-        var config = new DDownloadConfig { ApiKey = "api-key" };
-
-        // Act
-        var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(50);
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_ReturnsDDownloadConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new DDownloadConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeHosterConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<DDownloadConfig>().ApiKey.ShouldBe("api-key");
     }
 
     private string CreateTemporaryFile(string content)

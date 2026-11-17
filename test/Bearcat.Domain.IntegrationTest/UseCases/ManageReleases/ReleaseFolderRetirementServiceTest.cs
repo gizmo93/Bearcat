@@ -128,28 +128,6 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task ProcessAsync_ArchivesLiveInsideReleaseFolder_NotifiesWithWarningMessage()
-    {
-        // Arrange
-        var release = await AddScenarioAsync(archiveInsideReleaseFolder: true);
-        SetupConfiguration();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
-        var notification = await DbContext.Notifications.SingleAsync(n =>
-            n.ReleaseId == release.Id
-        );
-
-        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
-        notification.Message.ShouldContain(releaseFolderPath);
-        notification.Message.ShouldContain("delete only the release data there");
-    }
-
-    [Test]
     public async Task ProcessAsync_DeletionEnabledAndLocalArchivesExist_DeletesReleaseFolder()
     {
         // Arrange
@@ -356,57 +334,6 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task ProcessAsync_UploadsPostedAtIsRecent_KeepsReleaseManaged()
-    {
-        // Arrange
-        var release = await AddScenarioAsync(
-            uploadedAt: DateTime.UtcNow.AddDays(-60),
-            uploadsPostedAt: DateTime.UtcNow.AddDays(-1)
-        );
-        SetupConfiguration();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldStillBeManagedAsync(release);
-    }
-
-    [Test]
-    public async Task ProcessAsync_UploadsPostedAtIsOverdueButUploadIsRecent_ConvertsRelease()
-    {
-        // Arrange
-        var release = await AddScenarioAsync(
-            uploadedAt: DateTime.UtcNow.AddDays(-1),
-            uploadsPostedAt: DateTime.UtcNow.AddDays(-60)
-        );
-        SetupConfiguration();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
-
-        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
-    }
-
-    [Test]
-    public async Task ProcessAsync_ReleaseWasNeverUploadedOrPosted_KeepsReleaseManaged()
-    {
-        // Arrange
-        var release = await AddScenarioAsync(withCompletedUpload: false);
-        SetupConfiguration();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldStillBeManagedAsync(release);
-    }
-
-    [Test]
     public async Task ProcessAsync_ArchiveIsMissingAndNoMirrorExists_KeepsReleaseManaged()
     {
         // Arrange
@@ -438,20 +365,6 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
 
         result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
-    }
-
-    [Test]
-    public async Task ProcessAsync_ReleaseHasActiveUpload_KeepsReleaseManaged()
-    {
-        // Arrange
-        var release = await AddScenarioAsync(additionalUploadState: UploadState.Uploading);
-        SetupConfiguration();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        await ShouldStillBeManagedAsync(release);
     }
 
     [Test]

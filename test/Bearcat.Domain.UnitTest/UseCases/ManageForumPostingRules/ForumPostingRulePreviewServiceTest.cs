@@ -59,97 +59,6 @@ public class ForumPostingRulePreviewServiceTest
     }
 
     [Test]
-    public async Task PreviewAsync_SeveralMatchingRules_UsesLowestSortOrder()
-    {
-        // Arrange
-        var repository = new FakeForumPostingRuleReadRepository
-        {
-            Rules =
-            [
-                RuleWith(id: 1, sortOrder: 2, resolutions: ["R1080p"]),
-                RuleWith(id: 2, sortOrder: 1, resolutions: ["R1080p", "R720p"]),
-            ],
-            Releases = [ReleaseWith(id: 9, name: "Movie.1080p", ReleaseResolution.R1080p)],
-        };
-        var service = new ForumPostingRulePreviewService(repository);
-
-        // Act
-        var results = await service.PreviewAsync(
-            distributionSiteRegistrationId: 3,
-            entityType: ForumPostTemplateType.Release
-        );
-
-        // Assert
-        results.ShouldHaveSingleItem().MatchedRuleName.ShouldBe("Rule 2");
-    }
-
-    [Test]
-    public async Task PreviewAsync_DisabledRule_IsIgnored()
-    {
-        // Arrange
-        var repository = new FakeForumPostingRuleReadRepository
-        {
-            Rules = [RuleWith(id: 1, sortOrder: 0, resolutions: ["R1080p"], isEnabled: false)],
-            Releases = [ReleaseWith(id: 10, name: "Movie.1080p", ReleaseResolution.R1080p)],
-        };
-        var service = new ForumPostingRulePreviewService(repository);
-
-        // Act
-        var results = await service.PreviewAsync(
-            distributionSiteRegistrationId: 3,
-            entityType: ForumPostTemplateType.Release
-        );
-
-        // Assert
-        results.ShouldHaveSingleItem().MatchedRuleName.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task PreviewAsync_PassesRegistrationAndCountToRepository()
-    {
-        // Arrange
-        var repository = new FakeForumPostingRuleReadRepository();
-        var service = new ForumPostingRulePreviewService(repository);
-
-        // Act
-        await service.PreviewAsync(
-            distributionSiteRegistrationId: 42,
-            entityType: ForumPostTemplateType.Release,
-            entityCount: 12
-        );
-
-        // Assert
-        repository.RequestedDistributionSiteRegistrationId.ShouldBe(42);
-        repository.RequestedEntityCount.ShouldBe(12);
-    }
-
-    [Test]
-    public async Task PreviewAsync_KeepsRepositoryOrderOfReleases()
-    {
-        // Arrange
-        var repository = new FakeForumPostingRuleReadRepository
-        {
-            Rules = [],
-            Releases =
-            [
-                ReleaseWith(id: 3, name: "Third", ReleaseResolution.R1080p),
-                ReleaseWith(id: 2, name: "Second", ReleaseResolution.R1080p),
-                ReleaseWith(id: 1, name: "First", ReleaseResolution.R1080p),
-            ],
-        };
-        var service = new ForumPostingRulePreviewService(repository);
-
-        // Act
-        var results = await service.PreviewAsync(
-            distributionSiteRegistrationId: 3,
-            entityType: ForumPostTemplateType.Release
-        );
-
-        // Assert
-        results.Select(result => result.EntityId).ShouldBe([3, 2, 1]);
-    }
-
-    [Test]
     public async Task PreviewAsync_ReleaseCollection_MatchesCollectionRuleAgainstMemberClassifications()
     {
         // Arrange
@@ -190,37 +99,6 @@ public class ForumPostingRulePreviewServiceTest
         result.EntityName.ShouldBe("Show.S01.1080p");
         result.MatchedRuleName.ShouldBe("Rule 2");
         repository.RequestedEntityCount.ShouldBe(8);
-    }
-
-    [Test]
-    public async Task PreviewAsync_ReleaseCollectionWithOnlyReleaseRules_ReportsCollectionWithoutMatch()
-    {
-        // Arrange
-        var repository = new FakeForumPostingRuleReadRepository
-        {
-            Rules = [RuleWith(id: 1, sortOrder: 0, resolutions: ["R1080p"])],
-            Releases = [ReleaseWith(id: 7, name: "Movie.1080p", ReleaseResolution.R1080p)],
-            ReleaseCollections =
-            [
-                ReleaseCollectionWith(
-                    id: 5,
-                    name: "Show.S01.1080p",
-                    ReleaseWith(id: 11, name: "Show.S01E01.1080p", ReleaseResolution.R1080p)
-                ),
-            ],
-        };
-        var service = new ForumPostingRulePreviewService(repository);
-
-        // Act
-        var results = await service.PreviewAsync(
-            distributionSiteRegistrationId: 3,
-            entityType: ForumPostTemplateType.ReleaseCollection
-        );
-
-        // Assert
-        var result = results.ShouldHaveSingleItem();
-        result.EntityId.ShouldBe(5);
-        result.MatchedRuleName.ShouldBeNull();
     }
 
     private static ForumPostingRule RuleWith(

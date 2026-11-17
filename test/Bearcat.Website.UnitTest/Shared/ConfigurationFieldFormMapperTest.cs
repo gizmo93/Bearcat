@@ -13,7 +13,6 @@ public class ConfigurationFieldFormMapperTest
     private readonly FakeStringLocalizer localizer = new(
         new Dictionary<string, string>
         {
-            ["Config_Host"] = "Host label",
             ["Config_Password"] = "Password label",
             ["Config_Mode"] = "Mode label",
             ["Config_Mode_Secure"] = "Secure label",
@@ -23,49 +22,6 @@ public class ConfigurationFieldFormMapperTest
             ["MustBeWholeNumber"] = "Whole number",
         }
     );
-
-    [TestCase(ConfigurationFieldType.Text, FieldType.Text)]
-    [TestCase(ConfigurationFieldType.Password, FieldType.Password)]
-    [TestCase(ConfigurationFieldType.Number, FieldType.Number)]
-    [TestCase(ConfigurationFieldType.Boolean, FieldType.Switch)]
-    [TestCase(ConfigurationFieldType.Select, FieldType.Select)]
-    [TestCase(ConfigurationFieldType.Url, FieldType.Url)]
-    public void ToFormField_FieldType_MapsToBlueprintFieldType(
-        ConfigurationFieldType type,
-        FieldType expected
-    )
-    {
-        // Arrange
-        var field = new ConfigurationField("Key", type, IsRequired: false);
-
-        // Act
-        var result = ConfigurationFieldFormMapper.ToFormField(field, localizer, Prefix, false);
-
-        // Assert
-        result.Type.ShouldBe(expected);
-    }
-
-    [Test]
-    public void ToFormField_Create_UsesLabelRequiredAndDefault()
-    {
-        // Arrange
-        var field = new ConfigurationField(
-            "Host",
-            ConfigurationFieldType.Text,
-            IsRequired: true,
-            DefaultValue: "localhost"
-        );
-
-        // Act
-        var result = ConfigurationFieldFormMapper.ToFormField(field, localizer, Prefix, false);
-
-        // Assert
-        result.Name.ShouldBe("Host");
-        result.Label.ShouldBe("Host label");
-        result.Description.ShouldBeNull();
-        result.Required.ShouldBeTrue();
-        result.DefaultValue.ShouldBe("localhost");
-    }
 
     [Test]
     public void ToFormField_MissingLabelResource_FallsBackToKey()

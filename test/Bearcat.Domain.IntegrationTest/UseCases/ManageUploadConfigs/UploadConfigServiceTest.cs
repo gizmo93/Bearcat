@@ -2,7 +2,6 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UploadSources;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
-using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -25,36 +24,6 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
             new UploadConfigWriteRepository(DbContext),
             TestUploadSourceValidator.Create(DbContext)
         );
-    }
-
-    [Test]
-    public async Task CreateAsync_ValidUploadConfig_PersistsUploadConfigAndReturnsId()
-    {
-        // Arrange
-        var seed = await AddUploadConfigDependenciesAsync();
-
-        // Act
-        var result = await service.CreateAsync(
-            seed.ReleaseId,
-            "Default upload",
-            UploadTarget.ForHosterRegistration(seed.HosterRegistrationId),
-            UploadSource.ArchiveFiles,
-            seed.ArchiveConfigId,
-            true,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploadConfig = await DbContext.UploadConfigs.SingleAsync();
-
-        result.ShouldBeGreaterThan(0);
-        uploadConfig.ShouldNotBeNull();
-        uploadConfig.Id.ShouldBe(result);
-        uploadConfig.ReleaseId.ShouldBe(seed.ReleaseId);
-        uploadConfig.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
-        uploadConfig.ArchiveConfigId.ShouldBe(seed.ArchiveConfigId);
-        uploadConfig.Name.ShouldBe("Default upload");
-        uploadConfig.PremiumOnlyDownload.ShouldBeTrue();
     }
 
     [Test]
@@ -134,35 +103,6 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_UploadConfigExists_UpdatesUploadConfig()
-    {
-        // Arrange
-        var firstSeed = await AddUploadConfigDependenciesAsync();
-        var uploadConfig = await AddUploadConfigAsync(firstSeed);
-        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
-
-        // Act
-        await service.UpdateAsync(
-            uploadConfig.Id,
-            "Updated upload",
-            UploadTarget.ForHosterRegistration(secondSeed.HosterRegistrationId),
-            secondSeed.ArchiveConfigId,
-            true,
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.UploadConfigs.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(uploadConfig.Id);
-        result.Name.ShouldBe("Updated upload");
-        result.HosterRegistrationId.ShouldBe(secondSeed.HosterRegistrationId);
-        result.ArchiveConfigId.ShouldBe(secondSeed.ArchiveConfigId);
-        result.PremiumOnlyDownload.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task UpdateAsync_HosterRegistrationChanged_MovesOnlyUploadsNotStartedOnHosterToNewHosterRegistration()
     {
         // Arrange
@@ -179,6 +119,10 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
         var failedUpload = await AddUploadAsync(uploadConfig, UploadState.Failed, archive.Id);
         var completedUpload = await AddUploadAsync(uploadConfig, UploadState.Completed, archive.Id);
+        waitingUpload.HosterFolderId = "folder-on-old-hoster";
+        pendingUpload.HosterFolderId = "folder-on-old-hoster";
+        pendingUploadWithUploadedFile.HosterFolderId = "folder-on-old-hoster";
+        await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
@@ -206,89 +150,14 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
             },
             ignoreOrder: true
         );
-    }
 
-    [Test]
-    public async Task UpdateAsync_HosterRegistrationChanged_ClearsHosterFolderOfUploadsNotStartedOnHoster()
-    {
-        // Arrange
-        var firstSeed = await AddUploadConfigDependenciesAsync();
-        var uploadConfig = await AddUploadConfigAsync(firstSeed);
-        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
-        var pendingUpload = await AddUploadAsync(uploadConfig, UploadState.Pending);
-        pendingUpload.HosterFolderId = "folder-on-old-hoster";
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.UpdateAsync(
-            uploadConfig.Id,
-            uploadConfig.Name,
-            UploadTarget.ForHosterRegistration(secondSeed.HosterRegistrationId),
-            firstSeed.ArchiveConfigId,
-            false,
-            CancellationToken.None
-        );
-
-        // Assert
-        var upload = await DbContext.Uploads.SingleAsync();
-        upload.HosterFolderId.ShouldBeNull();
-        upload.HosterRegistrationId.ShouldBe(secondSeed.HosterRegistrationId);
-    }
-
-    [Test]
-    public async Task UpdateAsync_HosterRegistrationChanged_KeepsHosterRegistrationOfUploadsOfOtherUploadConfigs()
-    {
-        // Arrange
-        var firstSeed = await AddUploadConfigDependenciesAsync();
-        var uploadConfig = await AddUploadConfigAsync(firstSeed);
-        var otherUploadConfig = await AddUploadConfigAsync(firstSeed, "Other upload");
-        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
-        var otherWaitingUpload = await AddUploadAsync(
-            otherUploadConfig,
-            UploadState.WaitingForArchive
-        );
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.UpdateAsync(
-            uploadConfig.Id,
-            uploadConfig.Name,
-            UploadTarget.ForHosterRegistration(secondSeed.HosterRegistrationId),
-            firstSeed.ArchiveConfigId,
-            false,
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.Uploads.SingleAsync(u => u.Id == otherWaitingUpload.Id);
-
-        result.HosterRegistrationId.ShouldBe(firstSeed.HosterRegistrationId);
-    }
-
-    [Test]
-    public async Task CreateAsync_HosterAccountPoolTarget_PersistsHosterAccountPoolWithoutHosterRegistration()
-    {
-        // Arrange
-        var seed = await AddUploadConfigDependenciesAsync();
-        var hosterAccountPool = await AddHosterAccountPoolAsync(seed);
-
-        // Act
-        await service.CreateAsync(
-            seed.ReleaseId,
-            "Pool upload",
-            UploadTarget.ForHosterAccountPool(hosterAccountPool.Id),
-            UploadSource.ArchiveFiles,
-            seed.ArchiveConfigId,
-            false,
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploadConfig = await DbContext.UploadConfigs.SingleAsync();
-
-        uploadConfig.HosterRegistrationId.ShouldBeNull();
-        uploadConfig.HosterAccountPoolId.ShouldBe(hosterAccountPool.Id);
+        var hosterFolderIdsByUploadId = await DbContext
+            .Uploads.Select(upload => new { upload.Id, upload.HosterFolderId })
+            .ToDictionaryAsync(upload => upload.Id, upload => upload.HosterFolderId);
+        hosterFolderIdsByUploadId[waitingUpload.Id].ShouldBeNull();
+        hosterFolderIdsByUploadId[pendingUpload.Id].ShouldBeNull();
+        hosterFolderIdsByUploadId[pendingUploadWithUploadedFile.Id]
+            .ShouldBe("folder-on-old-hoster");
     }
 
     [Test]
@@ -338,73 +207,6 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_HosterAccountPoolChangedToHosterRegistration_AssignsUploadsNotStartedOnHoster()
-    {
-        // Arrange
-        var seed = await AddUploadConfigDependenciesAsync();
-        var hosterAccountPool = await AddHosterAccountPoolAsync(seed);
-        var uploadConfig = await AddUploadConfigAsync(seed);
-        uploadConfig.HosterRegistrationId = null;
-        uploadConfig.HosterAccountPoolId = hosterAccountPool.Id;
-        await DbContext.SaveChangesAsync();
-        var waitingUpload = await AddUploadAsync(uploadConfig, UploadState.WaitingForArchive);
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.UpdateAsync(
-            uploadConfig.Id,
-            uploadConfig.Name,
-            UploadTarget.ForHosterRegistration(seed.HosterRegistrationId),
-            seed.ArchiveConfigId,
-            false,
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.UploadConfigs.SingleAsync();
-        var upload = await DbContext.Uploads.SingleAsync(u => u.Id == waitingUpload.Id);
-
-        result.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
-        result.HosterAccountPoolId.ShouldBeNull();
-        upload.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
-    }
-
-    [Test]
-    public async Task DeleteAsync_UploadConfigExists_RemovesUploadConfig()
-    {
-        // Arrange
-        var seed = await AddUploadConfigDependenciesAsync();
-        var uploadConfig = await AddUploadConfigAsync(seed);
-
-        // Act
-        await service.DeleteAsync(uploadConfig.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.UploadConfigs.AnyAsync();
-
-        result.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task GetHosterRegistrationOptionsAsync_InactiveHosterRegistration_ExcludesInactiveOption()
-    {
-        // Arrange
-        var activeSeed = await AddUploadConfigDependenciesAsync("Active", hosterIsActive: true);
-        var inactiveSeed = await AddUploadConfigDependenciesAsync(
-            "Inactive",
-            hosterIsActive: false
-        );
-        var readRepository = new UploadConfigReadRepository(DbContext);
-
-        // Act
-        var result = await readRepository.GetHosterRegistrationOptionsAsync(CancellationToken.None);
-
-        // Assert
-        result.ShouldContainKey(activeSeed.HosterRegistrationId);
-        result.ShouldNotContainKey(inactiveSeed.HosterRegistrationId);
-    }
-
-    [Test]
     public async Task GetUploadConfigsAsync_UploadsWithDownloadCounts_AggregatesIndividualAndCompleteDownloads()
     {
         // Arrange
@@ -451,112 +253,6 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         var config = result.ShouldHaveSingleItem();
         config.TotalIndividualDownloads.ShouldBeNull();
         config.TotalCompleteDownloads.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task GetReadModelByIdAsync_SeveralUploadConfigsWithDownloads_ReturnsRequestedConfigWithItsAggregates()
-    {
-        // Arrange
-        var seed = await AddUploadConfigDependenciesAsync();
-        var firstUploadConfig = await AddUploadConfigAsync(seed);
-        var secondUploadConfig = await AddUploadConfigAsync(
-            seed,
-            "Mirror upload",
-            premiumOnlyDownload: true
-        );
-        var archive = await AddArchiveAsync(seed.ArchiveConfigId);
-
-        await AddUploadWithFilesAsync(firstUploadConfig, archive.Id, [100, 200]);
-        await AddUploadWithFilesAsync(secondUploadConfig, archive.Id, [7, 9, null]);
-        await AddUploadWithFilesAsync(secondUploadConfig, archive.Id, [3]);
-        DbContext.ChangeTracker.Clear();
-
-        var readRepository = new UploadConfigReadRepository(DbContext);
-
-        // Act
-        var result = await readRepository.GetReadModelByIdAsync(
-            secondUploadConfig.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.UploadConfigId.ShouldBe(secondUploadConfig.Id);
-        result.Name.ShouldBe("Mirror upload");
-        result.HosterRegistrationName.ShouldBe("First hoster");
-        result.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
-        result.ArchiveConfigId.ShouldBe(seed.ArchiveConfigId);
-        result.ArchiveConfigName.ShouldBe("First archive");
-        result.ReleaseName.ShouldBe("Bearcat.Release.First");
-        result.PremiumOnlyDownload.ShouldBeTrue();
-        result.TotalIndividualDownloads.ShouldBe(19);
-        result.TotalCompleteDownloads.ShouldBe(11d);
-    }
-
-    [Test]
-    public async Task GetReadModelByIdAsync_HosterAccountPoolUploadConfig_ReturnsHosterAccountPoolWithoutHosterRegistration()
-    {
-        // Arrange
-        var seed = await AddUploadConfigDependenciesAsync();
-        var hosterAccountPool = await AddHosterAccountPoolAsync(seed);
-        var uploadConfig = await AddUploadConfigAsync(seed);
-        uploadConfig.HosterRegistrationId = null;
-        uploadConfig.HosterAccountPoolId = hosterAccountPool.Id;
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        var readRepository = new UploadConfigReadRepository(DbContext);
-
-        // Act
-        var result = await readRepository.GetReadModelByIdAsync(
-            uploadConfig.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.HosterRegistrationId.ShouldBeNull();
-        result.HosterRegistrationName.ShouldBeNull();
-        result.HosterAccountPoolId.ShouldBe(hosterAccountPool.Id);
-        result.HosterAccountPoolName.ShouldBe("First pool");
-    }
-
-    [Test]
-    public async Task GetArchiveConfigOptionsAsync_SeveralReleases_ReturnsArchiveConfigsOfRelease()
-    {
-        // Arrange
-        var firstSeed = await AddUploadConfigDependenciesAsync();
-        await AddUploadConfigDependenciesAsync("Second");
-        var additionalArchiveConfig = new ArchiveConfig
-        {
-            ReleaseId = firstSeed.ReleaseId,
-            Name = "Additional archive",
-            ArchiveFilesBasePath = "/tmp/archive-additional",
-            ArchiverName = "zip",
-            ArchiveFileSizeMb = 1024,
-        };
-        DbContext.ArchiveConfigs.Add(additionalArchiveConfig);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        var readRepository = new UploadConfigReadRepository(DbContext);
-
-        // Act
-        var result = await readRepository.GetArchiveConfigOptionsAsync(
-            firstSeed.ReleaseId,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(
-            [
-                new ArchiveConfigOptionReadModel(firstSeed.ArchiveConfigId, "First archive", 512),
-                new ArchiveConfigOptionReadModel(
-                    additionalArchiveConfig.Id,
-                    "Additional archive",
-                    1024
-                ),
-            ],
-            ignoreOrder: true
-        );
     }
 
     private async Task<HosterAccountPool> AddHosterAccountPoolAsync(UploadConfigSeed seed)

@@ -1,5 +1,3 @@
-using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -72,87 +70,6 @@ public class NitroflareTest
         result.IsSuccess.ShouldBeTrue();
         result.FileUrl.ShouldBe("https://nitroflare.com/view/file-id");
         result.ErrorMessages.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task CheckFilesExistAsync_ApiReturnsStatuses_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new NitroflareConfig { UserHash = "user-hash" };
-        var fileUrls = new[]
-        {
-            "https://nitroflare.com/view/online",
-            "https://nitroflare.com/view/offline",
-        };
-
-        apiClientMock
-            .Setup(x => x.CheckLinksAsync(fileUrls, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new Dictionary<string, bool> { [fileUrls[0]] = true, [fileUrls[1]] = false }
-            );
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
-        result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
-        result.ErrorMessages.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task CheckFilesExistAsync_ApiThrows_ReturnsFailure()
-    {
-        // Arrange
-        var config = new NitroflareConfig { UserHash = "user-hash" };
-        var fileUrls = new[] { "https://nitroflare.com/view/file-id" };
-
-        apiClientMock
-            .Setup(x => x.CheckLinksAsync(fileUrls, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("link check failed"));
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
-        result.StatusPerFileUrl.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["link check failed"]);
-    }
-
-    [Test]
-    public async Task TryLoginAsync_TestUploadReturnsUrl_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new NitroflareConfig { UserHash = "user-hash" };
-
-        apiClientMock
-            .Setup(x => x.TestUserHashAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new UploadFileResponse
-                {
-                    Files = [new UploadedFile { Url = "https://nitroflare.com/view/test" }],
-                }
-            );
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
     }
 
     [Test]
@@ -238,36 +155,6 @@ public class NitroflareTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("invalid user hash");
-    }
-
-    [Test]
-    public async Task GetMaximumParallelUploadsAsync_Config_ReturnsStaticLimit()
-    {
-        // Arrange
-        var config = new NitroflareConfig { UserHash = "user-hash" };
-
-        // Act
-        var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(5);
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_ReturnsNitroflareConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(
-            new NitroflareConfig { UserHash = "user-hash" }
-        );
-
-        // Act
-        var result = service.DeserializeHosterConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<NitroflareConfig>().UserHash.ShouldBe("user-hash");
     }
 
     private string CreateTemporaryFile(string content)

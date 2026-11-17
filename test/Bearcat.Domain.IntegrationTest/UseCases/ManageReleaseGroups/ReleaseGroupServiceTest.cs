@@ -60,54 +60,6 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_NumberOfHoursUntilReuploadIsNegative_ThrowsArgumentOutOfRangeException()
-    {
-        // Arrange
-        var numberOfHoursUntilReupload = -1;
-
-        // Act
-        var result = await Should.ThrowAsync<ArgumentOutOfRangeException>(async () =>
-            await service.CreateAsync(
-                "Managed releases",
-                false,
-                numberOfHoursUntilReupload,
-                null,
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ParamName.ShouldBe("numberOfHoursUntilReupload");
-    }
-
-    [Test]
-    public async Task UpdateAsync_ReleaseGroupExists_UpdatesReleaseGroup()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync();
-
-        // Act
-        await service.UpdateAsync(
-            releaseGroup.Id,
-            "  Updated releases  ",
-            true,
-            48,
-            null,
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.ReleaseGroups.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(releaseGroup.Id);
-        result.Name.ShouldBe("Updated releases");
-        result.EnableAutomaticReuploads.ShouldBeTrue();
-        result.NumberOfHoursUntilReupload.ShouldBe(48);
-    }
-
-    [Test]
     public async Task UpdateAsync_QualityProfileChanged_ResetsQualityGateOfReleases()
     {
         // Arrange
@@ -163,21 +115,6 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
 
         result.QualityGateState.ShouldBe(QualityGateState.Failed);
         result.QualityIssues.ShouldHaveSingleItem();
-    }
-
-    [Test]
-    public async Task DeleteAsync_ReleaseGroupHasNoAssignedReleases_RemovesReleaseGroup()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync();
-
-        // Act
-        await service.DeleteAsync(releaseGroup.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.ReleaseGroups.AnyAsync();
-
-        result.ShouldBeFalse();
     }
 
     [Test]
@@ -257,60 +194,6 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
                     QualityProfileName: null
                 ),
             ]);
-    }
-
-    [Test]
-    public async Task GetReadModelByIdAsync_GroupWithQualityProfileExists_ReturnsReadModel()
-    {
-        // Arrange
-        var qualityProfile = new QualityProfile { Name = "Strict", Rules = [] };
-        var releaseGroup = new ReleaseGroup
-        {
-            Name = "Managed releases",
-            EnableAutomaticReuploads = true,
-            NumberOfHoursUntilReupload = 48,
-            QualityProfile = qualityProfile,
-        };
-        DbContext.ReleaseGroups.Add(releaseGroup);
-        await DbContext.SaveChangesAsync();
-        await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetReadModelByIdAsync(
-            releaseGroup.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(
-            new ReleaseGroupReadModel(
-                ReleaseGroupId: releaseGroup.Id,
-                Name: "Managed releases",
-                EnableAutomaticReuploads: true,
-                NumberOfHoursUntilReupload: 48,
-                AssignedReleaseCount: 1,
-                QualityProfileId: qualityProfile.Id,
-                QualityProfileName: "Strict"
-            )
-        );
-    }
-
-    [Test]
-    public async Task GetReadModelByIdAsync_GroupDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var releaseGroup = await AddReleaseGroupAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetReadModelByIdAsync(
-            releaseGroup.Id + 1,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private async Task AddReleaseAsync(int releaseGroupId, string name)

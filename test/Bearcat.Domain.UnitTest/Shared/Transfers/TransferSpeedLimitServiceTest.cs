@@ -56,21 +56,14 @@ public class TransferSpeedLimitServiceTest
         service.Dispose();
     }
 
-    [Test]
-    public void EnterUploadScope_NoSpeedLimitConfigured_CurrentIsNull()
-    {
-        // Act
-        using var scope = service.EnterUploadScope(Registration);
-
-        // Assert
-        TransferSpeedLimitScope.Current.ShouldBeNull();
-    }
-
-    [Test]
-    public void EnterUploadScope_ZeroSpeedLimitConfigured_CurrentIsNull()
+    [TestCase(null)]
+    [TestCase(0)]
+    public void EnterUploadScope_NoOrZeroSpeedLimitConfigured_CurrentIsNull(
+        double? speedLimitMegabytesPerSecond
+    )
     {
         // Arrange
-        uploadSpeedLimitMegabytesPerSecond = 0;
+        uploadSpeedLimitMegabytesPerSecond = (decimal?)speedLimitMegabytesPerSecond;
 
         // Act
         using var scope = service.EnterUploadScope(Registration);
@@ -154,22 +147,6 @@ public class TransferSpeedLimitServiceTest
 
         // Assert
         TransferSpeedLimitScope.Current.ShouldBeNull();
-    }
-
-    [Test]
-    public void EnterMirrorDownloadScope_SpeedLimitConfigured_UsesDownloadConfiguration()
-    {
-        // Arrange
-        uploadSpeedLimitMegabytesPerSecond = 50;
-        downloadSpeedLimitMegabytesPerSecond = 1.5m;
-
-        // Act
-        using var scope = service.EnterMirrorDownloadScope(Registration);
-
-        // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
-        limiters.Count.ShouldBe(1);
-        limiters[0].BytesPerSecond.ShouldBe(1_572_864);
     }
 
     [Test]

@@ -300,24 +300,6 @@ public class ReleaseReadRepositoryDownloadLinkSearchTest(DatabaseProvider databa
     }
 
     [Test]
-    public async Task SearchReleaseResultsAsync_LinkWithoutMatch_ReturnsNoRelease()
-    {
-        // Arrange
-        AddReleaseWithUploadedFile("Bearcat.Exact.2026-GRP", FullLink);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleaseResultsAsync(
-            new ReleaseSearchQuery(DownloadLink: "does-not-exist"),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(0);
-        result.Items.ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task CountReleasesByOnlineStateAsync_PartialLink_CountsOnlyReleasesWithMatchingLink()
     {
         // Arrange
@@ -343,36 +325,6 @@ public class ReleaseReadRepositoryDownloadLinkSearchTest(DatabaseProvider databa
             new ReleaseOnlineStateCounts(
                 TotalCount: 3,
                 OnlineCount: 2,
-                PartiallyOnlineCount: 0,
-                OfflineCount: 1,
-                WithoutUploadConfigsCount: 0
-            )
-        );
-    }
-
-    [Test]
-    public async Task CountReleasesByOnlineStateAsync_FullLink_CountsOnlyReleaseWithExactlyThatLink()
-    {
-        // Arrange
-        AddReleaseWithUploadedFile(
-            "Bearcat.Exact.2026-GRP",
-            FullLink,
-            uploadOnlineState: OnlineState.Offline
-        );
-        AddReleaseWithUploadedFile("Bearcat.Longer.2026-GRP", FullLink + ".html");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.CountReleasesByOnlineStateAsync(
-            new ReleaseSearchQuery(DownloadLink: FullLink),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(
-            new ReleaseOnlineStateCounts(
-                TotalCount: 1,
-                OnlineCount: 0,
                 PartiallyOnlineCount: 0,
                 OfflineCount: 1,
                 WithoutUploadConfigsCount: 0

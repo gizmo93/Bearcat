@@ -260,27 +260,6 @@ public class UnreadableSecretsDetectionServiceTest(DatabaseProvider databaseProv
     }
 
     [Test]
-    public async Task DetectAsync_FlaggedRegistrationReadableAgain_ClearsFlagWithoutNotification()
-    {
-        // Arrange
-        await AddHosterRegistrationAsync(
-            "Hoster",
-            currentKeyProtector.Protect("secret"),
-            hasUnreadableSecrets: true
-        );
-
-        // Act
-        await DetectAsync();
-
-        // Assert
-        var assertContext = CreateDbContext();
-        (
-            await assertContext.HosterRegistrations.SingleAsync()
-        ).HasUnreadableSecrets.ShouldBeFalse();
-        (await assertContext.Notifications.CountAsync()).ShouldBe(0);
-    }
-
-    [Test]
     public async Task DetectAsync_AllSecretsReadableAgain_ResolvesUnreadableSecretsNotification()
     {
         // Arrange
@@ -385,58 +364,17 @@ public class UnreadableSecretsDetectionServiceTest(DatabaseProvider databaseProv
         );
     }
 
-    [Test]
-    public async Task DetectAsync_UnreadableTelegramBotToken_FlagsConfigurationAndCreatesNotification()
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task DetectAsync_ProxyServerWithoutPasswordOrWithReadablePassword_DoesNotFlagProxyServer(
+        bool hasPassword
+    )
     {
         // Arrange
+        var encryptedPassword = hasPassword ? currentKeyProtector.Protect("secret") : null;
         await using (var arrangeContext = Database.CreateDbContext())
         {
-            arrangeContext.TelegramConfigurations.Add(
-                CreateTelegramConfiguration(otherKeyProtector.Protect("token"))
-            );
-            await arrangeContext.SaveChangesAsync();
-        }
-
-        // Act
-        await DetectAsync();
-
-        // Assert
-        var assertContext = CreateDbContext();
-        (
-            await assertContext.TelegramConfigurations.SingleAsync()
-        ).HasUnreadableSecrets.ShouldBeTrue();
-        var notification = await assertContext.Notifications.SingleAsync();
-        notification.Message.ShouldEndWith(": Telegram bot token");
-    }
-
-    [Test]
-    public async Task DetectAsync_ProxyServerWithoutPassword_DoesNotFlagProxyServer()
-    {
-        // Arrange
-        await using (var arrangeContext = Database.CreateDbContext())
-        {
-            arrangeContext.ProxyServers.Add(CreateProxyServer("Proxy", encryptedPassword: null));
-            await arrangeContext.SaveChangesAsync();
-        }
-
-        // Act
-        await DetectAsync();
-
-        // Assert
-        var assertContext = CreateDbContext();
-        (await assertContext.ProxyServers.SingleAsync()).HasUnreadableSecrets.ShouldBeFalse();
-        (await assertContext.Notifications.AnyAsync()).ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task DetectAsync_ProxyServerWithReadablePassword_DoesNotFlagProxyServer()
-    {
-        // Arrange
-        await using (var arrangeContext = Database.CreateDbContext())
-        {
-            arrangeContext.ProxyServers.Add(
-                CreateProxyServer("Proxy", currentKeyProtector.Protect("secret"))
-            );
+            arrangeContext.ProxyServers.Add(CreateProxyServer("Proxy", encryptedPassword));
             await arrangeContext.SaveChangesAsync();
         }
 

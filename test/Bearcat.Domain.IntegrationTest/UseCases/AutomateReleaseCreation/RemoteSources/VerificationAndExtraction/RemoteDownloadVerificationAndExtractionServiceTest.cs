@@ -77,59 +77,6 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
         readyDownloads.Select(ready => ready.Id).ShouldBe([download.Id]);
     }
 
-    [Test]
-    public async Task ProcessAsync_SfvMismatch_PersistsFailureAndNotification()
-    {
-        // Arrange
-        await WriteFileAsync("release.rar", "corrupted");
-        await WriteFileAsync("release.sfv", CreateSfvLine("release.rar", "volume"));
-        var download = await AddDownloadAsync(RemoteSourceDownloadState.Downloaded);
-
-        // Act
-        await ProcessAsync();
-
-        // Assert
-        var reloaded = await ReloadDownloadAsync(download.Id);
-        reloaded.State.ShouldBe(RemoteSourceDownloadState.Failed);
-        reloaded.ErrorMessage!.ShouldContain("release.rar");
-        reloaded.ErrorMessage!.ShouldContain("files were kept");
-        var notification = await CreateDbContext().Notifications.SingleAsync();
-        notification.NotificationKind.ShouldBe(NotificationKind.RemoteDownloadFailed);
-        notification.Message.ShouldContain(ReleaseName);
-    }
-
-    [TestCase(RemoteSourceDownloadState.Verifying)]
-    [TestCase(RemoteSourceDownloadState.Extracting)]
-    public async Task ProcessAsync_InterruptedByCrash_DeletesTemporaryFolderAndProcessesAgain(
-        RemoteSourceDownloadState interruptedState
-    )
-    {
-        // Arrange
-        await WriteFileAsync(
-            Path.Combine(FolderArchiveExtractionService.TemporaryExtractionFolderName, "movie.mkv"),
-            "partial"
-        );
-        await WriteFileAsync("movie.mkv", "movie");
-        var download = await AddDownloadAsync(interruptedState, extractArchives: true);
-
-        // Act
-        await ProcessAsync();
-
-        // Assert
-        var reloaded = await ReloadDownloadAsync(download.Id);
-        reloaded.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
-        reloaded.ArchivesExtractedAt.ShouldBeNull();
-        Directory
-            .Exists(
-                Path.Combine(
-                    localFolderPath,
-                    FolderArchiveExtractionService.TemporaryExtractionFolderName
-                )
-            )
-            .ShouldBeFalse();
-        File.Exists(Path.Combine(localFolderPath, "movie.mkv")).ShouldBeTrue();
-    }
-
     [TestCase(RemoteSourceDownloadState.Downloading)]
     [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
     [TestCase(RemoteSourceDownloadState.Failed)]

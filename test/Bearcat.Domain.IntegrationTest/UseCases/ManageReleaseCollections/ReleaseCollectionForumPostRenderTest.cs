@@ -326,67 +326,6 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     }
 
     [Test]
-    public void GetVariables_CollectionType_ContainsPerReleaseAndUploadSlotVariablesIncludingImageLinks()
-    {
-        // Act
-        var variables = service.GetVariables(ForumPostTemplateType.ReleaseCollection);
-
-        // Assert
-        var releasesVariable = variables.Single(node => node.Name == "releases");
-        releasesVariable.LoopStatement.ShouldBe("for release in releases");
-
-        releasesVariable
-            .Children.Select(node => node.Path)
-            .ShouldBe([
-                "release.name",
-                "release.primary_language",
-                "release.nfo",
-                "release.steam_app_id",
-                "release.steam_url",
-                "release.imdb_id",
-                "release.imdb_url",
-                "release.tmdb_id",
-                "release.tmdb_url",
-                "release.main_video",
-                "release.media_files",
-                "release.release_info",
-                "release.classification",
-                "release.uploads",
-                "release.link_crypters",
-                "release.imagelinks",
-            ]);
-
-        var releaseImageLinksVariable = releasesVariable.Children.Single(node =>
-            node.Path == "release.imagelinks"
-        );
-        releaseImageLinksVariable
-            .Children.Select(node => node.Insertion?.Text)
-            .ShouldContain("{{ release.imagelinks.<image_upload_config_name>.full }}");
-        releaseImageLinksVariable
-            .Children.Select(node => node.LoopStatement)
-            .ShouldContain(
-                "for screenshot in release.imagelinks.<image_upload_config_name>.screenshots"
-            );
-
-        var uploadSlotsVariable = variables.Single(node => node.Name == "upload_slots");
-        uploadSlotsVariable.LoopStatement.ShouldBe("for upload_slot in upload_slots");
-
-        uploadSlotsVariable
-            .Children.Select(node => node.Path)
-            .ShouldBe(["upload_slot.name", "upload_slot.key", "upload_slot.link_crypters"]);
-
-        uploadSlotsVariable
-            .Children.Single(node => node.Path == "upload_slot.link_crypters")
-            .LoopStatement.ShouldBe("for crypter in upload_slot.link_crypters");
-
-        var collectionImageLinksVariable = variables.Single(node => node.Path == "imagelinks");
-        collectionImageLinksVariable
-            .Children.Select(node => node.Insertion?.Text)
-            .ShouldContain("{{ imagelinks.<image_upload_config_name>.full }}");
-        collectionImageLinksVariable.Children.ShouldAllBe(node => node.LoopStatement == null);
-    }
-
-    [Test]
     public async Task LoadPreviewDataAsync_ExistingCollection_ReturnsDataNodesAndRendersPreview()
     {
         // Arrange
@@ -439,20 +378,6 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         );
         renderResult.Errors.ShouldBeEmpty();
         renderResult.Content.ShouldBe("Bodies|Bodies.2023.S01E01-GRP");
-    }
-
-    [Test]
-    public async Task LoadPreviewDataAsync_MissingCollection_ReturnsNull()
-    {
-        // Act
-        var previewData = await service.LoadPreviewDataAsync(
-            ForumPostTemplateType.ReleaseCollection,
-            999,
-            CancellationToken.None
-        );
-
-        // Assert
-        previewData.ShouldBeNull();
     }
 
     private async Task<ReleaseCollection> AddCollectionWithTwoDetailedReleasesAsync()

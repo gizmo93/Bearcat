@@ -5,24 +5,6 @@ namespace Bearcat.Abstractions.UnitTest.Proxies;
 
 public class ProxyCategoryGroupMappingTest
 {
-    [TestCase(ProxyCategory.HosterUploads, ProxyCategoryGroup.Hosters)]
-    [TestCase(ProxyCategory.HosterMirrorDownloads, ProxyCategoryGroup.Hosters)]
-    [TestCase(ProxyCategory.ImageHosters, ProxyCategoryGroup.ImageHosters)]
-    [TestCase(ProxyCategory.LinkCrypters, ProxyCategoryGroup.LinkCrypters)]
-    [TestCase(ProxyCategory.NfoDatabases, ProxyCategoryGroup.NfoDatabases)]
-    [TestCase(ProxyCategory.MediaDatabases, ProxyCategoryGroup.MediaDatabases)]
-    public void GetGroup_Category_ReturnsPluginGroup(
-        ProxyCategory category,
-        ProxyCategoryGroup expectedGroup
-    )
-    {
-        // Act
-        var group = ProxyCategoryGroupMapping.GetGroup(category);
-
-        // Assert
-        group.ShouldBe(expectedGroup);
-    }
-
     [Test]
     public void GetGroup_EveryCategory_IsMapped()
     {

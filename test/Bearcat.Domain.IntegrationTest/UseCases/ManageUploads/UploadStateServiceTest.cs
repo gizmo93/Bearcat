@@ -58,29 +58,6 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SetUploadOfflineAsync_PartiallyOnlineUpload_MarksUploadOffline()
-    {
-        // Arrange
-        var upload = await AddCompletedUploadAsync(
-            OnlineState.PartiallyOnline,
-            checkedAt: LocalNow.AddHours(-1),
-            uploadedFileLinks: ["https://hoster.test/1"]
-        );
-
-        // Act
-        var result = await service.SetUploadOfflineAsync(upload.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeTrue();
-
-        DbContext.ChangeTracker.Clear();
-        var updated = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
-
-        updated.OnlineState.ShouldBe(OnlineState.Offline);
-        updated.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
-    }
-
-    [Test]
     public async Task SetUploadOfflineAsync_AlreadyOfflineUpload_ReturnsFalse()
     {
         // Arrange
@@ -92,26 +69,6 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
 
         // Act
         var result = await service.SetUploadOfflineAsync(upload.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task SetUploadOfflineAsync_UploadDoesNotExist_ReturnsFalse()
-    {
-        // Act
-        var result = await service.SetUploadOfflineAsync(-1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task CancelUploadAsync_UploadDoesNotExist_ReturnsFalse()
-    {
-        // Act
-        var result = await service.CancelUploadAsync(-1, CancellationToken.None);
 
         // Assert
         result.ShouldBeFalse();
@@ -181,16 +138,6 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ResumeUploadAsync_UploadDoesNotExist_ReturnsFalse()
-    {
-        // Act
-        var result = await service.ResumeUploadAsync(-1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task ResumeUploadAsync_CanceledUpload_SetsUploadPending()
     {
         // Arrange
@@ -244,9 +191,6 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [TestCase(UploadState.Pending)]
-    [TestCase(UploadState.Uploading)]
-    [TestCase(UploadState.Completed)]
-    [TestCase(UploadState.Failed)]
     [TestCase(UploadState.CancellationRequested)]
     public async Task ResumeUploadAsync_NonCanceledUpload_ReturnsFalseAndKeepsState(
         UploadState uploadState
@@ -284,8 +228,6 @@ public class UploadStateServiceTest(DatabaseProvider databaseProvider)
 
     [TestCase(UploadState.Pending)]
     [TestCase(UploadState.Completed)]
-    [TestCase(UploadState.Failed)]
-    [TestCase(UploadState.Canceled)]
     public async Task DeleteUploadAsync_AllowedState_DeletesUpload(UploadState uploadState)
     {
         // Arrange

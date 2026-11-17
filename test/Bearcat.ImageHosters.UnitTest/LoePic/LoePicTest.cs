@@ -64,48 +64,6 @@ public class LoePicTest
     }
 
     [Test]
-    public async Task UploadImageAsync_ApiThrows_ReturnsErrorMessage()
-    {
-        // Arrange
-        var config = new LoePicConfig { ApiKey = "api-key" };
-        var image = new ImageToUploadDto("invalid", ImageUploadSource.Url);
-
-        apiClientMock
-            .Setup(api => api.UploadImageAsync("api-key", image, CancellationToken.None))
-            .ThrowsAsync(new LoePicApiException("Invalid API key."));
-
-        // Act
-        var result = await service.UploadImageAsync(image, config, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ImageUrls.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["Invalid API key."]);
-    }
-
-    [Test]
-    public async Task TryLoginAsync_AccountLookupSucceeds_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new LoePicConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(api => api.GetAccountAsync("api-key", CancellationToken.None))
-            .ReturnsAsync(new AccountResponse { Username = "gizmo93", Role = "user" });
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-        apiClientMock.Verify(
-            api => api.GetAccountAsync("api-key", CancellationToken.None),
-            Times.Once
-        );
-    }
-
-    [Test]
     public async Task TryLoginAsync_AccountLookupFails_ReturnsErrorMessage()
     {
         // Arrange

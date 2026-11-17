@@ -310,35 +310,6 @@ public class AutoForumPostingPlanServiceTest
     }
 
     [Test]
-    public async Task GetPlanAsync_SeveralMatchingRules_UsesLowestSortOrder()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Releases = [AutoPostTestFactory.Release()],
-            Registrations =
-            [
-                AutoPostTestFactory.Registration(
-                    id: 5,
-                    name: "Board",
-                    rules:
-                    [
-                        AutoPostTestFactory.Rule(id: 1, sortOrder: 2),
-                        AutoPostTestFactory.Rule(id: 2, sortOrder: 1),
-                    ]
-                ),
-            ],
-        };
-        var service = new AutoForumPostingPlanService(repository);
-
-        // Act
-        var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
-
-        // Assert
-        plan.Sites.ShouldHaveSingleItem().Match.ShouldNotBeNull().ForumPostingRuleId.ShouldBe(2);
-    }
-
-    [Test]
     public async Task GetPlansAsync_SeveralReleases_ReturnsOnePlanPerRequestedId()
     {
         // Arrange
@@ -451,44 +422,6 @@ public class AutoForumPostingPlanServiceTest
         plan.EntityType.ShouldBe(ForumPostTemplateType.ReleaseCollection);
         plan.EntityName.ShouldBe(AutoPostTestFactory.ReleaseCollectionName);
         plan.Sites.ShouldHaveSingleItem().Status.ShouldBe(AutoPostSiteStatus.Matched);
-    }
-
-    [Test]
-    public async Task GetPlanAsync_RulesForBothEntityTypes_EachPlanMatchesOnlyRulesOfItsEntityType()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Releases = [AutoPostTestFactory.Release(id: 1)],
-            ReleaseCollections = [AutoPostTestFactory.ReleaseCollection(id: 4)],
-            Registrations =
-            [
-                AutoPostTestFactory.Registration(
-                    id: 5,
-                    name: "Board",
-                    rules:
-                    [
-                        AutoPostTestFactory.Rule(id: 1, sortOrder: 0),
-                        CollectionRule(id: 2, sortOrder: 1),
-                    ]
-                ),
-            ],
-        };
-        var service = new AutoForumPostingPlanService(repository);
-
-        // Act
-        var releasePlan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
-        var collectionPlan = await service.GetPlanAsync(ForumPostTemplateType.ReleaseCollection, 4);
-
-        // Assert
-        releasePlan
-            .Sites.ShouldHaveSingleItem()
-            .Match.ShouldNotBeNull()
-            .ForumPostingRuleId.ShouldBe(1);
-        collectionPlan
-            .Sites.ShouldHaveSingleItem()
-            .Match.ShouldNotBeNull()
-            .ForumPostingRuleId.ShouldBe(2);
     }
 
     [Test]

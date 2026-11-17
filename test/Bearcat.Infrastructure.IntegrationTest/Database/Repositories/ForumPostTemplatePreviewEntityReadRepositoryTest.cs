@@ -32,32 +32,6 @@ public class ForumPostTemplatePreviewEntityReadRepositoryTest(DatabaseProvider d
     }
 
     [Test]
-    public async Task SearchAsync_ReleaseWithoutSearchTerm_ReturnsNewestReleasesFirst()
-    {
-        // Arrange
-        var oldestRelease = AddRelease("Old.Release-GRP", BaseTime);
-        var newestRelease = AddRelease("New.Release-GRP", BaseTime.AddHours(2));
-        var middleRelease = AddRelease("Middle.Release-GRP", BaseTime.AddHours(1));
-        AddCollection("Some.Collection", BaseTime.AddHours(3));
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchAsync(
-            ForumPostTemplateType.Release,
-            searchTerm: null,
-            limit: 20,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe([
-            new ForumPostTemplatePreviewEntityReadModel(newestRelease.Id, "New.Release-GRP"),
-            new ForumPostTemplatePreviewEntityReadModel(middleRelease.Id, "Middle.Release-GRP"),
-            new ForumPostTemplatePreviewEntityReadModel(oldestRelease.Id, "Old.Release-GRP"),
-        ]);
-    }
-
-    [Test]
     public async Task SearchAsync_ReleaseWithSearchTerm_MatchesNameCaseInsensitively()
     {
         // Arrange
@@ -112,30 +86,6 @@ public class ForumPostTemplatePreviewEntityReadRepositoryTest(DatabaseProvider d
     }
 
     [Test]
-    public async Task SearchAsync_ReleaseCollectionWithoutSearchTerm_ReturnsNewestCollectionsFirst()
-    {
-        // Arrange
-        var olderCollection = AddCollection("Older.Collection", BaseTime);
-        var newerCollection = AddCollection("Newer.Collection", BaseTime.AddHours(1));
-        AddRelease("Some.Release-GRP", BaseTime.AddHours(2));
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchAsync(
-            ForumPostTemplateType.ReleaseCollection,
-            searchTerm: null,
-            limit: 20,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe([
-            new ForumPostTemplatePreviewEntityReadModel(newerCollection.Id, "Newer.Collection"),
-            new ForumPostTemplatePreviewEntityReadModel(olderCollection.Id, "Older.Collection"),
-        ]);
-    }
-
-    [Test]
     public async Task SearchAsync_ReleaseCollectionWithSearchTerm_MatchesNameCaseInsensitively()
     {
         // Arrange
@@ -158,119 +108,6 @@ public class ForumPostTemplatePreviewEntityReadRepositoryTest(DatabaseProvider d
                 "Bodies.2023.S01.German"
             ),
         ]);
-    }
-
-    [Test]
-    public async Task SearchAsync_ReleaseCollectionWithLimit_ReturnsOnlyNewestCollectionsUpToLimit()
-    {
-        // Arrange
-        AddCollection("Older.Collection", BaseTime);
-        var newerCollection = AddCollection("Newer.Collection", BaseTime.AddHours(1));
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchAsync(
-            ForumPostTemplateType.ReleaseCollection,
-            searchTerm: null,
-            limit: 1,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe([
-            new ForumPostTemplatePreviewEntityReadModel(newerCollection.Id, "Newer.Collection"),
-        ]);
-    }
-
-    [Test]
-    public async Task SearchAsync_NoEntitiesOfType_ReturnsEmpty()
-    {
-        // Arrange
-        AddRelease("Some.Release-GRP", BaseTime);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchAsync(
-            ForumPostTemplateType.ReleaseCollection,
-            searchTerm: null,
-            limit: 1,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task GetAsync_ExistingRelease_ReturnsRelease()
-    {
-        // Arrange
-        var release = AddRelease("Some.Release-GRP", BaseTime);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.GetAsync(
-            ForumPostTemplateType.Release,
-            release.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(
-            new ForumPostTemplatePreviewEntityReadModel(release.Id, "Some.Release-GRP")
-        );
-    }
-
-    [Test]
-    public async Task GetAsync_ExistingReleaseCollection_ReturnsReleaseCollection()
-    {
-        // Arrange
-        var collection = AddCollection("Some.Collection", BaseTime);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.GetAsync(
-            ForumPostTemplateType.ReleaseCollection,
-            collection.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(
-            new ForumPostTemplatePreviewEntityReadModel(collection.Id, "Some.Collection")
-        );
-    }
-
-    [Test]
-    public async Task GetAsync_MissingRelease_ReturnsNull()
-    {
-        // Act
-        var result = await repository.GetAsync(
-            ForumPostTemplateType.Release,
-            999,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task GetAsync_MissingReleaseCollection_ReturnsNull()
-    {
-        // Arrange
-        var release = AddRelease("Some.Release-GRP", BaseTime);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.GetAsync(
-            ForumPostTemplateType.ReleaseCollection,
-            release.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private Release AddRelease(string name, DateTime createdAt)

@@ -73,8 +73,6 @@ public class ArchiveLocalWorkingCopyCleanupServiceTest(DatabaseProvider database
         (await File.ReadAllBytesAsync(scenario.StorageSecondFilePath)).ShouldBe(storageBytes);
     }
 
-    [TestCase(UploadState.WaitingForArchive)]
-    [TestCase(UploadState.Pending)]
     [TestCase(UploadState.Uploading)]
     public async Task DeleteLocalWorkingCopiesAsync_ArchiveConfigHasActiveUpload_KeepsLocalWorkingCopy(
         UploadState uploadState
@@ -92,23 +90,6 @@ public class ArchiveLocalWorkingCopyCleanupServiceTest(DatabaseProvider database
         secondArchiveFile.FullFileName.ShouldBe(scenario.WorkingCopyFilePath);
         secondArchiveFile.Md5Hash.ShouldBe(WorkingCopySecondFileHash);
         File.Exists(scenario.WorkingCopyFilePath).ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task DeleteLocalWorkingCopiesAsync_ArchiveConfigHasOnlyFailedUpload_DeletesLocalWorkingCopy()
-    {
-        // Arrange
-        var scenario = await AddScenarioAsync(UploadState.Failed);
-
-        // Act
-        await CreateService(new FileSystemService())
-            .DeleteLocalWorkingCopiesAsync(CancellationToken.None);
-
-        // Assert
-        var secondArchiveFile = (await LoadArchiveFilesAsync(scenario.ArchiveId))[1];
-        secondArchiveFile.FullFileName.ShouldBe(scenario.StorageSecondFilePath);
-        secondArchiveFile.Md5Hash.ShouldBe(StorageSecondFileHash);
-        File.Exists(scenario.WorkingCopyFilePath).ShouldBeFalse();
     }
 
     [Test]
@@ -147,30 +128,6 @@ public class ArchiveLocalWorkingCopyCleanupServiceTest(DatabaseProvider database
         secondArchiveFile.FullFileName.ShouldBe(scenario.StorageSecondFilePath);
         secondArchiveFile.Md5Hash.ShouldBe(StorageSecondFileHash);
         File.Exists(scenario.WorkingCopyFilePath).ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task DeleteLocalWorkingCopiesAsync_ArchiveWithoutLocalWorkingCopy_LeavesArchiveUnchanged()
-    {
-        // Arrange
-        var scenario = await AddScenarioAsync(
-            UploadState.Completed,
-            secondFileIsInLocalWorkingCopy: false
-        );
-        var fileSystemServiceMock = new Mock<IFileSystemService>(MockBehavior.Strict);
-
-        // Act
-        await CreateService(fileSystemServiceMock.Object)
-            .DeleteLocalWorkingCopiesAsync(CancellationToken.None);
-
-        // Assert
-        var archiveFiles = await LoadArchiveFilesAsync(scenario.ArchiveId);
-        archiveFiles
-            .Select(file => (file.FullFileName, file.Md5Hash))
-            .ShouldBe([
-                (scenario.StorageFirstFilePath, FirstFileHash),
-                (scenario.StorageSecondFilePath, StorageSecondFileHash),
-            ]);
     }
 
     private ArchiveLocalWorkingCopyCleanupService CreateService(

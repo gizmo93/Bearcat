@@ -103,38 +103,6 @@ public class ReleaseFolderVerificationAndExtractionServiceTest
     }
 
     [Test]
-    public async Task TryVerifyAndExtractAsync_SfvAndArchive_TracksProgressWithObservationIdAndFolderName()
-    {
-        // Arrange
-        var firstVolumeFilePath = WriteFile("release.rar", "volume");
-        WriteFile("release.sfv", CreateSfvLine("release.rar", "volume"));
-        archiveExtractor.AddArchive(
-            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
-            new Dictionary<string, string> { ["movie.mkv"] = "movie" }
-        );
-        var verificationIdentifier = new TransferIdentifier(
-            TransferType.ReleaseFolderVerification,
-            ObservationId
-        );
-        var extractionIdentifier = new TransferIdentifier(
-            TransferType.ReleaseFolderExtraction,
-            ObservationId
-        );
-
-        // Act
-        await CreateService().TryVerifyAndExtractAsync(CreateObservation(), CancellationToken.None);
-
-        // Assert
-        progressTracker
-            .PlannedFilesPerIdentifier[verificationIdentifier]
-            .ShouldAllBe(file => file.SourceName == FolderName);
-        progressTracker
-            .PlannedFilesPerIdentifier[extractionIdentifier]
-            .ShouldBe([new TransferFile(1, "release.rar", FolderName, 6, false)]);
-        progressTracker.StoppedIdentifiers.ShouldBe([verificationIdentifier, extractionIdentifier]);
-    }
-
-    [Test]
     public async Task TryVerifyAndExtractAsync_NoSfvAndNoArchives_SucceedsWithoutTrackingProgress()
     {
         // Arrange

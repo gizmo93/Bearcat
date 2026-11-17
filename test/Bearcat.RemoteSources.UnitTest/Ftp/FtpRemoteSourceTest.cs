@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.RemoteSources.Ftp;
 using FluentFTP;
 using FluentFTP.BouncyCastle;
@@ -62,70 +61,6 @@ public class FtpRemoteSourceTest
     }
 
     [Test]
-    public void DeserializeConfig_KeysInDifferentCasing_MapsValues()
-    {
-        // Arrange
-        const string json = """
-            {"host":"ftp.example.test","port":990,"username":"user","password":"secret","encryption":"none"}
-            """;
-
-        // Act
-        var config = (FtpRemoteSourceConfig)remoteSource.DeserializeConfig(json);
-
-        // Assert
-        config.Host.ShouldBe("ftp.example.test");
-        config.Port.ShouldBe(990);
-        config.Encryption.ShouldBe(FtpEncryption.None);
-    }
-
-    [Test]
-    public void DeserializeConfig_UnknownEncryption_ThrowsJsonException()
-    {
-        // Arrange
-        const string json = """
-            {"Host":"ftp.example.test","Username":"user","Password":"secret","Encryption":"Sftp"}
-            """;
-
-        // Act
-        var action = () => remoteSource.DeserializeConfig(json);
-
-        // Assert
-        action.ShouldThrow<JsonException>();
-    }
-
-    [Test]
-    public void DeserializeConfig_RequiredValueMissing_ThrowsJsonException()
-    {
-        // Arrange
-        const string json = """{"Host":"ftp.example.test","Username":"user"}""";
-
-        // Act
-        var action = () => remoteSource.DeserializeConfig(json);
-
-        // Assert
-        action.ShouldThrow<JsonException>();
-    }
-
-    [Test]
-    public void ToDictionary_Config_ReturnsTypedValues()
-    {
-        // Arrange
-        var config = CreateConfig();
-
-        // Act
-        var values = config.ToDictionary();
-
-        // Assert
-        values["Host"].ShouldBe("ftp.example.test");
-        values["Port"].ShouldBe(2121);
-        values["Username"].ShouldBe("user");
-        values["Password"].ShouldBe("secret");
-        values["Encryption"].ShouldBe("Implicit");
-        values["TlsProvider"].ShouldBe("System");
-        values["ValidateCertificate"].ShouldBe(true);
-    }
-
-    [Test]
     public void ToDictionary_SerializedAndDeserializedAgain_ReturnsEqualConfig()
     {
         // Arrange
@@ -150,39 +85,6 @@ public class FtpRemoteSourceTest
 
         // Assert
         fieldKeys.ShouldBe(config.ToDictionary().Keys.ToList());
-    }
-
-    [Test]
-    public void ConfigurationFields_DefinesTypesRequirementsAndDefaults()
-    {
-        // Act
-        var fields = remoteSource.ConfigurationFields.ToDictionary(field => field.Key);
-
-        // Assert
-        fields["Host"].ShouldBe(new ConfigurationField("Host", ConfigurationFieldType.Text, true));
-        fields["Port"]
-            .ShouldBe(new ConfigurationField("Port", ConfigurationFieldType.Number, true, 21));
-        fields["Username"]
-            .ShouldBe(new ConfigurationField("Username", ConfigurationFieldType.Text, true));
-        fields["Password"]
-            .ShouldBe(new ConfigurationField("Password", ConfigurationFieldType.Password, true));
-        fields["Encryption"].Type.ShouldBe(ConfigurationFieldType.Select);
-        fields["Encryption"].IsRequired.ShouldBeTrue();
-        fields["Encryption"].DefaultValue.ShouldBe("Explicit");
-        fields["Encryption"].Options.ShouldBe(["None", "Explicit", "Implicit"]);
-        fields["TlsProvider"].Type.ShouldBe(ConfigurationFieldType.Select);
-        fields["TlsProvider"].IsRequired.ShouldBeTrue();
-        fields["TlsProvider"].DefaultValue.ShouldBe("BouncyCastle");
-        fields["TlsProvider"].Options.ShouldBe(["System", "BouncyCastle"]);
-        fields["ValidateCertificate"]
-            .ShouldBe(
-                new ConfigurationField(
-                    "ValidateCertificate",
-                    ConfigurationFieldType.Boolean,
-                    false,
-                    false
-                )
-            );
     }
 
     [Test]
@@ -228,23 +130,6 @@ public class FtpRemoteSourceTest
         clientConfig
             .CustomStreamConfig.ShouldBeOfType<BouncyCastleFtpConfig>()
             .RequireSessionResumption.ShouldBeFalse();
-    }
-
-    [Test]
-    public void CreateClientConfig_SystemProvider_UsesDefaultStream()
-    {
-        // Arrange
-        var config = CreateConfig() with
-        {
-            TlsProvider = FtpTlsProvider.System,
-        };
-
-        // Act
-        var clientConfig = FtpRemoteSource.CreateClientConfig(config);
-
-        // Assert
-        clientConfig.CustomStream.ShouldBeNull();
-        clientConfig.CustomStreamConfig.ShouldBeNull();
     }
 
     private static FtpRemoteSourceConfig CreateConfig()

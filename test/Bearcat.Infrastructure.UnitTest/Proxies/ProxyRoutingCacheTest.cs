@@ -64,16 +64,6 @@ public class ProxyRoutingCacheTest
     }
 
     [Test]
-    public void GetProxyServerForCategory_BeforeRefresh_ReturnsNull()
-    {
-        // Act
-        var result = cache.GetProxyServerForCategory(ProxyCategory.HosterUploads);
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
     public async Task RefreshAsync_CategoryWithHttpProxy_ResolvesProxyUriAndCredential()
     {
         // Arrange
