@@ -1,11 +1,27 @@
 <BbDropdownMenu>
     <BbDropdownMenuTrigger>
-        <BbButton Variant="ButtonVariant.Secondary" Class="bearcat-page-action">
-            <LucideIcon Name="download" class="h-4 w-4" />
-            @L["ExportLinks"]
-        </BbButton>
+        @if (ReleaseIds is null)
+        {
+            <BbButton Variant="ButtonVariant.Secondary" Class="bearcat-page-action">
+                <LucideIcon Name="download" class="h-4 w-4" />
+                @L["ExportLinks"]
+            </BbButton>
+        }
+        else
+        {
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.Small"
+                      Class="shrink-0"
+                      AriaLabel="@L["ExportLinksOfSelectedReleases"]"
+                      title="@L["ExportLinksOfSelectedReleases"]">
+                <LucideIcon Name="download" class="h-4 w-4" />
+                <span class="hidden sm:inline">@L["ExportLinks"]</span>
+            </BbButton>
+        }
     </BbDropdownMenuTrigger>
-    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+    <BbDropdownMenuContent Side="MenuSide"
+                           Align="MenuAlign"
+                           Strategy="PositioningStrategy.Fixed">
         <BbDropdownMenuItem Href="@GetDownloadUrl(null)" download="@GetFileName(null)">
             <ChildContent>@L["AllLinks"]</ChildContent>
         </BbDropdownMenuItem>

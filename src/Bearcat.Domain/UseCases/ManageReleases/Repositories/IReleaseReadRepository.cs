@@ -159,6 +159,7 @@ public interface IReleaseReadRepository
 
     IAsyncEnumerable<ReleaseLinkExportReadModel> StreamLinksForExportAsync(
         OnlineState? uploadOnlineState,
+        IReadOnlyList<int>? releaseIds,
         CancellationToken cancellationToken = default
     );
 

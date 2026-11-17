@@ -1789,6 +1789,7 @@ public class ReleaseReadRepository(
 
     public async IAsyncEnumerable<ReleaseLinkExportReadModel> StreamLinksForExportAsync(
         OnlineState? uploadOnlineState,
+        IReadOnlyList<int>? releaseIds,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
@@ -1800,6 +1801,13 @@ public class ReleaseReadRepository(
         if (uploadOnlineState is not null)
         {
             linksQuery = linksQuery.Where(f => f.Upload.OnlineState == uploadOnlineState.Value);
+        }
+
+        if (releaseIds is not null)
+        {
+            linksQuery = linksQuery.Where(f =>
+                EF.Parameter(releaseIds).Contains(f.Upload.UploadConfig.ReleaseId)
+            );
         }
 
         var links = linksQuery
