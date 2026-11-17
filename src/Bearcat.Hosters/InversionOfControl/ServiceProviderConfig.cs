@@ -8,6 +8,7 @@ using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.DoodStream.InversionOfControl;
 using Bearcat.Hosters.Fast2Share.InversionOfControl;
 using Bearcat.Hosters.Fichier.InversionOfControl;
+using Bearcat.Hosters.FileFactory.InversionOfControl;
 using Bearcat.Hosters.FileQ.InversionOfControl;
 using Bearcat.Hosters.Filer.InversionOfControl;
 using Bearcat.Hosters.FileServe.InversionOfControl;
@@ -52,6 +53,7 @@ public static class ServiceProviderConfig
         services.AddFileServe();
         services.AddFileUpload();
         services.AddFichier();
+        services.AddFileFactory();
         services.AddFiler();
         services.AddFreeDlink();
         services.AddGoFile();
