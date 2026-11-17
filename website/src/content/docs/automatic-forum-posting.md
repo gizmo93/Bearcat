@@ -225,6 +225,17 @@ Older posts may have no stored template. Choose one in the dialog or make sure a
 You can also update a post from **Posted locations** on a release or collection. Click the update button and confirm the replacement.
 The entry must be linked to a distribution site; posts you confirmed by hand also qualify.
 
+## Finding an existing thread
+
+With *Reply to an existing thread, otherwise start a new one*, Bearcat searches the subforum and compares the
+thread titles with the name. It ignores thread prefixes, case and punctuation.
+
+- A thread with exactly the same title wins.
+- Otherwise, a thread matches when its title contains all words of the name in the same order.
+- No match: Bearcat starts a new thread. One match: Bearcat replies to it.
+- Several matches: Bearcat does not post and creates one notification. Click **Post** in the
+  **Automatic posting** section and choose a thread or a new thread.
+
 ## Failed automatic posts
 
 When an automatic post or update to a forum fails, the background task pauses that forum for the release or collection:
@@ -244,6 +255,7 @@ Posts and updates share the counter. The **Automatic posting** section shows the
 
 Bearcat notifies you of successful posts and updates. A failing automatic post or update creates one notification
 when Bearcat gives up after 5 failed attempts. Earlier failures only appear in the log.
+Several matching threads also create one notification.
 You can disable notifications for posts and updates separately.
 Posts skipped because of the hoster and link crypter settings create no notification.
 

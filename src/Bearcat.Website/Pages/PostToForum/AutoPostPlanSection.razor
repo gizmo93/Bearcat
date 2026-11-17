@@ -111,6 +111,42 @@
                         @L["AutoPostNow"]
                     </BbButton>
                 }
+
+                @if (threadCandidatesByRegistrationId.GetValueOrDefault(site.DistributionSiteRegistrationId) is { } threadCandidates)
+                {
+                    <div class="w-full space-y-2 border-t border-border/70 pt-2">
+                        <p class="text-xs text-muted-foreground">@L["AutoPostChooseThread"]</p>
+                        <BbRadioGroup TValue="string"
+                                      Value="@ThreadSelection(site)"
+                                      ValueChanged="@(value => SelectThread(site, value))"
+                                      AriaLabel="@L["AutoPostChooseThread"]">
+                            @for (var index = 0; index < threadCandidates.Count; index++)
+                            {
+                                var thread = threadCandidates[index];
+                                var radioId = $"thread-{site.DistributionSiteRegistrationId}-{index}";
+                                <div class="flex items-center gap-2">
+                                    <BbRadioGroupItem TValue="string" Value="@thread.Url" Id="@radioId" />
+                                    <label for="@radioId" class="min-w-0 text-sm">
+                                        <a href="@thread.Url"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="break-words hover:underline">
+                                            @thread.Title
+                                        </a>
+                                    </label>
+                                </div>
+                            }
+                            <BbRadioGroupItem TValue="string" Value="@NewThreadValue" Label="@L["StartNewThread"]" />
+                        </BbRadioGroup>
+                        <BbButton Size="ButtonSize.Small"
+                                  Disabled="@(IsAnySiteBusy || ThreadSelection(site).Length == 0)"
+                                  OnClick="@(() => PostToChosenThreadAsync(site))">
+                            <LucideIcon Name="@(IsSiteBusy(site) ? "loader-circle" : "send")"
+                                        class="@($"h-4 w-4 {(IsSiteBusy(site) ? "animate-spin" : string.Empty)}")" />
+                            @L["AutoPostPostToChosenThread"]
+                        </BbButton>
+                    </div>
+                }
             </div>
         }
     }

@@ -1261,6 +1261,10 @@
   <data name="MinimumSecondsBetweenPostsSaved" xml:space="preserve"><value>Mindestabstand zwischen Posts für {0} gespeichert</value></data>
   <data name="AutoPostPausedAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten pausiert bis {0} nach {1} Fehlversuchen: {2}</value></data>
   <data name="AutoPostGaveUpAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten nach {0} Fehlversuchen aufgegeben: {1}</value></data>
+  <data name="AutoPostWaitingForThreadSelection" xml:space="preserve"><value>Mehrere passende Themen gefunden. Klicke auf Posten, um eines auszuwählen.</value></data>
+  <data name="AutoPostChooseThread" xml:space="preserve"><value>Mehrere passende Themen gefunden. Wähle, wohin gepostet wird:</value></data>
+  <data name="AutoPostPostToChosenThread" xml:space="preserve"><value>Auswahl posten</value></data>
+  <data name="AutoPostThreadSelectionNeeded" xml:space="preserve"><value>Wähle ein Thema für {0}</value></data>
   <data name="AutoPostContentOutdated" xml:space="preserve"><value>Postinhalt ist veraltet</value></data>
   <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} aktualisiert</value></data>
   <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Posts in {0} fehlgeschlagen</value></data>

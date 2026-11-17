@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
@@ -228,7 +229,13 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                         releaseName: postName
                     )
             );
-            threadSelection = existingThreads.FirstOrDefault()?.Url ?? NewThreadValue;
+
+            var matchingThreads = ForumThreadTitleMatcher.FindMatchingThreads(
+                postName,
+                existingThreads
+            );
+
+            threadSelection = matchingThreads.Count == 1 ? matchingThreads[0].Url : NewThreadValue;
             step = WizardStep.Thread;
         });
     }

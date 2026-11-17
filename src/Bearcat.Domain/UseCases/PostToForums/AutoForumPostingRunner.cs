@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
@@ -125,7 +126,7 @@ public class AutoForumPostingRunner(
 
             var result = await CreatePostForSiteAsync(plan, site, cancellationToken);
 
-            if (result.Status != AutoPostExecutionStatus.Skipped)
+            if (result.Status is AutoPostExecutionStatus.Posted or AutoPostExecutionStatus.Failed)
             {
                 lastAttemptTimestampsByRegistrationId[site.DistributionSiteRegistrationId] =
                     Stopwatch.GetTimestamp();
@@ -145,6 +146,15 @@ public class AutoForumPostingRunner(
                     errors: result.Errors,
                     gaveUpNotificationKind: NotificationKind.AutomaticForumPostFailed,
                     actionDescription: $"posting {EntityLabel(plan)} '{plan.EntityName}' automatically to '{site.DistributionSiteRegistrationName}'",
+                    cancellationToken: cancellationToken
+                );
+            }
+            else if (result.Status == AutoPostExecutionStatus.ThreadSelectionNeeded)
+            {
+                await RecordWaitingForThreadSelectionAsync(
+                    plan: plan,
+                    site: site,
+                    threadCandidates: result.ThreadCandidates,
                     cancellationToken: cancellationToken
                 );
             }
@@ -199,6 +209,7 @@ public class AutoForumPostingRunner(
         return site.FailureState switch
         {
             ForumPostingFailureState.GaveUp => true,
+            ForumPostingFailureState.WaitingForThreadSelection => true,
             ForumPostingFailureState.RetryScheduled => site.NextAttemptAt
                 > timeProvider.GetLocalNow(),
             _ => false,
@@ -268,6 +279,35 @@ public class AutoForumPostingRunner(
                 cancellationToken: cancellationToken
             );
         }
+    }
+
+    private async Task RecordWaitingForThreadSelectionAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        IReadOnlyList<ExistingThread> threadCandidates,
+        CancellationToken cancellationToken
+    )
+    {
+        var threadTitles = string.Join(" | ", threadCandidates.Select(thread => thread.Title));
+
+        await repository.SaveForumPostingFailureAsync(
+            entityType: plan.EntityType,
+            entityId: plan.EntityId,
+            distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
+            failedAttemptCount: site.FailedAttemptCount,
+            nextAttemptAt: null,
+            lastErrorMessage: TruncateErrorMessage(
+                $"Several matching threads found: {threadTitles}"
+            ),
+            state: ForumPostingFailureState.WaitingForThreadSelection,
+            cancellationToken: cancellationToken
+        );
+
+        await notificationService.CreateAsync(
+            kind: NotificationKind.AutomaticForumPostFailed,
+            message: $"Several matching threads were found for {EntityLabel(plan)} '{plan.EntityName}' in '{site.DistributionSiteRegistrationName}'. Choose the thread in the post dialog.",
+            cancellationToken: cancellationToken
+        );
     }
 
     private static string TruncateErrorMessage(string errorMessage)

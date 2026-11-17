@@ -46,8 +46,10 @@ In the dialog:
    to search for existing threads and name new ones. **Dots → spaces** replaces dots with spaces
    and adds spaces around the final hyphen before the release group.
    ![subforum-selection.png](images/subforum-selection.png)
-3. Bearcat searches the subforum for a thread that matches the name. If it finds one, Bearcat
-   suggests a reply. Otherwise, it suggests a new thread.
+3. Bearcat searches the subforum and compares the thread titles with the name, like
+   [automatic posting](/Bearcat/automatic-forum-posting/#finding-an-existing-thread).
+   If exactly one thread matches, Bearcat suggests a reply. Otherwise, it suggests a new thread.
+   You can still pick any search result.
 
    <figure>
 

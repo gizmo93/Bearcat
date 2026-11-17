@@ -19,7 +19,7 @@ public class XenForoForumClientTest
         handler.Enqueue(async request =>
         {
             requestBody = await request.Content!.ReadAsStringAsync();
-            return HtmlResponse("<html></html>");
+            return JsonResponse("""{"status":"ok","message":""}""");
         });
 
         using var client = CreateClient(handler);
@@ -35,40 +35,120 @@ public class XenForoForumClientTest
         requestBody.ShouldNotBeNull();
         requestBody.ShouldContain("search_type=post");
         requestBody.ShouldContain("c%5Bnodes%5D%5B0%5D=9");
+        requestBody.ShouldContain("_xfResponseType=json");
+        requestBody.ShouldContain("_xfWithData=1");
+        requestBody.ShouldContain("_xfRequestUri=%2Fsearch%2F");
     }
 
     [Test]
-    public async Task SearchThreadsAsync_SeveralResults_OrdersThreadsByThreadIdAscending()
+    public async Task SearchThreadsAsync_ResultsWithPrefixLabels_ReturnsTitlesWithoutLabelsInForumOrder()
+    {
+        // Arrange
+        string? resultsPageUrl = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse("<html data-csrf=\"token\"></html>"));
+        handler.Enqueue(_ =>
+            JsonResponse(
+                """{"status":"ok","message":"","redirect":"https://www.data-load.me/search/123/?q=Joker"}"""
+            )
+        );
+        handler.Enqueue(request =>
+        {
+            resultsPageUrl = request.RequestUri!.AbsoluteUri;
+            return HtmlResponse(
+                """
+                <html>
+                    <div class="contentRow-title"><a href="/threads/joker.300/"><span class="label label--blue">1080p/x265</span><span class="label-append">&nbsp;</span><em class="textHighlight">Joker</em> 2019 German DL</a></div>
+                    <div class="contentRow-title"><a href="/threads/joker.12/">Joker 2019 German DL REPACK</a></div>
+                </html>
+                """
+            );
+        });
+
+        using var client = CreateClient(handler);
+
+        // Act
+        var threads = await client.SearchThreadsAsync(
+            "Joker 2019 German DL",
+            "https://www.data-load.me/forums/uhd-4k.9/",
+            CancellationToken.None
+        );
+
+        // Assert
+        resultsPageUrl.ShouldBe("https://www.data-load.me/search/123/?q=Joker");
+        threads.ShouldBe([
+            new ExistingThread(
+                "Joker 2019 German DL",
+                "https://www.data-load.me/threads/joker.300/"
+            ),
+            new ExistingThread(
+                "Joker 2019 German DL REPACK",
+                "https://www.data-load.me/threads/joker.12/"
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task SearchThreadsAsync_StatusOkWithoutRedirect_ReturnsNoThreads()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse("<html data-csrf=\"token\"></html>"));
+        handler.Enqueue(_ => JsonResponse("""{"status":"ok","message":"No results found."}"""));
+
+        using var client = CreateClient(handler);
+
+        // Act
+        var threads = await client.SearchThreadsAsync("Some Movie", null, CancellationToken.None);
+
+        // Assert
+        threads.ShouldBeEmpty();
+        handler.SentRequestCount.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task SearchThreadsAsync_StatusError_ThrowsWithErrorMessages()
     {
         // Arrange
         using var handler = new TestHttpMessageHandler();
         handler.Enqueue(_ => HtmlResponse("<html data-csrf=\"token\"></html>"));
         handler.Enqueue(_ =>
-            HtmlResponse(
-                """
-                <html>
-                    <div class="contentRow-title"><a href="/threads/newest.300/">Newest</a></div>
-                    <div class="contentRow-title"><a href="/threads/unparsable/">Unparsable</a></div>
-                    <div class="contentRow-title"><a href="/threads/oldest.12/post-98">Oldest</a></div>
-                    <div class="contentRow-title"><a href="/threads/middle.150/">Middle</a></div>
-                </html>
-                """
+            JsonResponse(
+                """{"status":"error","errors":["You must wait at least <b>10</b> seconds."]}"""
             )
         );
 
         using var client = CreateClient(handler);
 
         // Act
-        var threads = await client.SearchThreadsAsync(
-            "Some Movie",
-            "https://www.data-load.me/forums/uhd-4k.9/",
-            CancellationToken.None
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            client.SearchThreadsAsync("Some Movie", null, CancellationToken.None)
         );
 
         // Assert
-        threads
-            .Select(thread => thread.Title)
-            .ShouldBe(["Oldest", "Middle", "Newest", "Unparsable"]);
+        exception.Message.ShouldContain("You must wait at least 10 seconds.");
+    }
+
+    [Test]
+    public async Task FindNewThreadPostUrlAsync_SearchRejected_ReturnsNull()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse("<html data-csrf=\"token\"></html>"));
+        handler.Enqueue(_ => JsonResponse("""{"status":"error","errors":["Flood control"]}"""));
+
+        using var client = CreateClient(handler);
+
+        // Act
+        var postUrl = await client.FindNewThreadPostUrlAsync(
+            forumUrl: null,
+            title: "Some Movie",
+            username: "uploader",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        postUrl.ShouldBeNull();
     }
 
     [Test]
@@ -474,6 +554,13 @@ public class XenForoForumClientTest
         handler.Enqueue(request =>
         {
             requestUrls.Add(request.RequestUri!.AbsoluteUri);
+            return JsonResponse(
+                """{"status":"ok","redirect":"https://example.org/community/search/7/?q=Movie"}"""
+            );
+        });
+        handler.Enqueue(request =>
+        {
+            requestUrls.Add(request.RequestUri!.AbsoluteUri);
             return HtmlResponse(
                 """
                 <div class="contentRow-title"><a href="threads/movie.42/">Movie</a></div>
@@ -493,6 +580,7 @@ public class XenForoForumClientTest
         requestUrls.ShouldBe([
             "https://example.org/community/search/",
             "https://example.org/community/search/search",
+            "https://example.org/community/search/7/?q=Movie",
         ]);
         results
             .ShouldHaveSingleItem()
@@ -615,7 +703,7 @@ public class XenForoForumClientTest
             redirectContent = request.Content;
             redirectUrl = request.RequestUri!.AbsoluteUri;
             redirectCookies = string.Join("; ", request.Headers.GetValues("Cookie"));
-            return HtmlResponse("<html></html>");
+            return JsonResponse("""{"status":"ok"}""");
         });
         using var client = CreateClient(handler, "https://example.org/community/");
 
@@ -653,7 +741,7 @@ public class XenForoForumClientTest
             redirectMethod = request.Method;
             redirectUrl = request.RequestUri!.AbsoluteUri;
             redirectBody = await request.Content!.ReadAsStringAsync();
-            return HtmlResponse("<html></html>");
+            return JsonResponse("""{"status":"ok"}""");
         });
         using var client = CreateClient(handler, "https://example.org/");
 

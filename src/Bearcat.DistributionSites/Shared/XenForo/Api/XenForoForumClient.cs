@@ -334,7 +334,11 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var token = GetCsrfToken(await GetDocumentAsync("search/", cancellationToken));
+        var searchPageUrl = new Uri(baseUri, "search/");
+
+        var token = GetCsrfToken(
+            await GetDocumentAsync(searchPageUrl.ToString(), cancellationToken)
+        );
 
         var form = new List<KeyValuePair<string, string>>
         {
@@ -344,6 +348,9 @@ public sealed partial class XenForoForumClient : IDisposable
             new("order", "relevance"),
             new("grouped", "1"),
             new("_xfToken", token),
+            new("_xfResponseType", "json"),
+            new("_xfWithData", "1"),
+            new("_xfRequestUri", searchPageUrl.AbsolutePath),
         };
 
         if (ExtractNodeId(forumUrl) is { } nodeId)
@@ -363,12 +370,22 @@ public sealed partial class XenForoForumClient : IDisposable
         {
             Content = new FormUrlEncodedContent(form),
         };
+
+        request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+
         using var response = await SendAsync(request, cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
-        var html = await response.Content.ReadAsStringAsync(cancellationToken);
-        var document = await parser.ParseDocumentAsync(html, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        var resultsPageUrl = ReadSearchResultsUrlFromJsonResponse(body);
+
+        if (resultsPageUrl is null)
+        {
+            return [];
+        }
+
+        var document = await GetDocumentAsync(resultsPageUrl, cancellationToken);
 
         var results = new List<ExistingThread>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -385,16 +402,61 @@ public sealed partial class XenForoForumClient : IDisposable
 
             if (seen.Add(absolute))
             {
-                results.Add(new ExistingThread(link.TextContent.Trim(), absolute));
+                results.Add(new ExistingThread(ReadThreadTitleWithoutPrefixLabels(link), absolute));
             }
         }
 
-        return results
-            .Select(thread => new { Thread = thread, ThreadId = ExtractThreadId(thread.Url) })
-            .OrderBy(entry => entry.ThreadId is null)
-            .ThenBy(entry => entry.ThreadId ?? 0)
-            .Select(entry => entry.Thread)
-            .ToList();
+        return results;
+    }
+
+    private string? ReadSearchResultsUrlFromJsonResponse(string body)
+    {
+        using var json = ParseJson(body);
+        var root = json.RootElement;
+
+        if (root.ValueKind is not JsonValueKind.Object)
+        {
+            throw new InvalidOperationException(CreateUnexpectedSearchResponseMessage(body));
+        }
+
+        var status = ReadString(root, "status");
+
+        if (string.Equals(status, "error", StringComparison.OrdinalIgnoreCase))
+        {
+            var errors = ReadErrorMessages(root);
+
+            throw new InvalidOperationException(
+                errors.Count > 0
+                    ? $"XenForo rejected the thread search: {string.Join(" | ", errors)}"
+                    : CreateUnexpectedSearchResponseMessage(body)
+            );
+        }
+
+        if (!string.Equals(status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(CreateUnexpectedSearchResponseMessage(body));
+        }
+
+        var redirect = ReadString(root, "redirect");
+
+        return string.IsNullOrWhiteSpace(redirect) ? null : new Uri(baseUri, redirect).ToString();
+    }
+
+    private static string CreateUnexpectedSearchResponseMessage(string body)
+    {
+        return $"Unexpected XenForo response to the thread search: {body[..Math.Min(body.Length, 200)]}";
+    }
+
+    private static string ReadThreadTitleWithoutPrefixLabels(IElement link)
+    {
+        var linkCopy = (IElement)link.Clone();
+
+        foreach (var label in linkCopy.QuerySelectorAll(".label, .label-append").ToList())
+        {
+            label.Remove();
+        }
+
+        return linkCopy.TextContent.Trim();
     }
 
     public async Task<IReadOnlyList<ThreadPrefix>> GetThreadPrefixesAsync(
@@ -629,11 +691,24 @@ public sealed partial class XenForoForumClient : IDisposable
             }
         }
 
-        var threads = await SearchThreadsAsync(
-            keywords: title,
-            forumUrl: forumUrl,
-            cancellationToken: cancellationToken
-        );
+        IReadOnlyList<ExistingThread> threads;
+
+        try
+        {
+            threads = await SearchThreadsAsync(
+                keywords: title,
+                forumUrl: forumUrl,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
 
         ExistingThread? matchedThread = null;
         foreach (var thread in threads)
@@ -1242,15 +1317,6 @@ public sealed partial class XenForoForumClient : IDisposable
         return match.Success ? match.Groups[1].Value : null;
     }
 
-    private static int? ExtractThreadId(string threadUrl)
-    {
-        var match = ThreadIdPattern().Match(threadUrl);
-
-        return match.Success
-            ? int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture)
-            : null;
-    }
-
     private static Uri CreateUriWithTrailingSlash(string url)
     {
         return new Uri(url.EndsWith('/') ? url : url + "/");
@@ -1263,9 +1329,6 @@ public sealed partial class XenForoForumClient : IDisposable
 
     [GeneratedRegex(@"(\d+)$")]
     private static partial Regex NodeIdPattern();
-
-    [GeneratedRegex(@"/threads/(?:[^/]*\.)?(\d+)(?:/|$)")]
-    private static partial Regex ThreadIdPattern();
 
     [GeneratedRegex(@"(?:/posts/|post-)(\d+)")]
     private static partial Regex PostIdPattern();

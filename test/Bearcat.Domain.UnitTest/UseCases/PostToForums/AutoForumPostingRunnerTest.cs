@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
@@ -365,6 +366,63 @@ public class AutoForumPostingRunnerTest
         var notification = notificationService.Created.ShouldHaveSingleItem();
         notification.Kind.ShouldBe(NotificationKind.AutomaticForumPostFailed);
         notification.Message.ShouldContain("5 failed attempts");
+    }
+
+    [Test]
+    public async Task RunAsync_SeveralMatchingThreads_WaitsForThreadSelectionWithOneNotification()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations =
+            [
+                AutomaticRegistration(
+                    id: 5,
+                    name: "Board",
+                    rule: AutoPostTestFactory.Rule(
+                        postMode: ForumPostPostMode.ReplyToExistingElseNewThread
+                    )
+                ),
+            ],
+        };
+        var submitter = new FakeForumPostSubmitter
+        {
+            ExistingThreads =
+            [
+                new ExistingThread(
+                    "Some Movie 2021 1080p BluRay GROUP PROPER",
+                    "https://forum.test/threads/1"
+                ),
+                new ExistingThread(
+                    "Some Movie 2021 1080p BluRay GROUP REPACK",
+                    "https://forum.test/threads/2"
+                ),
+            ],
+        };
+        var notificationService = new FakeNotificationService();
+        var runner = RunnerWith(repository, submitter, notificationService);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.PostedCount.ShouldBe(0);
+        result.Failures.ShouldBeEmpty();
+        submitter.NewThreads.ShouldBeEmpty();
+        submitter.Replies.ShouldBeEmpty();
+
+        var failure = repository.ForumPostingFailures.ShouldHaveSingleItem();
+        failure.State.ShouldBe(ForumPostingFailureState.WaitingForThreadSelection);
+        failure.FailedAttemptCount.ShouldBe(0);
+        failure.NextAttemptAt.ShouldBeNull();
+        failure.LastErrorMessage.ShouldBe(
+            "Several matching threads found: Some Movie 2021 1080p BluRay GROUP PROPER | Some Movie 2021 1080p BluRay GROUP REPACK"
+        );
+
+        notificationService
+            .Created.ShouldHaveSingleItem()
+            .Kind.ShouldBe(NotificationKind.AutomaticForumPostFailed);
     }
 
     private static ForumPostingFailure RetryScheduledFailure(

@@ -1261,6 +1261,10 @@
   <data name="MinimumSecondsBetweenPostsSaved" xml:space="preserve"><value>Minimum seconds between posts saved for {0}</value></data>
   <data name="AutoPostPausedAfterFailedAttempts" xml:space="preserve"><value>Automatic posting paused until {0} after {1} failed attempts: {2}</value></data>
   <data name="AutoPostGaveUpAfterFailedAttempts" xml:space="preserve"><value>Automatic posting gave up after {0} failed attempts: {1}</value></data>
+  <data name="AutoPostWaitingForThreadSelection" xml:space="preserve"><value>Several matching threads were found. Click Post to choose one.</value></data>
+  <data name="AutoPostChooseThread" xml:space="preserve"><value>Several matching threads were found. Choose where to post:</value></data>
+  <data name="AutoPostPostToChosenThread" xml:space="preserve"><value>Post to selection</value></data>
+  <data name="AutoPostThreadSelectionNeeded" xml:space="preserve"><value>Choose a thread for {0}</value></data>
   <data name="AutoPostContentOutdated" xml:space="preserve"><value>Post content is outdated</value></data>
   <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} updated</value></data>
   <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Updating the post in {0} failed</value></data>

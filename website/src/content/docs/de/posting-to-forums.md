@@ -46,8 +46,10 @@ Im Dialog:
    nach bestehenden Threads sucht und neue benennt. **Punkte → Leerzeichen** ersetzt Punkte durch Leerzeichen
    und setzt Leerzeichen um den letzten Bindestrich vor der Releasegruppe.
    ![subforum-selection.png](../images/subforum-selection.png)
-3. Bearcat sucht im Unterforum nach einem Thread, der zum Namen passt. Findet es einen, schlägt Bearcat
-   eine Antwort vor. Sonst schlägt es einen neuen Thread vor.
+3. Bearcat durchsucht das Unterforum und vergleicht die Threadtitel mit dem Namen, wie beim
+   [automatischen Posten](/Bearcat/de/automatic-forum-posting/#bestehendes-thema-finden).
+   Passt genau ein Thread, schlägt Bearcat eine Antwort vor. Sonst schlägt es einen neuen Thread vor.
+   Du kannst trotzdem jedes Suchergebnis wählen.
 
    <figure>
 

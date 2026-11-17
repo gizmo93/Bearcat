@@ -226,6 +226,17 @@ Du kannst einen Post auch unter **Veröffentlichungsorte** bei einem Release ode
 Klicke auf den Button zum Aktualisieren und bestätige das Ersetzen.
 Der Eintrag muss mit einer Verteilungsseite verknüpft sein; auch von Hand bestätigte Posts lassen sich aktualisieren.
 
+## Bestehendes Thema finden
+
+Mit *Auf bestehendes Thema antworten, sonst neues Thema* durchsucht Bearcat das Unterforum und vergleicht die
+Thementitel mit dem Namen. Präfixe, Gross- und Kleinschreibung sowie Satzzeichen ignoriert es.
+
+- Ein Thema mit genau gleichem Titel gewinnt.
+- Sonst passt ein Thema, wenn sein Titel alle Wörter des Namens in derselben Reihenfolge enthält.
+- Kein Treffer: Bearcat erstellt ein neues Thema. Ein Treffer: Bearcat antwortet darin.
+- Mehrere Treffer: Bearcat postet nicht und erzeugt eine Benachrichtigung. Klicke im Abschnitt
+  **Automatisches Posten** auf **Posten** und wähle ein Thema oder ein neues Thema.
+
 ## Fehlgeschlagene automatische Posts
 
 Schlägt ein automatischer Post oder eine Aktualisierung in einem Forum fehl, pausiert die Hintergrundaufgabe dieses Forum für das Release oder die Collection:
@@ -245,6 +256,7 @@ Posts und Aktualisierungen teilen sich den Zähler. Der Abschnitt **Automatische
 
 Bearcat meldet erfolgreiche Posts und Aktualisierungen. Ein fehlschlagender automatischer Post oder eine fehlschlagende Aktualisierung
 erzeugt eine Benachrichtigung, wenn Bearcat nach 5 Fehlversuchen aufgibt. Frühere Fehlschläge stehen nur im Log.
+Mehrere passende Themen erzeugen ebenfalls eine Benachrichtigung.
 Die Benachrichtigungen für Posts und Aktualisierungen kannst du separat deaktivieren.
 Posts, die wegen der Einstellungen für Hoster und Linkcrypter übersprungen werden, erzeugen keine Benachrichtigung.
 
