@@ -1,3 +1,5 @@
+@using Bearcat.Website.Pages.ManageReleases.Search
+
 @if (Selection.Count > 0)
 {
     <div class="bearcat-release-bulk-action-bar">
@@ -43,6 +45,7 @@
             <LucideIcon Name="scan-search" class="h-4 w-4" />
             <span class="hidden sm:inline">@L["CheckOnlineState"]</span>
         </BbButton>
+        <ReleaseLinksExportMenu ReleaseIds="Selection.SelectedIds" />
         <BbButton Variant="ButtonVariant.Ghost"
                   Size="ButtonSize.Small"
                   Class="shrink-0 text-destructive hover:text-destructive"

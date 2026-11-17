@@ -65,13 +65,25 @@ public class ReleaseReadRepositoryLinkExportTest(DatabaseProvider databaseProvid
 
         // Act
         var partiallyOnlineLinks = await repository
-            .StreamLinksForExportAsync(OnlineState.PartiallyOnline, CancellationToken.None)
+            .StreamLinksForExportAsync(
+                uploadOnlineState: OnlineState.PartiallyOnline,
+                releaseIds: null,
+                cancellationToken: CancellationToken.None
+            )
             .ToListAsync();
         var offlineLinks = await repository
-            .StreamLinksForExportAsync(OnlineState.Offline, CancellationToken.None)
+            .StreamLinksForExportAsync(
+                uploadOnlineState: OnlineState.Offline,
+                releaseIds: null,
+                cancellationToken: CancellationToken.None
+            )
             .ToListAsync();
         var allLinks = await repository
-            .StreamLinksForExportAsync(null, CancellationToken.None)
+            .StreamLinksForExportAsync(
+                uploadOnlineState: null,
+                releaseIds: null,
+                cancellationToken: CancellationToken.None
+            )
             .ToListAsync();
 
         // Assert
@@ -112,7 +124,11 @@ public class ReleaseReadRepositoryLinkExportTest(DatabaseProvider databaseProvid
 
         // Act
         var links = await repository
-            .StreamLinksForExportAsync(null, CancellationToken.None)
+            .StreamLinksForExportAsync(
+                uploadOnlineState: null,
+                releaseIds: null,
+                cancellationToken: CancellationToken.None
+            )
             .ToListAsync();
 
         // Assert
@@ -153,7 +169,11 @@ public class ReleaseReadRepositoryLinkExportTest(DatabaseProvider databaseProvid
 
         // Act
         var links = await repository
-            .StreamLinksForExportAsync(null, CancellationToken.None)
+            .StreamLinksForExportAsync(
+                uploadOnlineState: null,
+                releaseIds: null,
+                cancellationToken: CancellationToken.None
+            )
             .ToListAsync();
 
         // Assert
@@ -205,7 +225,11 @@ public class ReleaseReadRepositoryLinkExportTest(DatabaseProvider databaseProvid
 
         // Act
         var links = await repository
-            .StreamLinksForExportAsync(null, CancellationToken.None)
+            .StreamLinksForExportAsync(
+                uploadOnlineState: null,
+                releaseIds: null,
+                cancellationToken: CancellationToken.None
+            )
             .ToListAsync();
 
         // Assert
