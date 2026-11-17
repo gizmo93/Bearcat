@@ -241,8 +241,11 @@ public partial class AutoPostPlanSection(
         var entityType = Plan.EntityType;
         var entityId = Plan.EntityId;
 
-        threadCandidatesByRegistrationId.Remove(site.DistributionSiteRegistrationId);
-        threadSelectionsByRegistrationId.Remove(site.DistributionSiteRegistrationId);
+        if (result.Status != AutoPostExecutionStatus.Failed)
+        {
+            threadCandidatesByRegistrationId.Remove(site.DistributionSiteRegistrationId);
+            threadSelectionsByRegistrationId.Remove(site.DistributionSiteRegistrationId);
+        }
 
         if (result.Status == AutoPostExecutionStatus.ThreadSelectionNeeded)
         {
