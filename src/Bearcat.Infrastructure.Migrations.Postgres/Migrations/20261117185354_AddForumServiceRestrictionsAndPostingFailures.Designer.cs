@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bearcat.Infrastructure.Migrations.Postgres
 {
     [DbContext(typeof(BearcatDbContext))]
-    [Migration("20261117182551_AddForumPostingFailures")]
-    partial class AddForumPostingFailures
+    [Migration("20261117185354_AddForumServiceRestrictionsAndPostingFailures")]
+    partial class AddForumServiceRestrictionsAndPostingFailures
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
