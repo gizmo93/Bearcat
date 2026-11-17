@@ -63,6 +63,25 @@
                           CheckedChanged="SetStripDotsForThreadSearchAsync"
                           AriaLabel="@L["StripDotsForThreadSearch"]" />
             </div>
+
+            <div class="bearcat-section-header border-t border-border/60 pt-4">
+                <div class="flex items-start gap-2">
+                    <LucideIcon Name="timer" class="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <div class="space-y-1">
+                        <p class="text-sm font-semibold">@L["MinimumSecondsBetweenPosts"]</p>
+                        <p class="text-xs text-muted-foreground">@L["MinimumSecondsBetweenPostsHelp"]</p>
+                    </div>
+                </div>
+
+                <BbNumericInput TValue="int"
+                                Value="registration.MinimumSecondsBetweenPosts"
+                                ValueChanged="SetMinimumSecondsBetweenPostsAsync"
+                                Min="0"
+                                Step="1"
+                                AllowNegative="false"
+                                Class="w-24"
+                                AriaLabel="@L["MinimumSecondsBetweenPosts"]" />
+            </div>
         </BbCardContent>
     </BbCard>
 

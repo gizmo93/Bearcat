@@ -39,6 +39,7 @@ public class AutoForumPostingRepository(
                 registration.Name,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
+                registration.MinimumSecondsBetweenPosts,
             })
             .ToListAsync(cancellationToken);
 
@@ -58,6 +59,7 @@ public class AutoForumPostingRepository(
                 Name: registration.Name,
                 EnableAutomaticPosting: registration.EnableAutomaticPosting,
                 StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+                MinimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
                 EnabledRules: enabledRules
                     .Where(rule => rule.DistributionSiteRegistrationId == registration.Id)
                     .ToList()
@@ -184,6 +186,81 @@ public class AutoForumPostingRepository(
         return completionTimes.ToDictionary(entry => entry.EntityId, entry => entry.UploadedAt);
     }
 
+    public async Task<IReadOnlyList<ForumPostingFailure>> GetForumPostingFailuresAsync(
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var failures =
+            entityType == ForumPostTemplateType.Release
+                ? dbRead.ForumPostingFailures.Where(failure =>
+                    failure.ReleaseId != null && entityIds.Contains(failure.ReleaseId.Value)
+                )
+                : dbRead.ForumPostingFailures.Where(failure =>
+                    failure.ReleaseCollectionId != null
+                    && entityIds.Contains(failure.ReleaseCollectionId.Value)
+                );
+
+        return await failures.ToListAsync(cancellationToken);
+    }
+
+    public async Task SaveForumPostingFailureAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId,
+        int failedAttemptCount,
+        DateTime? nextAttemptAt,
+        string lastErrorMessage,
+        ForumPostingFailureState state,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var failure = await ForumPostingFailuresOf(
+                failures: dbWrite.ForumPostingFailures,
+                entityType: entityType,
+                entityId: entityId,
+                distributionSiteRegistrationId: distributionSiteRegistrationId
+            )
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (failure is null)
+        {
+            failure = new ForumPostingFailure
+            {
+                ReleaseId = entityType == ForumPostTemplateType.Release ? entityId : null,
+                ReleaseCollectionId =
+                    entityType == ForumPostTemplateType.ReleaseCollection ? entityId : null,
+                DistributionSiteRegistrationId = distributionSiteRegistrationId,
+            };
+
+            dbWrite.Add(failure);
+        }
+
+        failure.FailedAttemptCount = failedAttemptCount;
+        failure.NextAttemptAt = nextAttemptAt;
+        failure.LastErrorMessage = lastErrorMessage;
+        failure.State = state;
+
+        await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteForumPostingFailureAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await ForumPostingFailuresOf(
+                failures: dbWrite.ForumPostingFailures,
+                entityType: entityType,
+                entityId: entityId,
+                distributionSiteRegistrationId: distributionSiteRegistrationId
+            )
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     public async Task<AutoPostUpdateTarget> GetUpdateTargetAsync(
         int postedLocationId,
         CancellationToken cancellationToken = default
@@ -284,5 +361,21 @@ public class AutoForumPostingRepository(
         }
 
         await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    private static IQueryable<ForumPostingFailure> ForumPostingFailuresOf(
+        IQueryable<ForumPostingFailure> failures,
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId
+    )
+    {
+        var failuresOfRegistration = failures.Where(failure =>
+            failure.DistributionSiteRegistrationId == distributionSiteRegistrationId
+        );
+
+        return entityType == ForumPostTemplateType.Release
+            ? failuresOfRegistration.Where(failure => failure.ReleaseId == entityId)
+            : failuresOfRegistration.Where(failure => failure.ReleaseCollectionId == entityId);
     }
 }

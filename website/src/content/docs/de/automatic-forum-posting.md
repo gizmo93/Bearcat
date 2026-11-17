@@ -39,6 +39,9 @@ Das Intervall änderst du unter [Hintergrundaufgaben](/Bearcat/de/advanced-confi
 nach Themen sucht und neue Themen benennt. Bei Collections verwendet es den Collectionnamen.
 Schalte die Einstellung aus, um die Punkte bei der Suche und in neuen Themennamen zu behalten.
 
+**Mindestabstand zwischen Posts in Sekunden** ist standardmässig 30. Die Hintergrundaufgabe wartet mindestens so lange
+zwischen zwei Posts oder Aktualisierungen im selben Forum, auch nach Fehlversuchen. Posten aus der Postwarteschlange wartet nicht.
+
 ## Hoster, Linkcrypter und Bildhoster
 
 Unter den Einstellungen pro Forum wählst du erforderliche und verbotene Hoster, Linkcrypter und Bildhoster für das Forum.
@@ -223,10 +226,27 @@ Du kannst einen Post auch unter **Veröffentlichungsorte** bei einem Release ode
 Klicke auf den Button zum Aktualisieren und bestätige das Ersetzen.
 Der Eintrag muss mit einer Verteilungsseite verknüpft sein; auch von Hand bestätigte Posts lassen sich aktualisieren.
 
+## Fehlgeschlagene automatische Posts
+
+Schlägt ein automatischer Post oder eine Aktualisierung in einem Forum fehl, pausiert die Hintergrundaufgabe dieses Forum für das Release oder die Collection:
+
+| Fehlversuche | Nächster Versuch nach |
+| --- | --- |
+| 1 | 15 Minuten |
+| 2 | 1 Stunde |
+| 3 | 4 Stunden |
+| 4 | 12 Stunden |
+| 5 | Aufgegeben |
+
+Posts und Aktualisierungen teilen sich den Zähler. Der Abschnitt **Automatisches Posten** zeigt die Pause oder das Aufgeben mit dem letzten Fehler.
+**Posten** oder **Post aktualisieren** versucht es sofort erneut. Ein erfolgreicher Post oder eine erfolgreiche Aktualisierung setzt den Zähler zurück, ein Fehlschlag ändert ihn nicht.
+
 ## Benachrichtigungen
 
-Bearcat meldet erfolgreiche und fehlgeschlagene Posts. Die Benachrichtigungen für erfolgreiche und
-fehlgeschlagene Aktualisierungen kannst du separat deaktivieren. Posts, die wegen der Einstellungen für Hoster und Linkcrypter übersprungen werden, erzeugen keine Benachrichtigung.
+Bearcat meldet erfolgreiche Posts und Aktualisierungen. Ein fehlschlagender automatischer Post oder eine fehlschlagende Aktualisierung
+erzeugt eine Benachrichtigung, wenn Bearcat nach 5 Fehlversuchen aufgibt. Frühere Fehlschläge stehen nur im Log.
+Die Benachrichtigungen für Posts und Aktualisierungen kannst du separat deaktivieren.
+Posts, die wegen der Einstellungen für Hoster und Linkcrypter übersprungen werden, erzeugen keine Benachrichtigung.
 
 ## Veröffentlichungsorte und Duplikate
 

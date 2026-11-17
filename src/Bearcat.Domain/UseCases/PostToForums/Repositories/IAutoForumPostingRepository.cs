@@ -40,6 +40,30 @@ public interface IAutoForumPostingRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ForumPostingFailure>> GetForumPostingFailuresAsync(
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
+        CancellationToken cancellationToken = default
+    );
+
+    Task SaveForumPostingFailureAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId,
+        int failedAttemptCount,
+        DateTime? nextAttemptAt,
+        string lastErrorMessage,
+        ForumPostingFailureState state,
+        CancellationToken cancellationToken = default
+    );
+
+    Task DeleteForumPostingFailureAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<AutoPostUpdateTarget> GetUpdateTargetAsync(
         int postedLocationId,
         CancellationToken cancellationToken = default

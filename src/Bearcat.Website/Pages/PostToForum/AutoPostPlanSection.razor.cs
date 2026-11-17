@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
@@ -38,6 +39,39 @@ public partial class AutoPostPlanSection(
     private static bool CanUpdatePost(AutoPostSiteEntry site)
     {
         return site.PostedLocationId is not null && site.ResolvedForumPostTemplateId is not null;
+    }
+
+    private string? FailureText(AutoPostSiteEntry site)
+    {
+        var isPending =
+            site.Status == AutoPostSiteStatus.Matched
+            || (site.Status == AutoPostSiteStatus.AlreadyPosted && site.NeedsContentUpdate);
+
+        if (!isPending)
+        {
+            return null;
+        }
+
+        if (site.FailureState == ForumPostingFailureState.RetryScheduled)
+        {
+            return L[
+                "AutoPostPausedAfterFailedAttempts",
+                site.NextAttemptAt!.Value.ToString("g", CultureInfo.CurrentCulture),
+                site.FailedAttemptCount,
+                site.LastErrorMessage!
+            ].Value;
+        }
+
+        if (site.FailureState == ForumPostingFailureState.GaveUp)
+        {
+            return L[
+                "AutoPostGaveUpAfterFailedAttempts",
+                site.FailedAttemptCount,
+                site.LastErrorMessage!
+            ].Value;
+        }
+
+        return null;
     }
 
     private async Task PostToSiteAsync(AutoPostSiteEntry site)

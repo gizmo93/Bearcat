@@ -39,6 +39,9 @@ Change the interval under [Background tasks](/Bearcat/advanced-configuration/#ba
 for threads and naming new ones. For collections, it uses the collection name.
 Turn it off to keep dots in searches and new thread titles.
 
+**Minimum seconds between posts** defaults to 30. The background task waits at least this long between
+two posts or updates to the same forum, including failed attempts. Posting from the post queue does not wait.
+
 ## Hosters, link crypters and image hosters
 
 Below the site-wide settings, choose required and forbidden hosters, link crypters and image hosters for the forum.
@@ -222,10 +225,27 @@ Older posts may have no stored template. Choose one in the dialog or make sure a
 You can also update a post from **Posted locations** on a release or collection. Click the update button and confirm the replacement.
 The entry must be linked to a distribution site; posts you confirmed by hand also qualify.
 
+## Failed automatic posts
+
+When an automatic post or update to a forum fails, the background task pauses that forum for the release or collection:
+
+| Failed attempts | Next attempt after |
+| --- | --- |
+| 1 | 15 minutes |
+| 2 | 1 hour |
+| 3 | 4 hours |
+| 4 | 12 hours |
+| 5 | Gives up |
+
+Posts and updates share the counter. The **Automatic posting** section shows the pause or the give-up with the last error.
+**Post** or **Update post** retries right away. A successful post or update resets the counter, a failed one does not change it.
+
 ## Notifications
 
-Bearcat notifies you of successful and failed posts. You can disable notifications for successful
-and failed updates separately. Posts skipped because of the hoster and link crypter settings create no notification.
+Bearcat notifies you of successful posts and updates. A failing automatic post or update creates one notification
+when Bearcat gives up after 5 failed attempts. Earlier failures only appear in the log.
+You can disable notifications for posts and updates separately.
+Posts skipped because of the hoster and link crypter settings create no notification.
 
 ## Posted locations and duplicates
 

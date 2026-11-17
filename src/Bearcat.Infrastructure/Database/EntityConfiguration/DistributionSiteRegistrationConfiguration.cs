@@ -23,6 +23,7 @@ public class DistributionSiteRegistrationConfiguration
         builder.Property(registration => registration.IsActive).IsRequired();
         builder.Property(registration => registration.EnableAutomaticPosting).IsRequired();
         builder.Property(registration => registration.StripDotsForThreadSearch).IsRequired();
+        builder.Property(registration => registration.MinimumSecondsBetweenPosts).IsRequired();
         builder.Property(registration => registration.RequiredHosterClassNames).IsRequired();
         builder.Property(registration => registration.ForbiddenHosterClassNames).IsRequired();
         builder.Property(registration => registration.RequiredLinkCrypterClassNames).IsRequired();

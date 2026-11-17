@@ -24,6 +24,8 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
 
     public List<AutoPostUpdateTarget> UpdateTargets { get; init; } = [];
 
+    public List<ForumPostingFailure> ForumPostingFailures { get; init; } = [];
+
     public List<AutoPostPostedLocation> RecordedPostedLocations { get; } = [];
 
     public List<UpdatedPostedLocation> UpdatedPostedLocations { get; } = [];
@@ -116,6 +118,80 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
         );
     }
 
+    public Task<IReadOnlyList<ForumPostingFailure>> GetForumPostingFailuresAsync(
+        ForumPostTemplateType entityType,
+        IReadOnlyList<int> entityIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.FromResult<IReadOnlyList<ForumPostingFailure>>(
+            ForumPostingFailures
+                .Where(failure =>
+                    EntityIdOf(failure, entityType) is { } entityId && entityIds.Contains(entityId)
+                )
+                .ToList()
+        );
+    }
+
+    public Task SaveForumPostingFailureAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId,
+        int failedAttemptCount,
+        DateTime? nextAttemptAt,
+        string lastErrorMessage,
+        ForumPostingFailureState state,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var failure = FindForumPostingFailure(
+            entityType: entityType,
+            entityId: entityId,
+            distributionSiteRegistrationId: distributionSiteRegistrationId
+        );
+
+        if (failure is null)
+        {
+            failure = new ForumPostingFailure
+            {
+                ReleaseId = entityType == ForumPostTemplateType.Release ? entityId : null,
+                ReleaseCollectionId =
+                    entityType == ForumPostTemplateType.ReleaseCollection ? entityId : null,
+                DistributionSiteRegistrationId = distributionSiteRegistrationId,
+            };
+
+            ForumPostingFailures.Add(failure);
+        }
+
+        failure.FailedAttemptCount = failedAttemptCount;
+        failure.NextAttemptAt = nextAttemptAt;
+        failure.LastErrorMessage = lastErrorMessage;
+        failure.State = state;
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteForumPostingFailureAsync(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var failure = FindForumPostingFailure(
+            entityType: entityType,
+            entityId: entityId,
+            distributionSiteRegistrationId: distributionSiteRegistrationId
+        );
+
+        if (failure is not null)
+        {
+            ForumPostingFailures.Remove(failure);
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<AutoPostUpdateTarget> GetUpdateTargetAsync(
         int postedLocationId,
         CancellationToken cancellationToken = default
@@ -204,5 +280,24 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
         return entityType == ForumPostTemplateType.Release
             ? PostedLocations
             : ReleaseCollectionPostedLocations;
+    }
+
+    private ForumPostingFailure? FindForumPostingFailure(
+        ForumPostTemplateType entityType,
+        int entityId,
+        int distributionSiteRegistrationId
+    )
+    {
+        return ForumPostingFailures.FirstOrDefault(failure =>
+            EntityIdOf(failure, entityType) == entityId
+            && failure.DistributionSiteRegistrationId == distributionSiteRegistrationId
+        );
+    }
+
+    private static int? EntityIdOf(ForumPostingFailure failure, ForumPostTemplateType entityType)
+    {
+        return entityType == ForumPostTemplateType.Release
+            ? failure.ReleaseId
+            : failure.ReleaseCollectionId;
     }
 }

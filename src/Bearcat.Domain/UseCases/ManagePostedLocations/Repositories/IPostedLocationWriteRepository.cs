@@ -15,6 +15,13 @@ public interface IPostedLocationWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task DeleteForumPostingFailureAsync(
+        int? releaseId,
+        int? releaseCollectionId,
+        int distributionSiteRegistrationId,
+        CancellationToken cancellationToken = default
+    );
+
     void Add(PostedLocation postedLocation);
 
     void Remove(PostedLocation postedLocation);

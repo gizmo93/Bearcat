@@ -397,6 +397,35 @@ public class AutoForumPostCreationServiceTest
         repository.MarkedReleaseIds.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task CreatePostOnSiteAsync_SiteWithRecordedFailures_DeletesTheFailureRecord()
+    {
+        // Arrange
+        var repository = RepositoryWith(AutoPostTestFactory.Rule());
+        repository.ForumPostingFailures.Add(
+            new ForumPostingFailure
+            {
+                ReleaseId = 1,
+                DistributionSiteRegistrationId = 5,
+                FailedAttemptCount = 5,
+                LastErrorMessage = "Flood control",
+                State = ForumPostingFailureState.GaveUp,
+            }
+        );
+        var service = ServiceWith(repository, new FakeForumPostSubmitter());
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        repository.ForumPostingFailures.ShouldBeEmpty();
+    }
+
     private static FakeAutoForumPostingRepository RepositoryWith(
         ForumPostingRule rule,
         bool stripDotsForThreadSearch = true

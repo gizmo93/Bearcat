@@ -69,6 +69,11 @@
                         <p class="text-xs text-muted-foreground">@L["AutoPostNoMatchingRule"]</p>
                     }
 
+                    @if (FailureText(site) is { } failureText)
+                    {
+                        <p class="text-xs text-muted-foreground">@failureText</p>
+                    }
+
                     @if (siteErrors.GetValueOrDefault(site.DistributionSiteRegistrationId) is { } error)
                     {
                         <p class="text-xs text-destructive">@error</p>

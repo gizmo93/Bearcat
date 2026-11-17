@@ -507,6 +507,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("MinimumSecondsBetweenPosts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -574,6 +577,56 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsUnique();
 
                     b.ToTable("ForumPostTemplates");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingFailure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DistributionSiteRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FailedAttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastErrorMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistributionSiteRegistrationId");
+
+                    b.HasIndex("ReleaseCollectionId", "DistributionSiteRegistrationId")
+                        .IsUnique()
+                        .HasFilter("\"ReleaseCollectionId\" IS NOT NULL");
+
+                    b.HasIndex("ReleaseId", "DistributionSiteRegistrationId")
+                        .IsUnique()
+                        .HasFilter("\"ReleaseId\" IS NOT NULL");
+
+                    b.ToTable("ForumPostingFailures", t =>
+                        {
+                            t.HasCheckConstraint("CK_ForumPostingFailure_Owner", "(\"ReleaseId\" IS NOT NULL) <> (\"ReleaseCollectionId\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingRule", b =>
@@ -3045,6 +3098,31 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasForeignKey("ReleaseCollectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ReleaseCollection");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingFailure", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.DistributionSiteRegistration", "DistributionSiteRegistration")
+                        .WithMany()
+                        .HasForeignKey("DistributionSiteRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany()
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("DistributionSiteRegistration");
+
+                    b.Navigation("Release");
 
                     b.Navigation("ReleaseCollection");
                 });

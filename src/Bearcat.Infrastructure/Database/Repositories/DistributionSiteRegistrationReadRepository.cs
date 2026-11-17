@@ -29,6 +29,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.HasUnreadableSecrets,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
+                registration.MinimumSecondsBetweenPosts,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .ToListAsync(cancellationToken);
@@ -43,6 +44,7 @@ public class DistributionSiteRegistrationReadRepository(
                     hasUnreadableSecrets: registration.HasUnreadableSecrets,
                     enableAutomaticPosting: registration.EnableAutomaticPosting,
                     stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+                    minimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
                     postingRuleCount: registration.PostingRuleCount,
                     distributionSitesByClassName: distributionSitesByClassName
                 )
@@ -66,6 +68,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.HasUnreadableSecrets,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
+                registration.MinimumSecondsBetweenPosts,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -83,6 +86,7 @@ public class DistributionSiteRegistrationReadRepository(
             hasUnreadableSecrets: registration.HasUnreadableSecrets,
             enableAutomaticPosting: registration.EnableAutomaticPosting,
             stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
+            minimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
             postingRuleCount: registration.PostingRuleCount,
             distributionSitesByClassName: DistributionSitesByClassName()
         );
@@ -132,6 +136,7 @@ public class DistributionSiteRegistrationReadRepository(
         bool hasUnreadableSecrets,
         bool enableAutomaticPosting,
         bool stripDotsForThreadSearch,
+        int minimumSecondsBetweenPosts,
         int postingRuleCount,
         IReadOnlyDictionary<string, DistributionSiteDto> distributionSitesByClassName
     )
@@ -148,6 +153,7 @@ public class DistributionSiteRegistrationReadRepository(
             HasUnreadableSecrets: hasUnreadableSecrets,
             EnableAutomaticPosting: enableAutomaticPosting,
             StripDotsForThreadSearch: stripDotsForThreadSearch,
+            MinimumSecondsBetweenPosts: minimumSecondsBetweenPosts,
             PostingRuleCount: postingRuleCount
         );
     }

@@ -121,6 +121,7 @@ public static class AutoPostTestFactory
             Name: name,
             EnableAutomaticPosting: false,
             StripDotsForThreadSearch: true,
+            MinimumSecondsBetweenPosts: 0,
             EnabledRules: rules.Length == 0 ? [Rule()] : rules
         );
     }

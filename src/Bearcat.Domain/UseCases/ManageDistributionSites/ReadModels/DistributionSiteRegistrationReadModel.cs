@@ -12,5 +12,6 @@ public record DistributionSiteRegistrationReadModel(
     bool HasUnreadableSecrets,
     bool EnableAutomaticPosting,
     bool StripDotsForThreadSearch,
+    int MinimumSecondsBetweenPosts,
     int PostingRuleCount
 );

@@ -1146,7 +1146,7 @@
   <data name="NotificationKind.ReleaseCreationSkippedBecauseNameExists.Description" xml:space="preserve"><value>Ein von einer Ordnerautomatisierung oder Remotequelle gefundener Ordner wurde übersprungen, weil bereits ein Release mit demselben Namen existiert. Es wurde kein Release erstellt.</value></data>
   <data name="NotificationKind.LinkCrypterImportFailed" xml:space="preserve"><value>Linkcrypterimport fehlgeschlagen</value></data><data name="NotificationKind.LinkCrypterImportFailed.Description" xml:space="preserve"><value>Ein Linkcrypterimport ist fehlgeschlagen oder einige seiner Container konnten nicht importiert werden.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatischer Forenpost erstellt</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>Ein Release wurde automatisch in einem Forum gepostet.</value></data>
-  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Ein Release konnte nicht automatisch in einem Forum gepostet werden.</value></data>
+  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Das automatische Posten in einem Forum wurde nach 5 Fehlversuchen aufgegeben.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Schweregrad</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Benachrichtigungsart</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>Alle Benachrichtigungsarten</value></data>
@@ -1256,6 +1256,11 @@
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} aktiviert</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} deaktiviert</value></data>
   <data name="AutoPostUpdatePost" xml:space="preserve"><value>Post aktualisieren</value></data>
+  <data name="MinimumSecondsBetweenPosts" xml:space="preserve"><value>Mindestabstand zwischen Posts in Sekunden</value></data>
+  <data name="MinimumSecondsBetweenPostsHelp" xml:space="preserve"><value>Das automatische Posten wartet mindestens so lange zwischen zwei Posts oder Aktualisierungen in diesem Forum. Posten aus dem Dialog wartet nicht.</value></data>
+  <data name="MinimumSecondsBetweenPostsSaved" xml:space="preserve"><value>Mindestabstand zwischen Posts für {0} gespeichert</value></data>
+  <data name="AutoPostPausedAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten pausiert bis {0} nach {1} Fehlversuchen: {2}</value></data>
+  <data name="AutoPostGaveUpAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten nach {0} Fehlversuchen aufgegeben: {1}</value></data>
   <data name="AutoPostContentOutdated" xml:space="preserve"><value>Postinhalt ist veraltet</value></data>
   <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} aktualisiert</value></data>
   <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Posts in {0} fehlgeschlagen</value></data>
@@ -1268,7 +1273,7 @@
   <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Forumspost aktualisiert</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>Ein vorhandener Forumspost wurde mit frisch gerendertem Inhalt aktualisiert.</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Forumsposts fehlgeschlagen</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Ein vorhandener Forumspost konnte nicht aktualisiert werden.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Das automatische Aktualisieren eines Forumsposts wurde nach 5 Fehlversuchen aufgegeben.</value></data>
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archivwiederherstellung fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>

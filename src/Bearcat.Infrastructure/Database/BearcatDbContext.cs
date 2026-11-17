@@ -18,6 +18,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<PostedLocation> PostedLocations { get; set; } = null!;
 
+    public DbSet<ForumPostingFailure> ForumPostingFailures { get; set; } = null!;
+
     public DbSet<ImageUpload> ImageUploads { get; set; } = null!;
 
     public DbSet<ImageUploadUrl> ImageUploadUrls { get; set; } = null!;

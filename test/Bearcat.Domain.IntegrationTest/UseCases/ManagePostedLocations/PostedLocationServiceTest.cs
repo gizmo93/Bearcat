@@ -126,6 +126,84 @@ public class PostedLocationServiceTest(DatabaseProvider databaseProvider)
         postedLocation.ReleaseId.ShouldBe(release.Id);
     }
 
+    [Test]
+    public async Task AddForReleaseAsync_ForumPostingFailuresExist_DeletesOnlyFailureOfSameReleaseAndForum()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Release.001");
+        var otherRelease = await AddReleaseAsync("Bearcat.Release.002");
+        var registration = await AddRegistrationAsync("Forum A");
+        var otherRegistration = await AddRegistrationAsync("Forum B");
+
+        DbContext.ForumPostingFailures.AddRange(
+            CreateGaveUpFailure(release.Id, registration.Id),
+            CreateGaveUpFailure(release.Id, otherRegistration.Id),
+            CreateGaveUpFailure(otherRelease.Id, registration.Id)
+        );
+
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await service.AddForReleaseAsync(
+            releaseId: release.Id,
+            url: "https://forum.example/threads/1",
+            distributionSiteRegistrationId: registration.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var remainingFailures = await DbContext
+            .ForumPostingFailures.Select(failure => new
+            {
+                failure.ReleaseId,
+                failure.DistributionSiteRegistrationId,
+            })
+            .ToListAsync();
+
+        remainingFailures.Count.ShouldBe(2);
+        remainingFailures.ShouldContain(failure =>
+            failure.ReleaseId == release.Id
+            && failure.DistributionSiteRegistrationId == otherRegistration.Id
+        );
+
+        remainingFailures.ShouldContain(failure =>
+            failure.ReleaseId == otherRelease.Id
+            && failure.DistributionSiteRegistrationId == registration.Id
+        );
+    }
+
+    private static ForumPostingFailure CreateGaveUpFailure(
+        int releaseId,
+        int distributionSiteRegistrationId
+    )
+    {
+        return new ForumPostingFailure
+        {
+            ReleaseId = releaseId,
+            DistributionSiteRegistrationId = distributionSiteRegistrationId,
+            FailedAttemptCount = 5,
+            LastErrorMessage = "Forum unavailable.",
+            State = ForumPostingFailureState.GaveUp,
+        };
+    }
+
+    private async Task<DistributionSiteRegistration> AddRegistrationAsync(string name)
+    {
+        var registration = new DistributionSiteRegistration
+        {
+            Name = name,
+            DistributionSiteClassName = "GenericXenForo",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+
+        DbContext.DistributionSiteRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
+
+        return registration;
+    }
+
     private async Task<Release> AddReleaseAsync(string name)
     {
         var release = new Release

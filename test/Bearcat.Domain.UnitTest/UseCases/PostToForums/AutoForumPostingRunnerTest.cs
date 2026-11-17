@@ -4,12 +4,17 @@ using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.ValueObjects;
+using Microsoft.Extensions.Configuration;
+using Moq;
 using Shouldly;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public class AutoForumPostingRunnerTest
 {
+    private static readonly DateTime Now = new(2026, 9, 16, 12, 0, 0, DateTimeKind.Unspecified);
+
     [Test]
     public async Task RunAsync_MixedRegistrations_PostsOnlyToAutomaticallyEnabledSites()
     {
@@ -302,6 +307,82 @@ public class AutoForumPostingRunnerTest
         repository.MarkedReleaseCollectionIds.ShouldBe([4]);
     }
 
+    [Test]
+    public async Task RunAsync_SiteWithRetryScheduledInTheFuture_SkipsTheSite()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
+            ForumPostingFailures =
+            [
+                RetryScheduledFailure(failedAttemptCount: 1, nextAttemptAt: Now.AddMinutes(10)),
+            ],
+        };
+        var submitter = new FakeForumPostSubmitter();
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.PostedCount.ShouldBe(0);
+        result.Failures.ShouldBeEmpty();
+        submitter.NewThreads.ShouldBeEmpty();
+        repository.ForumPostingFailures.ShouldHaveSingleItem().FailedAttemptCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task RunAsync_FifthFailedAttempt_GivesUpWithOneNotification()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutomaticRegistration(id: 5, name: "Broken")],
+            ForumPostingFailures =
+            [
+                RetryScheduledFailure(failedAttemptCount: 4, nextAttemptAt: Now.AddMinutes(-1)),
+            ],
+        };
+        var submitter = new FakeForumPostSubmitter { FailingRegistrationIds = [5] };
+        var notificationService = new FakeNotificationService();
+        var runner = RunnerWith(repository, submitter, notificationService);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.FailedCount.ShouldBe(1);
+
+        var failure = repository.ForumPostingFailures.ShouldHaveSingleItem();
+        failure.State.ShouldBe(ForumPostingFailureState.GaveUp);
+        failure.FailedAttemptCount.ShouldBe(5);
+        failure.NextAttemptAt.ShouldBeNull();
+        failure.LastErrorMessage.ShouldBe("Submit to 5 failed");
+
+        var notification = notificationService.Created.ShouldHaveSingleItem();
+        notification.Kind.ShouldBe(NotificationKind.AutomaticForumPostFailed);
+        notification.Message.ShouldContain("5 failed attempts");
+    }
+
+    private static ForumPostingFailure RetryScheduledFailure(
+        int failedAttemptCount,
+        DateTime nextAttemptAt
+    )
+    {
+        return new ForumPostingFailure
+        {
+            ReleaseId = 1,
+            DistributionSiteRegistrationId = 5,
+            FailedAttemptCount = failedAttemptCount,
+            NextAttemptAt = nextAttemptAt,
+            LastErrorMessage = "Submit to 5 failed",
+            State = ForumPostingFailureState.RetryScheduled,
+        };
+    }
+
     private static AutoPostRegistration AutomaticRegistration(
         int id,
         string name,
@@ -325,6 +406,9 @@ public class AutoForumPostingRunnerTest
         notificationService ??= new FakeNotificationService();
         var uploadsPostedStatusService = new UploadsPostedStatusService(planService, repository);
 
+        var timeProvider = new Mock<TimeProvider>(new ConfigurationBuilder().Build());
+        timeProvider.Setup(provider => provider.GetLocalNow()).Returns(Now);
+
         return new AutoForumPostingRunner(
             repository: repository,
             planService: planService,
@@ -343,7 +427,9 @@ public class AutoForumPostingRunnerTest
                 submitter: submitter,
                 notificationService: notificationService,
                 uploadsPostedStatusService: uploadsPostedStatusService
-            )
+            ),
+            notificationService: notificationService,
+            timeProvider: timeProvider.Object
         );
     }
 }

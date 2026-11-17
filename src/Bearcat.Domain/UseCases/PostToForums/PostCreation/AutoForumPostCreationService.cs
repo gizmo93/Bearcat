@@ -63,13 +63,22 @@ public class AutoForumPostCreationService(
             cancellationToken: cancellationToken
         );
 
-        await CreatePostResultNotificationAsync(
-            entityType: plan.EntityType,
-            entityName: plan.EntityName,
-            distributionSiteRegistrationName: site.DistributionSiteRegistrationName,
-            result: result,
-            cancellationToken: cancellationToken
-        );
+        if (result.Status == AutoPostExecutionStatus.Posted)
+        {
+            await repository.DeleteForumPostingFailureAsync(
+                entityType: plan.EntityType,
+                entityId: plan.EntityId,
+                distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
+                cancellationToken: cancellationToken
+            );
+
+            await CreatePostedNotificationAsync(
+                plan: plan,
+                site: site,
+                postedUrl: result.PostedUrl!,
+                cancellationToken: cancellationToken
+            );
+        }
 
         return result;
     }
@@ -191,36 +200,19 @@ public class AutoForumPostCreationService(
         );
     }
 
-    private async Task CreatePostResultNotificationAsync(
-        ForumPostTemplateType entityType,
-        string entityName,
-        string distributionSiteRegistrationName,
-        AutoPostExecutionResult result,
+    private async Task CreatePostedNotificationAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        string postedUrl,
         CancellationToken cancellationToken
     )
     {
-        if (result.Status == AutoPostExecutionStatus.Skipped)
-        {
-            return;
-        }
-
         var entityLabel =
-            entityType == ForumPostTemplateType.Release ? "Release" : "Release collection";
-
-        if (result.Status == AutoPostExecutionStatus.Posted)
-        {
-            await notificationService.CreateAsync(
-                kind: NotificationKind.AutomaticForumPostCreated,
-                message: $"{entityLabel} '{entityName}' was posted automatically to '{distributionSiteRegistrationName}': {result.PostedUrl}",
-                cancellationToken: cancellationToken
-            );
-
-            return;
-        }
+            plan.EntityType == ForumPostTemplateType.Release ? "Release" : "Release collection";
 
         await notificationService.CreateAsync(
-            kind: NotificationKind.AutomaticForumPostFailed,
-            message: $"Automatic posting of {entityLabel.ToLowerInvariant()} '{entityName}' to '{distributionSiteRegistrationName}' failed: {string.Join(" ", result.Errors)}",
+            kind: NotificationKind.AutomaticForumPostCreated,
+            message: $"{entityLabel} '{plan.EntityName}' was posted automatically to '{site.DistributionSiteRegistrationName}': {postedUrl}",
             cancellationToken: cancellationToken
         );
     }

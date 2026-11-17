@@ -233,6 +233,24 @@ public partial class ForumPostingRulesPage(
         );
     }
 
+    private async Task SetMinimumSecondsBetweenPostsAsync(int minimumSecondsBetweenPosts)
+    {
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.SetMinimumSecondsBetweenPostsAsync(
+                    DistributionSiteRegistrationId,
+                    minimumSecondsBetweenPosts
+                )
+        );
+
+        registration = registration with
+        {
+            MinimumSecondsBetweenPosts = minimumSecondsBetweenPosts,
+        };
+
+        toastService.Success(L["MinimumSecondsBetweenPostsSaved", registration.Name]);
+    }
+
     private async Task SetServiceRestrictionsAsync(DistributionSiteServiceRestrictions restrictions)
     {
         await operationRunner.RunAsync(

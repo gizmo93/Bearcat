@@ -112,6 +112,16 @@ public class PostedLocationService(
         writeRepository.Add(postedLocation);
         await writeRepository.SaveChangesAsync(cancellationToken);
 
+        if (postedLocation.DistributionSiteRegistrationId is { } distributionSiteRegistrationId)
+        {
+            await writeRepository.DeleteForumPostingFailureAsync(
+                releaseId: postedLocation.ReleaseId,
+                releaseCollectionId: postedLocation.ReleaseCollectionId,
+                distributionSiteRegistrationId: distributionSiteRegistrationId,
+                cancellationToken: cancellationToken
+            );
+        }
+
         return postedLocation.Id;
     }
 }

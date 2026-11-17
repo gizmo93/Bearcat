@@ -155,6 +155,19 @@ public class DistributionSiteRegistrationService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task SetMinimumSecondsBetweenPostsAsync(
+        int id,
+        int minimumSecondsBetweenPosts,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await repository.GetByIdAsync(id, cancellationToken);
+
+        registration.MinimumSecondsBetweenPosts = minimumSecondsBetweenPosts;
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetServiceRestrictionsAsync(
         int id,
         DistributionSiteServiceRestrictions restrictions,

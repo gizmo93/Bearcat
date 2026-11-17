@@ -479,6 +479,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("MinimumSecondsBetweenPosts")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -544,6 +547,54 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsUnique();
 
                     b.ToTable("ForumPostTemplates");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingFailure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DistributionSiteRegistrationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FailedAttemptCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastErrorMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistributionSiteRegistrationId");
+
+                    b.HasIndex("ReleaseCollectionId", "DistributionSiteRegistrationId")
+                        .IsUnique()
+                        .HasFilter("\"ReleaseCollectionId\" IS NOT NULL");
+
+                    b.HasIndex("ReleaseId", "DistributionSiteRegistrationId")
+                        .IsUnique()
+                        .HasFilter("\"ReleaseId\" IS NOT NULL");
+
+                    b.ToTable("ForumPostingFailures", t =>
+                        {
+                            t.HasCheckConstraint("CK_ForumPostingFailure_Owner", "(\"ReleaseId\" IS NOT NULL) <> (\"ReleaseCollectionId\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingRule", b =>
@@ -2917,6 +2968,31 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasForeignKey("ReleaseCollectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ReleaseCollection");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingFailure", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.DistributionSiteRegistration", "DistributionSiteRegistration")
+                        .WithMany()
+                        .HasForeignKey("DistributionSiteRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany()
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("DistributionSiteRegistration");
+
+                    b.Navigation("Release");
 
                     b.Navigation("ReleaseCollection");
                 });

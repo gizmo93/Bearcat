@@ -7,5 +7,6 @@ public sealed record AutoPostRegistration(
     string Name,
     bool EnableAutomaticPosting,
     bool StripDotsForThreadSearch,
+    int MinimumSecondsBetweenPosts,
     IReadOnlyList<ForumPostingRule> EnabledRules
 );

@@ -129,7 +129,7 @@ public class AutoForumPostUpdateServiceTest
     }
 
     [Test]
-    public async Task UpdatePostOnSiteAsync_FailingEdit_CreatesAFailureNotification()
+    public async Task UpdatePostOnSiteAsync_FailingEdit_CreatesNoNotification()
     {
         // Arrange
         var repository = OutdatedRepository(forumPostTemplateId: 3);
@@ -147,9 +147,7 @@ public class AutoForumPostUpdateServiceTest
         // Assert
         result.Status.ShouldBe(AutoPostUpdateStatus.Failed);
         repository.UpdatedPostedLocations.ShouldBeEmpty();
-        notificationService
-            .Created.ShouldHaveSingleItem()
-            .Kind.ShouldBe(NotificationKind.AutomaticForumPostUpdateFailed);
+        notificationService.Created.ShouldBeEmpty();
     }
 
     [Test]
