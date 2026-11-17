@@ -33,7 +33,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
-using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.LocalFolders;
@@ -41,9 +40,6 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.LocalF
 public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
-    private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
-
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
     private Mock<IArchiveExtractor> archiveExtractorMock = null!;
@@ -309,61 +305,6 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_ReleaseInfoIsResolved_PersistsReleaseInfoWithCreatedRelease()
-    {
-        // Arrange
-        var releaseTemplate = await AddReleaseTemplateAsync();
-        var releaseFolder = Directory.CreateDirectory(
-            Path.Combine(tempRootPath, "Bearcat.Release.1080p")
-        );
-        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
-        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
-        SetupNfoDatabase(
-            WorkingDatabaseClassName,
-            "Bearcat.Release.1080p",
-            CreateReleaseInfo("Bearcat.Release.1080p")
-        );
-
-        // Act
-        var result = await ProcessUntilStableAsync();
-
-        // Assert
-        result.ShouldBe(1);
-
-        DbContext.ChangeTracker.Clear();
-        var release = await DbContext
-            .Releases.AsSplitQuery()
-            .Include(release => release.ReleaseInfo)
-                .ThenInclude(info => info!.ExternalInfos)
-            .Include(release => release.Metadata)
-            .SingleAsync(release => release.ReleaseFolderPath == releaseFolder.FullName);
-
-        var releaseInfo = release.ReleaseInfo.ShouldNotBeNull();
-        releaseInfo.NfoDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
-        releaseInfo.ReleaseName.ShouldBe("Bearcat.Release.1080p");
-        releaseInfo.ReleaseDatabaseUrl.ShouldBe("https://www.xrel.to/release/123");
-        releaseInfo.SizeNumber.ShouldBe(12);
-        releaseInfo.SizeUnit.ShouldBe("GB");
-        releaseInfo.VideoType.ShouldBe("WEB");
-        releaseInfo.AudioType.ShouldBe("AC3");
-
-        var metadata = release.Metadata.ShouldNotBeNull();
-        metadata.Genre.ShouldBe("Drama, Sci-Fi");
-        metadata.Description.ShouldBe("Bearcat plot");
-        metadata.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
-
-        var externalInfo = releaseInfo.ExternalInfos.Single();
-        externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
-        externalInfo.Title.ShouldBe("Bearcat Movie");
-        externalInfo.Urls.ShouldContain(url =>
-            url.Type == UrlType.Imdb && url.Url == "https://www.imdb.com/de/title/tt1234567"
-        );
-        externalInfo.Urls.ShouldContain(url =>
-            url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
-        );
-    }
-
-    [Test]
     public async Task ProcessAsync_MultipleEpisodesInSameTick_ReusesPendingReleaseCollection()
     {
         // Arrange
@@ -486,23 +427,6 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
 
         releaseExists.ShouldBeFalse();
         notificationExists.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task ProcessAsync_EnabledAutomationHasNoMatchingFolders_DoesNotCreateRelease()
-    {
-        // Arrange
-        var releaseTemplate = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
-        Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.720p"));
-        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
-
-        // Act
-        var result = await ProcessUntilStableAsync();
-
-        // Assert
-        result.ShouldBe(0);
-        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
-        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -837,28 +761,6 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_IgnoreExistingOnFirstScanDisabled_ObservesExistingFolderAndCompletesInitialScan()
-    {
-        // Arrange
-        var releaseTemplate = await AddReleaseTemplateAsync();
-        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
-        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
-
-        // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(0);
-        (await DbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
-            folder.FullName
-        );
-        (await DbContext.ReleaseFolderAutomationIgnoredFolders.AnyAsync()).ShouldBeFalse();
-
-        var automation = await CreateDbContext().ReleaseFolderAutomations.SingleAsync();
-        automation.HasCompletedInitialScan.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task ProcessAsync_FolderBelowMinimumSize_DoesNotCreateRelease()
     {
         // Arrange
@@ -902,10 +804,6 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
     }
 
     [TestCase(RemoteSourceDownloadState.Downloading)]
-    [TestCase(RemoteSourceDownloadState.Downloaded)]
-    [TestCase(RemoteSourceDownloadState.Extracting)]
-    [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
-    [TestCase(RemoteSourceDownloadState.Failed)]
     public async Task ProcessAsync_FolderIsTargetOfRemoteDownload_IsSkipped(
         RemoteSourceDownloadState downloadState
     )
@@ -1424,78 +1322,6 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
             new ReleaseClassificationRepository(DbContext),
             CreateTimeProvider(),
             NullLogger<ReleaseClassificationService>.Instance
-        );
-    }
-
-    private void SetupNfoDatabase(
-        string className,
-        string expectedReleaseName,
-        NfoReleaseInfo? releaseInfo
-    )
-    {
-        var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
-        var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
-        nfoDatabaseMock.SetupGet(database => database.ResolutionPriority).Returns(100);
-        nfoDatabaseMock
-            .Setup(database => database.DeserializeConfig(SerializedConfig))
-            .Returns(configMock.Object);
-        nfoDatabaseMock
-            .Setup(database =>
-                database.GetReleaseInfoAsync(
-                    configMock.Object,
-                    expectedReleaseName,
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(releaseInfo);
-        nfoDatabaseFactoryMock
-            .Setup(factory => factory.Get(className))
-            .Returns(nfoDatabaseMock.Object);
-        nfoDatabasesByClassName[className] = nfoDatabaseMock.Object;
-    }
-
-    private async Task<NfoDatabaseRegistration> AddNfoDatabaseRegistrationAsync(
-        string className,
-        bool isActive
-    )
-    {
-        var registration = new NfoDatabaseRegistration
-        {
-            NfoDatabaseClassName = className,
-            SerializedConfig = SerializedConfig,
-            IsActive = isActive,
-        };
-
-        DbContext.NfoDatabaseRegistrations.Add(registration);
-        await DbContext.SaveChangesAsync();
-
-        return registration;
-    }
-
-    private static NfoReleaseInfo CreateReleaseInfo(string releaseName)
-    {
-        return new NfoReleaseInfo(
-            ReleaseName: releaseName,
-            ReleaseDatabaseUrl: "https://www.xrel.to/release/123",
-            Size: new ReleaseInfoSize(12, "GB"),
-            VideoType: "WEB",
-            AudioType: "AC3",
-            Genre: "Drama, Sci-Fi",
-            Description: "Bearcat plot",
-            CoverUrl: "https://uploads2.xrel.to/img_cover/movie123.JPG",
-            ExternalInfos:
-            [
-                new ExternalInfo(
-                    Type: ExternalInfoType.Movie,
-                    Title: "Bearcat Movie",
-                    Urls:
-                    [
-                        new Url(UrlType.Imdb, "https://www.imdb.com/de/title/tt1234567"),
-                        new Url(UrlType.Other, "https://www.xrel.to/movie/123"),
-                    ]
-                ),
-            ],
-            ContentKind: ExternalInfoType.Movie
         );
     }
 

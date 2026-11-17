@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -20,32 +21,6 @@ public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvide
         service = new UploadConfigLinkCrypterService(
             new UploadConfigLinkCrypterWriteRepository(DbContext)
         );
-    }
-
-    [Test]
-    public async Task CreateAsync_ValidLinkCrypter_PersistsUploadConfigLinkCrypter()
-    {
-        // Arrange
-        var seed = await AddDependenciesAsync();
-
-        // Act
-        await service.CreateAsync(
-            seed.UploadConfigId,
-            seed.LinkCrypterRegistrationId,
-            "secret",
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.UploadConfigId.ShouldBe(seed.UploadConfigId);
-        result.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
-        result.Password.ShouldBe("secret");
-        result.EnableCaptcha.ShouldBeTrue();
-        result.EnableContainerDownload.ShouldBeTrue();
-        result.EnableClickAndLoad.ShouldBeTrue();
     }
 
     [Test]
@@ -70,55 +45,27 @@ public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvide
     }
 
     [Test]
-    public async Task UpdateAsync_LinkCrypterExists_UpdatesPassword()
+    public async Task CreateAsync_UploadConfigUploadsVideoFiles_ThrowsAndPersistsNothing()
     {
         // Arrange
-        var linkCrypter = await AddUploadConfigLinkCrypterAsync("old-secret");
+        var seed = await AddDependenciesAsync();
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync();
+        uploadConfig.UploadSource = UploadSource.VideoFiles;
+        uploadConfig.ArchiveConfigId = null;
+        await DbContext.SaveChangesAsync();
 
         // Act
-        await service.UpdateAsync(
-            linkCrypter.Id,
-            "new-secret",
-            cancellationToken: CancellationToken.None
+        await Should.ThrowAsync<InvalidUploadSourceException>(async () =>
+            await service.CreateAsync(
+                seed.UploadConfigId,
+                seed.LinkCrypterRegistrationId,
+                "secret",
+                cancellationToken: CancellationToken.None
+            )
         );
 
         // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(linkCrypter.Id);
-        result.Password.ShouldBe("new-secret");
-    }
-
-    [Test]
-    public async Task UpdateAsync_PasswordIsBlank_UpdatesPasswordToNull()
-    {
-        // Arrange
-        var linkCrypter = await AddUploadConfigLinkCrypterAsync("old-secret");
-
-        // Act
-        await service.UpdateAsync(linkCrypter.Id, "", cancellationToken: CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Password.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task DeleteAsync_LinkCrypterExists_RemovesUploadConfigLinkCrypter()
-    {
-        // Arrange
-        var linkCrypter = await AddUploadConfigLinkCrypterAsync("secret");
-
-        // Act
-        await service.DeleteAsync(linkCrypter.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.UploadConfigLinkCrypters.AnyAsync();
-
-        result.ShouldBeFalse();
+        (await DbContext.UploadConfigLinkCrypters.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]

@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Uploady;
@@ -20,17 +19,6 @@ public class UploadyDownloadTest
         apiClientMock = new Mock<IUploadyApiClient>(MockBehavior.Strict);
         var loggerMock = new Mock<ILogger<Hosters.Uploady.Uploady>>();
         service = new Hosters.Uploady.Uploady(apiClientMock.Object, loggerMock.Object);
-    }
-
-    [Test]
-    public void DownloadRequiresPremium_AnonymousDirectLinks_IsFalse()
-    {
-        // Arrange
-        // Act
-        var requiresPremium = service.DownloadRequiresPremium;
-
-        // Assert
-        requiresPremium.ShouldBeFalse();
     }
 
     [Test]

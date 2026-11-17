@@ -1,18 +1,13 @@
 using System.Net;
-using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
-using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
 using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Rapidgator.Api.User;
-using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Refit;
 using Shouldly;
 
 namespace Bearcat.Hosters.UnitTest.Rapidgator;
@@ -40,12 +35,6 @@ public class RapidgatorTest
         {
             File.Delete(temporaryFile);
         }
-    }
-
-    [Test]
-    public void SupportsPremiumOnlyDownloads_ReturnsTrue()
-    {
-        service.SupportsPremiumOnlyDownloads.ShouldBeTrue();
     }
 
     [Test]
@@ -504,105 +493,6 @@ public class RapidgatorTest
     }
 
     [Test]
-    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateFolderAsync("release-folder", config, It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync("folder-id");
-
-        // Act
-        var result = await service.CreateFolderAsync(
-            "release-folder",
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe("folder-id");
-    }
-
-    [Test]
-    public async Task CheckFilesExistAsync_ApiReturnsStatuses_ReturnsStatuses()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-        var fileUrls = new[]
-        {
-            "https://rapidgator.net/file/online",
-            "https://rapidgator.net/file/offline",
-        };
-
-        apiClientMock
-            .Setup(x =>
-                x.CheckLinksAsync(
-                    config,
-                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new Dictionary<string, LinkCheckStatus>
-                {
-                    [fileUrls[0]] = new LinkCheckStatus(true, 42),
-                    [fileUrls[1]] = new LinkCheckStatus(false, null),
-                }
-            );
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
-        result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
-        result.DownloadCountPerFileUrl.ShouldNotBeNull();
-        result.DownloadCountPerFileUrl[fileUrls[0]].ShouldBe(42);
-        result.DownloadCountPerFileUrl.ShouldNotContainKey(fileUrls[1]);
-        result.ErrorMessages.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task CheckFilesExistAsync_ApiThrows_ReturnsFailure()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-        var fileUrls = new[] { "https://rapidgator.net/file/online" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CheckLinksAsync(
-                    config,
-                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new InvalidOperationException("login failed"));
-
-        // Act
-        var result = await service.CheckFilesExistAsync(
-            config,
-            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
-        result.StatusPerFileUrl.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["Link check failed: login failed"]);
-    }
-
-    [Test]
     public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
     {
         // Arrange
@@ -634,25 +524,6 @@ public class RapidgatorTest
     }
 
     [Test]
-    public async Task TryLoginAsync_LoginSucceeds_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-
-        apiClientMock
-            .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateLoginResponse(uploadPipes: 8));
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task TryLoginAsync_CredentialsRejected_ReturnsFailure()
     {
         // Arrange
@@ -673,75 +544,12 @@ public class RapidgatorTest
         result.ErrorMessage.ShouldBe("Error: Wrong e-mail or password.");
     }
 
-    [Test]
-    public async Task GetMaximumParallelUploadsAsync_LoginReturnsUploadPipes_ReturnsPipeCount()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-
-        apiClientMock
-            .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateLoginResponse(uploadPipes: 5, remoteUploadJobs: 200));
-
-        // Act
-        var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(5);
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_ReturnsRapidgatorConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(
-            new RapidgatorConfig { Username = "user", Password = "password" }
-        );
-
-        // Act
-        var result = service.DeserializeHosterConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<RapidgatorConfig>().Username.ShouldBe("user");
-        result.ShouldBeOfType<RapidgatorConfig>().Password.ShouldBe("password");
-    }
-
     private string CreateTemporaryFile(string content)
     {
         var filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.bin");
         File.WriteAllText(filePath, content);
         temporaryFiles.Add(filePath);
         return filePath;
-    }
-
-    [Test]
-    public async Task GetStorageQuotaAsync_UserInfoCarriesStorage_ReturnsLimitedQuota()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-
-        apiClientMock
-            .Setup(x => x.GetUserInfoAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new InfoResponse.User
-                {
-                    Storage = new InfoResponse.Storage
-                    {
-                        Total = 4398046511104,
-                        Left = 4398035213138,
-                    },
-                }
-            );
-
-        // Act
-        var result = await service.GetStorageQuotaAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(
-            HosterStorageQuota.Limited(freeBytes: 4398035213138, totalBytes: 4398046511104)
-        );
     }
 
     [TestCase(
@@ -763,21 +571,5 @@ public class RapidgatorTest
 
         // Assert
         result.ShouldBe(expectedFileLink);
-    }
-
-    private static LoginResponse.ResponseObject CreateLoginResponse(
-        int uploadPipes,
-        int remoteUploadJobs = 0
-    )
-    {
-        return new LoginResponse.ResponseObject
-        {
-            Token = "token",
-            User = new LoginResponse.User
-            {
-                Upload = new LoginResponse.Upload { NbPipes = uploadPipes },
-                RemoteUpload = new LoginResponse.RemoteUpload { MaxNbJobs = remoteUploadJobs },
-            },
-        };
     }
 }

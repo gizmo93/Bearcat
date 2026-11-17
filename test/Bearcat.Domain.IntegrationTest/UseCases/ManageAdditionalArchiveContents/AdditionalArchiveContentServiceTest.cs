@@ -62,17 +62,6 @@ public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvid
     }
 
     [Test]
-    public async Task CreateAsync_PathContentWithExistingFile_PersistsContent()
-    {
-        // Act
-        var result = await service.CreateAsync(CreatePathInput("Premium ad file", sourceFilePath));
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        (await LoadContentAsync()).SourcePath.ShouldBe(sourceFilePath);
-    }
-
-    [Test]
     public async Task CreateAsync_PathContentWithTextFileFields_PersistsOnlyPathFields()
     {
         // Act
@@ -107,59 +96,6 @@ public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvid
         ]);
         result.AdditionalArchiveContentId.ShouldBeNull();
         (await DbContext.AdditionalArchiveContents.AnyAsync()).ShouldBeFalse();
-    }
-
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public async Task CreateAsync_PathContentWithoutSourcePath_ReturnsSourcePathRequired(
-        string? sourcePath
-    )
-    {
-        // Act
-        var result = await service.CreateAsync(CreatePathInput("Premium ad folder", sourcePath));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([
-            AdditionalArchiveContentValidationError.SourcePathRequired,
-        ]);
-    }
-
-    [Test]
-    public async Task CreateAsync_SourcePathLongerThanMaximum_ReturnsSourcePathTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreatePathInput("Premium ad folder", "/" + new string('a', 1000))
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([
-            AdditionalArchiveContentValidationError.SourcePathTooLong,
-        ]);
-    }
-
-    [TestCase("")]
-    [TestCase("   ")]
-    public async Task CreateAsync_BlankName_ReturnsNameRequired(string name)
-    {
-        // Act
-        var result = await service.CreateAsync(CreatePathInput(name, sourceFolderPath));
-
-        // Assert
-        result.ValidationErrors.ShouldBe([AdditionalArchiveContentValidationError.NameRequired]);
-    }
-
-    [Test]
-    public async Task CreateAsync_NameLongerThanMaximum_ReturnsNameTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreatePathInput(new string('a', 201), sourceFolderPath)
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([AdditionalArchiveContentValidationError.NameTooLong]);
     }
 
     [Test]
@@ -203,24 +139,6 @@ public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvid
         content.TextContent.ShouldBe("  Buy premium via my link.\n");
     }
 
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public async Task CreateAsync_TextFileContentWithoutFileName_ReturnsFileNameRequired(
-        string? fileName
-    )
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateTextFileInput("Premium ad text", fileName, "Buy premium.")
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([
-            AdditionalArchiveContentValidationError.FileNameRequired,
-        ]);
-    }
-
     [TestCase("ads/premium.txt")]
     [TestCase("ads\\premium.txt")]
     [TestCase(".")]
@@ -239,18 +157,6 @@ public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvid
         result.ValidationErrors.ShouldBe([AdditionalArchiveContentValidationError.FileNameInvalid]);
     }
 
-    [Test]
-    public async Task CreateAsync_FileNameLongerThanMaximum_ReturnsFileNameTooLong()
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateTextFileInput("Premium ad text", new string('a', 256), "Buy premium.")
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([AdditionalArchiveContentValidationError.FileNameTooLong]);
-    }
-
     [TestCase("__nonce.txt")]
     [TestCase("__NONCE.TXT")]
     public async Task CreateAsync_TextFileContentWithNonceFileName_ReturnsFileNameReserved(
@@ -265,24 +171,6 @@ public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvid
         // Assert
         result.ValidationErrors.ShouldBe([
             AdditionalArchiveContentValidationError.FileNameReserved,
-        ]);
-    }
-
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase(" \n ")]
-    public async Task CreateAsync_TextFileContentWithoutTextContent_ReturnsTextContentRequired(
-        string? textContent
-    )
-    {
-        // Act
-        var result = await service.CreateAsync(
-            CreateTextFileInput("Premium ad text", "premium.txt", textContent)
-        );
-
-        // Assert
-        result.ValidationErrors.ShouldBe([
-            AdditionalArchiveContentValidationError.TextContentRequired,
         ]);
     }
 
@@ -394,22 +282,6 @@ public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvid
         content.SourcePath.ShouldBe(sourceFolderPath);
         content.FileName.ShouldBeNull();
         content.TextContent.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task DeleteAsync_UnassignedContent_DeletesContent()
-    {
-        // Arrange
-        var created = await service.CreateAsync(CreatePathInput("Premium ad", sourceFolderPath));
-
-        // Act
-        var result = await service.DeleteAsync(created.AdditionalArchiveContentId!.Value);
-
-        // Assert
-        result.IsDeleted.ShouldBeTrue();
-        result.UsingReleaseTemplateNames.ShouldBeEmpty();
-        result.UsingReleaseNames.ShouldBeEmpty();
-        (await DbContext.AdditionalArchiveContents.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]

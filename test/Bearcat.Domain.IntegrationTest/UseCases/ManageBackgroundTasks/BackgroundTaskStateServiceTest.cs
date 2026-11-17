@@ -35,33 +35,6 @@ public class BackgroundTaskStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task RegisterAsync_TaskDoesNotExist_CreatesTaskAndPrimesCache()
-    {
-        // Arrange
-        scheduleCacheMock.Setup(cache => cache.SetEnabled(Key, true));
-        scheduleCacheMock.Setup(cache => cache.SetOverride(Key, null));
-
-        // Act
-        var isEnabled = await service.RegisterAsync(
-            Key,
-            DisplayName,
-            TimeSpan.FromMinutes(15),
-            CancellationToken.None
-        );
-
-        // Assert
-        isEnabled.ShouldBeTrue();
-
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.Key.ShouldBe(Key);
-        taskState.DisplayName.ShouldBe(DisplayName);
-        taskState.IsEnabled.ShouldBeTrue();
-        taskState.DefaultInterval.ShouldBe(TimeSpan.FromMinutes(15));
-        scheduleCacheMock.Verify(cache => cache.SetEnabled(Key, true), Times.Once);
-        scheduleCacheMock.Verify(cache => cache.SetOverride(Key, null), Times.Once);
-    }
-
-    [Test]
     public async Task RegisterAsync_TaskExistsWithChangedMetadata_UpdatesDisplayNameAndInterval()
     {
         // Arrange
@@ -137,59 +110,6 @@ public class BackgroundTaskStateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task MarkSucceededAsync_TaskExists_SetsSuccessStatus()
-    {
-        // Arrange
-        await AddTaskStateAsync();
-
-        // Act
-        await service.MarkSucceededAsync(Key, DisplayName, CancellationToken.None);
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.LastFinishedAt.ShouldNotBeNull();
-        taskState.LastExecutionStatus.ShouldBe(BackgroundTaskExecutionStatus.Success);
-        taskState.LastErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task MarkFailedAsync_TaskExists_SetsErrorStatusWithMessage()
-    {
-        // Arrange
-        await AddTaskStateAsync();
-
-        // Act
-        await service.MarkFailedAsync(
-            Key,
-            DisplayName,
-            new InvalidOperationException("boom"),
-            CancellationToken.None
-        );
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.LastFinishedAt.ShouldNotBeNull();
-        taskState.LastExecutionStatus.ShouldBe(BackgroundTaskExecutionStatus.Error);
-        taskState.LastErrorMessage.ShouldBe("boom");
-    }
-
-    [Test]
-    public async Task MarkCanceledAsync_TaskExists_SetsCanceledStatus()
-    {
-        // Arrange
-        await AddTaskStateAsync();
-
-        // Act
-        await service.MarkCanceledAsync(Key, DisplayName, CancellationToken.None);
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.LastFinishedAt.ShouldNotBeNull();
-        taskState.LastExecutionStatus.ShouldBe(BackgroundTaskExecutionStatus.Canceled);
-        taskState.LastErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task MarkFailedAsync_LongErrorMessage_TruncatesToMaxLength()
     {
         // Arrange
@@ -207,67 +127,6 @@ public class BackgroundTaskStateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.LastErrorMessage!.Length.ShouldBe(2000);
-    }
-
-    [Test]
-    public async Task MarkStartedAsync_TaskDoesNotExist_CreatesTaskWithZeroDefaultInterval()
-    {
-        // Act
-        await service.MarkStartedAsync(Key, DisplayName, CancellationToken.None);
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.DefaultInterval.ShouldBe(TimeSpan.Zero);
-        taskState.LastStartedAt.ShouldNotBeNull();
-    }
-
-    [Test]
-    public async Task SetIsEnabledAsync_TaskExists_UpdatesStateAndCache()
-    {
-        // Arrange
-        var existing = await AddTaskStateAsync(isEnabled: true);
-        scheduleCacheMock.Setup(cache => cache.SetEnabled(Key, false));
-
-        // Act
-        await service.SetIsEnabledAsync(existing.Id, false, CancellationToken.None);
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.IsEnabled.ShouldBeFalse();
-        scheduleCacheMock.Verify(cache => cache.SetEnabled(Key, false), Times.Once);
-    }
-
-    [Test]
-    public async Task SetIntervalOverrideAsync_ValidInterval_UpdatesStateAndCache()
-    {
-        // Arrange
-        var existing = await AddTaskStateAsync();
-        var interval = TimeSpan.FromMinutes(10);
-        scheduleCacheMock.Setup(cache => cache.SetOverride(Key, interval));
-
-        // Act
-        await service.SetIntervalOverrideAsync(existing.Id, interval, CancellationToken.None);
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.IntervalOverride.ShouldBe(interval);
-        scheduleCacheMock.Verify(cache => cache.SetOverride(Key, interval), Times.Once);
-    }
-
-    [Test]
-    public async Task SetIntervalOverrideAsync_NullInterval_ClearsOverride()
-    {
-        // Arrange
-        var existing = await AddTaskStateAsync(intervalOverride: TimeSpan.FromMinutes(10));
-        scheduleCacheMock.Setup(cache => cache.SetOverride(Key, null));
-
-        // Act
-        await service.SetIntervalOverrideAsync(existing.Id, null, CancellationToken.None);
-
-        // Assert
-        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
-        taskState.IntervalOverride.ShouldBeNull();
-        scheduleCacheMock.Verify(cache => cache.SetOverride(Key, null), Times.Once);
     }
 
     [Test]

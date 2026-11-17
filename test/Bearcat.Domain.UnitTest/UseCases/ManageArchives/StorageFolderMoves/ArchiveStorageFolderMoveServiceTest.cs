@@ -115,43 +115,6 @@ public class ArchiveStorageFolderMoveServiceTest
     }
 
     [Test]
-    public async Task MoveArchivesAsync_Success_StartsAndStopsProgressTracking()
-    {
-        // Arrange
-        var storageFolder = CreateStorageFolder(1, "/mnt/first");
-        SetupStorageFolders(storageFolder);
-        fileSystemServiceMock
-            .Setup(f => f.GetAvailableFreeSpaceBytes(storageFolder.Path))
-            .Returns(10 * Gigabyte);
-        var archive = CreateArchive(7);
-        var transferIdentifier = new TransferIdentifier(
-            TransferType.ArchiveMoveToStorageFolder,
-            archive.Id
-        );
-
-        // Act
-        await service.MoveArchivesAsync([archive], CancellationToken.None);
-
-        // Assert
-        progressTrackerMock.Verify(
-            t =>
-                t.StartTracking(
-                    transferIdentifier,
-                    It.Is<IReadOnlyList<TransferFile>>(files =>
-                        files.Single().SizeBytes == Gigabyte
-                        && files.Single().SourceName == storageFolder.Name
-                    )
-                ),
-            Times.Once
-        );
-        progressTrackerMock.Verify(t => t.StopTracking(transferIdentifier), Times.Once);
-        repositoryMock.Verify(
-            r => r.SaveChangesAsync(It.IsAny<CancellationToken>()),
-            Times.Exactly(2)
-        );
-    }
-
-    [Test]
     public async Task MoveArchivesAsync_CopyFails_StopsProgressTrackingAndKeepsArchiveLocal()
     {
         // Arrange

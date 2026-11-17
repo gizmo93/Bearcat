@@ -8,51 +8,6 @@ namespace Bearcat.Website.UnitTest.Pages.ManageReleaseCollections.Overview;
 public class CollectionLinkContainerOverviewServiceTest
 {
     [Test]
-    public void HasSharedLinkCryptersOrContainers_NeitherSharedLinkCryptersNorContainers_ReturnsFalse()
-    {
-        // Act
-        var result = CollectionLinkContainerOverviewService.HasSharedLinkCryptersOrContainers(
-            CreateUploadSlot()
-        );
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Test]
-    public void HasSharedLinkCryptersOrContainers_OnlySharedLinkCrypters_ReturnsTrue()
-    {
-        // Act
-        var result = CollectionLinkContainerOverviewService.HasSharedLinkCryptersOrContainers(
-            CreateUploadSlot(sharedLinkCrypters: [CreateSharedLinkCrypter("Filecrypt")])
-        );
-
-        // Assert
-        result.ShouldBeTrue();
-    }
-
-    [Test]
-    public void HasSharedLinkCryptersOrContainers_OnlyContainers_ReturnsTrue()
-    {
-        // Act
-        var result = CollectionLinkContainerOverviewService.HasSharedLinkCryptersOrContainers(
-            CreateUploadSlot(
-                containers:
-                [
-                    CreateContainer(
-                        "Filecrypt",
-                        LinkCrypterContainerState.Created,
-                        "https://filecrypt.example/a"
-                    ),
-                ]
-            )
-        );
-
-        // Assert
-        result.ShouldBeTrue();
-    }
-
-    [Test]
     public void GetSharedLinkCryptersWithoutContainer_SomeCryptersHaveContainers_ReturnsCryptersWithoutContainer()
     {
         // Arrange

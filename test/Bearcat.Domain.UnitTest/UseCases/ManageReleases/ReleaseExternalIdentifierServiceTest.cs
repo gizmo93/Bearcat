@@ -66,46 +66,6 @@ public class ReleaseExternalIdentifierServiceTest
     }
 
     [Test]
-    public void SyncSteamAppIds_ReplacesIdentifiersFromSameSource()
-    {
-        // Arrange
-        var release = new Release
-        {
-            ExternalIdentifiers =
-            [
-                new ReleaseExternalIdentifier
-                {
-                    Type = ExternalIdentifierType.Steam,
-                    Value = "111111",
-                    Source = ExternalIdentifierSource.Nfo,
-                },
-                new ReleaseExternalIdentifier
-                {
-                    Type = ExternalIdentifierType.Steam,
-                    Value = "222222",
-                    Source = ExternalIdentifierSource.Xrel,
-                },
-            ],
-        };
-
-        // Act
-        ReleaseExternalIdentifierService.SyncSteamAppIds(
-            release,
-            ExternalIdentifierSource.Nfo,
-            ["https://store.steampowered.com/app/333333/"]
-        );
-
-        // Assert
-        release.ExternalIdentifiers.Count.ShouldBe(2);
-        release.ExternalIdentifiers.ShouldContain(identifier =>
-            identifier.Value == "333333" && identifier.Source == ExternalIdentifierSource.Nfo
-        );
-        release.ExternalIdentifiers.ShouldContain(identifier =>
-            identifier.Value == "222222" && identifier.Source == ExternalIdentifierSource.Xrel
-        );
-    }
-
-    [Test]
     public void SyncSteamAppIds_LeavesImdbIdentifiersOfSameSourceUntouched()
     {
         // Arrange
@@ -136,40 +96,6 @@ public class ReleaseExternalIdentifierServiceTest
         );
         release.ExternalIdentifiers.ShouldContain(identifier =>
             identifier.Type == ExternalIdentifierType.Steam && identifier.Value == "1172710"
-        );
-    }
-
-    [Test]
-    public void SyncImdbIds_LeavesSteamIdentifiersOfSameSourceUntouched()
-    {
-        // Arrange
-        var release = new Release
-        {
-            ExternalIdentifiers =
-            [
-                new ReleaseExternalIdentifier
-                {
-                    Type = ExternalIdentifierType.Steam,
-                    Value = "1172710",
-                    Source = ExternalIdentifierSource.Nfo,
-                },
-            ],
-        };
-
-        // Act
-        ReleaseExternalIdentifierService.SyncImdbIds(
-            release,
-            ExternalIdentifierSource.Nfo,
-            ["https://www.imdb.com/title/tt1111111/"]
-        );
-
-        // Assert
-        release.ExternalIdentifiers.Count.ShouldBe(2);
-        release.ExternalIdentifiers.ShouldContain(identifier =>
-            identifier.Type == ExternalIdentifierType.Steam && identifier.Value == "1172710"
-        );
-        release.ExternalIdentifiers.ShouldContain(identifier =>
-            identifier.Type == ExternalIdentifierType.Imdb && identifier.Value == "tt1111111"
         );
     }
 

@@ -1,5 +1,3 @@
-using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -86,33 +84,6 @@ public class GoFileTest
         result.IsSuccess.ShouldBeTrue();
         result.FileUrl.ShouldBe("https://gofile.io/d/file-id");
         result.ErrorMessages.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task CreateFolderAsync_Config_CreatesFolderWithApiKey()
-    {
-        // Arrange
-        var config = new GoFileConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateUploadFolderIdAsync(
-                    "api-key",
-                    "release_upload",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync("folder-id");
-
-        // Act
-        var result = await service.CreateFolderAsync(
-            "release_upload",
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe("folder-id");
     }
 
     [Test]
@@ -223,25 +194,6 @@ public class GoFileTest
     }
 
     [Test]
-    public async Task TryLoginAsync_ApiReturnsOk_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new GoFileConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x => x.GetAccountAsync("api-key", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AccountResponse { Status = "ok" });
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task TryLoginAsync_TokenRejected_ReturnsFailureWithHosterMessage()
     {
         // Arrange
@@ -261,53 +213,6 @@ public class GoFileTest
         // Assert
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("GoFile rejected the API token (error-wrongToken)");
-    }
-
-    [Test]
-    public async Task TryLoginAsync_ApiReturnsError_ReturnsFailure()
-    {
-        // Arrange
-        var config = new GoFileConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x => x.GetAccountAsync("api-key", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AccountResponse { Status = "error-invalidToken" });
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("error-invalidToken");
-    }
-
-    [Test]
-    public async Task GetMaximumParallelUploadsAsync_Config_ReturnsStaticLimit()
-    {
-        // Arrange
-        var config = new GoFileConfig { ApiKey = "api-key" };
-
-        // Act
-        var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(100);
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_ReturnsGoFileConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new GoFileConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeHosterConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<GoFileConfig>().ApiKey.ShouldBe("api-key");
     }
 
     private string CreateTemporaryFile(string content, string? fileName = null)

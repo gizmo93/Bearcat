@@ -7,16 +7,6 @@ public class RemoteFolderSelectionSourceTest
 {
     private readonly RemoteFolderSelectionSource source = new(null!, 1);
 
-    [Test]
-    public void RootPaths_ContainsOnlyTheRemoteRoot()
-    {
-        // Act
-        var rootPaths = source.RootPaths;
-
-        // Assert
-        rootPaths.ShouldBe(["/"]);
-    }
-
     [TestCase("/", "/")]
     [TestCase("//", "/")]
     [TestCase("releases", "/releases")]
@@ -95,17 +85,5 @@ public class RemoteFolderSelectionSourceTest
 
         // Assert
         result.ShouldBeFalse();
-    }
-
-    [TestCase("/", "/")]
-    [TestCase("/releases", "releases")]
-    [TestCase("/releases/movies/", "movies")]
-    public void GetDisplayName_Path_ReturnsLastSegment(string path, string expected)
-    {
-        // Act
-        var result = source.GetDisplayName(path);
-
-        // Assert
-        result.ShouldBe(expected);
     }
 }

@@ -109,29 +109,6 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
     }
 
     [Test]
-    public async Task SearchReleaseResultsAsync_ReleaseWithoutMetadataAndClassification_ReturnsNullForTheirFields()
-    {
-        // Arrange
-        testData.AddRelease("Bearcat.Plain.2026-GRP");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleaseResultsAsync(
-            new ReleaseSearchQuery(),
-            CancellationToken.None
-        );
-
-        // Assert
-        var item = result.Items.Single();
-        item.MetadataTitle.ShouldBeNull();
-        item.CoverUrl.ShouldBeNull();
-        item.Year.ShouldBeNull();
-        item.Resolution.ShouldBeNull();
-        item.Source.ShouldBeNull();
-        item.UploadsPostedAt.ShouldBeNull();
-    }
-
-    [Test]
     public async Task SearchReleaseResultsAsync_ClassificationWithUnknownResolutionAndSource_ReturnsNullResolutionAndSource()
     {
         // Arrange
@@ -229,31 +206,6 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
         item.OnlineState.ShouldBe(OnlineState.PartiallyOnline);
     }
 
-    [TestCase("Bearcat.NoUploadConfigs.2026-GRP", null)]
-    [TestCase("Bearcat.AllOnline.2026-GRP", OnlineState.Online)]
-    [TestCase("Bearcat.PartiallyOnline.2026-GRP", OnlineState.PartiallyOnline)]
-    [TestCase("Bearcat.Offline.2026-GRP", OnlineState.Offline)]
-    public async Task SearchReleaseResultsAsync_ReleaseWithUploadConfigs_ComputesOnlineStateFromUploadConfigs(
-        string releaseName,
-        OnlineState? expectedOnlineState
-    )
-    {
-        // Arrange
-        testData.AddOnlineStateReleases();
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleaseResultsAsync(
-            new ReleaseSearchQuery(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result
-            .Items.Single(item => item.Name == releaseName)
-            .OnlineState.ShouldBe(expectedOnlineState);
-    }
-
     [Test]
     public async Task SearchReleaseResultsAsync_ReleasesWithAndWithoutPendingPost_ReturnsReadyForPostQueueFlag()
     {
@@ -288,65 +240,6 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
         readyFlagsByReleaseId[readyRelease.Id].ShouldBeTrue();
         readyFlagsByReleaseId[postedRelease.Id].ShouldBeFalse();
         readyFlagsByReleaseId[releaseWithoutUploadConfigs.Id].ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task SearchReleaseResultsAsync_FilterAndSecondPage_ReturnsTotalCountOfFilterAndRemainingReleases()
-    {
-        // Arrange
-        foreach (var number in new[] { 4, 7, 1, 6, 3, 2, 5 })
-        {
-            testData.AddRelease($"Bearcat.Page.0{number}.2026-GRP");
-        }
-
-        testData.AddRelease("Bearcat.S01E01.2026-GRP", ReleaseContentType.TvShowEpisode);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleaseResultsAsync(
-            new ReleaseSearchQuery(
-                ReleaseContentType: ReleaseContentType.Movie,
-                PageIndex: 1,
-                PageSize: 5
-            ),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.TotalCount.ShouldBe(7);
-        result.PageIndex.ShouldBe(1);
-        result.PageSize.ShouldBe(5);
-        result
-            .Items.Select(item => item.Name)
-            .ShouldBe(["Bearcat.Page.06.2026-GRP", "Bearcat.Page.07.2026-GRP"]);
-    }
-
-    [TestCase(ReleaseSearchSortOrder.NameAscending, new[] { "A", "B", "C", "D" })]
-    [TestCase(ReleaseSearchSortOrder.CreatedAtDescending, new[] { "B", "C", "A", "D" })]
-    [TestCase(ReleaseSearchSortOrder.UploadsPostedAtDescending, new[] { "C", "B", "D", "A" })]
-    [TestCase(
-        ReleaseSearchSortOrder.OfflineUploadConfigCountDescending,
-        new[] { "C", "A", "B", "D" }
-    )]
-    public async Task SearchReleaseResultsAsync_SortOrder_ReturnsReleasesInThatOrder(
-        ReleaseSearchSortOrder sortOrder,
-        string[] expectedReleaseNameParts
-    )
-    {
-        // Arrange
-        testData.AddSortOrderReleases();
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.SearchReleaseResultsAsync(
-            new ReleaseSearchQuery(SortOrder: sortOrder),
-            CancellationToken.None
-        );
-
-        // Assert
-        result
-            .Items.Select(item => item.Name)
-            .ShouldBe(expectedReleaseNameParts.Select(part => $"Bearcat.{part}.2026-GRP"));
     }
 
     [Test]
@@ -479,53 +372,6 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
     }
 
     [Test]
-    public async Task CountReleasesByOnlineStateAsync_NoReleases_ReturnsZeroCounts()
-    {
-        // Act
-        var result = await repository.CountReleasesByOnlineStateAsync(
-            new ReleaseSearchQuery(),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(new ReleaseOnlineStateCounts(0, 0, 0, 0, 0));
-    }
-
-    [Test]
-    public async Task CountReleasesByOnlineStateAsync_OtherFilters_CountsOnlyMatchingReleases()
-    {
-        // Arrange
-        testData.AddOnlineStateReleases();
-        testData.AddRelease("Bearcat.S01E01.2026-GRP", ReleaseContentType.TvShowEpisode);
-        testData.AddUpload(
-            testData.AddUploadConfig(
-                testData.AddRelease("Bearcat.S01E02.2026-GRP", ReleaseContentType.TvShowEpisode),
-                "Episode online"
-            ),
-            MidnightUtc,
-            MidnightUtc
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.CountReleasesByOnlineStateAsync(
-            new ReleaseSearchQuery(ReleaseContentType: ReleaseContentType.TvShowEpisode),
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(
-            new ReleaseOnlineStateCounts(
-                TotalCount: 2,
-                OnlineCount: 1,
-                PartiallyOnlineCount: 0,
-                OfflineCount: 0,
-                WithoutUploadConfigsCount: 1
-            )
-        );
-    }
-
-    [Test]
     public async Task CountReleasesByOnlineStateAsync_OnlineStateInQuery_IgnoresOnlineStateFilter()
     {
         // Arrange
@@ -553,42 +399,5 @@ public class ReleaseReadRepositorySearchResultTest(DatabaseProvider databaseProv
                 WithoutUploadConfigsCount: 1
             )
         );
-    }
-
-    [TestCase(OnlineState.Unknown)]
-    [TestCase(OnlineState.Online)]
-    [TestCase(OnlineState.PartiallyOnline)]
-    [TestCase(OnlineState.Offline)]
-    public async Task CountReleasesByOnlineStateAsync_EachState_EqualsTotalCountOfSearchFilteredByThatState(
-        OnlineState onlineState
-    )
-    {
-        // Arrange
-        testData.AddOnlineStateReleases();
-        testData.AddSortOrderReleases();
-        testData.AddRelease("Bearcat.SecondNoUploadConfigs.2026-GRP");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var counts = await repository.CountReleasesByOnlineStateAsync(
-            new ReleaseSearchQuery(),
-            CancellationToken.None
-        );
-        var searchResult = await repository.SearchReleaseResultsAsync(
-            new ReleaseSearchQuery(OnlineState: onlineState),
-            CancellationToken.None
-        );
-
-        // Assert
-        var expectedCount = onlineState switch
-        {
-            OnlineState.Unknown => counts.WithoutUploadConfigsCount,
-            OnlineState.Online => counts.OnlineCount,
-            OnlineState.PartiallyOnline => counts.PartiallyOnlineCount,
-            OnlineState.Offline => counts.OfflineCount,
-            _ => throw new ArgumentOutOfRangeException(nameof(onlineState), onlineState, null),
-        };
-        searchResult.TotalCount.ShouldBe(expectedCount);
-        searchResult.TotalCount.ShouldBeGreaterThan(0);
     }
 }

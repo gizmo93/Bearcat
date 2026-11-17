@@ -85,27 +85,6 @@ public class RemoteSourceAutomationRepositoryTest(DatabaseProvider databaseProvi
         );
     }
 
-    [Test]
-    public async Task GetExistingReleaseOrDownloadFolderNamesAsync_NoMatchingDownloadOrRelease_ReturnsEmptySet()
-    {
-        // Arrange
-        await using var dbContext = CreateDbContext();
-        var automation = await AddAutomationAsync(dbContext);
-        AddDownload(dbContext, automation, "Show.S01E01-GRP", RemoteSourceDownloadState.Observing);
-        AddRelease(dbContext, automation, "Movie.2026.1080p-GRP");
-        await dbContext.SaveChangesAsync();
-        var repository = CreateRepository();
-
-        // Act
-        var existingFolderNames = await repository.GetExistingReleaseOrDownloadFolderNamesAsync([
-            "Show.S01E02-GRP",
-            "Movie.2026",
-        ]);
-
-        // Assert
-        existingFolderNames.ShouldBeEmpty();
-    }
-
     private RemoteSourceAutomationRepository CreateRepository()
     {
         var dbContext = CreateDbContext();

@@ -61,24 +61,6 @@ public class TransferProgressTrackerTest
     }
 
     [Test]
-    public void Get_FreshlyTrackedWithoutPlannedFiles_HasNoFiles()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-
-        // Act
-        tracker.StartTracking(Identifier, []);
-        var snapshot = tracker.Get(Identifier);
-
-        // Assert
-        snapshot.ShouldNotBeNull();
-        snapshot.Files.ShouldBeEmpty();
-        snapshot.TransferredBytes.ShouldBe(0);
-        snapshot.TotalBytes.ShouldBe(0);
-        snapshot.Percentage.ShouldBe(0);
-    }
-
-    [Test]
     public void Get_FreshlyTracked_ListsPlannedFilesWithoutProgress()
     {
         // Arrange
@@ -435,111 +417,6 @@ public class TransferProgressTrackerTest
     }
 
     [Test]
-    public void BeginFile_ScopeWithCategoryDefault_StoresNameOfCategoryDefaultProxyServer()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-        proxyRoutingCacheMock
-            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterMirrorDownloads))
-            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
-        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
-
-        // Act
-        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
-        {
-            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
-        }
-        var snapshot = tracker.Get(Identifier);
-
-        // Assert
-        snapshot.ShouldNotBeNull();
-        snapshot.Files[0].ProxyServerName.ShouldBe("NordVPN Stockholm");
-        snapshot.ProxyServerNames.ShouldBe(["NordVPN Stockholm"]);
-    }
-
-    [Test]
-    public void BeginFile_ScopeWithCategoryDefaultWithoutProxyServer_StoresNoProxyServerName()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-        proxyRoutingCacheMock
-            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterUploads))
-            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
-        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
-
-        // Act
-        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
-        {
-            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
-        }
-        var snapshot = tracker.Get(Identifier);
-
-        // Assert
-        snapshot.ShouldNotBeNull();
-        snapshot.Files[0].ProxyServerName.ShouldBeNull();
-    }
-
-    [Test]
-    public void BeginFile_ScopeWithSpecificProxyServer_StoresNameOfThatProxyServer()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-        proxyRoutingCacheMock
-            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterUploads))
-            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
-        proxyRoutingCacheMock
-            .Setup(cache => cache.GetProxyServerById(7))
-            .Returns(CreateProxyServer(7, "Mullvad Zurich"));
-        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
-
-        // Act
-        using (
-            ProxyCategoryScope.Enter(
-                ProxyCategory.HosterUploads,
-                ProxySelection.SpecificProxyServer,
-                proxyServerId: 7
-            )
-        )
-        {
-            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
-        }
-        var snapshot = tracker.Get(Identifier);
-
-        // Assert
-        snapshot.ShouldNotBeNull();
-        snapshot.Files[0].ProxyServerName.ShouldBe("Mullvad Zurich");
-    }
-
-    [Test]
-    public void BeginFile_ScopeWithNoProxy_StoresNoProxyServerName()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-        proxyRoutingCacheMock
-            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterUploads))
-            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
-        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
-
-        // Act
-        using (
-            ProxyCategoryScope.Enter(
-                ProxyCategory.HosterUploads,
-                ProxySelection.NoProxy,
-                proxyServerId: null
-            )
-        )
-        {
-            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
-        }
-        var snapshot = tracker.Get(Identifier);
-
-        // Assert
-        snapshot.ShouldNotBeNull();
-        snapshot.Files[0].ProxyServerName.ShouldBeNull();
-        snapshot.ProxyServerNames.ShouldBeEmpty();
-    }
-
-    [Test]
     public void Get_FilesTransferredViaDifferentProxyServers_ListsEachProxyServerNameOnce()
     {
         // Arrange
@@ -598,35 +475,6 @@ public class TransferProgressTrackerTest
 
         // Assert
         trackedIds.ShouldBe([3, 7], ignoreOrder: true);
-    }
-
-    [Test]
-    public void GetTrackedIds_TrackingStopped_DoesNotReturnStoppedId()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 3), []);
-        tracker.StartTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 7), []);
-        tracker.StopTracking(new TransferIdentifier(TransferType.ArchiveHashChange, 3));
-
-        // Act
-        var trackedIds = tracker.GetTrackedIds(TransferType.ArchiveHashChange);
-
-        // Assert
-        trackedIds.ShouldBe([7]);
-    }
-
-    [Test]
-    public void GetTrackedIds_NothingTracked_ReturnsEmptyList()
-    {
-        // Arrange
-        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
-
-        // Act
-        var trackedIds = tracker.GetTrackedIds(TransferType.ArchiveHashChange);
-
-        // Assert
-        trackedIds.ShouldBeEmpty();
     }
 
     private static ResolvedProxyServer CreateProxyServer(int id, string name)

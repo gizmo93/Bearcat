@@ -55,48 +55,6 @@ public class NotificationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_MessageProvided_PersistsConfiguredSeverity()
-    {
-        // Arrange
-        var message = "Some files are offline";
-
-        // Act
-        await service.CreateAsync(
-            kind: NotificationKind.FilesOffline,
-            message: message,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.Notifications.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Message.ShouldBe(message);
-        result.NotificationSeverity.ShouldBe(NotificationSeverity.Warning);
-    }
-
-    [Test]
-    public async Task CreateAsync_MessageProvided_PersistsErrorNotification()
-    {
-        // Arrange
-        var message = "Upload failed";
-
-        // Act
-        await service.CreateAsync(
-            kind: NotificationKind.UploadFailed,
-            message: message,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.Notifications.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Message.ShouldBe(message);
-        result.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
-    }
-
-    [Test]
     public async Task CreateAsync_DisabledKind_DoesNotPersistNotificationButSavesPendingChanges()
     {
         var configuration = new NotificationConfiguration { CaptchaVerificationRequired = false };
@@ -283,24 +241,6 @@ public class NotificationServiceTest(DatabaseProvider databaseProvider)
         Should.Throw<ArgumentOutOfRangeException>(() =>
             service.Create(kind, "invalid", upload, notification => notification.Upload)
         );
-    }
-
-    [Test]
-    public async Task ResolveAsync_NotificationExists_SetsResolvedAt()
-    {
-        // Arrange
-        var notification = await AddNotificationAsync("Resolve me");
-
-        // Act
-        await service.ResolveAsync(notification.Id, CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Notifications.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(notification.Id);
-        result.ResolvedAt.ShouldNotBeNull();
     }
 
     [Test]

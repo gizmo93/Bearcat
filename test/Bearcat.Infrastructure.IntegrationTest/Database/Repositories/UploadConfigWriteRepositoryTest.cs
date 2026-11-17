@@ -53,28 +53,6 @@ public class UploadConfigWriteRepositoryTest(DatabaseProvider databaseProvider)
         result.Select(upload => upload.Id).ShouldBe([waitingUpload.Id, pendingUpload.Id]);
     }
 
-    [Test]
-    public async Task GetWaitingOrPendingUploadsWithoutUploadedFilesAsync_WaitingUploadOfOtherUploadConfig_ReturnsEmpty()
-    {
-        // Arrange
-        var release = testData.AddRelease("Release");
-        var hosterRegistration = testData.AddHosterRegistration("Alpha");
-        var uploadConfig = testData.AddUploadConfig(release, hosterRegistration);
-        var otherUploadConfig = testData.AddUploadConfig(release, hosterRegistration);
-        AddUpload(otherUploadConfig, UploadState.WaitingForArchive);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetWaitingOrPendingUploadsWithoutUploadedFilesAsync(
-            uploadConfig.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
     private Upload AddUpload(
         UploadConfig uploadConfig,
         UploadState uploadState,

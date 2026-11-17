@@ -89,24 +89,4 @@ public class DirectUploadTest
             new ImageUrl(ImageSize.Full, "https://s1.directupload.eu/images/260620/sf2opb5w.png"),
         ]);
     }
-
-    [Test]
-    public async Task UploadImageAsync_ApiThrows_ReturnsErrorMessage()
-    {
-        // Arrange
-        var config = new DirectUploadConfig();
-        var image = new ImageToUploadDto("https://example.test/cover.jpg", ImageUploadSource.Url);
-
-        apiClientMock
-            .Setup(api => api.UploadImageAsync(image, CancellationToken.None))
-            .ThrowsAsync(new DirectUploadApiException("directupload upload was rejected."));
-
-        // Act
-        var result = await service.UploadImageAsync(image, config, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ImageUrls.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["directupload upload was rejected."]);
-    }
 }

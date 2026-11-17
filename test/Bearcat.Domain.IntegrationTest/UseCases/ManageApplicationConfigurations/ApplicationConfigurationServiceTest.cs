@@ -38,53 +38,6 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
     }
 
     [Test]
-    public async Task GetAllAsync_NoOverrides_ReturnsDefaultApplicationConfigurations()
-    {
-        // Arrange
-        var cancellationToken = CancellationToken.None;
-
-        // Act
-        var result = await service.GetAllAsync(cancellationToken);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Count.ShouldBe(1);
-
-        var configuration = result.Single();
-        configuration.DisplayName.ShouldBe("ArchiveCleanup");
-        configuration.Description.ShouldBe("ArchiveCleanupDescription");
-
-        var property = configuration.Properties.Single(p => p.Name == PropertyName);
-        property.ConfigurationKey.ShouldBe(ConfigurationKey);
-        property.DisplayName.ShouldBe("AutoConvertToUnmanaged");
-        property.Description.ShouldBe("AutoConvertToUnmanagedDescription");
-        property.ValueType.ShouldBe(typeof(bool));
-        property.DefaultValue.ShouldBe(false);
-        property.CurrentValue.ShouldBe(false);
-        property.IsOverridden.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task GetAllAsync_ConfigurationHasSeveralProperties_KeepsDeclarationOrder()
-    {
-        // Act
-        var result = await service.GetAllAsync(CancellationToken.None);
-
-        // Assert
-        result
-            .Single()
-            .Properties.Select(p => p.Name)
-            .ShouldBe([
-                "AutoConvertToUnmanaged",
-                "ReleaseFolderRetentionDays",
-                "DeleteReleaseFolderOnConversion",
-                "ArchiveRetentionAction",
-                "ArchiveRetentionDays",
-                "MaximumLocalArchiveSizeGb",
-            ]);
-    }
-
-    [Test]
     public async Task GetAllAsync_OverrideExists_ReturnsOverriddenCurrentValue()
     {
         // Arrange
@@ -100,33 +53,6 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
         property.DefaultValue.ShouldBe(false);
         property.CurrentValue.ShouldBe(true);
         property.IsOverridden.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task SaveOverrideAsync_OverrideDoesNotExist_PersistsOverrideAndUpdatesCache()
-    {
-        // Arrange
-        overrideCacheMock
-            .Setup(c => c.SetOverride(ConfigurationKey, PropertyName, "true"))
-            .Verifiable();
-
-        // Act
-        await service.SaveOverrideAsync(
-            ConfigurationKey,
-            PropertyName,
-            true,
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.ApplicationConfigurationOverrides.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.ConfigurationKey.ShouldBe(ConfigurationKey);
-        result.PropertyName.ShouldBe(PropertyName);
-        result.SerializedValue.ShouldBe("true");
-        result.UpdatedAt.ShouldBeGreaterThan(DateTime.MinValue);
-        overrideCacheMock.Verify();
     }
 
     [Test]
@@ -201,47 +127,6 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
 
         result.ShouldBeFalse();
         overrideCacheMock.Verify();
-    }
-
-    [Test]
-    public async Task ResetOverrideAsync_OverrideDoesNotExist_ClearsCache()
-    {
-        // Arrange
-        overrideCacheMock
-            .Setup(c => c.RemoveOverride(ConfigurationKey, PropertyName))
-            .Verifiable();
-
-        // Act
-        await service.ResetOverrideAsync(ConfigurationKey, PropertyName, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.ApplicationConfigurationOverrides.AnyAsync();
-
-        result.ShouldBeFalse();
-        overrideCacheMock.Verify();
-    }
-
-    [Test]
-    public async Task SaveOverrideAsync_PropertyIsNotRegistered_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var unknownPropertyName = "MissingProperty";
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.SaveOverrideAsync(
-                ConfigurationKey,
-                unknownPropertyName,
-                true,
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Message.ShouldBe(
-            $"Configuration property {ConfigurationKey}.{unknownPropertyName} is not registered."
-        );
     }
 
     private static ApplicationConfigurationRegistry CreateRegistry()

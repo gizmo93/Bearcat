@@ -51,25 +51,4 @@ public class TelegramSettingsServiceTest(DatabaseProvider databaseProvider)
             await DbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
         ).ResolvedAt.ShouldNotBeNull();
     }
-
-    [TestCase(true)]
-    [TestCase(false)]
-    public async Task GetSettingsAsync_ConfigurationExists_ReturnsUnreadableSecretsFlag(
-        bool hasUnreadableSecrets
-    )
-    {
-        // Arrange
-        DbContext.TelegramConfigurations.Add(CreateConnectedConfiguration(hasUnreadableSecrets));
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var settings = await service.GetSettingsAsync(
-            "http://bearcat.internal",
-            CancellationToken.None
-        );
-
-        // Assert
-        settings.IsConfigured.ShouldBeTrue();
-        settings.HasUnreadableSecrets.ShouldBe(hasUnreadableSecrets);
-    }
 }

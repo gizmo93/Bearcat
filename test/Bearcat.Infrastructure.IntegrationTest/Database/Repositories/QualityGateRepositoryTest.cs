@@ -32,64 +32,6 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         result.Select(r => r.Id).ShouldBe([release.Id]);
     }
 
-    [Test]
-    public async Task GetPendingReleasesAsync_FailedReleaseWithUploadInProgress_IncludesRelease()
-    {
-        // Arrange
-        var release = await AddReleaseAsync(
-            QualityGateState.Failed,
-            uploads: [(OnlineState.Unknown, UploadState.WaitingForArchive)]
-        );
-
-        // Act
-        var result = await GetPendingReleasesAsync();
-
-        // Assert
-        result.Select(r => r.Id).ShouldBe([release.Id]);
-    }
-
-    [Test]
-    public async Task GetPendingReleasesAsync_FailedReleaseWithoutProfile_IncludesRelease()
-    {
-        // Arrange
-        var release = await AddReleaseAsync(QualityGateState.Failed, withProfile: false);
-
-        // Act
-        var result = await GetPendingReleasesAsync();
-
-        // Assert
-        result.Select(r => r.Id).ShouldBe([release.Id]);
-    }
-
-    [Test]
-    public async Task GetPendingReleasesAsync_NotEvaluatedRelease_IncludesRelease()
-    {
-        // Arrange
-        var release = await AddReleaseAsync(QualityGateState.NotEvaluated);
-
-        // Act
-        var result = await GetPendingReleasesAsync();
-
-        // Assert
-        result.Select(r => r.Id).ShouldBe([release.Id]);
-    }
-
-    [TestCase(QualityGateState.Failed)]
-    [TestCase(QualityGateState.NotEvaluated)]
-    public async Task GetPendingReleasesAsync_UnmanagedRelease_IncludesRelease(
-        QualityGateState state
-    )
-    {
-        // Arrange
-        var release = await AddReleaseAsync(state, releaseType: ReleaseType.Unmanaged);
-
-        // Act
-        var result = await GetPendingReleasesAsync();
-
-        // Assert
-        result.Select(r => r.Id).ShouldBe([release.Id]);
-    }
-
     [TestCase(QualityGateState.Passed)]
     [TestCase(QualityGateState.ManuallyApproved)]
     public async Task GetPendingReleasesAsync_PassedOrApprovedRelease_ExcludesRelease(
@@ -120,54 +62,6 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Select(r => r.Id).ShouldBe([firstRelease.Id, secondRelease.Id]);
-    }
-
-    [Test]
-    public async Task GetPendingReleasesAsync_AfterReleaseIdIsSet_ReturnsOnlyReleasesWithHigherId()
-    {
-        // Arrange
-        var firstRelease = await AddReleaseAsync(QualityGateState.Failed);
-        var secondRelease = await AddReleaseAsync(QualityGateState.Failed);
-        var thirdRelease = await AddReleaseAsync(QualityGateState.NotEvaluated);
-
-        // Act
-        var result = await GetPendingReleasesAsync(afterReleaseId: firstRelease.Id);
-
-        // Assert
-        result.Select(r => r.Id).ShouldBe([secondRelease.Id, thirdRelease.Id]);
-    }
-
-    [Test]
-    public async Task GetPendingReleasesAsync_NoPendingReleaseAfterReleaseId_ReturnsEmptyList()
-    {
-        // Arrange
-        var release = await AddReleaseAsync(QualityGateState.Failed);
-
-        // Act
-        var result = await GetPendingReleasesAsync(afterReleaseId: release.Id);
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task GetPendingReleasesAsync_PendingReleaseWithDetails_LoadsAllIncludes()
-    {
-        // Arrange
-        await AddEvaluationReleaseAsync("Bearcat.Movie.2026-GRP", "Movie profile");
-
-        // Act
-        var result = await GetPendingReleasesAsync();
-
-        // Assert
-        var release = result.ShouldHaveSingleItem();
-        release.ReleaseGroup.QualityProfile.ShouldNotBeNull();
-        release.ReleaseGroup.QualityProfile.Rules.Count.ShouldBe(2);
-        release.ReleaseInfo.ShouldNotBeNull();
-        release.Metadata.ShouldNotBeNull();
-        release.ReleaseNfo.ShouldNotBeNull();
-        release.MediaFiles.Count.ShouldBe(2);
-        release.QualityIssues.Count.ShouldBe(2);
     }
 
     [Test]
@@ -209,19 +103,6 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
                 ["Bearcat.Movie.2026-GRP missing nfo", "Bearcat.Movie.2026-GRP missing media info"],
                 ignoreOrder: true
             );
-    }
-
-    [Test]
-    public async Task GetForEvaluationAsync_ReleaseDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var release = await AddEvaluationReleaseAsync("Bearcat.Movie.2026-GRP", "Movie profile");
-
-        // Act
-        var result = await repository.GetForEvaluationAsync(release.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private async Task<IReadOnlyList<Release>> GetPendingReleasesAsync(

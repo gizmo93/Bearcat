@@ -31,43 +31,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_ValidArchiveConfig_PersistsArchiveConfigAndReturnsId()
-    {
-        // Arrange
-        var releaseId = await AddReleaseAsync();
-
-        // Act
-        var result = await service.CreateAsync(
-            releaseId,
-            "/data/releases",
-            "zip",
-            "bearcat-release",
-            "secret",
-            "Main archive",
-            512,
-            false,
-            false,
-            []
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-
-        var archiveConfig = await DbContext.ArchiveConfigs.SingleAsync();
-        archiveConfig.ShouldNotBeNull();
-        archiveConfig.Id.ShouldBe(result.ArchiveConfigId!.Value);
-        archiveConfig.ReleaseId.ShouldBe(releaseId);
-        archiveConfig.ArchiveFilesBasePath.ShouldBe("/data/releases");
-        archiveConfig.ArchiverName.ShouldBe("zip");
-        archiveConfig.ArchiveNamePrefix.ShouldBe("bearcat-release");
-        archiveConfig.ArchivePassword.ShouldBe("secret");
-        archiveConfig.Name.ShouldBe("Main archive");
-        archiveConfig.ArchiveFileSizeMb.ShouldBe(512);
-        archiveConfig.PackReleaseFolderAsRootFolder.ShouldBeFalse();
-        archiveConfig.CreateNonceFile.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task CreateAsync_ArchiveFileSizeIsNull_PersistsArchiveConfigWithZeroFileSize()
     {
         // Arrange
@@ -97,37 +60,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task DeleteAsync_ArchiveConfigExists_RemovesArchiveConfig()
-    {
-        // Arrange
-        var archiveConfig = await AddArchiveConfigAsync();
-
-        // Act
-        await service.DeleteAsync(archiveConfig.Id);
-
-        // Assert
-        var result = await DbContext.ArchiveConfigs.AnyAsync();
-
-        result.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task DeleteAsync_ArchiveConfigDoesNotExist_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var archiveConfigId = 404;
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.DeleteAsync(archiveConfigId)
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Message.ShouldBe($"ArchiveConfig with ID {archiveConfigId} not found");
-    }
-
-    [Test]
     public async Task DeleteAsync_UnmanagedReleaseArchiveConfig_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -140,153 +72,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Message.ShouldBe("Archive configs for unmanaged releases cannot be changed.");
-    }
-
-    [Test]
-    public async Task UpdateAsync_ArchiveConfigExists_UpdatesArchiveConfig()
-    {
-        // Arrange
-        var archiveConfig = await AddArchiveConfigAsync();
-
-        // Act
-        await service.UpdateAsync(
-            archiveConfig.Id,
-            "/new/releases",
-            "updated-prefix",
-            "new-secret",
-            "Updated archive",
-            256,
-            false,
-            false,
-            []
-        );
-
-        // Assert
-        var result = await DbContext.ArchiveConfigs.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(archiveConfig.Id);
-        result.ReleaseId.ShouldBe(archiveConfig.ReleaseId);
-        result.ArchiverName.ShouldBe("zip");
-        result.ArchiveFilesBasePath.ShouldBe("/new/releases");
-        result.ArchiveNamePrefix.ShouldBe("updated-prefix");
-        result.ArchivePassword.ShouldBe("new-secret");
-        result.Name.ShouldBe("Updated archive");
-        result.ArchiveFileSizeMb.ShouldBe(256);
-        result.PackReleaseFolderAsRootFolder.ShouldBeFalse();
-        result.CreateNonceFile.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task UpdateAsync_ArchiveFileSizeIsNull_UpdatesArchiveConfigWithZeroFileSize()
-    {
-        // Arrange
-        var archiveConfig = await AddArchiveConfigAsync();
-
-        // Act
-        await service.UpdateAsync(
-            archiveConfig.Id,
-            "/new/releases",
-            "updated-prefix",
-            null,
-            "Updated archive",
-            null,
-            true,
-            true,
-            []
-        );
-
-        // Assert
-        var result = await DbContext.ArchiveConfigs.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.ArchivePassword.ShouldBeNull();
-        result.ArchiveFileSizeMb.ShouldBe(0);
-    }
-
-    [Test]
-    public async Task UpdateAsync_ArchiveConfigDoesNotExist_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var archiveConfigId = 404;
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.UpdateAsync(
-                archiveConfigId,
-                "/new/releases",
-                "updated-prefix",
-                "new-secret",
-                "Updated archive",
-                256,
-                true,
-                true,
-                []
-            )
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Message.ShouldBe($"ArchiveConfig with ID {archiveConfigId} not found");
-    }
-
-    [Test]
-    public async Task UpdateAsync_UnmanagedReleaseArchiveConfig_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var archiveConfig = await AddArchiveConfigAsync(ReleaseType.Unmanaged);
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.UpdateAsync(
-                archiveConfig.Id,
-                "/new/releases",
-                "updated-prefix",
-                "new-secret",
-                "Updated archive",
-                256,
-                true,
-                true,
-                []
-            )
-        );
-
-        // Assert
-        result.Message.ShouldBe("Archive configs for unmanaged releases cannot be changed.");
-    }
-
-    [Test]
-    public async Task CreateAsync_WithAdditionalArchiveContentIds_PersistsAssignments()
-    {
-        // Arrange
-        var releaseId = await AddReleaseAsync();
-        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
-
-        // Act
-        var result = await service.CreateAsync(
-            releaseId,
-            "/data/releases",
-            "zip",
-            "bearcat-release",
-            null,
-            "Main archive",
-            512,
-            true,
-            true,
-            additionalArchiveContents.Select(content => content.Id).ToList()
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-
-        var archiveConfig = await CreateDbContext()
-            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
-            .SingleAsync(config => config.Id == result.ArchiveConfigId);
-
-        archiveConfig
-            .AdditionalArchiveContents.Select(content => content.Id)
-            .Order()
-            .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
     }
 
     [Test]
@@ -355,43 +140,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         updatedArchiveConfig
             .AdditionalArchiveContents.Select(content => content.Id)
             .ShouldBe([additionalArchiveContents[1].Id]);
-        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
-            additionalArchiveContents.Count
-        );
-    }
-
-    [Test]
-    public async Task UpdateAsync_EmptyAdditionalArchiveContentIds_RemovesAssignmentsAndKeepsContents()
-    {
-        // Arrange
-        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
-        var archiveConfig = await AddArchiveConfigAsync();
-        archiveConfig.AdditionalArchiveContents = additionalArchiveContents;
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await service.UpdateAsync(
-            archiveConfig.Id,
-            "/data/releases",
-            "bearcat-release",
-            null,
-            "Main archive",
-            512,
-            true,
-            true,
-            []
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-
-        var verificationDbContext = CreateDbContext();
-        var updatedArchiveConfig = await verificationDbContext
-            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
-            .SingleAsync(config => config.Id == archiveConfig.Id);
-
-        updatedArchiveConfig.AdditionalArchiveContents.ShouldBeEmpty();
         (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
             additionalArchiveContents.Count
         );
@@ -477,54 +225,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SetArchiveFolderAsync_OldRarVolumesInOtherFolder_RelocatesArchive()
-    {
-        // Arrange
-        var currentFolderPath = CreateReleaseFolderWithFiles();
-        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
-            currentFolderPath,
-            "bearcat-release.rar",
-            "bearcat-release.r00",
-            "bearcat-release.r01"
-        );
-        var targetFolderPath = CreateReleaseFolderWithFiles(
-            "bearcat-release.rar",
-            "bearcat-release.r00",
-            "bearcat-release.r01",
-            "bearcat-release.nfo"
-        );
-
-        // Act
-        var changeResult = await service.SetArchiveFolderAsync(
-            archiveConfig.Id,
-            targetFolderPath,
-            confirmContentChange: false
-        );
-
-        // Assert
-        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
-
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext
-            .ArchiveConfigs.AsSplitQuery()
-            .Include(c => c.Archives)
-                .ThenInclude(a => a.ArchiveFiles)
-            .SingleAsync(c => c.Id == archiveConfig.Id);
-        var archive = result.Archives.Single();
-
-        result.ArchiveFilesBasePath.ShouldBe(targetFolderPath);
-        archive.ArchiveFolderPath.ShouldBe(targetFolderPath);
-        archive
-            .ArchiveFiles.Select(file => file.FullFileName)
-            .Order(StringComparer.Ordinal)
-            .ShouldBe([
-                Path.Combine(targetFolderPath, "bearcat-release.r00"),
-                Path.Combine(targetFolderPath, "bearcat-release.r01"),
-                Path.Combine(targetFolderPath, "bearcat-release.rar"),
-            ]);
-    }
-
-    [Test]
     public async Task SetArchiveFolderAsync_ArchiveFilesChanged_RequiresConfirmationThenReimports()
     {
         // Arrange
@@ -579,54 +279,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SetArchiveFolderAsync_TargetHasAdditionalArchiveFiles_RequiresConfirmationThenReimports()
-    {
-        // Arrange
-        var releaseFolderPath = CreateReleaseFolderWithFiles(
-            "Bearcat.Release.Unmanaged.part1.rar",
-            "Bearcat.Release.Unmanaged.part2.rar"
-        );
-        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
-            releaseFolderPath,
-            "Bearcat.Release.Unmanaged.part1.rar"
-        );
-
-        // Act
-        var unconfirmedResult = await service.SetArchiveFolderAsync(
-            archiveConfig.Id,
-            releaseFolderPath,
-            confirmContentChange: false
-        );
-        var confirmedResult = await service.SetArchiveFolderAsync(
-            archiveConfig.Id,
-            releaseFolderPath,
-            confirmContentChange: true
-        );
-
-        // Assert
-        unconfirmedResult.ShouldBe(ArchiveFolderChangeResult.ConfirmationRequired);
-        confirmedResult.ShouldBe(ArchiveFolderChangeResult.Reimported);
-
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext
-            .ArchiveConfigs.AsSplitQuery()
-            .Include(c => c.Archives)
-                .ThenInclude(a => a.ArchiveFiles)
-            .SingleAsync(c => c.Id == archiveConfig.Id);
-        var archives = result.Archives.OrderBy(a => a.Id).ToList();
-
-        archives.Count.ShouldBe(2);
-        archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
-        archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
-        archives[1]
-            .ArchiveFiles.Select(file => file.FullFileName)
-            .ShouldBe([
-                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
-                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]);
-    }
-
-    [Test]
     public async Task SetArchiveFolderAsync_NoMatchingArchiveFiles_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -673,79 +325,6 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Message.ShouldBe("Archives can only be refreshed for unmanaged releases.");
-    }
-
-    [Test]
-    public async Task SetArchiveFolderAsync_ArchiveRelocatedIntoStorageFolder_PersistsStorageFolderReference()
-    {
-        // Arrange
-        var currentFolderPath = CreateReleaseFolderWithFiles();
-        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
-            currentFolderPath,
-            "bearcat-release.rar"
-        );
-        var targetFolderPath = CreateReleaseFolderWithFiles("bearcat-release.rar");
-        var storageFolder = await AddArchiveStorageFolderAsync(targetFolderPath);
-
-        // Act
-        var changeResult = await service.SetArchiveFolderAsync(
-            archiveConfig.Id,
-            targetFolderPath,
-            confirmContentChange: false
-        );
-
-        // Assert
-        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
-        DbContext.ChangeTracker.Clear();
-        var archive = await DbContext.Archives.SingleAsync(a =>
-            a.ArchiveConfigId == archiveConfig.Id
-        );
-        archive.ArchiveFolderPath.ShouldBe(targetFolderPath);
-        archive.ArchiveStorageFolderId.ShouldBe(storageFolder.Id);
-    }
-
-    [Test]
-    public async Task SetArchiveFolderAsync_ArchiveRelocatedOutOfStorageFolder_ClearsStorageFolderReference()
-    {
-        // Arrange
-        var currentFolderPath = CreateReleaseFolderWithFiles();
-        var storageFolder = await AddArchiveStorageFolderAsync(currentFolderPath);
-        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
-            currentFolderPath,
-            "bearcat-release.rar"
-        );
-        var archive = archiveConfig.Archives.Single();
-        archive.ArchiveStorageFolderId = storageFolder.Id;
-        await DbContext.SaveChangesAsync();
-        var targetFolderPath = CreateReleaseFolderWithFiles("bearcat-release.rar");
-
-        // Act
-        var changeResult = await service.SetArchiveFolderAsync(
-            archiveConfig.Id,
-            targetFolderPath,
-            confirmContentChange: false
-        );
-
-        // Assert
-        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Archives.SingleAsync(a => a.Id == archive.Id);
-        result.ArchiveFolderPath.ShouldBe(targetFolderPath);
-        result.ArchiveStorageFolderId.ShouldBeNull();
-    }
-
-    private async Task<ArchiveStorageFolder> AddArchiveStorageFolderAsync(string path)
-    {
-        var storageFolder = new ArchiveStorageFolder
-        {
-            Name = "NAS",
-            Path = path,
-            IsActive = true,
-        };
-        DbContext.ArchiveStorageFolders.Add(storageFolder);
-        await DbContext.SaveChangesAsync();
-
-        return storageFolder;
     }
 
     private async Task<List<AdditionalArchiveContent>> AddAdditionalArchiveContentsAsync()

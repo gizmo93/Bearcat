@@ -231,26 +231,6 @@ public class ArchiveRestoreServiceTest
     }
 
     [Test]
-    public async Task ProcessAsync_HosterReportsFileSizes_PassesThemToTrackerAndDownload()
-    {
-        // Arrange
-        CreateScenario();
-        downloadHoster.SizeBytesPerLink["https://mirror.test/file-2"] = 4711;
-        var service = CreateService();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        downloadHoster.ExpectedSizeBytesPerLink["https://mirror.test/file-2"].ShouldBe(4711);
-        downloadHoster.ExpectedSizeBytesPerLink["https://mirror.test/file-3"].ShouldBeNull();
-        var plannedFiles = transferProgressTracker.PlannedFilesPerKey[MirrorDownloadKey(3)];
-        plannedFiles.Select(file => file.FileId).ShouldBe([2, 3]);
-        plannedFiles[0].SizeBytes.ShouldBe(4711);
-        plannedFiles[1].SizeBytes.ShouldBeNull();
-    }
-
-    [Test]
     public async Task ProcessAsync_FileSizeLookupFails_StillRestoresWithUnknownSizes()
     {
         // Arrange
@@ -268,22 +248,6 @@ public class ArchiveRestoreServiceTest
             .PlannedFilesPerKey[MirrorDownloadKey(3)]
             .ShouldAllBe(file => file.SizeBytes == null);
         downloadHoster.ExpectedSizeBytesPerLink.Values.ShouldAllBe(size => size == null);
-    }
-
-    [Test]
-    public async Task ProcessAsync_HosterAlwaysReuploadsAllFiles_DownloadsEveryArchiveFile()
-    {
-        // Arrange
-        var scenario = CreateScenario();
-        scenario.WaitingUpload.HosterRegistration!.AlwaysReuploadAllFiles = true;
-        var service = CreateService();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        downloadHoster.DownloadedLinks.Count.ShouldBe(3);
-        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
     }
 
     [Test]

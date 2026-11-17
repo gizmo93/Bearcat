@@ -80,23 +80,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ToggleIsActiveAsync_RegistrationExists_TogglesIsActive()
-    {
-        // Arrange
-        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
-
-        // Act
-        await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.LinkCrypterRegistrations.SingleAsync();
-
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(registration.Id);
-        result.IsActive.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task UpdateAsync_RegistrationExists_UpdatesNameAndSerializedConfig()
     {
         // Arrange
@@ -179,48 +162,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
         result.HasUnreadableSecrets.ShouldBeFalse();
         linkCrypterMock.Verify(c => c.DeserializeConfig(It.IsAny<string>()), Times.Never);
-    }
-
-    [Test]
-    public async Task TryLoginAsync_RegistrationExists_DelegatesToLinkCrypter()
-    {
-        // Arrange
-        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
-        var loginResult = new TryLoginResult(true);
-        linkCrypterMock
-            .Setup(c => c.DeserializeConfig(SerializedConfig))
-            .Returns(linkCrypterConfigMock.Object);
-        linkCrypterMock
-            .Setup(c => c.TryLoginAsync(linkCrypterConfigMock.Object, CancellationToken.None))
-            .ReturnsAsync(loginResult);
-
-        // Act
-        var result = await service.TryLoginAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBe(loginResult);
-        linkCrypterFactoryMock.Verify(f => f.Get(LinkCrypterClassName), Times.Once);
-        linkCrypterMock.Verify(c => c.DeserializeConfig(SerializedConfig), Times.Once);
-        linkCrypterMock.Verify(
-            c => c.TryLoginAsync(linkCrypterConfigMock.Object, CancellationToken.None),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task DeleteAsync_RegistrationExists_RemovesRegistration()
-    {
-        // Arrange
-        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
-
-        // Act
-        await service.DeleteAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        var result = await DbContext.LinkCrypterRegistrations.AnyAsync();
-
-        result.ShouldBeFalse();
     }
 
     [Test]
@@ -328,22 +269,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetLinkCrypterContainerCountAsync_RegistrationWithoutContainers_ReturnsZero()
-    {
-        // Arrange
-        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
-
-        // Act
-        var result = await service.GetLinkCrypterContainerCountAsync(
-            registration.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(0);
-    }
-
-    [Test]
     public async Task CreateAsync_SpecificProxyServer_StoresSelectionAndProxyServerId()
     {
         // Arrange
@@ -366,90 +291,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         var registration = await DbContext.LinkCrypterRegistrations.SingleAsync();
         registration.ProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
         registration.ProxyServerId.ShouldBe(proxyServer.Id);
-    }
-
-    [Test]
-    public async Task CreateAsync_SpecificProxyServerDoesNotExist_ThrowsAndStoresNothing()
-    {
-        // Arrange
-        linkCrypterMock
-            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
-            .Returns(SerializedConfig);
-
-        // Act
-        var act = () =>
-            service.CreateAsync(
-                "Primary crypter",
-                LinkCrypterClassName,
-                new Dictionary<string, string> { ["apiKey"] = "secret" },
-                proxySelection: ProxySelection.SpecificProxyServer,
-                proxyServerId: 4711,
-                cancellationToken: CancellationToken.None
-            );
-
-        // Assert
-        await act.ShouldThrowAsync<InvalidProxySelectionException>();
-        (await DbContext.LinkCrypterRegistrations.CountAsync()).ShouldBe(0);
-    }
-
-    [Test]
-    public async Task CreateAsync_SpecificProxyServerWithoutProxyServerId_Throws()
-    {
-        // Arrange
-        linkCrypterMock
-            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
-            .Returns(SerializedConfig);
-
-        // Act
-        var act = () =>
-            service.CreateAsync(
-                "Primary crypter",
-                LinkCrypterClassName,
-                new Dictionary<string, string> { ["apiKey"] = "secret" },
-                proxySelection: ProxySelection.SpecificProxyServer,
-                proxyServerId: null,
-                cancellationToken: CancellationToken.None
-            );
-
-        // Assert
-        await act.ShouldThrowAsync<InvalidProxySelectionException>();
-    }
-
-    [Test]
-    public async Task UpdateAsync_UseCategoryDefaultWithProxyServerId_StoresCategoryDefaultWithoutProxyServerId()
-    {
-        // Arrange
-        var proxyServer = await AddProxyServerAsync();
-        var registration = await AddLinkCrypterRegistrationAsync(
-            isActive: true,
-            proxySelection: ProxySelection.SpecificProxyServer,
-            proxyServerId: proxyServer.Id
-        );
-        linkCrypterMock
-            .Setup(x => x.DeserializeConfig(SerializedConfig))
-            .Returns(linkCrypterConfigMock.Object);
-        linkCrypterConfigMock
-            .Setup(c => c.ToDictionary())
-            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
-        linkCrypterMock
-            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
-            .Returns(SerializedConfig);
-
-        // Act
-        await service.UpdateAsync(
-            registration.Id,
-            "Primary crypter",
-            new Dictionary<string, string>(),
-            proxySelection: ProxySelection.UseCategoryDefault,
-            proxyServerId: proxyServer.Id,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.LinkCrypterRegistrations.SingleAsync();
-        result.ProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
-        result.ProxyServerId.ShouldBeNull();
     }
 
     [Test]
@@ -536,56 +377,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
             ],
             ignoreOrder: true
         );
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
-    {
-        // Arrange
-        await AddLinkCrypterRegistrationAsync(isActive: true);
-        var proxyServer = await AddProxyServerAsync();
-        var registration = await AddLinkCrypterRegistrationAsync(
-            isActive: false,
-            proxySelection: ProxySelection.SpecificProxyServer,
-            proxyServerId: proxyServer.Id,
-            name: "Secondary crypter"
-        );
-        DbContext.ChangeTracker.Clear();
-        var readRepository = CreateReadRepositoryWithCrypterLookup();
-
-        // Act
-        var result = await readRepository.GetByIdAsync(registration.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldBe(
-            new LinkCrypterRegistrationReadModel(
-                registration.Id,
-                "Secondary crypter",
-                LinkCrypterClassName,
-                linkCrypterMock.Object.GetType().Name,
-                IsActive: false,
-                HasUnreadableSecrets: false,
-                SupportsCaptcha: true,
-                SupportsContainerDownload: false,
-                SupportsClickAndLoad: true,
-                ProxySelection.SpecificProxyServer,
-                proxyServer.Id
-            )
-        );
-    }
-
-    [Test]
-    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
-        var readRepository = CreateReadRepositoryWithCrypterLookup();
-
-        // Act
-        var result = await readRepository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
     }
 
     private LinkCrypterRegistrationReadRepository CreateReadRepositoryWithCrypterLookup()

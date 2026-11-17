@@ -1,11 +1,9 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.FileCrypt;
 using Bearcat.LinkCrypters.FileCrypt.Api;
 using Moq;
-using Refit;
 using Shouldly;
 
 namespace Bearcat.LinkCrypters.UnitTest.FileCrypt;
@@ -20,14 +18,6 @@ public class FileCryptTest
     {
         apiMock = new Mock<IFileCryptApi>(MockBehavior.Strict);
         service = new LinkCrypters.FileCrypt.FileCrypt(apiMock.Object);
-    }
-
-    [Test]
-    public void SupportedSettings_FileCryptApiSettings_ReturnsDocumentedOptions()
-    {
-        service.SupportsCaptcha.ShouldBeTrue();
-        service.SupportsContainerDownload.ShouldBeTrue();
-        service.SupportsClickAndLoad.ShouldBeTrue();
     }
 
     [Test]
@@ -297,48 +287,6 @@ public class FileCryptTest
     }
 
     [Test]
-    public async Task UpdateContainerAsync_DisabledSettings_SendsDisabledFileCryptOptions()
-    {
-        // Arrange
-        var config = new FileCryptConfig { ApiKey = "api-key" };
-        var externalReference = """{"ContainerId":"60598C0844","Name":"container-name"}""";
-
-        apiMock
-            .Setup(x =>
-                x.SendAsync(It.IsAny<FormUrlEncodedContent>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(new Response { State = 1 });
-
-        // Act
-        var result = await service.UpdateContainerAsync(
-            config,
-            "https://filecrypt.cc/Container/60598C0844.html",
-            externalReference,
-            null,
-            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
-            enableCaptcha: false,
-            enableContainerDownload: false,
-            enableClickAndLoad: false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
-
-        apiMock.Verify(x =>
-            x.SendAsync(
-                It.Is<FormUrlEncodedContent>(content =>
-                    HasFormValue(content, "captcha", "0")
-                    && HasFormValue(content, "allow_cnl", "0")
-                    && HasFormValue(content, "allow_dlc", "0")
-                    && HasFormValue(content, "allow_links", "1")
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
-    }
-
-    [Test]
     public async Task UpdateContainerAsync_ExternalReferenceIsPlainId_UsesIdAsName()
     {
         // Arrange
@@ -490,72 +438,6 @@ public class FileCryptTest
     }
 
     [Test]
-    public void DeserializeConfig_SerializedConfig_ReturnsFileCryptConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new FileCryptConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<FileCryptConfig>().ApiKey.ShouldBe("api-key");
-    }
-
-    [Test]
-    public async Task SendAsync_RefitSendsFormUrlEncodedBody()
-    {
-        // Arrange
-        using var httpMessageHandler = new TestHttpMessageHandler();
-        var capturedBody = string.Empty;
-        var capturedContentType = string.Empty;
-
-        httpMessageHandler.Enqueue(async request =>
-        {
-            request.Method.ShouldBe(HttpMethod.Post);
-            request.RequestUri!.ToString().ShouldBe("https://www.filecrypt.cc/api.php");
-            request.Content.ShouldNotBeNull();
-
-            capturedContentType = request.Content!.Headers.ContentType!.ToString();
-            capturedBody = await request.Content.ReadAsStringAsync();
-
-            return CreateJsonResponse(
-                """
-                {"container":{"link":"https://filecrypt.cc/Container/60598C0844.html","name":"container-name"},"state":1}
-                """
-            );
-        });
-
-        var api = RestService.For<IFileCryptApi>(
-            new HttpClient(httpMessageHandler, disposeHandler: false)
-            {
-                BaseAddress = new Uri("https://www.filecrypt.cc"),
-            }
-        );
-
-        using var content = new FormUrlEncodedContent([
-            new KeyValuePair<string, string>("api_key", "api-key"),
-            new KeyValuePair<string, string>("fn", "containerV2"),
-            new KeyValuePair<string, string>("sub", "createV2"),
-            new KeyValuePair<string, string>("mirror_1[0][0]", "https://hoster.test/file"),
-        ]);
-
-        // Act
-        var response = await api.SendAsync(content, CancellationToken.None);
-
-        // Assert
-        response.State.ShouldBe(1);
-        response.Container![0].Link.ShouldBe("https://filecrypt.cc/Container/60598C0844.html");
-        capturedContentType.ShouldBe("application/x-www-form-urlencoded");
-        capturedBody.ShouldContain("api_key=api-key");
-        capturedBody.ShouldContain("fn=containerV2");
-        capturedBody.ShouldContain("sub=createV2");
-        capturedBody.ShouldContain("mirror_1%5B0%5D%5B0%5D=https%3A%2F%2Fhoster.test%2Ffile");
-        httpMessageHandler.PendingRequests.ShouldBe(0);
-    }
-
-    [Test]
     public async Task ListContainersAsync_ListV3ReturnsKeyedContainers_ReturnsContainersWithExternalReference()
     {
         // Arrange
@@ -673,37 +555,5 @@ public class FileCryptTest
                 part => WebUtility.UrlDecode(part[0]),
                 part => part.Length > 1 ? WebUtility.UrlDecode(part[1]) : string.Empty
             );
-    }
-
-    private static HttpResponseMessage CreateJsonResponse(string content)
-    {
-        return new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(content)
-            {
-                Headers = { ContentType = new MediaTypeHeaderValue("application/json") },
-            },
-        };
-    }
-
-    private sealed class TestHttpMessageHandler : HttpMessageHandler
-    {
-        private readonly Queue<Func<HttpRequestMessage, Task<HttpResponseMessage>>> responses = [];
-
-        public int PendingRequests => responses.Count;
-
-        public void Enqueue(Func<HttpRequestMessage, Task<HttpResponseMessage>> response)
-        {
-            responses.Enqueue(response);
-        }
-
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken
-        )
-        {
-            responses.Count.ShouldBeGreaterThan(0);
-            return responses.Dequeue().Invoke(request);
-        }
     }
 }

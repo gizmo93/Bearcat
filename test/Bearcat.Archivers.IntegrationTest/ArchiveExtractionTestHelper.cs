@@ -57,24 +57,6 @@ public static class ArchiveExtractionTestHelper
         File.ReadAllBytes(extractedFilePath).ShouldBe(File.ReadAllBytes(sourceFilePath));
     }
 
-    public static void ExtractedFolderShouldMatchSourceFolder(
-        string sourceFolderPath,
-        string extractPath,
-        string fileName
-    )
-    {
-        var sourceFolderName = Path.GetFileName(
-            Path.TrimEndingDirectorySeparator(sourceFolderPath)
-        );
-        var extractedFolderPath = Path.Combine(extractPath, sourceFolderName);
-        var extractedFilePath = Path.Combine(extractedFolderPath, fileName);
-
-        Directory.Exists(extractedFolderPath).ShouldBeTrue();
-        File.Exists(extractedFilePath).ShouldBeTrue();
-        File.ReadAllText(extractedFilePath)
-            .ShouldBe(File.ReadAllText(Path.Combine(sourceFolderPath, fileName)));
-    }
-
     public static async Task CreateNestedFoldersWithHiddenFilesAndEmptyFoldersAsync(
         string sourceFolderPath
     )

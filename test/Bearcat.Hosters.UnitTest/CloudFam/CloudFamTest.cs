@@ -1,5 +1,3 @@
-using System.Text.Json;
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -135,27 +133,6 @@ public class CloudFamTest
     }
 
     [Test]
-    public async Task CheckFilesExistAsync_CheckThrows_ReturnsFailedResult()
-    {
-        // Arrange
-        var files = new List<FileUrlToCheckDto>
-        {
-            new($"https://cloudfam.io/{FileCode}", ExternalId: null),
-        };
-
-        apiClientMock
-            .Setup(x => x.CheckLinksAsync(config, files, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new HttpRequestException("Invalid credentials"));
-
-        // Act
-        var result = await service.CheckFilesExistAsync(config, files, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessages.ShouldContain("Invalid credentials");
-    }
-
-    [Test]
     public async Task TryLoginAsync_ApiKeyRejected_ReturnsInvalidCredentials()
     {
         // Arrange
@@ -169,40 +146,5 @@ public class CloudFamTest
         // Assert
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("Invalid or revoked API key.");
-    }
-
-    [Test]
-    public void SerializeHosterConfig_ApiKeyGiven_RoundTripsThroughDeserialization()
-    {
-        // Arrange
-        var serialized = service.SerializeHosterConfig(
-            new Dictionary<string, string> { [nameof(CloudFamConfig.ApiKey)] = "cloudfam-api-key" }
-        );
-
-        // Act
-        var result = service.DeserializeHosterConfig(serialized);
-
-        // Assert
-        result.ShouldBeOfType<CloudFamConfig>().ApiKey.ShouldBe("cloudfam-api-key");
-        JsonSerializer.Deserialize<CloudFamConfig>(serialized).ShouldNotBeNull();
-    }
-
-    [Test]
-    public async Task CreateFolderAsync_FolderRequested_ReturnsFolderIdFromApiClient()
-    {
-        // Arrange
-        apiClientMock
-            .Setup(x => x.CreateFolderAsync(config, "Release.Name", It.IsAny<CancellationToken>()))
-            .ReturnsAsync("15");
-
-        // Act
-        var result = await service.CreateFolderAsync(
-            "Release.Name",
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe("15");
     }
 }

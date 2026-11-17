@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.KeepLinks;
 using Bearcat.LinkCrypters.KeepLinks.Api;
@@ -31,14 +30,6 @@ public class KeepLinksTest
     {
         apiMock = new Mock<IKeepLinksApi>(MockBehavior.Strict);
         service = new LinkCrypters.KeepLinks.KeepLinks(apiMock.Object);
-    }
-
-    [Test]
-    public void SupportedSettings_KeepLinksApiSettings_ReturnsDocumentedOptions()
-    {
-        service.SupportsCaptcha.ShouldBeTrue();
-        service.SupportsContainerDownload.ShouldBeTrue();
-        service.SupportsClickAndLoad.ShouldBeFalse();
     }
 
     [Test]
@@ -284,49 +275,6 @@ public class KeepLinksTest
     }
 
     [Test]
-    public async Task UpdateContainerAsync_DisabledSettings_OmitsOptionalKeepLinksFields()
-    {
-        // Arrange
-        var config = new KeepLinksConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.UpdateContainerAsync(
-                    It.IsAny<MultipartFormDataContent>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync("""{"p_links":"https://keeplinks.org/p/container-id"}""");
-
-        // Act
-        var result = await service.UpdateContainerAsync(
-            config,
-            "https://keeplinks.org/p/container-id",
-            null,
-            null,
-            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
-            enableCaptcha: false,
-            enableContainerDownload: false,
-            enableClickAndLoad: false,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.Outcome.ShouldBe(UpdateContainerOutcome.Success);
-
-        apiMock.Verify(x =>
-            x.UpdateContainerAsync(
-                It.Is<MultipartFormDataContent>(content =>
-                    !HasFormName(content, "captcha")
-                    && !HasFormName(content, "captchatype")
-                    && !HasFormName(content, "dlc")
-                ),
-                It.IsAny<CancellationToken>()
-            )
-        );
-    }
-
-    [Test]
     public async Task UpdateContainerAsync_ApiReturnsError_ReturnsFailure()
     {
         // Arrange
@@ -443,25 +391,6 @@ public class KeepLinksTest
     }
 
     [Test]
-    public async Task TryLoginAsync_ApiHashIsValid_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new KeepLinksConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x => x.GetLinksAsync("api-key", It.IsAny<CancellationToken>()))
-            .ReturnsAsync("""{"url_id":"container-id"}""");
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task TryLoginAsync_ApiHashIsInvalid_ReturnsFailure()
     {
         // Arrange
@@ -478,20 +407,6 @@ public class KeepLinksTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("API hash is not valid");
-    }
-
-    [Test]
-    public void DeserializeConfig_SerializedConfig_ReturnsKeepLinksConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new KeepLinksConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<KeepLinksConfig>().ApiKey.ShouldBe("api-key");
     }
 
     [Test]

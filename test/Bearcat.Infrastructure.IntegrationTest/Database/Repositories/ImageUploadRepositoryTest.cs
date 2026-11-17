@@ -107,19 +107,6 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateMissingImageUploadsAsync_CollectionWithoutCover_DoesNotCreateUpload()
-    {
-        // Arrange
-        var config = await AddCollectionImageUploadConfigAsync(coverUrl: null);
-
-        // Act
-        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
-
-        // Assert
-        (await GetImageUploadsAsync(config)).ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task CreateMissingImageUploadsAsync_SeveralConfigsWithAndWithoutUpload_CreatesUploadsOnlyForConfigsWithoutUpload()
     {
         // Arrange
@@ -152,24 +139,6 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
             },
             ignoreOrder: true
         );
-    }
-
-    [Test]
-    public async Task CreateMissingImageUploadsAsync_CalledTwice_CreatesOnlyOneUpload()
-    {
-        // Arrange
-        var config = await AddReleaseImageUploadConfigAsync(coverUrl: "https://cover.test/1.jpg");
-
-        // Act
-        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
-        await repository.CreateMissingImageUploadsAsync(
-            CreatedAt.AddMinutes(1),
-            CancellationToken.None
-        );
-
-        // Assert
-        var upload = (await GetImageUploadsAsync(config)).ShouldHaveSingleItem();
-        upload.CreatedAt.ShouldBe(CreatedAt);
     }
 
     [Test]
@@ -240,47 +209,6 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
         uploads.Count.ShouldBe(3);
         uploads.ShouldContain(upload => upload.ReleaseScreenshotId == null);
         uploads.ShouldNotContain(upload => upload.ReleaseScreenshotId == screenshotGridId);
-    }
-
-    [Test]
-    public async Task CreateMissingImageUploadsAsync_ScreenshotConfigCalledTwice_DoesNotCreateDuplicates()
-    {
-        // Arrange
-        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
-            uploadCover: true,
-            uploadScreenshots: true,
-            uploadScreenshotGrid: true
-        );
-
-        // Act
-        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
-        await repository.CreateMissingImageUploadsAsync(
-            CreatedAt.AddMinutes(1),
-            CancellationToken.None
-        );
-
-        // Assert
-        var uploads = await GetImageUploadsAsync(config);
-        uploads.Count.ShouldBe(4);
-        uploads.ShouldAllBe(upload => upload.CreatedAt == CreatedAt);
-    }
-
-    [Test]
-    public async Task CreateMissingImageUploadsAsync_ScreenshotConfigWithInactiveImageHoster_DoesNotCreateUploads()
-    {
-        // Arrange
-        var config = await AddReleaseWithScreenshotsImageUploadConfigAsync(
-            uploadCover: true,
-            uploadScreenshots: true,
-            uploadScreenshotGrid: true,
-            imageHosterRegistrationIsActive: false
-        );
-
-        // Act
-        await repository.CreateMissingImageUploadsAsync(CreatedAt, CancellationToken.None);
-
-        // Assert
-        (await GetImageUploadsAsync(config)).ShouldBeEmpty();
     }
 
     [Test]

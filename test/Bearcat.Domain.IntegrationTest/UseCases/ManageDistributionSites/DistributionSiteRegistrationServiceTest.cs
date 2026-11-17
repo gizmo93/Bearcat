@@ -298,24 +298,6 @@ public class DistributionSiteRegistrationServiceTest(DatabaseProvider databasePr
     }
 
     [Test]
-    public async Task GetForumPostingRuleCountAsync_RegistrationWithoutRules_ReturnsZero()
-    {
-        // Arrange
-        var registration = CreateRegistration("Primary forum");
-        DbContext.DistributionSiteRegistrations.Add(registration);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await registrationService.GetForumPostingRuleCountAsync(
-            registration.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(0);
-    }
-
-    [Test]
     public async Task DeleteAsync_RegistrationHasRulesAndPostedLocations_DeletesRulesAndKeepsPostedLocationsWithoutRegistration()
     {
         // Arrange

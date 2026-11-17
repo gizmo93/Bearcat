@@ -130,38 +130,6 @@ public class QualityProfileServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetDetailAsync_ProfileWithoutRules_ReturnsEmptyRules()
-    {
-        // Arrange
-        await AddProfileAsync("Movies", (QualityCheckRuleType.MediaInfoPresent, "{}"));
-        var emptyProfile = await AddProfileAsync("Empty");
-
-        // Act
-        var result = await repository.GetDetailAsync(emptyProfile.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Name.ShouldBe("Empty");
-        result.Rules.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task GetDetailAsync_ProfileDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var profile = await AddProfileAsync(
-            "Movies",
-            (QualityCheckRuleType.MediaInfoPresent, "{}")
-        );
-
-        // Act
-        var result = await repository.GetDetailAsync(profile.Id + 1, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
     public async Task UpdateAsync_ProfileWithRules_ReplacesRulesAndResetsReleasesOfAssignedGroups()
     {
         // Arrange

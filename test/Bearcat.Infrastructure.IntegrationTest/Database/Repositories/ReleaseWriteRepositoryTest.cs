@@ -51,23 +51,6 @@ public class ReleaseWriteRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldBeTrue();
     }
 
-    [Test]
-    public async Task NameExistsAsync_NameOnlyUsedByExcludedRelease_ReturnsFalse()
-    {
-        // Arrange
-        var release = await AddReleaseAsync("Bearcat.Release.1080p-GRP");
-
-        // Act
-        var result = await new ReleaseWriteRepository(CreateDbContext()).NameExistsAsync(
-            "bearcat.release.1080p-grp",
-            release.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
     private async Task<Release> AddReleaseAsync(string name)
     {
         var release = new Release

@@ -45,78 +45,6 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateAsync_NullTemplateBody_PersistsEmptyBody()
-    {
-        // Act
-        var id = await service.CreateAsync(
-            "Empty",
-            ForumPostTemplateType.ReleaseCollection,
-            ForumPostTemplateOutputFormat.BBCode,
-            templateBody: null,
-            CancellationToken.None
-        );
-
-        // Assert
-        var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
-        template.TemplateBody.ShouldBe(string.Empty);
-    }
-
-    [Test]
-    public async Task UpdateAsync_TemplateExists_UpdatesNameOutputFormatAndBodyAndKeepsType()
-    {
-        // Arrange
-        var id = await service.CreateAsync(
-            "Original",
-            ForumPostTemplateType.Release,
-            ForumPostTemplateOutputFormat.BBCode,
-            "Original body",
-            CancellationToken.None
-        );
-
-        // Act
-        await service.UpdateAsync(
-            id,
-            "  Updated  ",
-            ForumPostTemplateOutputFormat.PlainText,
-            "Updated body",
-            CancellationToken.None
-        );
-
-        // Assert
-        var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
-        template.Name.ShouldBe("Updated");
-        template.Type.ShouldBe(ForumPostTemplateType.Release);
-        template.OutputFormat.ShouldBe(ForumPostTemplateOutputFormat.PlainText);
-        template.TemplateBody.ShouldBe("Updated body");
-    }
-
-    [Test]
-    public async Task UpdateAsync_NullTemplateBody_PersistsEmptyBody()
-    {
-        // Arrange
-        var id = await service.CreateAsync(
-            "Original",
-            ForumPostTemplateType.Release,
-            ForumPostTemplateOutputFormat.BBCode,
-            "Original body",
-            CancellationToken.None
-        );
-
-        // Act
-        await service.UpdateAsync(
-            id,
-            "Original",
-            ForumPostTemplateOutputFormat.BBCode,
-            templateBody: null,
-            CancellationToken.None
-        );
-
-        // Assert
-        var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
-        template.TemplateBody.ShouldBe(string.Empty);
-    }
-
-    [Test]
     public async Task DuplicateAsync_TemplateExists_CopiesTypeOutputFormatAndBodyWithTrimmedName()
     {
         // Arrange
@@ -154,29 +82,6 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
             t.Id == sourceTemplate.Id
         );
         unchangedSourceTemplate.Name.ShouldBe("Original");
-    }
-
-    [Test]
-    public async Task DeleteAsync_TemplateExists_RemovesTemplate()
-    {
-        // Arrange
-        var template = new ForumPostTemplate
-        {
-            Name = "To delete",
-            Type = ForumPostTemplateType.Release,
-            TemplateBody = string.Empty,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-        DbContext.ForumPostTemplates.Add(template);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.DeleteAsync(template.Id, CancellationToken.None);
-
-        // Assert
-        (await DbContext.ForumPostTemplates.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]

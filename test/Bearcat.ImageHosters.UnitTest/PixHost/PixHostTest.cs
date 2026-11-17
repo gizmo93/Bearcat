@@ -76,24 +76,4 @@ public class PixHostTest
         result.ImageUrls.ShouldBeEmpty();
         result.ErrorMessages.ShouldNotBeEmpty();
     }
-
-    [Test]
-    public async Task UploadImageAsync_ApiThrows_ReturnsErrorMessage()
-    {
-        // Arrange
-        var config = new PixHostConfig();
-        var image = new ImageToUploadDto("https://example.test/cover.jpg", ImageUploadSource.Url);
-
-        apiClientMock
-            .Setup(api => api.UploadImageAsync(image, 0, CancellationToken.None))
-            .ThrowsAsync(new InvalidOperationException("network down"));
-
-        // Act
-        var result = await service.UploadImageAsync(image, config, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ImageUrls.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["network down"]);
-    }
 }

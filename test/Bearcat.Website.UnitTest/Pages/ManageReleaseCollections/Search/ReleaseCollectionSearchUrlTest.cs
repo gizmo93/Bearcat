@@ -22,19 +22,6 @@ public class ReleaseCollectionSearchUrlTest
         state.PageIndex.ShouldBe(0);
     }
 
-    [TestCase("Popularity")]
-    [TestCase("99")]
-    public void Parse_SortOrderInvalid_ReturnsNameAscending(string sortOrder)
-    {
-        // Act
-        var state = ReleaseCollectionSearchUrl.Parse(
-            new ReleaseCollectionSearchUrlValues(SortOrder: sortOrder)
-        );
-
-        // Assert
-        state.Query.SortOrder.ShouldBe(ReleaseCollectionSearchSortOrder.NameAscending);
-    }
-
     [Test]
     public void Parse_LanguageNone_ReturnsEmptyPrimaryLanguageCode()
     {

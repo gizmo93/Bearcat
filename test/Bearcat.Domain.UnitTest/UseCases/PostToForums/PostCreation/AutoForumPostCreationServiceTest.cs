@@ -280,7 +280,12 @@ public class AutoForumPostCreationServiceTest
             Releases = [AutoPostTestFactory.Release(qualityGateState: QualityGateState.Failed)],
             Registrations = [AutoPostTestFactory.Registration(id: 5)],
         };
-        var service = ServiceWith(repository, new FakeForumPostSubmitter());
+        var notificationService = new FakeNotificationService();
+        var service = ServiceWith(
+            repository: repository,
+            submitter: new FakeForumPostSubmitter(),
+            notificationService: notificationService
+        );
 
         // Act
         var result = await service.CreatePostOnSiteAsync(
@@ -293,6 +298,7 @@ public class AutoForumPostCreationServiceTest
         result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.Blocked);
         result.BlockedReason.ShouldBe(AutoPostBlockedReason.QualityGateNotPassed);
+        notificationService.Created.ShouldBeEmpty();
     }
 
     [Test]
@@ -365,33 +371,6 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
-    public async Task CreatePostOnSiteAsync_SkippedRelease_CreatesNoNotification()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Releases = [AutoPostTestFactory.Release(qualityGateState: QualityGateState.Failed)],
-            Registrations = [AutoPostTestFactory.Registration(id: 5)],
-        };
-        var notificationService = new FakeNotificationService();
-        var service = ServiceWith(
-            repository: repository,
-            submitter: new FakeForumPostSubmitter(),
-            notificationService: notificationService
-        );
-
-        // Act
-        await service.CreatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.Release,
-            entityId: 1,
-            distributionSiteRegistrationId: 5
-        );
-
-        // Assert
-        notificationService.Created.ShouldBeEmpty();
-    }
-
-    [Test]
     public async Task CreatePostOnSiteAsync_Collection_UsesTheCollectionNameAndRecordsACollectionPostedLocation()
     {
         // Arrange
@@ -416,44 +395,6 @@ public class AutoForumPostCreationServiceTest
         repository.PostedLocations.ShouldBeEmpty();
         repository.MarkedReleaseCollectionIds.ShouldBe([4]);
         repository.MarkedReleaseIds.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task CreatePostOnSiteAsync_Collection_NamesTheReleaseCollectionInTheNotifications()
-    {
-        // Arrange
-        var notificationService = new FakeNotificationService();
-        var submitter = new FakeForumPostSubmitter();
-        var service = ServiceWith(
-            repository: CollectionRepository(),
-            submitter: submitter,
-            notificationService: notificationService
-        );
-        var failingService = ServiceWith(
-            repository: CollectionRepository(),
-            submitter: new FakeForumPostSubmitter { FailingRegistrationIds = [5] },
-            notificationService: notificationService
-        );
-
-        // Act
-        await service.CreatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.ReleaseCollection,
-            entityId: 4,
-            distributionSiteRegistrationId: 5
-        );
-        await failingService.CreatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.ReleaseCollection,
-            entityId: 4,
-            distributionSiteRegistrationId: 5
-        );
-
-        // Assert
-        notificationService
-            .Created.Select(notification => notification.Message)
-            .ShouldBe([
-                $"Release collection '{AutoPostTestFactory.ReleaseCollectionName}' was posted automatically to 'Board': {submitter.NewThreadUrl}",
-                $"Automatic posting of release collection '{AutoPostTestFactory.ReleaseCollectionName}' to 'Board' failed: Submit to 5 failed",
-            ]);
     }
 
     private static FakeAutoForumPostingRepository RepositoryWith(

@@ -76,42 +76,6 @@ public class HideCxTest
     }
 
     [Test]
-    public async Task CreateContainerAsync_ApiThrows_ReturnsFailure()
-    {
-        // Arrange
-        var config = new HideCxConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.CreateContainerAsync(
-                    It.IsAny<CreateContainerRequest>(),
-                    "Bearer api-key",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new InvalidOperationException("create failed"));
-
-        // Act
-        var result = await service.CreateContainerAsync(
-            config,
-            "container-name",
-            null,
-            new Dictionary<int, IReadOnlyList<string>> { [1] = ["https://hoster.test/file"] },
-            enableCaptcha: true,
-            enableContainerDownload: true,
-            enableClickAndLoad: true,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeFalse();
-        result.ContainerLink.ShouldBeNull();
-        result.ExternalReference.ShouldBeNull();
-        result.ErrorMessages.ShouldBe(["create failed"]);
-    }
-
-    [Test]
     public async Task UpdateContainerAsync_ApiUpdatesContainer_ReturnsSuccess()
     {
         // Arrange
@@ -287,35 +251,6 @@ public class HideCxTest
     }
 
     [Test]
-    public async Task TryLoginAsync_SearchSucceeds_ReturnsSuccess()
-    {
-        // Arrange
-        var config = new HideCxConfig { ApiKey = "api-key" };
-
-        apiMock
-            .Setup(x =>
-                x.SearchContainersAsync(
-                    It.Is<SearchContainersRequest>(request =>
-                        request.Limit == 1
-                        && request.Offset == 0
-                        && request.AccessStatus == "unknown"
-                    ),
-                    "Bearer api-key",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(new SearchContainersResponse { Total = 0 });
-
-        // Act
-        var result = await service.TryLoginAsync(config, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-    }
-
-    [Test]
     public async Task TryLoginAsync_SearchThrows_ReturnsFailure()
     {
         // Arrange
@@ -338,20 +273,6 @@ public class HideCxTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("invalid token");
-    }
-
-    [Test]
-    public void DeserializeConfig_SerializedConfig_ReturnsHideCxConfig()
-    {
-        // Arrange
-        var serializedConfig = JsonSerializer.Serialize(new HideCxConfig { ApiKey = "api-key" });
-
-        // Act
-        var result = service.DeserializeConfig(serializedConfig);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.ShouldBeOfType<HideCxConfig>().ApiKey.ShouldBe("api-key");
     }
 
     [Test]

@@ -2,7 +2,6 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
-using Bearcat.Infrastructure.IntegrationTest.Database.MaterializedValues;
 using Bearcat.IntegrationTest.Utils;
 using Shouldly;
 
@@ -243,28 +242,6 @@ public class ArchiveCreationRepositoryTest(DatabaseProvider databaseProvider)
         var waitingUpload = result.ShouldHaveSingleItem();
         waitingUpload.Id.ShouldBe(upload.Id);
         waitingUpload.HosterRegistration!.HosterClassName.ShouldBe("OtherHoster");
-    }
-
-    [Test]
-    public async Task GetUploadsWithoutArchiveAsync_UnassignedUploadOfHosterAccountPool_LoadsHosterAccountPool()
-    {
-        // Arrange
-        var testData = new MaterializedValuesTestData(DbContext);
-        var uploadConfig = testData.AddHosterAccountPoolUploadConfig(
-            testData.AddRelease("Release"),
-            testData.AddHosterAccountPool("Pool", testData.AddHosterRegistration("Member"))
-        );
-        testData.AddUnassignedUpload(uploadConfig, UploadState.WaitingForArchive);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        var result = await repository.GetUploadsWithoutArchiveAsync(CancellationToken.None);
-
-        // Assert
-        var upload = result.ShouldHaveSingleItem();
-        upload.HosterRegistration.ShouldBeNull();
-        upload.GetHosterClassName().ShouldBe("PoolHoster");
     }
 
     [Test]

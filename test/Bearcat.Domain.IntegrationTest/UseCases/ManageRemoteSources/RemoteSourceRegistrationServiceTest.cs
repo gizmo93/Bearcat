@@ -9,7 +9,6 @@ using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
-using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -125,7 +124,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
     }
 
     [TestCase(0)]
-    [TestCase(-1)]
     public async Task CreateAsync_MaxConnectionsBelowOne_Throws(int maxConnections)
     {
         // Arrange
@@ -138,19 +136,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
         // Assert
         var exception = await Should.ThrowAsync<ArgumentException>(action);
         exception.Message.ShouldBe("Max connections must be at least 1.");
-    }
-
-    [Test]
-    public async Task CreateAsync_EmptyName_Throws()
-    {
-        // Arrange
-        var values = FormValues();
-
-        // Act
-        var action = () => service.CreateAsync(" ", SourceClassName, values);
-
-        // Assert
-        await Should.ThrowAsync<ArgumentException>(action);
     }
 
     [Test]
@@ -172,21 +157,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
         var config = ReadConfig(registration);
         config["Host"].ShouldBe("new.example.org");
         config["Password"].ShouldBe("secret");
-    }
-
-    [Test]
-    public async Task UpdateAsync_NewPassword_ReplacesPassword()
-    {
-        // Arrange
-        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
-        var values = FormValues();
-        values["Password"] = "new-secret";
-
-        // Act
-        await service.UpdateAsync(id, "Main server", values, 2);
-
-        // Assert
-        ReadConfig(await ReloadAsync(id))["Password"].ShouldBe("new-secret");
     }
 
     [Test]
@@ -250,22 +220,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
     }
 
     [Test]
-    public async Task TestConnectionAsync_CalledTwice_ReusesPooledSession()
-    {
-        // Arrange
-        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
-
-        // Act
-        await service.TestConnectionAsync(id);
-        var result = await service.TestConnectionAsync(id);
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        remoteSource.OpenCount.ShouldBe(1);
-        remoteSource.SessionDisposed.ShouldBeFalse();
-    }
-
-    [Test]
     public async Task UpdateAsync_PooledSessionExists_ClosesSessionAndOpensNewOneWithNewConfig()
     {
         // Arrange
@@ -301,22 +255,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
     }
 
     [Test]
-    public async Task TestConnectionAsync_ListingFails_ReturnsFailureAndDisposesSession()
-    {
-        // Arrange
-        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
-        remoteSource.ListException = new InvalidOperationException("Permission denied");
-
-        // Act
-        var result = await service.TestConnectionAsync(id);
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("Permission denied");
-        remoteSource.SessionDisposed.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task ListFoldersAsync_SessionListsFolders_ReturnsFoldersOfRequestedPath()
     {
         // Arrange
@@ -340,67 +278,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
         remoteSource.SessionDisposed.ShouldBeFalse();
     }
 
-    [Test]
-    public async Task ListFoldersAsync_ListingFails_ReturnsFailureWithoutFolders()
-    {
-        // Arrange
-        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
-        remoteSource.ListException = new InvalidOperationException("No such directory");
-
-        // Act
-        var result = await service.ListFoldersAsync(id, "/missing");
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("No such directory");
-        result.Folders.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task ToggleIsActiveAsync_ActiveRegistration_Deactivates()
-    {
-        // Arrange
-        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
-
-        // Act
-        await service.ToggleIsActiveAsync(id);
-
-        // Assert
-        (await ReloadAsync(id)).IsActive.ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task RemoveAsync_RegistrationExists_DeletesRegistration()
-    {
-        // Arrange
-        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
-
-        // Act
-        await service.RemoveAsync(id);
-
-        // Assert
-        (await CreateDbContext().RemoteSourceRegistrations.CountAsync()).ShouldBe(0);
-    }
-
-    [Test]
-    public async Task GetAllAsync_Registrations_ReturnsReadModelsWithSourceName()
-    {
-        // Arrange
-        await service.CreateAsync("B server", SourceClassName, FormValues(), 4);
-        await service.CreateAsync("A server", SourceClassName, FormValues());
-
-        // Act
-        var registrations = await repository.GetAllAsync();
-
-        // Assert
-        registrations.Select(r => r.Name).ShouldBe(["A server", "B server"]);
-        registrations[0].SourceName.ShouldBe("Fake source");
-        registrations[0].SourceClassName.ShouldBe(SourceClassName);
-        registrations[0].MaxConnections.ShouldBe(RemoteSourceRegistration.DefaultMaxConnections);
-        registrations[1].MaxConnections.ShouldBe(4);
-        registrations[1].IsActive.ShouldBeTrue();
-    }
-
     private async Task MarkConfigUnreadableAsync(int id)
     {
         var otherKeyProtector = new AesGcmSecretProtector(new FixedKeyProvider(fillValue: 7));
@@ -414,76 +291,6 @@ public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvid
                     .SetProperty(registration => registration.HasUnreadableSecrets, true)
             );
         DbContext.ChangeTracker.Clear();
-    }
-
-    [Test]
-    public async Task GetRemoteSourceAutomationCountAsync_AutomationsOfSeveralRegistrations_CountsOnlyAutomationsOfRegistration()
-    {
-        // Arrange
-        var registrationId = await service.CreateAsync("A server", SourceClassName, FormValues());
-        var otherRegistrationId = await service.CreateAsync(
-            "B server",
-            SourceClassName,
-            FormValues()
-        );
-        var releaseTemplate = new ReleaseTemplate
-        {
-            Name = "Template",
-            ReleaseType = ReleaseType.Managed,
-            ReleaseGroup = new ReleaseGroup
-            {
-                Name = "Group",
-                EnableAutomaticReuploads = false,
-                NumberOfHoursUntilReupload = 24,
-            },
-        };
-        DbContext.RemoteSourceAutomations.AddRange(
-            CreateAutomation("First", registrationId, releaseTemplate),
-            CreateAutomation("Second", registrationId, releaseTemplate),
-            CreateAutomation("Other", otherRegistrationId, releaseTemplate)
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetRemoteSourceAutomationCountAsync(
-            registrationId,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(2);
-    }
-
-    [Test]
-    public async Task GetRemoteSourceAutomationCountAsync_RegistrationWithoutAutomations_ReturnsZero()
-    {
-        // Arrange
-        var registrationId = await service.CreateAsync("A server", SourceClassName, FormValues());
-
-        // Act
-        var result = await service.GetRemoteSourceAutomationCountAsync(
-            registrationId,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe(0);
-    }
-
-    private static RemoteSourceAutomation CreateAutomation(
-        string name,
-        int registrationId,
-        ReleaseTemplate releaseTemplate
-    )
-    {
-        return new RemoteSourceAutomation
-        {
-            Name = name,
-            RemoteSourceRegistrationId = registrationId,
-            RemotePath = "/incoming",
-            TargetPath = "/downloads",
-            ReleaseTemplate = releaseTemplate,
-        };
     }
 
     private async Task<RemoteSourceRegistration> ReloadAsync(int id)

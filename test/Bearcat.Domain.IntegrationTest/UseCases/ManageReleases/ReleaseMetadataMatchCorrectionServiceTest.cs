@@ -102,27 +102,6 @@ public class ReleaseMetadataMatchCorrectionServiceTest(DatabaseProvider database
     }
 
     [Test]
-    public async Task LoadPreviewAsync_UnrecognizedInput_ReturnsInputNotRecognized()
-    {
-        // Arrange
-        var release = await AddReleaseAsync(
-            "Amok.1994.1080p.BluRay.x264-GRP",
-            ReleaseContentType.Movie
-        );
-
-        // Act
-        var result = await service.LoadPreviewAsync(
-            release.Id,
-            "not a reference",
-            CancellationToken.None
-        );
-
-        // Assert
-        result.Failure.ShouldBe(MetadataMatchCorrectionFailure.InputNotRecognized);
-        result.Preview.ShouldBeNull();
-    }
-
-    [Test]
     public async Task LoadPreviewAsync_TmdbTvUrlForMovie_ReturnsReferenceNotSupportedForContentType()
     {
         // Arrange

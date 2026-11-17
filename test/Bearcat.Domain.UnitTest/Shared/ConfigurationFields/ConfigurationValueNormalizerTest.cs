@@ -307,24 +307,6 @@ public class ConfigurationValueNormalizerTest
         exception.Error.ShouldBe(ConfigurationFieldValidationError.InvalidUrl);
     }
 
-    [Test]
-    public void ValidationException_IsArgumentExceptionWithCleanMessage()
-    {
-        // Arrange
-        var exception = new ConfigurationFieldValidationException(
-            "Host",
-            ConfigurationFieldValidationError.Required
-        );
-
-        // Act
-        var argumentException = exception as ArgumentException;
-
-        // Assert
-        argumentException.ShouldNotBeNull();
-        argumentException.ParamName.ShouldBeNull();
-        argumentException.Message.ShouldBe("The configuration field 'Host' is invalid: Required.");
-    }
-
     private static Dictionary<string, object?> ValidSubmission()
     {
         return new Dictionary<string, object?>

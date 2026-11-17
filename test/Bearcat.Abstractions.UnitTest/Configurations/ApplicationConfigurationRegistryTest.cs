@@ -6,7 +6,7 @@ namespace Bearcat.Abstractions.UnitTest.Configurations;
 public class ApplicationConfigurationRegistryTest
 {
     [Test]
-    public void GetDefinition_PropertyWithUnitAttribute_ReadsUnit()
+    public void GetDefinition_PropertiesWithAndWithoutUnitAttribute_ReadsUnitOnlyWhereDeclared()
     {
         // Arrange
         var registry = new ApplicationConfigurationRegistry([
@@ -27,20 +27,6 @@ public class ApplicationConfigurationRegistryTest
                 property.Name == nameof(ConfigurationWithUnits.SpeedLimitMegabytesPerSecond)
             )
             .Unit.ShouldBe(ApplicationConfigurationUnit.MegabytesPerSecond);
-    }
-
-    [Test]
-    public void GetDefinition_PropertyWithoutUnitAttribute_HasNoUnit()
-    {
-        // Arrange
-        var registry = new ApplicationConfigurationRegistry([
-            new ApplicationConfigurationRegistration(typeof(ConfigurationWithUnits)),
-        ]);
-
-        // Act
-        var definition = registry.GetDefinition<ConfigurationWithUnits>();
-
-        // Assert
         definition
             .Properties.Single(property =>
                 property.Name == nameof(ConfigurationWithUnits.MaxParallelOperations)

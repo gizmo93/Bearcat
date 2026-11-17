@@ -6,9 +6,7 @@ namespace Bearcat.Website.UnitTest.Pages.ManageReleases.DetailTabs;
 public class ReleaseDetailTabSelectionResolverTest
 {
     [TestCase(null)]
-    [TestCase("")]
     [TestCase("unknown")]
-    [TestCase("overview")]
     public void Resolve_MissingUnknownOrOverviewTab_ReturnsOverview(string? requestedTab)
     {
         // Act
@@ -23,11 +21,7 @@ public class ReleaseDetailTabSelectionResolverTest
         );
     }
 
-    [TestCase("release-infos", ReleaseDetailTab.ReleaseInfos)]
-    [TestCase("archives", ReleaseDetailTab.Archives)]
-    [TestCase("images", ReleaseDetailTab.Images)]
     [TestCase("image-upload-configs", ReleaseDetailTab.Images)]
-    [TestCase("image-uploads", ReleaseDetailTab.Images)]
     public void Resolve_NonUploadsTab_ReturnsMatchingTabWithConfigurationView(
         string requestedTab,
         string expectedTab

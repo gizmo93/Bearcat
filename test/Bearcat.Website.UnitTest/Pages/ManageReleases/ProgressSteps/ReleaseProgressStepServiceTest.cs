@@ -9,7 +9,7 @@ namespace Bearcat.Website.UnitTest.Pages.ManageReleases.ProgressSteps;
 public class ReleaseProgressStepServiceTest
 {
     [Test]
-    public void Calculate_ReturnsStepsInFixedOrder()
+    public void Calculate_NothingDone_ReturnsPendingAndNotApplicableSteps()
     {
         // Act
         var steps = Calculate();
@@ -24,15 +24,6 @@ public class ReleaseProgressStepServiceTest
                 ReleaseProgressStepKind.LinkContainers,
                 ReleaseProgressStepKind.Posted,
             ]);
-    }
-
-    [Test]
-    public void Calculate_NothingDone_ReturnsPendingAndNotApplicableSteps()
-    {
-        // Act
-        var steps = Calculate();
-
-        // Assert
         steps
             .Select(step => step.State)
             .ShouldBe([

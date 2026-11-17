@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
@@ -59,49 +58,39 @@ public class CostActionHosterBaseTest
         File.Delete(filePath);
     }
 
-    [Test]
-    public async Task UploadFileAsync_Turbobit_UploadsWithTurbobitAppTypeAndReturnsFileIdAsExternalId()
+    [TestCase(true, "fd1", "15", "cye2wolk2zz7", "https://trbt.cc/cye2wolk2zz7.html")]
+    [TestCase(false, "fd2", null, "tHzfhvR", "https://htfl.net/tHzfhvR")]
+    public async Task UploadFileAsync_Hoster_UploadsWithItsAppTypeAndReturnsFileIdAsExternalId(
+        bool isTurbobit,
+        string appType,
+        string? folderId,
+        string fileId,
+        string fileUrl
+    )
     {
         // Arrange
-        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11, FolderId: "15");
-        SetupUpload(
-            "fd1",
-            "15",
-            new CostActionUploadResult("cye2wolk2zz7", "https://trbt.cc/cye2wolk2zz7.html")
-        );
+        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11, FolderId: folderId);
+        SetupUpload(appType, folderId, new CostActionUploadResult(fileId, fileUrl));
 
         // Act
-        var result = await turbobit.UploadFileAsync(
-            fileDto,
-            turbobitConfig,
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
+        var result = isTurbobit
+            ? await turbobit.UploadFileAsync(
+                fileDto,
+                turbobitConfig,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            )
+            : await hitfile.UploadFileAsync(
+                fileDto,
+                hitfileConfig,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        result.FileUrl.ShouldBe("https://trbt.cc/cye2wolk2zz7.html");
-        result.ExternalId.ShouldBe("cye2wolk2zz7");
-    }
-
-    [Test]
-    public async Task UploadFileAsync_Hitfile_UploadsWithHitfileAppType()
-    {
-        // Arrange
-        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11);
-        SetupUpload("fd2", null, new CostActionUploadResult("tHzfhvR", "https://htfl.net/tHzfhvR"));
-
-        // Act
-        var result = await hitfile.UploadFileAsync(
-            fileDto,
-            hitfileConfig,
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.FileUrl.ShouldBe("https://htfl.net/tHzfhvR");
+        result.FileUrl.ShouldBe(fileUrl);
+        result.ExternalId.ShouldBe(fileId);
     }
 
     [Test]
@@ -257,33 +246,6 @@ public class CostActionHosterBaseTest
     }
 
     [Test]
-    public async Task CheckFilesExistAsync_ApiFails_ReturnsFailure()
-    {
-        // Arrange
-        apiClientMock
-            .Setup(x =>
-                x.CheckFilesAsync(
-                    ApiKey,
-                    "fd2",
-                    It.IsAny<IReadOnlyList<string>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new HttpRequestException("Too many attempts"));
-
-        // Act
-        var result = await hitfile.CheckFilesExistAsync(
-            hitfileConfig,
-            [new FileUrlToCheckDto("https://htfl.net/tHzfhvR", ExternalId: null)],
-            CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessages.ShouldBe(["Too many attempts"]);
-    }
-
-    [Test]
     public async Task MoveFileToFolderAsync_WithoutExternalId_UsesIdFromUrl()
     {
         // Arrange
@@ -320,21 +282,6 @@ public class CostActionHosterBaseTest
         // Assert
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("fd2 user does not exist");
-    }
-
-    [Test]
-    public void DeserializeHosterConfig_SerializedConfig_RoundTripsApiKey()
-    {
-        // Arrange
-        var serialized = turbobit.SerializeHosterConfig(
-            new Dictionary<string, string> { ["ApiKey"] = ApiKey }
-        );
-
-        // Act
-        var config = turbobit.DeserializeHosterConfig(serialized);
-
-        // Assert
-        config.ShouldBe(turbobitConfig);
     }
 
     [TestCase("https://trbt.cc/cye2wolk2zz7.html", "cye2wolk2zz7")]

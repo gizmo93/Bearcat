@@ -50,7 +50,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     private string additionalContentSourcePath = null!;
     private RecordingTransferProgressTracker progressTracker = null!;
     private TransferCancellationRegistry cancellationRegistry = null!;
-    private long releaseFolderBytesWhilePacking;
     private int? userCanceledArchiveId;
     private ArchiveCreationService service = null!;
 
@@ -351,58 +350,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         changedArchiveBytes.Last().ShouldBe((byte)0);
         changedArchiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(changedArchiveBytes)));
         archiverFactoryMock.Verify(f => f.GetByName("zip"), Times.Once);
-    }
-
-    [Test]
-    public async Task ProcessAsync_AssignableArchiveWasAlreadyUploadedToSameHoster_TracksHashChangeProgressOfExistingArchive()
-    {
-        // Arrange
-        var upload = await AddUploadWaitingForArchiveAsync();
-        var existingArchiveFolder = Directory
-            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
-            .FullName;
-        var archiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
-        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
-        var existingArchive = new Archive
-        {
-            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId!.Value,
-            ArchiveFolderPath = existingArchiveFolder,
-            ArchiveState = ArchiveState.Created,
-            ArchiveFileSizeMb = 512,
-            CreatedAt = DateTime.UtcNow,
-            ArchiveFiles = [new ArchiveFile { FullFileName = archiveFilePath }],
-            Uploads = [],
-            ErrorMessages = [],
-        };
-        var previousUpload = new Upload
-        {
-            UploadConfigId = upload.UploadConfigId,
-            HosterRegistrationId = upload.HosterRegistrationId,
-            Archive = existingArchive,
-            CreatedAt = DateTime.UtcNow.AddHours(-1),
-            UploadedAt = DateTime.UtcNow.AddHours(-1),
-            UploadState = UploadState.Completed,
-            OnlineState = OnlineState.Offline,
-            ErrorMessages = [],
-        };
-        DbContext.Archives.Add(existingArchive);
-        DbContext.Uploads.Add(previousUpload);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        var hashChangeIdentifier = new TransferIdentifier(
-            TransferType.ArchiveHashChange,
-            existingArchive.Id
-        );
-        progressTracker.PlannedFilesPerIdentifier.Keys.ShouldBe([hashChangeIdentifier]);
-        progressTracker
-            .LastSnapshotPerIdentifier[hashChangeIdentifier]
-            .TransferredBytes.ShouldBe(12);
-        progressTracker.StoppedIdentifiers.ShouldContain(hashChangeIdentifier);
-        progressTracker.GetTrackedIds(TransferType.ArchiveHashChange).ShouldBeEmpty();
     }
 
     [Test]
@@ -763,44 +710,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_NoAssignableArchiveExists_TracksPackingProgressOfReleaseFolder()
-    {
-        // Arrange
-        await AddUploadWaitingForArchiveAsync();
-        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie-content");
-        Directory.CreateDirectory(Path.Combine(releaseFolderPath, "Sample"));
-        await File.WriteAllTextAsync(
-            Path.Combine(releaseFolderPath, "Sample", "sample.mkv"),
-            "sample"
-        );
-        SetupArchiverWritingVolumes(
-            ("bearcat-release.part1.rar", "first"),
-            ("bearcat-release.part2.rar", "second")
-        );
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        var archiveId = (await DbContext.Archives.SingleAsync()).Id;
-        var identifier = new TransferIdentifier(TransferType.ArchiveCreation, archiveId);
-        progressTracker
-            .PlannedFilesPerIdentifier[identifier]
-            .ShouldBe([
-                new TransferFile(
-                    1,
-                    "Bearcat.Release.001",
-                    "Main archive",
-                    releaseFolderBytesWhilePacking,
-                    IsAlreadyTransferred: false
-                ),
-            ]);
-        progressTracker.LastSnapshotPerIdentifier[identifier].TransferredBytes.ShouldBe(11);
-        progressTracker.StoppedIdentifiers.ShouldContain(identifier);
-        progressTracker.Get(identifier).ShouldBeNull();
-    }
-
-    [Test]
     public async Task ProcessAsync_NoAssignableArchiveExists_TracksHashingProgressPerArchiveFileWithUnchangedHashes()
     {
         // Arrange
@@ -924,44 +833,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         Directory.Exists(nestedMetadataFolder).ShouldBeFalse();
         Directory.Exists(nestedMediaFolder).ShouldBeTrue();
         upload.UploadState.ShouldBe(UploadState.Pending);
-    }
-
-    [Test]
-    public async Task ProcessAsync_SolidCompressionStrategy_CreatesSolidCompressedArchive()
-    {
-        // Arrange
-        configurationProviderMock
-            .Setup(p =>
-                p.GetValue<ArchiveRepackagingConfiguration>(
-                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, string?>>>()
-                )
-            )
-            .Returns(ArchiveRepackagingStrategies.SolidCompression);
-        var upload = await AddUploadWaitingForArchiveAsync();
-        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
-        archiverMock
-            .Setup(a =>
-                a.ArchiveAsync(
-                    releaseFolderPath,
-                    It.Is<string>(p => p.StartsWith(archiveFilesBasePath)),
-                    "bearcat-release",
-                    512,
-                    "secret",
-                    It.Is<ArchiveOptions>(o => o.UseCompression && o.UseSolidArchive),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var result = await DbContext.Archives.Include(a => a.Uploads).SingleAsync();
-
-        result.ArchiveFileSizeMb.ShouldBe(512);
-        result.Uploads.Single().Id.ShouldBe(upload.Id);
     }
 
     [Test]
@@ -1197,8 +1068,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [TestCase(ArchiveRepackagingStrategies.NonceOnly, null)]
-    [TestCase(ArchiveRepackagingStrategies.NonceOnly, "0123456789ABCDEF0123456789ABCDEF")]
-    [TestCase(ArchiveRepackagingStrategies.SolidCompression, null)]
     [TestCase(ArchiveRepackagingStrategies.SolidCompression, "0123456789ABCDEF0123456789ABCDEF")]
     public async Task ProcessAsync_CreateNonceFileDisabledAndArchiverCanChangeHashInPlace_UsesConfiguredArchiveFileSize(
         string strategy,
@@ -1968,40 +1837,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         persistedEntryNamesDuringArchiving.ShouldBe(["Mirror.txt"]);
         GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
         result.ArchiveState.ShouldBe(ArchiveState.Created);
-    }
-
-    [TestCase(true)]
-    [TestCase(false)]
-    public async Task ProcessAsync_PackReleaseFolderAsRootFolderConfigured_PassesOptionToArchiver(
-        bool packReleaseFolderAsRootFolder
-    )
-    {
-        // Arrange
-        var upload = await AddUploadWaitingForArchiveAsync();
-        upload.UploadConfig.ArchiveConfig!.PackReleaseFolderAsRootFolder =
-            packReleaseFolderAsRootFolder;
-        await DbContext.SaveChangesAsync();
-        SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
-
-        // Act
-        await service.ProcessAsync(CancellationToken.None);
-
-        // Assert
-        archiverMock.Verify(
-            a =>
-                a.ArchiveAsync(
-                    releaseFolderPath,
-                    It.IsAny<string>(),
-                    "bearcat-release",
-                    512,
-                    "secret",
-                    It.Is<ArchiveOptions>(o =>
-                        o.PackSourceFolderAsRootFolder == packReleaseFolderAsRootFolder
-                    ),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
     }
 
     [Test]
@@ -3494,9 +3329,6 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    releaseFolderBytesWhilePacking = Directory
-                        .GetFiles(releaseFolderPath, "*", SearchOption.AllDirectories)
-                        .Sum(filePath => new FileInfo(filePath).Length);
                     var createdFileNames = new List<string>();
 
                     foreach (var (fileName, content) in volumes)

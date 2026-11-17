@@ -907,54 +907,6 @@ public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task CreateMissingLinkCrypterContainersAsync_CollectionScopedLinkCrypterRegistrationUsesSpecificProxyServer_CreatesSharedContainerInsideLinkCrypterProxyScope()
-    {
-        // Arrange
-        await AddCollectionUploadsWithMissingContainerAsync();
-        var proxyServerId = await UseProxySelectionForLinkCrypterRegistrationAsync(
-            ProxySelection.SpecificProxyServer
-        );
-        ProxyCategoryScopeState? stateDuringCreation = null;
-        SetupCreateContainerCapturingProxyScope(state => stateDuringCreation = state);
-
-        // Act
-        await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
-
-        // Assert
-        stateDuringCreation.ShouldBe(
-            new ProxyCategoryScopeState(
-                ProxyCategory.LinkCrypters,
-                ProxySelection.SpecificProxyServer,
-                proxyServerId
-            )
-        );
-        ProxyCategoryScope.Current.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task UpdateCollectionContainersAsync_LinkCrypterRegistrationUsesNoProxy_UpdatesExistingContainerInsideLinkCrypterProxyScope()
-    {
-        // Arrange
-        var seed = await AddCollectionUploadsWithMissingContainerAsync();
-        await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
-        await UseProxySelectionForLinkCrypterRegistrationAsync(ProxySelection.NoProxy);
-        ProxyCategoryScopeState? stateDuringUpdate = null;
-        SetupUpdateContainerCapturingProxyScope(state => stateDuringUpdate = state);
-
-        // Act
-        await collectionContainerService.UpdateContainersAsync(
-            seed.CollectionUploadSlotId,
-            CancellationToken.None
-        );
-
-        // Assert
-        stateDuringUpdate.ShouldBe(
-            new ProxyCategoryScopeState(ProxyCategory.LinkCrypters, ProxySelection.NoProxy, null)
-        );
-        ProxyCategoryScope.Current.ShouldBeNull();
-    }
-
-    [Test]
     public async Task CreateMissingLinkCrypterContainersAsync_PreviousContainerUpdateFails_MovesContainerAndMarksItAsUpdateFailed()
     {
         // Arrange

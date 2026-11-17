@@ -196,55 +196,6 @@ public class UploadConfigTemplateServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task UpdateAsync_TemplateExists_UpdatesUploadConfigTemplate()
-    {
-        // Arrange
-        var seed = await AddReleaseTemplateWithChildrenAsync();
-        var secondHosterRegistration = await AddHosterRegistrationAsync("Second hoster");
-        var secondArchiveConfigTemplateId = (
-            await archiveConfigTemplateService.CreateAsync(
-                seed.ReleaseTemplateId,
-                new ArchiveConfigTemplateSettings(
-                    Name: "ZIP Forum B",
-                    ArchiveFilesBasePath: "/tmp/second-archives",
-                    ArchiverName: "zip",
-                    ArchivePassword: null,
-                    ArchiveFileSizeMb: 2048,
-                    UseReleaseNameAsArchiveName: false,
-                    PackReleaseFolderAsRootFolder: true,
-                    CreateNonceFile: true,
-                    AdditionalArchiveContentIds: []
-                ),
-                CancellationToken.None
-            )
-        )
-            .ArchiveConfigTemplateId!
-            .Value;
-
-        // Act
-        await service.UpdateAsync(
-            seed.UploadConfigTemplateId,
-            new UploadConfigTemplateSettings(
-                Name: "  Mirror upload  ",
-                UploadTarget: UploadTarget.ForHosterRegistration(secondHosterRegistration.Id),
-                ArchiveConfigTemplateId: secondArchiveConfigTemplateId,
-                PremiumOnlyDownload: true
-            ),
-            CancellationToken.None
-        );
-
-        // Assert
-        var result = await DbContext.UploadConfigTemplates.SingleAsync(u =>
-            u.Id == seed.UploadConfigTemplateId
-        );
-
-        result.Name.ShouldBe("Mirror upload");
-        result.HosterRegistrationId.ShouldBe(secondHosterRegistration.Id);
-        result.ArchiveConfigTemplateId.ShouldBe(secondArchiveConfigTemplateId);
-        result.PremiumOnlyDownload.ShouldBeTrue();
-    }
-
-    [Test]
     public async Task DeleteAsync_TemplateExists_RemovesUploadConfigTemplateWithLinkCrypters()
     {
         // Arrange

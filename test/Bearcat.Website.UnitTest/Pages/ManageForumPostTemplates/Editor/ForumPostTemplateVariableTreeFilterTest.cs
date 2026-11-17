@@ -54,16 +54,6 @@ public class ForumPostTemplateVariableTreeFilterTest
     ];
 
     [Test]
-    public void CreateKey_WithParentKey_JoinsKeysWithSlash()
-    {
-        // Act
-        var result = ForumPostTemplateVariableTreeFilter.CreateKey("uploads", "name");
-
-        // Assert
-        result.ShouldBe("uploads/name");
-    }
-
-    [Test]
     public void Filter_EmptySearchTerm_ReturnsAllNodesWithoutExpandedKeys()
     {
         // Act

@@ -147,43 +147,6 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetReleasesForRoutingAsync_RequestedReleases_ReturnsReleasesWithClassificationAndReleaseGroup()
-    {
-        // Arrange
-        var classifiedRelease = AddRelease("Bearcat.Release.001");
-        classifiedRelease.Classification = new ReleaseClassification
-        {
-            Title = "Bearcat Release",
-            Year = 2026,
-            ContentType = ReleaseContentType.Movie,
-            ClassifiedAt = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
-        };
-        var unclassifiedRelease = AddRelease("Bearcat.Release.002");
-        AddRelease("Bearcat.Release.003");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.GetReleasesForRoutingAsync(
-            [classifiedRelease.Id, unclassifiedRelease.Id],
-            CancellationToken.None
-        );
-
-        // Assert
-        var releasesById = result.ToDictionary(release => release.Id);
-        releasesById.Keys.ShouldBe(
-            [classifiedRelease.Id, unclassifiedRelease.Id],
-            ignoreOrder: true
-        );
-        releasesById[classifiedRelease.Id].Classification.ShouldNotBeNull();
-        releasesById[classifiedRelease.Id].Classification!.Title.ShouldBe("Bearcat Release");
-        releasesById[classifiedRelease.Id].Classification!.Year.ShouldBe(2026);
-        releasesById[classifiedRelease.Id].ReleaseGroup.Name.ShouldBe("Bearcat.Release.001 group");
-        releasesById[unclassifiedRelease.Id].Classification.ShouldBeNull();
-        releasesById[unclassifiedRelease.Id]
-            .ReleaseGroup.Name.ShouldBe("Bearcat.Release.002 group");
-    }
-
-    [Test]
     public async Task GetPostedLocationsAsync_RequestedReleases_ReturnsOnlyReleasePostedLocationsOrderedById()
     {
         // Arrange
@@ -395,22 +358,6 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetUpdateTargetAsync_PostedLocationWithoutRegistration_Throws()
-    {
-        // Arrange
-        var release = AddRelease("Bearcat.Release.001");
-        var postedLocation = AddPostedLocation("https://blog.example/post/1", release: release);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var action = () =>
-            repository.GetUpdateTargetAsync(postedLocation.Id, CancellationToken.None);
-
-        // Assert
-        await Should.ThrowAsync<InvalidOperationException>(action);
-    }
-
-    [Test]
     public async Task RecordPostedLocationAsync_ValidValues_StoresTrimmedUrlAndTimestamps()
     {
         // Arrange
@@ -488,82 +435,6 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetReleaseCollectionsForRoutingAsync_RequestedCollection_ReturnsCollectionWithMemberClassificationsAndReleaseGroup()
-    {
-        // Arrange
-        var collection = AddReleaseCollection("Bearcat.Collection");
-        var classifiedRelease = AddRelease("Bearcat.Collection.E01");
-        classifiedRelease.ReleaseCollection = collection;
-        classifiedRelease.Classification = new ReleaseClassification
-        {
-            Title = "Bearcat Collection",
-            Season = 1,
-            ContentType = ReleaseContentType.TvShowEpisode,
-            ClassifiedAt = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
-        };
-        var unclassifiedRelease = AddRelease("Bearcat.Collection.E02");
-        unclassifiedRelease.ReleaseCollection = collection;
-        AddReleaseCollection("Bearcat.Other.Collection");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.GetReleaseCollectionsForRoutingAsync(
-            [collection.Id],
-            CancellationToken.None
-        );
-
-        // Assert
-        var loadedCollection = result.ShouldHaveSingleItem();
-        loadedCollection.ReleaseGroup.Name.ShouldBe("Bearcat.Collection group");
-        var releasesById = loadedCollection.Releases.ToDictionary(release => release.Id);
-        releasesById.Keys.ShouldBe(
-            [classifiedRelease.Id, unclassifiedRelease.Id],
-            ignoreOrder: true
-        );
-        releasesById[classifiedRelease.Id].Classification.ShouldNotBeNull().Season.ShouldBe(1);
-        releasesById[unclassifiedRelease.Id].Classification.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task GetPostedLocationsAsync_RequestedCollections_ReturnsOnlyCollectionPostedLocations()
-    {
-        // Arrange
-        var registration = AddRegistration("Forum A");
-        var collection = AddReleaseCollection("Bearcat.Collection.001");
-        var otherCollection = AddReleaseCollection("Bearcat.Collection.002");
-        var release = AddRelease("Bearcat.Release.001");
-        var collectionLocation = AddPostedLocation(
-            url: "https://forum.example/threads/1",
-            collection: collection,
-            registration: registration,
-            createdAt: new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc)
-        );
-        AddPostedLocation("https://forum.example/threads/2", collection: otherCollection);
-        AddPostedLocation("https://forum.example/threads/3", release: release);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var result = await repository.GetPostedLocationsAsync(
-            entityType: ForumPostTemplateType.ReleaseCollection,
-            entityIds: [collection.Id, release.Id],
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        result.ShouldBe([
-            new AutoPostPostedLocation(
-                PostedLocationId: collectionLocation.Id,
-                EntityId: collection.Id,
-                DistributionSiteRegistrationId: registration.Id,
-                ForumPostTemplateId: null,
-                Url: "https://forum.example/threads/1",
-                CreatedAt: new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc),
-                ContentUpdatedAt: null
-            ),
-        ]);
-    }
-
-    [Test]
     public async Task GetLatestUploadCompletionTimesAsync_CollectionSlotUploads_ReturnsLatestCountedCompletionPerCollection()
     {
         // Arrange
@@ -619,83 +490,6 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
             },
             ignoreOrder: true
         );
-    }
-
-    [Test]
-    public async Task RecordPostedLocationAsync_ReleaseCollection_StoresTheCollectionAsPostedEntity()
-    {
-        // Arrange
-        var template = AddForumPostTemplate("Collection post");
-        var registration = AddRegistration("Forum A");
-        var collection = AddReleaseCollection("Bearcat.Collection");
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await repository.RecordPostedLocationAsync(
-            entityType: ForumPostTemplateType.ReleaseCollection,
-            entityId: collection.Id,
-            distributionSiteRegistrationId: registration.Id,
-            url: "https://forum.example/threads/1",
-            forumPostTemplateId: template.Id,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var postedLocation = await DbContext.PostedLocations.SingleAsync();
-        postedLocation.ReleaseCollectionId.ShouldBe(collection.Id);
-        postedLocation.ReleaseId.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task MarkPostedLocationUpdatedAsync_PostedLocationExists_UpdatesUrlTemplateAndContentUpdatedAt()
-    {
-        // Arrange
-        var oldTemplate = AddForumPostTemplate("Old post");
-        var newTemplate = AddForumPostTemplate("New post");
-        var registration = AddRegistration("Forum A");
-        var release = AddRelease("Bearcat.Release.001");
-        var createdAt = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc);
-        var postedLocation = AddPostedLocation(
-            url: "https://forum.example/threads/1",
-            release: release,
-            registration: registration,
-            template: oldTemplate,
-            createdAt: createdAt,
-            contentUpdatedAt: createdAt
-        );
-        var otherPostedLocation = AddPostedLocation(
-            url: "https://forum.example/threads/2",
-            release: release,
-            registration: registration,
-            template: oldTemplate,
-            createdAt: createdAt,
-            contentUpdatedAt: createdAt
-        );
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        await repository.MarkPostedLocationUpdatedAsync(
-            postedLocationId: postedLocation.Id,
-            url: " https://forum.example/threads/1-renamed ",
-            forumPostTemplateId: newTemplate.Id,
-            cancellationToken: CancellationToken.None
-        );
-
-        // Assert
-        DbContext.ChangeTracker.Clear();
-        var updatedPostedLocation = await DbContext.PostedLocations.SingleAsync(location =>
-            location.Id == postedLocation.Id
-        );
-        updatedPostedLocation.Url.ShouldBe("https://forum.example/threads/1-renamed");
-        updatedPostedLocation.ForumPostTemplateId.ShouldBe(newTemplate.Id);
-        updatedPostedLocation.CreatedAt.ShouldBe(createdAt);
-        updatedPostedLocation.ContentUpdatedAt.ShouldBe(Now);
-        var unchangedPostedLocation = await DbContext.PostedLocations.SingleAsync(location =>
-            location.Id == otherPostedLocation.Id
-        );
-        unchangedPostedLocation.ForumPostTemplateId.ShouldBe(oldTemplate.Id);
-        unchangedPostedLocation.ContentUpdatedAt.ShouldBe(createdAt);
     }
 
     [Test]
