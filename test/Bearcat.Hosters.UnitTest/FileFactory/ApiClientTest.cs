@@ -36,6 +36,13 @@ public class ApiClientTest
     private const string CompleteUploadResponse =
         """{"success":true,"fileId":"x17bs33m3smp0yvfqsbr3jyjxs8japhr","viewhash":"e91919f6101d3ecaefa7960a62d66f06","downloadUrl":"https://www.filefactory.com/file/e91919f6101d3ecaefa7960a62d66f06"}""";
 
+    private const string UserId = "jd7f2ah3mk9c1xw4q8z6v5n0rbp3t2ye";
+
+    private const string CurrentUserResponse =
+        $$$"""{"status":"success","value":{"id":"{{{UserId}}}","email":"bearcat@example.com"}}""";
+
+    private readonly Dictionary<string, string> convexResponsePerPath = [];
+
     private RecordingHttpMessageHandler httpMessageHandler = null!;
     private ApiClient apiClient = null!;
     private FileFactoryConfig config = null!;
@@ -44,6 +51,7 @@ public class ApiClientTest
     public void SetUp()
     {
         httpMessageHandler = new RecordingHttpMessageHandler();
+        convexResponsePerPath.Clear();
         var webApi = RestService.For<IFileFactoryWebApi>(
             new HttpClient(httpMessageHandler, disposeHandler: false)
             {
@@ -370,6 +378,126 @@ public class ApiClientTest
         queryRequests[0].Body.ShouldBe("""{"path":"users:me","args":{},"format":"json"}""");
     }
 
+    [Test]
+    public async Task CreateFolderAsync_RootFolderWithSameNameExists_ReturnsItsIdWithoutCreating()
+    {
+        // Arrange
+        SetupLogin(FirstToken);
+        SetupConvexResponse("users:me", CurrentUserResponse);
+        SetupConvexResponse(
+            "file_manager/folders:getFolderSelectOptions",
+            """{"status":"success","value":[{"hash":"bcparentmwjvx","id":"parent-folder-id","level":0.0,"name":"parent"},{"hash":"bcsubmwjvxb6u","id":"subfolder-id","level":1.0,"name":"bearcat-test"},{"hash":"bctestmwjvxb6u","id":"root-folder-id","level":0.0,"name":"bearcat-test"}]}"""
+        );
+
+        // Act
+        var folderId = await apiClient.CreateFolderAsync(
+            config,
+            "bearcat-test",
+            CancellationToken.None
+        );
+
+        // Assert
+        folderId.ShouldBe("root-folder-id");
+        httpMessageHandler
+            .Requests("/api/query")
+            .Select(request => request.Body)
+            .ShouldBe([
+                """{"path":"users:me","args":{},"format":"json"}""",
+                $$"""{"path":"file_manager/folders:getFolderSelectOptions","args":{"userId":"{{UserId}}"},"format":"json"}""",
+            ]);
+        httpMessageHandler.CountRequests("/api/mutation").ShouldBe(0);
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_OnlySubfolderWithSameNameExists_CreatesRootFolderWithRandomHash()
+    {
+        // Arrange
+        SetupLogin(FirstToken);
+        SetupConvexResponse("users:me", CurrentUserResponse);
+        SetupConvexResponse(
+            "file_manager/folders:getFolderSelectOptions",
+            """{"status":"success","value":[{"hash":"bcsubmwjvxb6u","id":"subfolder-id","level":1.0,"name":"bearcat-test"}]}"""
+        );
+        SetupConvexResponse(
+            "file_manager/folders:createFolder",
+            """{"status":"success","value":"new-folder-id"}"""
+        );
+
+        // Act
+        var folderId = await apiClient.CreateFolderAsync(
+            config,
+            "bearcat-test",
+            CancellationToken.None
+        );
+
+        // Assert
+        folderId.ShouldBe("new-folder-id");
+
+        var createRequest = httpMessageHandler.SingleRequest("/api/mutation");
+        createRequest.Headers["Authorization"].ShouldBe($"Bearer {FirstToken}");
+        using var body = JsonDocument.Parse(createRequest.Body);
+        var path = body.RootElement.GetProperty("path").GetString();
+        var arguments = body.RootElement.GetProperty("args");
+        var hash = arguments.GetProperty("hash").GetString()!;
+
+        path.ShouldBe("file_manager/folders:createFolder");
+        arguments.EnumerateObject().Select(property => property.Name).ShouldBe(["name", "hash"]);
+        arguments.GetProperty("name").GetString().ShouldBe("bearcat-test");
+        hash.ShouldMatch("^[0-9a-ik-z][0-9a-z]{12}$");
+    }
+
+    [Test]
+    public async Task MoveFilesToFolderAsync_TwoFiles_SendsUserIdFileIdsAndTargetFolderInOneMutation()
+    {
+        // Arrange
+        SetupLogin(FirstToken);
+        SetupConvexResponse("users:me", CurrentUserResponse);
+        SetupConvexResponse(
+            "file_manager/files:moveFiles",
+            """{"status":"success","value":null}"""
+        );
+
+        // Act
+        await apiClient.MoveFilesToFolderAsync(
+            config: config,
+            fileIds: [FileId, "x27bs33m3smp0yvfqsbr3jyjxs8japhr"],
+            folderId: "root-folder-id",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        httpMessageHandler
+            .SingleRequest("/api/mutation")
+            .Body.ShouldBe(
+                $$"""{"path":"file_manager/files:moveFiles","args":{"userId":"{{UserId}}","fileIds":["{{FileId}}","x27bs33m3smp0yvfqsbr3jyjxs8japhr"],"targetFolderId":"root-folder-id"},"format":"json"}"""
+            );
+    }
+
+    [Test]
+    public async Task MoveFilesToFolderAsync_ConvexReturnsErrorStatus_ThrowsWithErrorMessage()
+    {
+        // Arrange
+        SetupLogin(FirstToken);
+        SetupConvexResponse("users:me", CurrentUserResponse);
+        SetupConvexResponse(
+            "file_manager/files:moveFiles",
+            """{"status":"error","errorMessage":"[Request ID: 5f1c2a] Server Error"}"""
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.MoveFilesToFolderAsync(
+                config: config,
+                fileIds: [FileId],
+                folderId: "unknown-folder-id",
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldContain("[Request ID: 5f1c2a] Server Error");
+    }
+
     private void SetupLogin(params string[] tokens)
     {
         var tokenQueue = new Queue<string>(tokens);
@@ -381,6 +509,21 @@ public class ApiClientTest
                     $$$"""{"tokens":{"token":"{{{tokenQueue.Dequeue()}}}","refreshToken":"dummy"}}"""
                 )
         );
+    }
+
+    private void SetupConvexResponse(string convexPath, string json)
+    {
+        convexResponsePerPath[convexPath] = json;
+        httpMessageHandler.Respond("/api/query", RespondToConvexRequest);
+        httpMessageHandler.Respond("/api/mutation", RespondToConvexRequest);
+    }
+
+    private HttpResponseMessage RespondToConvexRequest(RecordedRequest request)
+    {
+        using var body = JsonDocument.Parse(request.Body);
+        var convexPath = body.RootElement.GetProperty("path").GetString()!;
+
+        return CreateJsonResponse(HttpStatusCode.OK, convexResponsePerPath[convexPath]);
     }
 
     private void SetupSignUpload()

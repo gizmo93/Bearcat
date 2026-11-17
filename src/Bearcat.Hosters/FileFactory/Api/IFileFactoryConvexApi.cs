@@ -9,7 +9,30 @@ public interface IFileFactoryConvexApi
     [Post("/api/query")]
     Task<ApiResponse<ConvexResponse<CurrentUserResponse>>> QueryCurrentUserAsync(
         [Authorize("Bearer")] string token,
-        [Body] ConvexQueryRequest request,
+        [Body] ConvexRequest<EmptyArguments> request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/api/query")]
+    Task<
+        ApiResponse<ConvexResponse<List<FolderSelectOptionResponse>>>
+    > QueryFolderSelectOptionsAsync(
+        [Authorize("Bearer")] string token,
+        [Body] ConvexRequest<UserIdArguments> request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/api/mutation")]
+    Task<ApiResponse<ConvexResponse<string>>> CreateFolderAsync(
+        [Authorize("Bearer")] string token,
+        [Body] ConvexRequest<CreateFolderArguments> request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/api/mutation")]
+    Task<ApiResponse<ConvexResponse<object>>> MoveFilesAsync(
+        [Authorize("Bearer")] string token,
+        [Body] ConvexRequest<MoveFilesArguments> request,
         CancellationToken cancellationToken
     );
 }

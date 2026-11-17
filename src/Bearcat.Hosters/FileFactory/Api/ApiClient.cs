@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
@@ -36,9 +37,23 @@ public class ApiClient(
 
     private const string ConvexErrorStatus = "error";
 
+    private const string ConvexResponseFormat = "json";
+
+    private const string FolderHashCharacters = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+    private const int FolderHashLength = 13;
+
+    private const double RootFolderLevel = 0;
+
     private const int MaxLinksPerLinkCheckRequest = 100;
 
     private const int CompleteUploadAttempts = 7;
+
+    private static readonly string FolderHashFirstCharacters = FolderHashCharacters.Replace(
+        "j",
+        string.Empty,
+        StringComparison.Ordinal
+    );
 
     private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromMinutes(50));
 
@@ -118,43 +133,155 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        await GetCurrentUserIdAsync(config, cancellationToken);
+    }
+
+    public async Task<string> CreateFolderAsync(
+        FileFactoryConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var userId = await GetCurrentUserIdAsync(config, cancellationToken);
+
+        var folders = await SendConvexRequestAsync(
+            config: config,
+            request: new ConvexRequest<UserIdArguments>(
+                Path: "file_manager/folders:getFolderSelectOptions",
+                Arguments: new UserIdArguments(userId),
+                Format: ConvexResponseFormat
+            ),
+            sendRequestAsync: convexApi.QueryFolderSelectOptionsAsync,
+            isAuthTokenRejected: IsUnauthorized,
+            cancellationToken: cancellationToken
+        );
+
+        var existingRootFolder = folders!.FirstOrDefault(folder =>
+            folder.Level == RootFolderLevel && folder.Name == folderName
+        );
+
+        if (existingRootFolder is not null)
+        {
+            return existingRootFolder.Id;
+        }
+
+        logger.LogInformation("Creating FileFactory folder {FolderName}", folderName);
+
+        var folderId = await SendConvexRequestAsync(
+            config: config,
+            request: new ConvexRequest<CreateFolderArguments>(
+                Path: "file_manager/folders:createFolder",
+                Arguments: new CreateFolderArguments(Name: folderName, Hash: CreateFolderHash()),
+                Format: ConvexResponseFormat
+            ),
+            sendRequestAsync: convexApi.CreateFolderAsync,
+            isAuthTokenRejected: IsUnauthorized,
+            cancellationToken: cancellationToken
+        );
+
+        return folderId!;
+    }
+
+    public async Task MoveFilesToFolderAsync(
+        FileFactoryConfig config,
+        IReadOnlyList<string> fileIds,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var userId = await GetCurrentUserIdAsync(config, cancellationToken);
+
+        await SendConvexRequestAsync(
+            config: config,
+            request: new ConvexRequest<MoveFilesArguments>(
+                Path: "file_manager/files:moveFiles",
+                Arguments: new MoveFilesArguments(
+                    UserId: userId,
+                    FileIds: fileIds,
+                    TargetFolderId: folderId
+                ),
+                Format: ConvexResponseFormat
+            ),
+            sendRequestAsync: convexApi.MoveFilesAsync,
+            isAuthTokenRejected: IsUnauthorized,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<string> GetCurrentUserIdAsync(
+        FileFactoryConfig config,
+        CancellationToken cancellationToken
+    )
+    {
+        var currentUser = await SendConvexRequestAsync(
+            config: config,
+            request: new ConvexRequest<EmptyArguments>(
+                Path: "users:me",
+                Arguments: new EmptyArguments(),
+                Format: ConvexResponseFormat
+            ),
+            sendRequestAsync: convexApi.QueryCurrentUserAsync,
+            isAuthTokenRejected: IsCurrentUserQueryUnauthenticated,
+            cancellationToken: cancellationToken
+        );
+
+        if (currentUser is null)
+        {
+            throw new HttpRequestException(
+                "FileFactory did not recognize the session of the successful login"
+            );
+        }
+
+        return currentUser.Id;
+    }
+
+    private async Task<TValue?> SendConvexRequestAsync<TArguments, TValue>(
+        FileFactoryConfig config,
+        ConvexRequest<TArguments> request,
+        Func<
+            string,
+            ConvexRequest<TArguments>,
+            CancellationToken,
+            Task<ApiResponse<ConvexResponse<TValue>>>
+        > sendRequestAsync,
+        Func<ApiResponse<ConvexResponse<TValue>>, bool> isAuthTokenRejected,
+        CancellationToken cancellationToken
+    )
+    {
         var response = await authTokenCache.SendWithAuthTokenAsync(
             accountKey: config.Email,
             authenticateAsync: ct => SignInAsync(config, ct),
-            sendRequestAsync: token =>
-                convexApi.QueryCurrentUserAsync(
-                    token: token,
-                    request: new ConvexQueryRequest(
-                        Path: "users:me",
-                        Arguments: new Dictionary<string, string>(),
-                        Format: "json"
-                    ),
-                    cancellationToken: cancellationToken
-                ),
-            isAuthTokenRejected: IsCurrentUserQueryUnauthenticated,
+            sendRequestAsync: token => sendRequestAsync(token, request, cancellationToken),
+            isAuthTokenRejected: isAuthTokenRejected,
             cancellationToken: cancellationToken
         );
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
             throw new HttpRequestException(
-                $"FileFactory current user query failed with status code {response.StatusCode}: {GetErrorContent(response)}"
+                $"FileFactory request {request.Path} failed with status code {response.StatusCode}: {GetErrorContent(response)}"
             );
         }
 
         if (response.Content.Status == ConvexErrorStatus)
         {
             throw new HttpRequestException(
-                $"FileFactory current user query failed: {response.Content.ErrorMessage}"
+                $"FileFactory request {request.Path} failed: {response.Content.ErrorMessage}"
             );
         }
 
-        if (response.Content.Value is null)
-        {
-            throw new HttpRequestException(
-                "FileFactory did not recognize the session of the successful login"
-            );
-        }
+        return response.Content.Value;
+    }
+
+    private static string CreateFolderHash()
+    {
+        var firstCharacter = RandomNumberGenerator.GetString(FolderHashFirstCharacters, 1);
+        var remainingCharacters = RandomNumberGenerator.GetString(
+            FolderHashCharacters,
+            FolderHashLength - 1
+        );
+
+        return firstCharacter + remainingCharacters;
     }
 
     private async Task<SignUploadResponse> SignUploadAsync(
@@ -373,9 +500,14 @@ public class ApiClient(
             accountKey: config.Email,
             authenticateAsync: ct => SignInAsync(config, ct),
             sendRequestAsync: token => sendRequestAsync($"{SessionCookieName}={token}"),
-            isAuthTokenRejected: response => response.StatusCode == HttpStatusCode.Unauthorized,
+            isAuthTokenRejected: IsUnauthorized,
             cancellationToken: cancellationToken
         );
+    }
+
+    private static bool IsUnauthorized(IApiResponse response)
+    {
+        return response.StatusCode == HttpStatusCode.Unauthorized;
     }
 
     private static bool IsCurrentUserQueryUnauthenticated(

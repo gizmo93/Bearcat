@@ -23,4 +23,17 @@ public interface IFileFactoryApiClient
         FileFactoryConfig config,
         CancellationToken cancellationToken
     );
+
+    Task<string> CreateFolderAsync(
+        FileFactoryConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    );
+
+    Task MoveFilesToFolderAsync(
+        FileFactoryConfig config,
+        IReadOnlyList<string> fileIds,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }

@@ -132,6 +132,97 @@ public class FileFactoryTest
     }
 
     [Test]
+    public async Task MoveFilesToFolderAsync_OneFileWithoutExternalId_MovesTheOtherFilesInOneRequest()
+    {
+        // Arrange
+        IReadOnlyList<string>? requestedFileIds = null;
+
+        apiClientMock
+            .Setup(x =>
+                x.MoveFilesToFolderAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    "folder-1",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(
+                (
+                    FileFactoryConfig _,
+                    IReadOnlyList<string> fileIds,
+                    string _,
+                    CancellationToken _
+                ) => requestedFileIds = fileIds
+            )
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var movedFileLinks = await service.MoveFilesToFolderAsync(
+            files:
+            [
+                new HosterFileToMoveDto(
+                    $"https://www.filefactory.com/file/{OnlineViewhash}",
+                    "x17bs33m3smp0yvfqsbr3jyjxs8japhr"
+                ),
+                new HosterFileToMoveDto(
+                    $"https://www.filefactory.com/file/{DeletedViewhash}",
+                    ExternalId: null
+                ),
+                new HosterFileToMoveDto(
+                    "https://www.filefactory.com/file/3b42efa34953f497b27e6a9220ea72c7",
+                    "x27bs33m3smp0yvfqsbr3jyjxs8japhr"
+                ),
+            ],
+            folderId: "folder-1",
+            hosterConfig: config,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        movedFileLinks.ShouldBe([
+            $"https://www.filefactory.com/file/{OnlineViewhash}",
+            "https://www.filefactory.com/file/3b42efa34953f497b27e6a9220ea72c7",
+        ]);
+        requestedFileIds.ShouldBe([
+            "x17bs33m3smp0yvfqsbr3jyjxs8japhr",
+            "x27bs33m3smp0yvfqsbr3jyjxs8japhr",
+        ]);
+    }
+
+    [Test]
+    public async Task MoveFilesToFolderAsync_MoveRequestFails_ReturnsNoMovedFileLinks()
+    {
+        // Arrange
+        apiClientMock
+            .Setup(x =>
+                x.MoveFilesToFolderAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    "unknown-folder",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("[Request ID: 5f1c2a] Server Error"));
+
+        // Act
+        var movedFileLinks = await service.MoveFilesToFolderAsync(
+            files:
+            [
+                new HosterFileToMoveDto(
+                    $"https://www.filefactory.com/file/{OnlineViewhash}",
+                    "x17bs33m3smp0yvfqsbr3jyjxs8japhr"
+                ),
+            ],
+            folderId: "unknown-folder",
+            hosterConfig: config,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        movedFileLinks.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task CheckFilesExistAsync_LinksWithTrailingSlashAndFileName_MapsStatusPerUrlAndSkipsForeignLinks()
     {
         // Arrange

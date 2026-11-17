@@ -13,7 +13,8 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.FileFactory;
 
 public class FileFactory(IFileFactoryApiClient apiClient, ILogger<FileFactory> logger)
-    : IHosterWithFileInfo,
+    : IHosterWithBatchFileMove,
+        IHosterWithFileInfo,
         IHosterWithFileSizeLimit
 {
     private const string FileLinkPathSegment = "file";
@@ -175,6 +176,97 @@ public class FileFactory(IFileFactoryApiClient apiClient, ILogger<FileFactory> l
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return FileInfoResultMapping.CreateFailedResult(ex);
+        }
+    }
+
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<FileFactoryConfig>();
+
+        return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<FileFactoryConfig>();
+
+        if (string.IsNullOrEmpty(externalId))
+        {
+            throw new HttpRequestException(
+                $"Cannot move FileFactory file {fileUrl} because its file id is unknown"
+            );
+        }
+
+        await apiClient.MoveFilesToFolderAsync(
+            config: config,
+            fileIds: [externalId],
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyList<string>> MoveFilesToFolderAsync(
+        IReadOnlyList<HosterFileToMoveDto> files,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<FileFactoryConfig>();
+        var movableFiles = new List<(string FileLink, string FileId)>();
+
+        foreach (var file in files)
+        {
+            if (string.IsNullOrEmpty(file.ExternalId))
+            {
+                logger.LogWarning(
+                    "Cannot move FileFactory file {FileLink} because its file id is unknown",
+                    file.HosterFileLink
+                );
+
+                continue;
+            }
+
+            movableFiles.Add((file.HosterFileLink, file.ExternalId));
+        }
+
+        if (movableFiles.Count == 0)
+        {
+            return [];
+        }
+
+        try
+        {
+            await apiClient.MoveFilesToFolderAsync(
+                config: config,
+                fileIds: movableFiles.Select(file => file.FileId).ToList(),
+                folderId: folderId,
+                cancellationToken: cancellationToken
+            );
+
+            return movableFiles.Select(file => file.FileLink).ToList();
+        }
+        catch (Exception ex)
+            when (ex is not HosterCredentialsRejectedException and not OperationCanceledException)
+        {
+            logger.LogWarning(
+                ex,
+                "Failed to move {FileCount} FileFactory files to folder {FolderId}",
+                movableFiles.Count,
+                folderId
+            );
+
+            return [];
         }
     }
 
