@@ -51,6 +51,8 @@ They apply to every post to this forum, automatic and manual.
 - **Forbidden**: Bearcat removes these uploads, containers and images from the post.
   It blocks the post only if that kind had entries before and none is left.
 
+Empty lists do not restrict anything.
+
 Bearcat checks a release or collection as a whole: all uploads, upload slots and member releases together.
 Containers with several hosters (all hosters of a release, collection upload slots) are filtered only by the link crypter lists.
 A forbidden hoster inside such a container is ignored.

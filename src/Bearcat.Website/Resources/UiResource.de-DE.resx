@@ -2283,7 +2283,7 @@
   <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen wechseln von {2} MB auf {3} MB.</value></data>
   <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen geändert. {2} Archivkonfigurationen und {3} Archivkonfigurationen in Vorlagen übersprungen.</value></data>
   <data name="ForumServiceRestrictions" xml:space="preserve"><value>Hoster, Linkcrypter und Bildhoster</value></data>
-  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Erforderlich: Mindestens einer der gewählten muss im Post bleiben. Verboten: wird aus dem Post entfernt. Automatisches Posten überspringt dieses Forum, wenn von einer Art Einträge vorhanden waren und keiner übrig bleibt oder wenn kein erforderlicher vorhanden ist.</value></data>
+  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Erforderlich: Mindestens einer der gewählten muss im Post bleiben. Verboten: wird aus dem Post entfernt. Automatisches Posten überspringt dieses Forum, wenn von einer Art Einträge vorhanden waren und keiner übrig bleibt oder wenn kein erforderlicher vorhanden ist. Leere Listen schränken nichts ein.</value></data>
   <data name="RequiredFileHosters" xml:space="preserve"><value>Erforderliche Hoster</value></data>
   <data name="ForbiddenFileHosters" xml:space="preserve"><value>Verbotene Hoster</value></data>
   <data name="RequiredLinkCrypters" xml:space="preserve"><value>Erforderliche Linkcrypter</value></data>

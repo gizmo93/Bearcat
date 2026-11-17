@@ -51,6 +51,8 @@ Sie gelten für jeden Post in dieses Forum, automatisch und manuell.
 - **Verboten**: Bearcat entfernt diese Uploads, Container und Bilder aus dem Post.
   Blockiert wird der Post nur, wenn es von dieser Art vorher Einträge gab und keiner übrig bleibt.
 
+Leere Listen schränken nichts ein.
+
 Bearcat prüft ein Release oder eine Collection als Ganzes: alle Uploads, Uploadslots und enthaltenen Releases zusammen.
 Container mit mehreren Hostern (alle Hoster eines Releases, Uploadslots von Collections) werden nur nach den Linkcrypterlisten gefiltert.
 Ein verbotener Hoster in einem solchen Container wird ignoriert.
