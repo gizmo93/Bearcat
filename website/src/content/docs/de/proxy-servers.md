@@ -13,7 +13,7 @@ Ohne Proxy verbindet sich Bearcat direkt.
 
 ![proxy-servers-page.png](../images/proxy-servers-page.png)
 
-1. Öffne **Proxyserver** in der Seitenleiste und klicke auf **Neuer Proxyserver**.
+1. Öffne **System > Proxyserver** in der Seitenleiste und klicke auf **Neuer Proxyserver**.
 2. Gib einen Namen ein und wähle **HTTP** oder **SOCKS5** als **Proxytyp**.
 3. Gib **Host** und **Port** getrennt ein. Verwende im Feld für den Host einen Hostnamen oder eine
    IP-Adresse wie `proxy.example.com`, ohne `http://`, Port oder Pfad.

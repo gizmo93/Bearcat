@@ -13,7 +13,7 @@ Das Entpacken ist standardmässig aus. Mit einem Unmanaged Template lädst du di
 
 ![remote-sources-page.png](../images/remote-sources-page.png)
 
-1. Öffne **Remotequellen** und klicke auf **Neue Remotequelle**.
+1. Öffne **Registrierungen > Remotequellen** und klicke auf **Neue Remotequelle**.
 2. Wähle **FTP / FTPS** als **Quelltyp** und gib der Verbindung einen Namen.
 3. Gib **Host**, **Port**, **Benutzername** und **Passwort** ein.
 4. Stelle **Verschlüsselung** passend zum Server ein: **Explizit (FTPES)**, **Implizit (FTPS)** oder **Keine (unverschlüsseltes FTP)**.
@@ -35,7 +35,7 @@ Wähle **Managed**, um die heruntergeladenen Dateien zu packen, oder **Unmanaged
 
 ![remote-automations-page.png](../images/remote-automations-page.png)
 
-1. Öffne **Remoteautomatisierungen** und klicke auf **Neue Remoteautomatisierung**.
+1. Öffne **Automatisierung > Remoteautomatisierungen** und klicke auf **Neue Remoteautomatisierung**.
 2. Gib ihr einen Namen und wähle deine **Remotequelle**.
 3. Setze **Remoteordner** auf den Ordner, der die Releases enthält. Mit **Durchsuchen** wählst du ihn auf dem Server aus.
 4. Wähle einen lokalen **Downloadordner**. Bearcat legt dort für jedes Release einen Unterordner an.
@@ -89,7 +89,7 @@ Bearcat scannt etwa alle zwei Minuten. Standardmässig muss ein Ordner mindesten
 seine Dateianzahl und Gesamtgrösse müssen fünf Minuten lang unverändert bleiben, bevor er vorgemerkt wird.
 Diese Prüfungen passt du unter [Einstellungen für Remotedownloads](/Bearcat/de/advanced-configuration/#remotedownloads) an.
 
-Unter **Remotedownloads** siehst du Ordner, Status und Fehler. Der übliche Ablauf ist:
+Unter **Aktivität > Remotedownloads** siehst du Ordner, Status und Fehler. Der übliche Ablauf ist:
 
 | Status | Bedeutung |
 | --- | --- |
@@ -110,7 +110,7 @@ Nach jedem Download sucht Bearcat im Releaseordner und seinen Unterordnern nach 
 vergleicht die CRC32-Prüfsumme jeder aufgeführten Datei. Fehlt eine aufgeführte Datei oder stimmt ihre
 Prüfsumme nicht, schlägt der Download fehl, und die Dateien bleiben auf der Festplatte.
 
-Laufende Downloads siehst du auch unter **Aktivität > Downloads** auf der Startseite, mit Fortschritt,
+Laufende Downloads siehst du auch auf der Startseite **Home** im Bereich **Downloads**, mit Fortschritt,
 Geschwindigkeit, Restzeit, Phase und Dateidetails. Die Releasedetailseite zeigt die Remotequelle.
 
 ![running-remote-download.png](../images/running-remote-download.png)

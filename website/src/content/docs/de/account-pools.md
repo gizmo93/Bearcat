@@ -19,7 +19,7 @@ Pools funktionieren nur mit Hostern, die den freien Speicherplatz eines Accounts
 
 ## Pool anlegen
 
-Öffne **Hoster** > **Accountpools** und klicke auf **Neuer Pool**. Wähle den Hoster, füge die Accounts
+Öffne **Registrierungen > Hoster** > **Accountpools** und klicke auf **Neuer Pool**. Wähle den Hoster, füge die Accounts
 hinzu und ziehe sie in die gewünschte Reihenfolge. Bearcat prüft die Accounts von oben nach unten.
 Den Hoster kannst du später nicht mehr ändern.
 
@@ -44,9 +44,9 @@ Bearcat speichert das Ergebnis der Speicherplatzabfrage für 5 Minuten.
 ## Pool voll
 
 Hat kein Account genug Platz, wartet der Upload. Bearcat meldet einmal pro Upload **Accountpool voll**.
-Hat der Pool keinen nutzbaren Account (alle Accounts sind inaktiv, haben unlesbare Zugangsdaten oder ein
-ausstehendes Captcha, oder der Pool ist leer), meldet Bearcat stattdessen **Accountpool ohne nutzbaren
-Account**.
+Ist der Pool leer oder kann Bearcat keinen seiner Accounts verwenden, meldet es stattdessen
+**Accountpool ohne nutzbaren Account**. Prüfe, ob die Accounts aktiv sind, gültige Zugangsdaten haben
+und ob du ein Captcha lösen musst.
 
 Bearcat prüft den Pool bei jedem Uploaddurchlauf erneut. Sobald ein Account genug Platz hat, startet
 der Upload automatisch. Du kannst dafür einen Account hinzufügen oder Speicherplatz freigeben.

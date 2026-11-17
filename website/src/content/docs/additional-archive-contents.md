@@ -42,7 +42,7 @@ Enter a **Filename**, such as `Premium.txt`, and the **Text content**, then save
 To include an entry in an archive, select it under **Additional archive contents** in the archive configuration:
 
 - **On a release template:** applies to new releases created from that template.
-- **On a release, under Archive configurations:** applies to that release only.
+- **On a release's Archives tab:** applies to that release only.
 
 You can select multiple entries and reuse an entry across templates and releases.
 

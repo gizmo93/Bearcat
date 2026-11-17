@@ -7,7 +7,7 @@ Quality gates prevent new uploads until a release passes your checks or you appr
 Use them to catch missing NFOs, cover images, or incomplete release folders before uploading.
 
 [Unmanaged releases](/Bearcat/release-types/) have no release folder, so only the
-**Required release infos** check runs for them. Groups without a quality profile pass the gate.
+**Required release infos** check runs for them. Without a quality profile, the gate does not block uploads.
 
 ## Quality profiles and release groups
 
@@ -18,7 +18,7 @@ You can assign the same profile to several release groups.
 
 ## Creating a quality profile
 
-Open **Quality Profiles** in the **Configuration** group of the sidebar and click **New quality
+Open **Release settings > Quality profiles** in the sidebar and click **New quality
 profile**. Give it a name and add one or more checks. Each check has its own settings:
 
 - **File with pattern present**: a file matching the pattern you enter (for example `*.nfo` or
@@ -39,8 +39,7 @@ A release passes only when **all** checks in its profile pass.
 
 ## Assigning a profile to a release group
 
-Open the release group (under **Configuration**, **Release Groups**) and pick a
-quality profile in the **Quality profile** field. Leave it empty if the group does not need any
+Open **Release settings > Release groups**, edit the group, and select a **Quality profile**. Leave it empty if the group does not need any
 checks. The release groups list shows which profile each group uses.
 
 ![assign-quality-profile-to-release-group.png](images/assign-quality-profile-to-release-group.png)

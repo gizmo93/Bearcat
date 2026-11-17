@@ -3,24 +3,23 @@ title: "Konten und Reuploadeinstellungen"
 description: "Linkcrypter und Bildhoster hinzufügen, Reuploads aktivieren und Uploadlimits festlegen."
 ---
 
-## Einen Proxy verwenden
-
-Unter [Proxyserver](/Bearcat/de/proxy-servers/) richtest du HTTP- oder SOCKS5-Proxys für Uploads und
-Mirrordownloads ein. Du kannst einen Standard pro Kategorie festlegen oder einen Proxy für einzelne Accounts wählen.
+Hosterkonten findest du unter **Registrierungen > Hoster > Hosterregistrierungen**.
+Wie du dein erstes Konto hinzufügst, steht unter [Dein erster Upload](/Bearcat/de/post-installation/#manuell-einrichten).
+Hier richtest du weitere Dienste, Reuploads und Uploadlimits ein.
 
 ## Linkcrypter und Metadatenquellen einrichten
 
-- Öffne **Crypterregistrierungen**, um Accounts für Linkcontainer hinzuzufügen. Klappe in einem Release
-  eine gespeicherte Uploadkonfiguration auf und füge eine Linkcrypterregistrierung hinzu, optional mit
-  einem Containerpasswort.
-- Öffne **NFO-Datenbankregistrierungen**, um NFOs automatisch abzurufen.
-- Öffne **Metadatenquellen**, um Quellen für Titel, Beschreibungen, Genres und Coverbilder hinzuzufügen.
+- Öffne **Registrierungen > Crypter > Crypterregistrierungen** und füge deinen Account hinzu.
+  Öffne danach ein Release, gehe zu **Uploads > Konfiguration** und klappe die gespeicherte
+  Uploadkonfiguration auf. Füge dort den Linkcrypter hinzu, bei Bedarf mit einem Containerpasswort.
+- Öffne **Registrierungen > NFO-Datenbankregistrierungen**, um NFOs automatisch abzurufen.
+- Öffne **Registrierungen > Metadatenquellen**, um Quellen für Titel, Beschreibungen, Genres und Coverbilder hinzuzufügen.
 
 Details findest du unter [Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
 
 ## Bildhosteraccounts einrichten
 
-Öffne **Bildhosterregistrierungen** und klicke auf **Neuer Bildhoster**.
+Öffne **Registrierungen > Bildhosterregistrierungen** und klicke auf **Neuer Bildhoster**.
 Wähle den Hoster und gib die nötigen Zugangsdaten ein.
 
 ## Bilduploadkonfiguration
@@ -48,7 +47,8 @@ Upload im Tab **Bilder**, um ihn erneut zu starten.
 
 ## Automatische Reuploads
 
-Bearbeite eine Releasegruppe, um automatische Reuploads zu aktivieren, und setze **Stunden bis Reupload**.
+Öffne **Releaseeinstellungen > Releasegruppen** und bearbeite die Gruppe.
+Aktiviere automatische Reuploads und setze **Stunden bis Reupload**.
 Mit `24` wartet Bearcat mindestens 24 Stunden, nachdem es die Links als offline erkannt hat.
 Mit `0` kann es sofort einen Reupload einplanen.
 
@@ -59,7 +59,7 @@ Details findest du unter [Automatische Reuploads](/Bearcat/de/upload-lifecycle/#
 ## Reuploadoverrides pro Hoster
 
 Öffne in **Hosterregistrierungen** den Dialog **Neuer Hoster** oder **Bearbeiten**, um die
-Reuploadeinstellungen für einen Account zu überschreiben. Lass die Overridefelder leer, um die Einstellungen
+Reuploadeinstellungen für einen Account zu überschreiben. Lass die Felder für abweichende Werte leer, um die Einstellungen
 der Releasegruppe zu verwenden.
 
 | Einstellung | Wirkung |
@@ -71,7 +71,7 @@ der Releasegruppe zu verwenden.
 
 ![Reuploadoverrides eines Hosters](../images/edit-hoster-reupload-overrides.png)
 
-Die Releasegruppe muss automatische Reuploads aktiviert haben, damit diese Overrides greifen.
+Diese Einstellungen gelten nur, wenn automatische Reuploads in der Releasegruppe aktiviert sind.
 Unter [Overrides pro Hoster](/Bearcat/de/upload-lifecycle/#overrides-pro-hoster) siehst du, wann welche Option sinnvoll ist.
 
 Die Spalte **Reupload** zeigt die Overrides oder **Standard der Releasegruppe**, wenn keine gesetzt sind.
@@ -96,3 +96,8 @@ erlaubt. Ein leeres Feld bedeutet kein Limit.
 Das [globale Limit für die Uploadgeschwindigkeit](/Bearcat/de/advanced-configuration/#parallele-uploads)
 gilt zusätzlich. Uploads müssen beide Limits einhalten. Die Spalte **Parallele Uploads** zeigt
 das konfigurierte Limit an.
+
+## Einen Proxy verwenden
+
+Unter [Proxyserver](/Bearcat/de/proxy-servers/) richtest du HTTP- oder SOCKS5-Proxys für Uploads und
+Mirrordownloads ein. Du kannst einen Standard pro Kategorie festlegen oder einen Proxy für einzelne Accounts wählen.

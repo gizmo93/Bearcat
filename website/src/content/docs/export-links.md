@@ -17,7 +17,7 @@ The file contains archive passwords in plain text. Keep it as secure as your pas
 | --- | --- |
 | **All links** | All uploads, including those with an unknown online state |
 | **Online** | Uploads that are fully online |
-| **Partially online** | Uploads with at least one offline link |
+| **Partially online** | Uploads with both online and offline links |
 | **Offline** | Uploads that are fully offline |
 
 The filter uses the online state of the whole upload. The export includes every link from each matching upload, including offline links for **Partially online** uploads. `LinkOnlineState` shows the state of each individual link.

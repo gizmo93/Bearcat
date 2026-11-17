@@ -15,9 +15,10 @@ If you changed the web port during installation, use that port instead.
 ## Open setup
 
 After installation, **Initial Setup** opens automatically on your first visit to the start page.
-To return later, use **System > Initial Setup** or search with **Ctrl+K** or **Cmd+K**.
+To return later, use **System > Initial Setup**.
 
-You can skip steps and change all settings later.
+You can skip steps and change all settings later. Menu paths such as **System > Initial Setup**
+refer to the sidebar. You can also search for a page with **Ctrl+K** or **Cmd+K**.
 
 ### Welcome
 
@@ -26,12 +27,15 @@ You can also [set up Bearcat manually](#set-up-manually).
 
 ### Working directories
 
-Bearcat can only access folders inside its working directories. Setup shows each directory as **OK**,
+Choose release folders inside the configured working directories. Setup shows each directory as **OK**,
 **Missing**, or **Not writable**. At least one must exist and be writable before you can click **Next**.
 
 - **Docker:** the host folder `RELEASES_DIR` from your `.env` file appears as `/mnt/data/releases`.
-- **Desktop app or Windows service:** set working directories in the desktop app settings or in
-  `appsettings.user.json`, then restart Bearcat and click **Check again**.
+- **Desktop app:** change **Working directories** in the settings and restart Bearcat.
+- **Windows service:** run `Bearcat.Cli.exe setup` again as Administrator and change the working directories.
+  See [Change the setup later](/Bearcat/use-the-windows-service/#change-the-setup-later).
+
+Then click **Check again** in the web interface.
 
 You cannot change working directories in the wizard.
 
@@ -176,9 +180,9 @@ Click **Hide** to hide the list and setup banner in all browsers. To show them a
 
 ## Set up manually
 
-1. **Hoster:** open **Hoster registrations**, click **New hoster**, enter your credentials, save, and
+1. **Hoster:** open **Registrations > Hosters > Hoster registrations**, click **New hoster**, enter your credentials, save, and
    click **Try login**.
-2. **Release group:** open **Release groups**, click **New release group**, and save. Keep automatic
+2. **Release group:** open **Release settings > Release groups**, click **New release group**, and save. Keep automatic
    reuploads disabled for a first test.
 3. **Release:** put your files in a subfolder of a working directory, for example `releases/My.First.Upload/`.
    Open **Releases**, click **New release**, select **Managed**, choose the folder and the group, and

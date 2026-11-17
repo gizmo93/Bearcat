@@ -27,7 +27,8 @@ See [Archive reuse](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) fo
 
 ## Enable a hoster as a mirror
 
-Open the hoster registration and turn on **Use for mirror downloads**.
+Open **Registrations > Hosters > Hoster registrations** and edit the account.
+Turn on **Use for mirror downloads** and save.
 
 ![enable-hoster-mirror-download.png](images/enable-hoster-mirror-download.png)
 
@@ -73,7 +74,7 @@ Ask support to enable it.
 
 ## Cancel a running download
 
-Follow or cancel mirror downloads under **Activity > Downloads**. It shows progress, speed,
+Follow or cancel mirror downloads in the **Downloads** section on **Home**. It shows progress, speed,
 remaining time, and file details.
 
 Canceling deletes the incomplete downloads and cancels the waiting uploads so they do not restart

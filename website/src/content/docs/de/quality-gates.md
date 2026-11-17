@@ -7,7 +7,7 @@ Bearcat erstellt erst Uploads, wenn ein Release die festgelegten Qualitätsprüf
 So erkennst du fehlende NFOs, Coverbilder oder unvollständige Releaseordner vor dem Upload.
 
 [Unmanaged Releases](/Bearcat/de/release-types/) haben keinen Releaseordner, deshalb läuft für sie nur
-die Prüfung **Erforderliche Releaseinfos**. Gruppen ohne Qualitätsprofil bestehen die Qualitätsprüfung.
+die Prüfung **Erforderliche Releaseinfos**. Ohne Qualitätsprofil blockiert die Qualitätsprüfung keine Uploads.
 
 ## Qualitätsprofile und Releasegruppen
 
@@ -18,7 +18,7 @@ Du kannst dasselbe Profil mehreren Releasegruppen zuweisen.
 
 ## Ein Qualitätsprofil erstellen
 
-Öffne **Qualitätsprofile** in der Gruppe **Konfiguration** der Seitenleiste und klicke auf **Neues Qualitätsprofil**.
+Öffne **Releaseeinstellungen > Qualitätsprofile** in der Seitenleiste und klicke auf **Neues Qualitätsprofil**.
 Gib einen Namen ein und füge eine oder mehrere Prüfungen hinzu. Jede Prüfung hat eigene Einstellungen:
 
 - **Datei mit Muster vorhanden**: Irgendwo im Releaseordner muss eine Datei existieren, die zum eingegebenen Muster passt
@@ -39,8 +39,7 @@ Ein Release besteht nur, wenn **alle** Prüfungen seines Profils bestanden sind.
 
 ## Einer Releasegruppe ein Profil zuweisen
 
-Öffne die Releasegruppe (unter **Konfiguration**, **Releasegruppen**) und wähle im Feld **Qualitätsprofil** ein
-Qualitätsprofil. Lass es leer, wenn die Gruppe keine Prüfungen braucht. Die Liste der Releasegruppen zeigt, welches
+Öffne **Releaseeinstellungen > Releasegruppen**, bearbeite die Gruppe und wähle ein **Qualitätsprofil**. Lass es leer, wenn die Gruppe keine Prüfungen braucht. Die Liste der Releasegruppen zeigt, welches
 Profil jede Gruppe verwendet.
 
 ![assign-quality-profile-to-release-group.png](../images/assign-quality-profile-to-release-group.png)

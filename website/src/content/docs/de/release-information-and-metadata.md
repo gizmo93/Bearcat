@@ -16,7 +16,7 @@ aufgelösten Cover von TMDB.
 
 ## Quellen konfigurieren
 
-Öffne **NFO-Datenbankregistrierungen** in der Seitenleiste, um Quellen für Scenereleaseinformationen
+Öffne **Registrierungen > NFO-Datenbankregistrierungen** in der Seitenleiste, um Quellen für Scenereleaseinformationen
 und NFO-Dateien zu aktivieren:
 
 - **xREL** deckt deutsche Scenereleases gut ab.
@@ -29,7 +29,7 @@ und NFO-Dateien zu aktivieren:
 
 xREL, SRRDB und PreDB benötigen keine Zugangsdaten.
 
-Öffne **Metadatenquellen**, um Anbieter für Film-, TV- und Spielmetadaten zu registrieren:
+Öffne **Registrierungen > Metadatenquellen**, um Anbieter für Film-, TV- und Spielmetadaten zu registrieren:
 
 | Anbieter | Metadaten | Zugangsdaten |
 | --- | --- | --- |

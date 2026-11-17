@@ -31,7 +31,7 @@ that file. If the media data is missing or no file has a video stream, the uploa
 
 ## Create a video upload configuration
 
-1. Open the release detail page and add an upload configuration.
+1. Open the release and click **Add** under **Uploads > Configuration**.
 2. Choose **Video file** under **Upload source**. The field only appears when the release meets the
    requirements for video uploads.
 3. Choose an account or [account pool](/Bearcat/account-pools/) of a video hoster as **Upload target**.

@@ -78,7 +78,7 @@ Click **Open** on an entry to start the workflow there.
 
 ## Turning the post queue off
 
-Disable the post queue under **Configurations** to hide its header icon and stop counting pending items.
+Open **System > Configurations > Post queue** and disable the post queue to hide its header icon and stop counting pending items.
 The queue page then shows a note instead of the lists. You can enable it again without restarting Bearcat.
 
 ![post-queue-config.png](images/post-queue-config.png)

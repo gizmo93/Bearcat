@@ -33,7 +33,8 @@ same release group can be added.
 
 ## Upload slots
 
-An upload slot applies the same settings to every release in the collection. Choose:
+Open the collection and switch to **Upload slots**. A slot defines shared upload settings
+for the releases in the collection. Choose:
 
 - A name, such as "Rapidgator passworded".
 - The hoster to upload to.

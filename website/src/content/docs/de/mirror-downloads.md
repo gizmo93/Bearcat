@@ -28,7 +28,8 @@ Die Unterschiede stehen unter [Archivwiederverwendung](/Bearcat/de/upload-lifecy
 
 ## Hoster als Mirror aktivieren
 
-Öffne die Hosterregistrierung und schalte **Für Mirrordownloads verwenden** ein.
+Öffne **Registrierungen > Hoster > Hosterregistrierungen** und bearbeite den Account.
+Schalte **Für Mirrordownloads verwenden** ein und speichere.
 
 ![enable-hoster-mirror-download.png](../images/enable-hoster-mirror-download.png)
 
@@ -74,7 +75,7 @@ Bitte den Support, ihn freizuschalten.
 
 ## Laufenden Download abbrechen
 
-Verfolge oder beende Mirrordownloads unter **Aktivität > Downloads**. Dort siehst du Fortschritt,
+Verfolge oder beende Mirrordownloads auf der Startseite **Home** im Bereich **Downloads**. Dort siehst du Fortschritt,
 Geschwindigkeit, Restzeit und Dateidetails.
 
 Beim Abbrechen löscht Bearcat die unvollständigen Downloads und bricht die wartenden Uploads ab.

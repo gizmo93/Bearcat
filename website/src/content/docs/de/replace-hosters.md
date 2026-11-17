@@ -3,7 +3,7 @@ title: "Hoster ersetzen"
 description: "Uploadkonfigurationen und Vorlagen von einem Hoster auf einen anderen Account oder Pool umstellen."
 ---
 
-Öffne **Hoster** > **Hoster ersetzen**. Wähle den Hoster, die zu ersetzenden Accounts und Pools sowie einen
+Öffne **Registrierungen > Hoster** > **Hoster ersetzen**. Wähle den Hoster, die zu ersetzenden Accounts und Pools sowie einen
 Ersatzaccount oder Ersatzpool derselben Art (Video oder Archiv).
 
 ![Hoster, Accounts und Pools zum Ersetzen](../images/replace-hosters-source-selection.png)

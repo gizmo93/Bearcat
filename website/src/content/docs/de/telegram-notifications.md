@@ -14,7 +14,7 @@ Der Link öffnet die Details der Benachrichtigung:
 
 ## Wo du sie findest
 
-Öffne **Telegram Notifications** in der Seitenleiste oder rufe `/telegram` auf.
+Öffne **System > Telegram Notifications** in der Seitenleiste.
 
 ## Den Bot einrichten
 

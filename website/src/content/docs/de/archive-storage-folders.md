@@ -34,8 +34,8 @@ In Docker muss er über einen Bindmount erreichbar sein. Gib den Pfad innerhalb 
 
 Die Liste zeigt den freien Speicherplatz und den eingestellten Mindestwert, die Anzahl gespeicherter Archive,
 die Priorität und den Aktivierungsstatus. Ist der freie Speicherplatz nicht lesbar, steht dort **Nicht verfügbar**.
-Als gespeichert zählen nur aktuelle Archive. Gelöschte, durch einen Neuimport ersetzte und Archive mit
-fehlenden Dateien zählen nicht.
+Als gespeichert zählen nur aktuelle, vollständige Archive. Bearcat zählt keine Archive, die gelöscht
+oder durch einen Neuimport ersetzt wurden oder denen Dateien fehlen.
 
 ## Einen Speicherordner bearbeiten oder löschen
 
@@ -52,7 +52,7 @@ Stelle unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#loka
 Bearcat verschiebt die Archive dann nach Ablauf der Aufbewahrungsfrist.
 
 Bearcat wählt für jedes Archiv einen aktiven, erreichbaren Speicherordner mit genug Platz für alle
-Archivdateien und den freizuhaltenden Speicherplatz. Die niedrigste Priorität hat Vorrang.
+Archivdateien und den freizuhaltenden Speicherplatz. Der niedrigste Wert im Feld **Priorität** hat Vorrang.
 Bei gleicher Priorität gewinnt der Ordner mit dem meisten freien Platz.
 Ein Archiv bleibt immer zusammen in einem Unterordner namens `<Releasename>.<Archivkonfigurationsname>.<Archiv-ID>`,
 damit du Archive auch ohne Bearcat zuordnen kannst. Zeichen, die in Ordnernamen nicht erlaubt sind, werden zu `_`.
@@ -62,7 +62,7 @@ und löscht die ursprünglichen Archivdateien. Den ursprünglichen Archivordner 
 Archivdateien, die lokal fehlen, verhindern das Verschieben nicht. Sie fehlen weiterhin, bis ein Reupload
 sie wiederherstellt.
 
-Unter **Aktivität** siehst du Fortschritt und Ziel. Mit **Verschieben abbrechen** entfernst du die
+Auf der Startseite **Home** siehst du Fortschritt und Ziel. Mit **Verschieben abbrechen** entfernst du die
 bisher kopierten Dateien; das Archiv bleibt am ursprünglichen Ort.
 
 Fehlt ein passender Speicherordner oder schlägt das Kopieren fehl, bleibt das Archiv am ursprünglichen Ort.
@@ -81,8 +81,8 @@ wie Bearcat es verwendet.
 Reupload schreibt Bearcat dort, der Speicherordner muss also beschreibbar sein.
 
 **Ein:** Bearcat kopiert nur die Archivdateien, die hochgeladen werden, in eine temporäre lokale Arbeitskopie.
-Die Arbeitskopie ist ein Unterordner mit dem Ordnernamen des Archivs im **Basispfad der Archivdateien**
-der Archivkonfiguration. Enthält dieser Unterordner bereits andere Dateien, verwendet Bearcat stattdessen
+Die Arbeitskopie liegt im **Basispfad der Archivdateien** aus der Archivkonfiguration.
+Ihr Unterordner hat denselben Namen wie der Archivordner. Enthält dieser Unterordner bereits andere Dateien, verwendet Bearcat stattdessen
 `<Ordnername>.<Archiv-ID>`. Dateien, die von einem früheren Reupload noch in einer Arbeitskopie liegen,
 verwendet Bearcat wieder.
 
@@ -94,7 +94,7 @@ verwendet Bearcat wieder.
   den Speicherordner um und löscht die Arbeitskopie. Das passiert unabhängig von den Aufräumregeln.
   Fehlgeschlagene Uploads verzögern es nicht.
 
-Unter **Aktivität** zeigt **Kopieren in lokale Arbeitskopien** den Fortschritt.
+Auf der Startseite **Home** zeigt **Kopieren in lokale Arbeitskopien** den Fortschritt.
 Mit **Kopieren abbrechen** entfernst du die bisher kopierten Dateien und der Upload liest das Archiv aus dem
 Speicherordner.
 

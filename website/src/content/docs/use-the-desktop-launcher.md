@@ -49,7 +49,14 @@ Download the Desktop package for your computer from [GitHub releases](https://gi
 
 - **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep all extracted files in the same folder.
 - **macOS (Apple Silicon):** extract `Bearcat.Desktop-macos-arm64.zip`, move **Bearcat Desktop.app** to **Applications**, and open it.
-- **Linux (x64):** open `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) or `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), install it, and start **Bearcat Desktop** from the app menu. In a terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` or `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. On other distributions, extract `Bearcat.Desktop-linux-x64.tar.gz` and run `Bearcat.Desktop` from a terminal.
+- **Linux (x64):** install the package for your distribution, then start **Bearcat Desktop** from the app menu:
+
+  | Distribution | Package |
+  | --- | --- |
+  | Ubuntu, Debian | `Bearcat.Desktop-linux-x64.deb`, or run `sudo apt install ./Bearcat.Desktop-linux-x64.deb` |
+  | Fedora | `Bearcat.Desktop-linux-x64.rpm`, or run `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` |
+  | openSUSE | Open and install `Bearcat.Desktop-linux-x64.rpm` with your package manager. |
+  | Other | Extract `Bearcat.Desktop-linux-x64.tar.gz` and run `Bearcat.Desktop` from a terminal. |
 
 <details>
 <summary>macOS says the app is damaged or blocks it from opening</summary>

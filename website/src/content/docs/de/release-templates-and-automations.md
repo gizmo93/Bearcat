@@ -8,15 +8,16 @@ Damit erstellst du weitere Releases von Hand oder automatisch aus neuen Ordnern.
 
 ## Releasetemplates einrichten
 
-Ein Releasetemplate enthält die Releasegruppe sowie die Einstellungen für Archive, Uploads, Bilder und Linkcrypter.
+Ein Releasetemplate ist eine Vorlage für neue Releases. Es enthält die Releasegruppe und die
+Einstellungen für Archive, Uploads, Bilder und Linkcrypter. Du kannst es auf drei Arten anlegen:
+
+- Öffne **Releaseeinstellungen > Releasetemplates**, klicke auf **Neues Releasetemplate** und füge die Konfigurationen hinzu.
+- Öffne ein konfiguriertes Release und wähle im Aktionsmenü **Als Template speichern**.
+- Wähle im Aktionsmenü eines Templates **Duplizieren**, um eine Variante davon zu erstellen.
 
 Mit **Container erstellen für** wählst du in der Linkcrypterkonfiguration, ob jeder Hoster einen eigenen
 Container bekommt oder alle Hoster eines Releases als Mirrors in einem Container erscheinen.
 Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontainer).
-
-- Öffne **Releasetemplates**, klicke auf **Neues Releasetemplate** und füge die Konfigurationen hinzu.
-- Öffne ein konfiguriertes Release und wähle im Aktionsmenü **Als Template speichern**.
-- Wähle im Aktionsmenü eines Templates **Duplizieren**, um eine Variante davon zu erstellen.
 
 ![Releasetemplates](../images/release-templates-page.png)
 
@@ -59,7 +60,7 @@ Der Tab **Bilder** zeigt danach die Bilder vom Bildhoster.
 
 ## Ordnerautomatisierungen einrichten
 
-1. Erstelle ein Releasetemplate, öffne dann **Ordnerautomatisierungen** und klicke auf **Neue Ordnerautomatisierung**.
+1. Erstelle ein Releasetemplate, öffne dann **Automatisierung > Ordnerautomatisierungen** und klicke auf **Neue Ordnerautomatisierung**.
 2. Setze **Releasebasispfad** auf den Ordner, den Bearcat durchsuchen soll. Nur direkte Unterordner werden geprüft.
 3. Setze optional ein **Muster für Ordnernamen**, etwa `*1080p*` oder `*.GERMAN.*`. Der Abgleich ignoriert
    Gross- und Kleinschreibung und unterstützt Wildcards, aber keine regulären Ausdrücke. Lass das Feld leer,
@@ -73,7 +74,7 @@ Der Tab **Bilder** zeigt danach die Bilder vom Bildhoster.
 
 ![Ordnerautomatisierungen](../images/folder-automations-page.png)
 
-Für diesen Basisordner:
+Beispiel für einen Basisordner:
 
 ```text
 /data/releases/incoming/
@@ -116,7 +117,7 @@ und entpackt alle RAR- und 7z-Archive im Ordner und in seinen Unterordnern. Nach
 löscht es die Archivparts und die `.sfv`-Dateien, die nur diese Parts auflisten. Es gelten dieselben
 Regeln wie bei [Remotedownloads](/Bearcat/de/remote-downloads/#archive-vor-der-releaseerstellung-entpacken).
 
-Laufende Prüfungen und Entpackvorgänge erscheinen auf der Seite **Aktivität** unter **Ordnerautomatisierungen**.
+Laufende Prüfungen und Entpackvorgänge erscheinen auf der Seite **Home** unter **Ordnerautomatisierungen**.
 
 Schlägt die Prüfung oder das Entpacken fehl, behält Bearcat die Dateien und erstellt kein Release.
 Du findest den Fehler unter **Fehlgeschlagene Entpackvorgänge** auf **Ordnerautomatisierungen**.

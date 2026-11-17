@@ -16,7 +16,7 @@ higher-resolution cover from TMDB.
 
 ## Configure the sources
 
-Open **NFO database registrations** in the sidebar to enable sources for scene release
+Open **Registrations > NFO database registrations** in the sidebar to enable sources for scene release
 information and NFO files:
 
 - **xREL** has good coverage for German scene releases.
@@ -29,7 +29,7 @@ information and NFO files:
 
 xREL, SRRDB and PreDB do not require account credentials.
 
-Open **Metadata sources** to register providers for movie, TV and game metadata:
+Open **Registrations > Metadata sources** to register providers for movie, TV and game metadata:
 
 | Provider | Metadata | Credentials |
 | --- | --- | --- |

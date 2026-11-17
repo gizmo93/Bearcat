@@ -3,23 +3,23 @@ title: "Accounts and Reupload Settings"
 description: "Add link crypters and image hosters, enable reuploads, and set upload limits."
 ---
 
-## Use a proxy
-
-See [Proxy Servers](/Bearcat/proxy-servers/) to set up HTTP or SOCKS5 proxies for uploads and mirror
-downloads. You can choose a default per category or a proxy for individual accounts.
+Find hoster accounts under **Registrations > Hosters > Hoster registrations**.
+See [Your first upload](/Bearcat/post-installation/#set-up-manually) to add your first account.
+This page covers other services, reuploads, and upload limits.
 
 ## Setting up link crypters and metadata sources
 
-- Open **Crypter registrations** to add accounts for link containers. On a release, expand a saved
-  upload configuration and add a link crypter registration, with an optional container password.
-- Open **NFO database registrations** to enable sources for scene release information and NFOs.
-- Open **Metadata sources** to add providers for titles, descriptions, genres, and cover images.
+- Open **Registrations > Crypters > Crypter registrations** and add your account.
+  Then open a release, go to **Uploads > Configuration**, and expand the saved upload configuration.
+  Add the link crypter there, with a container password if needed.
+- Open **Registrations > NFO database registrations** to enable sources for scene release information and NFOs.
+- Open **Registrations > Metadata sources** to add providers for titles, descriptions, genres, and cover images.
 
 See [Release Information and Metadata](/Bearcat/release-information-and-metadata/) for details.
 
 ## Setting up image hoster accounts
 
-Open **Image hoster registrations** and click **New image hoster**. Choose the hoster and enter
+Open **Registrations > Image hoster registrations** and click **New image hoster**. Choose the hoster and enter
 the required credentials.
 
 ## Image upload configuration
@@ -46,7 +46,8 @@ or running. Failed image uploads do not block posting. Delete a failed upload on
 
 ## Automatic reuploads
 
-Edit a release group to enable automatic reuploads and set **Hours until reupload**.
+Open **Release settings > Release groups** and edit the group.
+Enable automatic reuploads and set **Hours until reupload**.
 With `24`, Bearcat waits at least 24 hours after detecting offline files before scheduling a reupload.
 With `0`, it can schedule one immediately.
 
@@ -91,3 +92,8 @@ for this account. Decimal values such as `0.5` or `0,5` are allowed. Leave it em
 
 The [global speed limit](/Bearcat/advanced-configuration/#upload-concurrency) also applies.
 Uploads must stay within both limits. The **Parallel uploads** column shows the account's limit.
+
+## Use a proxy
+
+See [Proxy Servers](/Bearcat/proxy-servers/) to set up HTTP or SOCKS5 proxies for uploads and mirror
+downloads. You can choose a default per category or a proxy for individual accounts.

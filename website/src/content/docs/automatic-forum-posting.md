@@ -11,7 +11,7 @@ Each forum has its own rules. Bearcat skips forums with no matching rule.
 
 ## What you need first
 
-- A forum added under **Distribution sites**, with a working login.
+- A forum added under **Registrations > Distribution site registrations**, with a working login.
 - A suitable [forum post template](/Bearcat/forum-post-templates/).
 - Releases in the [post queue](/Bearcat/post-queue/) with a classification and a passed or manually approved
   [quality gate](/Bearcat/quality-gates/). Groups without a quality profile pass the gate.
@@ -19,7 +19,7 @@ Each forum has its own rules. Bearcat skips forums with no matching rule.
 
 ## Opening the posting rules page
 
-Open **Distribution sites** in the sidebar. The table has a **Posting rules** column that shows how
+Open **Registrations > Distribution site registrations** in the sidebar. The table has a **Posting rules** column that shows how
 many rules a forum has.
 
 ![distribution-site-rules.png](images/distribution-site-rules.png)

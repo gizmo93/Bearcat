@@ -37,13 +37,16 @@ Use the copy buttons to copy the image links.
 
 ![release-infos-tab.png](images/release-infos-tab.png)
 
-See [Release Information and Metadata](/Bearcat/release-information-and-metadata/).
+View and edit the title, description, cover, NFO, and media data here.
+Use **Resolve metadata** to search the configured providers again.
+See [Release Information and Metadata](/Bearcat/release-information-and-metadata/)
+to set up sources or correct a wrong match.
 
 ## Archives
 
 ![archive-configurations-tab.png](images/archive-configurations-tab.png)
 
-A managed release needs at least one archive configuration. See
+To upload a managed release as an archive, add an archive configuration here. See
 [Creating the archive](/Bearcat/upload-lifecycle/#3-creating-the-archive) for the packing options.
 
 Archives in a [storage folder](/Bearcat/archive-storage-folders/) show the storage folder name next to

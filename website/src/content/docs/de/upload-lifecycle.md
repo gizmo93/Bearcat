@@ -26,7 +26,8 @@ flowchart TD
 
 ## 1. Release und Uploadkonfiguration
 
-In einer **Uploadkonfiguration** wählst du für ein Release die Archivkonfiguration und das Uploadziel:
+Öffne ein Release und gehe zu **Uploads > Konfiguration**. Mit **Hinzufügen** legst du eine
+Uploadkonfiguration an. Darin wählst du die Archivkonfiguration und das Uploadziel:
 eine einzelne Hosterregistrierung oder einen [Accountpool](/Bearcat/de/account-pools/).
 Optional wählst du Linkcrypterkonfigurationen dazu.
 
@@ -40,7 +41,7 @@ Mit der Uploadquelle **Videodatei** lädt Bearcat das Hauptvideo direkt zu einem
 ## 2. Der erste Upload
 
 Der **Cooldown für initiale Uploads** beginnt mit der Erstellung des Releases.
-Unter **Konfigurationen** stellst du die Wartezeit ein (Standard: `5` Minuten).
+Unter **System > Konfigurationen > Initiale Uploads** stellst du die Wartezeit ein (Standard: `5` Minuten).
 
 Sobald der Cooldown abgelaufen ist und eine Uploadkonfiguration existiert, plant Bearcat den ersten
 Upload bei der nächsten Prüfung ein. Mit `0` Minuten entfällt die Wartezeit.
@@ -62,7 +63,8 @@ Für jeden wartenden Upload stellt Bearcat ein Archiv bereit:
 2. Fehlende lokale Dateien von einem konfigurierten [Mirrorhoster](/Bearcat/de/mirror-downloads/) wiederherstellen.
 3. Wenn beides nicht möglich ist, ein neues Archiv aus dem Releaseordner erstellen.
 
-Ein nicht erreichbarer Speicherordner oder dort fehlende Archivdateien zählen als fehlende Dateien.
+Ist ein Speicherordner nicht erreichbar, schlägt die Wiederherstellung fehl. Prüfe dann die Verbindung
+zum Laufwerk oder zur Freigabe. Siehe [Reuploads aus Speicherordnern](/Bearcat/de/archive-storage-folders/#reuploads).
 
 Neu packen kann Bearcat nur [Managed Releases](/Bearcat/de/release-types/).
 Unmanaged Releases brauchen lokale Archivdateien oder einen verfügbaren Mirror.
@@ -93,7 +95,7 @@ Für Reuploads muss Bearcat eventuell die Archivhashes ändern oder die Dateien 
 
 ### Laufende Archiverstellung abbrechen
 
-Unter **Aktivität > Archive** kannst du laufende Archiverstellungen abbrechen.
+Auf der Startseite **Home** kannst du im Bereich **Archive** laufende Archiverstellungen abbrechen.
 Das gilt auch während der MD5-Berechnung oder der Hashänderung eines wiederverwendeten Archivs.
 
 - **Neues Archiv:** Bearcat löscht das Archiv und seine Dateien.
@@ -130,7 +132,7 @@ Ein Upload gilt als Reupload, wenn beim Erstellen bereits ein anderer Upload des
 
 ![Einstellung Startreihenfolge der Uploads unter Konfigurationen > Uploadparallelität](../images/upload-start-order-setting.png)
 
-Klicke unter **Aktivität > Uploads** neben einem Upload auf **Upload priorisieren**, damit er Vorrang bekommt.
+Klicke auf der Startseite **Home** im Bereich **Uploads** neben einem Upload auf **Upload priorisieren**, damit er Vorrang bekommt.
 Auf der Releasedetailseite findest du dieselbe Aktion unter **Uploads > Verlauf** im Menü `...`.
 Du kannst Uploads im Status `Pending` oder `Uploading` priorisieren. Die Änderung wirkt nach wenigen Sekunden.
 Laufende Dateiuploads werden nicht unterbrochen. Mit **Priorisierung entfernen** gilt für den Upload wieder die normale Reihenfolge.
@@ -230,7 +232,8 @@ In der Hosterregistrierung kannst du [Reuploadoverrides](/Bearcat/de/account-set
 
 ## 8. Manuelle Reuploads
 
-Wähle **Manuellen Reupload erstellen** im `...`-Menü eines Eintrags unter **Uploads > Verlauf**.
+Öffne das Release und gehe zu **Uploads > Verlauf**. Wähle beim betroffenen Upload
+**Manuellen Reupload erstellen** im `...`-Menü.
 Das geht bei `Offline`, `PartiallyOnline`, `Canceled` oder `Failed`.
 
 Auch hier darf es keinen [blockierenden Ersatzupload](#7-automatische-reuploads) geben.

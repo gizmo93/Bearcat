@@ -16,7 +16,7 @@ To let Bearcat submit posts for you, use [posting rules](/Bearcat/automatic-foru
 
 ## Setting up a distribution site
 
-Open **Distribution sites** in the sidebar and add one. Pick the forum, enter your username and
+Open **Registrations > Distribution site registrations** in the sidebar and add one. Pick the forum, enter your username and
 password, and save. Your password is stored encrypted. Activate the site and use **Try login**
 to check the connection.
 
@@ -114,4 +114,5 @@ In the dialog:
 
 **Posted locations** lists the URLs where a release or collection has been published,
 such as forum threads or WordPress pages. Confirming a forum post adds its URL here.
-You can also add or remove links by hand.
+Find the list on the **Overview** tab of the release or collection.
+You can also add or remove links there by hand.

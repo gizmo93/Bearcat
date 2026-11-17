@@ -14,8 +14,9 @@ It uses the web interface’s address and port.
 | `/openapi/v1.json` | OpenAPI specification |
 | `/api/docs` | Interactive documentation |
 
-For example, on `http://localhost:5000`, open `http://localhost:5000/api/docs`
-or download the specification from `http://localhost:5000/openapi/v1.json`.
+For the Desktop app and Windows service, open `http://127.0.0.1:17208/api/docs` by default.
+For Docker, open `http://localhost:8080/api/docs`. Adjust the address and port if Bearcat
+runs on another computer or port.
 
 The [API reference](/Bearcat/api/) also lists the endpoints, parameters, and schemas.
 

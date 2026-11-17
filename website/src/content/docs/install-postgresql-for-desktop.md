@@ -28,6 +28,9 @@ Choose your own password. If you change any other values, enter them in Bearcat 
 
 On Windows, Docker is the recommended way to run PostgreSQL. Bearcat can still run as the Desktop app or Windows service.
 
+The following commands use Bash on macOS or Linux. On Windows, use the PowerShell example
+below. Replace `choose-a-password` with your own password.
+
 Create a folder for the database:
 
 ```bash
@@ -100,7 +103,7 @@ Choose the account Bearcat should use:
 - **Installer account:** Enter `postgres` and the password you chose during installation in Bearcat. This uses the PostgreSQL superuser.
 - **Separate account:** Open **pgAdmin 4**, connect as `postgres`, and create a login role named `bearcat`. Set a password and enable **Can create databases?** Then enter this account in Bearcat.
 
-Set the database name to `bearcat`. Bearcat creates it and applies migrations on first start.
+Set the database name to `bearcat`. Bearcat creates it and sets up the required tables on first start.
 
 ## macOS
 
@@ -122,7 +125,7 @@ CREATE USER bearcat WITH PASSWORD 'choose-a-password';
 ALTER USER bearcat CREATEDB;
 ```
 
-To create the database manually instead:
+To create the database yourself, use these commands instead. Choose only one of the two options:
 
 ```bash
 psql postgres

@@ -3,8 +3,8 @@ title: "Background Tasks and Advanced Settings"
 description: "Configure background tasks, cleanup rules, upload limits, the database, and the time zone."
 ---
 
-Bearcat packs, uploads, and checks files in the background. Manage tasks under **Background tasks**
-and their settings under **Configurations**.
+Bearcat packs, uploads, and checks files in the background. Find the tasks under
+**Activity > Background tasks** and their settings under **System > Configurations**.
 
 ## Background tasks
 
@@ -39,7 +39,7 @@ All tasks are enabled by default.
 
 ## Configurations
 
-Open **Configurations** in the sidebar to change global settings.
+Open **System > Configurations** to change settings for the whole application.
 
 Switches and dropdowns save immediately. Number fields have save and discard buttons.
 You can also press Enter to save or Escape to discard.
@@ -130,7 +130,8 @@ Leave **Keep raw files** enabled in the automation if you want to keep the downl
 
 ### Part size unit
 
-The part size of archive configurations is interpreted globally using **Part size unit** under **Configurations**.
+Choose **Part size unit** under **Configurations > Archive creation**.
+This setting applies to all archive configurations.
 **Megabytes** (default) means 1 MB = `1,000,000` bytes, **Mebibytes** means 1 MB = `1,048,576` bytes.
 This applies to RAR and 7-Zip.
 To change the part size of many archive configurations at once, see [Change part size](/Bearcat/change-archive-part-size/).
@@ -162,10 +163,11 @@ The default strategy increases it by `1` MB when repacking.
 
 ### Folder automation
 
-Bearcat creates a release from a watched folder once both conditions are met:
+Under **Configurations > Folder automation**, set when Bearcat turns a watched folder into a release.
+Both conditions must be met:
 
-- Its total file count and size stay unchanged for "Folder stability", default `5` minutes.
-- It reaches "Minimum folder size", default `1` MB.
+- Its total file count and size stay unchanged for **Folder stability**, default `5` minutes.
+- It reaches **Minimum folder size**, default `1` MB.
 
 This helps avoid creating releases while files are still being copied.
 
@@ -190,29 +192,30 @@ limit if the server rejects simultaneous transfers.
 
 ### Initial upload cooldown
 
-"Initial upload cooldown" defaults to `5` minutes. It gives you time to finish setting up a release before archiving and uploading begin.
+Find **Initial upload cooldown** under **Configurations > Initial uploads** (default: `5` minutes). It gives you time to finish setting up a release before archiving and uploading begin.
 
-Once an upload configuration exists and the release is older than the cooldown, the next "Upload state check" run creates the first upload record.
+Once an upload configuration exists and the release is older than the cooldown, the next **Upload state check** run creates the first upload record.
 The wait is measured from release creation. Set it to `0` to allow the first upload on the next check.
 
 Changes only affect upload configurations without an upload. Existing uploads are not canceled or delayed.
 
 ### Upload concurrency
 
-"Maximum parallel uploads" defaults to `10`. It limits parallel file uploads across all hosters.
+Under **Configurations > Upload concurrency**, **Maximum parallel uploads** limits the number
+of files uploaded at once across all hosters (default: `10`).
 Each hoster's own limit also applies.
 
-View and, where allowed, override individual limits on the "Hoster registrations" page. See [Parallel uploads per hoster](/Bearcat/account-settings/#parallel-uploads-per-hoster).
+View and, where allowed, override individual limits on the **Hoster registrations** page. See [Parallel uploads per hoster](/Bearcat/account-settings/#parallel-uploads-per-hoster).
 
-"Maximum upload speed" (MB/s) is empty by default, which means no limit. It caps the combined upload
+**Maximum upload speed** (MB/s) is empty by default, which means no limit. It caps the combined upload
 speed of all running uploads across all hosters. Decimal values such as `0.5` or `0,5` are allowed.
 Each hoster registration can set its own limit as well. See
 [Upload speed limit per hoster](/Bearcat/account-settings/#upload-speed-limit-per-hoster).
 
 Very low speed limits can cause uploads to time out.
 
-Under "Upload start order", choose which waiting uploads start first: "Oldest first" (default) or
-"Initial uploads before reuploads". See [Start order](/Bearcat/upload-lifecycle/#start-order).
+Under **Upload start order**, choose which waiting uploads start first: **Oldest first** (default) or
+**Initial uploads before reuploads**. See [Start order](/Bearcat/upload-lifecycle/#start-order).
 
 ### ffmpeg
 

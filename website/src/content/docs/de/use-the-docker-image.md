@@ -33,7 +33,7 @@ Sie läuft direkt auf dem Host und vermeidet die zusätzliche Dateifreigabe zwis
 
 ### macOS
 Du kannst Docker Desktop oder Rancher Desktop verwenden. Unter macOS empfehle ich
-[OrbStack](https://orbstack.dev), besonders wegen der schnellen Dateizugriffe über Bind Mounts.
+[OrbStack](https://orbstack.dev), besonders wegen der schnellen Dateizugriffe über Bindmounts.
 
 ## 1. Compose-Datei herunterladen
 
@@ -56,11 +56,14 @@ Ersetze `/srv/releases` durch deinen eigenen Pfad. Die übrigen Einstellungen ka
 Docker legt einen fehlenden Releaseordner nicht an. Existiert der Ordner nicht, startet der Container nicht.
 
 `BEARCAT_DATA_DIR` speichert die Datenbank und den Verschlüsselungsschlüssel, standardmässig in
-`bearcat-data` neben deiner Compose-Datei. Lege diesen Datenordner auf lokalen Speicher.
+`bearcat-data` neben deiner Composedatei. Lege diesen Datenordner auf lokalen Speicher.
 Releasedateien können auf einer NFS- oder SMB-Freigabe liegen.
 
+<details>
+<summary>Optional: Mountänderungen unter Linux an den Container weitergeben</summary>
+
 Die folgenden Einstellungen gelten nur für Docker Engine direkt auf Linux. Mit Docker Desktop
-auf Windows, macOS oder Linux behältst du den normalen Bindmount aus der Compose-Datei.
+auf Windows, macOS oder Linux behältst du den normalen Bindmount aus der Composedatei.
 
 Mit Docker Engine kann `rslave` Mountänderungen innerhalb von `RELEASES_DIR` vom Host an den Container weitergeben.
 Der Hostmount muss dafür `shared` sein. Wird `RELEASES_DIR` selbst neu eingebunden, kann es nötig sein,
@@ -78,6 +81,8 @@ Ergänze in `docker-compose.yml` unter `services.bearcat.volumes` im Abschnitt `
     create_host_path: false
     propagation: rslave
 ```
+
+</details>
 
 ## 3. Bearcat starten
 
@@ -115,7 +120,7 @@ Bearcat aktualisiert die Datenbank beim Start automatisch.
 
 ### Bestehende Installationen mit PostgreSQL
 
-Behalte deine bestehenden Compose-Dateien, um PostgreSQL weiterzuverwenden. Ersetzt du sie durch
+Behalte deine bestehenden Composedateien, um PostgreSQL weiterzuverwenden. Ersetzt du sie durch
 die aktuellen Dateien mit SQLite als Standard, füge diese Zeile in `.env` ein (Windows: `;` statt `:`):
 
 ```text
@@ -137,9 +142,9 @@ Behalte SQLite oder richte mit den folgenden Schritten PostgreSQL ein.
 
 ### Stattdessen PostgreSQL verwenden
 
-1. Speichere [docker-compose.postgres.yml](https://github.com/gizmo93/Bearcat/blob/main/docker-compose.postgres.yml) neben deiner Compose-Datei.
+1. Speichere [docker-compose.postgres.yml](https://github.com/gizmo93/Bearcat/blob/main/docker-compose.postgres.yml) neben deiner Composedatei.
 2. Setze in `.env` den Wert `POSTGRES_PASSWORD` auf ein eigenes Passwort.
-3. Füge diese Zeile in `.env` ein, damit alle Compose-Befehle PostgreSQL verwenden:
+3. Füge diese Zeile in `.env` ein, damit alle Composebefehle PostgreSQL verwenden:
 
 ```text
 COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml

@@ -14,7 +14,7 @@ The link opens the notification details:
 
 ## Where to find it
 
-Open **Telegram notifications** in the sidebar or go to `/telegram`.
+Open **System > Telegram notifications** in the sidebar.
 
 ## Setting up the bot
 

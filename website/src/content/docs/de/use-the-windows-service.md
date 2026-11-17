@@ -143,7 +143,7 @@ Nach einem Absturz startet der Dienst automatisch neu.
 
 ## Logs prüfen
 
-Der Dienst schreibt in das Windows-**Ereignisprotokoll**. Öffne die **Ereignisanzeige**, gehe zu **Windows-Protokolle => Anwendung** und filtere nach der Quelle **Bearcat**.
+Der Dienst schreibt in das Windows-**Ereignisprotokoll**. Öffne die **Ereignisanzeige**, gehe zu **Windows-Protokolle > Anwendung** und filtere nach der Quelle **Bearcat**.
 
 ![Bearcat-Einträge in der Ereignisanzeige](../images/windows-event-viewer.png)
 
@@ -178,7 +178,7 @@ sc.exe start Bearcat
 Der Dienst läuft standardmässig als `LocalSystem`. Dieses Konto hat keinen Zugriff auf geschützte Netzwerkfreigaben. Verbundene Laufwerke wie `Z:` sind für Dienste nicht sichtbar. Liegen deine Releasedaten auf einer Netzwerkfreigabe:
 
 1. Gib im Setup einen **UNC-Pfad** (`\\server\share\releases`) ein, keinen verbundenen Laufwerksbuchstaben.
-2. Öffne `services.msc` => **Bearcat** => **Anmelden** und wähle ein Konto mit Zugriff auf die Freigabe.
+2. Öffne `services.msc` > **Bearcat** > **Anmelden** und wähle ein Konto mit Zugriff auf die Freigabe.
 
    ![Anmeldekonto des Bearcat-Dienstes](../images/windows-service-user.png)
 

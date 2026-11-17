@@ -12,7 +12,7 @@ Du kannst das Ergebnis von Hand kopieren oder es von [Postingregeln](/Bearcat/de
 
 ## Eine Vorlage erstellen
 
-1. Öffne **Forenpostvorlagen** und klicke auf **+** neben dem Suchfeld.
+1. Öffne **Releaseeinstellungen > Forenpostvorlagen** und klicke auf **+** neben dem Suchfeld.
 2. Wähle den Typ: **Release** oder **Releasecollection**. Du kannst ihn später nicht ändern.
 3. Wähle das Ausgabeformat. Verwende **BBCode** für Forenposts. Nur BBCode-Vorlagen können in Foren gepostet werden.
 4. Gib einen Namen ein, schreibe die Vorlage und drücke **Ctrl+S** (**⌘S** auf einem Mac), um zu speichern.
@@ -183,7 +183,7 @@ Vorlage, klicke auf **Forenpost kopieren** und füge das Ergebnis in deinem Foru
   `ImgBB Cover`. Bearcat wandelt den Namen in Kleinbuchstaben um und ersetzt Leerzeichen durch `_`. Alternativ verwendest du den ursprünglichen Namen: `{{ imagelinks["ImgBB Cover"].full }}`. Der Link erscheint, sobald das Bild hochgeladen ist.
 - **Mediendaten:** `release.main_video` und `release.media_files` stammen aus den Videodateien von
   Managed Releases. Bearcat liest sie bei Releases, die aus einem Releasetemplate erstellt wurden,
-  automatisch aus. Bei anderen Releases klickst du im Release auf **Mediendaten extrahieren**.
+  automatisch aus. Bei anderen Releases öffnest du den Tab **Releaseinfo** und wählst im `...`-Menü **Mediendaten extrahieren**.
 - **Uploadnamen:** Benenne deine Uploadkonfigurationen so, wie sie im Post erscheinen sollen, zum
   Beispiel `Rapidgator`. Dann kannst du `{{ upload.name }}` direkt verwenden.
 - **Hosternamen:** `upload.hoster_name` zeigt den Hosternamen des letzten Uploads, zum Beispiel `Rapidgator`.

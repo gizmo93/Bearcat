@@ -14,7 +14,7 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 
 ## Ablauf
 
-1. Öffne **Crypter** > **Linkcrypterimporte** und klicke auf **Neuer Import**.
+1. Öffne **Registrierungen > Crypter** > **Linkcrypterimporte** und klicke auf **Neuer Import**.
 2. Wähle die Crypterregistrierung und das Releasetemplate. Das Template legt Hoster, Archiveinstellungen und Linkcryptereinstellungen der neuen Releases fest.
 3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Dort stellt Bearcat die Archive aus den importierten Mirrors wieder her, wenn kein lokaler Releaseordner vorhanden ist.
 
@@ -50,15 +50,15 @@ Bei neuen Releases stammen die Konfigurationen aus dem Template. Bei bestehenden
 | **Nicht unterstützter Hoster** | Bearcat kennt den Hoster der Links nicht. |
 | **Hoster nicht im Release** | Das Release hat keine weitere Uploadkonfiguration für diesen Hoster. |
 
-Bei einem verwalteten Template sucht Bearcat in den Arbeitsverzeichnissen und den Basispfaden der
+Bei einem Managed Template sucht Bearcat in den Arbeitsverzeichnissen und den Basispfaden der
 Ordnerautomatisierungen nach einem noch nicht verwendeten Ordner mit dem Releasenamen. Findet es einen,
-verwendet es ihn als Releaseordner und verwaltet das Release. Sonst bleibt das Release unverwaltet.
+verwendet es ihn als Releaseordner für ein Managed Release. Sonst erstellt es ein Unmanaged Release.
 Bearcat stellt sein Archiv dann bei Bedarf aus den Mirrors wieder her.
 
 Bearcat sucht ausserdem nach einem vorhandenen Archiv in den Archivspeicherordnern, Arbeitsverzeichnissen,
 dem Archivbasisordner und deren direkten Unterordnern. Die Dateinamen müssen genau mit denen des ersten
 übernommenen Mirrors übereinstimmen. Findet Bearcat ein passendes Archiv, verwendet es dieses unverändert
-und lädt nichts herunter. Ohne Releaseordner bleibt das Release auch mit vorhandenem Archiv unverwaltet.
+und lädt nichts herunter. Ohne Releaseordner bleibt das Release auch mit vorhandenem Archiv vom Typ Unmanaged.
 
 ## Ordner, die sich nicht importieren lassen
 
@@ -111,7 +111,7 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 ## Nach dem Import
 
 - Neue Releases übernehmen die **Primärsprache** des Imports für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
-- Releaseinformationen (xrel, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
+- Releaseinformationen (xREL, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
 - Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/). Das gilt auch für Collections aus einem Staffelordner.
 
 ## Archive beim Import nicht gefunden

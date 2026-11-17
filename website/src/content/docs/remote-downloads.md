@@ -13,7 +13,7 @@ is off by default. Use an unmanaged template to upload the downloaded archives u
 
 ![remote-sources-page.png](images/remote-sources-page.png)
 
-1. Open **Remote sources** and click **New remote source**.
+1. Open **Registrations > Remote sources** and click **New remote source**.
 2. Choose **FTP / FTPS** as the source type and give the connection a name.
 3. Enter the **Host**, **Port**, **Username**, and **Password**.
 4. Set **Encryption** to match the server: **Explicit (FTPES)**, **Implicit (FTPS)**, or **None (plain FTP)**.
@@ -35,7 +35,7 @@ Choose **managed** to pack the downloaded files or **unmanaged** to upload the p
 
 ![remote-automations-page.png](images/remote-automations-page.png)
 
-1. Open **Remote automations** and click **New remote automation**.
+1. Open **Automation > Remote automations** and click **New remote automation**.
 2. Give it a name and select your **Remote source**.
 3. Set **Remote folder** to the folder containing the releases. Use **Browse** to select it on the server.
 4. Choose a local **Download folder**. Bearcat creates a subfolder for each release there.
@@ -89,7 +89,7 @@ Bearcat scans about every two minutes. By default, a folder must be at least `1`
 count and total size must stay unchanged for five minutes before it is queued.
 You can adjust these checks under [Remote downloads settings](/Bearcat/advanced-configuration/#remote-downloads).
 
-Open **Remote downloads** to see folders, status, and errors. The usual sequence is:
+Open **Activity > Remote downloads** to see folders, status, and errors. The usual sequence is:
 
 | Status | Meaning |
 | --- | --- |
@@ -110,7 +110,7 @@ After every download, Bearcat looks for `.sfv` files in the release folder and i
 compares the CRC32 checksum of each listed file. If a listed file is missing or its checksum does not
 match, the download fails and the files stay on disk.
 
-You can also follow running downloads under **Activity > Downloads** on the start page. It shows
+You can also follow running downloads in the **Downloads** section on **Home**. It shows
 progress, speed, remaining time, phase, and file details. The release detail page shows the remote source.
 
 ![running-remote-download.png](images/running-remote-download.png)

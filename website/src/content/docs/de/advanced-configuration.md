@@ -3,8 +3,8 @@ title: "Hintergrundaufgaben und erweiterte Einstellungen"
 description: "Hintergrundaufgaben, Aufräumregeln, Uploadlimits, Datenbank und Zeitzone einstellen."
 ---
 
-Bearcat packt, lädt und prüft Dateien im Hintergrund. Unter **Hintergrundaufgaben** verwaltest du
-die Aufgaben, unter **Konfigurationen** ihre Einstellungen.
+Bearcat packt, lädt und prüft Dateien im Hintergrund. Die Aufgaben findest du unter
+**Aktivität > Hintergrundaufgaben**, ihre Einstellungen unter **System > Konfigurationen**.
 
 ## Hintergrundaufgaben
 
@@ -39,7 +39,7 @@ Standardmässig sind alle Aufgaben aktiv.
 
 ## Konfigurationen
 
-Öffne "Konfigurationen" im Menü, um das globale Verhalten von Bearcat zu ändern.
+Öffne **System > Konfigurationen**, um Einstellungen für die gesamte Anwendung zu ändern.
 
 Schalter und Auswahlfelder speichern sofort. Zahlenfelder speicherst oder verwirfst du über die Buttons.
 Du kannst auch Enter zum Speichern oder Escape zum Abbrechen drücken.
@@ -132,7 +132,8 @@ Lass **Rohdateien behalten** in der Automatisierung aktiviert, wenn du den herun
 
 ### Einheit der Partgrösse
 
-Die Partgrösse in Archivkonfigurationen richtet sich global nach **Einheit der Partgrösse** unter **Konfigurationen**.
+Wähle **Einheit der Partgrösse** unter **Konfigurationen > Archiverstellung**.
+Die Einstellung gilt für alle Archivkonfigurationen.
 **Megabytes** (Standard) bedeutet 1 MB = `1.000.000` Bytes, **Mebibytes** bedeutet 1 MB = `1.048.576` Bytes.
 Das gilt für RAR und 7-Zip.
 Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Partgrösse ändern](/Bearcat/de/change-archive-part-size/).
@@ -164,10 +165,11 @@ Die Standardstrategie erhöht sie beim Neupacken um `1` MB.
 
 ### Ordnerautomatisierung
 
-Bearcat erstellt ein Release aus einem überwachten Ordner, sobald beide Bedingungen erfüllt sind:
+Unter **Konfigurationen > Ordnerautomation** stellst du ein, wann Bearcat einen Ordner als Release übernimmt.
+Beide Bedingungen müssen erfüllt sein:
 
-- Anzahl und Gesamtgrösse der Dateien bleiben für die Dauer von "Ordnerstabilität" unverändert, Standard `5` Minuten.
-- Der Ordner erreicht die "Minimale Ordnergrösse", Standard `1` MB.
+- Anzahl und Gesamtgrösse der Dateien bleiben für die Dauer von **Ordnerstabilität** unverändert, Standard `5` Minuten.
+- Der Ordner erreicht die **Minimale Ordnergrösse**, Standard `1` MB.
 
 Das verringert das Risiko, dass Bearcat noch unvollständige Ordner als Release übernimmt.
 
@@ -192,29 +194,30 @@ wenn der Server gleichzeitige Übertragungen verbietet.
 
 ### Cooldown für initiale Uploads
 
-"Cooldown für initiale Uploads" ist standardmässig `5` Minuten. So hast du Zeit, ein Release fertig einzurichten, bevor Bearcat es packt und hochlädt.
+Unter **Konfigurationen > Initiale Uploads** findest du **Cooldown für initiale Uploads** (Standard: `5` Minuten). So hast du Zeit, ein Release fertig einzurichten, bevor Bearcat es packt und hochlädt.
 
-Sobald eine Uploadkonfiguration existiert und das Release älter als der Cooldown ist, plant der nächste Lauf von "Upload state check" den initialen Upload ein.
+Sobald eine Uploadkonfiguration existiert und das Release älter als der Cooldown ist, plant der nächste Lauf von **Upload state check** den initialen Upload ein.
 Die Wartezeit beginnt mit der Erstellung des Releases. Setze sie auf `0`, damit der erste Upload direkt bei der nächsten Prüfung geplant wird.
 
 Änderungen betreffen nur Uploadkonfigurationen ohne Upload. Bestehende Uploads werden weder abgebrochen noch verzögert.
 
 ### Parallele Uploads
 
-"Maximale parallele Uploads" ist standardmässig `10`. Der Wert limitiert parallele Dateiuploads über alle Hoster hinweg.
+Unter **Konfigurationen > Uploadparallelität** begrenzt du mit **Maximale parallele Uploads**
+die gleichzeitig laufenden Dateiuploads über alle Hoster hinweg (Standard: `10`).
 Das Limit jedes Hosters gilt zusätzlich.
 
-Auf der Seite "Hosterregistrierungen" siehst du die einzelnen Limits und kannst sie, wo möglich, überschreiben. Siehe [Parallele Uploads pro Hoster](/Bearcat/de/account-settings/#parallele-uploads-pro-hoster).
+Auf der Seite **Hosterregistrierungen** siehst du die einzelnen Limits und kannst sie, wo möglich, überschreiben. Siehe [Parallele Uploads pro Hoster](/Bearcat/de/account-settings/#parallele-uploads-pro-hoster).
 
-"Maximale Uploadgeschwindigkeit" (MB/s) ist standardmässig leer, also ohne Limit. Der Wert limitiert die gesamte
+**Maximale Uploadgeschwindigkeit** (MB/s) ist standardmässig leer, also ohne Limit. Der Wert begrenzt die gesamte
 Uploadgeschwindigkeit aller laufenden Uploads über alle Hoster hinweg. Kommazahlen wie `0.5` oder `0,5` sind erlaubt.
 Jede Hosterregistrierung kann zusätzlich ein eigenes Limit setzen. Siehe
 [Uploadgeschwindigkeit pro Hoster begrenzen](/Bearcat/de/account-settings/#uploadgeschwindigkeit-pro-hoster-begrenzen).
 
 Bei sehr niedrigen Geschwindigkeitslimits können Uploads wegen Zeitüberschreitungen scheitern.
 
-Unter "Startreihenfolge der Uploads" wählst du, welche wartenden Uploads zuerst starten: "Älteste zuerst"
-(Standard) oder "Initiale Uploads vor Reuploads". Siehe [Startreihenfolge](/Bearcat/de/upload-lifecycle/#startreihenfolge).
+Unter **Startreihenfolge der Uploads** wählst du, welche wartenden Uploads zuerst starten: **Älteste zuerst**
+(Standard) oder **Initiale Uploads vor Reuploads**. Siehe [Startreihenfolge](/Bearcat/de/upload-lifecycle/#startreihenfolge).
 
 ### ffmpeg
 
@@ -231,7 +234,7 @@ Dort kannst du ffmpeg herunterladen oder aktualisieren.
 | macOS mit Apple Silicon | [martin-riedl.de](https://ffmpeg.martin-riedl.de) |
 
 Gib unter `Media:FfmpegPath` (Umgebungsvariable `Media__FfmpegPath`) den Pfad zu deiner eigenen
-Installation von ffmpeg an, wenn du diese verwenden möchtest. Auf anderen Plattformen, etwa Linux ARM64
+Installation von ffmpeg an, wenn du diese verwenden möchtest. Auf anderen Plattformen, etwa Linux ARM64,
 musst du ffmpeg selbst installieren und diesen Pfad setzen.
 
 ## Datenbank

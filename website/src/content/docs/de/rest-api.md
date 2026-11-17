@@ -14,8 +14,9 @@ Sie verwendet die Adresse und den Port der Weboberfläche.
 | `/openapi/v1.json` | OpenAPI-Spezifikation |
 | `/api/docs` | Interaktive Dokumentation |
 
-Läuft Bearcat zum Beispiel unter `http://localhost:5000`, öffne `http://localhost:5000/api/docs`
-oder lade die Spezifikation von `http://localhost:5000/openapi/v1.json` herunter.
+Bei der Desktopanwendung und dem Windows-Dienst öffnest du normalerweise
+`http://127.0.0.1:17208/api/docs`, bei Docker `http://localhost:8080/api/docs`.
+Passe Adresse und Port an, wenn Bearcat auf einem anderen Rechner oder Port läuft.
 
 Die [API-Referenz](/Bearcat/api/) listet ebenfalls die Endpunkte, Parameter und Schemas auf.
 

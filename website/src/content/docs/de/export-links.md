@@ -17,7 +17,7 @@ Die Datei enthält Archivpasswörter im Klartext. Bewahre sie so sicher auf wie 
 | --- | --- |
 | **Alle Links** | Alle Uploads, auch Uploads mit unbekanntem Onlinestatus |
 | **Online** | Uploads, die vollständig online sind |
-| **Teilweise online** | Uploads mit mindestens einem Offlinelink |
+| **Teilweise online** | Uploads mit Online- und Offlinelinks |
 | **Offline** | Uploads, die vollständig offline sind |
 
 Der Filter richtet sich nach dem Onlinestatus des gesamten Uploads. Für jeden passenden Upload enthält der Export alle Links, bei **Teilweise online** also auch die Offlinelinks. `LinkOnlineState` zeigt den Status jedes einzelnen Links.

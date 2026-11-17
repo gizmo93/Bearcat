@@ -16,7 +16,7 @@ Damit Bearcat Posts für dich absendet, verwende [Postingregeln](/Bearcat/de/aut
 
 ## Eine Verteilungsseite einrichten
 
-Öffne **Verteilungsseiten** in der Seitenleiste und füge eine hinzu. Wähle das Forum, gib Benutzername und
+Öffne **Registrierungen > Verteilungsseitenregistrierungen** in der Seitenleiste und füge eine hinzu. Wähle das Forum, gib Benutzername und
 Passwort ein und speichere. Dein Passwort wird verschlüsselt gespeichert. Aktiviere die Seite und prüfe mit **Login testen**,
 ob die Anmeldung funktioniert.
 
@@ -114,4 +114,5 @@ Im Dialog:
 
 **Veröffentlichungsorte** listet die URLs, unter denen ein Release oder eine Collection veröffentlicht wurde,
 etwa Forenthreads oder WordPress-Seiten. Das Bestätigen eines Forenposts fügt dessen URL hier hinzu.
-Du kannst Links auch von Hand hinzufügen oder entfernen.
+Du findest die Liste im Tab **Übersicht** des Releases oder der Collection.
+Dort kannst du Links auch von Hand hinzufügen oder entfernen.

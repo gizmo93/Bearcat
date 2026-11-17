@@ -26,7 +26,7 @@ Mit **Durchsuchen** wählst du einen Pfad innerhalb deiner Arbeitsverzeichnisse.
 Verzeichnisse kannst du von Hand eingeben.
 
 In Docker gibst du den Pfad innerhalb des Containers an. Die Datei oder der Ordner muss dort über
-einen Bind Mount erreichbar sein.
+einen Bindmount erreichbar sein.
 
 ### Textdatei
 
@@ -45,7 +45,7 @@ Damit ein Eintrag ins Archiv kommt, wähle ihn in der Archivkonfiguration unter
 **Zusätzliche Archivinhalte** aus:
 
 - **In einem Releasetemplate:** gilt für neue Releases, die aus diesem Template erstellt werden.
-- **In einem Release unter Archivkonfigurationen:** gilt nur für dieses Release.
+- **Im Tab Archive eines Releases:** gilt nur für dieses Release.
 
 Du kannst mehrere Einträge auswählen und einen Eintrag in mehreren Templates und Releases verwenden.
 
@@ -80,7 +80,7 @@ Bei diesen Problemen bricht Bearcat das Packen ab und erstellt eine Fehlerbenach
 
 | Problem | Was du prüfen solltest |
 | --- | --- |
-| Eine Quelldatei oder ein Quellordner fehlt | Prüfe den Quellpfad und gegebenenfalls den Docker Bind Mount. |
+| Eine Quelldatei oder ein Quellordner fehlt | Prüfe den Quellpfad und gegebenenfalls den Docker Bindmount. |
 | Der Releaseordner enthält bereits denselben Namen | Benenne die zusätzliche Datei oder den Ordner um oder entferne die Zuweisung. Bearcat überschreibt nie deine vorhandenen Dateien. |
 | Eine Datei oder ein Ordner kann nicht kopiert werden | Prüfe, ob Bearcat die Quelle lesen und in den Releaseordner schreiben darf. |
 

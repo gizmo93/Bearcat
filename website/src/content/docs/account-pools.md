@@ -19,7 +19,7 @@ Pools only work with hosters that report the free storage of an account:
 
 ## Create a pool
 
-Open **Hosters** > **Account pools** and click **New pool**. Choose the hoster, add the accounts and
+Open **Registrations > Hosters** > **Account pools** and click **New pool**. Choose the hoster, add the accounts and
 drag them into order. Bearcat checks the accounts from top to bottom. You cannot change the hoster later.
 
 Set **Minimum free space** to choose how much storage must stay free on each account after an upload.
@@ -41,9 +41,9 @@ Bearcat keeps the result of each storage check for 5 minutes.
 ## Pool full
 
 If no account has enough space, the upload waits. Bearcat sends an **Account pool full** notification
-once per upload. If the pool has no usable account (all accounts are inactive, have unreadable
-credentials or a pending captcha, or the pool is empty), Bearcat sends an **Account pool without
-usable account** notification instead.
+once per upload. If the pool is empty or Bearcat cannot use any of its accounts, it sends
+**Account pool without usable account** instead. Check that the accounts are active, have valid
+credentials, and do not need a captcha solved.
 
 Bearcat checks the pool again on each upload run. The upload starts automatically once an account has
 enough space. You can add an account or free up storage to make room.

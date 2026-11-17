@@ -11,7 +11,7 @@ Jedes Forum hat eigene Regeln. Bearcat überspringt Foren ohne passende Regel.
 
 ## Voraussetzungen
 
-- Ein Forum unter **Verteilungsseiten** mit funktionierendem Login.
+- Ein Forum unter **Registrierungen > Verteilungsseitenregistrierungen** mit funktionierendem Login.
 - Eine passende [Forenpostvorlage](/Bearcat/de/forum-post-templates/).
 - Releases in der [Postwarteschlange](/Bearcat/de/post-queue/) mit Klassifizierung und bestandener oder manuell freigegebener
   [Qualitätsprüfung](/Bearcat/de/quality-gates/). Gruppen ohne Qualitätsprofil bestehen die Prüfung.
@@ -19,7 +19,7 @@ Jedes Forum hat eigene Regeln. Bearcat überspringt Foren ohne passende Regel.
 
 ## Postingregeln öffnen
 
-Öffne **Verteilungsseiten** in der Seitenleiste. Die Spalte **Postingregeln** zeigt,
+Öffne **Registrierungen > Verteilungsseitenregistrierungen** in der Seitenleiste. Die Spalte **Postingregeln** zeigt,
 wie viele Regeln das jeweilige Forum hat.
 
 ![distribution-site-rules.png](../images/distribution-site-rules.png)

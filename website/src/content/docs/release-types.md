@@ -4,7 +4,8 @@ description: "Let Bearcat pack your release files or upload existing archives."
 ---
 
 For managed releases, Bearcat packs your files. For unmanaged releases, you upload existing archives.
-Uploads, link checks, and reuploads work the same way for both.
+Uploads, link checks, and reuploads work the same way for both. Choose the type under
+**Releases > New release** or when creating a release template.
 
 | Type | Source | Who creates archives? |
 | --- | --- | --- |
@@ -13,7 +14,7 @@ Uploads, link checks, and reuploads work the same way for both.
 
 ## Managed Releases
 
-The release folder contains your raw files. Set the archive tool, output folder, part size, and optional
+The release folder contains the files Bearcat should pack, such as videos and NFOs. Set the archive tool, output folder, part size, and optional
 password in the archive configuration. Bearcat packs the files and uploads them to your chosen hosters.
 
 Bearcat reuses existing archives when possible. If they are missing locally, it downloads them from a

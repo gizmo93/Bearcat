@@ -34,8 +34,8 @@ In Docker, make it accessible through a bind mount and enter its path inside the
 
 The list shows free space and its required minimum, the number of stored archives, priority, and active status.
 If free space cannot be read, it shows **Unavailable**.
-Only current archives count as stored. Archives that were deleted, replaced by a re-import, or have
-missing files do not.
+Only current, complete archives count as stored. Bearcat excludes archives that were deleted,
+replaced by a re-import, or have missing files.
 
 ## Edit or delete a storage folder
 
@@ -52,7 +52,7 @@ Under [Auto cleanup](/Bearcat/advanced-configuration/#local-archives-after-reten
 Bearcat then moves archives once their retention period has passed.
 
 For each archive, Bearcat chooses an active, accessible folder with enough space for all archive
-files plus the required free space. The lowest priority takes precedence.
+files plus the required free space. The lowest **Priority** value takes precedence.
 At the same priority, the folder with the most free space wins.
 An archive always stays together in one subfolder named `<release name>.<archive config name>.<archive ID>`,
 so you can tell archives apart without Bearcat. Characters that are not allowed in folder names become `_`.
@@ -62,7 +62,7 @@ original archive files. It removes the original archive folder only if it is emp
 Archive files that are missing locally do not block the move. They stay missing until a reupload
 restores them.
 
-Under **Activity**, you can follow progress and see the destination. **Cancel move** removes the
+Under **Home**, you can follow progress and see the destination. **Cancel move** removes the
 files copied so far and keeps the archive at its original location.
 
 If no folder fits or copying fails, the archive stays at its original location.
@@ -81,8 +81,8 @@ how Bearcat uses it.
 reupload are written there too, so the storage folder must be writable.
 
 **On:** Bearcat copies only the archive files that need uploading into a temporary local working copy.
-The working copy is a subfolder with the archive's folder name inside the **Archive files base path**
-of the archive configuration. If that subfolder already contains other files, Bearcat uses
+The working copy is inside the **Archive files base path** set in the archive configuration.
+Its subfolder has the same name as the archive folder. If that subfolder already contains other files, Bearcat uses
 `<folder name>.<archive ID>` instead. Files that are still in a working copy from an earlier reupload
 are reused.
 
@@ -94,7 +94,7 @@ are reused.
   back to the storage folder and deletes the working copy. This runs regardless of the cleanup rules.
   Failed uploads do not delay it.
 
-Under **Activity**, **Copying into local working copies** shows the progress.
+Under **Home**, **Copying into local working copies** shows the progress.
 **Cancel copying** removes the files copied so far and the upload reads the archive from the storage folder.
 
 If copying fails, Bearcat removes the copied files and the upload reads the archive from the storage

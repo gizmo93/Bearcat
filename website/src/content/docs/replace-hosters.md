@@ -3,7 +3,7 @@ title: "Replace Hosters"
 description: "Move upload configurations and templates from one hoster to another account or pool."
 ---
 
-Open **Hosters** > **Replace hosters**. Choose the hoster, the accounts and pools to replace, and one
+Open **Registrations > Hosters** > **Replace hosters**. Choose the hoster, the accounts and pools to replace, and one
 replacement account or pool of the same kind (video or archive).
 
 ![Hoster, accounts and pools to replace](images/replace-hosters-source-selection.png)

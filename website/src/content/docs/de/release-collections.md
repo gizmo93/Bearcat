@@ -33,7 +33,8 @@ derselben Releasegruppe können hinzugefügt werden.
 
 ## Uploadslots
 
-Ein Uploadslot wendet dieselben Einstellungen auf jedes Release der Collection an. Wähle:
+Öffne die Collection und wechsle zum Tab **Uploadslots**. Ein Slot legt gemeinsame Uploadeinstellungen
+für die Releases der Collection fest. Wähle:
 
 - Einen Namen, etwa "Rapidgator passworded".
 - Den Hoster, auf den hochgeladen wird.

@@ -143,7 +143,7 @@ The service restarts automatically after a crash.
 
 ## Checking the logs
 
-The service logs to the Windows **Event Log**. Open the **Event Viewer**, go to **Windows Logs => Application**, and filter by the source **Bearcat**.
+The service logs to the Windows **Event Log**. Open the **Event Viewer**, go to **Windows Logs > Application**, and filter by the source **Bearcat**.
 
 ![Bearcat entries in Event Viewer](images/windows-event-viewer.png)
 
@@ -179,7 +179,7 @@ The service runs as `LocalSystem` by default. This account cannot access protect
 Mapped drives such as `Z:` are not visible to services. If your release data lives on a network share:
 
 1. Enter it as a **UNC path** (`\\server\share\releases`) during setup, not a mapped drive letter.
-2. Open `services.msc` => **Bearcat** => **Log On**, and set an account that has access to the share.
+2. Open `services.msc` > **Bearcat** > **Log On**, and set an account that has access to the share.
 
    ![Service login account](images/windows-service-user.png)
 

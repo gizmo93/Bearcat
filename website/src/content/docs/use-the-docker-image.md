@@ -58,6 +58,9 @@ Docker does not create a missing release folder. If the folder does not exist, t
 `BEARCAT_DATA_DIR` stores the database and encryption key in `bearcat-data` next to your Compose
 file by default. Keep this data folder on local storage. Release files can be on an NFS or SMB share.
 
+<details>
+<summary>Optional: pass Linux mount changes to the container</summary>
+
 The following settings apply only to Docker Engine running directly on Linux. With Docker Desktop
 on Windows, macOS, or Linux, keep the normal bind mount from the Compose file.
 
@@ -77,6 +80,8 @@ of the `${RELEASES_DIR}` entry. Keep the data folder entry unchanged.
     create_host_path: false
     propagation: rslave
 ```
+
+</details>
 
 ## 3. Start Bearcat
 

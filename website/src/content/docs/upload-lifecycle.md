@@ -26,7 +26,8 @@ flowchart TD
 
 ## 1. Release and upload configuration
 
-In an **upload configuration**, choose the archive configuration and upload target for a release:
+Open a release and go to **Uploads > Configuration**. Click **Add** to create an upload
+configuration, then choose its archive configuration and upload target:
 a single hoster registration or an [account pool](/Bearcat/account-pools/).
 You can also choose link crypter configurations.
 
@@ -40,7 +41,7 @@ and archive creation.
 ## 2. The first upload
 
 The **Initial upload cooldown** starts when the release is created.
-Set it under **Configurations** (default: `5` minutes).
+Set it under **System > Configurations > Initial uploads** (default: `5` minutes).
 
 Once the cooldown has passed and an upload configuration exists, Bearcat schedules the first upload
 on its next check. Set `0` minutes to skip the wait.
@@ -61,7 +62,8 @@ For each waiting upload, Bearcat prepares an archive:
 2. Restore missing local files from a configured [mirror hoster](/Bearcat/mirror-downloads/).
 3. If neither is possible, create a new archive from the release folder.
 
-An unreachable storage folder or archive files missing there count as missing files.
+If a storage folder is unreachable, the restore fails. Check the connection to the drive or share.
+See [Reuploads from storage folders](/Bearcat/archive-storage-folders/#reuploads).
 
 Bearcat can only repack [managed releases](/Bearcat/release-types/). Unmanaged releases need local
 archive files or an available mirror.
@@ -92,7 +94,7 @@ For reuploads, Bearcat may need to change the archive hashes or repack the files
 
 ### Cancel a running archive creation
 
-Cancel a running archive creation under **Activity > Archives**. This also works during
+Cancel a running archive creation in the **Archives** section on **Home**. This also works during
 MD5 calculation or hash changes to a reused archive.
 
 - **New archive:** Bearcat deletes the archive and its files.
@@ -129,7 +131,7 @@ An upload counts as a reupload if another upload of the same release had already
 
 ![Upload start order setting under Configurations > Upload concurrency](images/upload-start-order-setting.png)
 
-Click **Prioritize upload** next to an upload under **Activity > Uploads** to give it priority.
+On **Home**, click **Prioritize upload** next to an upload in the **Uploads** section to give it priority.
 On the release detail page, the same action is in the `...` menu under **Uploads > History**.
 You can prioritize uploads in the `Pending` or `Uploading` state. The change takes effect within seconds.
 Running file uploads are not interrupted. **Remove prioritization** returns the upload to the normal order.
@@ -228,7 +230,8 @@ Set [reupload overrides](/Bearcat/account-settings/#reupload-overrides-per-hoste
 
 ## 8. Manual reuploads
 
-Choose **Create manual reupload** in an entry's `...` menu under **Uploads > History**.
+Open the release and go to **Uploads > History**. Choose **Create manual reupload**
+from the affected upload's `...` menu.
 This is available for `Offline`, `PartiallyOnline`, `Canceled`, or `Failed` uploads.
 
 The same [replacement upload rules](#7-automatic-reuploads) apply.

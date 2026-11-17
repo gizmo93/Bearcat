@@ -19,8 +19,8 @@ part size until they are packed again.
 
 ## Skipped configurations
 
-If an upload configuration of an archive configuration targets a hoster whose file size limit is below
-the new part size, the archive configuration stays unchanged. The same applies to release templates.
+The new part size must fit every target hoster of an archive. If it exceeds any hoster's file size limit,
+Bearcat skips that archive configuration. This also applies to release templates.
 
 The preview lists each skipped configuration with the hoster, its limit and a link to the release or
 release template.

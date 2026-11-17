@@ -23,36 +23,6 @@ hero:
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-<span id="installing--running-bearcat" />
-
-## Get started
-
-Install Bearcat using one of the options below. Setup starts when you first open Bearcat.
-See [Your first upload](/Bearcat/post-installation/) for the steps.
-
-<CardGrid>
-	<LinkCard
-		title="Desktop app"
-		description="Run Bearcat on Windows, macOS with Apple Silicon, or Linux."
-		href="/Bearcat/use-the-desktop-launcher/"
-	/>
-	<LinkCard
-		title="Windows service"
-		description="Run Bearcat in the background, even when you are not logged in."
-		href="/Bearcat/use-the-windows-service/"
-	/>
-	<LinkCard
-		title="Docker container"
-		description="Run Bearcat on Linux, a NAS, or a server with Docker."
-		href="/Bearcat/use-the-docker-image/"
-	/>
-	<LinkCard
-		title="Your first upload"
-		description="Add a hoster account, create a template, and add a source."
-		href="/Bearcat/post-installation/"
-	/>
-</CardGrid>
-
 ## What is Bearcat?
 
 Bearcat runs on your desktop, NAS, or server. Use its web interface to manage releases,
@@ -66,30 +36,11 @@ You can:
 - Free local disk space and [restore archives from a mirror hoster](/Bearcat/mirror-downloads/) when a reupload needs them.
 - Look up release information and NFOs through xREL and SRRDB, movie or TV metadata through TMDB and TheTVDB and game metadata through Steam.
 - Read resolution, codecs, and audio and subtitle tracks from your video files with MediaInfo.
-- Upload cover images and use them alongside download links and NFOs in [BBCode templates](/Bearcat/forum-post-templates/).
+- Upload cover images and [create video screenshots or screenshot grids](/Bearcat/release-templates-and-automations/#screenshots). Use the images alongside download links and NFOs in [forum post templates](/Bearcat/forum-post-templates/).
 - [Prepare forum drafts](/Bearcat/posting-to-forums/) and submit them yourself, or use [posting rules to post automatically](/Bearcat/automatic-forum-posting/).
 - Find releases ready to post in the [post queue](/Bearcat/post-queue/).
 
 ![Bearcat web interface](images/gui.png)
-
-## Common questions
-
-### Can I use PostgreSQL?
-
-Yes. New installations use SQLite, but you can [set up PostgreSQL](/Bearcat/install-postgresql-for-desktop/) or use the [Docker option](/Bearcat/use-the-docker-image/#database). Existing PostgreSQL installations keep their settings.
-
-### Can I upload existing archives?
-
-Yes. Use an unmanaged release for existing archives, or a managed release to let Bearcat create them.
-See [release types](/Bearcat/release-types/).
-
-### Do I have to keep every archive on disk?
-
-No. Enable a hoster as a mirror so Bearcat can download archives when needed for a reupload.
-Delete local copies yourself or set a retention period for automatic cleanup.
-
-The hoster must support downloads through its API, and some hosters require a premium account.
-See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and setup instructions.
 
 <span id="which-hosters-and-linkcrypters-are-supported" />
 
@@ -153,6 +104,64 @@ See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and set
 The XenForo plugin should work with most XenForo forums without a captcha at login
 (tested with data-load.me and myboerse.bz). There are also dedicated plugins for data-load.me and boerse.cx.
 
+<span id="installing--running-bearcat" />
+
+## Get started
+
+Install Bearcat using one of the options below. Setup starts when you first open Bearcat.
+See [Your first upload](/Bearcat/post-installation/) for the steps.
+
+<CardGrid>
+	<LinkCard
+		title="Desktop app"
+		description="Run Bearcat on Windows, macOS with Apple Silicon, or Linux."
+		href="/Bearcat/use-the-desktop-launcher/"
+	/>
+	<LinkCard
+		title="Windows service"
+		description="Run Bearcat in the background, even when you are not logged in."
+		href="/Bearcat/use-the-windows-service/"
+	/>
+	<LinkCard
+		title="Docker container"
+		description="Run Bearcat on Linux, a NAS, or a server with Docker."
+		href="/Bearcat/use-the-docker-image/"
+	/>
+	<LinkCard
+		title="Your first upload"
+		description="Add a hoster account, create a template, and add a source."
+		href="/Bearcat/post-installation/"
+	/>
+</CardGrid>
+
+## After setup
+
+| You want to … | Guide |
+| --- | --- |
+| Upload new folders automatically | [Release templates and folder automations](/Bearcat/release-templates-and-automations/) |
+| Download releases from a server | [FTP/FTPS downloads](/Bearcat/remote-downloads/) |
+| Free disk space | [Mirror downloads](/Bearcat/mirror-downloads/) or [archive storage folders](/Bearcat/archive-storage-folders/) |
+| Post completed uploads to forums | [Forum drafts](/Bearcat/posting-to-forums/) or [automatic forum posting](/Bearcat/automatic-forum-posting/) |
+
+## Common questions
+
+### Can I use PostgreSQL?
+
+Yes. New installations use SQLite, but you can [set up PostgreSQL](/Bearcat/install-postgresql-for-desktop/) or use the [Docker option](/Bearcat/use-the-docker-image/#database). Existing PostgreSQL installations keep their settings.
+
+### Can I upload existing archives?
+
+Yes. Use an unmanaged release for existing archives, or a managed release to let Bearcat create them.
+See [release types](/Bearcat/release-types/).
+
+### Do I have to keep every archive on disk?
+
+No. Enable a hoster as a mirror so Bearcat can download archives when needed for a reupload.
+Delete local copies yourself or set a retention period for automatic cleanup.
+
+The hoster must support downloads through its API, and some hosters require a premium account.
+See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and setup instructions.
+
 ## Learn more
 
 <CardGrid>
@@ -173,7 +182,7 @@ The XenForo plugin should work with most XenForo forums without a captcha at log
 	/>
 	<LinkCard
 		title="Forum post templates"
-		description="Build forum posts with release details, cover images, NFOs, and download links."
+		description="Build forum posts with release details, cover images, screenshots, NFOs, and download links."
 		href="/Bearcat/forum-post-templates/"
 	/>
 	<LinkCard

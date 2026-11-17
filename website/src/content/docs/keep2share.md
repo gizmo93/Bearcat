@@ -11,7 +11,7 @@ This prevents further requests that could trigger an IP ban.
 
 ![Notification for a Keep2Share captcha challenge](images/keep2share-captcha-challenge.png)
 
-1. Open **Hoster registrations** and click the captcha button for your Keep2Share account.
+1. Open **Registrations > Hosters > Hoster registrations** and click the captcha button for your Keep2Share account.
 
    ![Captcha button on the hoster registration](images/keep2share-captcha-button.png)
 

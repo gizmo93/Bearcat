@@ -46,7 +46,8 @@ Führe dann `docker compose up -d` aus.
 
 ### Windows-Dienst
 
-Füge in `%ProgramData%\Bearcat\config.json` einen Abschnitt `Bearcat` hinzu:
+Füge `ApiKey` im Abschnitt `Bearcat` von `%ProgramData%\Bearcat\config.json` hinzu.
+Lege den Abschnitt an, falls er fehlt. Behalte die übrigen Einstellungen; die `...` im Beispiel sind Platzhalter:
 
 ```json
 {
@@ -57,7 +58,7 @@ Füge in `%ProgramData%\Bearcat\config.json` einen Abschnitt `Bearcat` hinzu:
 }
 ```
 
-Starte den Dienst mit `sc stop Bearcat` und `sc start Bearcat` neu.
+Starte den Dienst mit `sc.exe stop Bearcat` und `sc.exe start Bearcat` neu.
 
 `Bearcat.Cli.exe setup` und `Bearcat.Cli.exe set-db-password` behalten den Abschnitt bei. Siehe [Bearcat als Windows-Dienst ausführen](/Bearcat/de/use-the-windows-service/#speicherort-der-konfiguration).
 
@@ -85,6 +86,10 @@ der Bearcat erreichen kann, kann Releases, Uploads und Downloadlinks lesen.
 Die Desktopanwendung und der Windows-Dienst lauschen nur auf `127.0.0.1:17208`, das aufrufende Tool muss also auf demselben Rechner laufen. Docker veröffentlicht Port `8080`.
 
 ## Beispielablauf
+
+Die folgenden Befehle sind für eine Bash-Shell. Ersetze Adresse, API-Schlüssel und Beispiel-IDs
+(`3`, `42`, `1234`) durch die Werte deiner Installation. Die Release-ID erhältst du beim Erstellen,
+die Upload-ID beim Abfragen der Uploads.
 
 ```bash
 BEARCAT=http://localhost:8080

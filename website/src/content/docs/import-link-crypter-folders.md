@@ -10,11 +10,11 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 
 - **FileCrypt**: the API key needs the `LIST` permission to list your folders.
 - **Hide.cx**
-- **ToLink**
+- **ToLink**: a folder lists all links together. Bearcat groups them into one mirror per hoster domain.
 
 ## Steps
 
-1. Open **Crypters** > **Link crypter imports** and click **New import**.
+1. Open **Registrations > Crypters** > **Link crypter imports** and click **New import**.
 2. Select the crypter registration and the release template. The template defines the hosters, archive settings and link crypter settings of the new releases.
 3. Optional: select an **archive base folder for releases without local files**. Bearcat restores archives there from the imported mirrors when there is no local release folder.
 
@@ -109,7 +109,7 @@ See [Link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 ## After the import
 
 - New releases use the import's **primary language** for their release information. Existing releases keep their language.
-- Bearcat fetches release information (xrel, PreDB, NFO) after the import through the release information background task.
+- Bearcat fetches release information (xREL, PreDB, NFO) after the import through the release information background task.
 - Imported releases count as posted and do not appear in the [post queue](/Bearcat/post-queue/). This also applies to collections created from a season folder.
 
 ## Archives not found during the import

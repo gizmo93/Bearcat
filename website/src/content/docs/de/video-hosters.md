@@ -32,7 +32,7 @@ diese hoch. Fehlen die Mediendaten oder hat keine Datei einen Videostream, schl�
 
 ## Videouploadkonfiguration anlegen
 
-1. Öffne die Releasedetailseite und füge eine Uploadkonfiguration hinzu.
+1. Öffne das Release und klicke unter **Uploads > Konfiguration** auf **Hinzufügen**.
 2. Wähle unter **Uploadquelle** die Option **Videodatei**. Das Feld erscheint nur, wenn das Release die
    Voraussetzungen für Videouploads erfüllt.
 3. Wähle als **Uploadziel** einen Account oder einen [Accountpool](/Bearcat/de/account-pools/) eines Videohosters.

@@ -12,7 +12,7 @@ You can copy the result by hand or let [posting rules](/Bearcat/automatic-forum-
 
 ## Create a template
 
-1. Open **Forum post templates** and click **+** next to the search field.
+1. Open **Release settings > Forum post templates** and click **+** next to the search field.
 2. Choose the type: **Release** or **Release collection**. You can't change it later.
 3. Choose the output format. Use **BBCode** for forum posts. Only BBCode templates can be posted to forums.
 4. Enter a name, write the template and press **Ctrl+S** (**⌘S** on a Mac) to save.
@@ -184,7 +184,7 @@ Open a release or release collection and click **Render forum post** in the arro
   Alternatively, use the original name: `{{ imagelinks["ImgBB Cover"].full }}`. The link appears once the image is uploaded.
 - **Media data:** `release.main_video` and `release.media_files` come from the video files of managed
   releases. Bearcat reads them automatically for releases created from a release template. For other
-  releases, click **Extract media data** on the release.
+  releases, open **Release info** and choose **Extract media data** from the `...` menu.
 - **Upload names:** name your upload configurations the way they should appear in the post, for
   example `Rapidgator`. Then you can use `{{ upload.name }}` directly.
 - **Hoster names:** `upload.hoster_name` shows the hoster name of the latest upload, for example `Rapidgator`.

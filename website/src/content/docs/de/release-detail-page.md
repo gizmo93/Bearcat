@@ -37,13 +37,16 @@ Mit den Kopierbuttons kopierst du die Bildlinks.
 
 ![Tab Releaseinfo](../images/release-infos-tab.png)
 
-Siehe [Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
+Hier siehst und bearbeitest du Titel, Beschreibung, Cover, NFO und Mediendaten.
+Mit **Metadaten abrufen** suchst du erneut bei den eingerichteten Anbietern.
+Wie du Quellen einrichtest oder falsche Treffer korrigierst, steht unter
+[Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
 
 ## Archive
 
 ![Tab Archive](../images/archive-configurations-tab.png)
 
-Ein Managed Release braucht mindestens eine Archivkonfiguration. Die Packoptionen sind unter
+Um ein Managed Release als Archiv hochzuladen, füge hier eine Archivkonfiguration hinzu. Die Packoptionen sind unter
 [Archiv erstellen](/Bearcat/de/upload-lifecycle/#3-archiv-erstellen) beschrieben.
 
 Archive in einem [Speicherordner](/Bearcat/de/archive-storage-folders/) zeigen den Namen des Speicherordners

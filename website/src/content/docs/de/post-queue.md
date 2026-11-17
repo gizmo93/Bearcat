@@ -79,7 +79,7 @@ Mit **Öffnen** bei einem Eintrag startest du den Workflow direkt an dieser Stel
 
 ## Die Postwarteschlange deaktivieren
 
-Deaktiviere die Postwarteschlange unter **Konfigurationen**, um ihr Symbol in der Kopfzeile auszublenden und
+Öffne **System > Konfigurationen > Postwarteschlange** und deaktiviere die Postwarteschlange, um ihr Symbol in der Kopfzeile auszublenden und
 offene Einträge nicht mehr zu zählen. Die Seite der Warteschlange zeigt dann einen Hinweis statt der Listen.
 Du kannst sie wieder aktivieren, ohne Bearcat neu zu starten.
 

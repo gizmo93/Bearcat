@@ -15,9 +15,11 @@ Falls du den Webport geändert hast, verwende diesen Port.
 ## Einrichtung öffnen
 
 Nach der Installation öffnet sich die **Erste Einrichtung** einmalig beim ersten Aufruf der Startseite.
-Später findest du sie unter **System > Erste Einrichtung** oder über die Suche mit **Ctrl+K** oder **Cmd+K**.
+Später findest du sie unter **System > Erste Einrichtung**.
 
-Du kannst Schritte überspringen und alle Einstellungen später ändern.
+Du kannst Schritte überspringen und alle Einstellungen später ändern. Menüpfade wie
+**System > Erste Einrichtung** beziehen sich auf die Seitenleiste. Mit **Ctrl+K** oder **Cmd+K**
+kannst du auch direkt nach einer Seite suchen.
 
 ### Willkommen
 
@@ -26,13 +28,16 @@ Du kannst Bearcat auch [manuell einrichten](#manuell-einrichten).
 
 ### Arbeitsverzeichnisse
 
-Bearcat kann nur auf Ordner in seinen Arbeitsverzeichnissen zugreifen. Die Einrichtung zeigt für jedes
+Wähle deine Releaseordner innerhalb der konfigurierten Arbeitsverzeichnisse. Die Einrichtung zeigt für jedes
 Arbeitsverzeichnis den Status **OK**, **Fehlt** oder **Nicht beschreibbar**. Für **Weiter** muss mindestens
 eines vorhanden und beschreibbar sein.
 
 - **Docker:** Der Hostordner `RELEASES_DIR` aus deiner Datei `.env` erscheint als `/mnt/data/releases`.
-- **Desktopanwendung oder Windows-Dienst:** Lege die Arbeitsverzeichnisse in den Einstellungen der Desktopanwendung
-  oder in `appsettings.user.json` fest, starte Bearcat neu und klicke auf **Erneut prüfen**.
+- **Desktopanwendung:** Ändere **Working directories** in den Einstellungen und starte Bearcat neu.
+- **Windows-Dienst:** Führe `Bearcat.Cli.exe setup` erneut als Administrator aus und ändere die Arbeitsverzeichnisse.
+  Siehe [Setup später ändern](/Bearcat/de/use-the-windows-service/#setup-später-ändern).
+
+Klicke danach in der Weboberfläche auf **Erneut prüfen**.
 
 In der Einrichtung lassen sich die Arbeitsverzeichnisse nicht ändern.
 
@@ -181,9 +186,9 @@ anzuzeigen, aktiviere **Assistent auf der Aktivitätsseite anzeigen** unter **Ko
 
 ## Manuell einrichten
 
-1. **Hoster:** Öffne **Hosterregistrierungen**, klicke auf **Neuer Hoster**, gib deine Zugangsdaten ein,
+1. **Hoster:** Öffne **Registrierungen > Hoster > Hosterregistrierungen**, klicke auf **Neuer Hoster**, gib deine Zugangsdaten ein,
    speichere und klicke auf **Login testen**.
-2. **Releasegruppe:** Öffne **Releasegruppen**, klicke auf **Neue Releasegruppe** und speichere. Lass
+2. **Releasegruppe:** Öffne **Releaseeinstellungen > Releasegruppen**, klicke auf **Neue Releasegruppe** und speichere. Lass
    automatische Reuploads für einen ersten Test deaktiviert.
 3. **Release:** Lege deine Dateien in einen Unterordner eines Arbeitsverzeichnisses, zum Beispiel `releases/My.First.Upload/`.
    Öffne **Releases**, klicke auf **Neues Release**, wähle **Managed**, den Ordner und die Gruppe und klicke

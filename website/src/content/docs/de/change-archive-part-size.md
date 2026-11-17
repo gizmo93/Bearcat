@@ -19,8 +19,8 @@ behalten ihre Partgrösse, bis sie neu gepackt werden.
 
 ## Übersprungene Konfigurationen
 
-Zielt eine Uploadkonfiguration einer Archivkonfiguration auf einen Hoster, dessen Dateigrössenlimit unter
-der neuen Partgrösse liegt, bleibt die Archivkonfiguration unverändert. Dasselbe gilt für Releasetemplates.
+Die neue Partgrösse muss bei allen Zielhostern eines Archivs erlaubt sein. Überschreitet sie das
+Dateigrössenlimit eines Hosters, überspringt Bearcat diese Archivkonfiguration. Das gilt auch für Releasetemplates.
 
 Die Vorschau listet jede übersprungene Konfiguration mit Hoster, Limit und einem Link zum Release oder
 Releasetemplate.

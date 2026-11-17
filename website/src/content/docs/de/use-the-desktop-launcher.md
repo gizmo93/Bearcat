@@ -49,7 +49,14 @@ Lade das Desktoppaket für deinen Rechner von [GitHub Releases](https://github.c
 
 - **Windows:** Entpacke das Paket `Bearcat.Desktop-win-...zip` und öffne `Bearcat.Desktop.exe`. Lass alle entpackten Dateien im selben Ordner.
 - **macOS (Apple Silicon):** Entpacke `Bearcat.Desktop-macos-arm64.zip`, verschiebe **Bearcat Desktop.app** in den Ordner **Programme** und öffne die App.
-- **Linux (x64):** Öffne `Bearcat.Desktop-linux-x64.rpm` (Fedora, openSUSE) oder `Bearcat.Desktop-linux-x64.deb` (Ubuntu, Debian), installiere das Paket und starte **Bearcat Desktop** aus dem App-Menü. Im Terminal: `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` oder `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. Unter anderen Distributionen entpackst du `Bearcat.Desktop-linux-x64.tar.gz` und startest `Bearcat.Desktop` aus einem Terminal.
+- **Linux (x64):** Installiere das Paket für deine Distribution und starte **Bearcat Desktop** aus dem Appmenü:
+
+  | Distribution | Paket |
+  | --- | --- |
+  | Ubuntu, Debian | `Bearcat.Desktop-linux-x64.deb`, im Terminal mit `sudo apt install ./Bearcat.Desktop-linux-x64.deb` |
+  | Fedora | `Bearcat.Desktop-linux-x64.rpm`, im Terminal mit `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` |
+  | openSUSE | Öffne und installiere `Bearcat.Desktop-linux-x64.rpm` mit der Paketverwaltung. |
+  | Andere | Entpacke `Bearcat.Desktop-linux-x64.tar.gz` und starte `Bearcat.Desktop` aus einem Terminal. |
 
 <details>
 <summary>macOS meldet, die App sei beschädigt, oder blockiert das Öffnen</summary>

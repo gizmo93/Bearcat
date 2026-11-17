@@ -4,7 +4,8 @@ description: "Releases von Bearcat packen lassen oder vorhandene Archive hochlad
 ---
 
 Bei Managed Releases packt Bearcat deine Dateien. Bei Unmanaged Releases lädst du vorhandene Archive hoch.
-Upload, Linkprüfung und Reuploads funktionieren bei beiden gleich.
+Upload, Linkprüfung und Reuploads funktionieren bei beiden gleich. Den Typ wählst du unter
+**Releases > Neues Release** oder beim Erstellen eines Releasetemplates.
 
 | Typ | Quelle | Wer erstellt die Archive? |
 | --- | --- | --- |
@@ -13,7 +14,7 @@ Upload, Linkprüfung und Reuploads funktionieren bei beiden gleich.
 
 ## Managed Releases
 
-Der Releaseordner enthält deine Rohdateien. In der Archivkonfiguration legst du Archivformat,
+Der Releaseordner enthält die Dateien, die Bearcat packen soll, zum Beispiel Videos und NFOs. In der Archivkonfiguration legst du Archivformat,
 Ausgabeordner, Partgrösse und optional ein Passwort fest. Bearcat packt die Dateien und lädt sie zu den gewählten Hostern hoch.
 
 Bearcat verwendet vorhandene Archive wenn möglich wieder. Fehlen sie lokal, lädt es sie von einem

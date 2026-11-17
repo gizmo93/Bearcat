@@ -8,15 +8,16 @@ Use it to create more releases manually or automatically from new folders.
 
 ## Setting up release templates
 
-A release template contains the release group and settings for archives, uploads, images, and link crypters.
+A release template stores the release group and settings for archives, uploads, images, and link crypters
+for new releases. You can create one in three ways:
+
+- Open **Release settings > Release templates**, click **New release template**, and add the configurations.
+- Open a configured release and choose **Save as template** from its action menu.
+- Choose **Duplicate** from the action menu of a template to create a variant of it.
 
 Use **Create container for** in the link crypter configuration to give each hoster its own container
 or group all hosters of a release as mirrors in one container.
 See [link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containers).
-
-- Open **Release templates**, click **New release template**, and add the configurations.
-- Open a configured release and choose **Save as template** from its action menu.
-- Choose **Duplicate** from the action menu of a template to create a variant of it.
 
 ![Release templates](images/release-templates-page.png)
 
@@ -58,7 +59,7 @@ The **Images** tab then shows the images from the image hoster.
 
 ## Setting up folder automations
 
-1. Create a release template, then open **Folder automations** and click **New folder automation**.
+1. Create a release template, then open **Automation > Folder automations** and click **New folder automation**.
 2. Set **Release base path** to the folder Bearcat should scan. Only direct subfolders are checked.
 3. Optionally set a **Folder name pattern**, such as `*1080p*` or `*.GERMAN.*`. Matching ignores case
    and supports wildcards, but not regular expressions. Leave it empty to include all direct subfolders.
@@ -112,7 +113,7 @@ and extracts every RAR and 7z archive in the folder and its subfolders. After a 
 it deletes the archive volumes and `.sfv` files that only list those volumes. The extraction rules are
 the same as for [remote downloads](/Bearcat/remote-downloads/#extract-archives-before-release-creation).
 
-Running checks and extractions appear on the **Activity** page under **Folder automations**.
+Running checks and extractions appear on the **Home** page under **Folder automations**.
 
 If verification or extraction fails, Bearcat keeps the files and creates no release. Find the error
 under **Failed extractions** on **Folder automations**. Fix the cause, then click **Retry** to process
