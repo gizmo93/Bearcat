@@ -99,25 +99,29 @@ Existing installations with automatic archive deletion enabled keep the **Delete
 
 #### Maximum size of local archives
 
-**Maximum size of local archives** is a soft limit in GB for all local archives (default: `0`, off).
-It works independently of the retention period.
+**Maximum size of local archives** sets how much disk space local archives can use in total (in GB).
+The limit is off by default (`0`) and applies regardless of the retention period.
 
-Before Bearcat writes a new local archive (packing, restoring from a mirror, or copying a
-[local working copy](/Bearcat/archive-storage-folders/#reuploads)), it deletes local archives until the new archive fits.
-Archives whose archive configuration had its last upload longest ago go first.
+Before writing a local archive, Bearcat deletes other local archives as needed to make room within the limit.
+This applies when packing, restoring from a mirror, or creating a
+[local working copy](/Bearcat/archive-storage-folders/#reuploads).
+Bearcat sorts archives by their archive configuration's last upload, oldest first.
 
-Bearcat only deletes archives that the **Delete** action could delete: restorable from a fully online mirror or
-repackable from a managed release's folder, no waiting, pending, or running upload of the archive configuration,
-and not excluded from auto cleanup. Archives in storage folders are never deleted and do not count toward the limit.
+The same conditions apply as for the **Delete** action:
 
-If not enough space can be freed, Bearcat writes the archive anyway and sends a notification.
-The limit has no effect while **Local archives after retention** is set to **Move to storage folder**.
+- The archive can be restored from a fully online mirror or repacked from a managed release's folder.
+- No upload of the archive configuration is waiting, pending, or running.
+- The release is not excluded from auto cleanup.
 
-Leave free disk space above the limit. Bearcat checks the limit only before writing an archive.
+Archives in storage folders are kept and do not count toward the total.
+If Bearcat cannot free enough space, it writes the archive anyway and notifies you.
+The limit does not apply when **Local archives after retention** is set to **Move to storage folder**.
+
+Allow for extra free disk space: Bearcat only checks the limit before writing and may exceed it.
 
 #### Exclude single releases
 
-Enable **Exclude from auto cleanup** when creating or editing a release to skip both rules and the size limit.
+Enable **Exclude from auto cleanup** when creating or editing a release to exempt it from both cleanup rules and the size limit.
 
 ![exclude-from-auto-cleanup.png](images/exclude-from-auto-cleanup.png)
 
