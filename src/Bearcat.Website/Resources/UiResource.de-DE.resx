@@ -1146,7 +1146,7 @@
   <data name="NotificationKind.ReleaseCreationSkippedBecauseNameExists.Description" xml:space="preserve"><value>Ein von einer Ordnerautomatisierung oder Remotequelle gefundener Ordner wurde übersprungen, weil bereits ein Release mit demselben Namen existiert. Es wurde kein Release erstellt.</value></data>
   <data name="NotificationKind.LinkCrypterImportFailed" xml:space="preserve"><value>Linkcrypterimport fehlgeschlagen</value></data><data name="NotificationKind.LinkCrypterImportFailed.Description" xml:space="preserve"><value>Ein Linkcrypterimport ist fehlgeschlagen oder einige seiner Container konnten nicht importiert werden.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatischer Forenpost erstellt</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>Ein Release wurde automatisch in einem Forum gepostet.</value></data>
-  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Das automatische Posten in einem Forum wurde nach 5 Fehlversuchen aufgegeben.</value></data>
+  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Bearcat hat das automatische Posten in einem Forum nach 5 Fehlversuchen gestoppt.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Schweregrad</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Benachrichtigungsart</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>Alle Benachrichtigungsarten</value></data>
@@ -1257,13 +1257,13 @@
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} deaktiviert</value></data>
   <data name="AutoPostUpdatePost" xml:space="preserve"><value>Post aktualisieren</value></data>
   <data name="MinimumSecondsBetweenPosts" xml:space="preserve"><value>Mindestabstand zwischen Posts in Sekunden</value></data>
-  <data name="MinimumSecondsBetweenPostsHelp" xml:space="preserve"><value>Das automatische Posten wartet mindestens so lange zwischen zwei Posts oder Aktualisierungen in diesem Forum. Posten aus dem Dialog wartet nicht.</value></data>
+  <data name="MinimumSecondsBetweenPostsHelp" xml:space="preserve"><value>Bearcat wartet mindestens so lange zwischen automatischen Posts oder Aktualisierungen in diesem Forum, auch nach Fehlversuchen. Wenn du selbst auf Posten oder Post aktualisieren klickst, entfällt die Wartezeit.</value></data>
   <data name="MinimumSecondsBetweenPostsSaved" xml:space="preserve"><value>Mindestabstand zwischen Posts für {0} gespeichert</value></data>
-  <data name="AutoPostPausedAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten pausiert bis {0} nach {1} Fehlversuchen: {2}</value></data>
-  <data name="AutoPostGaveUpAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten nach {0} Fehlversuchen aufgegeben: {1}</value></data>
+  <data name="AutoPostPausedAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten nach {1} Fehlversuchen bis {0} pausiert. Letzter Fehler: {2}</value></data>
+  <data name="AutoPostGaveUpAfterFailedAttempts" xml:space="preserve"><value>Automatisches Posten nach {0} Fehlversuchen gestoppt. Letzter Fehler: {1}</value></data>
   <data name="AutoPostWaitingForThreadSelection" xml:space="preserve"><value>Mehrere passende Themen gefunden. Klicke auf Posten, um eines auszuwählen.</value></data>
-  <data name="AutoPostChooseThread" xml:space="preserve"><value>Mehrere passende Themen gefunden. Wähle, wohin gepostet wird:</value></data>
-  <data name="AutoPostPostToChosenThread" xml:space="preserve"><value>Auswahl posten</value></data>
+  <data name="AutoPostChooseThread" xml:space="preserve"><value>Mehrere passende Themen gefunden. Wähle ein bestehendes Thema oder erstelle ein neues:</value></data>
+  <data name="AutoPostPostToChosenThread" xml:space="preserve"><value>Im gewählten Thema posten</value></data>
   <data name="AutoPostThreadSelectionNeeded" xml:space="preserve"><value>Wähle ein Thema für {0}</value></data>
   <data name="AutoPostContentOutdated" xml:space="preserve"><value>Postinhalt ist veraltet</value></data>
   <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} aktualisiert</value></data>
@@ -1277,7 +1277,7 @@
   <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Forumspost aktualisiert</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>Ein vorhandener Forumspost wurde mit frisch gerendertem Inhalt aktualisiert.</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Forumsposts fehlgeschlagen</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Das automatische Aktualisieren eines Forumsposts wurde nach 5 Fehlversuchen aufgegeben.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Bearcat hat die automatische Aktualisierung eines Forenposts nach 5 Fehlversuchen gestoppt.</value></data>
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archivwiederherstellung fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>
@@ -2283,14 +2283,14 @@
   <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen wechseln von {2} MB auf {3} MB.</value></data>
   <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen geändert. {2} Archivkonfigurationen und {3} Archivkonfigurationen in Vorlagen übersprungen.</value></data>
   <data name="ForumServiceRestrictions" xml:space="preserve"><value>Hoster, Linkcrypter und Bildhoster</value></data>
-  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Erforderlich: Mindestens einer der gewählten muss im Post bleiben. Verboten: wird aus dem Post entfernt. Automatisches Posten überspringt dieses Forum, wenn von einer Art Einträge vorhanden waren und keiner übrig bleibt oder wenn kein erforderlicher vorhanden ist. Leere Listen schränken nichts ein.</value></data>
+  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Für Hoster, Linkcrypter und Bildhoster gilt jeweils: Ist eine Liste unter Erforderlich ausgefüllt, muss mindestens einer der gewählten Anbieter im Post vorkommen. Unter Verboten gewählte Anbieter entfernt Bearcat aus dem Post. Ist diese Anforderung nicht erfüllt oder wurden alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat das Forum beim automatischen Posten. Leere Listen schränken die Auswahl nicht ein.</value></data>
   <data name="RequiredFileHosters" xml:space="preserve"><value>Erforderliche Hoster</value></data>
   <data name="ForbiddenFileHosters" xml:space="preserve"><value>Verbotene Hoster</value></data>
   <data name="RequiredLinkCrypters" xml:space="preserve"><value>Erforderliche Linkcrypter</value></data>
   <data name="ForbiddenLinkCrypters" xml:space="preserve"><value>Verbotene Linkcrypter</value></data>
   <data name="RequiredImageHosters" xml:space="preserve"><value>Erforderliche Bildhoster</value></data>
   <data name="ForbiddenImageHosters" xml:space="preserve"><value>Verbotene Bildhoster</value></data>
-  <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Einstellungen für Hoster und Linkcrypter für {0} gespeichert</value></data>
-  <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>Dieser Post erfüllt die Einstellungen dieses Forums für Hoster und Linkcrypter nicht. Automatisches Posten würde ihn überspringen.</value></data>
-  <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Übersprungen, weil die Einstellungen dieses Forums für Hoster und Linkcrypter nicht erfüllt sind: {0}</value></data>
+  <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Hosterregeln für {0} gespeichert</value></data>
+  <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>Dieser Post erfüllt die Hosterregeln des Forums nicht. Bearcat würde ihn beim automatischen Posten überspringen.</value></data>
+  <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Wegen der Hosterregeln dieses Forums übersprungen: {0}</value></data>
 </root>

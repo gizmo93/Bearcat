@@ -39,29 +39,31 @@ Das Intervall änderst du unter [Hintergrundaufgaben](/Bearcat/de/advanced-confi
 nach Themen sucht und neue Themen benennt. Bei Collections verwendet es den Collectionnamen.
 Schalte die Einstellung aus, um die Punkte bei der Suche und in neuen Themennamen zu behalten.
 
-**Mindestabstand zwischen Posts in Sekunden** ist standardmässig 30. Die Hintergrundaufgabe wartet mindestens so lange
-zwischen zwei Posts oder Aktualisierungen im selben Forum, auch nach Fehlversuchen. Posten aus der Postwarteschlange wartet nicht.
+**Mindestabstand zwischen Posts in Sekunden** steht standardmässig auf 30. Die Hintergrundaufgabe wartet mindestens so lange
+zwischen zwei Posts oder Aktualisierungen im selben Forum, auch nach Fehlversuchen. Wenn du selbst auf **Posten** oder **Post aktualisieren** klickst, entfällt die Wartezeit.
 
 ## Hoster, Linkcrypter und Bildhoster
 
-Unter den Einstellungen pro Forum wählst du erforderliche und verbotene Hoster, Linkcrypter und Bildhoster für das Forum.
-Sie gelten für jeden Post in dieses Forum, automatisch und manuell.
+Auf der Seite **Postingregeln** legst du unter den Einstellungen pro Forum fest, welche Hoster, Linkcrypter und Bildhoster
+im Post vorkommen dürfen. Diese Hosterregeln gelten für automatische Posts und manuelle Entwürfe.
 
-- **Erforderlich**: mindestens einer der gewählten Typen muss im Post sein.
-- **Verboten**: Bearcat entfernt diese Uploads, Container und Bilder aus dem Post.
-  Blockiert wird der Post nur, wenn es von dieser Art vorher Einträge gab und keiner übrig bleibt.
+Für jede der drei Kategorien gibt es zwei Listen:
 
-Leere Listen schränken nichts ein.
+- **Erforderlich**: Der Post muss mindestens einen der gewählten Anbieter enthalten.
+- **Verboten**: Bearcat entfernt Uploads, Container und Bilder dieser Anbieter aus dem Post.
 
-Bearcat prüft ein Release oder eine Collection als Ganzes: alle Uploads, Uploadslots und enthaltenen Releases zusammen.
-Container mit mehreren Hostern (alle Hoster eines Releases, Uploadslots von Collections) werden nur nach den Linkcrypterlisten gefiltert.
-Ein verbotener Hoster in einem solchen Container wird ignoriert.
+Eine leere Liste schränkt die Auswahl nicht ein. Ist eine Anforderung unter **Erforderlich** nicht erfüllt oder wurden
+alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat das Forum beim automatischen Posten.
 
-Vorlagen, die `imagelinks.<config>` direkt verwenden, liefern einen leeren Wert, wenn dieser Bildhoster gefiltert wird.
+Bearcat prüft alle Uploads, Uploadslots und enthaltenen Releases zusammen.
+Container mit mehreren Hostern, etwa für alle Hoster eines Releases oder für Uploadslots einer Collection,
+prüft Bearcat nur anhand der Linkcrypterlisten. Verbotene Hoster innerhalb solcher Container werden nicht herausgefiltert.
+
+Die Vorlagenvariable `imagelinks.<config>` ist leer, wenn der zugehörige Bildhoster verboten ist.
 Prüfe den Wert mit `if` oder verwende für dieses Forum eine eigene Vorlage.
 
-Erfüllt der Post diese Einstellungen nicht, überspringt das automatische Posten das Forum ohne Benachrichtigung.
-**Posten** in der Postwarteschlange zeigt den Grund an. Ein [manueller Forenentwurf](/Bearcat/de/posting-to-forums/) zeigt ihn als Warnung, posten kannst du trotzdem.
+Für übersprungene Posts gibt es keine Benachrichtigung. Klicke in der Postwarteschlange auf **Posten**, um den Grund zu sehen.
+Bei einem [manuellen Forenentwurf](/Bearcat/de/posting-to-forums/) erscheint eine Warnung. Du kannst den Entwurf trotzdem posten.
 
 ## Regel hinzufügen
 
@@ -230,37 +232,42 @@ Der Eintrag muss mit einer Verteilungsseite verknüpft sein; auch von Hand best�
 
 ## Bestehendes Thema finden
 
-Mit *Auf bestehendes Thema antworten, sonst neues Thema* durchsucht Bearcat das Unterforum und vergleicht die
-Thementitel mit dem Namen. Präfixe, Gross- und Kleinschreibung sowie Satzzeichen ignoriert es.
+Im Postingmodus *Auf bestehendes Thema antworten, sonst neues Thema* durchsucht Bearcat das Unterforum und vergleicht die
+Thementitel mit dem Release- oder Collectionnamen. Dabei ignoriert Bearcat Themenpräfixe, Gross- und Kleinschreibung sowie Satzzeichen.
 
-- Ein Thema mit genau gleichem Titel gewinnt.
-- Sonst passt ein Thema, wenn sein Titel alle Wörter des Namens in derselben Reihenfolge enthält.
+- Themen mit genau übereinstimmendem Titel haben Vorrang.
+- Gibt es keine genaue Übereinstimmung, sucht Bearcat nach Titeln, die alle Wörter des Namens in derselben Reihenfolge enthalten.
 - Kein Treffer: Bearcat erstellt ein neues Thema. Ein Treffer: Bearcat antwortet darin.
-- Mehrere Treffer: Bearcat postet nicht und erzeugt eine Benachrichtigung. Klicke im Abschnitt
-  **Automatisches Posten** auf **Posten** und wähle ein Thema oder ein neues Thema.
+- Mehrere Treffer: Bearcat wartet auf deine Auswahl und benachrichtigt dich einmal.
+  Klicke im Abschnitt **Automatisches Posten** auf **Posten**. Wähle ein bestehendes Thema oder erstelle ein neues.
 
 ## Fehlgeschlagene automatische Posts
 
-Schlägt ein automatischer Post oder eine Aktualisierung in einem Forum fehl, pausiert die Hintergrundaufgabe dieses Forum für das Release oder die Collection:
+Schlägt ein automatischer Post oder eine Aktualisierung fehl, wartet Bearcat vor dem nächsten Versuch.
+Die Wartezeit gilt nur für dieses Release oder diese Collection im betroffenen Forum:
 
-| Fehlversuche | Nächster Versuch nach |
+| Fehlversuche | Wartezeit bis zum nächsten Versuch |
 | --- | --- |
 | 1 | 15 Minuten |
 | 2 | 1 Stunde |
 | 3 | 4 Stunden |
 | 4 | 12 Stunden |
-| 5 | Aufgegeben |
+| 5 | Kein weiterer automatischer Versuch |
 
-Posts und Aktualisierungen teilen sich den Zähler. Der Abschnitt **Automatisches Posten** zeigt die Pause oder das Aufgeben mit dem letzten Fehler.
-**Posten** oder **Post aktualisieren** versucht es sofort erneut. Ein erfolgreicher Post oder eine erfolgreiche Aktualisierung setzt den Zähler zurück, ein Fehlschlag ändert ihn nicht.
+Bearcat zählt Fehlversuche beim Posten und Aktualisieren zusammen. Unter **Automatisches Posten** siehst du den letzten Fehler
+und ob Bearcat auf den nächsten Versuch wartet oder das automatische Posten gestoppt hat.
+
+Mit **Posten** oder **Post aktualisieren** kannst du es sofort erneut versuchen.
+Gelingt der manuelle Versuch, setzt Bearcat den Zähler zurück. Schlägt er fehl, bleibt der Zähler unverändert.
 
 ## Benachrichtigungen
 
-Bearcat meldet erfolgreiche Posts und Aktualisierungen. Ein fehlschlagender automatischer Post oder eine fehlschlagende Aktualisierung
-erzeugt eine Benachrichtigung, wenn Bearcat nach 5 Fehlversuchen aufgibt. Frühere Fehlschläge stehen nur im Log.
-Mehrere passende Themen erzeugen ebenfalls eine Benachrichtigung.
-Die Benachrichtigungen für Posts und Aktualisierungen kannst du separat deaktivieren.
-Posts, die wegen der Einstellungen für Hoster und Linkcrypter übersprungen werden, erzeugen keine Benachrichtigung.
+Bearcat benachrichtigt dich nach erfolgreichen Posts und Aktualisierungen.
+Bei automatischen Fehlversuchen erhältst du erst nach dem fünften eine Benachrichtigung. Frühere Fehlschläge stehen nur im Log.
+Auch wenn du zwischen mehreren passenden Themen wählen musst, benachrichtigt dich Bearcat einmal.
+
+Benachrichtigungen für Posts und Aktualisierungen kannst du separat deaktivieren.
+Für Posts, die Bearcat wegen der Hosterregeln überspringt, gibt es keine Benachrichtigung.
 
 ## Veröffentlichungsorte und Duplikate
 
