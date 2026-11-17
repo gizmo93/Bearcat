@@ -1,4 +1,5 @@
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Security;
@@ -10,6 +11,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -30,6 +32,7 @@ public class ArchiveRestoreService(
     MirrorFileSizeService mirrorFileSizeService,
     UploadCancellationService uploadCancellationService,
     ArchiveFileCopyService archiveFileCopyService,
+    LocalArchiveSizeLimitService localArchiveSizeLimitService,
     ILogger<ArchiveRestoreService> logger
 )
 {
@@ -326,11 +329,42 @@ public class ArchiveRestoreService(
             return;
         }
 
+        if (archive.ArchiveStorageFolderId is null)
+        {
+            await DeleteOldestLocalArchivesToFitRestoreAsync(
+                archive: archive,
+                archiveFilesToRestore: archiveFilesToRestore,
+                cancellationToken: cancellationToken
+            );
+        }
+
         await RestoreFromMirrorsAsync(
             archive: archive,
             neededArchiveFiles: archiveFilesToRestore,
             plan: plan,
             waitingUploads: waitingUploads,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task DeleteOldestLocalArchivesToFitRestoreAsync(
+        Archive archive,
+        IReadOnlyList<ArchiveFile> archiveFilesToRestore,
+        CancellationToken cancellationToken
+    )
+    {
+        var partSizeUnit = configurationProvider.GetValue<
+            ArchiveCreationConfiguration,
+            ArchivePartSizeUnit
+        >(c => c.PartSizeUnit);
+
+        var archiveFileSizeBytes = ArchivePartSizeConversion.ConvertPartSizeToBytes(
+            partSize: archive.ArchiveFileSizeMb,
+            partSizeUnit: partSizeUnit
+        );
+
+        await localArchiveSizeLimitService.DeleteOldestArchivesToFitAsync(
+            requiredBytes: archiveFilesToRestore.Count * archiveFileSizeBytes,
             cancellationToken: cancellationToken
         );
     }

@@ -4,15 +4,18 @@ using System.Text;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
@@ -118,6 +121,16 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             progressTracker
         );
 
+        var localArchiveSizeLimitService = new LocalArchiveSizeLimitService(
+            new ArchiveCleanupRepository(DbContext),
+            Mock.Of<IApplicationConfigurationProvider>(),
+            fileSystemService,
+            new MirrorCoverageEvaluator(Mock.Of<IHosterFactory>()),
+            new LocalArchiveDeleter(fileSystemService),
+            notificationService,
+            Mock.Of<ILogger<LocalArchiveSizeLimitService>>()
+        );
+
         return new ArchiveCreationService(
             repository,
             Mock.Of<ILogger<ArchiveCreationService>>(),
@@ -158,6 +171,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                         Mock.Of<ILogger<ArchiveFileCopyService>>()
                     ),
                     cancellationRegistry,
+                    localArchiveSizeLimitService,
                     Mock.Of<ILogger<ArchiveLocalWorkingCopyService>>()
                 ),
                 archiveFileHashService,
@@ -176,7 +190,8 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                 progressTracker,
                 new FolderSizeProgressReporter()
             ),
-            archiveFileHashService
+            archiveFileHashService,
+            localArchiveSizeLimitService
         );
     }
 
@@ -3420,6 +3435,9 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         fileSystemServiceMock
             .Setup(f => f.GetFoldersInPath(It.IsAny<string>()))
             .Returns((string path) => realFileSystemService.GetFoldersInPath(path));
+        fileSystemServiceMock
+            .Setup(f => f.GetFolderFileCountAndSize(It.IsAny<string>()))
+            .Returns((string path) => realFileSystemService.GetFolderFileCountAndSize(path));
         fileSystemServiceMock
             .Setup(f => f.DeleteFileIfExists(It.IsAny<string>()))
             .Callback((string filePath) => realFileSystemService.DeleteFileIfExists(filePath));

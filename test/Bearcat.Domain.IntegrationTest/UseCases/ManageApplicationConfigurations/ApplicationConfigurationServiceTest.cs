@@ -80,6 +80,7 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
                 "DeleteReleaseFolderOnConversion",
                 "ArchiveRetentionAction",
                 "ArchiveRetentionDays",
+                "MaximumLocalArchiveSizeGb",
             ]);
     }
 

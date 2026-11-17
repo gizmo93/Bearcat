@@ -76,6 +76,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ArchiveCopyIntoLocalWorkingCopyFailed { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.LocalArchiveSizeLimitExceeded",
+        "NotificationKind.LocalArchiveSizeLimitExceeded.Description"
+    )]
+    public bool LocalArchiveSizeLimitExceeded { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.InitialUploadCreated",
         "NotificationKind.InitialUploadCreated.Description"
     )]

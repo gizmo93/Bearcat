@@ -97,9 +97,27 @@ Archives in storage folders are never deleted automatically.
 
 Existing installations with automatic archive deletion enabled keep the **Delete** action after updating.
 
+#### Maximum size of local archives
+
+**Maximum size of local archives** is a soft limit in GB for all local archives (default: `0`, off).
+It works independently of the retention period.
+
+Before Bearcat writes a new local archive (packing, restoring from a mirror, or copying a
+[local working copy](/Bearcat/archive-storage-folders/#reuploads)), it deletes local archives until the new archive fits.
+Archives whose archive configuration had its last upload longest ago go first.
+
+Bearcat only deletes archives that the **Delete** action could delete: restorable from a fully online mirror or
+repackable from a managed release's folder, no waiting, pending, or running upload of the archive configuration,
+and not excluded from auto cleanup. Archives in storage folders are never deleted and do not count toward the limit.
+
+If not enough space can be freed, Bearcat writes the archive anyway and sends a notification.
+The limit has no effect while **Local archives after retention** is set to **Move to storage folder**.
+
+Leave free disk space above the limit. Bearcat checks the limit only before writing an archive.
+
 #### Exclude single releases
 
-Enable **Exclude from auto cleanup** when creating or editing a release to skip both rules.
+Enable **Exclude from auto cleanup** when creating or editing a release to skip both rules and the size limit.
 
 ![exclude-from-auto-cleanup.png](images/exclude-from-auto-cleanup.png)
 

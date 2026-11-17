@@ -237,6 +237,121 @@ public class ArchiveCleanupRepositoryTest(DatabaseProvider databaseProvider)
             .UploadedFiles.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task GetDeletableLocalArchivesOrderedByLastUploadOfArchiveConfigAsync_SeveralArchives_ReturnsArchivesOrderedByLastUploadThenId()
+    {
+        // Arrange
+        var newestArchive = await AddArchiveAsync("Newest", uploadedAt: Cutoff.AddDays(2));
+        var oldestArchive = await AddArchiveAsync("Oldest", uploadedAt: Cutoff.AddDays(-5));
+        var firstMiddleArchive = await AddArchiveAsync("FirstMiddle", uploadedAt: Cutoff);
+        var secondMiddleArchive = await AddArchiveAsync("SecondMiddle", uploadedAt: Cutoff);
+
+        // Act
+        var result =
+            await repository.GetDeletableLocalArchivesOrderedByLastUploadOfArchiveConfigAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result
+            .Select(archive => archive.Id)
+            .ShouldBe([
+                oldestArchive.Id,
+                firstMiddleArchive.Id,
+                secondMiddleArchive.Id,
+                newestArchive.Id,
+            ]);
+        result.ShouldAllBe(archive => archive.ArchiveFiles.Count == 2);
+        result.ShouldAllBe(archive => archive.ArchiveConfig.Release != null);
+    }
+
+    [Test]
+    public async Task GetDeletableLocalArchivesOrderedByLastUploadOfArchiveConfigAsync_ArchivesThatMustStay_AreExcluded()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        await AddArchiveAsync(
+            "Stored",
+            uploadedAt: Cutoff,
+            archiveStorageFolderId: storageFolder.Id
+        );
+        await AddArchiveAsync(
+            "WaitingForArchive",
+            uploadedAt: Cutoff,
+            uploadState: UploadState.WaitingForArchive
+        );
+        await AddArchiveAsync("Deleted", uploadedAt: Cutoff, archiveState: ArchiveState.Deleted);
+        await AddArchiveAsync(
+            "PartlyUploaded",
+            uploadedAt: Cutoff,
+            failedUploadWithoutUploadedAt: FailedUploadWithoutUploadedAt.AfterCompletedUpload
+        );
+        var deletableArchive = await AddArchiveAsync("Deletable", uploadedAt: Cutoff);
+
+        // Act
+        var result =
+            await repository.GetDeletableLocalArchivesOrderedByLastUploadOfArchiveConfigAsync(
+                CancellationToken.None
+            );
+
+        // Assert
+        result.ShouldHaveSingleItem().Id.ShouldBe(deletableArchive.Id);
+    }
+
+    [Test]
+    public async Task GetLocalCreatedArchiveFilePathsAsync_MixedArchives_ReturnsFilesOfCreatedLocalArchivesOnly()
+    {
+        // Arrange
+        var storageFolder = await AddStorageFolderAsync("NAS", isActive: true);
+        await AddArchiveAsync("Local", uploadedAt: Cutoff, uploadState: UploadState.Uploading);
+        await AddArchiveAsync(
+            "Stored",
+            uploadedAt: Cutoff,
+            archiveStorageFolderId: storageFolder.Id
+        );
+        await AddArchiveAsync("Deleted", uploadedAt: Cutoff, archiveState: ArchiveState.Deleted);
+
+        // Act
+        var result = await repository.GetLocalCreatedArchiveFilePathsAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            ["/archives/Local/Local.part1.rar", "/archives/Local/Local.part2.rar"],
+            ignoreOrder: true
+        );
+    }
+
+    [Test]
+    public async Task HasUnresolvedNotificationAsync_ResolvedNotificationAndOtherKind_ReturnsTrueOnlyForUnresolvedKind()
+    {
+        // Arrange
+        await AddNotificationAsync(
+            NotificationKind.LocalArchiveSizeLimitExceeded,
+            archiveId: null,
+            resolvedAt: Cutoff
+        );
+        await AddNotificationAsync(
+            NotificationKind.NoArchiveStorageFolderAvailable,
+            archiveId: null,
+            resolvedAt: null
+        );
+
+        // Act
+        var hasUnresolvedSizeLimitNotification = await repository.HasUnresolvedNotificationAsync(
+            NotificationKind.LocalArchiveSizeLimitExceeded,
+            CancellationToken.None
+        );
+        var hasUnresolvedStorageFolderNotification =
+            await repository.HasUnresolvedNotificationAsync(
+                NotificationKind.NoArchiveStorageFolderAvailable,
+                CancellationToken.None
+            );
+
+        // Assert
+        hasUnresolvedSizeLimitNotification.ShouldBeFalse();
+        hasUnresolvedStorageFolderNotification.ShouldBeTrue();
+    }
+
     [TestCase(UploadState.WaitingForArchive, true)]
     [TestCase(UploadState.Pending, true)]
     [TestCase(UploadState.Uploading, true)]

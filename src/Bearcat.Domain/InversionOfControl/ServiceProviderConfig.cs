@@ -43,6 +43,7 @@ using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileHashes;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFolderRelocations;
 using Bearcat.Domain.UseCases.ManageArchives.FailedArchiveCreations;
 using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
@@ -224,6 +225,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UnmanagedReleaseConverter>();
             services.AddScoped<MirrorCoverageEvaluator>();
             services.AddScoped<LocalArchiveDeleter>();
+            services.AddScoped<LocalArchiveSizeLimitService>();
             services.AddScoped<ArchiveRestoreService>();
             services.AddScoped<MirrorSourceResolver>();
             services.AddScoped<MirrorDownloadCoordinator>();

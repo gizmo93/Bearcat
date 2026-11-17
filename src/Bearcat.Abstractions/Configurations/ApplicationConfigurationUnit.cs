@@ -7,4 +7,5 @@ public enum ApplicationConfigurationUnit
     Seconds = 3,
     Megabytes = 4,
     MegabytesPerSecond = 5,
+    Gigabytes = 6,
 }

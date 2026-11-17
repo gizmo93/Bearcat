@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Proxies;
@@ -7,11 +8,14 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives.ArchiveFileCopies;
+using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
+using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
@@ -671,6 +675,14 @@ public class ArchiveRestoreServiceTest
                 }
             );
 
+        configurationProviderMock
+            .Setup(x =>
+                x.GetValue<ArchiveCreationConfiguration, ArchivePartSizeUnit>(
+                    It.IsAny<Expression<Func<ArchiveCreationConfiguration, ArchivePartSizeUnit>>>()
+                )
+            )
+            .Returns(ArchivePartSizeUnit.Megabytes);
+
         var secretProtectorMock = new Mock<ISecretProtector>();
         secretProtectorMock.Setup(x => x.Unprotect(It.IsAny<string>())).Returns("{}");
 
@@ -703,6 +715,15 @@ public class ArchiveRestoreServiceTest
                 fileSystemServiceMock.Object,
                 transferProgressTracker,
                 NullLogger<ArchiveFileCopyService>.Instance
+            ),
+            new LocalArchiveSizeLimitService(
+                Mock.Of<IArchiveCleanupRepository>(),
+                configurationProviderMock.Object,
+                fileSystemServiceMock.Object,
+                new MirrorCoverageEvaluator(hosterFactoryMock.Object),
+                new LocalArchiveDeleter(fileSystemServiceMock.Object),
+                notificationServiceMock.Object,
+                NullLogger<LocalArchiveSizeLimitService>.Instance
             ),
             NullLogger<ArchiveRestoreService>.Instance
         );

@@ -676,6 +676,8 @@
   <data name="ArchiveRetentionAction.MoveToStorageFolder" xml:space="preserve"><value>In Speicherordner verschieben</value></data>
   <data name="ArchiveRetentionDays" xml:space="preserve"><value>Aufbewahrung lokaler Archive</value></data>
   <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem letzten abgeschlossenen Upload einer Archivkonfiguration. Jeder Reupload startet diese Frist neu.</value></data>
+  <data name="MaximumLocalArchiveSizeGb" xml:space="preserve"><value>Maximale Grösse lokaler Archive</value></data>
+  <data name="MaximumLocalArchiveSizeGbDescription" xml:space="preserve"><value>Weiche Grenze für alle lokalen Archive, 0 schaltet sie aus. Bevor ein neues Archiv geschrieben wird, löscht Bearcat die lokalen Archive mit dem ältesten letzten Upload, bis das neue Archiv hineinpasst. Gelöscht werden nur Archive, die von einem Onlinemirror wiederhergestellt oder aus einem Releaseordner neu gepackt werden können. Archive in Speicherordnern werden nie gelöscht. Lässt sich nicht genug Platz freigeben, wird das Archiv trotzdem geschrieben und du erhältst eine Benachrichtigung. Hat keine Wirkung, solange Lokale Archive nach Aufbewahrung auf In Speicherordner verschieben steht.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initiale Uploads</value></data>
   <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
@@ -1275,6 +1277,8 @@
   <data name="NotificationKind.ArchiveMoveToStorageFolderFailed.Description" xml:space="preserve"><value>Das Kopieren eines Archivs in einen Speicherordner ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und das Archiv bleibt lokal.</value></data>
   <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed" xml:space="preserve"><value>Kopieren in lokale Arbeitskopie fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveCopyIntoLocalWorkingCopyFailed.Description" xml:space="preserve"><value>Das Kopieren von Archivdateien aus einem Speicherordner in eine lokale Arbeitskopie vor einem Reupload ist fehlgeschlagen. Die kopierten Dateien wurden entfernt und der Upload liest die Archivdateien aus dem Speicherordner.</value></data>
+  <data name="NotificationKind.LocalArchiveSizeLimitExceeded" xml:space="preserve"><value>Grenze für lokale Archive überschritten</value></data>
+  <data name="NotificationKind.LocalArchiveSizeLimitExceeded.Description" xml:space="preserve"><value>Bearcat konnte nicht genug lokale Archive löschen, um unter der maximalen Grösse lokaler Archive zu bleiben. Das neue Archiv wurde trotzdem geschrieben.</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release aus Remotedownload erstellt</value></data>
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
@@ -1753,6 +1757,7 @@
   <data name="ConfigurationUnit.Seconds" xml:space="preserve"><value>s</value></data>
   <data name="ConfigurationUnit.Megabytes" xml:space="preserve"><value>MB</value></data>
   <data name="ConfigurationUnit.MegabytesPerSecond" xml:space="preserve"><value>MB/s</value></data>
+  <data name="ConfigurationUnit.Gigabytes" xml:space="preserve"><value>GB</value></data>
   <data name="ReleaseTotalCount" xml:space="preserve"><value>{0} Releases</value></data>
   <data name="ReleaseTotalCountOne" xml:space="preserve"><value>{0} Release</value></data>
   <data name="ReleaseSearchBarPlaceholder" xml:space="preserve"><value>Nach Name oder Ordner suchen. Link, Archivdatei oder Upload-ID einfügen, um danach zu suchen.</value></data>

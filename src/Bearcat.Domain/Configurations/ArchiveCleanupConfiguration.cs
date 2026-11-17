@@ -33,4 +33,11 @@ public class ArchiveCleanupConfiguration : IApplicationConfiguration
     [ApplicationConfigurationProperty("ArchiveRetentionDays", "ArchiveRetentionDaysDescription")]
     [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Days)]
     public int ArchiveRetentionDays { get; set; } = 30;
+
+    [ApplicationConfigurationProperty(
+        "MaximumLocalArchiveSizeGb",
+        "MaximumLocalArchiveSizeGbDescription"
+    )]
+    [ApplicationConfigurationUnit(ApplicationConfigurationUnit.Gigabytes)]
+    public int MaximumLocalArchiveSizeGb { get; set; } = 0;
 }
