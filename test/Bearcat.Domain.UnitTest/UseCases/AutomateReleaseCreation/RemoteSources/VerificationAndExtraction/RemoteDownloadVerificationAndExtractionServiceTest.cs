@@ -191,28 +191,6 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
     }
 
     [Test]
-    public async Task ProcessAsync_ExtractorReportsFailure_StopsTrackingExtractionProgress()
-    {
-        // Arrange
-        var firstVolumeFilePath = WriteFile("release.rar", "volume");
-        archiveExtractor.AddArchive(
-            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
-            new Dictionary<string, string>()
-        );
-        archiveExtractor.FailureResult = new ArchiveExtractionResult(false, ["CRC failed"]);
-        var download = AddDownload(extractArchives: true);
-
-        // Act
-        await CreateService().ProcessAsync(CancellationToken.None);
-
-        // Assert
-        download.State.ShouldBe(RemoteSourceDownloadState.Failed);
-        progressTracker.StoppedIdentifiers.ShouldBe([
-            new TransferIdentifier(TransferType.RemoteDownloadExtraction, download.Id),
-        ]);
-    }
-
-    [Test]
     public async Task ProcessAsync_ArchiveContainsOnlyWrapperFolder_MovesContentOfWrapperFolder()
     {
         // Arrange
@@ -445,6 +423,9 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
         );
         File.Exists(firstVolumeFilePath).ShouldBeTrue();
         Directory.Exists(Path.Join(localFolderPath, TemporaryExtractionFolderName)).ShouldBeFalse();
+        progressTracker.StoppedIdentifiers.ShouldBe([
+            new TransferIdentifier(TransferType.RemoteDownloadExtraction, download.Id),
+        ]);
     }
 
     [Test]

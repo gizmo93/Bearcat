@@ -364,34 +364,17 @@ public class UnreadableSecretsDetectionServiceTest(DatabaseProvider databaseProv
         );
     }
 
-    [Test]
-    public async Task DetectAsync_ProxyServerWithoutPassword_DoesNotFlagProxyServer()
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task DetectAsync_ProxyServerWithoutPasswordOrWithReadablePassword_DoesNotFlagProxyServer(
+        bool hasPassword
+    )
     {
         // Arrange
+        var encryptedPassword = hasPassword ? currentKeyProtector.Protect("secret") : null;
         await using (var arrangeContext = Database.CreateDbContext())
         {
-            arrangeContext.ProxyServers.Add(CreateProxyServer("Proxy", encryptedPassword: null));
-            await arrangeContext.SaveChangesAsync();
-        }
-
-        // Act
-        await DetectAsync();
-
-        // Assert
-        var assertContext = CreateDbContext();
-        (await assertContext.ProxyServers.SingleAsync()).HasUnreadableSecrets.ShouldBeFalse();
-        (await assertContext.Notifications.AnyAsync()).ShouldBeFalse();
-    }
-
-    [Test]
-    public async Task DetectAsync_ProxyServerWithReadablePassword_DoesNotFlagProxyServer()
-    {
-        // Arrange
-        await using (var arrangeContext = Database.CreateDbContext())
-        {
-            arrangeContext.ProxyServers.Add(
-                CreateProxyServer("Proxy", currentKeyProtector.Protect("secret"))
-            );
+            arrangeContext.ProxyServers.Add(CreateProxyServer("Proxy", encryptedPassword));
             await arrangeContext.SaveChangesAsync();
         }
 

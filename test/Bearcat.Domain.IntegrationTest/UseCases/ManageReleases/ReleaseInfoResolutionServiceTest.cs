@@ -194,6 +194,11 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
         persistedRelease.ReleaseNfo.ShouldNotBeNull();
         persistedRelease.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
         persistedRelease.ReleaseNfo.Content.ShouldBe("local nfo content");
+
+        var nfoFiles = Directory.GetFiles(releaseFolderPath, "*.nfo");
+        nfoFiles.Length.ShouldBe(1);
+        Path.GetFileName(nfoFiles[0]).ShouldBe("bearcat.nfo");
+        (await File.ReadAllTextAsync(nfoFiles[0])).ShouldBe("local nfo content");
     }
 
     [Test]
@@ -346,34 +351,6 @@ public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
         persistedInfo.ReleaseId.ShouldBe(release.Id);
         persistedRelease.ReleaseNfo.ShouldNotBeNull();
         persistedRelease.ReleaseNfo.FileName.ShouldBe("remote.nfo");
-    }
-
-    [Test]
-    public async Task ProcessMissingReleaseInfosAsync_LocalNfoFileExists_DoesNotWriteAdditionalFile()
-    {
-        // Arrange
-        var releaseFolderPath = CreateTempReleaseFolder();
-        await File.WriteAllTextAsync(
-            Path.Combine(releaseFolderPath, "bearcat.nfo"),
-            "local nfo content"
-        );
-        await AddReleaseAsync("Bearcat.Local.Nfo.Keep.2026-GRP", releaseFolderPath);
-        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
-
-        SetupNfoDatabase(
-            WorkingDatabaseClassName,
-            "Bearcat.Local.Nfo.Keep.2026-GRP",
-            CreateReleaseInfo("Bearcat.Local.Nfo.Keep.2026-GRP")
-        );
-
-        // Act
-        await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
-
-        // Assert
-        var nfoFiles = Directory.GetFiles(releaseFolderPath, "*.nfo");
-        nfoFiles.Length.ShouldBe(1);
-        Path.GetFileName(nfoFiles[0]).ShouldBe("bearcat.nfo");
-        (await File.ReadAllTextAsync(nfoFiles[0])).ShouldBe("local nfo content");
     }
 
     [Test]

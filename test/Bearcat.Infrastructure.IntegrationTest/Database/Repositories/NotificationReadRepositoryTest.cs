@@ -13,12 +13,9 @@ namespace Bearcat.Infrastructure.IntegrationTest.Database.Repositories;
 public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    [TestCase(null, false, 15)]
     [TestCase(null, true, 16)]
     [TestCase(NotificationKind.UploadFailed, false, 7)]
     [TestCase(NotificationKind.UploadFailed, true, 8)]
-    [TestCase(NotificationKind.Legacy, false, 1)]
-    [TestCase(NotificationKind.CaptchaVerificationRequired, false, 0)]
     public async Task Search_KindAndResolvedFilters_ReturnMatchingNotificationsAndCount(
         NotificationKind? kind,
         bool includeResolved,

@@ -56,21 +56,14 @@ public class TransferSpeedLimitServiceTest
         service.Dispose();
     }
 
-    [Test]
-    public void EnterUploadScope_NoSpeedLimitConfigured_CurrentIsNull()
-    {
-        // Act
-        using var scope = service.EnterUploadScope(Registration);
-
-        // Assert
-        TransferSpeedLimitScope.Current.ShouldBeNull();
-    }
-
-    [Test]
-    public void EnterUploadScope_ZeroSpeedLimitConfigured_CurrentIsNull()
+    [TestCase(null)]
+    [TestCase(0)]
+    public void EnterUploadScope_NoOrZeroSpeedLimitConfigured_CurrentIsNull(
+        double? speedLimitMegabytesPerSecond
+    )
     {
         // Arrange
-        uploadSpeedLimitMegabytesPerSecond = 0;
+        uploadSpeedLimitMegabytesPerSecond = (decimal?)speedLimitMegabytesPerSecond;
 
         // Act
         using var scope = service.EnterUploadScope(Registration);

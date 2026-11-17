@@ -119,6 +119,10 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
         var failedUpload = await AddUploadAsync(uploadConfig, UploadState.Failed, archive.Id);
         var completedUpload = await AddUploadAsync(uploadConfig, UploadState.Completed, archive.Id);
+        waitingUpload.HosterFolderId = "folder-on-old-hoster";
+        pendingUpload.HosterFolderId = "folder-on-old-hoster";
+        pendingUploadWithUploadedFile.HosterFolderId = "folder-on-old-hoster";
+        await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
@@ -146,34 +150,14 @@ public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
             },
             ignoreOrder: true
         );
-    }
 
-    [Test]
-    public async Task UpdateAsync_HosterRegistrationChanged_ClearsHosterFolderOfUploadsNotStartedOnHoster()
-    {
-        // Arrange
-        var firstSeed = await AddUploadConfigDependenciesAsync();
-        var uploadConfig = await AddUploadConfigAsync(firstSeed);
-        var secondSeed = await AddUploadConfigDependenciesAsync("Second");
-        var pendingUpload = await AddUploadAsync(uploadConfig, UploadState.Pending);
-        pendingUpload.HosterFolderId = "folder-on-old-hoster";
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act
-        await service.UpdateAsync(
-            uploadConfig.Id,
-            uploadConfig.Name,
-            UploadTarget.ForHosterRegistration(secondSeed.HosterRegistrationId),
-            firstSeed.ArchiveConfigId,
-            false,
-            CancellationToken.None
-        );
-
-        // Assert
-        var upload = await DbContext.Uploads.SingleAsync();
-        upload.HosterFolderId.ShouldBeNull();
-        upload.HosterRegistrationId.ShouldBe(secondSeed.HosterRegistrationId);
+        var hosterFolderIdsByUploadId = await DbContext
+            .Uploads.Select(upload => new { upload.Id, upload.HosterFolderId })
+            .ToDictionaryAsync(upload => upload.Id, upload => upload.HosterFolderId);
+        hosterFolderIdsByUploadId[waitingUpload.Id].ShouldBeNull();
+        hosterFolderIdsByUploadId[pendingUpload.Id].ShouldBeNull();
+        hosterFolderIdsByUploadId[pendingUploadWithUploadedFile.Id]
+            .ShouldBe("folder-on-old-hoster");
     }
 
     [Test]

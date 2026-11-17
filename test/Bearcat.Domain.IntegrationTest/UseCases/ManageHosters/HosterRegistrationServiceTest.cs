@@ -483,6 +483,75 @@ public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task RemoveAsync_RegistrationHoldsLastUploadsOfUploadConfigTargetingOtherRegistration_ThrowsAndKeepsRegistration()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(isActive: true);
+        var otherRegistration = await AddHosterRegistrationAsync(isActive: true);
+
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseGroup = releaseGroup,
+        };
+
+        var archiveConfig = new ArchiveConfig
+        {
+            Release = release,
+            Name = "Main archive",
+            ArchiveFilesBasePath = "/tmp/archive",
+            ArchiverName = "zip",
+            ArchiveNamePrefix = "bearcat-release",
+            ArchivePassword = "secret",
+            ArchiveFileSizeMb = 512,
+        };
+
+        var uploadConfig = new UploadConfig
+        {
+            UploadSource = UploadSource.ArchiveFiles,
+            Release = release,
+            ArchiveConfig = archiveConfig,
+            HosterRegistrationId = otherRegistration.Id,
+            Name = "Default upload",
+        };
+
+        DbContext.Uploads.Add(
+            new Upload
+            {
+                UploadConfig = uploadConfig,
+                HosterRegistrationId = registration.Id,
+                UploadState = UploadState.Completed,
+                OnlineState = OnlineState.Online,
+                CreatedAt = DateTime.UtcNow,
+                UploadedFiles = [],
+            }
+        );
+
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.RemoveAsync(registration.Id, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("still holds 1 uploads");
+
+        (
+            await DbContext.HosterRegistrations.AnyAsync(item => item.Id == registration.Id)
+        ).ShouldBeTrue();
+    }
+
+    [Test]
     public async Task RegisterHosterAsync_SpecificUploadProxyServer_StoresSelectionAndProxyServerId()
     {
         // Arrange

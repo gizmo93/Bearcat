@@ -280,7 +280,12 @@ public class AutoForumPostCreationServiceTest
             Releases = [AutoPostTestFactory.Release(qualityGateState: QualityGateState.Failed)],
             Registrations = [AutoPostTestFactory.Registration(id: 5)],
         };
-        var service = ServiceWith(repository, new FakeForumPostSubmitter());
+        var notificationService = new FakeNotificationService();
+        var service = ServiceWith(
+            repository: repository,
+            submitter: new FakeForumPostSubmitter(),
+            notificationService: notificationService
+        );
 
         // Act
         var result = await service.CreatePostOnSiteAsync(
@@ -293,6 +298,7 @@ public class AutoForumPostCreationServiceTest
         result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.Blocked);
         result.BlockedReason.ShouldBe(AutoPostBlockedReason.QualityGateNotPassed);
+        notificationService.Created.ShouldBeEmpty();
     }
 
     [Test]
@@ -362,33 +368,6 @@ public class AutoForumPostCreationServiceTest
         submitter
             .NewThreads.ShouldHaveSingleItem()
             .Title.ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
-    }
-
-    [Test]
-    public async Task CreatePostOnSiteAsync_SkippedRelease_CreatesNoNotification()
-    {
-        // Arrange
-        var repository = new FakeAutoForumPostingRepository
-        {
-            Releases = [AutoPostTestFactory.Release(qualityGateState: QualityGateState.Failed)],
-            Registrations = [AutoPostTestFactory.Registration(id: 5)],
-        };
-        var notificationService = new FakeNotificationService();
-        var service = ServiceWith(
-            repository: repository,
-            submitter: new FakeForumPostSubmitter(),
-            notificationService: notificationService
-        );
-
-        // Act
-        await service.CreatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.Release,
-            entityId: 1,
-            distributionSiteRegistrationId: 5
-        );
-
-        // Assert
-        notificationService.Created.ShouldBeEmpty();
     }
 
     [Test]

@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -41,6 +42,30 @@ public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvide
 
         result.ShouldNotBeNull();
         result.Password.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task CreateAsync_UploadConfigUploadsVideoFiles_ThrowsAndPersistsNothing()
+    {
+        // Arrange
+        var seed = await AddDependenciesAsync();
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync();
+        uploadConfig.UploadSource = UploadSource.VideoFiles;
+        uploadConfig.ArchiveConfigId = null;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        await Should.ThrowAsync<InvalidUploadSourceException>(async () =>
+            await service.CreateAsync(
+                seed.UploadConfigId,
+                seed.LinkCrypterRegistrationId,
+                "secret",
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        (await DbContext.UploadConfigLinkCrypters.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]

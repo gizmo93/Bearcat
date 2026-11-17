@@ -58,49 +58,39 @@ public class CostActionHosterBaseTest
         File.Delete(filePath);
     }
 
-    [Test]
-    public async Task UploadFileAsync_Turbobit_UploadsWithTurbobitAppTypeAndReturnsFileIdAsExternalId()
+    [TestCase(true, "fd1", "15", "cye2wolk2zz7", "https://trbt.cc/cye2wolk2zz7.html")]
+    [TestCase(false, "fd2", null, "tHzfhvR", "https://htfl.net/tHzfhvR")]
+    public async Task UploadFileAsync_Hoster_UploadsWithItsAppTypeAndReturnsFileIdAsExternalId(
+        bool isTurbobit,
+        string appType,
+        string? folderId,
+        string fileId,
+        string fileUrl
+    )
     {
         // Arrange
-        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11, FolderId: "15");
-        SetupUpload(
-            "fd1",
-            "15",
-            new CostActionUploadResult("cye2wolk2zz7", "https://trbt.cc/cye2wolk2zz7.html")
-        );
+        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11, FolderId: folderId);
+        SetupUpload(appType, folderId, new CostActionUploadResult(fileId, fileUrl));
 
         // Act
-        var result = await turbobit.UploadFileAsync(
-            fileDto,
-            turbobitConfig,
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
+        var result = isTurbobit
+            ? await turbobit.UploadFileAsync(
+                fileDto,
+                turbobitConfig,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            )
+            : await hitfile.UploadFileAsync(
+                fileDto,
+                hitfileConfig,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        result.FileUrl.ShouldBe("https://trbt.cc/cye2wolk2zz7.html");
-        result.ExternalId.ShouldBe("cye2wolk2zz7");
-    }
-
-    [Test]
-    public async Task UploadFileAsync_Hitfile_UploadsWithHitfileAppType()
-    {
-        // Arrange
-        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11);
-        SetupUpload("fd2", null, new CostActionUploadResult("tHzfhvR", "https://htfl.net/tHzfhvR"));
-
-        // Act
-        var result = await hitfile.UploadFileAsync(
-            fileDto,
-            hitfileConfig,
-            NullTransferProgress.Instance,
-            CancellationToken.None
-        );
-
-        // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.FileUrl.ShouldBe("https://htfl.net/tHzfhvR");
+        result.FileUrl.ShouldBe(fileUrl);
+        result.ExternalId.ShouldBe(fileId);
     }
 
     [Test]
