@@ -190,6 +190,11 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
         {
             lock (gate)
             {
+                if (Stopwatch.GetElapsedTime(lastSampleTimestamp, nowTimestamp) > window)
+                {
+                    return 0;
+                }
+
                 RemoveOldSamples(nowTimestamp, window);
 
                 var oldest = samples.Peek();
