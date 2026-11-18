@@ -23,6 +23,7 @@
         <BbDynamicForm @key="selectedActionClassName"
                        Schema="schema"
                        @bind-Values="values"
+                       FieldRenderers="folderFieldRenderers"
                        ShowSubmitButton="false"
                        OnValidSubmit="SaveAsync"
                        Class="space-y-6">

@@ -20,7 +20,7 @@ public sealed class IntelligenXmlExportAction : IUploadCompletionAction
     [
         new(
             nameof(IntelligenXmlExportConfig.ExportDirectory),
-            ConfigurationFieldType.Text,
+            ConfigurationFieldType.Folder,
             IsRequired: true
         ),
         new(

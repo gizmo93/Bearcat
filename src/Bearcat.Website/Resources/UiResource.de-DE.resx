@@ -51,6 +51,9 @@
   <data name="AllUploadConfigs" xml:space="preserve"><value>Alle Uploadkonfigurationen</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Basispfad ist erforderlich</value></data>
   <data name="Browse" xml:space="preserve"><value>Durchsuchen</value></data>
+  <data name="BrowseFolders" xml:space="preserve"><value>Ordner durchsuchen</value></data>
+  <data name="SelectFolder" xml:space="preserve"><value>Ordner auswählen</value></data>
+  <data name="SelectFolderDescription" xml:space="preserve"><value>Wähle einen vorhandenen Ordner.</value></data>
   <data name="BrowseArchiveFolders" xml:space="preserve"><value>Archivordner durchsuchen</value></data>
   <data name="BrowseReleaseFolders" xml:space="preserve"><value>Releaseordner durchsuchen</value></data>
   <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Erstellt mit BlazorBlueprint</value></data>

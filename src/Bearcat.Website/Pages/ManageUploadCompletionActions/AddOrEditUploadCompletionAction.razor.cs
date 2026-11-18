@@ -35,6 +35,8 @@ public partial class AddOrEditUploadCompletionAction(IScopedOperationRunner oper
     private IReadOnlyList<UploadCompletionActionDto> uploadCompletionActions = [];
     private string? selectedActionClassName;
     private FormSchema? schema;
+    private Dictionary<string, RenderFragment<DynamicFieldRenderContext>> folderFieldRenderers =
+        new();
     private Dictionary<string, object?> values = new();
     private string? errorMessage;
     private bool isSaving;
@@ -92,6 +94,11 @@ public partial class AddOrEditUploadCompletionAction(IScopedOperationRunner oper
 
     private FormSchema BuildSchema(UploadCompletionActionDto uploadCompletionAction)
     {
+        folderFieldRenderers = ConfigurationFieldFormMapper.BuildFolderFieldRenderers(
+            uploadCompletionAction.ConfigurationFields,
+            this
+        );
+
         return new FormSchema
         {
             Sections =

@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 
 namespace Bearcat.Website.Shared;
@@ -49,6 +50,16 @@ public static class ConfigurationFieldFormMapper
         };
     }
 
+    public static Dictionary<
+        string,
+        RenderFragment<DynamicFieldRenderContext>
+    > BuildFolderFieldRenderers(IReadOnlyList<ConfigurationField> fields, object eventReceiver)
+    {
+        return fields
+            .Where(field => field.Type == ConfigurationFieldType.Folder)
+            .ToDictionary(field => field.Key, _ => BuildFolderFieldRenderer(eventReceiver));
+    }
+
     public static string CreateFieldErrorMessage(
         ConfigurationFieldValidationException exception,
         IStringLocalizer localizer,
@@ -82,6 +93,35 @@ public static class ConfigurationFieldFormMapper
         return metadata;
     }
 
+    private static RenderFragment<DynamicFieldRenderContext> BuildFolderFieldRenderer(
+        object eventReceiver
+    )
+    {
+        return context =>
+            builder =>
+            {
+                builder.OpenComponent<FolderPathInput>(0);
+                builder.AddComponentParameter(1, nameof(FolderPathInput.Value), context.Value);
+
+                builder.AddComponentParameter(
+                    2,
+                    nameof(FolderPathInput.ValueChanged),
+                    EventCallback.Factory.Create<string?>(
+                        eventReceiver,
+                        folderPath => context.ValueChanged(folderPath)
+                    )
+                );
+
+                builder.AddComponentParameter(
+                    3,
+                    nameof(FolderPathInput.Disabled),
+                    context.Disabled
+                );
+
+                builder.CloseComponent();
+            };
+    }
+
     private static bool IsWholeNumber(object? value)
     {
         return value switch
@@ -104,6 +144,7 @@ public static class ConfigurationFieldFormMapper
             ConfigurationFieldType.Boolean => FieldType.Switch,
             ConfigurationFieldType.Select => FieldType.Select,
             ConfigurationFieldType.Url => FieldType.Url,
+            ConfigurationFieldType.Folder => FieldType.Custom,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(type),
                 type,
