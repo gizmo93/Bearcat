@@ -365,6 +365,7 @@ public class ExistingArchiveAssignmentService(
                 ExternalId = source.ExternalId,
                 HosterFolderId = source.HosterFolderId,
                 Md5Hash = source.Md5Hash,
+                SizeBytes = source.SizeBytes,
                 OnlineState = OnlineState.Online,
                 CreatedAt = source.CreatedAt,
                 CheckedAt = source.CheckedAt,

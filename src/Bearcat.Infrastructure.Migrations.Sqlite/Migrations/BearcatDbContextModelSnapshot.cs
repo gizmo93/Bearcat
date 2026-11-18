@@ -2919,6 +2919,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("OnlineState")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("UploadId")
                         .HasColumnType("INTEGER");
 

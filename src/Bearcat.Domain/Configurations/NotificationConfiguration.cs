@@ -148,6 +148,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool HosterAccountPoolWithoutUsableAccount { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.UploadCompletionActionFailed",
+        "NotificationKind.UploadCompletionActionFailed.Description"
+    )]
+    public bool UploadCompletionActionFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.CaptchaVerificationRequired",
         "NotificationKind.CaptchaVerificationRequired.Description"
     )]

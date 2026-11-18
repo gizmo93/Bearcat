@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -125,6 +126,9 @@ public class FileUploadResultService(
                 ExternalId = result.ExternalId,
                 HosterFolderId = context.Upload.HosterFolderId,
                 Md5Hash = result.IsSuccess ? sourceFile.Md5Hash ?? archiveFile?.Md5Hash : null,
+                SizeBytes = result.IsSuccess
+                    ? FileSizes.GetFileSizeBytesOrZeroWhenMissing(sourceFile.FullFileName)
+                    : null,
                 ErrorMessages = result.Errors.ToList(),
                 OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
                 CreatedAt = timeProvider.GetLocalNow(),

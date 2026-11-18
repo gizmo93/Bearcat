@@ -109,6 +109,7 @@ using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.UseCases.ReplaceHosters;
+using Bearcat.Domain.UseCases.RunUploadCompletionActions;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -199,6 +200,8 @@ public static class ServiceProviderConfig
             services.AddScoped<AutoForumPostCreationService>();
             services.AddScoped<AutoForumPostUpdateService>();
             services.AddScoped<AutoForumPostingRunner>();
+            services.AddScoped<UploadCompletionActionInputBuilder>();
+            services.AddScoped<UploadCompletionActionRunner>();
             services.AddScoped<IForumPostContentRenderer>(provider =>
                 provider.GetRequiredService<ForumPostRenderService>()
             );

@@ -26,6 +26,8 @@ public class UploadedFile
 
     public string? Md5Hash { get; set; }
 
+    public long? SizeBytes { get; set; }
+
     public List<string> ErrorMessages { get; set; } = [];
 
     public OnlineState OnlineState { get; set; }

@@ -176,6 +176,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.HosterAccountPoolWithoutUsableAccount.Description"
         ),
         new(
+            Kind: NotificationKind.UploadCompletionActionFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Uploads,
+            DisplayName: "NotificationKind.UploadCompletionActionFailed",
+            Description: "NotificationKind.UploadCompletionActionFailed.Description"
+        ),
+        new(
             Kind: NotificationKind.CaptchaVerificationRequired,
             Severity: NotificationSeverity.Warning,
             Group: NotificationGroup.Hosters,

@@ -3053,6 +3053,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("OnlineState")
                         .HasColumnType("integer");
 
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("UploadId")
                         .HasColumnType("integer");
 

@@ -11,6 +11,7 @@ public record ReleaseForumPostUploadReadModel(
     DateTime? UploadedAt,
     IReadOnlyList<string> Links,
     IReadOnlyList<string> EmbedLinks,
+    IReadOnlyList<long?> FileSizesBytes,
     IReadOnlyList<ReleaseForumPostLinkCrypterReadModel> LinkCrypters
 );
 

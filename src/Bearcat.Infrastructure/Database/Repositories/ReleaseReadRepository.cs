@@ -25,18 +25,10 @@ public class ReleaseReadRepository(
     IHosterFactory hosterFactory
 ) : IReleaseReadRepository, IReleaseForumPostUploadRepository, IForumPostImageLinkRepository
 {
-    internal static readonly Expression<Func<Release, bool>> IsReadyForPostQueue = r =>
+    internal static readonly Expression<
+        Func<Release, bool>
+    > AllUploadsLinkCrypterContainersAndImagesAreComplete = r =>
         r.UploadConfigs.AsQueryable()
-            .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-            .Any(uc =>
-                uc.CollectionUploadSlotId == null
-                && uc.Uploads.Any(u =>
-                    u.UploadState == UploadState.Completed
-                    && u.UploadedAt != null
-                    && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
-                )
-            )
-        && r.UploadConfigs.AsQueryable()
             .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
             .Where(uc => uc.CollectionUploadSlotId == null)
             .All(uc =>
@@ -67,6 +59,32 @@ public class ReleaseReadRepository(
             .Where(ImageUploadExpressions.ImageUploadConfigUploadsScreenshotsToActiveHoster)
             .Select(ic => ic.Release!)
             .Any(ReleaseScreenshotExpressions.ScreenshotGenerationIsPending);
+
+    private static readonly Expression<
+        Func<Release, bool>
+    > HasCompletedUploadNewerThanUploadsPostedAt = r =>
+        r.UploadConfigs.AsQueryable()
+            .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+            .Any(uc =>
+                uc.CollectionUploadSlotId == null
+                && uc.Uploads.Any(u =>
+                    u.UploadState == UploadState.Completed
+                    && u.UploadedAt != null
+                    && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
+                )
+            );
+
+    internal static readonly Expression<Func<Release, bool>> IsReadyForPostQueue =
+        Expression.Lambda<Func<Release, bool>>(
+            Expression.AndAlso(
+                HasCompletedUploadNewerThanUploadsPostedAt.Body,
+                Expression.Invoke(
+                    AllUploadsLinkCrypterContainersAndImagesAreComplete,
+                    HasCompletedUploadNewerThanUploadsPostedAt.Parameters
+                )
+            ),
+            HasCompletedUploadNewerThanUploadsPostedAt.Parameters
+        );
 
     private static readonly Expression<Func<Release, bool>> IsNotReadyForPostQueue =
         Expression.Lambda<Func<Release, bool>>(
@@ -687,6 +705,7 @@ public class ReleaseReadRepository(
 
         var linksByUploadId = new Dictionary<int, IReadOnlyList<string>>();
         var embedLinksByUploadId = new Dictionary<int, IReadOnlyList<string>>();
+        var fileSizesByUploadId = new Dictionary<int, IReadOnlyList<long?>>();
         var containers =
             new List<(
                 int UploadId,
@@ -710,6 +729,7 @@ public class ReleaseReadRepository(
                     f.UploadId,
                     f.HosterFileLink,
                     f.HosterEmbedLink,
+                    f.SizeBytes,
                 })
                 .ToListAsync(cancellationToken: cancellationToken);
 
@@ -727,6 +747,13 @@ public class ReleaseReadRepository(
                     group => group.Key,
                     group =>
                         (IReadOnlyList<string>)group.Select(link => link.HosterEmbedLink!).ToList()
+                );
+
+            fileSizesByUploadId = directLinks
+                .GroupBy(link => link.UploadId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => (IReadOnlyList<long?>)group.Select(link => link.SizeBytes).ToList()
                 );
 
             var releaseContainers = await dbRead
@@ -814,6 +841,12 @@ public class ReleaseReadRepository(
                         ? uploadEmbedLinks
                         : [];
 
+                IReadOnlyList<long?> fileSizes =
+                    upload is not null
+                    && fileSizesByUploadId.TryGetValue(upload.UploadId, out var uploadFileSizes)
+                        ? uploadFileSizes
+                        : [];
+
                 var linkCrypters = config
                     .LinkCrypters.Select(linkCrypter =>
                     {
@@ -864,6 +897,7 @@ public class ReleaseReadRepository(
                         UploadedAt: upload?.UploadedAt,
                         Links: links,
                         EmbedLinks: embedLinks,
+                        FileSizesBytes: fileSizes,
                         LinkCrypters: linkCrypters
                     )
                 );
