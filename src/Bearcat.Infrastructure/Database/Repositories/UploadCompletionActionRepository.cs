@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.UploadCompletionAction.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Repositories;
@@ -89,30 +88,6 @@ public class UploadCompletionActionRepository(
                 NewestUploadedAt: release.NewestUploadedAt!.Value
             ))
             .ToListAsync(cancellationToken);
-    }
-
-    public async Task<UploadCompletionActionReleaseDto> GetReleaseAsync(
-        int releaseId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var release = await dbRead
-            .Releases.Where(release => release.Id == releaseId)
-            .Select(release => new
-            {
-                release.Name,
-                ContentKind = release.ReleaseInfo != null ? release.ReleaseInfo.ContentKind : null,
-                ReleaseGroupName = release.ReleaseGroup.Name,
-                Nfo = release.ReleaseNfo != null ? release.ReleaseNfo.Content : null,
-            })
-            .SingleAsync(cancellationToken);
-
-        return new UploadCompletionActionReleaseDto(
-            Name: release.Name,
-            ContentKind: release.ContentKind?.ToString(),
-            ReleaseGroupName: release.ReleaseGroupName,
-            Nfo: release.Nfo
-        );
     }
 
     public async Task<UploadCompletionActionExecution?> GetExecutionAsync(

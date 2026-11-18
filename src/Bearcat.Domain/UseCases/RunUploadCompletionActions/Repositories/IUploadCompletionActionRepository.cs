@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.UploadCompletionAction.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
 
@@ -12,11 +11,6 @@ public interface IUploadCompletionActionRepository
 
     Task<IReadOnlyList<UploadCompletionActionDueRelease>> GetDueReleasesAsync(
         UploadCompletionActionRegistration registration,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<UploadCompletionActionReleaseDto> GetReleaseAsync(
-        int releaseId,
         CancellationToken cancellationToken = default
     );
 

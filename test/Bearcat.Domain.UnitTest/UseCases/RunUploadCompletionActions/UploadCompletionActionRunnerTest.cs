@@ -7,6 +7,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UnitTest.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
@@ -202,21 +203,56 @@ public class UploadCompletionActionRunnerTest
             ]);
 
         repository
-            .Setup(repo => repo.GetReleaseAsync(ReleaseId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new UploadCompletionActionReleaseDto(
-                    Name: "Bearcat.Release.001",
-                    ContentKind: null,
-                    ReleaseGroupName: "Bearcat",
-                    Nfo: null
-                )
-            );
-
-        repository
             .Setup(repo =>
                 repo.GetExecutionAsync(ReleaseId, registration.Id, It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(execution);
+    }
+
+    private static IReleaseReadRepository CreateReleaseReadRepository()
+    {
+        var releaseReadRepository = new Mock<IReleaseReadRepository>
+        {
+            DefaultValueProvider = DefaultValueProvider.Mock,
+        };
+
+        releaseReadRepository
+            .Setup(repo =>
+                repo.GetReleasesByIdAsync(
+                    It.IsAny<IReadOnlyList<int>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Dictionary<int, ReleaseReadModel>
+                {
+                    {
+                        ReleaseId,
+                        new ReleaseReadModel(
+                            ReleaseId: ReleaseId,
+                            Name: "Bearcat.Release.001",
+                            ReleaseType: ReleaseType.Managed,
+                            ReleaseContentType: ReleaseContentType.Other,
+                            PrimaryLanguageCode: null,
+                            ReleaseGroupId: 1,
+                            ReleaseGroupName: "Bearcat",
+                            ReleaseFolderPath: null,
+                            UploadConfigsCount: 0,
+                            OnlineUploadConfigsCount: 0,
+                            ExcludeFromAutoCleanup: false,
+                            UploadsPostedAt: null,
+                            HasUploadConfigsWaitingForInitialUpload: false,
+                            CreateScreenshots: false,
+                            ScreenshotCount: 0,
+                            CreateScreenshotGrid: false,
+                            ScreenshotGridColumns: 0,
+                            ScreenshotGridRows: 0
+                        )
+                    },
+                }
+            );
+
+        return releaseReadRepository.Object;
     }
 
     private UploadCompletionActionRunner CreateRunner()
@@ -274,11 +310,10 @@ public class UploadCompletionActionRunnerTest
 
         var inputBuilder = new UploadCompletionActionInputBuilder(
             releaseForumPostRenderModelBuilder: new ReleaseForumPostRenderModelBuilder(
-                releaseReadRepository: Mock.Of<IReleaseReadRepository>(),
+                releaseReadRepository: CreateReleaseReadRepository(),
                 uploadRepository: uploadRepository.Object,
                 imageLinkRepository: imageLinkRepository.Object
             ),
-            repository: repository.Object,
             imageHosterFactory: Mock.Of<IImageHosterFactory>(),
             linkCrypterFactory: Mock.Of<ILinkCrypterFactory>()
         );

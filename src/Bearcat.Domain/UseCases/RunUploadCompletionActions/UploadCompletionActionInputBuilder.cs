@@ -1,17 +1,17 @@
+using System.Globalization;
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.UploadCompletionAction.Dto;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
-using Bearcat.Domain.UseCases.RunUploadCompletionActions.Repositories;
 
 namespace Bearcat.Domain.UseCases.RunUploadCompletionActions;
 
 public class UploadCompletionActionInputBuilder(
     ReleaseForumPostRenderModelBuilder releaseForumPostRenderModelBuilder,
-    IUploadCompletionActionRepository repository,
     IImageHosterFactory imageHosterFactory,
     ILinkCrypterFactory linkCrypterFactory
 )
@@ -21,14 +21,18 @@ public class UploadCompletionActionInputBuilder(
         CancellationToken cancellationToken
     )
     {
-        var release = await repository.GetReleaseAsync(dueRelease.ReleaseId, cancellationToken);
-
         var serviceLinksByReleaseId =
             await releaseForumPostRenderModelBuilder.LoadServiceLinksAsync(
                 [dueRelease.ReleaseId],
                 cancellationToken
             );
 
+        var renderDataByReleaseId = await releaseForumPostRenderModelBuilder.BuildAsync(
+            serviceLinksByReleaseId,
+            cancellationToken
+        );
+
+        var release = ToRelease(renderDataByReleaseId[dueRelease.ReleaseId].RenderModel);
         var serviceLinks = serviceLinksByReleaseId[dueRelease.ReleaseId];
 
         var allHostersLinkCrypterContainers = serviceLinks
@@ -51,6 +55,52 @@ public class UploadCompletionActionInputBuilder(
             AllHostersLinkCrypterContainers: allHostersLinkCrypterContainers,
             Images: ToImages(serviceLinks.ImageLinks)
         );
+    }
+
+    private static UploadCompletionActionReleaseDto ToRelease(
+        ForumPostTemplateRenderModel renderModel
+    )
+    {
+        var mainVideo = renderModel.Release.MainVideo;
+
+        var audioLanguages = mainVideo
+            .AudioStreams.Select(audioStream => audioStream.Language)
+            .Where(language => language.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var mainAudioStream = mainVideo
+            .AudioStreams.OrderByDescending(audioStream => audioStream.IsDefault)
+            .FirstOrDefault();
+
+        return new UploadCompletionActionReleaseDto(
+            Name: renderModel.Release.Name,
+            ContentType: renderModel.Classification.ContentType.TrimOrNullWhenWhitespace(),
+            Platform: renderModel.Classification.Platform.TrimOrNullWhenWhitespace(),
+            Title: renderModel.Classification.Title.TrimOrNullWhenWhitespace(),
+            Genre: renderModel.ReleaseInfo.Genre.TrimOrNullWhenWhitespace(),
+            Description: renderModel.ReleaseInfo.Description.TrimOrNullWhenWhitespace(),
+            RuntimeMinutes: ToRuntimeMinutes(mainVideo.Duration),
+            VideoType: renderModel.ReleaseInfo.VideoType.TrimOrNullWhenWhitespace(),
+            VideoCodec: mainVideo.Video.Codec.TrimOrNullWhenWhitespace(),
+            AudioType: renderModel.ReleaseInfo.AudioType.TrimOrNullWhenWhitespace(),
+            AudioCodec: mainAudioStream?.Codec.TrimOrNullWhenWhitespace(),
+            AudioChannels: mainAudioStream?.Channels,
+            AudioLanguages: audioLanguages,
+            Nfo: renderModel.Release.Nfo.TrimOrNullWhenWhitespace()
+        );
+    }
+
+    private static int? ToRuntimeMinutes(string duration)
+    {
+        if (duration.Length == 0)
+        {
+            return null;
+        }
+
+        var timeSpan = TimeSpan.ParseExact(duration, @"hh\:mm\:ss", CultureInfo.InvariantCulture);
+
+        return (int)Math.Round(timeSpan.TotalMinutes);
     }
 
     private UploadCompletionActionMirrorDto ToMirror(

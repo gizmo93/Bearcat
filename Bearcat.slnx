@@ -49,6 +49,7 @@
         <Project Path="test/Bearcat.NfoDatabases.UnitTest/Bearcat.NfoDatabases.UnitTest.csproj" />
         <Project Path="test/Bearcat.RemoteSources.IntegrationTest/Bearcat.RemoteSources.IntegrationTest.csproj" />
         <Project Path="test/Bearcat.RemoteSources.UnitTest/Bearcat.RemoteSources.UnitTest.csproj" />
+        <Project Path="test/Bearcat.UploadCompletionActions.UnitTest/Bearcat.UploadCompletionActions.UnitTest.csproj" />
         <Project Path="test/Bearcat.Website.UnitTest/Bearcat.Website.UnitTest.csproj" />
     </Folder>
 </Solution>
