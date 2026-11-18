@@ -128,6 +128,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Templates and folder automations', translations: { de: 'Templates und Ordnerautomatisierungen' }, slug: 'release-templates-and-automations' },
 						{ label: 'FTP / FTPS downloads', translations: { de: 'FTP-/FTPS-Downloads' }, slug: 'remote-downloads' },
+						{ label: 'Actions after upload', translations: { de: 'Aktionen nach Upload' }, slug: 'upload-completion-actions' },
 						{ label: 'Quality gates', translations: { de: 'Qualitätsprüfungen' }, slug: 'quality-gates' },
 						{ label: 'Telegram notifications', translations: { de: 'Telegrambenachrichtigungen' }, slug: 'telegram-notifications' },
 					],

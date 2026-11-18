@@ -96,6 +96,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
+using Bearcat.Domain.UseCases.ManageUploadCompletionActions;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
@@ -124,6 +125,7 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<RemoteSourceRegistrationService>();
+            services.AddScoped<UploadCompletionActionRegistrationService>();
             services.AddSingleton<RemoteSourceSessionPool>();
             services.AddScoped<RemoteSourceSessionProvider>();
             services.AddScoped<RemoteSourceAutomationService>();

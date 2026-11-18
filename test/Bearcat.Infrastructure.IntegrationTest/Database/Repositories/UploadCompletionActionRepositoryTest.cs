@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
+using Bearcat.Domain.UseCases.RunUploadCompletionActions.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -170,6 +171,102 @@ public class UploadCompletionActionRepositoryTest(DatabaseProvider databaseProvi
         result.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task GetCompletelyUploadedReleaseAsync_ReuploadAlreadyHandled_ReturnsNewestUploadAsReupload()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var release = AddReuploadedRelease(registration);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetCompletelyUploadedReleaseAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new UploadCompletionActionDueRelease(
+                ReleaseId: release.Id,
+                IsReupload: true,
+                NewestUploadedAt: RegistrationCreatedAt.AddDays(2).AddHours(1)
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetCompletelyUploadedReleaseAsync_LatestUploadOfOneUploadConfigNotCompleted_ReturnsNull()
+    {
+        // Arrange
+        var release = AddRelease("Bearcat.Release.001");
+
+        AddUpload(
+            AddUploadConfig(release, CreateHosterRegistration("Alpha")),
+            RegistrationCreatedAt.AddHours(1)
+        );
+
+        AddUpload(
+            uploadConfig: AddUploadConfig(release, CreateHosterRegistration("Beta")),
+            uploadedAt: null,
+            uploadState: UploadState.Uploading,
+            createdAt: RegistrationCreatedAt.AddHours(1)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetCompletelyUploadedReleaseAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetReleaseStatesAsync_ActiveRegistrationsWithAndWithoutExecution_ReturnsStateOfEachActiveRegistration()
+    {
+        // Arrange
+        var failedRegistration = AddRegistration(name: "Alpha export");
+        var notRunRegistration = AddRegistration(name: "Beta export");
+        AddRegistration(name: "Inactive export", isActive: false);
+        var hoster = CreateHosterRegistration("Alpha");
+        var release = AddRelease("Bearcat.Release.001");
+        AddUpload(AddUploadConfig(release, hoster), RegistrationCreatedAt.AddHours(1));
+
+        AddExecution(
+            release: release,
+            registration: failedRegistration,
+            handledUploadedAt: RegistrationCreatedAt,
+            errorMessage: "Target folder is missing"
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetReleaseStatesAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([
+            new UploadCompletionActionReleaseStateReadModel(
+                RegistrationId: failedRegistration.Id,
+                RegistrationName: "Alpha export",
+                IsReleaseCompletelyUploaded: true,
+                ExecutedAt: RegistrationCreatedAt,
+                ResultText: null,
+                ErrorMessage: "Target folder is missing"
+            ),
+            new UploadCompletionActionReleaseStateReadModel(
+                RegistrationId: notRunRegistration.Id,
+                RegistrationName: "Beta export",
+                IsReleaseCompletelyUploaded: true,
+                ExecutedAt: null,
+                ResultText: null,
+                ErrorMessage: null
+            ),
+        ]);
+    }
+
     private Release AddReuploadedRelease(UploadCompletionActionRegistration registration)
     {
         var hoster = CreateHosterRegistration("Alpha");
@@ -191,15 +288,17 @@ public class UploadCompletionActionRepositoryTest(DatabaseProvider databaseProvi
 
     private UploadCompletionActionRegistration AddRegistration(
         bool runForInitialUpload = true,
-        bool runForReupload = true
+        bool runForReupload = true,
+        string name = "Export",
+        bool isActive = true
     )
     {
         var registration = new UploadCompletionActionRegistration
         {
-            Name = "Export",
+            Name = name,
             ActionClassName = "TestUploadCompletionAction",
             SerializedConfig = "{}",
-            IsActive = true,
+            IsActive = isActive,
             RunForInitialUpload = runForInitialUpload,
             RunForReupload = runForReupload,
             CreatedAt = RegistrationCreatedAt,
@@ -213,7 +312,8 @@ public class UploadCompletionActionRepositoryTest(DatabaseProvider databaseProvi
     private void AddExecution(
         Release release,
         UploadCompletionActionRegistration registration,
-        DateTime handledUploadedAt
+        DateTime handledUploadedAt,
+        string? errorMessage = null
     )
     {
         DbContext.UploadCompletionActionExecutions.Add(
@@ -223,6 +323,7 @@ public class UploadCompletionActionRepositoryTest(DatabaseProvider databaseProvi
                 UploadCompletionActionRegistration = registration,
                 HandledUploadedAt = handledUploadedAt,
                 ExecutedAt = handledUploadedAt,
+                ErrorMessage = errorMessage,
             }
         );
     }

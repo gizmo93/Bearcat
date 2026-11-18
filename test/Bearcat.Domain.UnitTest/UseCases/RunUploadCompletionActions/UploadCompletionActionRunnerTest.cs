@@ -159,6 +159,43 @@ public class UploadCompletionActionRunnerTest
         notificationService.Created.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task RunForReleaseAsync_ActionFailsWithoutPreviousFailure_StoresErrorAndCreatesNoNotification()
+    {
+        // Arrange
+        var execution = Execution(errorMessage: null);
+        SetUpRepository(execution);
+
+        repository
+            .Setup(repo =>
+                repo.GetRegistrationAsync(registration.Id, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(registration);
+
+        repository
+            .Setup(repo =>
+                repo.GetCompletelyUploadedReleaseAsync(ReleaseId, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new UploadCompletionActionDueRelease(
+                    ReleaseId: ReleaseId,
+                    IsReupload: false,
+                    NewestUploadedAt: NewestUploadedAt
+                )
+            );
+
+        SetUpFailingAction("Target folder is missing");
+
+        // Act
+        await CreateRunner().RunForReleaseAsync(registration.Id, ReleaseId);
+
+        // Assert
+        execution.HandledUploadedAt.ShouldBe(PreviouslyHandledUploadedAt);
+        execution.ExecutedAt.ShouldBe(Now);
+        execution.ErrorMessage.ShouldBe("Target folder is missing");
+        notificationService.Created.ShouldBeEmpty();
+    }
+
     private static UploadCompletionActionExecution Execution(string? errorMessage)
     {
         return new UploadCompletionActionExecution

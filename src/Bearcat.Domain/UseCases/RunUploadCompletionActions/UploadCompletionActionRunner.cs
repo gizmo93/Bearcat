@@ -34,56 +34,26 @@ public class UploadCompletionActionRunner(
         foreach (var registration in registrations)
         {
             var action = uploadCompletionActionFactory.GetByClassName(registration.ActionClassName);
-
-            var config = action.DeserializeConfig(
-                secretProtector.Unprotect(registration.SerializedConfig)
-            );
-
+            var config = DecryptConfig(action, registration);
             var dueReleases = await repository.GetDueReleasesAsync(registration, cancellationToken);
 
             foreach (var dueRelease in dueReleases)
             {
-                var input = await inputBuilder.BuildAsync(dueRelease, cancellationToken);
-
-                var execution = await repository.GetExecutionAsync(
-                    releaseId: dueRelease.ReleaseId,
-                    uploadCompletionActionRegistrationId: registration.Id,
+                var succeeded = await ExecuteAndSaveResultAsync(
+                    registration: registration,
+                    action: action,
+                    config: config,
+                    dueRelease: dueRelease,
+                    createNotificationOnFirstFailure: true,
                     cancellationToken: cancellationToken
                 );
 
-                try
+                if (succeeded)
                 {
-                    var resultText = await action.ExecuteAsync(config, input, cancellationToken);
-
-                    await SaveSuccessAsync(
-                        registration: registration,
-                        dueRelease: dueRelease,
-                        execution: execution,
-                        resultText: resultText,
-                        cancellationToken: cancellationToken
-                    );
-
                     succeededCount++;
                 }
-                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                else
                 {
-                    logger.LogWarning(
-                        exception,
-                        "Upload completion action {RegistrationName} failed for release {ReleaseName}: {Message}",
-                        registration.Name,
-                        input.Release.Name,
-                        exception.Message
-                    );
-
-                    await SaveFailureAsync(
-                        registration: registration,
-                        dueRelease: dueRelease,
-                        releaseName: input.Release.Name,
-                        execution: execution,
-                        errorMessage: exception.Message,
-                        cancellationToken: cancellationToken
-                    );
-
                     failedCount++;
                 }
             }
@@ -96,6 +66,87 @@ public class UploadCompletionActionRunner(
                 succeededCount,
                 failedCount
             );
+        }
+    }
+
+    public async Task RunForReleaseAsync(
+        int registrationId,
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await repository.GetRegistrationAsync(registrationId, cancellationToken);
+
+        var completelyUploadedRelease =
+            await repository.GetCompletelyUploadedReleaseAsync(releaseId, cancellationToken)
+            ?? throw new InvalidOperationException(
+                $"Release {releaseId} is not completely uploaded"
+            );
+
+        var action = uploadCompletionActionFactory.GetByClassName(registration.ActionClassName);
+
+        await ExecuteAndSaveResultAsync(
+            registration: registration,
+            action: action,
+            config: DecryptConfig(action, registration),
+            dueRelease: completelyUploadedRelease,
+            createNotificationOnFirstFailure: false,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<bool> ExecuteAndSaveResultAsync(
+        UploadCompletionActionRegistration registration,
+        IUploadCompletionAction action,
+        IUploadCompletionActionConfig config,
+        UploadCompletionActionDueRelease dueRelease,
+        bool createNotificationOnFirstFailure,
+        CancellationToken cancellationToken
+    )
+    {
+        var input = await inputBuilder.BuildAsync(dueRelease, cancellationToken);
+
+        var execution = await repository.GetExecutionAsync(
+            releaseId: dueRelease.ReleaseId,
+            uploadCompletionActionRegistrationId: registration.Id,
+            cancellationToken: cancellationToken
+        );
+
+        try
+        {
+            var resultText = await action.ExecuteAsync(config, input, cancellationToken);
+
+            await SaveSuccessAsync(
+                registration: registration,
+                dueRelease: dueRelease,
+                execution: execution,
+                resultText: resultText,
+                cancellationToken: cancellationToken
+            );
+
+            return true;
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                exception,
+                "Upload completion action {RegistrationName} failed for release {ReleaseName}: {Message}",
+                registration.Name,
+                input.Release.Name,
+                exception.Message
+            );
+
+            await SaveFailureAsync(
+                registration: registration,
+                dueRelease: dueRelease,
+                releaseName: input.Release.Name,
+                execution: execution,
+                errorMessage: exception.Message,
+                createNotificationOnFirstFailure: createNotificationOnFirstFailure,
+                cancellationToken: cancellationToken
+            );
+
+            return false;
         }
     }
 
@@ -123,6 +174,7 @@ public class UploadCompletionActionRunner(
         string releaseName,
         UploadCompletionActionExecution? execution,
         string errorMessage,
+        bool createNotificationOnFirstFailure,
         CancellationToken cancellationToken
     )
     {
@@ -135,7 +187,7 @@ public class UploadCompletionActionRunner(
 
         await repository.SaveChangesAsync(cancellationToken);
 
-        if (previousExecutionFailed)
+        if (previousExecutionFailed || !createNotificationOnFirstFailure)
         {
             return;
         }
@@ -149,6 +201,14 @@ public class UploadCompletionActionRunner(
             selector: notification => notification.ReleaseId,
             cancellationToken: cancellationToken
         );
+    }
+
+    private IUploadCompletionActionConfig DecryptConfig(
+        IUploadCompletionAction action,
+        UploadCompletionActionRegistration registration
+    )
+    {
+        return action.DeserializeConfig(secretProtector.Unprotect(registration.SerializedConfig));
     }
 
     private UploadCompletionActionExecution AddExecution(

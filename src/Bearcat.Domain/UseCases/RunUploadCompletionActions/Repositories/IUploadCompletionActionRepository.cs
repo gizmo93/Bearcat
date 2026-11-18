@@ -9,6 +9,16 @@ public interface IUploadCompletionActionRepository
         IReadOnlyList<UploadCompletionActionRegistration>
     > GetActiveRegistrationsWithReadableSecretsAsync(CancellationToken cancellationToken = default);
 
+    Task<UploadCompletionActionRegistration> GetRegistrationAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<UploadCompletionActionDueRelease?> GetCompletelyUploadedReleaseAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<UploadCompletionActionDueRelease>> GetDueReleasesAsync(
         UploadCompletionActionRegistration registration,
         CancellationToken cancellationToken = default
