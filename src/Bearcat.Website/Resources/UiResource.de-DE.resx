@@ -1136,8 +1136,8 @@
   <data name="NotificationKind.HosterAccountPoolFull.Description" xml:space="preserve"><value>Ein Upload konnte nicht starten, weil kein Account seines Accountpools genug freien Speicherplatz hat. Der Upload bleibt ausstehend und startet, sobald ein Account genug Platz hat.</value></data>
   <data name="NotificationKind.HosterAccountPoolWithoutUsableAccount" xml:space="preserve"><value>Accountpool ohne nutzbaren Account</value></data>
   <data name="NotificationKind.HosterAccountPoolWithoutUsableAccount.Description" xml:space="preserve"><value>Ein Upload konnte nicht starten, weil sein Accountpool keinen nutzbaren Account hat: Alle Accounts sind inaktiv, brauchen eine Captchaverifizierung oder haben unlesbare Zugangsdaten, oder der Pool hat keine Accounts. Der Upload bleibt ausstehend.</value></data>
-  <data name="NotificationKind.UploadCompletionActionFailed" xml:space="preserve"><value>Uploadabschlussaktion fehlgeschlagen</value></data>
-  <data name="NotificationKind.UploadCompletionActionFailed.Description" xml:space="preserve"><value>Eine Aktion, die nach dem vollständigen Upload eines Release läuft, ist fehlgeschlagen. Bearcat wiederholt sie automatisch.</value></data>
+  <data name="NotificationKind.UploadCompletionActionFailed" xml:space="preserve"><value>Aktion nach dem Upload fehlgeschlagen</value></data>
+  <data name="NotificationKind.UploadCompletionActionFailed.Description" xml:space="preserve"><value>Bearcat versucht die fehlgeschlagene Aktion bei der nächsten Prüfung erneut.</value></data>
   <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA-Verifizierung erforderlich</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>Ein Hoster erfordert eine CAPTCHA-Verifizierung.</value></data>
   <data name="NotificationKind.HosterCredentialsRejected" xml:space="preserve"><value>Zugangsdaten vom Hoster abgelehnt</value></data>
   <data name="NotificationKind.HosterCredentialsRejected.Description" xml:space="preserve"><value>Ein Hoster hat die Zugangsdaten einer Hosterregistrierung abgelehnt. Bearcat deaktiviert die Registrierung, bis du die Zugangsdaten korrigierst und sie wieder aktivierst.</value></data>
@@ -2298,34 +2298,34 @@
   <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Hosterregeln für {0} gespeichert</value></data>
   <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>Dieser Post erfüllt die Hosterregeln des Forums nicht. Bearcat würde ihn beim automatischen Posten überspringen.</value></data>
   <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Wegen der Hosterregeln dieses Forums übersprungen: {0}</value></data>
-  <data name="UploadCompletionActions" xml:space="preserve"><value>Aktionen nach Upload</value></data>
-  <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Aktionen, die Bearcat ausführt, sobald ein Release vollständig hochgeladen ist, zum Beispiel ein XML-Export für IntelliGeN.</value></data>
+  <data name="UploadCompletionActions" xml:space="preserve"><value>Aktionen nach dem Upload</value></data>
+  <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Lege fest, was Bearcat nach dem Upload tun soll, etwa ein Release für IntelliGeN exportieren.</value></data>
   <data name="NewUploadCompletionAction" xml:space="preserve"><value>Neue Aktion</value></data>
-  <data name="AddUploadCompletionAction" xml:space="preserve"><value>Aktion nach Upload hinzufügen</value></data>
-  <data name="NoUploadCompletionActionsYet" xml:space="preserve"><value>Noch keine Aktionen nach Upload eingerichtet.</value></data>
+  <data name="AddUploadCompletionAction" xml:space="preserve"><value>Aktion hinzufügen</value></data>
+  <data name="NoUploadCompletionActionsYet" xml:space="preserve"><value>Noch keine Aktionen eingerichtet.</value></data>
   <data name="OpenUploadCompletionActionMenu" xml:space="preserve"><value>Aktionsmenü öffnen</value></data>
   <data name="UploadCompletionActionType" xml:space="preserve"><value>Aktionstyp</value></data>
   <data name="SelectUploadCompletionActionType" xml:space="preserve"><value>Aktionstyp auswählen</value></data>
-  <data name="UploadCompletionActionTriggers" xml:space="preserve"><value>Läuft bei</value></data>
+  <data name="UploadCompletionActionTriggers" xml:space="preserve"><value>Auslöser</value></data>
   <data name="UploadCompletionActionTriggerInitialUpload" xml:space="preserve"><value>Erster Upload</value></data>
-  <data name="RunForInitialUpload" xml:space="preserve"><value>Beim ersten Upload ausführen</value></data>
-  <data name="RunForInitialUploadHelp" xml:space="preserve"><value>Läuft, sobald alle Uploads eines Release zum ersten Mal abgeschlossen sind.</value></data>
-  <data name="RunForReupload" xml:space="preserve"><value>Beim Reupload ausführen</value></data>
-  <data name="RunForReuploadHelp" xml:space="preserve"><value>Läuft erneut, sobald ein Reupload eines Release abgeschlossen ist.</value></data>
+  <data name="RunForInitialUpload" xml:space="preserve"><value>Nach dem ersten Upload</value></data>
+  <data name="RunForInitialUploadHelp" xml:space="preserve"><value>Startet die Aktion, sobald das Release zum ersten Mal vollständig hochgeladen ist.</value></data>
+  <data name="RunForReupload" xml:space="preserve"><value>Nach einem Reupload</value></data>
+  <data name="RunForReuploadHelp" xml:space="preserve"><value>Startet die Aktion, sobald der Reupload abgeschlossen ist.</value></data>
   <data name="UploadCompletionActionActivated" xml:space="preserve"><value>Aktion {0} aktiviert</value></data>
   <data name="UploadCompletionActionDeactivated" xml:space="preserve"><value>Aktion {0} deaktiviert</value></data>
   <data name="UploadCompletionActionDeleted" xml:space="preserve"><value>Aktion {0} gelöscht</value></data>
-  <data name="DeleteUploadCompletionActionConfirmation" xml:space="preserve"><value>Möchtest du die Aktion „{0}" wirklich löschen? Ihr Ausführungsverlauf wird ebenfalls gelöscht.</value></data>
+  <data name="DeleteUploadCompletionActionConfirmation" xml:space="preserve"><value>Aktion "{0}" löschen? Damit löschst du auch ihren Verlauf.</value></data>
   <data name="UploadCompletionActionConfig_ExportDirectory" xml:space="preserve"><value>Exportordner</value></data>
-  <data name="UploadCompletionActionConfig_ExportDirectory_Description" xml:space="preserve"><value>Ordner, in den die XML-Dateien geschrieben werden. Er muss bereits existieren, Bearcat legt ihn nie an.</value></data>
+  <data name="UploadCompletionActionConfig_ExportDirectory_Description" xml:space="preserve"><value>Wähle einen vorhandenen Ordner für die XML-Dateien.</value></data>
   <data name="UploadCompletionActionConfig_RelativeFilePathTemplate" xml:space="preserve"><value>Dateipfadvorlage</value></data>
-  <data name="UploadCompletionActionConfig_RelativeFilePathTemplate_Description" xml:space="preserve"><value>Pfad relativ zum Exportordner, darf Unterordner enthalten. Variablen: {{ release.name }}, {{ release.title }}, {{ release.content_type }}, {{ release.platform }}, {{ release.genre }} und {{ is_reupload }}. Vorhandene Dateien werden nie überschrieben, stattdessen wird eine Nummer wie " (2)" angehängt.</value></data>
+  <data name="UploadCompletionActionConfig_RelativeFilePathTemplate_Description" xml:space="preserve"><value>Gib den Pfad relativ zum Exportordner an. Du kannst Unterordner und Variablen wie {{ release.name }}, {{ release.title }}, {{ release.content_type }}, {{ release.platform }}, {{ release.genre }} und {{ is_reupload }} verwenden. Ist der Dateiname bereits vergeben, hängt Bearcat eine Nummer an, etwa bei "Release (2).xml".</value></data>
   <data name="UploadCompletionActionNotRunYet" xml:space="preserve"><value>Noch nicht ausgeführt</value></data>
   <data name="UploadCompletionActionSucceededAt" xml:space="preserve"><value>Erfolgreich am {0}</value></data>
   <data name="UploadCompletionActionFailedAt" xml:space="preserve"><value>Fehlgeschlagen am {0}</value></data>
   <data name="RunUploadCompletionActionNow" xml:space="preserve"><value>Jetzt ausführen</value></data>
-  <data name="RunUploadCompletionActionNowUnavailable" xml:space="preserve"><value>Verfügbar, sobald alle Uploads des Release abgeschlossen sind.</value></data>
-  <data name="RunUploadCompletionActionNowUnavailableForReleaseCollection" xml:space="preserve"><value>Verfügbar, sobald alle Uploads in den Uploadslots der Collection abgeschlossen sind.</value></data>
+  <data name="RunUploadCompletionActionNowUnavailable" xml:space="preserve"><value>Verfügbar, sobald Uploads, Linkcontainer und Bilder des Releases fertig sind.</value></data>
+  <data name="RunUploadCompletionActionNowUnavailableForReleaseCollection" xml:space="preserve"><value>Verfügbar, sobald alle Uploads in den Slots sowie die Linkcontainer und Bilder der Collection fertig sind.</value></data>
   <data name="UploadCompletionActionSucceeded" xml:space="preserve"><value>Aktion {0} erfolgreich ausgeführt</value></data>
   <data name="UploadCompletionActionFailed" xml:space="preserve"><value>Aktion {0} fehlgeschlagen</value></data>
 </root>

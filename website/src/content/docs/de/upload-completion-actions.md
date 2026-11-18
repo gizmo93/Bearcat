@@ -1,92 +1,46 @@
 ---
-title: "Aktionen nach Upload"
-description: "Aktionen wie einen IntelliGeN-XML-Export automatisch ausführen, sobald ein Release vollständig hochgeladen ist."
+title: "Aktionen nach dem Upload"
+description: "Automatische Aktionen für Uploads und Reuploads einrichten, Ergebnisse prüfen und Aktionen manuell starten."
 ---
 
-Aktionen nach Upload laufen automatisch, sobald ein Release vollständig hochgeladen ist.
-Die erste verfügbare Aktion ist der **IntelliGeN XML export**.
+Bearcat kann nach dem Upload eines Releases oder einer Releasecollection automatisch eine Aktion ausführen.
+Eine solche Aktion ist der [XML-Export für IntelliGeN](/Bearcat/de/intelligen-xml-export/).
 
-## Eine Aktion hinzufügen
+## Aktion einrichten
 
-1. Öffne **Automatisierung > Aktionen nach Upload** in der Seitenleiste und klicke auf **Neue Aktion**.
-2. Gib einen Namen ein und wähle den **Aktionstyp**.
-3. Lege fest, wann die Aktion läuft:
-   - **Beim ersten Upload ausführen** läuft, sobald alle Uploads eines Release zum ersten Mal abgeschlossen sind.
-   - **Beim Reupload ausführen** läuft erneut, sobald ein Reupload eines Release abgeschlossen ist.
-4. Fülle die Konfiguration aus und klicke auf **Speichern**.
+1. Öffne **Automatisierung > Aktionen nach dem Upload** und klicke auf **Neue Aktion**.
+2. Wähle den **Aktionstyp** und gib der Aktion einen Namen.
+3. Wähle, wann die Aktion laufen soll. Du kannst **Nach dem ersten Upload**, **Nach einem Reupload** oder beides aktivieren.
+4. Fülle die Felder für den gewählten Aktionstyp aus und klicke auf **Speichern**.
 
-Neue Aktionen sind aktiv. Mit **Deaktivieren** im Aktionsmenü pausierst du eine Aktion.
+Neue Aktionen sind sofort aktiv. Über **Deaktivieren** im Aktionsmenü kannst du sie pausieren.
 
-## Verhalten
+![Aktive Aktion für den ersten Upload und für Reuploads](../images/upload-completion-actions-overview.png)
 
-- Bearcat prüft alle 5 Minuten, ob Uploads, Linkcontainer und Bilder eines Release fertig sind.
-- Jede Aktion läuft einmal pro abgeschlossenem Uploadstand. Ein späterer Reupload zählt als neuer Stand.
-- Aktionen laufen nur für Uploads, die nach dem Anlegen der Aktion abgeschlossen wurden. Ältere
-  Releases werden nicht verarbeitet.
-- Eine fehlgeschlagene Aktion wird bei der nächsten Prüfung automatisch wiederholt. Bearcat erstellt
-  eine Benachrichtigung für den ersten Fehler, nicht für jede Wiederholung.
+## Wann eine Aktion läuft
 
-Der Abschnitt **Aktionen nach Upload** im Übersichtstab der
-[Releasedetailseite](/Bearcat/de/release-detail-page/) zeigt das letzte Ergebnis jeder aktiven Aktion.
-**Jetzt ausführen** führt eine Aktion sofort aus, auch wenn sie schon gelaufen ist oder ihr Auslöser
-ausgeschaltet ist. Der Button ist verfügbar, sobald alle Uploads des Release abgeschlossen sind.
-Ein fehlgeschlagener manueller Lauf erstellt keine Benachrichtigung.
+Bearcat prüft standardmässig alle fünf Minuten, ob alle Uploads, Linkcontainer und Bilder eines Releases fertig sind.
+Eine neue Aktion berücksichtigt nur Uploads, die nach dem Einrichten fertig werden.
+Nach einem erfolgreichen Lauf startet die Aktion erst wieder, wenn ein weiterer passender Upload abgeschlossen ist.
 
-## Releasecollections
+Schlägt die Aktion fehl, benachrichtigt dich Bearcat beim ersten Fehler und versucht es bei der nächsten Prüfung erneut.
 
-Eine [Releasecollection](/Bearcat/de/release-collections/), die über
-[Uploadslots](/Bearcat/de/release-collections/#uploadslots) hochlädt, behandelt Bearcat als eine Einheit:
+## Aktionen für Releasecollections
 
-- Die Aktion läuft, sobald alle Episoden in den Uploadslots hochgeladen sind, die Collectioncontainer
-  und die Collectionbilder fertig sind und jedes Release der Collection das
-  [Quality Gate](/Bearcat/de/quality-gates/) bestanden hat.
-- Sie läuft erneut, wenn eine Episode dazukommt oder neu hochgeladen wird. Als Reupload zählt der
-  Lauf nur, wenn alle neuen Uploads Reuploads sind.
-- `release.name` ist der Name der Collection.
-- Uploads eines Release ausserhalb der Uploadslots gehören nicht zur Collection. Sie lösen weiterhin
-  die Aktion für das Release selbst aus.
+Nutzt eine [Releasecollection](/Bearcat/de/release-collections/) [Uploadslots](/Bearcat/de/release-collections/#uploadslots),
+läuft die Aktion für die ganze Collection. Bearcat wartet, bis alle Uploads in den Slots, die Linkcontainer und die Bilder
+der Collection fertig sind. Ausserdem muss jedes Release das [Quality Gate](/Bearcat/de/quality-gates/) bestanden haben oder manuell freigegeben sein.
 
-Die Collectiondetailseite hat denselben Abschnitt **Aktionen nach Upload** mit **Jetzt ausführen**.
+Kommt eine neue Folge hinzu, gilt für ihren Upload **Nach dem ersten Upload**. **Nach einem Reupload** gilt nur,
+wenn alle neuen Uploads in den Slots Reuploads sind. Uploads ausserhalb der Slots lösen die Aktion für das einzelne Release aus.
 
-## IntelliGeN-XML-Export
+## Ergebnis prüfen oder Aktion manuell starten
 
-Der Export schreibt pro Lauf eine XML-Datei, die IntelliGeN importieren kann.
+Im Tab **Übersicht** auf der [Releasedetailseite](/Bearcat/de/release-detail-page/) siehst du unter
+**Aktionen nach dem Upload** das letzte Ergebnis jeder aktiven Aktion. Auf der Detailseite einer Collection findest du denselben Abschnitt.
 
-| Feld | Bedeutung |
-| --- | --- |
-| **Exportordner** | Ordner, in den die XML-Dateien geschrieben werden. Er muss bereits existieren. Bearcat legt ihn nie an. |
-| **Dateipfadvorlage** | Pfad der Datei relativ zum Exportordner. Er darf Unterordner enthalten. |
+Sobald Uploads, Linkcontainer und Bilder fertig sind, kannst du eine Aktion mit **Jetzt ausführen** manuell starten.
+Das geht auch, wenn sie bereits gelaufen ist oder der passende Auslöser deaktiviert ist.
+Fehler beim manuellen Start siehst du direkt in der Übersicht. Bearcat verschickt dafür keine Benachrichtigung.
 
-Für eine Collection schreibt jeder Lauf eine neue XML-Datei mit den Links aller Episoden. Jeder
-Uploadslot und Hoster wird ein eigener Mirror.
-
-Vorhandene Dateien werden nie überschrieben. Bearcat hängt stattdessen eine Nummer an, zum Beispiel
-`Release.Name (2).xml`.
-
-Die Dateipfadvorlage verwendet die Syntax von [Scriban](https://github.com/scriban/scriban).
-Standard ist `{{ release.name }}.xml`. Verfügbare Variablen:
-
-| Variable | Wert |
-| --- | --- |
-| `{{ release.name }}` | Releasename |
-| `{{ release.title }}` | Titel aus den Metadaten |
-| `{{ release.content_type }}` | Inhaltstyp |
-| `{{ release.platform }}` | Plattform eines Spiels |
-| `{{ release.genre }}` | Genre |
-| `{{ release.runtime_minutes }}` | Laufzeit in Minuten |
-| `{{ release.video_codec }}` | Videocodec des Hauptvideos |
-| `{{ release.audio_codec }}` | Audiocodec der Haupttonspur |
-| `{{ is_reupload }}` | `true` bei einem Reupload, sonst `false` |
-
-Beispiel, das Reuploads in einen Unterordner legt:
-
-```text
-{{ if is_reupload }}Reuploads/{{ end }}{{ release.name }}.xml
-```
-
-### In IntelliGeN importieren
-
-Richte **DirWatch** von IntelliGeN auf den Exportordner. IntelliGeN übernimmt dann jede neue Datei.
-
-Crypter und Dropdownwerte wie Genre, Sprache oder Codecs übernimmt IntelliGeN nur, wenn der Wert in
-seinen eigenen Listen existiert. Andere Werte ignoriert IntelliGeN.
+![Releaseübersicht mit erfolgreichem Export und der Schaltfläche "Jetzt ausführen"](../images/release-upload-action-result.png)
