@@ -83,4 +83,6 @@ public interface IBearcatWriteDbContext
     DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
     DbSet<HosterAccountPool> HosterAccountPools { get; set; }
     DbSet<HosterAccountPoolMember> HosterAccountPoolMembers { get; set; }
+    DbSet<UploadCompletionActionRegistration> UploadCompletionActionRegistrations { get; set; }
+    DbSet<UploadCompletionActionExecution> UploadCompletionActionExecutions { get; set; }
 }

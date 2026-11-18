@@ -42,6 +42,11 @@ public class UnreadableSecretsRepository(IBearcatWriteDbContext dbWrite)
         );
         entities.AddRange(
             await dbWrite
+                .UploadCompletionActionRegistrations.OrderBy(registration => registration.Name)
+                .ToListAsync(cancellationToken)
+        );
+        entities.AddRange(
+            await dbWrite
                 .NfoDatabaseRegistrations.OrderBy(registration => registration.NfoDatabaseClassName)
                 .ToListAsync(cancellationToken)
         );
@@ -116,6 +121,13 @@ public class UnreadableSecretsRepository(IBearcatWriteDbContext dbWrite)
             .Concat(
                 dbWrite
                     .RemoteSourceRegistrations.Where(registration =>
+                        registration.HasUnreadableSecrets
+                    )
+                    .Select(registration => 1)
+            )
+            .Concat(
+                dbWrite
+                    .UploadCompletionActionRegistrations.Where(registration =>
                         registration.HasUnreadableSecrets
                     )
                     .Select(registration => 1)

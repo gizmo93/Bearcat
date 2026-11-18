@@ -142,6 +142,12 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<HosterAccountPoolMember> HosterAccountPoolMembers { get; set; } = null!;
 
+    public DbSet<UploadCompletionActionRegistration> UploadCompletionActionRegistrations { get; set; } =
+        null!;
+
+    public DbSet<UploadCompletionActionExecution> UploadCompletionActionExecutions { get; set; } =
+        null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

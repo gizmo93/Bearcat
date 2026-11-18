@@ -28,6 +28,7 @@
         <Project Path="src/Bearcat.MediaDatabases/Bearcat.MediaDatabases.csproj" />
         <Project Path="src/Bearcat.NfoDatabases/Bearcat.NfoDatabases.csproj" />
         <Project Path="src/Bearcat.RemoteSources/Bearcat.RemoteSources.csproj" />
+        <Project Path="src/Bearcat.UploadCompletionActions/Bearcat.UploadCompletionActions.csproj" />
     </Folder>
     <Folder Name="/6_Tests/">
         <Project Path="test/Bearcat.Abstractions.UnitTest/Bearcat.Abstractions.UnitTest.csproj" />
