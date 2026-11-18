@@ -29,6 +29,7 @@ public static class ServiceProviderConfig
             services.AddHostedService<ReleaseClassificationBackgroundTask>();
             services.AddHostedService<TelegramNotificationBackgroundTask>();
             services.AddHostedService<AutoForumPostingBackgroundTask>();
+            services.AddHostedService<UploadCompletionActionBackgroundTask>();
         }
 
         public void AddSqliteBackgroundTasks()

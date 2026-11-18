@@ -1,0 +1,58 @@
+@if (states.Count > 0)
+{
+    <section class="space-y-3">
+        <div class="bearcat-overview-section-header">
+            <h2 class="bearcat-overview-section-heading">
+                <LucideIcon Name="file-output" class="h-4 w-4" />
+                @L["UploadCompletionActions"]
+            </h2>
+        </div>
+
+        <div class="bearcat-overview-card divide-y divide-border">
+            @foreach (var state in states)
+            {
+                <div class="flex min-w-0 items-center gap-3 px-4 py-2.5">
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-semibold" title="@state.RegistrationName">@state.RegistrationName</p>
+                        @if (state is { ErrorMessage: { } errorMessage, ExecutedAt: { } failedAt })
+                        {
+                            <p class="text-xs text-destructive [overflow-wrap:anywhere]">
+                                @L["UploadCompletionActionFailedAt", failedAt.ToString("g")]: @errorMessage
+                            </p>
+                        }
+                        else if (state.ExecutedAt is { } succeededAt)
+                        {
+                            <p class="text-xs text-muted-foreground [overflow-wrap:anywhere]">
+                                @L["UploadCompletionActionSucceededAt", succeededAt.ToString("g")]
+                                @if (!string.IsNullOrWhiteSpace(state.ResultText))
+                                {
+                                    <span>: @state.ResultText</span>
+                                }
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="text-xs text-muted-foreground">@L["UploadCompletionActionNotRunYet"]</p>
+                        }
+                    </div>
+
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="@(!state.IsCompletelyUploaded || runningRegistrationIds.Contains(state.RegistrationId))"
+                              title="@(state.IsCompletelyUploaded ? null : RunNowUnavailableText)"
+                              OnClick="@(() => RunNowAsync(state))">
+                        @if (runningRegistrationIds.Contains(state.RegistrationId))
+                        {
+                            <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                        }
+                        else
+                        {
+                            <LucideIcon Name="play" class="h-4 w-4" />
+                        }
+                        @L["RunUploadCompletionActionNow"]
+                    </BbButton>
+                </div>
+            }
+        </div>
+    </section>
+}

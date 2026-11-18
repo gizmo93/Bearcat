@@ -8,4 +8,5 @@ public enum ConfigurationFieldType
     Boolean = 4,
     Select = 5,
     Url = 6,
+    Folder = 7,
 }

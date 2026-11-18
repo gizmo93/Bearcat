@@ -2723,6 +2723,98 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.ToTable("Uploads");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("ExecutedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<DateTime>("HandledUploadedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ResultText")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("UploadCompletionActionRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadCompletionActionRegistrationId");
+
+                    b.HasIndex("ReleaseCollectionId", "UploadCompletionActionRegistrationId")
+                        .IsUnique();
+
+                    b.HasIndex("ReleaseId", "UploadCompletionActionRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("UploadCompletionActionExecutions", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadCompletionActionExecution_Owner", "(\"ReleaseId\" IS NOT NULL) <> (\"ReleaseCollectionId\" IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionClassName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("RunForInitialUpload")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RunForReupload")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UploadCompletionActionRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadConfig", b =>
                 {
                     b.Property<int>("Id")
@@ -2969,6 +3061,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("OnlineState")
                         .HasColumnType("integer");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("UploadId")
                         .HasColumnType("integer");
@@ -3771,6 +3866,31 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Navigation("HosterRegistration");
 
                     b.Navigation("UploadConfig");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionExecution", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany()
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.UploadCompletionActionRegistration", "UploadCompletionActionRegistration")
+                        .WithMany()
+                        .HasForeignKey("UploadCompletionActionRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+
+                    b.Navigation("ReleaseCollection");
+
+                    b.Navigation("UploadCompletionActionRegistration");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadConfig", b =>

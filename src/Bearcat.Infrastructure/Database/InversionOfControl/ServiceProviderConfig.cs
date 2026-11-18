@@ -45,11 +45,13 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
+using Bearcat.Domain.UseCases.ManageUploadCompletionActions.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.UseCases.ReplaceHosters.Repositories;
+using Bearcat.Domain.UseCases.RunUploadCompletionActions.Repositories;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics.Repositories;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
@@ -131,6 +133,22 @@ public static class ServiceProviderConfig
             services.AddScoped<IPostedLocationReadRepository, PostedLocationReadRepository>();
             services.AddScoped<IPostedLocationWriteRepository, PostedLocationWriteRepository>();
             services.AddScoped<IAutoForumPostingRepository, AutoForumPostingRepository>();
+            services.AddScoped<
+                IUploadCompletionActionRepository,
+                UploadCompletionActionRepository
+            >();
+            services.AddScoped<
+                IUploadCompletionActionStateReadRepository,
+                UploadCompletionActionRepository
+            >();
+            services.AddScoped<
+                IUploadCompletionActionRegistrationReadRepository,
+                UploadCompletionActionRegistrationRepository
+            >();
+            services.AddScoped<
+                IUploadCompletionActionRegistrationWriteRepository,
+                UploadCompletionActionRegistrationRepository
+            >();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<
                 IBackgroundTaskStateWriteRepository,

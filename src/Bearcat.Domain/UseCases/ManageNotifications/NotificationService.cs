@@ -154,6 +154,8 @@ public class NotificationService(
             NotificationKind.HosterAccountPoolFull => configuration.HosterAccountPoolFull,
             NotificationKind.HosterAccountPoolWithoutUsableAccount =>
                 configuration.HosterAccountPoolWithoutUsableAccount,
+            NotificationKind.UploadCompletionActionFailed =>
+                configuration.UploadCompletionActionFailed,
             NotificationKind.LinkCrypterContainerCreationFailed =>
                 configuration.LinkCrypterContainerCreationFailed,
             NotificationKind.LinkCrypterContainerUpdateFailed =>

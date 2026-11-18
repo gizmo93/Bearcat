@@ -1,0 +1,15 @@
+<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+    <BbInput Value="@Value"
+             ValueChanged="ValueChanged"
+             Disabled="Disabled"
+             class="sm:flex-1" />
+    <BbButton Variant="ButtonVariant.Outline"
+              Size="ButtonSize.Small"
+              Class="justify-center whitespace-nowrap"
+              AriaLabel="@L["BrowseFolders"]"
+              Disabled="Disabled"
+              OnClick="OpenFolderSelectionDialogAsync">
+        <LucideIcon Name="folder-open" class="h-4 w-4" />
+        @L["Browse"]
+    </BbButton>
+</div>

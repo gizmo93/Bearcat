@@ -128,6 +128,12 @@ export default defineConfig({
 					items: [
 						{ label: 'Templates and folder automations', translations: { de: 'Templates und Ordnerautomatisierungen' }, slug: 'release-templates-and-automations' },
 						{ label: 'FTP / FTPS downloads', translations: { de: 'FTP-/FTPS-Downloads' }, slug: 'remote-downloads' },
+						{ label: 'Actions after upload', translations: { de: 'Aktionen nach dem Upload' }, slug: 'upload-completion-actions' },
+						{
+							label: 'IntelligeN XML export', translations: { de: 'XML-Export für IntelligeN' },
+							slug: 'intelligen-xml-export',
+							attrs: { style: 'margin-inline-start: 1rem' },
+						},
 						{ label: 'Quality gates', translations: { de: 'Qualitätsprüfungen' }, slug: 'quality-gates' },
 						{ label: 'Telegram notifications', translations: { de: 'Telegrambenachrichtigungen' }, slug: 'telegram-notifications' },
 					],

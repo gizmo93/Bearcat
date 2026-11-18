@@ -43,4 +43,5 @@ public enum NotificationKind
     LinkCrypterImportFailed = 39,
     ReleaseCreationSkippedBecauseNameExists = 40,
     LocalArchiveSizeLimitExceeded = 41,
+    UploadCompletionActionFailed = 42,
 }

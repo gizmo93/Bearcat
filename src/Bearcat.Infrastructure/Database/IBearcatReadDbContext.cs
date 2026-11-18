@@ -69,5 +69,7 @@ public interface IBearcatReadDbContext
     public DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
     public DbSet<HosterAccountPool> HosterAccountPools { get; set; }
     public DbSet<HosterAccountPoolMember> HosterAccountPoolMembers { get; set; }
+    public DbSet<UploadCompletionActionRegistration> UploadCompletionActionRegistrations { get; set; }
+    public DbSet<UploadCompletionActionExecution> UploadCompletionActionExecutions { get; set; }
     public DatabaseFacade Database { get; }
 }

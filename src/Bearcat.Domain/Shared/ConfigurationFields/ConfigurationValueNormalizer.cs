@@ -69,6 +69,7 @@ public static class ConfigurationValueNormalizer
             ConfigurationFieldType.Boolean => NormalizeBoolean(field, value),
             ConfigurationFieldType.Select => NormalizeSelect(field, value),
             ConfigurationFieldType.Url => NormalizeUrl(field, value),
+            ConfigurationFieldType.Folder => NormalizeText(field, value),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(field),
                 field.Type,

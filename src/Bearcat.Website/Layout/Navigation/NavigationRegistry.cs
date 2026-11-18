@@ -73,6 +73,11 @@ public static class NavigationRegistry
                             "/remote-source-automations",
                             "folder-down"
                         ),
+                        Entry(
+                            "UploadCompletionActions",
+                            "/upload-completion-actions",
+                            "file-output"
+                        ),
                     ]
                 ),
                 new NavigationSubmenu(

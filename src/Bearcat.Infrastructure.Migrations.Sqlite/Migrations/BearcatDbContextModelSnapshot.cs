@@ -2603,6 +2603,94 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.ToTable("Uploads");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionExecution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExecutedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("HandledUploadedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ResultText")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UploadCompletionActionRegistrationId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadCompletionActionRegistrationId");
+
+                    b.HasIndex("ReleaseCollectionId", "UploadCompletionActionRegistrationId")
+                        .IsUnique();
+
+                    b.HasIndex("ReleaseId", "UploadCompletionActionRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("UploadCompletionActionExecutions", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadCompletionActionExecution_Owner", "(\"ReleaseId\" IS NOT NULL) <> (\"ReleaseCollectionId\" IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ActionClassName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RunForInitialUpload")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RunForReupload")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UploadCompletionActionRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadConfig", b =>
                 {
                     b.Property<int>("Id")
@@ -2838,6 +2926,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<int>("OnlineState")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("SizeBytes")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("UploadId")
@@ -3641,6 +3732,31 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Navigation("HosterRegistration");
 
                     b.Navigation("UploadConfig");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionExecution", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany()
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.UploadCompletionActionRegistration", "UploadCompletionActionRegistration")
+                        .WithMany()
+                        .HasForeignKey("UploadCompletionActionRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+
+                    b.Navigation("ReleaseCollection");
+
+                    b.Navigation("UploadCompletionActionRegistration");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadConfig", b =>

@@ -96,6 +96,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.UploadConfigTemplates;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
+using Bearcat.Domain.UseCases.ManageUploadCompletionActions;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
@@ -109,6 +110,7 @@ using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.UseCases.ReplaceHosters;
+using Bearcat.Domain.UseCases.RunUploadCompletionActions;
 using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -123,6 +125,7 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<RemoteSourceRegistrationService>();
+            services.AddScoped<UploadCompletionActionRegistrationService>();
             services.AddSingleton<RemoteSourceSessionPool>();
             services.AddScoped<RemoteSourceSessionProvider>();
             services.AddScoped<RemoteSourceAutomationService>();
@@ -199,6 +202,8 @@ public static class ServiceProviderConfig
             services.AddScoped<AutoForumPostCreationService>();
             services.AddScoped<AutoForumPostUpdateService>();
             services.AddScoped<AutoForumPostingRunner>();
+            services.AddScoped<UploadCompletionActionInputBuilder>();
+            services.AddScoped<UploadCompletionActionRunner>();
             services.AddScoped<IForumPostContentRenderer>(provider =>
                 provider.GetRequiredService<ForumPostRenderService>()
             );

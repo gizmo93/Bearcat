@@ -6,6 +6,7 @@
 @using Bearcat.Website.Pages.ManageReleases.ProgressSteps
 @using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.ManageReleaseScreenshots
+@using Bearcat.Website.Pages.ManageUploadCompletionActions
 @using Bearcat.Website.Pages.ManageUploadConfigs
 @using Bearcat.Website.Pages.PostQueue
 @using Bearcat.Website.Pages.PostToForum
@@ -282,6 +283,7 @@
                                  ReleaseId="@ReleaseId"
                                  OnLocationsChanged="HandlePostedLocationsChangedAsync" />
             </div>
+            <UploadCompletionActionStates ReleaseId="@ReleaseId" />
         </BbTabsContent>
 
         <BbTabsContent Value="@ReleaseDetailTab.ReleaseInfos" Class="space-y-4">
