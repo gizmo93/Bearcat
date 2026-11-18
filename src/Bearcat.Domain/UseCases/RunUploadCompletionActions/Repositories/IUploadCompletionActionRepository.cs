@@ -19,13 +19,29 @@ public interface IUploadCompletionActionRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<UploadCompletionActionDueReleaseCollection?> GetCompletelyUploadedReleaseCollectionAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<UploadCompletionActionDueRelease>> GetDueReleasesAsync(
         UploadCompletionActionRegistration registration,
         CancellationToken cancellationToken = default
     );
 
-    Task<UploadCompletionActionExecution?> GetExecutionAsync(
+    Task<IReadOnlyList<UploadCompletionActionDueReleaseCollection>> GetDueReleaseCollectionsAsync(
+        UploadCompletionActionRegistration registration,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<UploadCompletionActionExecution?> GetReleaseExecutionAsync(
         int releaseId,
+        int uploadCompletionActionRegistrationId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<UploadCompletionActionExecution?> GetReleaseCollectionExecutionAsync(
+        int releaseCollectionId,
         int uploadCompletionActionRegistrationId,
         CancellationToken cancellationToken = default
     );

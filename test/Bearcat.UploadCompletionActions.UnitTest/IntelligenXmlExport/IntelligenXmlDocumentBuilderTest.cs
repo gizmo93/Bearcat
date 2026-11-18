@@ -15,6 +15,7 @@ public class IntelligenXmlDocumentBuilderTest
         // Arrange
         var input = new UploadCompletionActionInput(
             Release: CreateRelease(contentType: "Movie"),
+            CollectionReleaseNames: [],
             IsReupload: false,
             Mirrors:
             [
@@ -171,6 +172,7 @@ public class IntelligenXmlDocumentBuilderTest
             {
                 Platform = "NintendoSwitch",
             },
+            CollectionReleaseNames: [],
             IsReupload: true,
             Mirrors:
             [

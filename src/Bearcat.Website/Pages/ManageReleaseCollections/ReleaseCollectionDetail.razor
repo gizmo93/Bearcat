@@ -5,6 +5,7 @@
 @using Bearcat.Website.Pages.ManageReleaseCollections.Overview
 @using Bearcat.Website.Pages.ManageReleaseCollections.ProgressSteps
 @using Bearcat.Website.Pages.ManageReleaseCollections.UploadSlots
+@using Bearcat.Website.Pages.ManageUploadCompletionActions
 @using Bearcat.Website.Pages.PostQueue
 @using Bearcat.Website.Pages.PostToForum
 
@@ -228,6 +229,7 @@
                                  ReleaseCollectionId="@ReleaseCollectionId"
                                  OnLocationsChanged="HandlePostedLocationsChangedAsync" />
             </div>
+            <UploadCompletionActionStates ReleaseCollectionId="@ReleaseCollectionId" />
         </BbTabsContent>
 
         <BbTabsContent Value="@ReleaseCollectionDetailTab.UploadSlots" Class="space-y-4">

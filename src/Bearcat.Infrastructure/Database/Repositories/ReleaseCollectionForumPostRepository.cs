@@ -20,6 +20,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
             {
                 collection.Name,
                 collection.Key,
+                collection.ReleaseContentType,
                 collection.PrimaryLanguageCode,
                 ReleaseGroupName = collection.ReleaseGroup.Name,
                 Series = collection.Metadata == null
@@ -50,6 +51,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
             .OrderBy(slot => slot.Name)
             .ThenBy(slot => slot.Id)
             .Select(slot => new CollectionForumPostUploadSlotReadModel(
+                slot.Id,
                 slot.Name,
                 slot.Key,
                 dbRead
@@ -77,6 +79,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
         return new CollectionForumPostReadModel(
             Name: collection.Name,
             Key: collection.Key,
+            ReleaseContentType: collection.ReleaseContentType,
             ReleaseGroupName: collection.ReleaseGroupName,
             PrimaryLanguageCode: collection.PrimaryLanguageCode,
             Series: collection.Series,

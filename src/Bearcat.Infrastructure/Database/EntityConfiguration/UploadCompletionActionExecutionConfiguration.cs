@@ -11,7 +11,8 @@ public class UploadCompletionActionExecutionConfiguration
     {
         builder.HasKey(execution => execution.Id);
         builder.Property(execution => execution.Id).IsRequired();
-        builder.Property(execution => execution.ReleaseId).IsRequired();
+        builder.Property(execution => execution.ReleaseId).IsRequired(false);
+        builder.Property(execution => execution.ReleaseCollectionId).IsRequired(false);
         builder.Property(execution => execution.UploadCompletionActionRegistrationId).IsRequired();
         builder.Property(execution => execution.HandledUploadedAt).IsRequired().HasPrecision(4);
         builder.Property(execution => execution.ExecutedAt).IsRequired().HasPrecision(4);
@@ -27,9 +28,23 @@ public class UploadCompletionActionExecutionConfiguration
             .IsUnique();
 
         builder
+            .HasIndex(execution => new
+            {
+                execution.ReleaseCollectionId,
+                execution.UploadCompletionActionRegistrationId,
+            })
+            .IsUnique();
+
+        builder
             .HasOne(execution => execution.Release)
             .WithMany()
             .HasForeignKey(execution => execution.ReleaseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(execution => execution.ReleaseCollection)
+            .WithMany()
+            .HasForeignKey(execution => execution.ReleaseCollectionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder
@@ -37,5 +52,12 @@ public class UploadCompletionActionExecutionConfiguration
             .WithMany()
             .HasForeignKey(execution => execution.UploadCompletionActionRegistrationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.ToTable(table =>
+            table.HasCheckConstraint(
+                "CK_UploadCompletionActionExecution_Owner",
+                $"(\"{nameof(UploadCompletionActionExecution.ReleaseId)}\" IS NOT NULL) <> (\"{nameof(UploadCompletionActionExecution.ReleaseCollectionId)}\" IS NOT NULL)"
+            )
+        );
     }
 }

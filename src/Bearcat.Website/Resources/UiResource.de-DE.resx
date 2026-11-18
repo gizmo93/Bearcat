@@ -2325,6 +2325,7 @@
   <data name="UploadCompletionActionFailedAt" xml:space="preserve"><value>Fehlgeschlagen am {0}</value></data>
   <data name="RunUploadCompletionActionNow" xml:space="preserve"><value>Jetzt ausführen</value></data>
   <data name="RunUploadCompletionActionNowUnavailable" xml:space="preserve"><value>Verfügbar, sobald alle Uploads des Release abgeschlossen sind.</value></data>
+  <data name="RunUploadCompletionActionNowUnavailableForReleaseCollection" xml:space="preserve"><value>Verfügbar, sobald alle Uploads in den Uploadslots der Collection abgeschlossen sind.</value></data>
   <data name="UploadCompletionActionSucceeded" xml:space="preserve"><value>Aktion {0} erfolgreich ausgeführt</value></data>
   <data name="UploadCompletionActionFailed" xml:space="preserve"><value>Aktion {0} fehlgeschlagen</value></data>
 </root>

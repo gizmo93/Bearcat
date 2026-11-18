@@ -2,6 +2,7 @@ namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 public record ReleaseForumPostUploadReadModel(
     string UploadConfigName,
+    int? CollectionUploadSlotId,
     string HosterClassName,
     string HosterName,
     string HosterRegistrationName,

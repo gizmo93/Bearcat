@@ -21,24 +21,28 @@ public class ReleaseCollectionRepository(
 {
     private const int MaximumIdsPerQuery = 1000;
 
-    internal static Expression<Func<ReleaseCollection, bool>> IsReadyForPostQueue(
-        IBearcatReadDbContext dbRead
-    )
+    private static readonly Expression<
+        Func<ReleaseCollection, bool>
+    > HasCompletedSlotUploadNewerThanUploadsPostedAt = c =>
+        c.Releases.Any(r =>
+            r.UploadConfigs.AsQueryable()
+                .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
+                .Any(uc =>
+                    uc.CollectionUploadSlotId != null
+                    && uc.Uploads.Any(u =>
+                        u.UploadState == UploadState.Completed
+                        && u.UploadedAt != null
+                        && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+                    )
+                )
+        );
+
+    internal static Expression<
+        Func<ReleaseCollection, bool>
+    > AllSlotUploadsLinkCrypterContainersAndImagesAreComplete(IBearcatReadDbContext dbRead)
     {
         return c =>
-            c.Releases.Any(r =>
-                r.UploadConfigs.AsQueryable()
-                    .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-                    .Any(uc =>
-                        uc.CollectionUploadSlotId != null
-                        && uc.Uploads.Any(u =>
-                            u.UploadState == UploadState.Completed
-                            && u.UploadedAt != null
-                            && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
-                        )
-                    )
-            )
-            && c.Releases.All(r =>
+            c.Releases.All(r =>
                 r.UploadConfigs.AsQueryable()
                     .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
                     .Where(uc => uc.CollectionUploadSlotId != null)
@@ -63,6 +67,22 @@ public class ReleaseCollectionRepository(
             )
             && c.ImageUploadConfigs.AsQueryable()
                 .All(ImageUploadExpressions.ImageUploadConfigIsSettledForPosting);
+    }
+
+    internal static Expression<Func<ReleaseCollection, bool>> IsReadyForPostQueue(
+        IBearcatReadDbContext dbRead
+    )
+    {
+        return Expression.Lambda<Func<ReleaseCollection, bool>>(
+            Expression.AndAlso(
+                HasCompletedSlotUploadNewerThanUploadsPostedAt.Body,
+                Expression.Invoke(
+                    AllSlotUploadsLinkCrypterContainersAndImagesAreComplete(dbRead),
+                    HasCompletedSlotUploadNewerThanUploadsPostedAt.Parameters
+                )
+            ),
+            HasCompletedSlotUploadNewerThanUploadsPostedAt.Parameters
+        );
     }
 
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(

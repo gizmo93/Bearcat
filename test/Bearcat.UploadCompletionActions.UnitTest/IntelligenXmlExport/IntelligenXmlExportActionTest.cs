@@ -107,6 +107,7 @@ public class IntelligenXmlExportActionTest
                 AudioLanguages: [],
                 Nfo: null
             ),
+            CollectionReleaseNames: [],
             IsReupload: false,
             Mirrors: [],
             AllHostersLinkCrypterContainers: [],

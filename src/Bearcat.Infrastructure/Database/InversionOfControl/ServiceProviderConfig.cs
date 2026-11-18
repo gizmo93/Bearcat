@@ -138,7 +138,7 @@ public static class ServiceProviderConfig
                 UploadCompletionActionRepository
             >();
             services.AddScoped<
-                IUploadCompletionActionReleaseStateReadRepository,
+                IUploadCompletionActionStateReadRepository,
                 UploadCompletionActionRepository
             >();
             services.AddScoped<

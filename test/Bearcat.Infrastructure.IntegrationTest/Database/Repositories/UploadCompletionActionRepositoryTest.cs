@@ -248,23 +248,398 @@ public class UploadCompletionActionRepositoryTest(DatabaseProvider databaseProvi
 
         // Assert
         result.ShouldBe([
-            new UploadCompletionActionReleaseStateReadModel(
+            new UploadCompletionActionStateReadModel(
                 RegistrationId: failedRegistration.Id,
                 RegistrationName: "Alpha export",
-                IsReleaseCompletelyUploaded: true,
+                IsCompletelyUploaded: true,
                 ExecutedAt: RegistrationCreatedAt,
                 ResultText: null,
                 ErrorMessage: "Target folder is missing"
             ),
-            new UploadCompletionActionReleaseStateReadModel(
+            new UploadCompletionActionStateReadModel(
                 RegistrationId: notRunRegistration.Id,
                 RegistrationName: "Beta export",
-                IsReleaseCompletelyUploaded: true,
+                IsCompletelyUploaded: true,
                 ExecutedAt: null,
                 ResultText: null,
                 ErrorMessage: null
             ),
         ]);
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_AllEpisodesCompleted_ReturnsCollectionOnceAsInitialUpload()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+        AddEpisodeUpload(collection, uploadSlot, "S01E02", RegistrationCreatedAt.AddHours(2));
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new UploadCompletionActionDueReleaseCollection(
+                ReleaseCollectionId: collection.Id,
+                IsReupload: false,
+                NewestUploadedAt: RegistrationCreatedAt.AddHours(2)
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_OneEpisodeStillUploading_ReturnsNothing()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+
+        AddEpisodeUpload(
+            collection: collection,
+            uploadSlot: uploadSlot,
+            episodeName: "S01E02",
+            uploadedAt: null,
+            uploadState: UploadState.Uploading,
+            createdAt: RegistrationCreatedAt.AddHours(1)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_MemberReleaseNotPassedQualityGate_ReturnsNothing()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+
+        var notEvaluatedEpisodeUploadConfig = AddEpisodeUpload(
+            collection,
+            uploadSlot,
+            "S01E02",
+            RegistrationCreatedAt.AddHours(1)
+        );
+
+        notEvaluatedEpisodeUploadConfig.Release.QualityGateState = QualityGateState.NotEvaluated;
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_NewEpisodeCompletedAfterHandledUpload_ReturnsCollectionAsInitialUpload()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+        AddEpisodeUpload(collection, uploadSlot, "S01E02", RegistrationCreatedAt.AddDays(2));
+
+        AddReleaseCollectionExecution(
+            collection,
+            registration,
+            handledUploadedAt: RegistrationCreatedAt.AddHours(1)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new UploadCompletionActionDueReleaseCollection(
+                ReleaseCollectionId: collection.Id,
+                IsReupload: false,
+                NewestUploadedAt: RegistrationCreatedAt.AddDays(2)
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_NewestUploadAlreadyHandled_ReturnsNothing()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+        AddEpisodeUpload(collection, uploadSlot, "S01E02", RegistrationCreatedAt.AddHours(2));
+
+        AddReleaseCollectionExecution(
+            collection,
+            registration,
+            handledUploadedAt: RegistrationCreatedAt.AddHours(2)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_OnlyReuploadsSinceHandledUpload_ReturnsCollectionAsReupload()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReuploadedReleaseCollection(registration);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new UploadCompletionActionDueReleaseCollection(
+                ReleaseCollectionId: collection.Id,
+                IsReupload: true,
+                NewestUploadedAt: RegistrationCreatedAt.AddDays(2).AddHours(1)
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_ReuploadWithRunForReuploadDisabled_ReturnsNothing()
+    {
+        // Arrange
+        var registration = AddRegistration(runForReupload: false);
+        AddReuploadedReleaseCollection(registration);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetDueReleaseCollectionsAsync_InitialUploadWithRunForInitialUploadDisabled_ReturnsNothing()
+    {
+        // Arrange
+        var registration = AddRegistration(runForInitialUpload: false);
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDueReleaseCollectionsAsync(
+            registration,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetCompletelyUploadedReleaseCollectionAsync_OnlyOneEpisodeReuploaded_ReturnsNewestUploadAsInitialUpload()
+    {
+        // Arrange
+        var registration = AddRegistration();
+        var collection = AddReuploadedReleaseCollection(registration);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetCompletelyUploadedReleaseCollectionAsync(
+            collection.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new UploadCompletionActionDueReleaseCollection(
+                ReleaseCollectionId: collection.Id,
+                IsReupload: false,
+                NewestUploadedAt: RegistrationCreatedAt.AddDays(2).AddHours(1)
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetReleaseCollectionStatesAsync_CollectionWithExecution_ReturnsStateOfRegistration()
+    {
+        // Arrange
+        var registration = AddRegistration(name: "Alpha export");
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+
+        AddReleaseCollectionExecution(
+            collection,
+            registration,
+            handledUploadedAt: RegistrationCreatedAt.AddHours(1)
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetReleaseCollectionStatesAsync(
+            collection.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new UploadCompletionActionStateReadModel(
+                RegistrationId: registration.Id,
+                RegistrationName: "Alpha export",
+                IsCompletelyUploaded: true,
+                ExecutedAt: RegistrationCreatedAt.AddHours(1),
+                ResultText: null,
+                ErrorMessage: null
+            ),
+        ]);
+    }
+
+    private ReleaseCollection AddReuploadedReleaseCollection(
+        UploadCompletionActionRegistration registration
+    )
+    {
+        var collection = AddReleaseCollection();
+        var uploadSlot = AddUploadSlot(collection);
+        AddEpisodeUpload(collection, uploadSlot, "S01E01", RegistrationCreatedAt.AddHours(1));
+
+        var reuploadedEpisodeUploadConfig = AddEpisodeUpload(
+            collection,
+            uploadSlot,
+            "S01E02",
+            RegistrationCreatedAt.AddHours(1)
+        );
+
+        AddUpload(
+            uploadConfig: reuploadedEpisodeUploadConfig,
+            uploadedAt: RegistrationCreatedAt.AddDays(2).AddHours(1),
+            uploadState: UploadState.Completed,
+            createdAt: RegistrationCreatedAt.AddDays(2)
+        );
+
+        AddReleaseCollectionExecution(
+            collection,
+            registration,
+            handledUploadedAt: RegistrationCreatedAt.AddHours(1)
+        );
+
+        return collection;
+    }
+
+    private ReleaseCollection AddReleaseCollection()
+    {
+        var collection = new ReleaseCollection
+        {
+            ReleaseContentType = ReleaseContentType.TvShowEpisode,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = "Bearcat.Collection group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+            Key = "bearcat-collection",
+            Name = "Bearcat.Collection",
+            CreatedAt = RegistrationCreatedAt,
+        };
+
+        DbContext.ReleaseCollections.Add(collection);
+
+        return collection;
+    }
+
+    private CollectionUploadSlot AddUploadSlot(ReleaseCollection collection)
+    {
+        var uploadSlot = new CollectionUploadSlot
+        {
+            ReleaseCollection = collection,
+            Key = "1080p",
+            Name = "1080p",
+        };
+
+        DbContext.CollectionUploadSlots.Add(uploadSlot);
+
+        return uploadSlot;
+    }
+
+    private UploadConfig AddEpisodeUpload(
+        ReleaseCollection collection,
+        CollectionUploadSlot uploadSlot,
+        string episodeName,
+        DateTime? uploadedAt,
+        UploadState uploadState = UploadState.Completed,
+        DateTime? createdAt = null
+    )
+    {
+        var release = AddRelease($"Bearcat.Collection.{episodeName}");
+        release.ReleaseCollection = collection;
+        release.QualityGateState = QualityGateState.Passed;
+
+        var uploadConfig = AddUploadConfig(release, CreateHosterRegistration(episodeName));
+        uploadConfig.CollectionUploadSlot = uploadSlot;
+
+        AddUpload(
+            uploadConfig: uploadConfig,
+            uploadedAt: uploadedAt,
+            uploadState: uploadState,
+            createdAt: createdAt
+        );
+
+        return uploadConfig;
+    }
+
+    private void AddReleaseCollectionExecution(
+        ReleaseCollection collection,
+        UploadCompletionActionRegistration registration,
+        DateTime handledUploadedAt
+    )
+    {
+        DbContext.UploadCompletionActionExecutions.Add(
+            new UploadCompletionActionExecution
+            {
+                ReleaseCollection = collection,
+                UploadCompletionActionRegistration = registration,
+                HandledUploadedAt = handledUploadedAt,
+                ExecutedAt = handledUploadedAt,
+            }
+        );
     }
 
     private Release AddReuploadedRelease(UploadCompletionActionRegistration registration)

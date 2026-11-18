@@ -2621,7 +2621,10 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasPrecision(4)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ReleaseId")
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReleaseId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ResultText")
@@ -2635,10 +2638,16 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("UploadCompletionActionRegistrationId");
 
+                    b.HasIndex("ReleaseCollectionId", "UploadCompletionActionRegistrationId")
+                        .IsUnique();
+
                     b.HasIndex("ReleaseId", "UploadCompletionActionRegistrationId")
                         .IsUnique();
 
-                    b.ToTable("UploadCompletionActionExecutions");
+                    b.ToTable("UploadCompletionActionExecutions", t =>
+                        {
+                            t.HasCheckConstraint("CK_UploadCompletionActionExecution_Owner", "(\"ReleaseId\" IS NOT NULL) <> (\"ReleaseCollectionId\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionRegistration", b =>
@@ -3727,11 +3736,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
 
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadCompletionActionExecution", b =>
                 {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany()
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Bearcat.Domain.Entities.Release", "Release")
                         .WithMany()
                         .HasForeignKey("ReleaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.UploadCompletionActionRegistration", "UploadCompletionActionRegistration")
                         .WithMany()
@@ -3740,6 +3753,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("Release");
+
+                    b.Navigation("ReleaseCollection");
 
                     b.Navigation("UploadCompletionActionRegistration");
                 });

@@ -38,8 +38,8 @@
 
                     <BbButton Variant="ButtonVariant.Outline"
                               Size="ButtonSize.Small"
-                              Disabled="@(!state.IsReleaseCompletelyUploaded || runningRegistrationIds.Contains(state.RegistrationId))"
-                              title="@(state.IsReleaseCompletelyUploaded ? null : L["RunUploadCompletionActionNowUnavailable"].Value)"
+                              Disabled="@(!state.IsCompletelyUploaded || runningRegistrationIds.Contains(state.RegistrationId))"
+                              title="@(state.IsCompletelyUploaded ? null : RunNowUnavailableText)"
                               OnClick="@(() => RunNowAsync(state))">
                         @if (runningRegistrationIds.Contains(state.RegistrationId))
                         {

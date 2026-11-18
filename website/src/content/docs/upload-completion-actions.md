@@ -31,6 +31,22 @@ The **Actions after upload** section on the overview tab of the
 The button is available once all uploads of the release are completed.
 A failed manual run creates no notification.
 
+## Release collections
+
+A [release collection](/Bearcat/release-collections/) that uploads via
+[upload slots](/Bearcat/release-collections/#upload-slots) is handled as one unit:
+
+- The action runs once all upload slot uploads of all episodes, the collection containers, and the
+  collection images are complete, and every release in the collection has passed the
+  [quality gate](/Bearcat/quality-gates/).
+- It runs again when an episode is added or reuploaded. It counts as a reupload only when all new
+  uploads are reuploads.
+- `release.name` is the collection name.
+- Uploads of a release outside the upload slots are not part of the collection. They still trigger
+  the action for the release itself.
+
+The collection detail page has the same **Actions after upload** section with **Run now**.
+
 ## IntelliGeN XML export
 
 The export writes one XML file per run that IntelliGeN can import.
@@ -39,6 +55,9 @@ The export writes one XML file per run that IntelliGeN can import.
 | --- | --- |
 | **Export folder** | Folder the XML files are written to. It must already exist. Bearcat never creates it. |
 | **File path template** | Path of the file relative to the export folder. It may contain subfolders. |
+
+For a collection, every run writes one new XML file with the links of all episodes. Each upload
+slot and hoster becomes one mirror.
 
 Existing files are never overwritten. Bearcat appends a number instead, for example
 `Release.Name (2).xml`.

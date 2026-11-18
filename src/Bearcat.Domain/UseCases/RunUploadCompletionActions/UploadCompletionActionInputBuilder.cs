@@ -5,6 +5,8 @@ using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.UploadCompletionAction.Dto;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
 
@@ -12,6 +14,8 @@ namespace Bearcat.Domain.UseCases.RunUploadCompletionActions;
 
 public class UploadCompletionActionInputBuilder(
     ReleaseForumPostRenderModelBuilder releaseForumPostRenderModelBuilder,
+    IReleaseCollectionForumPostRepository releaseCollectionForumPostRepository,
+    IForumPostImageLinkRepository imageLinkRepository,
     IImageHosterFactory imageHosterFactory,
     ILinkCrypterFactory linkCrypterFactory
 )
@@ -44,16 +48,157 @@ public class UploadCompletionActionInputBuilder(
             .ToHashSet();
 
         var mirrors = serviceLinks
-            .Uploads.Where(upload => upload.Links.Count > 0)
+            .Uploads.Where(upload =>
+                upload.CollectionUploadSlotId is null && upload.Links.Count > 0
+            )
             .Select(upload => ToMirror(upload, allHostersContainerUrls))
             .ToList();
 
         return new UploadCompletionActionInput(
             Release: release,
+            CollectionReleaseNames: [],
             IsReupload: dueRelease.IsReupload,
             Mirrors: mirrors,
             AllHostersLinkCrypterContainers: allHostersLinkCrypterContainers,
             Images: ToImages(serviceLinks.ImageLinks)
+        );
+    }
+
+    public async Task<UploadCompletionActionInput> BuildAsync(
+        UploadCompletionActionDueReleaseCollection dueReleaseCollection,
+        CancellationToken cancellationToken
+    )
+    {
+        var collection = (
+            await releaseCollectionForumPostRepository.GetAsync(
+                dueReleaseCollection.ReleaseCollectionId,
+                cancellationToken
+            )
+        )!;
+
+        var serviceLinksByReleaseId =
+            await releaseForumPostRenderModelBuilder.LoadServiceLinksAsync(
+                collection.ReleaseIds,
+                cancellationToken
+            );
+
+        var renderDataByReleaseId = await releaseForumPostRenderModelBuilder.BuildAsync(
+            serviceLinksByReleaseId,
+            cancellationToken
+        );
+
+        var collectionImageLinks = await imageLinkRepository.GetCollectionImageLinksAsync(
+            dueReleaseCollection.ReleaseCollectionId,
+            cancellationToken
+        );
+
+        var memberReleases = collection
+            .ReleaseIds.Select(releaseId => ToRelease(renderDataByReleaseId[releaseId].RenderModel))
+            .ToList();
+
+        var slotUploads = collection
+            .ReleaseIds.SelectMany(releaseId => serviceLinksByReleaseId[releaseId].Uploads)
+            .Where(upload => upload.CollectionUploadSlotId is not null && upload.Links.Count > 0)
+            .ToList();
+
+        var mirrors = collection
+            .UploadSlots.SelectMany(uploadSlot => BuildUploadSlotMirrors(uploadSlot, slotUploads))
+            .ToList();
+
+        return new UploadCompletionActionInput(
+            Release: ToCollectionRelease(collection, memberReleases),
+            CollectionReleaseNames: memberReleases.Select(release => release.Name).ToList(),
+            IsReupload: dueReleaseCollection.IsReupload,
+            Mirrors: mirrors,
+            AllHostersLinkCrypterContainers: [],
+            Images: ToImages(collectionImageLinks)
+        );
+    }
+
+    private static UploadCompletionActionReleaseDto ToCollectionRelease(
+        CollectionForumPostReadModel collection,
+        List<UploadCompletionActionReleaseDto> memberReleases
+    )
+    {
+        var audioLanguages = memberReleases
+            .First()
+            .AudioLanguages.Where(language =>
+                memberReleases.All(release =>
+                    release.AudioLanguages.Contains(language, StringComparer.OrdinalIgnoreCase)
+                )
+            )
+            .ToList();
+
+        return new UploadCompletionActionReleaseDto(
+            Name: collection.Name,
+            ContentType: collection.ReleaseContentType.ToString(),
+            Platform: GetCommonValueOrDefault(memberReleases, release => release.Platform),
+            Title: collection.Series?.Title.TrimOrNullWhenWhitespace(),
+            Genre: GetCommonValueOrDefault(memberReleases, release => release.Genre),
+            Description: collection.Series?.Description.TrimOrNullWhenWhitespace(),
+            RuntimeMinutes: null,
+            VideoType: GetCommonValueOrDefault(memberReleases, release => release.VideoType),
+            VideoCodec: GetCommonValueOrDefault(memberReleases, release => release.VideoCodec),
+            AudioType: GetCommonValueOrDefault(memberReleases, release => release.AudioType),
+            AudioCodec: GetCommonValueOrDefault(memberReleases, release => release.AudioCodec),
+            AudioChannels: GetCommonValueOrDefault(
+                memberReleases,
+                release => release.AudioChannels
+            ),
+            AudioLanguages: audioLanguages,
+            Nfo: null
+        );
+    }
+
+    private static T? GetCommonValueOrDefault<T>(
+        List<UploadCompletionActionReleaseDto> releases,
+        Func<UploadCompletionActionReleaseDto, T> selector
+    )
+    {
+        var distinctValues = releases.Select(selector).Distinct().ToList();
+
+        return distinctValues.Count == 1 ? distinctValues.Single() : default;
+    }
+
+    private List<UploadCompletionActionMirrorDto> BuildUploadSlotMirrors(
+        CollectionForumPostUploadSlotReadModel uploadSlot,
+        List<ReleaseForumPostUploadReadModel> slotUploads
+    )
+    {
+        var linkCrypterContainers = uploadSlot.LinkCrypters.Select(ToLinkCrypterContainer).ToList();
+
+        return slotUploads
+            .Where(upload => upload.CollectionUploadSlotId == uploadSlot.Id)
+            .GroupBy(upload => upload.HosterClassName)
+            .OrderBy(hosterUploads => hosterUploads.First().HosterName)
+            .Select(hosterUploads =>
+                ToCollectionMirror(hosterUploads.ToList(), linkCrypterContainers)
+            )
+            .ToList();
+    }
+
+    private static UploadCompletionActionMirrorDto ToCollectionMirror(
+        List<ReleaseForumPostUploadReadModel> hosterUploads,
+        List<UploadCompletionActionLinkCrypterContainerDto> linkCrypterContainers
+    )
+    {
+        var fileSizesBytes = hosterUploads.SelectMany(upload => upload.FileSizesBytes).ToList();
+        var allFileSizesAreKnown = fileSizesBytes.All(sizeBytes => sizeBytes is not null);
+
+        var archivePasswords = hosterUploads
+            .Select(upload => upload.ArchivePassword)
+            .Distinct()
+            .ToList();
+
+        return new UploadCompletionActionMirrorDto(
+            HosterClassName: hosterUploads.First().HosterClassName,
+            HosterName: hosterUploads.First().HosterName,
+            Links: hosterUploads.SelectMany(upload => upload.Links).ToList(),
+            TotalSizeBytes: allFileSizesAreKnown ? fileSizesBytes.Sum() : null,
+            LargestPartSizeBytes: fileSizesBytes.Max(),
+            PartCount: fileSizesBytes.Count,
+            ArchivePassword: archivePasswords.Count == 1 ? archivePasswords.Single() : null,
+            LinkCrypterContainers: linkCrypterContainers
         );
     }
 

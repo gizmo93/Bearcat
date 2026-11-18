@@ -5,18 +5,26 @@ using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
-namespace Bearcat.Website.Pages.ManageReleases;
+namespace Bearcat.Website.Pages.ManageUploadCompletionActions;
 
-public partial class ReleaseUploadCompletionActions(
+public partial class UploadCompletionActionStates(
     IScopedOperationRunner operationRunner,
     ToastService toastService
 ) : ComponentBase
 {
     [Parameter]
-    public int ReleaseId { get; set; }
+    public int? ReleaseId { get; set; }
+
+    [Parameter]
+    public int? ReleaseCollectionId { get; set; }
 
     private readonly HashSet<int> runningRegistrationIds = [];
-    private IReadOnlyList<UploadCompletionActionReleaseStateReadModel> states = [];
+    private IReadOnlyList<UploadCompletionActionStateReadModel> states = [];
+
+    private string RunNowUnavailableText =>
+        ReleaseCollectionId is null
+            ? L["RunUploadCompletionActionNowUnavailable"]
+            : L["RunUploadCompletionActionNowUnavailableForReleaseCollection"];
 
     protected override async Task OnInitializedAsync()
     {
@@ -26,12 +34,14 @@ public partial class ReleaseUploadCompletionActions(
     private async Task LoadStatesAsync()
     {
         states = await operationRunner.RunAsync(
-            (IUploadCompletionActionReleaseStateReadRepository repository) =>
-                repository.GetReleaseStatesAsync(ReleaseId)
+            (IUploadCompletionActionStateReadRepository repository) =>
+                ReleaseCollectionId is { } releaseCollectionId
+                    ? repository.GetReleaseCollectionStatesAsync(releaseCollectionId)
+                    : repository.GetReleaseStatesAsync(ReleaseId!.Value)
         );
     }
 
-    private async Task RunNowAsync(UploadCompletionActionReleaseStateReadModel state)
+    private async Task RunNowAsync(UploadCompletionActionStateReadModel state)
     {
         runningRegistrationIds.Add(state.RegistrationId);
 
@@ -39,7 +49,12 @@ public partial class ReleaseUploadCompletionActions(
         {
             await operationRunner.RunAsync(
                 (UploadCompletionActionRunner runner) =>
-                    runner.RunForReleaseAsync(state.RegistrationId, ReleaseId)
+                    ReleaseCollectionId is { } releaseCollectionId
+                        ? runner.RunForReleaseCollectionAsync(
+                            state.RegistrationId,
+                            releaseCollectionId
+                        )
+                        : runner.RunForReleaseAsync(state.RegistrationId, ReleaseId!.Value)
             );
 
             await LoadStatesAsync();

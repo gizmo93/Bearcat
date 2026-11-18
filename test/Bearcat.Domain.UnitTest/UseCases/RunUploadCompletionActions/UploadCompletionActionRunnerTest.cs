@@ -6,6 +6,7 @@ using Bearcat.Abstractions.UploadCompletionAction.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UnitTest.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -200,6 +201,7 @@ public class UploadCompletionActionRunnerTest
     {
         return new UploadCompletionActionExecution
         {
+            Id = 11,
             ReleaseId = ReleaseId,
             UploadCompletionActionRegistrationId = 3,
             HandledUploadedAt = PreviouslyHandledUploadedAt,
@@ -241,7 +243,17 @@ public class UploadCompletionActionRunnerTest
 
         repository
             .Setup(repo =>
-                repo.GetExecutionAsync(ReleaseId, registration.Id, It.IsAny<CancellationToken>())
+                repo.GetDueReleaseCollectionsAsync(registration, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync([]);
+
+        repository
+            .Setup(repo =>
+                repo.GetReleaseExecutionAsync(
+                    ReleaseId,
+                    registration.Id,
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(execution);
     }
@@ -351,6 +363,8 @@ public class UploadCompletionActionRunnerTest
                 uploadRepository: uploadRepository.Object,
                 imageLinkRepository: imageLinkRepository.Object
             ),
+            releaseCollectionForumPostRepository: Mock.Of<IReleaseCollectionForumPostRepository>(),
+            imageLinkRepository: imageLinkRepository.Object,
             imageHosterFactory: Mock.Of<IImageHosterFactory>(),
             linkCrypterFactory: Mock.Of<ILinkCrypterFactory>()
         );

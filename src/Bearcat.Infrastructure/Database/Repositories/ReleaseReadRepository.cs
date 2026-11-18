@@ -656,6 +656,7 @@ public class ReleaseReadRepository(
                 c.ReleaseId,
                 UploadConfigId = c.Id,
                 UploadConfigName = c.Name,
+                c.CollectionUploadSlotId,
                 c.UploadSource,
                 HosterRegistrationHosterClassName = c.HosterRegistrationId != null
                     ? c.HosterRegistration!.HosterClassName
@@ -883,6 +884,7 @@ public class ReleaseReadRepository(
                     config.ReleaseId,
                     Upload: new ReleaseForumPostUploadReadModel(
                         UploadConfigName: config.UploadConfigName,
+                        CollectionUploadSlotId: config.CollectionUploadSlotId,
                         HosterClassName: hosterClassName,
                         HosterName: hosterFactory.GetByName(hosterClassName).Name,
                         HosterRegistrationName: upload?.HosterRegistrationName ?? string.Empty,

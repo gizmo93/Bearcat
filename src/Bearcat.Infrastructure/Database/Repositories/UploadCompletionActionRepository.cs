@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.Models;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions.ReadModels;
@@ -10,8 +11,15 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class UploadCompletionActionRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite
-) : IUploadCompletionActionRepository, IUploadCompletionActionReleaseStateReadRepository
+) : IUploadCompletionActionRepository, IUploadCompletionActionStateReadRepository
 {
+    private static readonly Expression<Func<ReleaseCollection, bool>> AllReleasesPassedQualityGate =
+        collection =>
+            collection.Releases.All(release =>
+                release.QualityGateState == QualityGateState.Passed
+                || release.QualityGateState == QualityGateState.ManuallyApproved
+            );
+
     public async Task<
         IReadOnlyList<UploadCompletionActionRegistration>
     > GetActiveRegistrationsWithReadableSecretsAsync(CancellationToken cancellationToken = default)
@@ -42,7 +50,7 @@ public class UploadCompletionActionRepository(
     )
     {
         var uploadIsReupload = UploadExpressions.UploadIsReupload(dbRead);
-        var completedUploads = GetCompletedUploads();
+        var completedUploads = GetCompletedReleaseUploads();
 
         return await dbRead
             .Releases.Where(release => release.Id == releaseId)
@@ -65,11 +73,50 @@ public class UploadCompletionActionRepository(
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<
-        IReadOnlyList<UploadCompletionActionReleaseStateReadModel>
-    > GetReleaseStatesAsync(int releaseId, CancellationToken cancellationToken = default)
+    public async Task<UploadCompletionActionDueReleaseCollection?> GetCompletelyUploadedReleaseCollectionAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
     {
-        var completedUploads = GetCompletedUploads();
+        var uploadIsReupload = UploadExpressions.UploadIsReupload(dbRead);
+        var completedSlotUploads = GetCompletedCollectionSlotUploads();
+
+        return await dbRead
+            .ReleaseCollections.Where(collection => collection.Id == releaseCollectionId)
+            .Where(
+                ReleaseCollectionRepository.AllSlotUploadsLinkCrypterContainersAndImagesAreComplete(
+                    dbRead
+                )
+            )
+            .Select(collection => new
+            {
+                NewestUploadedAt = completedSlotUploads
+                    .Where(upload =>
+                        upload.UploadConfig.Release.ReleaseCollectionId == collection.Id
+                    )
+                    .Max(upload => upload.UploadedAt),
+                IsReupload = collection.Releases.All(release =>
+                    !completedSlotUploads.Any(upload => upload.UploadConfig.ReleaseId == release.Id)
+                    || completedSlotUploads
+                        .Where(upload => upload.UploadConfig.ReleaseId == release.Id)
+                        .Any(uploadIsReupload)
+                ),
+            })
+            .Where(collection => collection.NewestUploadedAt != null)
+            .Select(collection => new UploadCompletionActionDueReleaseCollection(
+                ReleaseCollectionId: releaseCollectionId,
+                IsReupload: collection.IsReupload,
+                NewestUploadedAt: collection.NewestUploadedAt!.Value
+            ))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<UploadCompletionActionStateReadModel>> GetReleaseStatesAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var completedUploads = GetCompletedReleaseUploads();
 
         var completelyUploadedReleases = dbRead
             .Releases.Where(release => release.Id == releaseId)
@@ -82,35 +129,44 @@ public class UploadCompletionActionRepository(
             execution.ReleaseId == releaseId
         );
 
-        return await dbRead
-            .UploadCompletionActionRegistrations.Where(registration =>
-                registration.IsActive && !registration.HasUnreadableSecrets
+        return await GetStatesAsync(
+            completelyUploadedEntities: completelyUploadedReleases,
+            executions: executionsOfRelease,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<
+        IReadOnlyList<UploadCompletionActionStateReadModel>
+    > GetReleaseCollectionStatesAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var completedSlotUploads = GetCompletedCollectionSlotUploads();
+
+        var completelyUploadedReleaseCollections = dbRead
+            .ReleaseCollections.Where(collection => collection.Id == releaseCollectionId)
+            .Where(
+                ReleaseCollectionRepository.AllSlotUploadsLinkCrypterContainersAndImagesAreComplete(
+                    dbRead
+                )
             )
-            .LeftJoin(
-                executionsOfRelease,
-                registration => registration.Id,
-                execution => execution.UploadCompletionActionRegistrationId,
-                (registration, execution) =>
-                    new
-                    {
-                        RegistrationId = registration.Id,
-                        RegistrationName = registration.Name,
-                        ExecutedAt = execution == null ? (DateTime?)null : execution.ExecutedAt,
-                        ResultText = execution == null ? null : execution.ResultText,
-                        ErrorMessage = execution == null ? null : execution.ErrorMessage,
-                    }
-            )
-            .OrderBy(state => state.RegistrationName)
-            .ThenBy(state => state.RegistrationId)
-            .Select(state => new UploadCompletionActionReleaseStateReadModel(
-                RegistrationId: state.RegistrationId,
-                RegistrationName: state.RegistrationName,
-                IsReleaseCompletelyUploaded: completelyUploadedReleases.Any(),
-                ExecutedAt: state.ExecutedAt,
-                ResultText: state.ResultText,
-                ErrorMessage: state.ErrorMessage
-            ))
-            .ToListAsync(cancellationToken);
+            .Where(collection =>
+                completedSlotUploads.Any(upload =>
+                    upload.UploadConfig.Release.ReleaseCollectionId == collection.Id
+                )
+            );
+
+        var executionsOfReleaseCollection = dbRead.UploadCompletionActionExecutions.Where(
+            execution => execution.ReleaseCollectionId == releaseCollectionId
+        );
+
+        return await GetStatesAsync(
+            completelyUploadedEntities: completelyUploadedReleaseCollections,
+            executions: executionsOfReleaseCollection,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task<IReadOnlyList<UploadCompletionActionDueRelease>> GetDueReleasesAsync(
@@ -127,7 +183,7 @@ public class UploadCompletionActionRepository(
             execution.UploadCompletionActionRegistrationId == registration.Id
         );
 
-        var completedUploads = GetCompletedUploads();
+        var completedUploads = GetCompletedReleaseUploads();
 
         return await dbRead
             .Releases.Where(
@@ -173,7 +229,77 @@ public class UploadCompletionActionRepository(
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<UploadCompletionActionExecution?> GetExecutionAsync(
+    public async Task<
+        IReadOnlyList<UploadCompletionActionDueReleaseCollection>
+    > GetDueReleaseCollectionsAsync(
+        UploadCompletionActionRegistration registration,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registrationCreatedAt = registration.CreatedAt;
+        var runForInitialUpload = registration.RunForInitialUpload;
+        var runForReupload = registration.RunForReupload;
+        var uploadIsReupload = UploadExpressions.UploadIsReupload(dbRead);
+
+        var executionsOfRegistration = dbRead.UploadCompletionActionExecutions.Where(execution =>
+            execution.UploadCompletionActionRegistrationId == registration.Id
+        );
+
+        var completedSlotUploads = GetCompletedCollectionSlotUploads();
+
+        return await dbRead
+            .ReleaseCollections.Where(
+                ReleaseCollectionRepository.AllSlotUploadsLinkCrypterContainersAndImagesAreComplete(
+                    dbRead
+                )
+            )
+            .Where(AllReleasesPassedQualityGate)
+            .Select(collection => new
+            {
+                ReleaseCollectionId = collection.Id,
+                HandledUploadedAt = executionsOfRegistration
+                    .Where(execution => execution.ReleaseCollectionId == collection.Id)
+                    .Select(execution => (DateTime?)execution.HandledUploadedAt)
+                    .FirstOrDefault()
+                    ?? registrationCreatedAt,
+            })
+            .Select(collection => new
+            {
+                collection.ReleaseCollectionId,
+                NewestUploadedAt = completedSlotUploads
+                    .Where(upload =>
+                        upload.UploadConfig.Release.ReleaseCollectionId
+                        == collection.ReleaseCollectionId
+                    )
+                    .Max(upload => upload.UploadedAt),
+                HasUploadNewerThanHandledUploadedAt = completedSlotUploads.Any(upload =>
+                    upload.UploadConfig.Release.ReleaseCollectionId
+                        == collection.ReleaseCollectionId
+                    && upload.UploadedAt > collection.HandledUploadedAt
+                ),
+                IsReupload = completedSlotUploads
+                    .Where(upload =>
+                        upload.UploadConfig.Release.ReleaseCollectionId
+                            == collection.ReleaseCollectionId
+                        && upload.UploadedAt > collection.HandledUploadedAt
+                    )
+                    .All(uploadIsReupload),
+            })
+            .Where(collection => collection.HasUploadNewerThanHandledUploadedAt)
+            .Where(collection =>
+                (collection.IsReupload && runForReupload)
+                || (!collection.IsReupload && runForInitialUpload)
+            )
+            .OrderBy(collection => collection.ReleaseCollectionId)
+            .Select(collection => new UploadCompletionActionDueReleaseCollection(
+                ReleaseCollectionId: collection.ReleaseCollectionId,
+                IsReupload: collection.IsReupload,
+                NewestUploadedAt: collection.NewestUploadedAt!.Value
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<UploadCompletionActionExecution?> GetReleaseExecutionAsync(
         int releaseId,
         int uploadCompletionActionRegistrationId,
         CancellationToken cancellationToken = default
@@ -182,6 +308,21 @@ public class UploadCompletionActionRepository(
         return await dbWrite.UploadCompletionActionExecutions.SingleOrDefaultAsync(
             execution =>
                 execution.ReleaseId == releaseId
+                && execution.UploadCompletionActionRegistrationId
+                    == uploadCompletionActionRegistrationId,
+            cancellationToken
+        );
+    }
+
+    public async Task<UploadCompletionActionExecution?> GetReleaseCollectionExecutionAsync(
+        int releaseCollectionId,
+        int uploadCompletionActionRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.UploadCompletionActionExecutions.SingleOrDefaultAsync(
+            execution =>
+                execution.ReleaseCollectionId == releaseCollectionId
                 && execution.UploadCompletionActionRegistrationId
                     == uploadCompletionActionRegistrationId,
             cancellationToken
@@ -198,11 +339,61 @@ public class UploadCompletionActionRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    private IQueryable<Upload> GetCompletedUploads()
+    private async Task<IReadOnlyList<UploadCompletionActionStateReadModel>> GetStatesAsync<TEntity>(
+        IQueryable<TEntity> completelyUploadedEntities,
+        IQueryable<UploadCompletionActionExecution> executions,
+        CancellationToken cancellationToken
+    )
     {
-        return dbRead
-            .UploadConfigs.Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
-            .Where(uploadConfig => uploadConfig.CollectionUploadSlotId == null)
+        return await dbRead
+            .UploadCompletionActionRegistrations.Where(registration =>
+                registration.IsActive && !registration.HasUnreadableSecrets
+            )
+            .LeftJoin(
+                executions,
+                registration => registration.Id,
+                execution => execution.UploadCompletionActionRegistrationId,
+                (registration, execution) =>
+                    new
+                    {
+                        RegistrationId = registration.Id,
+                        RegistrationName = registration.Name,
+                        ExecutedAt = execution == null ? (DateTime?)null : execution.ExecutedAt,
+                        ResultText = execution == null ? null : execution.ResultText,
+                        ErrorMessage = execution == null ? null : execution.ErrorMessage,
+                    }
+            )
+            .OrderBy(state => state.RegistrationName)
+            .ThenBy(state => state.RegistrationId)
+            .Select(state => new UploadCompletionActionStateReadModel(
+                RegistrationId: state.RegistrationId,
+                RegistrationName: state.RegistrationName,
+                IsCompletelyUploaded: completelyUploadedEntities.Any(),
+                ExecutedAt: state.ExecutedAt,
+                ResultText: state.ResultText,
+                ErrorMessage: state.ErrorMessage
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<Upload> GetCompletedReleaseUploads()
+    {
+        return GetCompletedUploads(
+            dbRead.UploadConfigs.Where(uploadConfig => uploadConfig.CollectionUploadSlotId == null)
+        );
+    }
+
+    private IQueryable<Upload> GetCompletedCollectionSlotUploads()
+    {
+        return GetCompletedUploads(
+            dbRead.UploadConfigs.Where(uploadConfig => uploadConfig.CollectionUploadSlotId != null)
+        );
+    }
+
+    private static IQueryable<Upload> GetCompletedUploads(IQueryable<UploadConfig> uploadConfigs)
+    {
+        return uploadConfigs
+            .Where(UploadTargetExpressions.UploadConfigHasActiveHosterRegistration)
             .SelectMany(uploadConfig => uploadConfig.Uploads)
             .Where(upload =>
                 upload.UploadState == UploadState.Completed && upload.UploadedAt != null

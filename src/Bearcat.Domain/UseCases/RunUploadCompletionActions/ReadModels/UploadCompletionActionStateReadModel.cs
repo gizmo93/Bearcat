@@ -1,9 +1,9 @@
 namespace Bearcat.Domain.UseCases.RunUploadCompletionActions.ReadModels;
 
-public record UploadCompletionActionReleaseStateReadModel(
+public record UploadCompletionActionStateReadModel(
     int RegistrationId,
     string RegistrationName,
-    bool IsReleaseCompletelyUploaded,
+    bool IsCompletelyUploaded,
     DateTime? ExecutedAt,
     string? ResultText,
     string? ErrorMessage

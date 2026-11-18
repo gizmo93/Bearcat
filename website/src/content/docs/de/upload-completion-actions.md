@@ -32,6 +32,22 @@ Der Abschnitt **Aktionen nach Upload** im Übersichtstab der
 ausgeschaltet ist. Der Button ist verfügbar, sobald alle Uploads des Release abgeschlossen sind.
 Ein fehlgeschlagener manueller Lauf erstellt keine Benachrichtigung.
 
+## Releasecollections
+
+Eine [Releasecollection](/Bearcat/de/release-collections/), die über
+[Uploadslots](/Bearcat/de/release-collections/#uploadslots) hochlädt, behandelt Bearcat als eine Einheit:
+
+- Die Aktion läuft, sobald alle Episoden in den Uploadslots hochgeladen sind, die Collectioncontainer
+  und die Collectionbilder fertig sind und jedes Release der Collection das
+  [Quality Gate](/Bearcat/de/quality-gates/) bestanden hat.
+- Sie läuft erneut, wenn eine Episode dazukommt oder neu hochgeladen wird. Als Reupload zählt der
+  Lauf nur, wenn alle neuen Uploads Reuploads sind.
+- `release.name` ist der Name der Collection.
+- Uploads eines Release ausserhalb der Uploadslots gehören nicht zur Collection. Sie lösen weiterhin
+  die Aktion für das Release selbst aus.
+
+Die Collectiondetailseite hat denselben Abschnitt **Aktionen nach Upload** mit **Jetzt ausführen**.
+
 ## IntelliGeN-XML-Export
 
 Der Export schreibt pro Lauf eine XML-Datei, die IntelliGeN importieren kann.
@@ -40,6 +56,9 @@ Der Export schreibt pro Lauf eine XML-Datei, die IntelliGeN importieren kann.
 | --- | --- |
 | **Exportordner** | Ordner, in den die XML-Dateien geschrieben werden. Er muss bereits existieren. Bearcat legt ihn nie an. |
 | **Dateipfadvorlage** | Pfad der Datei relativ zum Exportordner. Er darf Unterordner enthalten. |
+
+Für eine Collection schreibt jeder Lauf eine neue XML-Datei mit den Links aller Episoden. Jeder
+Uploadslot und Hoster wird ein eigener Mirror.
 
 Vorhandene Dateien werden nie überschrieben. Bearcat hängt stattdessen eine Nummer an, zum Beispiel
 `Release.Name (2).xml`.
