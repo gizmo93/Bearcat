@@ -4,7 +4,7 @@ description: "Automatische Aktionen für Uploads und Reuploads einrichten, Ergeb
 ---
 
 Bearcat kann nach dem Upload eines Releases oder einer Releasecollection automatisch eine Aktion ausführen.
-Eine solche Aktion ist der [XML-Export für IntelliGeN](/Bearcat/de/intelligen-xml-export/).
+Eine solche Aktion ist der [XML-Export für IntelligeN](/Bearcat/de/intelligen-xml-export/).
 
 ## Aktion einrichten
 

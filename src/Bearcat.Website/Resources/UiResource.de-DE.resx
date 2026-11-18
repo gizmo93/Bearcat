@@ -2299,7 +2299,7 @@
   <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>Dieser Post erfüllt die Hosterregeln des Forums nicht. Bearcat würde ihn beim automatischen Posten überspringen.</value></data>
   <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Wegen der Hosterregeln dieses Forums übersprungen: {0}</value></data>
   <data name="UploadCompletionActions" xml:space="preserve"><value>Aktionen nach dem Upload</value></data>
-  <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Lege fest, was Bearcat nach dem Upload tun soll, etwa ein Release für IntelliGeN exportieren.</value></data>
+  <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Lege fest, was Bearcat nach dem Upload tun soll, etwa ein Release für IntelligeN exportieren.</value></data>
   <data name="NewUploadCompletionAction" xml:space="preserve"><value>Neue Aktion</value></data>
   <data name="AddUploadCompletionAction" xml:space="preserve"><value>Aktion hinzufügen</value></data>
   <data name="NoUploadCompletionActionsYet" xml:space="preserve"><value>Noch keine Aktionen eingerichtet.</value></data>

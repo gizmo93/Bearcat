@@ -130,7 +130,7 @@ export default defineConfig({
 						{ label: 'FTP / FTPS downloads', translations: { de: 'FTP-/FTPS-Downloads' }, slug: 'remote-downloads' },
 						{ label: 'Actions after upload', translations: { de: 'Aktionen nach dem Upload' }, slug: 'upload-completion-actions' },
 						{
-							label: 'IntelliGeN XML export', translations: { de: 'XML-Export für IntelliGeN' },
+							label: 'IntelligeN XML export', translations: { de: 'XML-Export für IntelligeN' },
 							slug: 'intelligen-xml-export',
 							attrs: { style: 'margin-inline-start: 1rem' },
 						},

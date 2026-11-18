@@ -31,7 +31,7 @@ public sealed class IntelligenXmlExportAction : IUploadCompletionAction
         ),
     ];
 
-    public string Name => "IntelliGeN XML export";
+    public string Name => "IntelligeN XML export";
 
     public IReadOnlyList<ConfigurationField> ConfigurationFields => Fields;
 
@@ -40,7 +40,7 @@ public sealed class IntelligenXmlExportAction : IUploadCompletionAction
         return JsonSerializer.Deserialize<IntelligenXmlExportConfig>(
                 serializedConfig,
                 SerializerOptions
-            ) ?? throw new JsonException("IntelliGeN XML export configuration is empty");
+            ) ?? throw new JsonException("IntelligeN XML export configuration is empty");
     }
 
     public async Task<string> ExecuteAsync(

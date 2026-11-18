@@ -4,7 +4,7 @@ description: "Set up automatic actions for uploads and reuploads, check their re
 ---
 
 Bearcat can run an action automatically after uploading a release or a release collection.
-One available action is the [IntelliGeN XML export](/Bearcat/intelligen-xml-export/).
+One available action is the [IntelligeN XML export](/Bearcat/intelligen-xml-export/).
 
 ## Set up an action
 
