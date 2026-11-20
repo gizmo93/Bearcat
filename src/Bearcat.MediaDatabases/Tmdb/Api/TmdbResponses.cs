@@ -16,7 +16,8 @@ public record TmdbMovieResponse(
     string? Title,
     string? Overview,
     [property: JsonPropertyName("poster_path")] string? PosterPath,
-    [property: JsonPropertyName("imdb_id")] string? ImdbId
+    [property: JsonPropertyName("imdb_id")] string? ImdbId,
+    IReadOnlyList<TmdbGenreResponse>? Genres
 );
 
 public record TmdbTvResponse(
@@ -24,7 +25,8 @@ public record TmdbTvResponse(
     string? Name,
     string? Overview,
     [property: JsonPropertyName("poster_path")] string? PosterPath,
-    [property: JsonPropertyName("external_ids")] TmdbExternalIdsResponse? ExternalIds
+    [property: JsonPropertyName("external_ids")] TmdbExternalIdsResponse? ExternalIds,
+    IReadOnlyList<TmdbGenreResponse>? Genres
 );
 
 public record TmdbTvEpisodeResponse(

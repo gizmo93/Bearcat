@@ -43,14 +43,44 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
             )
         );
 
-        return lookup.MediaKind switch
+        if (lookup.MediaKind == MediaKind.Movie)
         {
-            MediaKind.Movie => MapMovie(response?.MovieResults?.FirstOrDefault()),
-            MediaKind.TvSeries => MapTv(response?.TvResults?.FirstOrDefault()),
-            MediaKind.TvEpisode => MapEpisode(response?.TvEpisodeResults?.FirstOrDefault())
-                ?? MapTv(response?.TvResults?.FirstOrDefault()),
-            _ => null,
-        };
+            return await GetMovieFromSearchResultAsync(
+                searchResult: response?.MovieResults?.FirstOrDefault(),
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        if (lookup.MediaKind == MediaKind.TvSeries)
+        {
+            return await GetTvFromSearchResultAsync(
+                searchResult: response?.TvResults?.FirstOrDefault(),
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        if (lookup.MediaKind == MediaKind.TvEpisode)
+        {
+            var episode = MapEpisode(response?.TvEpisodeResults?.FirstOrDefault());
+
+            if (episode is not null)
+            {
+                return episode;
+            }
+
+            return await GetTvFromSearchResultAsync(
+                searchResult: response?.TvResults?.FirstOrDefault(),
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        return null;
     }
 
     public async Task<MediaMetadata?> GetByTitleAsync(
@@ -79,7 +109,12 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
                 )
             );
 
-            return MapMovie(response?.Results?.FirstOrDefault());
+            return await GetMovieFromSearchResultAsync(
+                searchResult: response?.Results?.FirstOrDefault(),
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
+            );
         }
 
         if (lookup.MediaKind is MediaKind.TvSeries or MediaKind.TvEpisode)
@@ -95,7 +130,12 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
                 )
             );
 
-            return MapTv(response?.Results?.FirstOrDefault());
+            return await GetTvFromSearchResultAsync(
+                searchResult: response?.Results?.FirstOrDefault(),
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
+            );
         }
 
         return null;
@@ -118,31 +158,22 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
 
         if (tmdbIdParts[0] == "movie")
         {
-            var movie = await SendAsync(
-                api.GetMovieAsync(
-                    movieId: id,
-                    apiKey: tmdbConfig.ApiKey,
-                    language: lookup.LanguageCode,
-                    cancellationToken: cancellationToken
-                )
+            return await GetMovieByIdAsync(
+                movieId: id,
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
             );
-
-            return MapMovie(movie);
         }
 
         if (tmdbIdParts[0] == "tv")
         {
-            var series = await SendAsync(
-                api.GetTvAsync(
-                    seriesId: id,
-                    apiKey: tmdbConfig.ApiKey,
-                    language: lookup.LanguageCode,
-                    appendToResponse: "external_ids",
-                    cancellationToken: cancellationToken
-                )
+            return await GetTvByIdAsync(
+                seriesId: id,
+                config: tmdbConfig,
+                languageCode: lookup.LanguageCode,
+                cancellationToken: cancellationToken
             );
-
-            return MapTv(series);
         }
 
         throw new ArgumentOutOfRangeException(nameof(lookup), lookup.TmdbId, null);
@@ -180,6 +211,85 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
     {
         var config = JsonSerializer.Deserialize<Dictionary<string, string>>(serializedConfig) ?? [];
         return new TmdbConfig(config.GetValueOrDefault(TmdbConfig.ApiKeyConfigKey) ?? string.Empty);
+    }
+
+    private async Task<MediaMetadata?> GetMovieFromSearchResultAsync(
+        TmdbMovieResponse? searchResult,
+        TmdbConfig config,
+        string? languageCode,
+        CancellationToken cancellationToken
+    )
+    {
+        if (searchResult is null)
+        {
+            return null;
+        }
+
+        return await GetMovieByIdAsync(
+            movieId: searchResult.Id,
+            config: config,
+            languageCode: languageCode,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<MediaMetadata?> GetTvFromSearchResultAsync(
+        TmdbTvResponse? searchResult,
+        TmdbConfig config,
+        string? languageCode,
+        CancellationToken cancellationToken
+    )
+    {
+        if (searchResult is null)
+        {
+            return null;
+        }
+
+        return await GetTvByIdAsync(
+            seriesId: searchResult.Id,
+            config: config,
+            languageCode: languageCode,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<MediaMetadata?> GetMovieByIdAsync(
+        long movieId,
+        TmdbConfig config,
+        string? languageCode,
+        CancellationToken cancellationToken
+    )
+    {
+        var movie = await SendAsync(
+            api.GetMovieAsync(
+                movieId: movieId,
+                apiKey: config.ApiKey,
+                language: languageCode,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        return MapMovie(movie);
+    }
+
+    private async Task<MediaMetadata?> GetTvByIdAsync(
+        long seriesId,
+        TmdbConfig config,
+        string? languageCode,
+        CancellationToken cancellationToken
+    )
+    {
+        var series = await SendAsync(
+            api.GetTvAsync(
+                seriesId: seriesId,
+                apiKey: config.ApiKey,
+                language: languageCode,
+                appendToResponse: "external_ids",
+                cancellationToken: cancellationToken
+            )
+        );
+
+        return MapTv(series);
     }
 
     private static async Task<T?> SendAsync<T>(Task<ApiResponse<T>> request)
@@ -223,7 +333,7 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
         return new MediaMetadata(
             Title: movie.Title,
             Description: movie.Overview,
-            Genre: null,
+            Genre: JoinGenreNames(movie.Genres),
             CoverUrl: coverUrl,
             DatabaseUrl: $"https://www.themoviedb.org/movie/{movie.Id}",
             ImdbId: NullIfWhiteSpace(movie.ImdbId),
@@ -246,7 +356,7 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
         return new MediaMetadata(
             Title: series.Name,
             Description: series.Overview,
-            Genre: null,
+            Genre: JoinGenreNames(series.Genres),
             CoverUrl: coverUrl,
             DatabaseUrl: $"https://www.themoviedb.org/tv/{series.Id}",
             ImdbId: NullIfWhiteSpace(series.ExternalIds?.ImdbId),
@@ -276,6 +386,16 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
             TmdbId: $"tv/{episode.ShowId}",
             TvdbId: null
         );
+    }
+
+    private static string? JoinGenreNames(IReadOnlyList<TmdbGenreResponse>? genres)
+    {
+        var names = genres
+            ?.Select(genre => genre.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToList();
+
+        return names is null || names.Count == 0 ? null : string.Join(", ", names);
     }
 
     private static string? NullIfWhiteSpace(string? value)
