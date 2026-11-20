@@ -201,12 +201,6 @@ public partial class CreateReleaseFromTemplateDialog(
 
     private async Task CreateReleaseFromSubfolderAsync(string folderPath)
     {
-        var folderName = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar));
-
-        var primaryLanguageCode =
-            ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(folderName)
-            ?? formModel.PrimaryLanguageCode;
-
         try
         {
             await operationRunner.RunAsync(
@@ -215,7 +209,7 @@ public partial class CreateReleaseFromTemplateDialog(
                         releaseTemplateId: formModel.ReleaseTemplateId!.Value,
                         releaseFolderPath: folderPath,
                         name: null,
-                        primaryLanguageCode: primaryLanguageCode
+                        primaryLanguageCode: formModel.PrimaryLanguageCode
                     )
             );
 
@@ -255,6 +249,24 @@ public partial class CreateReleaseFromTemplateDialog(
         createdSubfolderPaths.Clear();
         subfolderErrorMessagesByFolderPath.Clear();
         SelectAllSubfoldersThatCanBecomeReleases();
+        PreselectPrimaryLanguageSharedBySubfolders();
+    }
+
+    private void PreselectPrimaryLanguageSharedBySubfolders()
+    {
+        var detectedLanguageCodes = subfolderPreview!
+            .MatchingFolders.Where(CanSubfolderBecomeRelease)
+            .Select(subfolder =>
+                ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(subfolder.FolderName)
+            )
+            .OfType<string>()
+            .Distinct()
+            .ToList();
+
+        if (detectedLanguageCodes.Count == 1)
+        {
+            formModel.PrimaryLanguageCode = detectedLanguageCodes.Single();
+        }
     }
 
     private void SelectAllSubfoldersThatCanBecomeReleases()
