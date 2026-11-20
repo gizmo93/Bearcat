@@ -14,7 +14,8 @@ namespace Bearcat.Hosters.Zippyshare;
 
 public class Zippyshare(IZippyshareApiClient apiClient, ILogger<Zippyshare> logger)
     : IHosterWithFileInfo,
-        IHosterWithStorageQuota
+        IHosterWithStorageQuota,
+        IHosterWithFileSizeLimit
 {
     private const int MaxParallelUploads = 3;
 
@@ -33,6 +34,8 @@ public class Zippyshare(IZippyshareApiClient apiClient, ILogger<Zippyshare> logg
     public bool HasFixedParallelUploadLimit => false;
 
     public int? DefaultMaximumParallelUploads => MaxParallelUploads;
+
+    public int MaxFileSizeMb => 104;
 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,

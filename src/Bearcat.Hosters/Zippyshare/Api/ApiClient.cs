@@ -22,6 +22,9 @@ public class ApiClient(IZippyshareApi api, HttpClientProvider httpClientProvider
 
     private const string ApiKeyRejectedMessage = "Zippyshare.day rejected the API key.";
 
+    private const string RequestTooLargeMessage =
+        "Zippyshare.day rejected the upload as too large. Its Cloudflare proxy accepts at most 100 MiB per upload request, so the file must be at most 104 MB.";
+
     private const int MaxParallelFileRequests = 4;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
@@ -53,6 +56,11 @@ public class ApiClient(IZippyshareApi api, HttpClientProvider httpClientProvider
         var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
         ThrowIfApiKeyRejected(httpResponse.StatusCode, content);
+
+        if (httpResponse.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+        {
+            throw new HttpRequestException(RequestTooLargeMessage);
+        }
 
         var response = httpResponse.IsSuccessStatusCode
             ? TryDeserialize<UploadFileResponse>(content)
