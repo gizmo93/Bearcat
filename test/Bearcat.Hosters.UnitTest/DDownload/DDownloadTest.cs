@@ -22,7 +22,10 @@ public class DDownloadTest
     {
         apiClientMock = new Mock<IDDownloadApiClient>(MockBehavior.Strict);
         var loggerMock = new Mock<ILogger<Hosters.DDownload.DDownload>>();
-        service = new Hosters.DDownload.DDownload(apiClientMock.Object, loggerMock.Object);
+        service = new Hosters.DDownload.DDownload(apiClientMock.Object, loggerMock.Object)
+        {
+            UploadRetryDelay = TimeSpan.Zero,
+        };
     }
 
     [TearDown]

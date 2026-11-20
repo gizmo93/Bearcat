@@ -5,6 +5,7 @@ using Bearcat.Hosters.DDownload.Api;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Moq;
+using Refit;
 using Shouldly;
 
 namespace Bearcat.Hosters.UnitTest.DDownload;
@@ -30,6 +31,52 @@ public class ApiClientTest
             apiMock.Object,
             httpClientProvider,
             new HosterFileDownloader(httpClientProvider)
+        )
+        {
+            RateLimitRetryDelay = TimeSpan.Zero,
+        };
+    }
+
+    [Test]
+    public async Task RequestUploadAsync_TooManyRequestsThenSuccess_RetriesAndReturnsUploadServer()
+    {
+        // Arrange
+        var uploadServer = new RequestUploadResponse
+        {
+            Status = (int)HttpStatusCode.OK,
+            UploadUrl = "https://upload.example/upload",
+            SessionId = "session-id",
+        };
+
+        var xfilesharingApiMock = apiMock.As<IXFilesharingApi>();
+
+        xfilesharingApiMock
+            .SetupSequence(x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse<RequestUploadResponse>(null, HttpStatusCode.TooManyRequests)
+            )
+            .ReturnsAsync(
+                CreateApiResponse<RequestUploadResponse>(uploadServer, HttpStatusCode.OK)
+            );
+
+        // Act
+        var result = await apiClient.RequestUploadAsync("api-key", CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(uploadServer);
+        xfilesharingApiMock.Verify(
+            x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()),
+            Times.Exactly(2)
+        );
+    }
+
+    private static ApiResponse<T> CreateApiResponse<T>(T? content, HttpStatusCode statusCode)
+    {
+        return new ApiResponse<T>(
+            new HttpResponseMessage(statusCode) { RequestMessage = new HttpRequestMessage() },
+            content,
+            new RefitSettings(),
+            error: null
         );
     }
 

@@ -38,6 +38,8 @@ public abstract class XFilesharingHosterBase<TConfig>(
 
     protected virtual int UploadRetryAttempts => 5;
 
+    public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
+
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
@@ -67,6 +69,10 @@ public abstract class XFilesharingHosterBase<TConfig>(
                     FileUrl: BuildFileUrl(response.FileCode)
                 );
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 var message = ex.InnerException?.Message ?? ex.Message;
@@ -80,6 +86,11 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 );
 
                 errors.Add(message);
+            }
+
+            if (attempt < UploadRetryAttempts)
+            {
+                await Task.Delay(UploadRetryDelay, cancellationToken);
             }
         }
 

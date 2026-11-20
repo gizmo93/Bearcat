@@ -26,6 +26,10 @@ public abstract class XFilesharingApiClient<TApi>(
         PropertyNameCaseInsensitive = true,
     };
 
+    private const int RateLimitRetryAttempts = 5;
+
+    public TimeSpan RateLimitRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
+
     protected TApi Api => api;
 
     public virtual async Task<Dictionary<string, XFilesharingFileStatus>> FilesExistAsync(
@@ -221,6 +225,18 @@ public abstract class XFilesharingApiClient<TApi>(
     )
     {
         var response = await api.RequestUploadAsync(apiKey, cancellationToken);
+
+        foreach (var _ in Enumerable.Range(start: 1, count: RateLimitRetryAttempts))
+        {
+            if (response.StatusCode != HttpStatusCode.TooManyRequests)
+            {
+                break;
+            }
+
+            await Task.Delay(RateLimitRetryDelay, cancellationToken);
+
+            response = await api.RequestUploadAsync(apiKey, cancellationToken);
+        }
 
         if (!response.IsSuccessStatusCode)
         {
