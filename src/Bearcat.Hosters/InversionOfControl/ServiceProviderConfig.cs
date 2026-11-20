@@ -34,6 +34,7 @@ using Bearcat.Hosters.Uploady.InversionOfControl;
 using Bearcat.Hosters.Vidara.InversionOfControl;
 using Bearcat.Hosters.Videro.InversionOfControl;
 using Bearcat.Hosters.Vixeo.InversionOfControl;
+using Bearcat.Hosters.Zippyshare.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters.InversionOfControl;
@@ -74,6 +75,7 @@ public static class ServiceProviderConfig
         services.AddUploadG();
         services.AddUploady();
         services.AddVixeo();
+        services.AddZippyshare();
         services.AddCostAction();
 
         services.AddScoped<IHosterFactory, HosterFactory>();

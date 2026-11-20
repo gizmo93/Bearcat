@@ -14,6 +14,7 @@ Pools funktionieren nur mit Hostern, die den freien Speicherplatz eines Accounts
 - Rapidgator
 - Alfafile
 - Fast2Share.com
+- Zippyshare.day
 - XFileSharing-basierte Hoster: clicknupload.click, datavaults.co, ddownload, file-upload.org,
   fileq.net, fileserve.com, freedl.ink, hxfile.co, katfile.com, mega4upload.net, uploady.io
 
