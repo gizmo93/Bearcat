@@ -16,7 +16,7 @@ public class ForumPostingRuleConfiguration : IEntityTypeConfiguration<ForumPosti
         builder.Property(rule => rule.ConditionJson).IsRequired().HasMaxLength(8000);
         builder.Property(rule => rule.TargetNodeId).IsRequired().HasMaxLength(100);
         builder.Property(rule => rule.TargetPathSnapshot).IsRequired().HasMaxLength(500);
-        builder.Property(rule => rule.ThreadPrefixId).IsRequired(false).HasMaxLength(100);
+        builder.PrimitiveCollection(rule => rule.ThreadPrefixIds).IsRequired();
         builder.Property(rule => rule.ForumPostTemplateId).IsRequired();
         builder.Property(rule => rule.PostMode).IsRequired();
         builder.Property(rule => rule.IsEnabled).IsRequired();

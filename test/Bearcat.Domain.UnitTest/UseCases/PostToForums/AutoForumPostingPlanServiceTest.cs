@@ -264,7 +264,7 @@ public class AutoForumPostingPlanServiceTest
                     name: "Board",
                     rules: AutoPostTestFactory.Rule(
                         id: 3,
-                        threadPrefixId: "11",
+                        threadPrefixIds: ["11"],
                         postMode: ForumPostPostMode.ReplyToExistingElseNewThread
                     )
                 ),
@@ -285,7 +285,7 @@ public class AutoForumPostingPlanServiceTest
         rule.Name.ShouldBe("Rule 3");
         rule.TargetNodeId.ShouldBe("42");
         rule.TargetPathSnapshot.ShouldBe("Board › Movies › HD");
-        rule.ThreadPrefixId.ShouldBe("11");
+        rule.ThreadPrefixIds.ShouldBe(["11"]);
         rule.ForumPostTemplateId.ShouldBe(7);
         rule.PostMode.ShouldBe(ForumPostPostMode.ReplyToExistingElseNewThread);
     }

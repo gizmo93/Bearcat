@@ -12,7 +12,7 @@ public sealed class ForumPostingRuleFormModel
 
     public string TargetPathSnapshot { get; set; } = string.Empty;
 
-    public string ThreadPrefixId { get; set; } = string.Empty;
+    public IReadOnlyList<string> ThreadPrefixIds { get; set; } = [];
 
     public ForumPostTemplateType TemplateType { get; set; } = ForumPostTemplateType.Release;
 

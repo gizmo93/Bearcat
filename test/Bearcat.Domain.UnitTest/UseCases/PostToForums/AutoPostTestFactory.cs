@@ -78,7 +78,7 @@ public static class AutoPostTestFactory
         int sortOrder = 0,
         string[]? resolutions = null,
         ForumPostPostMode postMode = ForumPostPostMode.AlwaysNewThread,
-        string? threadPrefixId = null,
+        List<string>? threadPrefixIds = null,
         int forumPostTemplateId = 7,
         bool isEnabled = true,
         ForumPostTemplateType templateType = ForumPostTemplateType.Release
@@ -98,7 +98,7 @@ public static class AutoPostTestFactory
             ),
             TargetNodeId = "42",
             TargetPathSnapshot = "Board › Movies › HD",
-            ThreadPrefixId = threadPrefixId,
+            ThreadPrefixIds = threadPrefixIds ?? [],
             ForumPostTemplateId = forumPostTemplateId,
             ForumPostTemplate = new ForumPostTemplate
             {

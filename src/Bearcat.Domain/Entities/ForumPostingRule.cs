@@ -20,7 +20,7 @@ public class ForumPostingRule
 
     public string TargetPathSnapshot { get; set; } = null!;
 
-    public string? ThreadPrefixId { get; set; }
+    public List<string> ThreadPrefixIds { get; set; } = [];
 
     public int ForumPostTemplateId { get; set; }
 

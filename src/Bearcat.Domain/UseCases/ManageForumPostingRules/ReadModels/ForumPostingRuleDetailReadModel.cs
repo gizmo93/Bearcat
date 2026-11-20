@@ -10,7 +10,7 @@ public record ForumPostingRuleDetailReadModel(
     string ConditionJson,
     string TargetNodeId,
     string TargetPathSnapshot,
-    string? ThreadPrefixId,
+    IReadOnlyList<string> ThreadPrefixIds,
     int ForumPostTemplateId,
     string ForumPostTemplateName,
     ForumPostTemplateType ForumPostTemplateType,

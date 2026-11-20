@@ -642,8 +642,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ThreadPrefixId")
-                        .HasMaxLength(100)
+                    b.PrimitiveCollection<string>("ThreadPrefixIds")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UpdatedAt")

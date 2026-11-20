@@ -1185,7 +1185,6 @@
   <data name="LoadSubforumsHelp" xml:space="preserve"><value>Loading the subforums signs in to the site and can take a few seconds. The stored subforum stays selected until you pick a different one.</value></data>
   <data name="NoSubforumSelected" xml:space="preserve"><value>No subforum selected yet</value></data>
   <data name="SubforumIsRequired" xml:space="preserve"><value>A subforum is required.</value></data>
-  <data name="ThreadPrefix" xml:space="preserve"><value>Prefix</value></data>
   <data name="LoadThreadPrefixes" xml:space="preserve"><value>Load prefixes</value></data>
   <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Reload prefixes</value></data>
   <data name="NoThreadPrefix" xml:space="preserve"><value>No prefix</value></data>

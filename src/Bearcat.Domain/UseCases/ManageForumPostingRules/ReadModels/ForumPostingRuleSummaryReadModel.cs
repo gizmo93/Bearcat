@@ -9,7 +9,7 @@ public record ForumPostingRuleSummaryReadModel(
     string Name,
     string TargetNodeId,
     string TargetPathSnapshot,
-    string? ThreadPrefixId,
+    IReadOnlyList<string> ThreadPrefixIds,
     int ForumPostTemplateId,
     string ForumPostTemplateName,
     ForumPostTemplateType ForumPostTemplateType,

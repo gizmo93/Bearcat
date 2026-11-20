@@ -28,8 +28,6 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private const string NoThreadPrefixValue = "";
-
     private ForumPostingRuleFormModel formModel = new();
     private ConditionNodeModel conditionRoot = ConditionModelMapper.CreateDefaultRoot();
     private EditContext editContext = null!;
@@ -65,10 +63,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             .ToList();
 
     private IReadOnlyList<SelectOption<string>> PrefixOptions =>
-        [
-            new(NoThreadPrefixValue, L["NoThreadPrefix"]),
-            .. prefixes.Select(prefix => new SelectOption<string>(prefix.Id, prefix.Label)),
-        ];
+        prefixes.Select(prefix => new SelectOption<string>(prefix.Id, prefix.Label)).ToList();
 
     private IReadOnlyList<SelectOption<string>> TargetOptions
     {
@@ -142,7 +137,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             Name = detail.Name,
             TargetNodeId = detail.TargetNodeId,
             TargetPathSnapshot = detail.TargetPathSnapshot,
-            ThreadPrefixId = detail.ThreadPrefixId ?? NoThreadPrefixValue,
+            ThreadPrefixIds = detail.ThreadPrefixIds,
             TemplateType = detail.ForumPostTemplateType,
             ForumPostTemplateId = detail.ForumPostTemplateId,
             PostMode = detail.PostMode,
@@ -207,7 +202,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
         prefixes = [];
         prefixesLoaded = false;
         prefixesErrorMessage = null;
-        formModel.ThreadPrefixId = NoThreadPrefixValue;
+        formModel.ThreadPrefixIds = [];
     }
 
     private async Task LoadPrefixesAsync()
@@ -241,6 +236,11 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
         }
     }
 
+    private void ChangeThreadPrefixIds(IEnumerable<string> threadPrefixIds)
+    {
+        formModel.ThreadPrefixIds = threadPrefixIds.ToList();
+    }
+
     private async Task SaveAsync()
     {
         isSaving = true;
@@ -251,9 +251,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             ConditionJson: ConditionModelMapper.ToJson(conditionRoot),
             TargetNodeId: formModel.TargetNodeId ?? string.Empty,
             TargetPathSnapshot: formModel.TargetPathSnapshot,
-            ThreadPrefixId: string.IsNullOrWhiteSpace(formModel.ThreadPrefixId)
-                ? null
-                : formModel.ThreadPrefixId,
+            ThreadPrefixIds: formModel.ThreadPrefixIds,
             ForumPostTemplateId: formModel.ForumPostTemplateId,
             PostMode: formModel.PostMode,
             IsEnabled: formModel.IsEnabled

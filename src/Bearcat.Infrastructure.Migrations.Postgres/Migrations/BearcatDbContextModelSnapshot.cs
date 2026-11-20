@@ -676,9 +676,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ThreadPrefixId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.PrimitiveCollection<List<string>>("ThreadPrefixIds")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasPrecision(4)

@@ -80,7 +80,7 @@ public class ForumPostingRuleServiceTest
             ),
             TargetNodeId: "42",
             TargetPathSnapshot: "Board > Series",
-            ThreadPrefixId: null,
+            ThreadPrefixIds: [],
             ForumPostTemplateId: CollectionTemplateId,
             PostMode: ForumPostPostMode.AlwaysNewThread,
             IsEnabled: true

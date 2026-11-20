@@ -167,6 +167,48 @@ public class ForumPostingRuleRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldBe(5);
     }
 
+    [Test]
+    public async Task GetDetailAsync_RuleWithSeveralThreadPrefixes_ReturnsThreadPrefixIdsInStoredOrder()
+    {
+        // Arrange
+        var template = AddForumPostTemplate("Release post");
+        var registration = AddRegistration("Forum A");
+        var rule = AddRule(
+            registration,
+            template,
+            "Rule A",
+            sortOrder: 0,
+            threadPrefixIds: ["23", "11"]
+        );
+        AddRule(registration, template, "Rule B", sortOrder: 1);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetDetailAsync(rule.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull().ThreadPrefixIds.ShouldBe(["23", "11"]);
+    }
+
+    [Test]
+    public async Task GetAllAsync_RulesWithAndWithoutThreadPrefixes_ReturnsThreadPrefixIdsPerRule()
+    {
+        // Arrange
+        var template = AddForumPostTemplate("Release post");
+        var registration = AddRegistration("Forum A");
+        AddRule(registration, template, "Rule A", sortOrder: 0, threadPrefixIds: ["23", "11"]);
+        AddRule(registration, template, "Rule B", sortOrder: 1);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var result = await repository.GetAllAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result[0].ThreadPrefixIds.ShouldBe(["23", "11"]);
+        result[1].ThreadPrefixIds.ShouldBeEmpty();
+    }
+
     private ForumPostTemplate AddForumPostTemplate(
         string name,
         ForumPostTemplateType type = ForumPostTemplateType.Release
@@ -207,7 +249,7 @@ public class ForumPostingRuleRepositoryTest(DatabaseProvider databaseProvider)
         string name,
         int sortOrder,
         string conditionJson = "{}",
-        string? threadPrefixId = null,
+        List<string>? threadPrefixIds = null,
         ForumPostPostMode postMode = ForumPostPostMode.ReplyToExistingElseNewThread,
         bool isEnabled = true,
         DateTime? updatedAt = null
@@ -221,7 +263,7 @@ public class ForumPostingRuleRepositoryTest(DatabaseProvider databaseProvider)
             ConditionJson = conditionJson,
             TargetNodeId = "12",
             TargetPathSnapshot = "Forum > Releases",
-            ThreadPrefixId = threadPrefixId,
+            ThreadPrefixIds = threadPrefixIds ?? [],
             ForumPostTemplate = template,
             PostMode = postMode,
             IsEnabled = isEnabled,

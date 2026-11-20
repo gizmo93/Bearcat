@@ -1185,7 +1185,6 @@
   <data name="LoadSubforumsHelp" xml:space="preserve"><value>Beim Laden der Unterforen wird die Seite angemeldet, das kann einige Sekunden dauern. Das gespeicherte Unterforum bleibt ausgewählt, bis du ein anderes wählst.</value></data>
   <data name="NoSubforumSelected" xml:space="preserve"><value>Noch kein Unterforum ausgewählt</value></data>
   <data name="SubforumIsRequired" xml:space="preserve"><value>Ein Unterforum ist erforderlich.</value></data>
-  <data name="ThreadPrefix" xml:space="preserve"><value>Präfix</value></data>
   <data name="LoadThreadPrefixes" xml:space="preserve"><value>Präfixe laden</value></data>
   <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Präfixe neu laden</value></data>
   <data name="NoThreadPrefix" xml:space="preserve"><value>Kein Präfix</value></data>

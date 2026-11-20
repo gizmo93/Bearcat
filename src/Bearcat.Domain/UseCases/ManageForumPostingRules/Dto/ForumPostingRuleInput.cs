@@ -7,7 +7,7 @@ public record ForumPostingRuleInput(
     string ConditionJson,
     string TargetNodeId,
     string TargetPathSnapshot,
-    string? ThreadPrefixId,
+    IReadOnlyList<string> ThreadPrefixIds,
     int ForumPostTemplateId,
     ForumPostPostMode PostMode,
     bool IsEnabled
