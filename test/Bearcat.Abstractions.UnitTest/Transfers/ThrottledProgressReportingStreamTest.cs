@@ -3,7 +3,7 @@ using Shouldly;
 
 namespace Bearcat.Abstractions.UnitTest.Transfers;
 
-public class ProgressReportingStreamTest
+public class ThrottledProgressReportingStreamTest
 {
     private static readonly byte[] SourceBytes = Enumerable
         .Range(0, 1000)
@@ -15,7 +15,7 @@ public class ProgressReportingStreamTest
     {
         // Arrange
         var progress = new RecordingTransferProgress();
-        await using var stream = new ProgressReportingStream(
+        await using var stream = new ThrottledProgressReportingStream(
             new MemoryStream(SourceBytes),
             progress,
             SourceBytes.Length
@@ -34,7 +34,7 @@ public class ProgressReportingStreamTest
     public async Task ReadAsync_NoSpeedLimitScope_ReadsFullRequestedCount()
     {
         // Arrange
-        await using var stream = new ProgressReportingStream(
+        await using var stream = new ThrottledProgressReportingStream(
             new MemoryStream(SourceBytes),
             new RecordingTransferProgress(),
             SourceBytes.Length
@@ -49,11 +49,11 @@ public class ProgressReportingStreamTest
     }
 
     [Test]
-    public async Task ReadAsync_SpeedLimitScope_ClampsReadToSmallestMaximumBytesPerAcquire()
+    public async Task ReadAsync_SpeedLimitScope_ClampsReadToSmallestBytesPerSecond()
     {
         // Arrange
-        using var hosterLimiter = new TransferSpeedLimiter(bytesPerSecond: 200);
-        using var globalLimiter = new TransferSpeedLimiter(bytesPerSecond: 100);
+        var hosterLimiter = new TransferSpeedLimiter(bytesPerSecond: 200);
+        var globalLimiter = new TransferSpeedLimiter(bytesPerSecond: 100);
         var stream = CreateStreamInScope([hosterLimiter, globalLimiter]);
         var buffer = new byte[4096];
 
@@ -65,62 +65,17 @@ public class ProgressReportingStreamTest
         buffer[..100].ShouldBe(SourceBytes[..100]);
     }
 
-    [Test]
-    public async Task ReadAsync_InnerStreamReturnsFewerBytes_AcquiresOnlyBytesActuallyRead()
-    {
-        // Arrange
-        using var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-        var stream = CreateStreamInScope(
-            [limiter],
-            new ShortReadingStream(SourceBytes, maximumBytesPerRead: 10)
-        );
-        var buffer = new byte[4096];
-
-        // Act
-        var bytesRead = await stream.ReadAsync(buffer);
-
-        // Assert
-        bytesRead.ShouldBe(10);
-        limiter
-            .AcquireAsync(90, CancellationToken.None)
-            .AsTask()
-            .IsCompletedSuccessfully.ShouldBeTrue();
-    }
-
-    private static ProgressReportingStream CreateStreamInScope(
+    private static ThrottledProgressReportingStream CreateStreamInScope(
         IReadOnlyList<TransferSpeedLimiter> limiters
-    )
-    {
-        return CreateStreamInScope(limiters, new MemoryStream(SourceBytes));
-    }
-
-    private static ProgressReportingStream CreateStreamInScope(
-        IReadOnlyList<TransferSpeedLimiter> limiters,
-        Stream innerStream
     )
     {
         using var scope = TransferSpeedLimitScope.Enter(limiters);
 
-        return new ProgressReportingStream(
-            innerStream,
+        return new ThrottledProgressReportingStream(
+            new MemoryStream(SourceBytes),
             new RecordingTransferProgress(),
             SourceBytes.Length
         );
-    }
-
-    private sealed class ShortReadingStream(byte[] bytes, int maximumBytesPerRead)
-        : MemoryStream(bytes)
-    {
-        public override ValueTask<int> ReadAsync(
-            Memory<byte> buffer,
-            CancellationToken cancellationToken = default
-        )
-        {
-            return base.ReadAsync(
-                buffer[..Math.Min(buffer.Length, maximumBytesPerRead)],
-                cancellationToken
-            );
-        }
     }
 
     private sealed class RecordingTransferProgress : ITransferProgress

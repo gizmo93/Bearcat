@@ -59,7 +59,7 @@ public abstract class XVideoSharingHosterBase<TConfig>(
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadedFile = await apiClient.UploadFileAsync(
                     apiKey: config.ApiKey,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     cancellationToken: cancellationToken
                 );

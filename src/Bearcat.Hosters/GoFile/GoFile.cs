@@ -60,7 +60,11 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     apiKey: config.ApiKey,
-                    fileStream: new ProgressReportingStream(stream, progress, stream.Length),
+                    fileStream: new ThrottledProgressReportingStream(
+                        stream,
+                        progress,
+                        stream.Length
+                    ),
                     fileName: fileName,
                     folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken

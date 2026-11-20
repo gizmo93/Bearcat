@@ -59,7 +59,7 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
                 var uploadResult = await apiClient.UploadFileAsync(
                     config: config,
                     fullFileName: fileDto.FullFileName,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     fileSize: fileInfo.Length,
                     folderId: fileDto.FolderId,

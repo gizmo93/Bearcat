@@ -65,7 +65,7 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
                 var uploadResult = await apiClient.UploadFileAsync(
                     apiKey: config.ApiKey,
                     appType: AppType,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     fileSize: fileInfo.Length,
                     folderId: fileDto.FolderId,

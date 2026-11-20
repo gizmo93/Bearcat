@@ -54,7 +54,7 @@ public class Vixeo(ApiClient apiClient, ILogger<Vixeo> logger) : IVideoHoster
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadedVideo = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     cancellationToken: cancellationToken
                 );

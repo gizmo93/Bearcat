@@ -368,7 +368,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
 
         var uploadResult = await apiClient.UploadFileAsync(
             uploadUrl: requestedUpload.Url,
-            stream: new ProgressReportingStream(stream, progress, stream.Length),
+            stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
         );

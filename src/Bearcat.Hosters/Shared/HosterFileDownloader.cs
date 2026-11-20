@@ -45,7 +45,7 @@ public class HosterFileDownloader(HttpClientProvider httpClientProvider)
             await using var responseStream = await response.Content.ReadAsStreamAsync(
                 cancellationToken
             );
-            await using var progressStream = new ProgressReportingStream(
+            await using var progressStream = new ThrottledProgressReportingStream(
                 inner: responseStream,
                 progress: progress,
                 totalBytes: response.Content.Headers.ContentLength ?? expectedSizeBytes

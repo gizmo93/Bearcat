@@ -50,15 +50,9 @@ public class TransferSpeedLimitServiceTest
         service = new TransferSpeedLimitService(configurationProviderMock.Object);
     }
 
-    [TearDown]
-    public void TearDown()
-    {
-        service.Dispose();
-    }
-
     [TestCase(null)]
     [TestCase(0)]
-    public void EnterUploadScope_NoOrZeroSpeedLimitConfigured_CurrentIsNull(
+    public void EnterUploadScope_NoOrZeroSpeedLimitConfigured_CurrentIsEmpty(
         double? speedLimitMegabytesPerSecond
     )
     {
@@ -69,7 +63,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(Registration);
 
         // Assert
-        TransferSpeedLimitScope.Current.ShouldBeNull();
+        TransferSpeedLimitScope.Current.ShouldBeEmpty();
     }
 
     [Test]
@@ -82,7 +76,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(Registration);
 
         // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        var limiters = TransferSpeedLimitScope.Current;
         limiters.Count.ShouldBe(1);
         limiters[0].BytesPerSecond.ShouldBe(524_288);
     }
@@ -96,7 +90,7 @@ public class TransferSpeedLimitServiceTest
 
         using (service.EnterUploadScope(Registration))
         {
-            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+            firstLimiter = TransferSpeedLimitScope.Current[0];
         }
 
         uploadSpeedLimitMegabytesPerSecond = 2;
@@ -105,7 +99,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(Registration);
 
         // Assert
-        var secondLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        var secondLimiter = TransferSpeedLimitScope.Current[0];
         secondLimiter.ShouldBeSameAs(firstLimiter);
         secondLimiter.BytesPerSecond.ShouldBe(2 * 1024 * 1024);
     }
@@ -120,7 +114,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(Registration);
 
         // Assert
-        TransferSpeedLimitScope.Current.ShouldNotBeNull()[0].BytesPerSecond.ShouldBe(int.MaxValue);
+        TransferSpeedLimitScope.Current[0].BytesPerSecond.ShouldBe(int.MaxValue);
     }
 
     [Test]
@@ -133,7 +127,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(Registration);
 
         // Assert
-        TransferSpeedLimitScope.Current.ShouldNotBeNull()[0].BytesPerSecond.ShouldBe(1);
+        TransferSpeedLimitScope.Current[0].BytesPerSecond.ShouldBe(1);
     }
 
     [Test]
@@ -146,7 +140,7 @@ public class TransferSpeedLimitServiceTest
         using (service.EnterUploadScope(Registration)) { }
 
         // Assert
-        TransferSpeedLimitScope.Current.ShouldBeNull();
+        TransferSpeedLimitScope.Current.ShouldBeEmpty();
     }
 
     [Test]
@@ -159,7 +153,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(registration);
 
         // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        var limiters = TransferSpeedLimitScope.Current;
         limiters.Count.ShouldBe(1);
         limiters[0].BytesPerSecond.ShouldBe(3 * 1024 * 1024);
     }
@@ -175,7 +169,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(registration);
 
         // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        var limiters = TransferSpeedLimitScope.Current;
         limiters.Count.ShouldBe(2);
         limiters[0].BytesPerSecond.ShouldBe(3 * 1024 * 1024);
         limiters[1].BytesPerSecond.ShouldBe(10 * 1024 * 1024);
@@ -190,7 +184,7 @@ public class TransferSpeedLimitServiceTest
 
         using (service.EnterUploadScope(registration))
         {
-            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+            firstLimiter = TransferSpeedLimitScope.Current[0];
         }
 
         registration.UploadSpeedLimitMegabytesPerSecond = 0.5m;
@@ -199,7 +193,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(registration);
 
         // Assert
-        var secondLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        var secondLimiter = TransferSpeedLimitScope.Current[0];
         secondLimiter.ShouldBeSameAs(firstLimiter);
         secondLimiter.BytesPerSecond.ShouldBe(524_288);
     }
@@ -219,7 +213,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(registration);
 
         // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        var limiters = TransferSpeedLimitScope.Current;
         limiters.Count.ShouldBe(1);
         limiters[0].BytesPerSecond.ShouldBe(10 * 1024 * 1024);
     }
@@ -233,7 +227,7 @@ public class TransferSpeedLimitServiceTest
 
         using (service.EnterUploadScope(registration))
         {
-            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+            firstLimiter = TransferSpeedLimitScope.Current[0];
         }
 
         registration.UploadSpeedLimitMegabytesPerSecond = null;
@@ -246,7 +240,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterUploadScope(registration);
 
         // Assert
-        TransferSpeedLimitScope.Current.ShouldNotBeNull()[0].ShouldNotBeSameAs(firstLimiter);
+        TransferSpeedLimitScope.Current[0].ShouldNotBeSameAs(firstLimiter);
     }
 
     [Test]
@@ -259,14 +253,14 @@ public class TransferSpeedLimitServiceTest
 
         using (service.EnterUploadScope(firstRegistration))
         {
-            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+            firstLimiter = TransferSpeedLimitScope.Current[0];
         }
 
         // Act
         using var scope = service.EnterUploadScope(secondRegistration);
 
         // Assert
-        var secondLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        var secondLimiter = TransferSpeedLimitScope.Current[0];
         secondLimiter.ShouldNotBeSameAs(firstLimiter);
     }
 
@@ -286,7 +280,7 @@ public class TransferSpeedLimitServiceTest
         using var scope = service.EnterMirrorDownloadScope(registration);
 
         // Assert
-        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        var limiters = TransferSpeedLimitScope.Current;
         limiters.Count.ShouldBe(2);
         limiters[0].BytesPerSecond.ShouldBe(2 * 1024 * 1024);
         limiters[1].BytesPerSecond.ShouldBe(10 * 1024 * 1024);
@@ -305,14 +299,14 @@ public class TransferSpeedLimitServiceTest
 
         using (service.EnterUploadScope(registration))
         {
-            uploadLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+            uploadLimiter = TransferSpeedLimitScope.Current[0];
         }
 
         // Act
         using var scope = service.EnterMirrorDownloadScope(registration);
 
         // Assert
-        TransferSpeedLimitScope.Current.ShouldNotBeNull()[0].ShouldNotBeSameAs(uploadLimiter);
+        TransferSpeedLimitScope.Current[0].ShouldNotBeSameAs(uploadLimiter);
     }
 
     private static HosterRegistration CreateRegistration(

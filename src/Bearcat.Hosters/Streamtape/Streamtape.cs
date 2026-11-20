@@ -79,7 +79,7 @@ public class Streamtape(ApiClient apiClient, ILogger<Streamtape> logger)
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadedFile = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken
