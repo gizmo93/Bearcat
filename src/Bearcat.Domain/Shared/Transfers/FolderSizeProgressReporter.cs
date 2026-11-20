@@ -2,11 +2,11 @@ using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Domain.Shared.Transfers;
 
-public class FolderSizeProgressReporter
+public static class FolderSizeProgressReporter
 {
-    private readonly TimeSpan pollingInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan PollingInterval = TimeSpan.FromSeconds(1);
 
-    public async Task<TResult> RunWhileReportingFolderSizeAsync<TResult>(
+    public static async Task<TResult> RunWhileReportingFolderSizeAsync<TResult>(
         string folderPath,
         ITransferProgress progress,
         Func<Task<TResult>> operation,
@@ -34,13 +34,13 @@ public class FolderSizeProgressReporter
         }
     }
 
-    private async Task ReportFolderSizePeriodicallyAsync(
+    private static async Task ReportFolderSizePeriodicallyAsync(
         string folderPath,
         ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
-        using var timer = new PeriodicTimer(pollingInterval);
+        using var timer = new PeriodicTimer(PollingInterval);
         var reportedBytes = 0L;
 
         try

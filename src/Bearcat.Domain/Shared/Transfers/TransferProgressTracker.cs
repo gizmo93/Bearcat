@@ -7,10 +7,6 @@ namespace Bearcat.Domain.Shared.Transfers;
 public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache)
     : ITransferProgressTracker
 {
-    private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(250);
-
-    private static readonly TimeSpan SpeedWindow = TimeSpan.FromSeconds(5);
-
     private readonly ConcurrentDictionary<TransferIdentifier, TransferState> states = new();
 
     public void StartTracking(
@@ -45,13 +41,7 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
     {
         if (states.TryGetValue(identifier, out var state))
         {
-            state.AddBytes(
-                fileId: fileId,
-                bytes: bytes,
-                nowTimestamp: Stopwatch.GetTimestamp(),
-                sampleInterval: SampleInterval,
-                window: SpeedWindow
-            );
+            state.AddBytes(fileId, bytes);
         }
     }
 
@@ -67,7 +57,7 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
             return null;
         }
 
-        var bytesPerSecond = state.GetBytesPerSecond(Stopwatch.GetTimestamp(), SpeedWindow);
+        var bytesPerSecond = state.GetBytesPerSecond();
         var (files, isTotalKnown) = state.GetFiles();
         var transferredBytes = files.Sum(file => file.TransferredBytes);
         var totalBytes = isTotalKnown ? files.Sum(file => file.TotalBytes) : 0;
@@ -105,6 +95,10 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
 
     private sealed class TransferState
     {
+        private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(250);
+
+        private static readonly TimeSpan SpeedWindow = TimeSpan.FromSeconds(5);
+
         private readonly Lock gate = new();
 
         private readonly Queue<Sample> samples;
@@ -155,16 +149,11 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
             }
         }
 
-        public void AddBytes(
-            int fileId,
-            long bytes,
-            long nowTimestamp,
-            TimeSpan sampleInterval,
-            TimeSpan window
-        )
+        public void AddBytes(int fileId, long bytes)
         {
             lock (gate)
             {
+                var nowTimestamp = Stopwatch.GetTimestamp();
                 cumulativeBytes += bytes;
 
                 if (progressPerFile.TryGetValue(fileId, out var fileProgress))
@@ -175,27 +164,29 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
                     };
                 }
 
-                if (Stopwatch.GetElapsedTime(lastSampleTimestamp, nowTimestamp) < sampleInterval)
+                if (Stopwatch.GetElapsedTime(lastSampleTimestamp, nowTimestamp) < SampleInterval)
                 {
                     return;
                 }
 
                 lastSampleTimestamp = nowTimestamp;
                 samples.Enqueue(new Sample(nowTimestamp, cumulativeBytes));
-                RemoveOldSamples(nowTimestamp, window);
+                RemoveOldSamples(nowTimestamp);
             }
         }
 
-        public double GetBytesPerSecond(long nowTimestamp, TimeSpan window)
+        public double GetBytesPerSecond()
         {
             lock (gate)
             {
-                if (Stopwatch.GetElapsedTime(lastSampleTimestamp, nowTimestamp) > window)
+                var nowTimestamp = Stopwatch.GetTimestamp();
+
+                if (Stopwatch.GetElapsedTime(lastSampleTimestamp, nowTimestamp) > SpeedWindow)
                 {
                     return 0;
                 }
 
-                RemoveOldSamples(nowTimestamp, window);
+                RemoveOldSamples(nowTimestamp);
 
                 var oldest = samples.Peek();
                 var elapsedSeconds = Stopwatch
@@ -235,11 +226,11 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
             }
         }
 
-        private void RemoveOldSamples(long nowTimestamp, TimeSpan window)
+        private void RemoveOldSamples(long nowTimestamp)
         {
             while (
                 samples.Count > 1
-                && Stopwatch.GetElapsedTime(samples.Peek().Timestamp, nowTimestamp) > window
+                && Stopwatch.GetElapsedTime(samples.Peek().Timestamp, nowTimestamp) > SpeedWindow
             )
             {
                 samples.Dequeue();

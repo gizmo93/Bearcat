@@ -235,7 +235,6 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveFileDownloader>();
             services.AddScoped<MirrorFileSizeService>();
             services.AddSingleton<ITransferProgressTracker, TransferProgressTracker>();
-            services.AddSingleton<FolderSizeProgressReporter>();
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();
             services.AddSingleton<TransferSpeedLimitService>();
             services.AddScoped<UploadFilesService>();

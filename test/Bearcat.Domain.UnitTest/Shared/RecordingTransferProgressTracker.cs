@@ -8,6 +8,8 @@ public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
 {
     private readonly TransferProgressTracker inner = new(Mock.Of<IProxyRoutingCache>());
 
+    private readonly Lock recordingLock = new();
+
     public Dictionary<
         TransferIdentifier,
         IReadOnlyList<TransferFile>
@@ -20,13 +22,18 @@ public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
 
     public List<TransferIdentifier> StoppedIdentifiers { get; } = [];
 
+    public List<(int FileId, string SourceName)> BegunFiles { get; } = [];
+
     public void StartTracking(
         TransferIdentifier identifier,
         IReadOnlyList<TransferFile> plannedFiles
     )
     {
-        PlannedFilesPerIdentifier[identifier] = plannedFiles;
-        inner.StartTracking(identifier, plannedFiles);
+        lock (recordingLock)
+        {
+            PlannedFilesPerIdentifier[identifier] = plannedFiles;
+            inner.StartTracking(identifier, plannedFiles);
+        }
     }
 
     public void BeginFile(
@@ -37,19 +44,29 @@ public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
         long? totalBytes
     )
     {
-        inner.BeginFile(identifier, fileId, fileName, sourceName, totalBytes);
+        lock (recordingLock)
+        {
+            BegunFiles.Add((fileId, sourceName));
+            inner.BeginFile(identifier, fileId, fileName, sourceName, totalBytes);
+        }
     }
 
     public void AddBytes(TransferIdentifier identifier, int fileId, long bytes)
     {
-        inner.AddBytes(identifier, fileId, bytes);
-        LastSnapshotPerIdentifier[identifier] = inner.Get(identifier)!;
+        lock (recordingLock)
+        {
+            inner.AddBytes(identifier, fileId, bytes);
+            LastSnapshotPerIdentifier[identifier] = inner.Get(identifier)!;
+        }
     }
 
     public void StopTracking(TransferIdentifier identifier)
     {
-        StoppedIdentifiers.Add(identifier);
-        inner.StopTracking(identifier);
+        lock (recordingLock)
+        {
+            StoppedIdentifiers.Add(identifier);
+            inner.StopTracking(identifier);
+        }
     }
 
     public TransferProgressSnapshot? Get(TransferIdentifier identifier)

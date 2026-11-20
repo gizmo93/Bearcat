@@ -67,9 +67,10 @@ public class ArchiveLocalWorkingCopyService(
             archive.Id
         );
 
-        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
-            transferIdentifier,
-            cancellationToken
+        using var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: cancellationRegistry,
+            transferIdentifier: transferIdentifier,
+            cancellationToken: cancellationToken
         );
 
         var copiedFiles = await CopyArchiveFilesAsync(

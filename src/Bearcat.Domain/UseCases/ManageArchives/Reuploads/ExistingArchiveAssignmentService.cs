@@ -252,9 +252,10 @@ public class ExistingArchiveAssignmentService(
     )
     {
         var transferIdentifier = new TransferIdentifier(TransferType.ArchiveCreation, archive.Id);
-        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
-            transferIdentifier,
-            cancellationToken
+        using var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: cancellationRegistry,
+            transferIdentifier: transferIdentifier,
+            cancellationToken: cancellationToken
         );
 
         try

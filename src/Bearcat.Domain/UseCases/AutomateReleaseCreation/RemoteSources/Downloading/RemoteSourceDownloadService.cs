@@ -100,9 +100,10 @@ public class RemoteSourceDownloadService(
         IReadOnlyList<RemoteFileDto> files;
 
         using (
-            var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
-                transferIdentifier,
-                stoppingToken
+            var userCancellableTransfer = new UserCancellableTransfer(
+                cancellationRegistry: cancellationRegistry,
+                transferIdentifier: transferIdentifier,
+                cancellationToken: stoppingToken
             )
         )
         {

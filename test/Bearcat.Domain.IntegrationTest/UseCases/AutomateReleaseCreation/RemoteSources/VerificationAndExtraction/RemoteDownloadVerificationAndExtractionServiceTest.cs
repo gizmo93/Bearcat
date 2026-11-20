@@ -113,7 +113,6 @@ public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider
                 archiverFactory.Object,
                 new FileSystemService(),
                 new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()),
-                new FolderSizeProgressReporter(),
                 NullLogger<FolderArchiveExtractionService>.Instance
             ),
             new NotificationService(

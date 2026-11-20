@@ -13,7 +13,6 @@ public class FolderArchiveExtractionService(
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
     ITransferProgressTracker progressTracker,
-    FolderSizeProgressReporter folderSizeProgressReporter,
     ILogger<FolderArchiveExtractionService> logger
 )
 {
@@ -212,7 +211,7 @@ public class FolderArchiveExtractionService(
             temporaryFolderPath
         );
 
-        var result = await folderSizeProgressReporter.RunWhileReportingFolderSizeAsync(
+        var result = await FolderSizeProgressReporter.RunWhileReportingFolderSizeAsync(
             folderPath: temporaryFolderPath,
             progress: progress,
             operation: () =>

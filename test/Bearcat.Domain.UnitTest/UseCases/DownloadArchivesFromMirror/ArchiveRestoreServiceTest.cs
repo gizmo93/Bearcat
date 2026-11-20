@@ -10,6 +10,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UnitTest.Shared;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
@@ -245,7 +246,7 @@ public class ArchiveRestoreServiceTest
         // Assert
         scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
         transferProgressTracker
-            .PlannedFilesPerKey[MirrorDownloadKey(3)]
+            .PlannedFilesPerIdentifier[MirrorDownloadKey(3)]
             .ShouldAllBe(file => file.SizeBytes == null);
         downloadHoster.ExpectedSizeBytesPerLink.Values.ShouldAllBe(size => size == null);
     }
@@ -590,11 +591,11 @@ public class ArchiveRestoreServiceTest
         // Assert
         scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
         transferProgressTracker.BegunFiles.ShouldBe(
-            [new BegunFile(2, "Mirror2"), new BegunFile(3, "Mirror")],
+            [(2, "Mirror2"), (3, "Mirror")],
             ignoreOrder: true
         );
         transferProgressTracker
-            .PlannedFilesPerKey[MirrorDownloadKey(3)]
+            .PlannedFilesPerIdentifier[MirrorDownloadKey(3)]
             .ShouldAllBe(file => file.SourceName == "Mirror");
     }
 
@@ -922,63 +923,6 @@ public class ArchiveRestoreServiceTest
         return new TransferIdentifier(TransferType.MirrorDownload, archiveId);
     }
 
-    private sealed class RecordingTransferProgressTracker : ITransferProgressTracker
-    {
-        private readonly TransferProgressTracker inner = new(Mock.Of<IProxyRoutingCache>());
-
-        public Dictionary<
-            TransferIdentifier,
-            IReadOnlyList<TransferFile>
-        > PlannedFilesPerKey { get; } = new();
-
-        public List<BegunFile> BegunFiles { get; } = [];
-
-        public void StartTracking(
-            TransferIdentifier identifier,
-            IReadOnlyList<TransferFile> plannedFiles
-        )
-        {
-            PlannedFilesPerKey[identifier] = plannedFiles;
-            inner.StartTracking(identifier, plannedFiles);
-        }
-
-        public void BeginFile(
-            TransferIdentifier identifier,
-            int fileId,
-            string fileName,
-            string sourceName,
-            long? totalBytes
-        )
-        {
-            lock (BegunFiles)
-            {
-                BegunFiles.Add(new BegunFile(fileId, sourceName));
-            }
-
-            inner.BeginFile(identifier, fileId, fileName, sourceName, totalBytes);
-        }
-
-        public void AddBytes(TransferIdentifier identifier, int fileId, long bytes)
-        {
-            inner.AddBytes(identifier, fileId, bytes);
-        }
-
-        public void StopTracking(TransferIdentifier identifier)
-        {
-            inner.StopTracking(identifier);
-        }
-
-        public TransferProgressSnapshot? Get(TransferIdentifier identifier)
-        {
-            return inner.Get(identifier);
-        }
-
-        public IReadOnlyList<int> GetTrackedIds(TransferType type)
-        {
-            return inner.GetTrackedIds(type);
-        }
-    }
-
     private static UploadedFile CreateUploadedFile(int uploadId, int archiveFileId, string link)
     {
         return new UploadedFile
@@ -991,8 +935,6 @@ public class ArchiveRestoreServiceTest
             CheckedAt = new DateTime(2026, 9, 16, 12, 0, 0, DateTimeKind.Local),
         };
     }
-
-    private sealed record BegunFile(int FileId, string SourceName);
 
     private sealed record Scenario(Archive Archive, Upload DonorUpload, Upload WaitingUpload);
 }

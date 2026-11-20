@@ -108,7 +108,6 @@ public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
                     archiverFactory.Object,
                     new FileSystemService(),
                     progressTracker,
-                    new FolderSizeProgressReporter(),
                     NullLogger<FolderArchiveExtractionService>.Instance
                 ),
                 fileSystemService: new FileSystemService(),
