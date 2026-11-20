@@ -76,6 +76,39 @@ public static class ArchiveExtractionTestHelper
         );
     }
 
+    public static async Task<List<string>> CreateFolderWithEntriesToExcludeAsync(
+        string sourceFolderPath
+    )
+    {
+        Directory.CreateDirectory(Path.Combine(sourceFolderPath, "sub", "Sample"));
+        Directory.CreateDirectory(Path.Combine(sourceFolderPath, "Sample"));
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, "movie.mkv"), "movie");
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, "a.sfv"), "root sfv");
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, "sub", "a.sfv"), "sub sfv");
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, "Sample", "s.mkv"), "s");
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, "sub", "Sample", "t.mkv"), "t");
+        await File.WriteAllTextAsync(
+            Path.Combine(sourceFolderPath, "Read me [www.example.org].txt"),
+            "brackets"
+        );
+
+        return ["a.sfv", "Sample", "Read me [www.example.org].txt"];
+    }
+
+    public static void ExtractedFolderShouldContainOnlyNotExcludedEntries(
+        string extractedFolderPath
+    )
+    {
+        GetRelativeFilePaths(extractedFolderPath)
+            .ShouldBe([
+                "movie.mkv",
+                Path.Combine("sub", "Sample", "t.mkv"),
+                Path.Combine("sub", "a.sfv"),
+            ]);
+
+        Directory.Exists(Path.Combine(extractedFolderPath, "Sample")).ShouldBeFalse();
+    }
+
     public static void ExtractedFolderShouldMatchSourceFolderStructure(
         string sourceFolderPath,
         string extractedFolderPath

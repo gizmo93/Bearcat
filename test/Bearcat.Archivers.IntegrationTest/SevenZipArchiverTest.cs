@@ -193,6 +193,53 @@ public class SevenZipArchiverTest
         ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ArchiveAsync_ExcludedRelativePathsGiven_PacksAllOtherEntries(
+        bool packSourceFolderAsRootFolder
+    )
+    {
+        // Arrange
+        var excludedRelativePaths =
+            await ArchiveExtractionTestHelper.CreateFolderWithEntriesToExcludeAsync(
+                sourceFolderPath
+            );
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath: sourceFolderPath + Path.DirectorySeparatorChar,
+            destinationPath: destinationPath,
+            archiveNamePrefix: "archive",
+            targetFileSizeMb: 1,
+            password: null,
+            options: new ArchiveOptions(
+                UseCompression: false,
+                UseSolidArchive: false,
+                PackSourceFolderAsRootFolder: packSourceFolderAsRootFolder,
+                PartSizeUnit: ArchivePartSizeUnit.Megabytes
+            )
+            {
+                ExcludedRelativePaths = excludedRelativePaths,
+            },
+            cancellationToken: CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+
+        // Act
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            CancellationToken.None
+        );
+
+        // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
+        ArchiveExtractionTestHelper.ExtractedFolderShouldContainOnlyNotExcludedEntries(
+            packSourceFolderAsRootFolder ? Path.Combine(extractPath, "source") : extractPath
+        );
+    }
+
     [TestCase(ArchivePartSizeUnit.Megabytes, 1_000_000L)]
     [TestCase(ArchivePartSizeUnit.Mebibytes, 1_048_576L)]
     public async Task ArchiveAsync_PartSizeUnitSelected_FirstVolumeHasPartSizeInSelectedUnit(

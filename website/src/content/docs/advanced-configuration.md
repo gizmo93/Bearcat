@@ -138,6 +138,23 @@ To change the part size of many archive configurations at once, see [Change part
 
 ![archive-part-size-unit.png](images/archive-part-size-unit.png)
 
+### Exclude files from packing
+
+Set **Packing exclude patterns** under **Configurations > Archive creation**.
+Matching files and folders of the release folder are not packed into newly created archives.
+Existing archives are not changed.
+
+| Rule | Example |
+| --- | --- |
+| Patterns are separated by commas, spaces around them are ignored. | `*.sfv, *.txt` |
+| `*` matches any characters, `?` matches one character. Case is ignored. | `*.SFV` matches `a.sfv` |
+| A pattern is compared with the file or folder name only and applies at every folder depth. | `*.sfv` matches `a.sfv` and `Sub/b.sfv` |
+| A pattern ending with `/` matches folders only, all other patterns match files only. | `sample*/` excludes the folder `Sample` with its content |
+
+Default: `@eaDir/` (Synology metadata folders). An empty value excludes nothing.
+Additional archive contents and the nonce file are never excluded.
+If the patterns exclude every file of the release folder, archive creation fails.
+
 ### Archive repackaging
 
 Hosters can recognise files by their MD5 hash. Before reuploading to the same hoster type, Bearcat

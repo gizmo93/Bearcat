@@ -43,6 +43,10 @@
                   AriaLabel="@L[Setting.DisplayName]"
                   Class="w-full @@xl:w-64" />
     }
+    else if (ConfigurationSettingFormatter.IsText(Setting))
+    {
+        <ConfigurationTextEditor Setting="Setting" OnSave="OnSave" />
+    }
     else
     {
         <ConfigurationNumberEditor Setting="Setting" OnSave="OnSave" />

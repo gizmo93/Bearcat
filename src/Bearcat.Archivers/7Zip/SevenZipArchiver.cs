@@ -183,6 +183,16 @@ public partial class SevenZipArchiver(
             arguments.Add($"-p{password}");
         }
 
+        var archiveRootFolderName = options.PackSourceFolderAsRootFolder
+            ? Path.GetFileName(sourceArchivePath)
+            : "";
+
+        arguments.AddRange(
+            options.ExcludedRelativePaths.Select(relativePath =>
+                "-x!" + Path.Join(archiveRootFolderName, relativePath)
+            )
+        );
+
         arguments.Add(archiveFullPath);
         arguments.Add(
             options.PackSourceFolderAsRootFolder

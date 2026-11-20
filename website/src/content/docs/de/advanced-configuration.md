@@ -140,6 +140,23 @@ Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Pa
 
 ![archive-part-size-unit.png](../images/archive-part-size-unit.png)
 
+### Dateien vom Packen ausschliessen
+
+Setze **Ausschlussmuster beim Packen** unter **Konfigurationen > Archiverstellung**.
+Passende Dateien und Ordner des Releaseordners werden nicht in neu erstellte Archive gepackt.
+Bestehende Archive bleiben unverändert.
+
+| Regel | Beispiel |
+| --- | --- |
+| Muster werden mit Kommas getrennt, Leerzeichen darum herum werden ignoriert. | `*.sfv, *.txt` |
+| `*` passt auf beliebige Zeichen, `?` auf genau ein Zeichen. Gross- und Kleinschreibung wird ignoriert. | `*.SFV` passt auf `a.sfv` |
+| Ein Muster wird nur mit dem Datei- oder Ordnernamen verglichen und gilt in jeder Ordnertiefe. | `*.sfv` passt auf `a.sfv` und `Sub/b.sfv` |
+| Ein Muster mit `/` am Ende passt nur auf Ordner, alle anderen Muster nur auf Dateien. | `sample*/` schliesst den Ordner `Sample` mit seinem Inhalt aus |
+
+Standard: `@eaDir/` (Synology-Metadatenordner). Ein leerer Wert schliesst nichts aus.
+Zusätzliche Archivinhalte und die Noncedatei werden nie ausgeschlossen.
+Schliessen die Muster alle Dateien des Releaseordners aus, schlägt die Archiverstellung fehl.
+
 ### Archivrepackaging
 
 Hoster erkennen Dateien an ihrem MD5-Hash. Vor einem Reupload zum selben Hostertyp gibt Bearcat den

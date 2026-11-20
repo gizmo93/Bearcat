@@ -8,4 +8,10 @@ public class ArchiveCreationConfiguration : IApplicationConfiguration
 {
     [ApplicationConfigurationProperty("ArchivePartSizeUnit", "ArchivePartSizeUnitDescription")]
     public ArchivePartSizeUnit PartSizeUnit { get; set; } = ArchivePartSizeUnit.Megabytes;
+
+    [ApplicationConfigurationProperty(
+        "ArchivePackingExcludePatterns",
+        "ArchivePackingExcludePatternsDescription"
+    )]
+    public string PackingExcludePatterns { get; set; } = "@eaDir/";
 }

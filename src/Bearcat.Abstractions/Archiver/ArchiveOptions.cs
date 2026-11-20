@@ -5,4 +5,7 @@ public record ArchiveOptions(
     bool UseSolidArchive,
     bool PackSourceFolderAsRootFolder,
     ArchivePartSizeUnit PartSizeUnit
-);
+)
+{
+    public IReadOnlyList<string> ExcludedRelativePaths { get; init; } = [];
+}

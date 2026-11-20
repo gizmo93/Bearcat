@@ -18,6 +18,7 @@ using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPackingExcludes;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -99,6 +100,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                 )
             )
             .Returns(ArchivePartSizeUnit.Megabytes);
+        SetupPackingExcludePatterns(new ArchiveCreationConfiguration().PackingExcludePatterns);
 
         progressTracker = new RecordingTransferProgressTracker();
         cancellationRegistry = new TransferCancellationRegistry();
@@ -183,9 +185,12 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
             ),
             new ReleaseFolderPackingService(
                 repository,
-                Mock.Of<ILogger<ReleaseFolderPackingService>>(),
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
+                new ReleaseFolderPackingExcludeService(
+                    fileSystemService,
+                    configurationProviderMock.Object
+                ),
                 progressTracker
             ),
             archiveFileHashService,
@@ -786,7 +791,7 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task ProcessAsync_ReleaseContainsSynologyMetadataFolders_RemovesThemBeforeArchiving()
+    public async Task ProcessAsync_ReleaseContainsSynologyMetadataFolders_ExcludesThemFromArchiveAndKeepsThemOnDisk()
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
@@ -799,39 +804,70 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
         var nestedMetadataFolder = Directory
             .CreateDirectory(Path.Combine(nestedMediaFolder, "@eaDir"))
             .FullName;
+        await File.WriteAllTextAsync(Path.Combine(nestedMediaFolder, "movie.mkv"), "movie");
         await File.WriteAllTextAsync(Path.Combine(topLevelMetadataFolder, "thumb.jpg"), "junk");
         await File.WriteAllTextAsync(Path.Combine(nestedMetadataFolder, "thumb.jpg"), "junk");
-
-        var metadataFoldersExistedDuringArchiving = true;
-        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
-        archiverMock
-            .Setup(a =>
-                a.ArchiveAsync(
-                    releaseFolderPath,
-                    It.IsAny<string>(),
-                    "bearcat-release",
-                    It.IsAny<int>(),
-                    "secret",
-                    It.IsAny<ArchiveOptions>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Callback(() =>
-                metadataFoldersExistedDuringArchiving =
-                    Directory.Exists(topLevelMetadataFolder)
-                    || Directory.Exists(nestedMetadataFolder)
-            )
-            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
+        var recordedOptions = SetupArchiverRecordingOptions();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        metadataFoldersExistedDuringArchiving.ShouldBeFalse();
-        Directory.Exists(topLevelMetadataFolder).ShouldBeFalse();
-        Directory.Exists(nestedMetadataFolder).ShouldBeFalse();
-        Directory.Exists(nestedMediaFolder).ShouldBeTrue();
-        upload.UploadState.ShouldBe(UploadState.Pending);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        recordedOptions
+            .ShouldHaveSingleItem()
+            .ExcludedRelativePaths.ShouldBe(
+                ["@eaDir", Path.Combine("Disc1", "@eaDir")],
+                ignoreOrder: true
+            );
+        Directory.Exists(topLevelMetadataFolder).ShouldBeTrue();
+        Directory.Exists(nestedMetadataFolder).ShouldBeTrue();
+        result.UploadState.ShouldBe(UploadState.Pending);
+    }
+
+    [Test]
+    public async Task ProcessAsync_PackingExcludePatternsExcludeAllReleaseFiles_FailsUploadsWithoutPacking()
+    {
+        // Arrange
+        SetupPackingExcludePatterns("*.mkv");
+        var upload = await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var recordedOptions = SetupArchiverRecordingOptions();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var failedUpload = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        recordedOptions.ShouldBeEmpty();
+        failedUpload.UploadState.ShouldBe(UploadState.Failed);
+        failedUpload
+            .ErrorMessages.ShouldHaveSingleItem()
+            .ShouldContain("excluded by the packing exclude patterns");
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_PackingExcludePatternMatchesNonceAndAdditionalContentNames_ExcludesOnlyReleaseFiles()
+    {
+        // Arrange
+        SetupPackingExcludePatterns("*.txt");
+        await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+        ]);
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "info.txt"), "info");
+        var recordedOptions = SetupArchiverRecordingOptions();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        recordedOptions.ShouldHaveSingleItem().ExcludedRelativePaths.ShouldBe(["info.txt"]);
     }
 
     [Test]
@@ -3340,6 +3376,49 @@ public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
                     return new ArchiveResult(true, createdFileNames, null);
                 }
             );
+    }
+
+    private List<ArchiveOptions> SetupArchiverRecordingOptions()
+    {
+        var recordedOptions = new List<ArchiveOptions>();
+
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(
+                (
+                    string _,
+                    string _,
+                    string _,
+                    int _,
+                    string? _,
+                    ArchiveOptions options,
+                    CancellationToken _
+                ) => recordedOptions.Add(options)
+            )
+            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
+
+        return recordedOptions;
+    }
+
+    private void SetupPackingExcludePatterns(string patterns)
+    {
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveCreationConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveCreationConfiguration, string?>>>()
+                )
+            )
+            .Returns(patterns);
     }
 
     private void SetupArchiveRepackagingStrategy(string strategy)
