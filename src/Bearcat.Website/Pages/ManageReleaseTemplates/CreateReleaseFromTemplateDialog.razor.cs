@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.Pages.ManageReleases;
@@ -200,6 +201,12 @@ public partial class CreateReleaseFromTemplateDialog(
 
     private async Task CreateReleaseFromSubfolderAsync(string folderPath)
     {
+        var folderName = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar));
+
+        var primaryLanguageCode =
+            ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(folderName)
+            ?? formModel.PrimaryLanguageCode;
+
         try
         {
             await operationRunner.RunAsync(
@@ -208,7 +215,7 @@ public partial class CreateReleaseFromTemplateDialog(
                         releaseTemplateId: formModel.ReleaseTemplateId!.Value,
                         releaseFolderPath: folderPath,
                         name: null,
-                        primaryLanguageCode: formModel.PrimaryLanguageCode
+                        primaryLanguageCode: primaryLanguageCode
                     )
             );
 
@@ -350,9 +357,19 @@ public partial class CreateReleaseFromTemplateDialog(
             return;
         }
 
+        var folderName = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar));
+
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            formModel.Name = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar));
+            formModel.Name = folderName;
+        }
+
+        if (
+            ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(folderName) is
+            { } primaryLanguageCode
+        )
+        {
+            formModel.PrimaryLanguageCode = primaryLanguageCode;
         }
     }
 

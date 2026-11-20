@@ -740,7 +740,7 @@
   <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Erstelle zuerst ein Archivkonfigurationstemplate.</value></data>
   <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Release aus Template erstellen</value></data>
   <data name="CreateOneReleasePerSubfolder" xml:space="preserve"><value>Ein Release pro Unterordner</value></data>
-  <data name="CreateOneReleasePerSubfolderHelp" xml:space="preserve"><value>Erstellt für jeden ausgewählten Unterordner des Ordners ein Release. Jedes Release übernimmt den Namen seines Unterordners.</value></data>
+  <data name="CreateOneReleasePerSubfolderHelp" xml:space="preserve"><value>Erstellt für jeden ausgewählten Unterordner des Ordners ein Release. Jedes Release übernimmt den Namen seines Unterordners. Die gewählte Primärsprache gilt nur, wenn Bearcat keine Sprache im Unterordnernamen erkennt.</value></data>
   <data name="Subfolders" xml:space="preserve"><value>Unterordner</value></data>
   <data name="NoSubfoldersFound" xml:space="preserve"><value>Dieser Ordner hat keine Unterordner.</value></data>
   <data name="SelectAtLeastOneSubfolder" xml:space="preserve"><value>Wähle mindestens einen Unterordner aus</value></data>

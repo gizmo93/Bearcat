@@ -740,7 +740,7 @@
   <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Create an archive configuration template first.</value></data>
   <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Create release from template</value></data>
   <data name="CreateOneReleasePerSubfolder" xml:space="preserve"><value>One release per subfolder</value></data>
-  <data name="CreateOneReleasePerSubfolderHelp" xml:space="preserve"><value>Creates a release for every selected subfolder of the folder. Each release takes the name of its subfolder.</value></data>
+  <data name="CreateOneReleasePerSubfolderHelp" xml:space="preserve"><value>Creates a release for every selected subfolder of the folder. Each release takes the name of its subfolder. The selected primary language is only used if Bearcat cannot detect one from the subfolder name.</value></data>
   <data name="Subfolders" xml:space="preserve"><value>Subfolders</value></data>
   <data name="NoSubfoldersFound" xml:space="preserve"><value>This folder has no subfolders.</value></data>
   <data name="SelectAtLeastOneSubfolder" xml:space="preserve"><value>Select at least one subfolder</value></data>
