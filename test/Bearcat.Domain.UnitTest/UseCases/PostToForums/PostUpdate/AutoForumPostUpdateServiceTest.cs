@@ -26,7 +26,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Updated);
+        result.Status.ShouldBe(AutoPostResultStatus.Updated);
         renderer.RenderedTemplateIds.ShouldBe([3]);
 
         var edited = submitter.EditedPosts.ShouldHaveSingleItem();
@@ -51,7 +51,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Updated);
+        result.Status.ShouldBe(AutoPostResultStatus.Updated);
         renderer.RenderedTemplateIds.ShouldBe([7]);
     }
 
@@ -72,7 +72,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Updated);
+        result.Status.ShouldBe(AutoPostResultStatus.Updated);
         renderer.RenderedTemplateIds.ShouldBe([11]);
     }
 
@@ -98,7 +98,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Failed);
+        result.Status.ShouldBe(AutoPostResultStatus.Failed);
         result.Errors.ShouldHaveSingleItem();
         submitter.EditedPosts.ShouldBeEmpty();
     }
@@ -145,7 +145,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Failed);
+        result.Status.ShouldBe(AutoPostResultStatus.Failed);
         repository.UpdatedPostedLocations.ShouldBeEmpty();
         notificationService.Created.ShouldBeEmpty();
     }
@@ -170,8 +170,8 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Skipped);
-        result.SkipReason.ShouldBe(AutoPostUpdateSkipReason.NotPosted);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
+        result.SkipReason.ShouldBe(AutoPostSkipReason.NotPosted);
         submitter.EditedPosts.ShouldBeEmpty();
     }
 
@@ -193,8 +193,8 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Skipped);
-        result.SkipReason.ShouldBe(AutoPostUpdateSkipReason.Blocked);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
+        result.SkipReason.ShouldBe(AutoPostSkipReason.Blocked);
         result.BlockedReason.ShouldBe(AutoPostBlockedReason.QualityGateNotPassed);
     }
 
@@ -235,7 +235,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Updated);
+        result.Status.ShouldBe(AutoPostResultStatus.Updated);
         renderer.RenderedTemplateIds.ShouldBe([12]);
         submitter
             .EditedPosts.ShouldHaveSingleItem()
@@ -288,7 +288,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Updated);
+        result.Status.ShouldBe(AutoPostResultStatus.Updated);
         result.UploadsMarkedPosted.ShouldBeFalse();
         repository.MarkedReleaseIds.ShouldBeEmpty();
     }
@@ -333,7 +333,7 @@ public class AutoForumPostUpdateServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostUpdateStatus.Updated);
+        result.Status.ShouldBe(AutoPostResultStatus.Updated);
         renderer.RenderedTemplateIds.ShouldBe([8]);
         submitter
             .EditedPosts.ShouldHaveSingleItem()

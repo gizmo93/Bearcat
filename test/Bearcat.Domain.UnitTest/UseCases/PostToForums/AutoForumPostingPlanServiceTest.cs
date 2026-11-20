@@ -86,7 +86,7 @@ public class AutoForumPostingPlanServiceTest
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
         site.Status.ShouldBe(AutoPostSiteStatus.AlreadyPosted);
-        site.PostedUrl.ShouldBe("https://forum.test/threads/1");
+        site.PostedLocation.ShouldNotBeNull().Url.ShouldBe("https://forum.test/threads/1");
         plan.PendingSites.ShouldBeEmpty();
     }
 
@@ -111,10 +111,11 @@ public class AutoForumPostingPlanServiceTest
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
         site.Status.ShouldBe(AutoPostSiteStatus.AlreadyPosted);
-        site.PostedLocationId.ShouldBe(9);
-        site.StoredForumPostTemplateId.ShouldBe(3);
-        site.Match.ShouldNotBeNull().ForumPostTemplateId.ShouldBe(7);
-        site.ResolvedForumPostTemplateId.ShouldBe(3);
+        var postedLocation = site.PostedLocation.ShouldNotBeNull();
+        postedLocation.PostedLocationId.ShouldBe(9);
+        postedLocation.ForumPostTemplateId.ShouldBe(3);
+        site.MatchedRule.ShouldNotBeNull().ForumPostTemplateId.ShouldBe(7);
+        site.ForumPostTemplateIdForUpdate.ShouldBe(3);
     }
 
     [Test]
@@ -133,7 +134,7 @@ public class AutoForumPostingPlanServiceTest
         var plan = await service.GetPlanAsync(ForumPostTemplateType.Release, 1);
 
         // Assert
-        plan.Sites.ShouldHaveSingleItem().ResolvedForumPostTemplateId.ShouldBe(7);
+        plan.Sites.ShouldHaveSingleItem().ForumPostTemplateIdForUpdate.ShouldBe(7);
     }
 
     [Test]
@@ -276,17 +277,17 @@ public class AutoForumPostingPlanServiceTest
 
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
-        site.DistributionSiteRegistrationName.ShouldBe("Board");
+        site.Registration.Name.ShouldBe("Board");
         site.Status.ShouldBe(AutoPostSiteStatus.Matched);
 
-        var match = site.Match.ShouldNotBeNull();
-        match.ForumPostingRuleId.ShouldBe(3);
-        match.RuleName.ShouldBe("Rule 3");
-        match.TargetNodeId.ShouldBe("42");
-        match.TargetPathSnapshot.ShouldBe("Board › Movies › HD");
-        match.ThreadPrefixId.ShouldBe("11");
-        match.ForumPostTemplateId.ShouldBe(7);
-        match.PostMode.ShouldBe(ForumPostPostMode.ReplyToExistingElseNewThread);
+        var rule = site.MatchedRule.ShouldNotBeNull();
+        rule.Id.ShouldBe(3);
+        rule.Name.ShouldBe("Rule 3");
+        rule.TargetNodeId.ShouldBe("42");
+        rule.TargetPathSnapshot.ShouldBe("Board › Movies › HD");
+        rule.ThreadPrefixId.ShouldBe("11");
+        rule.ForumPostTemplateId.ShouldBe(7);
+        rule.PostMode.ShouldBe(ForumPostPostMode.ReplyToExistingElseNewThread);
     }
 
     [Test]
@@ -306,7 +307,7 @@ public class AutoForumPostingPlanServiceTest
         // Assert
         var site = plan.Sites.ShouldHaveSingleItem();
         site.Status.ShouldBe(AutoPostSiteStatus.NoMatch);
-        site.Match.ShouldBeNull();
+        site.MatchedRule.ShouldBeNull();
     }
 
     [Test]
@@ -450,7 +451,9 @@ public class AutoForumPostingPlanServiceTest
         var site = plan.Sites.ShouldHaveSingleItem();
         site.Status.ShouldBe(AutoPostSiteStatus.AlreadyPosted);
         site.NeedsContentUpdate.ShouldBeTrue();
-        plan.UpdatableSites.ShouldHaveSingleItem().PostedLocationId.ShouldBe(9);
+        plan.UpdatableSites.ShouldHaveSingleItem()
+            .PostedLocation.ShouldNotBeNull()
+            .PostedLocationId.ShouldBe(9);
     }
 
     private static ForumPostingRule CollectionRule(int id = 1, int sortOrder = 0)

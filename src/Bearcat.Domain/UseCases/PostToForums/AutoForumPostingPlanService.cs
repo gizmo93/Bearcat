@@ -205,59 +205,17 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             context: context
         );
 
-        var match = rule is null
-            ? null
-            : new AutoPostRuleMatch(
-                ForumPostingRuleId: rule.Id,
-                RuleName: rule.Name,
-                TargetNodeId: rule.TargetNodeId,
-                TargetPathSnapshot: rule.TargetPathSnapshot,
-                ThreadPrefixId: rule.ThreadPrefixId,
-                ForumPostTemplateId: rule.ForumPostTemplateId,
-                PostMode: rule.PostMode
-            );
-
         var postedLocation = postedLocations.FirstOrDefault(location =>
             location.DistributionSiteRegistrationId == registration.DistributionSiteRegistrationId
         );
 
-        if (postedLocation is not null)
-        {
-            return new AutoPostSiteEntry(
-                DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
-                DistributionSiteRegistrationName: registration.Name,
-                AutomaticPostingEnabled: registration.EnableAutomaticPosting,
-                StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
-                MinimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
-                Status: AutoPostSiteStatus.AlreadyPosted,
-                PostedUrl: postedLocation.Url,
-                Match: match,
-                PostedLocationId: postedLocation.PostedLocationId,
-                StoredForumPostTemplateId: postedLocation.ForumPostTemplateId,
-                NeedsContentUpdate: IsOutdated(postedLocation, latestUploadCompletedAt),
-                FailureState: failure?.State,
-                FailedAttemptCount: failure?.FailedAttemptCount ?? 0,
-                NextAttemptAt: failure?.NextAttemptAt,
-                LastErrorMessage: failure?.LastErrorMessage
-            );
-        }
-
         return new AutoPostSiteEntry(
-            DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
-            DistributionSiteRegistrationName: registration.Name,
-            AutomaticPostingEnabled: registration.EnableAutomaticPosting,
-            StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
-            MinimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
-            Status: match is null ? AutoPostSiteStatus.NoMatch : AutoPostSiteStatus.Matched,
-            PostedUrl: null,
-            Match: match,
-            PostedLocationId: null,
-            StoredForumPostTemplateId: null,
-            NeedsContentUpdate: false,
-            FailureState: failure?.State,
-            FailedAttemptCount: failure?.FailedAttemptCount ?? 0,
-            NextAttemptAt: failure?.NextAttemptAt,
-            LastErrorMessage: failure?.LastErrorMessage
+            Registration: registration,
+            MatchedRule: rule,
+            PostedLocation: postedLocation,
+            Failure: failure,
+            NeedsContentUpdate: postedLocation is not null
+                && IsOutdated(postedLocation, latestUploadCompletedAt)
         );
     }
 

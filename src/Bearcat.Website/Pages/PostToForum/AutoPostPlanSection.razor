@@ -32,22 +32,22 @@
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
                 <div class="min-w-0 space-y-0.5">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-sm font-medium">@site.DistributionSiteRegistrationName</span>
+                        <span class="text-sm font-medium">@site.Registration.Name</span>
 
-                        @if (site.AutomaticPostingEnabled)
+                        @if (site.Registration.EnableAutomaticPosting)
                         {
                             <BbBadge Variant="BadgeVariant.Outline">@L["AutomaticPostingBadge"]</BbBadge>
                         }
                     </div>
 
-                    @if (site.Status == AutoPostSiteStatus.AlreadyPosted)
+                    @if (site.PostedLocation is { } postedLocation)
                     {
-                        <a href="@site.PostedUrl"
+                        <a href="@postedLocation.Url"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="block truncate text-xs text-muted-foreground hover:underline"
-                           title="@site.PostedUrl">
-                            @site.PostedUrl
+                           title="@postedLocation.Url">
+                            @postedLocation.Url
                         </a>
 
                         @if (site.NeedsContentUpdate)
@@ -58,10 +58,10 @@
                             </p>
                         }
                     }
-                    else if (site.Match is { } match)
+                    else if (site.MatchedRule is { } rule)
                     {
                         <p class="text-xs text-muted-foreground">
-                            @match.RuleName · @match.TargetPathSnapshot
+                            @rule.Name · @rule.TargetPathSnapshot
                         </p>
                     }
                     else

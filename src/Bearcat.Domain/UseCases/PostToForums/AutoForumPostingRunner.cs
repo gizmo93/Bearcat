@@ -110,7 +110,7 @@ public class AutoForumPostingRunner(
 
         var pendingSites = plan
             .PendingSites.Where(site =>
-                site.AutomaticPostingEnabled && !IsPausedAfterFailures(site)
+                site.Registration.EnableAutomaticPosting && !IsPausedAfterFailures(site)
             )
             .ToList();
 
@@ -126,17 +126,17 @@ public class AutoForumPostingRunner(
 
             var result = await CreatePostForSiteAsync(plan, site, cancellationToken);
 
-            if (result.Status is AutoPostExecutionStatus.Posted or AutoPostExecutionStatus.Failed)
+            if (result.Status is AutoPostResultStatus.Posted or AutoPostResultStatus.Failed)
             {
                 lastAttemptTimestampsByRegistrationId[site.DistributionSiteRegistrationId] =
                     Stopwatch.GetTimestamp();
             }
 
-            if (result.Status == AutoPostExecutionStatus.Posted)
+            if (result.Status == AutoPostResultStatus.Posted)
             {
                 postedCount++;
             }
-            else if (result.Status == AutoPostExecutionStatus.Failed)
+            else if (result.Status == AutoPostResultStatus.Failed)
             {
                 failures.Add(Failure(plan, site, result.Errors));
 
@@ -145,11 +145,11 @@ public class AutoForumPostingRunner(
                     site: site,
                     errors: result.Errors,
                     gaveUpNotificationKind: NotificationKind.AutomaticForumPostFailed,
-                    actionDescription: $"posting {EntityLabel(plan)} '{plan.EntityName}' automatically to '{site.DistributionSiteRegistrationName}'",
+                    actionDescription: $"posting {EntityLabel(plan)} '{plan.EntityName}' automatically to '{site.Registration.Name}'",
                     cancellationToken: cancellationToken
                 );
             }
-            else if (result.Status == AutoPostExecutionStatus.ThreadSelectionNeeded)
+            else if (result.Status == AutoPostResultStatus.ThreadSelectionNeeded)
             {
                 await RecordWaitingForThreadSelectionAsync(
                     plan: plan,
@@ -176,17 +176,17 @@ public class AutoForumPostingRunner(
 
             var result = await UpdatePostOfSiteAsync(plan, site, cancellationToken);
 
-            if (result.Status != AutoPostUpdateStatus.Skipped)
+            if (result.Status != AutoPostResultStatus.Skipped)
             {
                 lastAttemptTimestampsByRegistrationId[site.DistributionSiteRegistrationId] =
                     Stopwatch.GetTimestamp();
             }
 
-            if (result.Status == AutoPostUpdateStatus.Updated)
+            if (result.Status == AutoPostResultStatus.Updated)
             {
                 updatedCount++;
             }
-            else if (result.Status == AutoPostUpdateStatus.Failed)
+            else if (result.Status == AutoPostResultStatus.Failed)
             {
                 failures.Add(Failure(plan, site, result.Errors));
 
@@ -195,7 +195,7 @@ public class AutoForumPostingRunner(
                     site: site,
                     errors: result.Errors,
                     gaveUpNotificationKind: NotificationKind.AutomaticForumPostUpdateFailed,
-                    actionDescription: $"updating the post of '{plan.EntityName}' in '{site.DistributionSiteRegistrationName}'",
+                    actionDescription: $"updating the post of '{plan.EntityName}' in '{site.Registration.Name}'",
                     cancellationToken: cancellationToken
                 );
             }
@@ -206,11 +206,11 @@ public class AutoForumPostingRunner(
 
     private bool IsPausedAfterFailures(AutoPostSiteEntry site)
     {
-        return site.FailureState switch
+        return site.Failure switch
         {
-            ForumPostingFailureState.GaveUp => true,
-            ForumPostingFailureState.WaitingForThreadSelection => true,
-            ForumPostingFailureState.RetryScheduled => site.NextAttemptAt
+            { State: ForumPostingFailureState.GaveUp } => true,
+            { State: ForumPostingFailureState.WaitingForThreadSelection } => true,
+            { State: ForumPostingFailureState.RetryScheduled } failure => failure.NextAttemptAt
                 > timeProvider.GetLocalNow(),
             _ => false,
         };
@@ -233,7 +233,7 @@ public class AutoForumPostingRunner(
         }
 
         var remaining =
-            TimeSpan.FromSeconds(site.MinimumSecondsBetweenPosts)
+            TimeSpan.FromSeconds(site.Registration.MinimumSecondsBetweenPosts)
             - Stopwatch.GetElapsedTime(lastAttemptTimestamp);
 
         if (remaining > TimeSpan.Zero)
@@ -251,7 +251,7 @@ public class AutoForumPostingRunner(
         CancellationToken cancellationToken
     )
     {
-        var failedAttemptCount = site.FailedAttemptCount + 1;
+        var failedAttemptCount = (site.Failure?.FailedAttemptCount ?? 0) + 1;
         var hasGivenUp = failedAttemptCount >= FailedAttemptCountBeforeGivingUp;
         var errorMessage = TruncateErrorMessage(string.Join(" ", errors));
 
@@ -294,7 +294,7 @@ public class AutoForumPostingRunner(
             entityType: plan.EntityType,
             entityId: plan.EntityId,
             distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            failedAttemptCount: site.FailedAttemptCount,
+            failedAttemptCount: site.Failure?.FailedAttemptCount ?? 0,
             nextAttemptAt: null,
             lastErrorMessage: TruncateErrorMessage(
                 $"Several matching threads found: {threadTitles}"
@@ -305,7 +305,7 @@ public class AutoForumPostingRunner(
 
         await notificationService.CreateAsync(
             kind: NotificationKind.AutomaticForumPostFailed,
-            message: $"Several matching threads were found for {EntityLabel(plan)} '{plan.EntityName}' in '{site.DistributionSiteRegistrationName}'. Choose the thread in the post dialog.",
+            message: $"Several matching threads were found for {EntityLabel(plan)} '{plan.EntityName}' in '{site.Registration.Name}'. Choose the thread in the post dialog.",
             cancellationToken: cancellationToken
         );
     }
@@ -333,12 +333,12 @@ public class AutoForumPostingRunner(
             EntityId: plan.EntityId,
             EntityName: plan.EntityName,
             DistributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            DistributionSiteRegistrationName: site.DistributionSiteRegistrationName,
+            DistributionSiteRegistrationName: site.Registration.Name,
             Messages: messages
         );
     }
 
-    private async Task<AutoPostExecutionResult> CreatePostForSiteAsync(
+    private async Task<AutoPostResult> CreatePostForSiteAsync(
         AutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken
@@ -358,11 +358,11 @@ public class AutoForumPostingRunner(
         }
         catch (Exception exception)
         {
-            return AutoPostExecutionResult.Failed([exception.Message]);
+            return AutoPostResult.Failed([exception.Message]);
         }
     }
 
-    private async Task<AutoPostUpdateResult> UpdatePostOfSiteAsync(
+    private async Task<AutoPostResult> UpdatePostOfSiteAsync(
         AutoPostPlan plan,
         AutoPostSiteEntry site,
         CancellationToken cancellationToken
@@ -382,7 +382,7 @@ public class AutoForumPostingRunner(
         }
         catch (Exception exception)
         {
-            return AutoPostUpdateResult.Failed([exception.Message]);
+            return AutoPostResult.Failed([exception.Message]);
         }
     }
 }

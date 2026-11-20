@@ -5,6 +5,7 @@ public enum AutoPostSkipReason
     Blocked = 1,
     SiteNotConfigured = 2,
     AlreadyPosted = 3,
-    NoMatch = 4,
-    ServiceRestrictionNotMet = 5,
+    NotPosted = 4,
+    NoMatch = 5,
+    ServiceRestrictionNotMet = 6,
 }

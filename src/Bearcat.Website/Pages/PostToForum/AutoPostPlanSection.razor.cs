@@ -48,7 +48,7 @@ public partial class AutoPostPlanSection(
 
     private static bool CanUpdatePost(AutoPostSiteEntry site)
     {
-        return site.PostedLocationId is not null && site.ResolvedForumPostTemplateId is not null;
+        return site.PostedLocation is not null && site.ForumPostTemplateIdForUpdate is not null;
     }
 
     private string? FailureText(AutoPostSiteEntry site)
@@ -62,26 +62,28 @@ public partial class AutoPostPlanSection(
             return null;
         }
 
-        if (site.FailureState == ForumPostingFailureState.RetryScheduled)
+        var failure = site.Failure;
+
+        if (failure?.State == ForumPostingFailureState.RetryScheduled)
         {
             return L[
                 "AutoPostPausedAfterFailedAttempts",
-                site.NextAttemptAt!.Value.ToString("g", CultureInfo.CurrentCulture),
-                site.FailedAttemptCount,
-                site.LastErrorMessage!
+                failure.NextAttemptAt!.Value.ToString("g", CultureInfo.CurrentCulture),
+                failure.FailedAttemptCount,
+                failure.LastErrorMessage!
             ].Value;
         }
 
-        if (site.FailureState == ForumPostingFailureState.GaveUp)
+        if (failure?.State == ForumPostingFailureState.GaveUp)
         {
             return L[
                 "AutoPostGaveUpAfterFailedAttempts",
-                site.FailedAttemptCount,
-                site.LastErrorMessage!
+                failure.FailedAttemptCount,
+                failure.LastErrorMessage!
             ].Value;
         }
 
-        if (site.FailureState == ForumPostingFailureState.WaitingForThreadSelection)
+        if (failure?.State == ForumPostingFailureState.WaitingForThreadSelection)
         {
             return L["AutoPostWaitingForThreadSelection"].Value;
         }
@@ -147,11 +149,9 @@ public partial class AutoPostPlanSection(
                     )
             );
 
-            if (result.Status == AutoPostUpdateStatus.Updated)
+            if (result.Status == AutoPostResultStatus.Updated)
             {
-                toastService.Success(
-                    L["AutoPostUpdateSucceeded", site.DistributionSiteRegistrationName]
-                );
+                toastService.Success(L["AutoPostUpdateSucceeded", site.Registration.Name]);
 
                 if (result.UploadsMarkedPosted)
                 {
@@ -162,13 +162,11 @@ public partial class AutoPostPlanSection(
             else
             {
                 siteErrors[site.DistributionSiteRegistrationId] =
-                    result.Status == AutoPostUpdateStatus.Skipped
-                        ? UpdateSkipReasonText(entityType, result)
+                    result.Status == AutoPostResultStatus.Skipped
+                        ? SkipReasonText(entityType, result)
                         : string.Join(" ", result.Errors);
 
-                toastService.Error(
-                    L["AutoPostUpdateFailed", site.DistributionSiteRegistrationName]
-                );
+                toastService.Error(L["AutoPostUpdateFailed", site.Registration.Name]);
             }
 
             await ReloadPlanAsync(entityType, entityId);
@@ -235,35 +233,30 @@ public partial class AutoPostPlanSection(
         return await ApplyResultAsync(site, result);
     }
 
-    private async Task<bool> ApplyResultAsync(
-        AutoPostSiteEntry site,
-        AutoPostExecutionResult result
-    )
+    private async Task<bool> ApplyResultAsync(AutoPostSiteEntry site, AutoPostResult result)
     {
         var entityType = Plan.EntityType;
         var entityId = Plan.EntityId;
 
-        if (result.Status != AutoPostExecutionStatus.Failed)
+        if (result.Status != AutoPostResultStatus.Failed)
         {
             threadCandidatesByRegistrationId.Remove(site.DistributionSiteRegistrationId);
             threadSelectionsByRegistrationId.Remove(site.DistributionSiteRegistrationId);
         }
 
-        if (result.Status == AutoPostExecutionStatus.ThreadSelectionNeeded)
+        if (result.Status == AutoPostResultStatus.ThreadSelectionNeeded)
         {
             threadCandidatesByRegistrationId[site.DistributionSiteRegistrationId] =
                 result.ThreadCandidates;
 
-            toastService.Info(
-                L["AutoPostThreadSelectionNeeded", site.DistributionSiteRegistrationName]
-            );
+            toastService.Info(L["AutoPostThreadSelectionNeeded", site.Registration.Name]);
 
             return true;
         }
 
-        if (result.Status == AutoPostExecutionStatus.Posted)
+        if (result.Status == AutoPostResultStatus.Posted)
         {
-            toastService.Success(L["AutoPostSucceeded", site.DistributionSiteRegistrationName]);
+            toastService.Success(L["AutoPostSucceeded", site.Registration.Name]);
 
             if (result.UploadsMarkedPosted)
             {
@@ -276,12 +269,12 @@ public partial class AutoPostPlanSection(
         }
 
         var message =
-            result.Status == AutoPostExecutionStatus.Skipped
+            result.Status == AutoPostResultStatus.Skipped
                 ? SkipReasonText(entityType, result)
                 : string.Join(" ", result.Errors);
 
         siteErrors[site.DistributionSiteRegistrationId] = message;
-        toastService.Error(L["AutoPostFailed", site.DistributionSiteRegistrationName]);
+        toastService.Error(L["AutoPostFailed", site.Registration.Name]);
 
         await ReloadPlanAsync(entityType, entityId);
 
@@ -297,7 +290,7 @@ public partial class AutoPostPlanSection(
         await OnPlanChanged.InvokeAsync(plan);
     }
 
-    private string SkipReasonText(ForumPostTemplateType entityType, AutoPostExecutionResult result)
+    private string SkipReasonText(ForumPostTemplateType entityType, AutoPostResult result)
     {
         if (result.BlockedReason is not null)
         {
@@ -309,6 +302,9 @@ public partial class AutoPostPlanSection(
             AutoPostSkipReason.AlreadyPosted => entityType == ForumPostTemplateType.Release
                 ? L["AutoPostSkippedAlreadyPosted"]
                 : L["AutoPostSkippedCollectionAlreadyPosted"],
+            AutoPostSkipReason.NotPosted => entityType == ForumPostTemplateType.Release
+                ? L["AutoPostUpdateNotPosted"]
+                : L["AutoPostUpdateCollectionNotPosted"],
             AutoPostSkipReason.NoMatch => L["AutoPostNoMatchingRule"],
             AutoPostSkipReason.ServiceRestrictionNotMet => L[
                 "AutoPostSkippedServiceRestrictionNotMet",
@@ -316,30 +312,5 @@ public partial class AutoPostPlanSection(
             ],
             _ => L["AutoPostSkippedSiteUnavailable"],
         };
-    }
-
-    private string UpdateSkipReasonText(
-        ForumPostTemplateType entityType,
-        AutoPostUpdateResult result
-    )
-    {
-        if (result.BlockedReason is not null)
-        {
-            return L.Localize(result.BlockedReason.Value, entityType);
-        }
-
-        if (result.SkipReason == AutoPostUpdateSkipReason.ServiceRestrictionNotMet)
-        {
-            return L["AutoPostSkippedServiceRestrictionNotMet", string.Join(" ", result.Errors)];
-        }
-
-        if (result.SkipReason != AutoPostUpdateSkipReason.NotPosted)
-        {
-            return L["AutoPostSkippedSiteUnavailable"];
-        }
-
-        return entityType == ForumPostTemplateType.Release
-            ? L["AutoPostUpdateNotPosted"]
-            : L["AutoPostUpdateCollectionNotPosted"];
     }
 }
