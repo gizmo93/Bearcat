@@ -138,6 +138,25 @@ To change the part size of many archive configurations at once, see [Change part
 
 ![archive-part-size-unit.png](images/archive-part-size-unit.png)
 
+### Exclude files from packing
+
+Under **Configurations > Archive creation**, use **Exclude from packing** to choose which files and folders Bearcat skips when creating a new archive.
+Clear the field to pack the entire release folder.
+
+Separate patterns with commas. Spaces around commas are optional.
+Bearcat checks file and folder names at every level of the release folder and ignores case.
+`*` matches any number of characters and `?` matches exactly one.
+Patterns ending in `/` match folders only. All other patterns match files only.
+
+| Pattern | What Bearcat skips |
+| --- | --- |
+| `*.sfv, *.txt` | Any file ending in `.sfv` or `.txt`, including `Sub/CHECK.SFV`. |
+| `part?.rar` | Files with exactly one character between `part` and `.rar`, such as `part1.rar`. |
+| `sample*/` | Folders such as `Sample` or `Samples`, along with their contents. |
+
+The patterns apply only to files and folders in the release folder. Bearcat still packs additional archive contents and the nonce file as configured.
+If no files in the release folder are left to pack, archive creation fails.
+
 ### Archive repackaging
 
 Hosters can recognise files by their MD5 hash. Before reuploading to the same hoster type, Bearcat

@@ -17,6 +17,7 @@ using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPackingExcludes;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -179,9 +180,9 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
             ),
             new ReleaseFolderPackingService(
                 repository,
-                Mock.Of<ILogger<ReleaseFolderPackingService>>(),
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
+                new ReleaseFolderPackingExcludeService(fileSystemService, configurationProvider),
                 progressTracker
             ),
             archiveFileHashService,

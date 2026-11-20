@@ -658,6 +658,8 @@
   <data name="ArchivePartSizeUnitDescription" xml:space="preserve"><value>Einheit der Partgrösse in Archivkonfigurationen. Megabytes: 1 MB = 1.000.000 Bytes (RAR -M). Mebibytes: 1 MB = 1.048.576 Bytes (RAR -m).</value></data>
   <data name="ArchivePartSizeUnit.Megabytes" xml:space="preserve"><value>Megabytes (1.000.000 Bytes)</value></data>
   <data name="ArchivePartSizeUnit.Mebibytes" xml:space="preserve"><value>Mebibytes (1.048.576 Bytes)</value></data>
+  <data name="ArchivePackingExcludePatterns" xml:space="preserve"><value>Beim Packen ausschliessen</value></data>
+  <data name="ArchivePackingExcludePatternsDescription" xml:space="preserve"><value>Trenne mehrere Muster mit Kommas, zum Beispiel *.sfv, sample*/. Als Platzhalter kannst du * und ? verwenden. Setze bei Ordnern einen / ans Ende.</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann Releases in Unmanaged umgewandelt werden, ob ihre Releaseordner gelöscht werden und wann lokale Archivdateien gelöscht werden.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archivrepackaging</value></data>

@@ -19,6 +19,11 @@ public static class ConfigurationSettingFormatter
             && setting.Options.Count > 0;
     }
 
+    public static bool IsText(ApplicationConfigurationPropertyDto setting)
+    {
+        return setting.ValueType == typeof(string) && setting.Options.Count == 0;
+    }
+
     public static string? FormatOptionValue(object? value)
     {
         return value?.ToString();
@@ -86,6 +91,11 @@ public static class ConfigurationSettingFormatter
         if (HasOptions(setting))
         {
             return FormatOptionLabel(localizer, setting, FormatOptionValue(value)!);
+        }
+
+        if (IsText(setting))
+        {
+            return (string)value!;
         }
 
         var editorText = FormatEditorText(value);

@@ -162,6 +162,12 @@ public partial class RarArchiver(
             arguments.Add($"-p{password}");
         }
 
+        arguments.AddRange(
+            options.ExcludedRelativePaths.Select(relativePath =>
+                "-x" + Path.Join(sourceArchivePath, relativePath)
+            )
+        );
+
         arguments.Add(archiveFullPath);
         arguments.Add(
             options.PackSourceFolderAsRootFolder

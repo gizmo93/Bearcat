@@ -46,6 +46,7 @@ using Bearcat.Domain.UseCases.ManageArchives.InterruptedArchives;
 using Bearcat.Domain.UseCases.ManageArchives.LocalArchiveSizeLimit;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPackingExcludes;
 using Bearcat.Domain.UseCases.ManageArchives.Reuploads;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderLocalWorkingCopies;
 using Bearcat.Domain.UseCases.ManageArchives.StorageFolderMoves;
@@ -216,6 +217,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ExistingArchiveAssignmentService>();
             services.AddScoped<ArchivePackingSettingsService>();
             services.AddScoped<ReleaseFolderPackingService>();
+            services.AddScoped<ReleaseFolderPackingExcludeService>();
             services.AddScoped<ArchiveFileHashService>();
             services.AddScoped<ReleaseFolderEntriesForPackingService>();
             services.AddScoped<ArchiveCleanupService>();

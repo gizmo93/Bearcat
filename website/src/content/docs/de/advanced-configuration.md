@@ -140,6 +140,25 @@ Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Pa
 
 ![archive-part-size-unit.png](../images/archive-part-size-unit.png)
 
+### Dateien vom Packen ausschliessen
+
+Unter **Konfigurationen > Archiverstellung** legst du im Feld **Beim Packen ausschliessen** fest, welche Dateien und Ordner Bearcat bei neuen Archiven überspringt.
+Leere das Feld, um den ganzen Releaseordner zu packen.
+
+Trenne mehrere Muster mit Kommas. Leerzeichen um die Kommas sind optional.
+Bearcat prüft die Namen auch in Unterordnern. Gross- und Kleinschreibung spielt keine Rolle.
+`*` steht für beliebig viele Zeichen, `?` für genau eines.
+Mit `/` am Ende gilt ein Muster nur für Ordner, ohne `/` nur für Dateien.
+
+| Muster | Was Bearcat überspringt |
+| --- | --- |
+| `*.sfv, *.txt` | Alle Dateien mit der Endung `.sfv` oder `.txt`, auch `Sub/CHECK.SFV`. |
+| `part?.rar` | Dateien mit genau einem Zeichen zwischen `part` und `.rar`, etwa `part1.rar`. |
+| `sample*/` | Ordner wie `Sample` oder `Samples` samt Inhalt. |
+
+Die Muster gelten nur für Dateien und Ordner aus dem Releaseordner. Zusätzliche Archivinhalte und die Noncedatei packt Bearcat wie gewohnt.
+Bleibt im Releaseordner keine Datei zum Packen übrig, schlägt die Archiverstellung fehl.
+
 ### Archivrepackaging
 
 Hoster erkennen Dateien an ihrem MD5-Hash. Vor einem Reupload zum selben Hostertyp gibt Bearcat den

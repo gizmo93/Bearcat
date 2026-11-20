@@ -3,21 +3,19 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPackingExcludes;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
-using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderPacking;
 
 public class ReleaseFolderPackingService(
     IArchiveCreationRepository repository,
-    ILogger<ReleaseFolderPackingService> logger,
     IFileSystemService fileSystemService,
     ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService,
+    ReleaseFolderPackingExcludeService releaseFolderPackingExcludeService,
     ITransferProgressTracker progressTracker
 )
 {
-    private const string SynologyMetadataFolderName = "@eaDir";
-
     public async Task<ArchiveResult> PackReleaseFolderIntoArchiveAsync(
         Archive archive,
         IArchiver archiver,
@@ -42,12 +40,30 @@ public class ReleaseFolderPackingService(
             );
         }
 
+        var excludes = releaseFolderPackingExcludeService.FindExcludedEntries(releaseFolderPath);
+        var releaseFolderFileCount = fileSystemService
+            .GetFolderFileCountAndSize(releaseFolderPath)
+            .FileCount;
+
+        if (excludes.FileCount > 0 && releaseFolderFileCount == excludes.FileCount)
+        {
+            return new ArchiveResult(
+                IsSuccess: false,
+                CreatedFileNames: [],
+                ErrorMessages:
+                [
+                    $"All files of the release folder \"{releaseFolderPath}\" are excluded by the packing exclude patterns.",
+                ]
+            );
+        }
+
         return await CopyAdditionalEntriesIntoReleaseFolderAndPackAsync(
             archive: archive,
             archiver: archiver,
             releaseFolderPath: releaseFolderPath,
             entriesForPacking: entriesForPacking.Entries,
             packingSettings: packingSettings,
+            excludes: excludes,
             cancellationToken: cancellationToken
         );
     }
@@ -58,6 +74,7 @@ public class ReleaseFolderPackingService(
         string releaseFolderPath,
         IReadOnlyList<ReleaseFolderEntryForPacking> entriesForPacking,
         ArchivePackingSettings packingSettings,
+        ExcludedReleaseFolderEntries excludes,
         CancellationToken cancellationToken
     )
     {
@@ -85,13 +102,12 @@ public class ReleaseFolderPackingService(
                 );
             }
 
-            RemoveSynologyMetadataFolders(releaseFolderPath);
-
             return await PackReleaseFolderWithProgressAsync(
                 archive: archive,
                 archiver: archiver,
                 releaseFolderPath: releaseFolderPath,
                 packingSettings: packingSettings,
+                excludes: excludes,
                 cancellationToken: cancellationToken
             );
         }
@@ -106,31 +122,12 @@ public class ReleaseFolderPackingService(
         }
     }
 
-    private void RemoveSynologyMetadataFolders(string releasePath)
-    {
-        var deletedFolders = fileSystemService.DeleteDirectoriesByNameRecursively(
-            rootPath: releasePath,
-            directoryName: SynologyMetadataFolderName
-        );
-
-        if (deletedFolders.Count == 0)
-        {
-            return;
-        }
-
-        logger.LogInformation(
-            "Removed {FolderCount} Synology metadata folders ({FolderName}) from release folder {ReleaseFolderPath} before archiving",
-            deletedFolders.Count,
-            SynologyMetadataFolderName,
-            releasePath
-        );
-    }
-
     private async Task<ArchiveResult> PackReleaseFolderWithProgressAsync(
         Archive archive,
         IArchiver archiver,
         string releaseFolderPath,
         ArchivePackingSettings packingSettings,
+        ExcludedReleaseFolderEntries excludes,
         CancellationToken cancellationToken
     )
     {
@@ -140,7 +137,8 @@ public class ReleaseFolderPackingService(
             FileId: 1,
             FileName: archive.ArchiveConfig.Release.Name,
             SourceName: archive.ArchiveConfig.Name,
-            SizeBytes: fileSystemService.GetFolderFileCountAndSize(releaseFolderPath).TotalBytes,
+            SizeBytes: fileSystemService.GetFolderFileCountAndSize(releaseFolderPath).TotalBytes
+                - excludes.TotalBytes,
             IsAlreadyTransferred: false
         );
 
@@ -165,7 +163,10 @@ public class ReleaseFolderPackingService(
                             ?? Guid.NewGuid().ToString(),
                         targetFileSizeMb: packingSettings.ArchiveFileSizeMb,
                         password: archive.ArchiveConfig.ArchivePassword,
-                        options: packingSettings.Options,
+                        options: packingSettings.Options with
+                        {
+                            ExcludedRelativePaths = excludes.RelativePaths,
+                        },
                         cancellationToken: cancellationToken
                     ),
                 cancellationToken: cancellationToken
