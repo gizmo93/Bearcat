@@ -140,20 +140,22 @@ To change the part size of many archive configurations at once, see [Change part
 
 ### Exclude files from packing
 
-Set **Packing exclude patterns** under **Configurations > Archive creation**.
-Matching files and folders of the release folder are not packed into newly created archives.
-Existing archives are not changed.
+Under **Configurations > Archive creation**, use **Exclude from packing** to choose which files and folders Bearcat skips when creating a new archive.
+Clear the field to pack the entire release folder.
 
-| Rule | Example |
+Separate patterns with commas. Spaces around commas are optional.
+Bearcat checks file and folder names at every level of the release folder and ignores case.
+`*` matches any number of characters and `?` matches exactly one.
+Patterns ending in `/` match folders only. All other patterns match files only.
+
+| Pattern | What Bearcat skips |
 | --- | --- |
-| Patterns are separated by commas, spaces around them are ignored. | `*.sfv, *.txt` |
-| `*` matches any characters, `?` matches one character. Case is ignored. | `*.SFV` matches `a.sfv` |
-| A pattern is compared with the file or folder name only and applies at every folder depth. | `*.sfv` matches `a.sfv` and `Sub/b.sfv` |
-| A pattern ending with `/` matches folders only, all other patterns match files only. | `sample*/` excludes the folder `Sample` with its content |
+| `*.sfv, *.txt` | Any file ending in `.sfv` or `.txt`, including `Sub/CHECK.SFV`. |
+| `part?.rar` | Files with exactly one character between `part` and `.rar`, such as `part1.rar`. |
+| `sample*/` | Folders such as `Sample` or `Samples`, along with their contents. |
 
-Default: `@eaDir/` (Synology metadata folders). An empty value excludes nothing.
-Additional archive contents and the nonce file are never excluded.
-If the patterns exclude every file of the release folder, archive creation fails.
+The patterns apply only to files and folders in the release folder. Bearcat still packs additional archive contents and the nonce file as configured.
+If no files in the release folder are left to pack, archive creation fails.
 
 ### Archive repackaging
 

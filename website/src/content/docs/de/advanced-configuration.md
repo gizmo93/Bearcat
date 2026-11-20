@@ -142,20 +142,22 @@ Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Pa
 
 ### Dateien vom Packen ausschliessen
 
-Setze **Ausschlussmuster beim Packen** unter **Konfigurationen > Archiverstellung**.
-Passende Dateien und Ordner des Releaseordners werden nicht in neu erstellte Archive gepackt.
-Bestehende Archive bleiben unverändert.
+Unter **Konfigurationen > Archiverstellung** legst du im Feld **Beim Packen ausschliessen** fest, welche Dateien und Ordner Bearcat bei neuen Archiven überspringt.
+Leere das Feld, um den ganzen Releaseordner zu packen.
 
-| Regel | Beispiel |
+Trenne mehrere Muster mit Kommas. Leerzeichen um die Kommas sind optional.
+Bearcat prüft die Namen auch in Unterordnern. Gross- und Kleinschreibung spielt keine Rolle.
+`*` steht für beliebig viele Zeichen, `?` für genau eines.
+Mit `/` am Ende gilt ein Muster nur für Ordner, ohne `/` nur für Dateien.
+
+| Muster | Was Bearcat überspringt |
 | --- | --- |
-| Muster werden mit Kommas getrennt, Leerzeichen darum herum werden ignoriert. | `*.sfv, *.txt` |
-| `*` passt auf beliebige Zeichen, `?` auf genau ein Zeichen. Gross- und Kleinschreibung wird ignoriert. | `*.SFV` passt auf `a.sfv` |
-| Ein Muster wird nur mit dem Datei- oder Ordnernamen verglichen und gilt in jeder Ordnertiefe. | `*.sfv` passt auf `a.sfv` und `Sub/b.sfv` |
-| Ein Muster mit `/` am Ende passt nur auf Ordner, alle anderen Muster nur auf Dateien. | `sample*/` schliesst den Ordner `Sample` mit seinem Inhalt aus |
+| `*.sfv, *.txt` | Alle Dateien mit der Endung `.sfv` oder `.txt`, auch `Sub/CHECK.SFV`. |
+| `part?.rar` | Dateien mit genau einem Zeichen zwischen `part` und `.rar`, etwa `part1.rar`. |
+| `sample*/` | Ordner wie `Sample` oder `Samples` samt Inhalt. |
 
-Standard: `@eaDir/` (Synology-Metadatenordner). Ein leerer Wert schliesst nichts aus.
-Zusätzliche Archivinhalte und die Noncedatei werden nie ausgeschlossen.
-Schliessen die Muster alle Dateien des Releaseordners aus, schlägt die Archiverstellung fehl.
+Die Muster gelten nur für Dateien und Ordner aus dem Releaseordner. Zusätzliche Archivinhalte und die Noncedatei packt Bearcat wie gewohnt.
+Bleibt im Releaseordner keine Datei zum Packen übrig, schlägt die Archiverstellung fehl.
 
 ### Archivrepackaging
 

@@ -658,8 +658,8 @@
   <data name="ArchivePartSizeUnitDescription" xml:space="preserve"><value>Unit of the part size in archive configurations. Megabytes: 1 MB = 1,000,000 bytes (RAR -M). Mebibytes: 1 MB = 1,048,576 bytes (RAR -m).</value></data>
   <data name="ArchivePartSizeUnit.Megabytes" xml:space="preserve"><value>Megabytes (1,000,000 bytes)</value></data>
   <data name="ArchivePartSizeUnit.Mebibytes" xml:space="preserve"><value>Mebibytes (1,048,576 bytes)</value></data>
-  <data name="ArchivePackingExcludePatterns" xml:space="preserve"><value>Packing exclude patterns</value></data>
-  <data name="ArchivePackingExcludePatternsDescription" xml:space="preserve"><value>Comma-separated file and folder names that are not packed into new archives. Wildcards * and ?, a trailing / matches folders only, for example *.sfv,sample*/</value></data>
+  <data name="ArchivePackingExcludePatterns" xml:space="preserve"><value>Exclude from packing</value></data>
+  <data name="ArchivePackingExcludePatternsDescription" xml:space="preserve"><value>Separate patterns with commas, for example *.sfv, sample*/. Use * or ? as wildcards. Add a trailing / for folders.</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when releases are converted to unmanaged, whether their release folders are deleted and when local archive files are deleted.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
