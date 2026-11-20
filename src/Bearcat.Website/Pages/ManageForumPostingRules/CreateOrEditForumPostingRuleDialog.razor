@@ -94,7 +94,7 @@
 
         <div class="space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <label class="text-sm font-medium">@L["ThreadPrefix"]</label>
+                <label class="text-sm font-medium">@L["ThreadPrefixes"]</label>
                 <BbButton Variant="ButtonVariant.Outline"
                           Size="ButtonSize.Small"
                           Disabled="@(isLoadingPrefixes || SelectedTargetUrl is null)"
@@ -106,18 +106,22 @@
 
             @if (prefixesLoaded)
             {
-                <BbSelect TValue="string"
-                          @bind-Value="formModel.ThreadPrefixId"
-                          Options="PrefixOptions"
-                          Placeholder="@L["NoThreadPrefix"]"
-                          Class="w-full" />
+                <BbMultiSelect TValue="string"
+                               Values="formModel.ThreadPrefixIds"
+                               ValuesChanged="ChangeThreadPrefixIds"
+                               Options="PrefixOptions"
+                               ShowSelectAll="false"
+                               MatchTriggerWidth="true"
+                               Placeholder="@L["NoThreadPrefix"]"
+                               SearchPlaceholder="@L["Search"]"
+                               Class="w-full" />
             }
             else
             {
                 <div class="rounded-md border border-dashed border-border/70 px-3 py-2 text-sm">
-                    @(string.IsNullOrWhiteSpace(formModel.ThreadPrefixId)
+                    @(formModel.ThreadPrefixIds.Count == 0
                         ? L["NoThreadPrefix"]
-                        : formModel.ThreadPrefixId)
+                        : string.Join(", ", formModel.ThreadPrefixIds))
                 </div>
             }
 

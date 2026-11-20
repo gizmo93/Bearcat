@@ -276,7 +276,7 @@ public class AutoForumPostCreationService(
             registrationId: site.DistributionSiteRegistrationId,
             targetNodeId: rule.TargetNodeId,
             title: PostName(plan, site),
-            prefixIds: rule.ThreadPrefixId is null ? [] : [rule.ThreadPrefixId],
+            prefixIds: rule.ThreadPrefixIds,
             body: body,
             cancellationToken: cancellationToken
         );

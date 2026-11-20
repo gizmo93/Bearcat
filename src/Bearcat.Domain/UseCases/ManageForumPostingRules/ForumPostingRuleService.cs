@@ -28,7 +28,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
             ConditionJson = input.ConditionJson.Trim(),
             TargetNodeId = input.TargetNodeId.Trim(),
             TargetPathSnapshot = input.TargetPathSnapshot.Trim(),
-            ThreadPrefixId = NormalizeOptional(input.ThreadPrefixId),
+            ThreadPrefixIds = NormalizeThreadPrefixIds(input.ThreadPrefixIds),
             ForumPostTemplateId = input.ForumPostTemplateId,
             PostMode = input.PostMode,
             IsEnabled = input.IsEnabled,
@@ -55,7 +55,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
         rule.ConditionJson = input.ConditionJson.Trim();
         rule.TargetNodeId = input.TargetNodeId.Trim();
         rule.TargetPathSnapshot = input.TargetPathSnapshot.Trim();
-        rule.ThreadPrefixId = NormalizeOptional(input.ThreadPrefixId);
+        rule.ThreadPrefixIds = NormalizeThreadPrefixIds(input.ThreadPrefixIds);
         rule.ForumPostTemplateId = input.ForumPostTemplateId;
         rule.PostMode = input.PostMode;
         rule.IsEnabled = input.IsEnabled;
@@ -158,8 +158,12 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
         }
     }
 
-    private static string? NormalizeOptional(string? value)
+    private static List<string> NormalizeThreadPrefixIds(IReadOnlyList<string> threadPrefixIds)
     {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        return threadPrefixIds
+            .Where(threadPrefixId => !string.IsNullOrWhiteSpace(threadPrefixId))
+            .Select(threadPrefixId => threadPrefixId.Trim())
+            .Distinct()
+            .ToList();
     }
 }

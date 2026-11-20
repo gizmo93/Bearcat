@@ -159,7 +159,7 @@ public class AutoForumPostCreationServiceTest
         var repository = RepositoryWith(
             AutoPostTestFactory.Rule(
                 postMode: ForumPostPostMode.ReplyToExistingElseNewThread,
-                threadPrefixId: "11"
+                threadPrefixIds: ["11", "23"]
             )
         );
         var submitter = new FakeForumPostSubmitter();
@@ -180,7 +180,7 @@ public class AutoForumPostCreationServiceTest
         var newThread = submitter.NewThreads.ShouldHaveSingleItem();
         newThread.TargetNodeId.ShouldBe("42");
         newThread.Title.ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
-        newThread.PrefixIds.ShouldBe(["11"]);
+        newThread.PrefixIds.ShouldBe(["11", "23"]);
     }
 
     [Test]
