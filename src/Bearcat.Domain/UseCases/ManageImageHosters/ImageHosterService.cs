@@ -131,7 +131,7 @@ public class ImageHosterService(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
-        using var proxyScope = ImageHosterRegistrationProxyScope.Enter(registration);
+        using var proxyScope = RegistrationProxyScope.EnterForImageHoster(registration);
 
         return await loginCapableImageHoster.TryLoginAsync(config, cancellationToken);
     }

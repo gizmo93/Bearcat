@@ -382,7 +382,7 @@ public class LinkCrypterImportPreviewService(
                 secretProtector.Unprotect(registration.SerializedConfig)
             );
 
-            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+            using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
             return await hoster.GetFileInfosAsync(hosterConfig, links, cancellationToken);
         }

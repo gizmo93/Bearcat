@@ -46,7 +46,7 @@ public class FileUploadExecutionService(
                 Md5Hash: fileToUpload.SourceFile.Md5Hash
             );
 
-            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
+            using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(
                 context.Upload.HosterRegistration!
             );
 

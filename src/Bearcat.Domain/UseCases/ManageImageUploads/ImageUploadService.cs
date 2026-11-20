@@ -133,7 +133,7 @@ public class ImageUploadService(
 
             var config = imageHoster.DeserializeConfig(configsByRegistrationId[registration.Id]);
 
-            using var proxyScope = ImageHosterRegistrationProxyScope.Enter(registration);
+            using var proxyScope = RegistrationProxyScope.EnterForImageHoster(registration);
 
             var result = await imageHoster.UploadImageAsync(
                 image: image,

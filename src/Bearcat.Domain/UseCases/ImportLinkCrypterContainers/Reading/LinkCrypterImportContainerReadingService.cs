@@ -111,7 +111,7 @@ public class LinkCrypterImportContainerReadingService(
         CancellationToken cancellationToken
     )
     {
-        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(registration);
+        using var proxyScope = RegistrationProxyScope.EnterForLinkCrypter(registration);
 
         return await linkCrypter.ListContainersAsync(linkCrypterConfig, cancellationToken);
     }
@@ -185,7 +185,7 @@ public class LinkCrypterImportContainerReadingService(
     {
         ReadContainerLinksResult result;
 
-        using (LinkCrypterRegistrationProxyScope.Enter(registration))
+        using (RegistrationProxyScope.EnterForLinkCrypter(registration))
         {
             result = await linkCrypter.ReadContainerLinksAsync(
                 linkCrypterConfig: linkCrypterConfig,
