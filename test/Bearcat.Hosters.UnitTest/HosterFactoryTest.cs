@@ -76,6 +76,7 @@ public class HosterFactoryTest
     [TestCase("https://www.rapidgator.net/file/fd90f309156dca5c7b83359483451bba", "Rapidgator")]
     [TestCase("https://keep2share.cc/file/477d4eaa84d33", "Keep2Share")]
     [TestCase("https://F2S.IM/f/0beBcPPHvfen", "Fast2Share")]
+    [TestCase("https://zippyshare.day/f/x7k2m9q4w1z8c3v", "Zippyshare")]
     [TestCase("https://unknown-hoster.test/file/abc", null)]
     public void FindHosterByFileLink_FileLink_ReturnsHosterOwningTheHostName(
         string fileLink,
