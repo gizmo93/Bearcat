@@ -1,3 +1,4 @@
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
@@ -79,14 +80,17 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                 group.Count()
             ))
             .ToListAsync(cancellationToken);
-        var selectableContainers = await GetSelectableContainersAsync(
-            linkCrypterImportId: linkCrypterImportId,
-            state: import.State,
-            cancellationToken: cancellationToken
-        );
-        var selectedContainers = selectableContainers
-            .Where(container => container.IsSelected)
-            .ToList();
+        var releaseNamesOfSelectedImportableContainers =
+            import.State is LinkCrypterImportState.ReadyForReview
+                ? await dbRead
+                    .LinkCrypterImportContainers.Where(container =>
+                        container.LinkCrypterImportId == linkCrypterImportId
+                        && container.IsSelected
+                        && container.Status == LinkCrypterImportContainerStatus.Importable
+                    )
+                    .Select(container => container.ReleaseName)
+                    .ToListAsync(cancellationToken)
+                : [];
 
         return new LinkCrypterImportDetailReadModel(
             Id: import.Id,
@@ -103,10 +107,8 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             UpdatedAt: import.UpdatedAt,
             ProcessedContainerCount: import.ProcessedContainerCount,
             ContainerCountToProcess: import.ContainerCountToProcess,
-            SelectableContainerCount: selectableContainers.Count,
-            SelectedContainerCount: selectedContainers.Count,
-            SelectedReleaseCount: selectedContainers
-                .Select(container => container.ReleaseName)
+            SelectedImportableContainerCount: releaseNamesOfSelectedImportableContainers.Count,
+            ReleaseCountWithSelectedImportableContainers: releaseNamesOfSelectedImportableContainers
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Count(),
             ErrorMessages: import.ErrorMessages,
@@ -126,22 +128,15 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
     )
     {
         var importState = await dbRead
-            .LinkCrypterImports.Where(import => import.Id == query.LinkCrypterImportId)
+            .LinkCrypterImports.Where(import => import.Id == query.Filter.LinkCrypterImportId)
             .Select(import => import.State)
             .FirstAsync(cancellationToken);
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
         var pageIndex = Math.Max(0, query.PageIndex);
         var containersOfImport = dbRead.LinkCrypterImportContainers.Where(container =>
-            container.LinkCrypterImportId == query.LinkCrypterImportId
+            container.LinkCrypterImportId == query.Filter.LinkCrypterImportId
         );
-        var matchingContainers = containersOfImport;
-
-        if (query.Statuses.Count > 0)
-        {
-            matchingContainers = matchingContainers.Where(container =>
-                EF.Parameter(query.Statuses).Contains(container.Status)
-            );
-        }
+        var matchingContainers = GetMatchingContainers(query.Filter);
 
         var releasesQuery = matchingContainers
             .GroupBy(container => container.ReleaseName.ToLower())
@@ -207,7 +202,11 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             .OrderBy(release => lowerReleaseNamesOfPage.IndexOf(release.Key.ToLowerInvariant()))
             .Select(release =>
                 CreateReleaseReadModel(
-                    firstContainer: release.First(),
+                    containerWithReleaseSettings: release.FirstOrDefault(container =>
+                        container.ReadModel.Status
+                            is LinkCrypterImportContainerStatus.Importable
+                                or LinkCrypterImportContainerStatus.NotImportable
+                    ) ?? release.First(),
                     containers: release.Select(container => container.ReadModel).ToList()
                 )
             )
@@ -221,27 +220,71 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
         );
     }
 
-    private async Task<List<SelectableContainer>> GetSelectableContainersAsync(
-        int linkCrypterImportId,
-        LinkCrypterImportState state,
-        CancellationToken cancellationToken
+    public async Task<
+        IReadOnlyList<LinkCrypterImportSelectableContainerReadModel>
+    > GetSelectableContainersOfFilteredReleasesAsync(
+        LinkCrypterImportReleaseFilter filter,
+        CancellationToken cancellationToken = default
     )
     {
-        if (state is not LinkCrypterImportState.ReadyForReview)
-        {
-            return [];
-        }
+        var lowerReleaseNamesOfFilteredReleases = GetMatchingContainers(filter)
+            .Select(container => container.ReleaseName.ToLower());
 
         return await dbRead
             .LinkCrypterImportContainers.Where(container =>
-                container.LinkCrypterImportId == linkCrypterImportId
-                && container.Status == LinkCrypterImportContainerStatus.Importable
+                container.LinkCrypterImportId == filter.LinkCrypterImportId
+                && container.LinkCrypterImport.State == LinkCrypterImportState.ReadyForReview
+                && (
+                    container.Status == LinkCrypterImportContainerStatus.Importable
+                    || container.Status == LinkCrypterImportContainerStatus.NotImportable
+                )
+                && lowerReleaseNamesOfFilteredReleases.Contains(container.ReleaseName.ToLower())
             )
-            .Select(container => new SelectableContainer(
+            .OrderBy(container => container.Id)
+            .Select(container => new LinkCrypterImportSelectableContainerReadModel(
+                container.Id,
                 container.ReleaseName,
                 container.IsSelected
             ))
             .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<LinkCrypterImportContainer> GetMatchingContainers(
+        LinkCrypterImportReleaseFilter filter
+    )
+    {
+        var matchingContainers = dbRead.LinkCrypterImportContainers.Where(container =>
+            container.LinkCrypterImportId == filter.LinkCrypterImportId
+        );
+
+        if (filter.Statuses.Count > 0)
+        {
+            matchingContainers = matchingContainers.Where(container =>
+                EF.Parameter(filter.Statuses).Contains(container.Status)
+            );
+        }
+
+        var searchText = SearchTextPatterns.TrimOrNullWhenEmpty(filter.SearchText);
+
+        if (searchText is not null)
+        {
+            var pattern = SearchTextPatterns.ToLowerCaseWildcardPattern(searchText);
+
+            matchingContainers = matchingContainers.Where(container =>
+                EF.Functions.Like(
+                    container.ReleaseName.ToLower(),
+                    pattern,
+                    SearchTextPatterns.LikeEscapeCharacter
+                )
+                || EF.Functions.Like(
+                    container.ContainerName.ToLower(),
+                    pattern,
+                    SearchTextPatterns.LikeEscapeCharacter
+                )
+            );
+        }
+
+        return matchingContainers;
     }
 
     private static bool IsSelectable(
@@ -250,11 +293,13 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
     )
     {
         return importState is LinkCrypterImportState.ReadyForReview
-            && status is LinkCrypterImportContainerStatus.Importable;
+            && status
+                is LinkCrypterImportContainerStatus.Importable
+                    or LinkCrypterImportContainerStatus.NotImportable;
     }
 
     private static LinkCrypterImportReleaseReadModel CreateReleaseReadModel(
-        ContainerOfRelease firstContainer,
+        ContainerOfRelease containerWithReleaseSettings,
         List<LinkCrypterImportContainerReadModel> containers
     )
     {
@@ -265,10 +310,10 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
         var selectableContainers = containers.Where(container => container.IsSelectable).ToList();
 
         return new LinkCrypterImportReleaseReadModel(
-            ReleaseName: firstContainer.ReleaseName,
-            ReleaseTemplateId: firstContainer.ReleaseTemplateId,
-            ReleaseTemplateName: firstContainer.ReleaseTemplateName,
-            PrimaryLanguageCode: firstContainer.PrimaryLanguageCode,
+            ReleaseName: containerWithReleaseSettings.ReleaseName,
+            ReleaseTemplateId: containerWithReleaseSettings.ReleaseTemplateId,
+            ReleaseTemplateName: containerWithReleaseSettings.ReleaseTemplateName,
+            PrimaryLanguageCode: containerWithReleaseSettings.PrimaryLanguageCode,
             ReleaseAction: releasePreview?.ReleaseAction,
             ExistingReleaseId: releasePreview?.ExistingReleaseId,
             ReleaseFolderPath: releasePreview?.ReleaseFolderPath,
@@ -318,8 +363,6 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             ))
             .ToList();
     }
-
-    private sealed record SelectableContainer(string ReleaseName, bool IsSelected);
 
     private sealed record ContainerOfRelease(
         string ReleaseName,

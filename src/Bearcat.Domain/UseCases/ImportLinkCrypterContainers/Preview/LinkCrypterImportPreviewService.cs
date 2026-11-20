@@ -8,6 +8,7 @@ using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -49,14 +50,18 @@ public class LinkCrypterImportPreviewService(
         linkCrypterImport.StartProgress(containers.Count);
         await repository.SaveChangesAsync(cancellationToken);
 
-        await AssignSeriesReleaseTemplateAsync(linkCrypterImport, containers, cancellationToken);
+        await AssignSeriesReleaseTemplateAndPrimaryLanguageAsync(
+            linkCrypterImport,
+            containers,
+            cancellationToken
+        );
+
+        await CreatePreviewsAsync(linkCrypterImport, cancellationToken);
 
         foreach (var container in containers)
         {
-            container.IsSelected = true;
+            container.IsSelected = container.Status is LinkCrypterImportContainerStatus.Importable;
         }
-
-        await CreatePreviewsAsync(linkCrypterImport, cancellationToken);
 
         linkCrypterImport.ProcessedContainerCount = containers.Count;
 
@@ -137,52 +142,72 @@ public class LinkCrypterImportPreviewService(
             container.PreviewJson = previewResult.Preview.ToJson();
             container.NotImportableReason = notImportableReason;
 
-            if (notImportableReason is null)
-            {
-                container.Status = LinkCrypterImportContainerStatus.Importable;
-            }
-            else
-            {
-                container.Status = LinkCrypterImportContainerStatus.NotImportable;
-                container.IsSelected = false;
-            }
+            container.Status = notImportableReason is null
+                ? LinkCrypterImportContainerStatus.Importable
+                : LinkCrypterImportContainerStatus.NotImportable;
         }
     }
 
-    private async Task AssignSeriesReleaseTemplateAsync(
+    private async Task AssignSeriesReleaseTemplateAndPrimaryLanguageAsync(
         LinkCrypterImport linkCrypterImport,
         List<LinkCrypterImportContainer> containers,
         CancellationToken cancellationToken
     )
     {
-        if (linkCrypterImport.SeriesReleaseTemplateId is not { } seriesReleaseTemplateId)
-        {
-            return;
-        }
-
-        var seriesReleaseTemplate = await GetReleaseTemplateAsync(
-            linkCrypterImport: linkCrypterImport,
-            releaseTemplateId: seriesReleaseTemplateId,
-            cancellationToken: cancellationToken
-        );
+        var seriesReleaseTemplate = linkCrypterImport.SeriesReleaseTemplateId
+            is { } seriesReleaseTemplateId
+            ? await GetReleaseTemplateAsync(
+                linkCrypterImport: linkCrypterImport,
+                releaseTemplateId: seriesReleaseTemplateId,
+                cancellationToken: cancellationToken
+            )
+            : null;
 
         foreach (var container in containers)
         {
-            var containsArchivesOfSeveralReleases =
-                LinkCrypterImportMirrorSplitter
-                    .SplitByArchiveBaseName(GetMirrorsWithoutDecisions(container))
-                    .Count > 0;
+            var archiveBaseNames = LinkCrypterImportMirrorSplitter
+                .SplitByArchiveBaseName(GetMirrorsWithoutDecisions(container))
+                .Select(mirrorsOfArchive => mirrorsOfArchive.ArchiveBaseName)
+                .ToList();
 
-            var releaseNameMatchesSeriesPattern =
-                ReleaseCollectionDetectionService.Detect(
-                    container.ReleaseName,
-                    seriesReleaseTemplate
-                )
-                is not null;
+            var parsedReleaseName = ReleaseNameParser.Parse(container.ReleaseName);
 
-            if (containsArchivesOfSeveralReleases || releaseNameMatchesSeriesPattern)
+            if (seriesReleaseTemplate is not null)
             {
-                container.ReleaseTemplateId = seriesReleaseTemplateId;
+                var containsArchivesOfSeveralReleases = archiveBaseNames.Count > 0;
+                var releaseNameContainsSeason = parsedReleaseName.Season is not null;
+
+                var releaseNameMatchesSeriesPattern =
+                    ReleaseCollectionDetectionService.Detect(
+                        container.ReleaseName,
+                        seriesReleaseTemplate
+                    )
+                    is not null;
+
+                if (
+                    containsArchivesOfSeveralReleases
+                    || releaseNameContainsSeason
+                    || releaseNameMatchesSeriesPattern
+                )
+                {
+                    container.ReleaseTemplateId = seriesReleaseTemplate.Id;
+                }
+            }
+
+            var languageName =
+                parsedReleaseName.Language
+                ?? (
+                    archiveBaseNames.Count > 0
+                        ? ReleaseNameParser.Parse(archiveBaseNames.First()).Language
+                        : null
+                );
+
+            if (
+                languageName is not null
+                && LanguageCatalog.GetTwoLetterCodeOrDefault(languageName) is { } languageCode
+            )
+            {
+                container.PrimaryLanguageCode = languageCode;
             }
         }
     }

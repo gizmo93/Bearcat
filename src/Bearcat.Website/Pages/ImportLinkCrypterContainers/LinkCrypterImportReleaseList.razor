@@ -1,4 +1,5 @@
 @using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview
+@using Bearcat.Website.Pages.ManageReleases.Results
 
 @{
     RenderFragment<LinkCrypterImportMirror> mirrorSummary = mirror =>
@@ -31,17 +32,57 @@
                 @L.Localize(statusCount.Status) <span class="tabular-nums">@statusCount.Count</span>
             </BbButton>
         }
+        <BbInput Value="@searchText"
+                 ValueChanged="SearchAsync"
+                 UpdateTiming="UpdateTiming.Debounced"
+                 DebounceInterval="300"
+                 Placeholder="@L["LinkCrypterImportSearchPlaceholder"]"
+                 AriaLabel="@L["Search"]"
+                 autocomplete="off"
+                 spellcheck="false"
+                 Class="w-full sm:ml-auto sm:w-80" />
+    </div>
 
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         @if (CanChangeSelection)
         {
-            <div class="flex items-center gap-2 sm:ml-auto">
+            <div class="flex items-center gap-2">
                 <BbCheckbox Id="link-crypter-import-select-all-selectable"
                             Checked="AreAllSelectableContainersSelected"
                             Indeterminate="AreSomeSelectableContainersSelected"
                             CheckedChanged="SetSelectionOfAllSelectableContainersAsync" />
                 <label for="link-crypter-import-select-all-selectable" class="text-sm font-medium">
-                    @L["SelectAllImportableContainers"]
+                    @(IsFilterActive ? L["SelectAllInResult"] : L["SelectAll"])
                 </label>
+            </div>
+        }
+
+        @if (CanChangeReleases && SelectedReleaseCount > 0)
+        {
+            <div class="flex flex-wrap items-center gap-1 sm:ml-auto">
+                @if (isSettingReleaseTemplate)
+                {
+                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.Small" Disabled="true">
+                        <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                        @L["SetReleaseTemplateForReleases", SelectedReleaseCount]
+                    </BbButton>
+                }
+                else
+                {
+                    @if (Detail.SeriesReleaseTemplateId is not null)
+                    {
+                        <ReleaseBulkActionMenuButton TValue="int"
+                                                     Label="@L["SetReleaseTemplateForReleases", SelectedReleaseCount]"
+                                                     Icon="layout-template"
+                                                     Options="ReleaseTemplateOptions"
+                                                     OnSelect="StartSettingReleaseTemplate" />
+                    }
+                    <ReleaseBulkActionMenuButton TValue="string"
+                                                 Label="@L["SetPrimaryLanguageForReleases", SelectedReleaseCount]"
+                                                 Icon="languages"
+                                                 Options="PrimaryLanguageOptions"
+                                                 OnSelect="SetPrimaryLanguageAsync" />
+                }
             </div>
         }
     </div>

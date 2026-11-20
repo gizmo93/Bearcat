@@ -15,7 +15,7 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 ## Ablauf
 
 1. Öffne **Registrierungen > Crypter** > **Linkcrypterimporte** und klicke auf **Neuer Import**.
-2. Wähle die Crypterregistrierung und das Releasetemplate. Das Template legt Hoster, Archiveinstellungen und Linkcryptereinstellungen der neuen Releases fest.
+2. Wähle die Crypterregistrierung, das **Standardreleasetemplate** und optional ein **Serienreleasetemplate**. Die Templates legen Hoster, Archiveinstellungen und Linkcryptereinstellungen der neuen Releases fest. Wähle bei Bedarf eine **Standardsprache**. Siehe [Template und Sprache](#template-und-sprache).
 3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Dort stellt Bearcat die Archive aus den importierten Mirrors wieder her, wenn kein lokaler Releaseordner vorhanden ist.
 
    ![Dialog für einen neuen Import](../images/link-crypter-import-new-import-dialog.png)
@@ -36,7 +36,30 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 
 Bearcat fasst Ordner mit demselben Releasenamen zu einem Eintrag zusammen. Du wählst sie gemeinsam aus.
 Als Releasename dient der Ordnername. Stimmt er nicht, korrigiere ihn vor dem Import mit dem Button zum Bearbeiten.
-Gibst du zwei Releases denselben Namen, führt Bearcat sie zusammen.
+Gibst du zwei Releases denselben Namen, führt Bearcat sie zusammen. Das umbenannte Release übernimmt Template und Sprache des anderen.
+
+Die Suche findet Releases über den Releasenamen oder den Ordnernamen, unabhängig von der Gross- und Kleinschreibung.
+Text ohne `*` passt an beliebiger Stelle im Namen. `*` steht für beliebige Zeichen, zum Beispiel `Show.S01*-GRP`.
+Die Suche lässt sich mit dem Statusfilter kombinieren.
+
+Das Häkchen markiert ein Release. Nach der Dateiprüfung markiert Bearcat die importierbaren Ordner.
+**Import starten** importiert die importierbaren Ordner aller markierten Releases, auch die vom Filter ausgeblendeten. Markierte Ordner, die nicht importierbar sind, überspringt Bearcat.
+Auch nicht importierbare Releases lassen sich markieren, zum Beispiel um ihr Template zu ändern.
+Das Häkchen in der Kopfzeile und die Sammelaktionen betreffen nur die markierten Releases des aktuellen Ergebnisses (Statusfilter und Suche, alle Seiten):
+
+- **Releasetemplate für N Release(s) setzen**: Standard- oder Serienreleasetemplate. Nur sichtbar, wenn der Import ein Serienreleasetemplate hat. Bearcat berechnet die Vorschau neu, das dauert bei grossen Importen eine Weile.
+- **Primärsprache für N Release(s) setzen**
+
+Um ein einzelnes Release zu ändern, suche danach und lass nur dieses Release markiert.
+
+## Template und Sprache
+
+Nach der Dateiprüfung weist Bearcat jedem Ordner ein Template und eine Sprache zu. Bei der Prüfung kannst du beides ändern.
+
+| Einstellung | Regel |
+| --- | --- |
+| Serienreleasetemplate | Der Ordner enthält Archive mehrerer Releases, sein Name passt zum Folgenmuster der Collectionerkennung des Serientemplates oder sein Name enthält eine Staffel (`Show.S01.German.1080p-GRP`). Sonst bekommt der Ordner das Standardreleasetemplate. |
+| Primärsprache | Die Sprache im Releasenamen (`German` wird zu `de`). Bei einem Ordner mit mehreren Archiven ohne Sprache im Namen die Sprache im ersten Archivnamen. Sonst die Standardsprache. |
 
 ## Welche Mirrors Bearcat übernimmt
 
@@ -110,7 +133,7 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 
 ## Nach dem Import
 
-- Neue Releases übernehmen die **Primärsprache** des Imports für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
+- Neue Releases übernehmen die Primärsprache ihres Ordners für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
 - Releaseinformationen (xREL, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
 - Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/). Das gilt auch für Collections aus einem Staffelordner.
 

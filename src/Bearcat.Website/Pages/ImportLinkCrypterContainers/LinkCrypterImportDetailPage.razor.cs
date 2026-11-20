@@ -164,7 +164,7 @@ public partial class LinkCrypterImportDetailPage(
     {
         var confirmation = await dialogService.ConfirmAsync(
             L["StartLinkCrypterImport"],
-            $"{L["StartLinkCrypterImportConfirmation", detail!.SelectedReleaseCount, detail.SelectedContainerCount]} {L["LinkCrypterImportReleaseInfoHint"]}",
+            $"{L["StartLinkCrypterImportConfirmation", detail!.ReleaseCountWithSelectedImportableContainers, detail.SelectedImportableContainerCount]} {L["LinkCrypterImportReleaseInfoHint"]}",
             new ConfirmDialogOptions
             {
                 ConfirmText = L["StartLinkCrypterImport"],

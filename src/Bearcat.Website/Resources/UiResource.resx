@@ -2071,7 +2071,6 @@
   <data name="SelectHosterAccount" xml:space="preserve"><value>Select hoster account</value></data>
   <data name="CheckFiles" xml:space="preserve"><value>Check files</value></data>
   <data name="LinkCrypterImportReleaseInfoHint" xml:space="preserve"><value>Release information (xrel, PreDB, NFO) is not fetched during the import. The background task fetches it afterwards.</value></data>
-  <data name="SelectAllImportableContainers" xml:space="preserve"><value>All importable</value></data>
   <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Start import ({0} releases)</value></data>
   <data name="StartLinkCrypterImportWithOneRelease" xml:space="preserve"><value>Start import (1 release)</value></data>
   <data name="StartLinkCrypterImport" xml:space="preserve"><value>Start import</value></data>
@@ -2088,6 +2087,11 @@
   <data name="LinkCrypterImportReleaseCollection" xml:space="preserve"><value>Collection: {0}</value></data>
   <data name="LinkCrypterImportMirrorsWithoutRelease" xml:space="preserve"><value>The files of these mirrors cannot be assigned to releases:</value></data>
   <data name="NoLinkCrypterImportReleasesFound" xml:space="preserve"><value>No releases found.</value></data>
+  <data name="LinkCrypterImportSearchPlaceholder" xml:space="preserve"><value>Release or container name, * as wildcard</value></data>
+  <data name="SelectAllInResult" xml:space="preserve"><value>Select all in result</value></data>
+  <data name="SetReleaseTemplateForReleases" xml:space="preserve"><value>Set release template for {0} release(s)</value></data>
+  <data name="SetPrimaryLanguageForReleases" xml:space="preserve"><value>Set primary language for {0} release(s)</value></data>
+  <data name="ReleaseTemplateChangedForReleases" xml:space="preserve"><value>Release template changed for {0} release(s).</value></data>
   <data name="ReleaseAction" xml:space="preserve"><value>Release action</value></data>
   <data name="LocalFiles" xml:space="preserve"><value>Local files</value></data>
   <data name="RenameRelease" xml:space="preserve"><value>Rename release</value></data>

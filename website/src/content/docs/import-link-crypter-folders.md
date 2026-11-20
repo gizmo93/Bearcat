@@ -15,7 +15,7 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 ## Steps
 
 1. Open **Registrations > Crypters** > **Link crypter imports** and click **New import**.
-2. Select the crypter registration and the release template. The template defines the hosters, archive settings and link crypter settings of the new releases.
+2. Select the crypter registration, the **Default release template** and optionally a **Series release template**. The templates define the hosters, archive settings and link crypter settings of the new releases. Select a **Default language** if needed. See [Template and language](#template-and-language).
 3. Optional: select an **archive base folder for releases without local files**. Bearcat restores archives there from the imported mirrors when there is no local release folder.
 
    ![New import dialog](images/link-crypter-import-new-import-dialog.png)
@@ -36,7 +36,29 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 
 Bearcat groups folders with the same release name into one entry. You select them together.
 The release name defaults to the folder name. If it is wrong, correct it with the edit button before importing.
-Giving two releases the same name merges them.
+Giving two releases the same name merges them. The renamed release takes over the template and language of the other one.
+
+The search finds releases by release name or folder name, ignoring case. Text without `*` matches anywhere in the name.
+`*` matches any characters, for example `Show.S01*-GRP`. The search combines with the status filter.
+
+The checkbox selects a release. After the file check, Bearcat selects the importable folders.
+**Start import** imports the importable folders of all checked releases, including those hidden by the filter. Checked folders that are not importable are skipped.
+Not importable releases can be checked too, for example to change their template.
+The header checkbox and the bulk actions only affect the checked releases of the current result (status filter and search, all pages):
+
+- **Set release template for N release(s)**: default or series release template. Only shown when the import has a series release template. Bearcat recalculates the preview, which takes a while for large imports.
+- **Set primary language for N release(s)**
+
+To change a single release, search for it and leave only this release checked.
+
+## Template and language
+
+After the file check, Bearcat assigns a template and a language to each folder. You can change both during review.
+
+| Setting | Rule |
+| --- | --- |
+| Series release template | The folder contains archives of several releases, its name matches the episode pattern of the series template's collection detection, or its name contains a season (`Show.S01.German.1080p-GRP`). Otherwise the folder gets the default release template. |
+| Primary language | The language in the release name (`German` becomes `de`). For a folder with several archives and no language in its name, the language in the first archive name. Otherwise the default language. |
 
 ## Which mirrors Bearcat imports
 
@@ -108,7 +130,7 @@ See [Link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 
 ## After the import
 
-- New releases use the import's **primary language** for their release information. Existing releases keep their language.
+- New releases use the primary language of their folder for their release information. Existing releases keep their language.
 - Bearcat fetches release information (xREL, PreDB, NFO) after the import through the release information background task.
 - Imported releases count as posted and do not appear in the [post queue](/Bearcat/post-queue/). This also applies to collections created from a season folder.
 

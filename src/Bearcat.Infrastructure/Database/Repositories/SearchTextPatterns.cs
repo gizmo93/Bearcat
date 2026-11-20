@@ -2,6 +2,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public static class SearchTextPatterns
 {
+    public const string LikeEscapeCharacter = "\\";
+
     public static string? TrimOrNullWhenEmpty(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -15,6 +17,18 @@ public static class SearchTextPatterns
     public static string ToLowerCaseContainsPattern(string value)
     {
         return $"%{value.ToLowerInvariant()}%";
+    }
+
+    public static string ToLowerCaseWildcardPattern(string value)
+    {
+        var escapedValue = value
+            .ToLowerInvariant()
+            .Replace(LikeEscapeCharacter, LikeEscapeCharacter + LikeEscapeCharacter)
+            .Replace("%", LikeEscapeCharacter + "%")
+            .Replace("_", LikeEscapeCharacter + "_")
+            .Replace('*', '%');
+
+        return value.Contains('*') ? escapedValue : $"%{escapedValue}%";
     }
 
     public static int? ParseIdWithOptionalHashPrefix(string value)

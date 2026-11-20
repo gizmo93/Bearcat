@@ -6,8 +6,10 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.ReadModels;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleases;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ImportLinkCrypterContainers;
@@ -23,11 +25,14 @@ public partial class LinkCrypterImportReleaseList(
         "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]";
 
     private IReadOnlyList<LinkCrypterImportReleaseReadModel> releases = [];
+    private IReadOnlyList<LinkCrypterImportSelectableContainerReadModel> selectableContainers = [];
     private LinkCrypterImportDetailReadModel? loadedDetail;
     private LinkCrypterImportContainerStatus? selectedStatus;
+    private string? searchText;
     private string? releaseNameBeingEdited;
     private string editedReleaseName = "";
     private bool isRenaming;
+    private bool isSettingReleaseTemplate;
     private int totalCount;
     private int pageIndex;
 
@@ -44,15 +49,32 @@ public partial class LinkCrypterImportReleaseList(
 
     private bool CanChangeReleases => Detail.State is LinkCrypterImportState.ReadyForReview;
 
-    private bool CanChangeSelection =>
-        Detail.State is LinkCrypterImportState.ReadyForReview
-        && Detail.SelectableContainerCount > 0;
+    private bool CanChangeSelection => CanChangeReleases && selectableContainers.Count > 0;
+
+    private bool IsFilterActive =>
+        selectedStatus is not null || !string.IsNullOrWhiteSpace(searchText);
 
     private bool AreAllSelectableContainersSelected =>
-        Detail.SelectedContainerCount == Detail.SelectableContainerCount;
+        selectableContainers.All(container => container.IsSelected);
 
     private bool AreSomeSelectableContainersSelected =>
-        Detail.SelectedContainerCount > 0 && !AreAllSelectableContainersSelected;
+        !AreAllSelectableContainersSelected
+        && selectableContainers.Any(container => container.IsSelected);
+
+    private int SelectedReleaseCount =>
+        GetSelectedContainers()
+            .Select(container => container.ReleaseName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+
+    private IReadOnlyList<SelectOption<int>> ReleaseTemplateOptions =>
+        [
+            new(Detail.ReleaseTemplateId, Detail.ReleaseTemplateName),
+            new(Detail.SeriesReleaseTemplateId!.Value, Detail.SeriesReleaseTemplateName!),
+        ];
+
+    private IReadOnlyList<SelectOption<string>> PrimaryLanguageOptions =>
+        PrimaryLanguageSelectOptions.Create(L["NotSet"]);
 
     private int CurrentPage => pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / PageSize));
@@ -72,18 +94,27 @@ public partial class LinkCrypterImportReleaseList(
 
     private async Task LoadReleasesAsync()
     {
+        var filter = new LinkCrypterImportReleaseFilter(
+            LinkCrypterImportId: Detail.Id,
+            Statuses: selectedStatus is { } status ? [status] : [],
+            SearchText: searchText
+        );
+
         var result = await operationRunner.RunAsync(
             (ILinkCrypterImportReadRepository repository) =>
                 repository.SearchReleasesAsync(
                     new LinkCrypterImportReleaseSearchQuery(
-                        LinkCrypterImportId: Detail.Id,
-                        Statuses: selectedStatus is { } status ? [status] : [],
+                        Filter: filter,
                         PageIndex: pageIndex,
                         PageSize: PageSize
                     )
                 )
         );
 
+        selectableContainers = await operationRunner.RunAsync(
+            (ILinkCrypterImportReadRepository repository) =>
+                repository.GetSelectableContainersOfFilteredReleasesAsync(filter)
+        );
         releases = result.Items;
         totalCount = result.TotalCount;
         pageIndex = result.PageIndex;
@@ -92,6 +123,13 @@ public partial class LinkCrypterImportReleaseList(
     private async Task SelectStatusAsync(LinkCrypterImportContainerStatus? status)
     {
         selectedStatus = status;
+        pageIndex = 0;
+        await LoadReleasesAsync();
+    }
+
+    private async Task SearchAsync(string? text)
+    {
+        searchText = text;
         pageIndex = 0;
         await LoadReleasesAsync();
     }
@@ -162,11 +200,13 @@ public partial class LinkCrypterImportReleaseList(
 
     private async Task SetSelectionOfAllSelectableContainersAsync(bool isSelected)
     {
+        var containerIds = selectableContainers.Select(container => container.Id).ToList();
+
         try
         {
             await operationRunner.RunAsync(
                 (LinkCrypterImportService service) =>
-                    service.SetSelectionOfAllSelectableContainersAsync(Detail.Id, isSelected)
+                    service.SetSelectionOfContainersAsync(Detail.Id, containerIds, isSelected)
             );
         }
         catch (InvalidLinkCrypterImportException exception)
@@ -175,6 +215,75 @@ public partial class LinkCrypterImportReleaseList(
         }
 
         await OnReleasesChanged.InvokeAsync();
+    }
+
+    private void StartSettingReleaseTemplate(int releaseTemplateId)
+    {
+        isSettingReleaseTemplate = true;
+        _ = SetReleaseTemplateInBackgroundAsync(
+            containerIds: GetSelectedContainers().Select(container => container.Id).ToList(),
+            releaseCount: SelectedReleaseCount,
+            releaseTemplateId: releaseTemplateId
+        );
+    }
+
+    private async Task SetReleaseTemplateInBackgroundAsync(
+        IReadOnlyList<int> containerIds,
+        int releaseCount,
+        int releaseTemplateId
+    )
+    {
+        try
+        {
+            await operationRunner.RunAsync(
+                (LinkCrypterImportService service) =>
+                    service.SetReleaseTemplateAsync(Detail.Id, containerIds, releaseTemplateId)
+            );
+
+            toastService.Success(L["ReleaseTemplateChangedForReleases", releaseCount]);
+        }
+        catch (InvalidLinkCrypterImportException exception)
+        {
+            toastService.Error(exception.Message);
+        }
+        catch (Exception exception)
+        {
+            await DispatchExceptionAsync(exception);
+        }
+        finally
+        {
+            isSettingReleaseTemplate = false;
+        }
+
+        await OnReleasesChanged.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task SetPrimaryLanguageAsync(string languageCode)
+    {
+        var containerIds = GetSelectedContainers().Select(container => container.Id).ToList();
+        var releaseCount = SelectedReleaseCount;
+
+        try
+        {
+            await operationRunner.RunAsync(
+                (LinkCrypterImportService service) =>
+                    service.SetPrimaryLanguageAsync(Detail.Id, containerIds, languageCode)
+            );
+
+            toastService.Success(L["PrimaryLanguageChangedForReleases", releaseCount]);
+        }
+        catch (InvalidLinkCrypterImportException exception)
+        {
+            toastService.Error(exception.Message);
+        }
+
+        await OnReleasesChanged.InvokeAsync();
+    }
+
+    private List<LinkCrypterImportSelectableContainerReadModel> GetSelectedContainers()
+    {
+        return selectableContainers.Where(container => container.IsSelected).ToList();
     }
 
     private static bool IsReleasePartlySelected(LinkCrypterImportReleaseReadModel release)

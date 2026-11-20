@@ -31,9 +31,17 @@ public static class LanguageCatalog
 
     private static readonly Dictionary<string, string> ByCode = BuildCodeLookup();
 
+    private static readonly Dictionary<string, string> TwoLetterCodesByName =
+        BuildTwoLetterCodeLookup();
+
     public static bool TryResolveName(string token, out string canonical)
     {
         return ByName.TryGetValue(token, out canonical!);
+    }
+
+    public static string? GetTwoLetterCodeOrDefault(string languageName)
+    {
+        return TwoLetterCodesByName.GetValueOrDefault(languageName);
     }
 
     public static string? Resolve(string? value)
@@ -105,6 +113,21 @@ public static class LanguageCatalog
         foreach (var alias in Aliases)
         {
             lookup.TryAdd(alias.Key, alias.Value);
+        }
+
+        return lookup;
+    }
+
+    private static Dictionary<string, string> BuildTwoLetterCodeLookup()
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var culture in CultureInfo.GetCultures(CultureTypes.NeutralCultures))
+        {
+            if (culture.TwoLetterISOLanguageName.Length == 2)
+            {
+                lookup.TryAdd(culture.EnglishName, culture.TwoLetterISOLanguageName);
+            }
         }
 
         return lookup;
