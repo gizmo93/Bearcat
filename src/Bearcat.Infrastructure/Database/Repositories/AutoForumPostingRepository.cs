@@ -98,6 +98,7 @@ public class AutoForumPostingRepository(
             .Releases.Where(release => releaseIds.Contains(release.Id))
             .Include(release => release.Classification)
             .Include(release => release.ReleaseGroup)
+            .Include(release => release.Metadata)
             .ToListAsync(cancellationToken);
     }
 
@@ -111,6 +112,8 @@ public class AutoForumPostingRepository(
             .Include(collection => collection.ReleaseGroup)
             .Include(collection => collection.Releases)
                 .ThenInclude(release => release.Classification)
+            .Include(collection => collection.Releases)
+                .ThenInclude(release => release.Metadata)
             .ToListAsync(cancellationToken);
     }
 

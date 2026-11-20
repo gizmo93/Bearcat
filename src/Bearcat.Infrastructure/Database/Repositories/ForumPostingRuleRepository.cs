@@ -86,6 +86,7 @@ public class ForumPostingRuleRepository(
         return await dbRead
             .Releases.Include(release => release.Classification)
             .Include(release => release.ReleaseGroup)
+            .Include(release => release.Metadata)
             .OrderByDescending(release => release.CreatedAt)
             .ThenByDescending(release => release.Id)
             .Take(count)
@@ -101,6 +102,8 @@ public class ForumPostingRuleRepository(
             .ReleaseCollections.Include(collection => collection.ReleaseGroup)
             .Include(collection => collection.Releases)
                 .ThenInclude(release => release.Classification)
+            .Include(collection => collection.Releases)
+                .ThenInclude(release => release.Metadata)
             .OrderByDescending(collection => collection.CreatedAt)
             .ThenByDescending(collection => collection.Id)
             .Take(count)

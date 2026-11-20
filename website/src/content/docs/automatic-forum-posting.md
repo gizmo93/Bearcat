@@ -112,13 +112,14 @@ Each comparison row picks a field, an operator and a value:
 | Year | Number |
 | Season | Number |
 | Episode | Number, releases only |
+| Genre | Genres from the media database, comma-separated, for example `Animation, Family` |
 
 The available operators depend on the field:
 
 | Field | Operators |
 | --- | --- |
 | Release name | *is*, *is not*, pattern matching and *matches regex* |
-| Release group, release group tag | *is*, *is not*, pattern matching, *is one of*, *is none of*, *is set*, *is not set* |
+| Release group, release group tag, genre | *is*, *is not*, pattern matching, *is one of*, *is none of*, *is set*, *is not set* |
 | Primary language | *is*, *is not*, *is one of*, *is none of*, *is set*, *is not set* |
 | Resolution, year, season, episode | Include *is at least* and *is at most* |
 
@@ -126,6 +127,7 @@ With *matches pattern (%)*, `%` stands for any text. The pattern must match the 
 
 - `%German%` matches names containing `German`.
 - `%-FLAME` matches names ending in `-FLAME`.
+- `%Animation%` on the genre matches every release that has `Animation` among its genres.
 
 Patterns and regular expressions ignore case. An invalid regular expression or a match that times out
 is treated as no match.
@@ -138,6 +140,8 @@ If language or content type is not set, Bearcat falls back to the member release
 Resolution, source, platform, year, season, multi-language and release group tag come from the classifications
 of the releases in the collection. Bearcat uses a value only when it is the same across all classified releases.
 Otherwise, it is unknown or not set. Releases without a classification do not count into these values.
+The genre comes from the media data of the member releases and is used only when it is the same across all
+releases that have one.
 
 ## Ordering the rules
 

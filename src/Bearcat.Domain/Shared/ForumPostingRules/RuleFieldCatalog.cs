@@ -28,6 +28,8 @@ public static class RuleFieldCatalog
 
     public const string Episode = "Episode";
 
+    public const string Genre = "Genre";
+
     private static readonly IReadOnlyList<RuleFieldDescriptor> AllFields =
     [
         new RuleFieldDescriptor(
@@ -166,6 +168,14 @@ public static class RuleFieldCatalog
             Options: [],
             ValueAccessor: context => context.Episode,
             SupportedEntityTypes: ReleaseOnlyEntityTypes
+        ),
+        new RuleFieldDescriptor(
+            Name: Genre,
+            ValueKind: RuleFieldValueKind.Text,
+            AllowedOperators: TextIdentityOperators,
+            Options: [],
+            ValueAccessor: context => context.Genre,
+            SupportedEntityTypes: AllEntityTypes
         ),
     ];
 

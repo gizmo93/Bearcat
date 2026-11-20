@@ -1226,6 +1226,7 @@
   <data name="RuleField.Year" xml:space="preserve"><value>Year</value></data>
   <data name="RuleField.Season" xml:space="preserve"><value>Season</value></data>
   <data name="RuleField.Episode" xml:space="preserve"><value>Episode</value></data>
+  <data name="RuleField.Genre" xml:space="preserve"><value>Genre</value></data>
   <data name="RuleConditionOperator.Equals" xml:space="preserve"><value>is</value></data>
   <data name="RuleConditionOperator.NotEquals" xml:space="preserve"><value>is not</value></data>
   <data name="RuleConditionOperator.In" xml:space="preserve"><value>is one of</value></data>
