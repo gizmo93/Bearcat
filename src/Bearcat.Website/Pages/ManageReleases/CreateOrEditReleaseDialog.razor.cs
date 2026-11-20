@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
@@ -246,6 +247,15 @@ public partial class CreateOrEditReleaseDialog(
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
             formModel.Name = Path.GetFileName(folderPath);
+        }
+
+        if (
+            !formModel.IsEdit
+            && ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(Path.GetFileName(folderPath))
+                is { } primaryLanguageCode
+        )
+        {
+            formModel.PrimaryLanguageCode = primaryLanguageCode;
         }
     }
 

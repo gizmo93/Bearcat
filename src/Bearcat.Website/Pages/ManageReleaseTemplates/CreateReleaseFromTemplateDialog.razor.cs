@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Preview;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.Pages.ManageReleases;
@@ -248,6 +249,24 @@ public partial class CreateReleaseFromTemplateDialog(
         createdSubfolderPaths.Clear();
         subfolderErrorMessagesByFolderPath.Clear();
         SelectAllSubfoldersThatCanBecomeReleases();
+        PreselectPrimaryLanguageSharedBySubfolders();
+    }
+
+    private void PreselectPrimaryLanguageSharedBySubfolders()
+    {
+        var detectedLanguageCodes = subfolderPreview!
+            .MatchingFolders.Where(CanSubfolderBecomeRelease)
+            .Select(subfolder =>
+                ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(subfolder.FolderName)
+            )
+            .OfType<string>()
+            .Distinct()
+            .ToList();
+
+        if (detectedLanguageCodes.Count == 1)
+        {
+            formModel.PrimaryLanguageCode = detectedLanguageCodes.Single();
+        }
     }
 
     private void SelectAllSubfoldersThatCanBecomeReleases()
@@ -350,9 +369,19 @@ public partial class CreateReleaseFromTemplateDialog(
             return;
         }
 
+        var folderName = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar));
+
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            formModel.Name = Path.GetFileName(folderPath.TrimEnd(Path.DirectorySeparatorChar));
+            formModel.Name = folderName;
+        }
+
+        if (
+            ReleaseNameParser.ParsePrimaryLanguageCodeOrDefault(folderName) is
+            { } primaryLanguageCode
+        )
+        {
+            formModel.PrimaryLanguageCode = primaryLanguageCode;
         }
     }
 

@@ -90,6 +90,15 @@ public static partial class ReleaseNameParser
         ["satrip"] = ReleaseSource.SatRip,
     };
 
+    public static string? ParsePrimaryLanguageCodeOrDefault(string releaseName)
+    {
+        var languageName = Parse(releaseName).Language;
+
+        return languageName is null
+            ? null
+            : LanguageCatalog.GetTwoLetterCodeOrDefault(languageName);
+    }
+
     public static ParsedReleaseName Parse(string releaseName)
     {
         var (body, group) = ExtractGroup(releaseName.Trim());
