@@ -18,6 +18,12 @@ public class LinkCrypterImportContainer
 
     public string ReleaseName { get; set; } = null!;
 
+    public int ReleaseTemplateId { get; set; }
+
+    public ReleaseTemplate ReleaseTemplate { get; set; } = null!;
+
+    public string? PrimaryLanguageCode { get; set; }
+
     public string ExternalReference { get; set; } = null!;
 
     public bool HasBackupLinks { get; set; }

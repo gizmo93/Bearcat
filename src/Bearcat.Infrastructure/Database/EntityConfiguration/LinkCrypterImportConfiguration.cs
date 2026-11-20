@@ -12,6 +12,7 @@ public class LinkCrypterImportConfiguration : IEntityTypeConfiguration<LinkCrypt
         builder.Property(import => import.Id).IsRequired();
         builder.Property(import => import.LinkCrypterRegistrationId).IsRequired();
         builder.Property(import => import.ReleaseTemplateId).IsRequired();
+        builder.Property(import => import.SeriesReleaseTemplateId).IsRequired(false);
         builder
             .Property(import => import.ArchiveFilesBasePathForReleasesWithoutLocalFiles)
             .IsRequired(false)
@@ -41,6 +42,14 @@ public class LinkCrypterImportConfiguration : IEntityTypeConfiguration<LinkCrypt
             .OnDelete(DeleteBehavior.Cascade);
 
         builder
+            .HasOne(import => import.SeriesReleaseTemplate)
+            .WithMany()
+            .HasForeignKey(import => import.SeriesReleaseTemplateId)
+            .HasPrincipalKey(template => template.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
             .HasMany(import => import.HosterRegistrations)
             .WithOne(hosterRegistration => hosterRegistration.LinkCrypterImport)
             .HasForeignKey(hosterRegistration => hosterRegistration.LinkCrypterImportId)
@@ -59,5 +68,6 @@ public class LinkCrypterImportConfiguration : IEntityTypeConfiguration<LinkCrypt
         builder.HasIndex(import => import.State);
         builder.HasIndex(import => import.LinkCrypterRegistrationId);
         builder.HasIndex(import => import.ReleaseTemplateId);
+        builder.HasIndex(import => import.SeriesReleaseTemplateId);
     }
 }

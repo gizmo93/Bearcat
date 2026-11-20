@@ -27,7 +27,7 @@
         <div class="bearcat-config-list">
             <div class="@($"bearcat-config-header {ImportGridClass}")">
                 <span>@L["Crypter"]</span>
-                <span>@L["ReleaseTemplate"]</span>
+                <span>@L["ReleaseTemplates"]</span>
                 <span>@L["State"]</span>
                 <span>@L["Timeline"]</span>
                 <span class="text-right">@L["Actions"]</span>
@@ -45,9 +45,15 @@
                             <p class="text-xs text-muted-foreground">@L["LinkCrypterImportContainerCount", import.ContainerCount]</p>
                         </div>
 
-                        <div class="min-w-0">
-                            <p class="bearcat-mobile-label">@L["ReleaseTemplate"]</p>
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="bearcat-mobile-label">@L["ReleaseTemplates"]</p>
                             <p class="truncate text-sm" title="@import.ReleaseTemplateName">@import.ReleaseTemplateName</p>
+                            @if (import.SeriesReleaseTemplateName is { } seriesReleaseTemplateName)
+                            {
+                                <p class="truncate text-xs text-muted-foreground" title="@seriesReleaseTemplateName">
+                                    @L["SeriesReleaseTemplate"]: <span class="text-foreground">@seriesReleaseTemplateName</span>
+                                </p>
+                            }
                         </div>
 
                         <div class="min-w-0 space-y-1">

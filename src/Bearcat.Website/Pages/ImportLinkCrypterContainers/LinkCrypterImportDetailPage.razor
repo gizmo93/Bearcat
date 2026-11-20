@@ -28,8 +28,9 @@
                 </div>
                 <p class="text-sm text-muted-foreground">
                     @L["Crypter"]: <span class="text-foreground">@detail.LinkCrypterRegistrationName</span>
-                    · @L["ReleaseTemplate"]: <span class="text-foreground">@detail.ReleaseTemplateName</span>
-                    · @L["PrimaryLanguage"]: <span class="text-foreground">@GetLanguageDisplayName(detail.PrimaryLanguageCode)</span>
+                    · @L["DefaultReleaseTemplate"]: <span class="text-foreground">@detail.ReleaseTemplateName</span>
+                    · @L["SeriesReleaseTemplate"]: <span class="text-foreground">@(detail.SeriesReleaseTemplateName ?? L["None"])</span>
+                    · @L["DefaultLanguage"]: <span class="text-foreground">@GetLanguageDisplayName(detail.PrimaryLanguageCode)</span>
                 </p>
                 @if (detail.ArchiveFilesBasePathForReleasesWithoutLocalFiles is { } archiveFilesBasePath)
                 {
@@ -97,19 +98,9 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <BbButton Class="sm:ml-auto" Disabled="@(isSubmitting || detail.SelectedContainerCount == 0)" OnClick="StartImportAsync">
+                <BbButton Class="sm:ml-auto" Disabled="@(isSubmitting || detail.SelectedImportableContainerCount == 0)" OnClick="StartImportAsync">
                     <LucideIcon Name="download" class="h-4 w-4" />
-                    @(detail.SelectedReleaseCount == 1 ? L["StartLinkCrypterImportWithOneRelease"] : L["StartLinkCrypterImportWithCount", detail.SelectedReleaseCount])
-                </BbButton>
-            </div>
-        }
-
-        @if (detail.State is LinkCrypterImportState.Completed && detail.SelectableContainerCount > 0)
-        {
-            <div class="flex flex-wrap items-center gap-2">
-                <BbButton Class="sm:ml-auto" Disabled="@(isSubmitting || detail.SelectedContainerCount == 0)" OnClick="StartReimportAsync">
-                    <LucideIcon Name="split" class="h-4 w-4" />
-                    @L["ReimportSelectedLinkCrypterContainersWithCount", detail.SelectedContainerCount]
+                    @(detail.ReleaseCountWithSelectedImportableContainers == 1 ? L["StartLinkCrypterImportWithOneRelease"] : L["StartLinkCrypterImportWithCount", detail.ReleaseCountWithSelectedImportableContainers])
                 </BbButton>
             </div>
         }

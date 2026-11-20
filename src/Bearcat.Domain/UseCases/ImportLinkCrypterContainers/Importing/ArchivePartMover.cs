@@ -9,10 +9,10 @@ public class ArchivePartMover(
     ILogger<ArchivePartMover> logger
 )
 {
-    public void MoveArchiveParts(IReadOnlyList<ArchivePartsMove> archivePartsMoves)
+    public void MoveArchiveParts(IReadOnlyList<ArchivePartsToMove> archivePartsToMovePerRelease)
     {
-        var targetFolderPathWithEntries = archivePartsMoves
-            .Select(archivePartsMove => archivePartsMove.TargetFolderPath)
+        var targetFolderPathWithEntries = archivePartsToMovePerRelease
+            .Select(archivePartsToMove => archivePartsToMove.TargetFolderPath)
             .FirstOrDefault(fileSystemService.DirectoryHasEntries);
 
         if (targetFolderPathWithEntries is not null)
@@ -22,16 +22,16 @@ public class ArchivePartMover(
             );
         }
 
-        foreach (var archivePartsMove in archivePartsMoves)
+        foreach (var archivePartsToMove in archivePartsToMovePerRelease)
         {
-            fileSystemService.CreateDirectory(archivePartsMove.TargetFolderPath);
+            fileSystemService.CreateDirectory(archivePartsToMove.TargetFolderPath);
 
-            foreach (var sourceFilePath in archivePartsMove.SourceFilePaths)
+            foreach (var sourceFilePath in archivePartsToMove.SourceFilePaths)
             {
                 fileSystemService.MoveFile(
                     sourceFilePath,
                     Path.Combine(
-                        archivePartsMove.TargetFolderPath,
+                        archivePartsToMove.TargetFolderPath,
                         Path.GetFileName(sourceFilePath)
                     )
                 );
@@ -39,9 +39,9 @@ public class ArchivePartMover(
 
             logger.LogInformation(
                 "Moved {FileCount} archive parts of release {ReleaseName} into folder {TargetFolderPath}",
-                archivePartsMove.SourceFilePaths.Count,
-                archivePartsMove.ReleaseName,
-                archivePartsMove.TargetFolderPath
+                archivePartsToMove.SourceFilePaths.Count,
+                archivePartsToMove.ReleaseName,
+                archivePartsToMove.TargetFolderPath
             );
         }
     }

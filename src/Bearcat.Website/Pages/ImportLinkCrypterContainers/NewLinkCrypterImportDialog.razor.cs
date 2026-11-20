@@ -28,6 +28,7 @@ public partial class NewLinkCrypterImportDialog(
     private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
     private int? linkCrypterRegistrationId;
     private int? releaseTemplateId;
+    private int? seriesReleaseTemplateId;
     private string? archiveFilesBasePath;
     private string primaryLanguageCode = string.Empty;
     private string? errorMessage;
@@ -46,6 +47,9 @@ public partial class NewLinkCrypterImportDialog(
         releaseTemplates
             .Select(template => new SelectOption<int?>(template.ReleaseTemplateId, template.Name))
             .ToList();
+
+    private IReadOnlyList<SelectOption<int?>> SeriesReleaseTemplateOptions =>
+        new[] { new SelectOption<int?>(null, L["None"]) }.Concat(ReleaseTemplateOptions).ToList();
 
     private IReadOnlyList<SelectOption<string>> LanguageOptions =>
         PrimaryLanguageSelectOptions.Create(L["Unknown"]);
@@ -118,6 +122,7 @@ public partial class NewLinkCrypterImportDialog(
                     service.StartAsync(
                         linkCrypterRegistrationId: linkCrypterRegistrationId!.Value,
                         releaseTemplateId: releaseTemplateId!.Value,
+                        seriesReleaseTemplateId: seriesReleaseTemplateId,
                         archiveFilesBasePathForReleasesWithoutLocalFiles: archiveFilesBasePath,
                         primaryLanguageCode: primaryLanguageCode
                     )

@@ -15,12 +15,12 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 ## Steps
 
 1. Open **Registrations > Crypters** > **Link crypter imports** and click **New import**.
-2. Select the crypter registration and the release template. The template defines the hosters, archive settings and link crypter settings of the new releases.
-3. Optional: select an **archive base folder for releases without local files**. Bearcat restores archives there from the imported mirrors when there is no local release folder.
+2. Choose the crypter registration and the **Default release template** for new releases. The template sets the hosters, archive settings and link crypter settings. You can also choose a **Series template** and a **Default language**. See [Template and language](#template-and-language) for details.
+3. If a release has no local folder, Bearcat can restore its archives from the imported mirrors. To choose where to save them, set the **archive base folder for releases without local files**.
 
    ![New import dialog](images/link-crypter-import-new-import-dialog.png)
 
-4. Bearcat reads all folders and their links in the background, skipping folders with URLs it already knows.
+4. Click **Read crypter folders**. Bearcat reads the folders and links in the background and skips folders whose URLs it already knows.
 
    ![Import reading the crypter folders](images/link-crypter-import-reading-folders.png)
 
@@ -34,9 +34,29 @@ It imports mirrors with valid archive links as completed uploads, then uploads t
 
 ![Review of the releases to import](images/link-crypter-import-review.png)
 
-Bearcat groups folders with the same release name into one entry. You select them together.
-The release name defaults to the folder name. If it is wrong, correct it with the edit button before importing.
-Giving two releases the same name merges them.
+Bearcat uses the folder name as the release name and groups folders with the same release name into one entry. Use **Rename release** to correct a name. If you enter a name already in the list, Bearcat groups the folders under that name and uses that entry's template and language.
+
+### Find and select releases
+
+Enter any part of a release or folder name. The search ignores case. For example, `Show.S01*-GRP` finds names that start with `Show.S01` and end with `-GRP`. Use the status filter to narrow the results.
+
+After the file check, Bearcat selects all importable folders. Use the checkbox next to a release to select or clear its folders together. **Select all matches** applies to every page of the filtered results.
+
+- **Change release template** and **Change primary language** apply to the selected releases that match the current search and status filter. To edit one release, search for its name and select just that match. You can also edit releases marked **Not importable**.
+- If you chose a series template, you can switch between the default and series templates. Bearcat then updates the preview. This can take a while for large imports.
+- **Start import** imports all selected folders marked **Importable**, including any hidden by the search or status filter.
+
+## Template and language
+
+After the file check, you can review the template and language Bearcat chose for each folder and change either before importing.
+
+If you chose a **series template**, Bearcat uses it for folders that meet any of the conditions below. All other folders use the **default release template**.
+
+- The folder contains archives from more than one release.
+- The release name matches the episode pattern in the series template's collection settings.
+- The release name contains a season number, such as `S01` in `Show.S01.German.1080p-GRP`.
+
+Bearcat reads the **primary language** from the release name. For example, `German` gives `de`. If the name has no language and the folder contains archives from several releases, Bearcat checks the first archive name. If it cannot identify a language, it uses the default language for the import.
 
 ## Which mirrors Bearcat imports
 
@@ -46,7 +66,7 @@ New releases use the template's configurations. Existing releases use their own 
 | Decision | When |
 | --- | --- |
 | **Adopted** | All files are online and use a supported archive format (`.rar`, `.r00`, `.7z`, `.7z.001`). Additional mirrors must have the same file names as the first adopted mirror. |
-| **Bearcat uploads this hoster itself** | The hoster is configured in the release, but the mirror does not meet all the conditions above. |
+| **Bearcat uploads the files** | The hoster is configured in the release, but the mirror does not meet all the conditions above. |
 | **Unsupported hoster** | Bearcat does not know the hoster of the links. |
 | **Hoster not in the release** | The release has no remaining upload configuration for this hoster. |
 
@@ -108,8 +128,8 @@ See [Link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containe
 
 ## After the import
 
-- New releases use the import's **primary language** for their release information. Existing releases keep their language.
-- Bearcat fetches release information (xREL, PreDB, NFO) after the import through the release information background task.
+- For new releases, Bearcat uses the primary language shown in the import preview when fetching release information. Existing releases keep their language.
+- After the import, a background task fetches release information (xREL, PreDB, NFO).
 - Imported releases count as posted and do not appear in the [post queue](/Bearcat/post-queue/). This also applies to collections created from a season folder.
 
 ## Archives not found during the import
@@ -138,23 +158,3 @@ Bearcat skips the archive in these cases:
 - The folder is already used by another archive.
 - The same folder was found for several selected archives.
 - The release is managed and the archive folder is inside its release folder.
-
-## Re-import a season folder
-
-Before Bearcat could detect season folders, it created one release for the whole season.
-Use **Re-import** to split these folders into episodes. The dialog shows what will change before you confirm:
-
-- Bearcat creates one release per episode in a collection, as described in [Season folders](#season-folders).
-- Bearcat splits the old release's completed uploads by archive name and assigns them to the episodes. Their links and check history are preserved.
-- Bearcat also adopts the old release's other containers for the collection, including folders from other crypters. If a container cannot be adopted, the dialog shows its URL.
-- Bearcat assigns the old release's posts to the collection.
-- Bearcat then deletes the old release. Nothing is deleted at hosters or link crypters.
-
-You cannot re-import the folder while Bearcat is processing an upload or archive of the old release.
-
-To re-import several folders at once, select them on the import page (all are selected by default) and click **Re-import selected**.
-
-![Selection of folders to re-import](images/link-crypter-import-reimport-selection.png)
-
-Bearcat re-imports them in the background and notifies you when it is done. Folders that cannot be re-imported keep their release and show the reason.
-Only the dialog of **Re-import** for a single folder shows the changes before you confirm.

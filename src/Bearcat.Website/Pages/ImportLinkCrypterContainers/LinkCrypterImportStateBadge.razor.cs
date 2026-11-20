@@ -16,8 +16,7 @@ public partial class LinkCrypterImportStateBadge : ComponentBase
             LinkCrypterImportState.Failed => BadgeVariant.Destructive,
             LinkCrypterImportState.ReadingContainers
             or LinkCrypterImportState.CheckingFiles
-            or LinkCrypterImportState.Importing
-            or LinkCrypterImportState.Reimporting => BadgeVariant.Default,
+            or LinkCrypterImportState.Importing => BadgeVariant.Default,
             LinkCrypterImportState.Completed => BadgeVariant.Secondary,
             _ => BadgeVariant.Outline,
         };

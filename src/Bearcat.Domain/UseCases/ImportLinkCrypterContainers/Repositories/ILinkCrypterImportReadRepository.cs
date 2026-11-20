@@ -19,4 +19,11 @@ public interface ILinkCrypterImportReadRepository
         LinkCrypterImportReleaseSearchQuery query,
         CancellationToken cancellationToken = default
     );
+
+    Task<
+        IReadOnlyList<LinkCrypterImportSelectableContainerReadModel>
+    > GetSelectableContainersOfFilteredReleasesAsync(
+        LinkCrypterImportReleaseFilter filter,
+        CancellationToken cancellationToken = default
+    );
 }

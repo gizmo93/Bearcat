@@ -17,16 +17,13 @@ public class CollectionContainerImportService(
     ILogger<CollectionContainerImportService> logger
 )
 {
-    public async Task<CollectionContainerImportResult> ImportAsync(
+    public async Task<List<ArchivePartsToMove>> ImportAsync(
         LinkCrypterImportContainer container,
         IReadOnlyList<LinkCrypterImportReleasePreview> releasePreviews,
-        IReadOnlyList<LinkCrypterImportUploadToMove> uploadsToMove,
-        DateTime? uploadsPostedAt,
         CancellationToken cancellationToken
     )
     {
         var localNow = timeProvider.GetLocalNow();
-        var uploadsPostedAtOrNow = uploadsPostedAt ?? localNow;
 
         var archiveStorageFolders = await repository.GetArchiveStorageFoldersAsync(
             cancellationToken
@@ -42,20 +39,11 @@ public class CollectionContainerImportService(
             );
 
             var importedRelease = await releaseImportService.ImportReleaseAsync(
-                linkCrypterImport: container.LinkCrypterImport,
+                container: container,
                 releasePreview: releasePreview,
                 existingRelease: existingRelease,
-                uploadsToMove: uploadsToMove
-                    .Where(uploadToMove =>
-                        string.Equals(
-                            uploadToMove.ReleaseName,
-                            releasePreview.ReleaseName,
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
-                    .ToList(),
                 archiveStorageFolders: archiveStorageFolders,
-                uploadsPostedAt: uploadsPostedAtOrNow,
+                uploadsPostedAt: localNow,
                 localNow: localNow,
                 cancellationToken: cancellationToken
             );
@@ -95,7 +83,7 @@ public class CollectionContainerImportService(
             cancellationToken: cancellationToken
         );
 
-        releaseCollection.UploadsPostedAt ??= uploadsPostedAtOrNow;
+        releaseCollection.UploadsPostedAt ??= localNow;
         container.ImportedReleaseCollection = releaseCollection;
         container.Status = LinkCrypterImportContainerStatus.Imported;
         container.ErrorMessages = [];
@@ -107,18 +95,13 @@ public class CollectionContainerImportService(
             releaseCollection.Name
         );
 
-        return new CollectionContainerImportResult(
-            ReleaseCollection: releaseCollection,
-            CollectionUploadSlot: slot,
-            ImportedReleases: importedReleases,
-            ArchivePartsMoves: importedReleases
-                .Select(importedRelease => importedRelease.ArchivePartsMove)
-                .OfType<ArchivePartsMove>()
-                .ToList()
-        );
+        return importedReleases
+            .Select(importedRelease => importedRelease.ArchivePartsToMove)
+            .OfType<ArchivePartsToMove>()
+            .ToList();
     }
 
-    public static void AddReleaseCollectionLinkCryptersToSlot(
+    private static void AddReleaseCollectionLinkCryptersToSlot(
         CollectionUploadSlot slot,
         int linkCrypterRegistrationId,
         CollectionUploadSlotLinkCrypterSettings? settings

@@ -15,12 +15,12 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 ## Ablauf
 
 1. Öffne **Registrierungen > Crypter** > **Linkcrypterimporte** und klicke auf **Neuer Import**.
-2. Wähle die Crypterregistrierung und das Releasetemplate. Das Template legt Hoster, Archiveinstellungen und Linkcryptereinstellungen der neuen Releases fest.
-3. Optional: Wähle einen **Archivbasisordner für Releases ohne lokale Dateien**. Dort stellt Bearcat die Archive aus den importierten Mirrors wieder her, wenn kein lokaler Releaseordner vorhanden ist.
+2. Wähle die Crypterregistrierung und das **Standardtemplate** für neue Releases. Das Template legt die Hoster und die Einstellungen für Archive und Linkcrypter fest. Bei Bedarf kannst du ein eigenes **Serientemplate** und eine **Standardsprache** wählen. Wie Bearcat beides auswählt, steht unter [Template und Sprache](#template-und-sprache).
+3. Fehlt der lokale Releaseordner, kann Bearcat die Archive aus den importierten Mirrors wiederherstellen. Wähle dafür einen **Archivbasisordner für Releases ohne lokale Dateien**.
 
    ![Dialog für einen neuen Import](../images/link-crypter-import-new-import-dialog.png)
 
-4. Bearcat liest alle Ordner und ihre Links im Hintergrund. Ordner mit bereits bekannter URL überspringt es.
+4. Klicke auf **Crypterordner lesen**. Bearcat liest die Ordner und Links im Hintergrund und überspringt Ordner, deren URL es schon kennt.
 
    ![Import liest die Crypterordner](../images/link-crypter-import-reading-folders.png)
 
@@ -34,9 +34,29 @@ Mirrors mit gültigen Archivlinks übernimmt Bearcat als abgeschlossene Uploads.
 
 ![Prüfung der zu importierenden Releases](../images/link-crypter-import-review.png)
 
-Bearcat fasst Ordner mit demselben Releasenamen zu einem Eintrag zusammen. Du wählst sie gemeinsam aus.
-Als Releasename dient der Ordnername. Stimmt er nicht, korrigiere ihn vor dem Import mit dem Button zum Bearbeiten.
-Gibst du zwei Releases denselben Namen, führt Bearcat sie zusammen.
+Bearcat verwendet den Ordnernamen als Releasenamen. Ordner mit demselben Releasenamen erscheinen als ein Eintrag. Über **Release umbenennen** kannst du den Namen korrigieren. Gibst du einem Release den Namen eines anderen, führt Bearcat beide zusammen. Template und Sprache übernimmt es vom Release, das den Namen schon hatte.
+
+### Releases suchen und auswählen
+
+Gib einen Teil des Release- oder Ordnernamens ein. Gross- und Kleinschreibung spielen keine Rolle. Mit `Show.S01*-GRP` findest du Namen, die mit `Show.S01` beginnen und mit `-GRP` enden. Über den Statusfilter kannst du die Treffer weiter eingrenzen.
+
+Nach der Dateiprüfung sind alle importierbaren Ordner markiert. Mit dem Häkchen neben einem Release wählst du seine Ordner gemeinsam aus oder ab. Mit **Alle Treffer auswählen** markierst du auch die Treffer auf den weiteren Seiten.
+
+- **Releasetemplate ändern** und **Primärsprache ändern** gelten für die markierten Releases in der gefilterten Liste. Willst du nur ein Release ändern, suche nach seinem Namen und markiere nur diesen Treffer. Auch Releases mit dem Status **Nicht importierbar** kannst du so bearbeiten.
+- Hast du ein Serientemplate gewählt, kannst du zwischen Standard- und Serientemplate wechseln. Bearcat berechnet die Vorschau danach neu. Bei vielen Releases kann das etwas dauern.
+- Mit **Import starten** übernimmt Bearcat alle markierten Ordner mit dem Status **Importierbar**, auch wenn die Suche oder der Statusfilter sie gerade ausblendet.
+
+## Template und Sprache
+
+Nach der Dateiprüfung siehst du für jeden Ordner, welches Template und welche Sprache Bearcat gewählt hat. Beides kannst du vor dem Import ändern.
+
+Das **Standardtemplate** gilt für alle Ordner. Hast du ein **Serientemplate** gewählt, verwendet Bearcat es in folgenden Fällen:
+
+- Der Ordner enthält Archive verschiedener Releases.
+- Der Releasename passt zum Folgenmuster der Collectionerkennung im Serientemplate.
+- Der Releasename enthält eine Staffelnummer, etwa `S01` in `Show.S01.German.1080p-GRP`.
+
+Die **Primärsprache** erkennt Bearcat am Releasenamen. Aus `German` wird zum Beispiel `de`. Fehlt die Sprache im Namen und enthält der Ordner Archive mehrerer Releases, prüft Bearcat den Namen des ersten Archivs. Erkennt Bearcat keine Sprache, gilt die Standardsprache des Imports.
 
 ## Welche Mirrors Bearcat übernimmt
 
@@ -46,7 +66,7 @@ Bei neuen Releases stammen die Konfigurationen aus dem Template. Bei bestehenden
 | Entscheidung | Wann |
 | --- | --- |
 | **Wird übernommen** | Alle Dateien sind online und haben ein unterstütztes Archivformat (`.rar`, `.r00`, `.7z`, `.7z.001`). Weitere Mirrors müssen dieselben Dateinamen wie der erste übernommene Mirror haben. |
-| **Bearcat lädt diesen Hoster selbst hoch** | Der Hoster ist im Release konfiguriert, aber der Mirror erfüllt nicht alle Bedingungen oben. |
+| **Bearcat lädt die Dateien hoch** | Der Hoster ist im Release konfiguriert, aber der Mirror erfüllt nicht alle Bedingungen oben. |
 | **Nicht unterstützter Hoster** | Bearcat kennt den Hoster der Links nicht. |
 | **Hoster nicht im Release** | Das Release hat keine weitere Uploadkonfiguration für diesen Hoster. |
 
@@ -110,8 +130,8 @@ Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontaine
 
 ## Nach dem Import
 
-- Neue Releases übernehmen die **Primärsprache** des Imports für ihre Releaseinformationen. Bestehende Releases behalten ihre Sprache.
-- Releaseinformationen (xREL, PreDB, NFO) ruft Bearcat nach dem Import über die Hintergrundaufgabe für Releaseinformationen ab.
+- Für die Releaseinformationen neuer Releases gilt die Primärsprache aus der Importvorschau. Bestehende Releases behalten ihre Sprache.
+- Nach dem Import ruft eine Hintergrundaufgabe die Releaseinformationen ab (xREL, PreDB, NFO).
 - Importierte Releases gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/). Das gilt auch für Collections aus einem Staffelordner.
 
 ## Archive beim Import nicht gefunden
@@ -140,23 +160,3 @@ Bearcat überspringt das Archiv in diesen Fällen:
 - Der Ordner wird bereits von einem anderen Archiv verwendet.
 - Derselbe Ordner wurde für mehrere ausgewählte Archive gefunden.
 - Das Release ist vom Typ Managed und der Archivordner liegt in seinem Releaseordner.
-
-## Staffelordner neu importieren
-
-Bevor Bearcat Staffelordner erkennen konnte, hat es für die ganze Staffel ein einziges Release angelegt.
-Solche Ordner kannst du mit **Neu importieren** aufteilen. Im Dialog siehst du vor dem Bestätigen, was sich ändert:
-
-- Bearcat legt pro Folge ein Release in einer Collection an, wie unter [Staffelordner](#staffelordner) beschrieben.
-- Abgeschlossene Uploads des alten Releases teilt Bearcat nach Archivnamen auf die Folgen auf. Links und Prüfhistorie bleiben erhalten.
-- Bearcat übernimmt auch weitere Container des alten Releases für die Collection, darunter Ordner von anderen Cryptern. Lässt sich ein Container nicht übernehmen, zeigt der Dialog seine URL.
-- Bearcat ordnet die Posts des alten Releases der Collection zu.
-- Danach löscht Bearcat das alte Release. Bei Hostern und Linkcryptern wird nichts gelöscht.
-
-Solange Bearcat einen Upload oder ein Archiv des alten Releases verarbeitet, kannst du den Ordner nicht neu importieren.
-
-Mehrere Ordner importierst du auf einmal neu, indem du sie auf der Importseite auswählst (standardmässig sind alle ausgewählt) und auf **Ausgewählte neu importieren** klickst.
-
-![Auswahl der neu zu importierenden Ordner](../images/link-crypter-import-reimport-selection.png)
-
-Bearcat importiert sie im Hintergrund neu und benachrichtigt dich, wenn es fertig ist. Ordner, die sich nicht neu importieren lassen, behalten ihr Release und zeigen den Grund an.
-Nur der Dialog von **Neu importieren** für einen einzelnen Ordner zeigt die Änderungen vor dem Bestätigen.

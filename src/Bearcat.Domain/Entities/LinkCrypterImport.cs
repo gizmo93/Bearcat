@@ -14,6 +14,10 @@ public class LinkCrypterImport
 
     public ReleaseTemplate ReleaseTemplate { get; set; } = null!;
 
+    public int? SeriesReleaseTemplateId { get; set; }
+
+    public ReleaseTemplate? SeriesReleaseTemplate { get; set; }
+
     public string? ArchiveFilesBasePathForReleasesWithoutLocalFiles { get; set; }
 
     public string? PrimaryLanguageCode { get; set; }
@@ -33,6 +37,15 @@ public class LinkCrypterImport
     public List<LinkCrypterImportHosterRegistration> HosterRegistrations { get; set; } = [];
 
     public List<LinkCrypterImportContainer> Containers { get; set; } = [];
+
+    public List<int> GetReleaseTemplateIds()
+    {
+        return
+            SeriesReleaseTemplateId is { } seriesReleaseTemplateId
+            && seriesReleaseTemplateId != ReleaseTemplateId
+            ? [ReleaseTemplateId, seriesReleaseTemplateId]
+            : [ReleaseTemplateId];
+    }
 
     public void StartProgress(int containerCountToProcess)
     {

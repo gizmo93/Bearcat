@@ -17,7 +17,6 @@ using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Importing;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reading;
-using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -211,7 +210,8 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
     protected async Task<int> StartImportAsync(
         TemplateSeed seed,
         int? linkCrypterRegistrationId = null,
-        string? primaryLanguageCode = null
+        string? primaryLanguageCode = null,
+        int? seriesReleaseTemplateId = null
     )
     {
         return await CreateLinkCrypterImportService(CreateDbContext())
@@ -219,6 +219,7 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
                 linkCrypterRegistrationId: linkCrypterRegistrationId
                     ?? seed.LinkCrypterRegistrationId,
                 releaseTemplateId: seed.ReleaseTemplateId,
+                seriesReleaseTemplateId: seriesReleaseTemplateId,
                 archiveFilesBasePathForReleasesWithoutLocalFiles: archiveFilesBasePath,
                 primaryLanguageCode: primaryLanguageCode
             );
@@ -293,47 +294,12 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
                 timeProvider,
                 NullLogger<LinkCrypterImportContainerImportService>.Instance
             ),
-            CreateReimportService(dbContext, timeProvider),
             notificationService,
             timeProvider,
             NullLogger<LinkCrypterImportProcessingService>.Instance
         );
 
         await service.ProcessAsync(CancellationToken.None);
-    }
-
-    protected LinkCrypterImportContainerReimportService CreateReimportService(
-        BearcatDbContext dbContext,
-        ControllableTimeProvider timeProvider
-    )
-    {
-        var repository = new LinkCrypterImportRepository(dbContext);
-        var releaseCollectionAssigner = CreateReleaseCollectionAssigner(dbContext, timeProvider);
-
-        return new LinkCrypterImportContainerReimportService(
-            repository,
-            new ReleaseWriteRepository(dbContext),
-            CreatePreviewService(dbContext, timeProvider),
-            new CollectionContainerImportService(
-                repository,
-                CreateReleaseImportService(
-                    dbContext: dbContext,
-                    timeProvider: timeProvider,
-                    releaseCollectionAssigner: releaseCollectionAssigner
-                ),
-                timeProvider,
-                NullLogger<CollectionContainerImportService>.Instance
-            ),
-            CreateArchivePartMover(),
-            releaseCollectionAssigner,
-            new NotificationService(
-                new NotificationRepository(dbContext),
-                timeProvider,
-                CreateNotificationConfigurationProvider()
-            ),
-            timeProvider,
-            NullLogger<LinkCrypterImportContainerReimportService>.Instance
-        );
     }
 
     protected static ReleaseCollectionAssignmentService CreateReleaseCollectionAssigner(
@@ -888,6 +854,36 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
             FirstHosterRegistrationId: firstHosterRegistration.Id,
             SecondHosterRegistrationId: secondHosterRegistration.Id
         );
+    }
+
+    protected async Task<int> AddSeriesReleaseTemplateWithFirstHosterAsync(TemplateSeed seed)
+    {
+        var archiveConfigTemplate = UnmanagedArchiveConfigTemplates.Create();
+        var releaseTemplate = new ReleaseTemplate
+        {
+            Name = "Series template",
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseContentType = ReleaseContentType.TvShowEpisode,
+            ReleaseGroupId = seed.ReleaseGroupId,
+            ReleaseCollectionDetectionMode = ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ArchiveConfigTemplates = [archiveConfigTemplate],
+        };
+        releaseTemplate.UploadConfigTemplates =
+        [
+            new UploadConfigTemplate
+            {
+                ReleaseTemplate = releaseTemplate,
+                UploadSource = UploadSource.ArchiveFiles,
+                ArchiveConfigTemplate = archiveConfigTemplate,
+                HosterRegistrationId = seed.FirstHosterRegistrationId,
+            },
+        ];
+
+        var dbContext = CreateDbContext();
+        dbContext.ReleaseTemplates.Add(releaseTemplate);
+        await dbContext.SaveChangesAsync();
+
+        return releaseTemplate.Id;
     }
 
     protected async Task AddThirdHosterUploadConfigTemplateAsync(TemplateSeed seed)

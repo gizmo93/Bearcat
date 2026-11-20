@@ -9,5 +9,4 @@ public enum LinkCrypterImportState
     Importing = 5,
     Completed = 6,
     Failed = 7,
-    Reimporting = 8,
 }
