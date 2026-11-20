@@ -98,13 +98,9 @@ public class LinkCrypterImportContainerReimportService(
         linkCrypterImport.StartProgress(containerIds.Count);
         await repository.SaveChangesAsync(cancellationToken);
 
-        var localFileSearchResult = await previewService.SearchLocalFilesAsync(
+        var previewRun = await previewService.CreatePreviewRunAsync(
             linkCrypterImport,
             cancellationToken
-        );
-
-        var releaseNamesByChosenArchiveFolderPath = new Dictionary<string, string>(
-            StringComparer.Ordinal
         );
 
         var reimportedContainerCount = 0;
@@ -116,8 +112,7 @@ public class LinkCrypterImportContainerReimportService(
 
             var containerReimport = await ReimportContainerOrSaveErrorAsync(
                 linkCrypterImportContainerId: containerId,
-                localFileSearchResult: localFileSearchResult,
-                releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                previewRun: previewRun,
                 cancellationToken: cancellationToken
             );
 
@@ -141,8 +136,7 @@ public class LinkCrypterImportContainerReimportService(
 
     private async Task<ContainerReimport> ReimportContainerOrSaveErrorAsync(
         int linkCrypterImportContainerId,
-        LinkCrypterImportLocalFileSearchResult localFileSearchResult,
-        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        LinkCrypterImportPreviewRun previewRun,
         CancellationToken cancellationToken
     )
     {
@@ -161,8 +155,7 @@ public class LinkCrypterImportContainerReimportService(
 
             var (plan, archivePartsMoves) = await ApplyReimportWithoutSavingAsync(
                 container: container,
-                localFileSearchResult: localFileSearchResult,
-                releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
+                previewRun: previewRun,
                 cancellationToken: cancellationToken
             );
 
@@ -267,25 +260,21 @@ public class LinkCrypterImportContainerReimportService(
             cancellationToken
         );
 
-        var localFileSearchResult = await previewService.SearchLocalFilesAsync(
+        var previewRun = await previewService.CreatePreviewRunAsync(
             container.LinkCrypterImport,
             cancellationToken
         );
 
         return await ApplyReimportWithoutSavingAsync(
             container: container,
-            localFileSearchResult: localFileSearchResult,
-            releaseNamesByChosenArchiveFolderPath: new Dictionary<string, string>(
-                StringComparer.Ordinal
-            ),
+            previewRun: previewRun,
             cancellationToken: cancellationToken
         );
     }
 
     private async Task<AppliedReimport> ApplyReimportWithoutSavingAsync(
         LinkCrypterImportContainer container,
-        LinkCrypterImportLocalFileSearchResult localFileSearchResult,
-        Dictionary<string, string> releaseNamesByChosenArchiveFolderPath,
+        LinkCrypterImportPreviewRun previewRun,
         CancellationToken cancellationToken
     )
     {
@@ -302,10 +291,9 @@ public class LinkCrypterImportContainerReimportService(
         );
 
         var previewResult = await previewService.CreatePreviewOfContainerAsync(
+            run: previewRun,
             container: container,
             folderPathsOfReplacedRelease: GetFolderPathsOfArchivesThatAreNotDeleted(release),
-            localFileSearchResult: localFileSearchResult,
-            releaseNamesByChosenArchiveFolderPath: releaseNamesByChosenArchiveFolderPath,
             cancellationToken: cancellationToken
         );
 

@@ -251,17 +251,6 @@ public class LinkCrypterImportService(
 
         EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
 
-        if (
-            GetImportableContainers(linkCrypterImport)
-                .Any(container =>
-                    LinkCrypterImportContainerPreview.FromJson(container.PreviewJson).Releases
-                        is null
-                )
-        )
-        {
-            await previewService.CreatePreviewsAsync(linkCrypterImport, cancellationToken);
-        }
-
         linkCrypterImport.ChangeState(LinkCrypterImportState.Importing, timeProvider.GetLocalNow());
 
         linkCrypterImport.StartProgress(
