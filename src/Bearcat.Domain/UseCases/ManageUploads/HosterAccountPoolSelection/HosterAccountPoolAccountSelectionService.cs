@@ -180,7 +180,7 @@ public class HosterAccountPoolAccountSelectionService(
         var hoster = (IHosterWithStorageQuota)hosterFactory.GetByName(registration.HosterClassName);
         var hosterConfig = hoster.DeserializeHosterConfig(serializedHosterConfig);
 
-        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+        using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
         return await hoster.GetStorageQuotaAsync(hosterConfig, cancellationToken);
     }

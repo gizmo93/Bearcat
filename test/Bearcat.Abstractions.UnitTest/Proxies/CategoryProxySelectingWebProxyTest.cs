@@ -72,7 +72,13 @@ public class CategoryProxySelectingWebProxyTest
 
         // Act
         Uri? proxyUri;
-        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.UseCategoryDefault,
+                proxyServerId: null
+            )
+        )
         {
             proxyUri = webProxy.GetProxy(Destination);
         }
@@ -93,7 +99,13 @@ public class CategoryProxySelectingWebProxyTest
             ProxyCategory.HosterMirrorDownloads,
             "socks5://download-proxy.test:1080"
         );
-        ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads).Dispose();
+        ProxyCategoryScope
+            .Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.UseCategoryDefault,
+                proxyServerId: null
+            )
+            .Dispose();
 
         // Act
         var proxyUri = webProxy.GetProxy(Destination);
@@ -115,9 +127,21 @@ public class CategoryProxySelectingWebProxyTest
 
         // Act
         Uri? proxyUri;
-        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.UseCategoryDefault,
+                proxyServerId: null
+            )
+        )
         {
-            ProxyCategoryScope.Enter(ProxyCategory.ImageHosters).Dispose();
+            ProxyCategoryScope
+                .Enter(
+                    ProxyCategory.ImageHosters,
+                    ProxySelection.UseCategoryDefault,
+                    proxyServerId: null
+                )
+                .Dispose();
             proxyUri = webProxy.GetProxy(Destination);
         }
 
@@ -136,7 +160,13 @@ public class CategoryProxySelectingWebProxyTest
 
         // Act
         Uri?[] proxyUris;
-        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.UseCategoryDefault,
+                proxyServerId: null
+            )
+        )
         {
             proxyUris = await Task.WhenAll(
                 Enumerable.Range(0, 3).Select(_ => Task.Run(() => webProxy.GetProxy(Destination)))

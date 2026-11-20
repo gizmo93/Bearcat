@@ -261,7 +261,7 @@ public class ArchiveFileDownloader(
     {
         try
         {
-            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+            using var proxyScope = RegistrationProxyScope.EnterForHosterMirrorDownload(
                 resolved.Registration
             );
 

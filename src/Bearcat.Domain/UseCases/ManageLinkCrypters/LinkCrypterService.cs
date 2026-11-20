@@ -126,7 +126,7 @@ public class LinkCrypterService(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
-        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(registration);
+        using var proxyScope = RegistrationProxyScope.EnterForLinkCrypter(registration);
 
         return await crypter.TryLoginAsync(config, cancellationToken);
     }

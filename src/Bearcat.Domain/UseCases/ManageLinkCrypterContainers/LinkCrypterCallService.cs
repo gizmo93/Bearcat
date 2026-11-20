@@ -21,7 +21,7 @@ public class LinkCrypterCallService(
         var crypter = GetCrypter(linkCrypterConfig);
         var config = GetCrypterConfig(crypter, linkCrypterConfig);
 
-        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
+        using var proxyScope = RegistrationProxyScope.EnterForLinkCrypter(
             linkCrypterConfig.LinkCrypterRegistration
         );
 
@@ -47,7 +47,7 @@ public class LinkCrypterCallService(
         var crypter = GetCrypter(linkCrypterConfig);
         var config = GetCrypterConfig(crypter, linkCrypterConfig);
 
-        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
+        using var proxyScope = RegistrationProxyScope.EnterForLinkCrypter(
             linkCrypterConfig.LinkCrypterRegistration
         );
 

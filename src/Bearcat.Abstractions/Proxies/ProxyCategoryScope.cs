@@ -6,11 +6,6 @@ public static class ProxyCategoryScope
 
     public static ProxyCategoryScopeState? Current => CurrentState.Value;
 
-    public static IDisposable Enter(ProxyCategory category)
-    {
-        return Enter(category, ProxySelection.UseCategoryDefault, proxyServerId: null);
-    }
-
     public static IDisposable Enter(
         ProxyCategory category,
         ProxySelection proxySelection,

@@ -275,7 +275,7 @@ public class UploadPreparationService(
     {
         var hosterRegistration = upload.HosterRegistration!;
 
-        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(hosterRegistration);
+        using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(hosterRegistration);
 
         var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
         var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);

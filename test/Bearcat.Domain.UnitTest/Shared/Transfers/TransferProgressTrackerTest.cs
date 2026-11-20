@@ -438,7 +438,13 @@ public class TransferProgressTrackerTest
         );
 
         // Act
-        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.UseCategoryDefault,
+                proxyServerId: null
+            )
+        )
         {
             tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", 1000);
             tracker.BeginFile(Identifier, 2, "archive.part02.rar", "Rapidgator", 1000);

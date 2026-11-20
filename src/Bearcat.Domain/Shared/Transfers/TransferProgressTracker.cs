@@ -91,16 +91,7 @@ public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache
 
     private string? GetProxyServerNameOfCurrentScope()
     {
-        var scopeState = ProxyCategoryScope.Current;
-
-        if (scopeState is null)
-        {
-            return null;
-        }
-
-        return ProxyServerSelection
-            .Select(scopeState.Category, scopeState, proxyRoutingCache)
-            ?.Name;
+        return ProxyServerResolver.ResolveForCurrentScope(proxyRoutingCache)?.Name;
     }
 
     private sealed class TransferState

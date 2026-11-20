@@ -222,7 +222,7 @@ public class HosterRegistrationService(
 
         try
         {
-            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+            using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
             var result = await hoster.TryLoginAsync(config, cancellationToken);
 
@@ -268,7 +268,7 @@ public class HosterRegistrationService(
 
         try
         {
-            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+            using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
             var storageQuota = await storageQuotaHoster.GetStorageQuotaAsync(
                 config,
@@ -303,7 +303,7 @@ public class HosterRegistrationService(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
-        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+        using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
         return await captchaHoster.RequestCaptchaChallengeAsync(config, cancellationToken);
     }
@@ -322,7 +322,7 @@ public class HosterRegistrationService(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
-        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+        using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
         var result = await captchaHoster.VerifyCaptchaAsync(
             config,

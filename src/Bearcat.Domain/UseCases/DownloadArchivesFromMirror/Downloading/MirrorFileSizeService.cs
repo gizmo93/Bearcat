@@ -13,7 +13,7 @@ public class MirrorFileSizeService(ILogger<MirrorFileSizeService> logger)
     {
         try
         {
-            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+            using var proxyScope = RegistrationProxyScope.EnterForHosterMirrorDownload(
                 resolvedMirrorHoster.Registration
             );
 

@@ -83,7 +83,7 @@ public class UploadConcurrencyService(
             var hoster = hostersByName[hosterName];
             var hosterConfig = hoster.DeserializeHosterConfig(concurrencyInfo.SerializedConfig);
 
-            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
+            using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(
                 concurrencyInfo.UploadProxySelection,
                 concurrencyInfo.UploadProxyServerId
             );
