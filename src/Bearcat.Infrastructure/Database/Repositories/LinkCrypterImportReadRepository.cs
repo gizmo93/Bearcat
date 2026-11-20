@@ -138,20 +138,15 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
         );
         var matchingContainers = GetMatchingContainers(query.Filter);
 
-        var releasesQuery = matchingContainers
-            .GroupBy(container => container.ReleaseName.ToLower())
-            .Select(group => new
-            {
-                LowerReleaseName = group.Key,
-                LowestContainerId = group.Min(container => container.Id),
-            });
+        var lowerReleaseNamesQuery = matchingContainers
+            .Select(container => container.ReleaseName.ToLower())
+            .Distinct();
 
-        var totalCount = await releasesQuery.CountAsync(cancellationToken);
-        var lowerReleaseNamesOfPage = await releasesQuery
-            .OrderBy(release => release.LowestContainerId)
+        var totalCount = await lowerReleaseNamesQuery.CountAsync(cancellationToken);
+        var lowerReleaseNamesOfPage = await lowerReleaseNamesQuery
+            .OrderBy(lowerReleaseName => lowerReleaseName)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
-            .Select(release => release.LowerReleaseName)
             .ToListAsync(cancellationToken);
 
         var containers = await containersOfImport

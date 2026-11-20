@@ -23,7 +23,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
     );
 
     [Test]
-    public async Task SearchReleasesAsync_StatusFilterAndPaging_ReturnsReleasesWithAllTheirContainersByLowestContainerId()
+    public async Task SearchReleasesAsync_StatusFilterAndPaging_ReturnsReleasesWithAllTheirContainersOrderedByReleaseName()
     {
         // Arrange
         await using var dbContext = CreateDbContext();
@@ -45,10 +45,10 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
             "Release.C",
             LinkCrypterImportContainerStatus.AlreadyInBearcat
         );
-        AddContainer(linkCrypterImport, "Release.D", LinkCrypterImportContainerStatus.Importable);
+        AddContainer(linkCrypterImport, "Release.G", LinkCrypterImportContainerStatus.Importable);
         AddContainer(linkCrypterImport, "Release.E", LinkCrypterImportContainerStatus.Importable);
         AddContainer(linkCrypterImport, "Release.F", LinkCrypterImportContainerStatus.Importable);
-        AddContainer(linkCrypterImport, "Release.G", LinkCrypterImportContainerStatus.Importable);
+        AddContainer(linkCrypterImport, "Release.D", LinkCrypterImportContainerStatus.Importable);
         AddContainer(
             linkCrypterImport,
             "Release.B",
@@ -106,7 +106,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
     [TestCase("movie*", new string[0])]
     [TestCase("100%", new[] { "Other.Show.S01-GRP" })]
     [TestCase("report_", new[] { "Report_2026-GRP" })]
-    [TestCase("pack", new[] { "Other.Show.S01-GRP", "Folder 1000 Pack" })]
+    [TestCase("pack", new[] { "Folder 1000 Pack", "Other.Show.S01-GRP" })]
     public async Task SearchReleasesAsync_SearchText_MatchesReleaseOrContainerNameWithStarAsOnlyWildcard(
         string searchText,
         string[] expectedReleaseNames
