@@ -255,7 +255,6 @@ public class ReleaseFolderVerificationAndExtractionServiceTest
                 archiverFactory.Object,
                 fileSystemService.Object,
                 progressTracker,
-                new FolderSizeProgressReporter(),
                 NullLogger<FolderArchiveExtractionService>.Instance
             ),
             fileSystemService.Object,

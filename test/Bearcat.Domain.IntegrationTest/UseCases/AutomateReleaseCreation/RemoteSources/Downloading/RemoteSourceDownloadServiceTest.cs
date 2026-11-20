@@ -754,7 +754,6 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
                 Mock.Of<IArchiverFactory>(),
                 new FileSystemService(),
                 progressTracker,
-                new FolderSizeProgressReporter(),
                 NullLogger<FolderArchiveExtractionService>.Instance
             ),
             CreateNotificationService(dbContext),

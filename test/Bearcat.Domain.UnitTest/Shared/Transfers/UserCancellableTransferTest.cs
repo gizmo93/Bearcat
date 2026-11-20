@@ -11,9 +11,10 @@ public class UserCancellableTransferTest
         // Arrange
         var registry = new TransferCancellationRegistry();
         var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, 3);
-        using var userCancellableTransfer = registry.RegisterUserCancellableTransfer(
-            transferIdentifier,
-            CancellationToken.None
+        using var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: registry,
+            transferIdentifier: transferIdentifier,
+            cancellationToken: CancellationToken.None
         );
 
         // Act
@@ -30,9 +31,10 @@ public class UserCancellableTransferTest
         // Arrange
         var registry = new TransferCancellationRegistry();
         using var callerTokenSource = new CancellationTokenSource();
-        using var userCancellableTransfer = registry.RegisterUserCancellableTransfer(
-            new TransferIdentifier(TransferType.MirrorDownload, 3),
-            callerTokenSource.Token
+        using var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: registry,
+            transferIdentifier: new TransferIdentifier(TransferType.MirrorDownload, 3),
+            cancellationToken: callerTokenSource.Token
         );
 
         // Act
@@ -49,9 +51,10 @@ public class UserCancellableTransferTest
         // Arrange
         var registry = new TransferCancellationRegistry();
         var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, 3);
-        var userCancellableTransfer = registry.RegisterUserCancellableTransfer(
-            transferIdentifier,
-            CancellationToken.None
+        var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: registry,
+            transferIdentifier: transferIdentifier,
+            cancellationToken: CancellationToken.None
         );
 
         // Act

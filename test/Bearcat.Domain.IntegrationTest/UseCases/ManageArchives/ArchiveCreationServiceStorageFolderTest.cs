@@ -182,8 +182,7 @@ public class ArchiveCreationServiceStorageFolderTest(DatabaseProvider databasePr
                 Mock.Of<ILogger<ReleaseFolderPackingService>>(),
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
-                progressTracker,
-                new FolderSizeProgressReporter()
+                progressTracker
             ),
             archiveFileHashService,
             localArchiveSizeLimitService

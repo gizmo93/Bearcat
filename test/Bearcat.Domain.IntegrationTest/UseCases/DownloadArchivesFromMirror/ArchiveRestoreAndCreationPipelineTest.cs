@@ -228,8 +228,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                 NullLogger<ReleaseFolderPackingService>.Instance,
                 fileSystemService,
                 releaseFolderEntriesForPackingService,
-                progressTracker,
-                new FolderSizeProgressReporter()
+                progressTracker
             ),
             archiveFileHashService,
             localArchiveSizeLimitService

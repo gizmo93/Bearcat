@@ -434,9 +434,10 @@ public class ArchiveRestoreService(
         );
 
         var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, archive.Id);
-        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
-            transferIdentifier,
-            cancellationToken
+        using var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: cancellationRegistry,
+            transferIdentifier: transferIdentifier,
+            cancellationToken: cancellationToken
         );
 
         IReadOnlyList<FileDownloadResult> results;
@@ -607,9 +608,10 @@ public class ArchiveRestoreService(
             archive.Id
         );
 
-        using var userCancellableTransfer = cancellationRegistry.RegisterUserCancellableTransfer(
-            transferIdentifier,
-            cancellationToken
+        using var userCancellableTransfer = new UserCancellableTransfer(
+            cancellationRegistry: cancellationRegistry,
+            transferIdentifier: transferIdentifier,
+            cancellationToken: cancellationToken
         );
 
         IReadOnlyList<CopiedArchiveFile> copiedFiles;

@@ -13,8 +13,7 @@ public class ReleaseFolderPackingService(
     ILogger<ReleaseFolderPackingService> logger,
     IFileSystemService fileSystemService,
     ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService,
-    ITransferProgressTracker progressTracker,
-    FolderSizeProgressReporter folderSizeProgressReporter
+    ITransferProgressTracker progressTracker
 )
 {
     private const string SynologyMetadataFolderName = "@eaDir";
@@ -149,7 +148,7 @@ public class ReleaseFolderPackingService(
 
         try
         {
-            return await folderSizeProgressReporter.RunWhileReportingFolderSizeAsync(
+            return await FolderSizeProgressReporter.RunWhileReportingFolderSizeAsync(
                 folderPath: archive.ArchiveFolderPath,
                 progress: new TransferProgressReporter(
                     tracker: progressTracker,
