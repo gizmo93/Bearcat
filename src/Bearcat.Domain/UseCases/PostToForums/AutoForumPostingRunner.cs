@@ -35,44 +35,42 @@ public class AutoForumPostingRunner(
 
     public async Task<AutoPostRunResult> RunAsync(CancellationToken cancellationToken = default)
     {
-        var lastAttemptTimestampsByRegistrationId = new Dictionary<int, long>();
+        var progress = new RunProgress();
 
         var releaseIds = await repository.GetQueuedReleaseIdsAsync(cancellationToken);
-        var releaseResult = await ProcessQueueAsync(
+
+        await ProcessQueueAsync(
             entityType: ForumPostTemplateType.Release,
             entityIds: releaseIds,
-            lastAttemptTimestampsByRegistrationId: lastAttemptTimestampsByRegistrationId,
+            progress: progress,
             cancellationToken: cancellationToken
         );
 
         var releaseCollectionIds = await repository.GetQueuedReleaseCollectionIdsAsync(
             cancellationToken
         );
-        var releaseCollectionResult = await ProcessQueueAsync(
+
+        await ProcessQueueAsync(
             entityType: ForumPostTemplateType.ReleaseCollection,
             entityIds: releaseCollectionIds,
-            lastAttemptTimestampsByRegistrationId: lastAttemptTimestampsByRegistrationId,
+            progress: progress,
             cancellationToken: cancellationToken
         );
 
         return new AutoPostRunResult(
-            PostedCount: releaseResult.PostedCount + releaseCollectionResult.PostedCount,
-            UpdatedCount: releaseResult.UpdatedCount + releaseCollectionResult.UpdatedCount,
-            Failures: releaseResult.Failures.Concat(releaseCollectionResult.Failures).ToList()
+            PostedCount: progress.PostedCount,
+            UpdatedCount: progress.UpdatedCount,
+            Failures: progress.Failures
         );
     }
 
-    private async Task<AutoPostRunResult> ProcessQueueAsync(
+    private async Task ProcessQueueAsync(
         ForumPostTemplateType entityType,
         IReadOnlyList<int> entityIds,
-        Dictionary<int, long> lastAttemptTimestampsByRegistrationId,
+        RunProgress progress,
         CancellationToken cancellationToken
     )
     {
-        var postedCount = 0;
-        var updatedCount = 0;
-        var failures = new List<AutoPostRunFailure>();
-
         foreach (var entityIdBatch in entityIds.Chunk(EntityBatchSize))
         {
             var plans = await planService.GetPlansAsync(
@@ -83,134 +81,112 @@ public class AutoForumPostingRunner(
 
             foreach (var plan in plans.Where(plan => !plan.IsBlocked))
             {
-                var planResult = await ProcessPlanAsync(
-                    plan: plan,
-                    lastAttemptTimestampsByRegistrationId: lastAttemptTimestampsByRegistrationId,
-                    cancellationToken: cancellationToken
-                );
-
-                postedCount += planResult.PostedCount;
-                updatedCount += planResult.UpdatedCount;
-                failures.AddRange(planResult.Failures);
+                await ProcessPlanAsync(plan, progress, cancellationToken);
             }
         }
-
-        return new AutoPostRunResult(postedCount, updatedCount, failures);
     }
 
-    private async Task<AutoPostRunResult> ProcessPlanAsync(
+    private async Task ProcessPlanAsync(
         AutoPostPlan plan,
-        Dictionary<int, long> lastAttemptTimestampsByRegistrationId,
+        RunProgress progress,
         CancellationToken cancellationToken
     )
     {
-        var postedCount = 0;
-        var updatedCount = 0;
-        var failures = new List<AutoPostRunFailure>();
+        var pendingSites = plan.PendingSites.Where(site =>
+            site.Registration.EnableAutomaticPosting && !IsPausedAfterFailures(site)
+        );
 
-        var pendingSites = plan
-            .PendingSites.Where(site =>
-                site.AutomaticPostingEnabled && !IsPausedAfterFailures(site)
+        var updatableSites = plan.AutomaticallyUpdatableSites.Where(site =>
+            !IsPausedAfterFailures(site)
+        );
+
+        var sites = pendingSites.Concat(updatableSites).ToList();
+
+        foreach (var site in sites)
+        {
+            await PostOrUpdateSiteAsync(plan, site, progress, cancellationToken);
+        }
+    }
+
+    private async Task PostOrUpdateSiteAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        RunProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await WaitForMinimumIntervalAsync(site, progress, cancellationToken);
+
+        var isUpdate = site.PostedLocation is not null;
+
+        var result = isUpdate
+            ? await postUpdateService.UpdatePostOfPlannedSiteAsync(
+                plan: plan,
+                site: site,
+                cancellationToken: cancellationToken
             )
-            .ToList();
-
-        foreach (var site in pendingSites)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            await WaitForMinimumIntervalAsync(
+            : await postCreationService.CreatePostForPlannedSiteAsync(
+                plan: plan,
                 site: site,
-                lastAttemptTimestampsByRegistrationId: lastAttemptTimestampsByRegistrationId,
                 cancellationToken: cancellationToken
             );
 
-            var result = await CreatePostForSiteAsync(plan, site, cancellationToken);
-
-            if (result.Status is AutoPostExecutionStatus.Posted or AutoPostExecutionStatus.Failed)
-            {
-                lastAttemptTimestampsByRegistrationId[site.DistributionSiteRegistrationId] =
-                    Stopwatch.GetTimestamp();
-            }
-
-            if (result.Status == AutoPostExecutionStatus.Posted)
-            {
-                postedCount++;
-            }
-            else if (result.Status == AutoPostExecutionStatus.Failed)
-            {
-                failures.Add(Failure(plan, site, result.Errors));
-
-                await RecordFailedAttemptAsync(
-                    plan: plan,
-                    site: site,
-                    errors: result.Errors,
-                    gaveUpNotificationKind: NotificationKind.AutomaticForumPostFailed,
-                    actionDescription: $"posting {EntityLabel(plan)} '{plan.EntityName}' automatically to '{site.DistributionSiteRegistrationName}'",
-                    cancellationToken: cancellationToken
-                );
-            }
-            else if (result.Status == AutoPostExecutionStatus.ThreadSelectionNeeded)
-            {
-                await RecordWaitingForThreadSelectionAsync(
-                    plan: plan,
-                    site: site,
-                    threadCandidates: result.ThreadCandidates,
-                    cancellationToken: cancellationToken
-                );
-            }
+        if (
+            result.Status
+            is AutoPostResultStatus.Posted
+                or AutoPostResultStatus.Updated
+                or AutoPostResultStatus.Failed
+        )
+        {
+            progress.LastAttemptTimestampsByRegistrationId[site.DistributionSiteRegistrationId] =
+                Stopwatch.GetTimestamp();
         }
 
-        var updatableSites = plan
-            .AutomaticallyUpdatableSites.Where(site => !IsPausedAfterFailures(site))
-            .ToList();
-
-        foreach (var site in updatableSites)
+        if (result.Status == AutoPostResultStatus.Posted)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            progress.PostedCount++;
+        }
+        else if (result.Status == AutoPostResultStatus.Updated)
+        {
+            progress.UpdatedCount++;
+        }
+        else if (result.Status == AutoPostResultStatus.Failed)
+        {
+            progress.Failures.Add(BuildFailure(plan, site, result.Errors));
 
-            await WaitForMinimumIntervalAsync(
+            await RecordFailedAttemptAsync(
+                plan: plan,
                 site: site,
-                lastAttemptTimestampsByRegistrationId: lastAttemptTimestampsByRegistrationId,
+                errors: result.Errors,
+                gaveUpNotificationKind: isUpdate
+                    ? NotificationKind.AutomaticForumPostUpdateFailed
+                    : NotificationKind.AutomaticForumPostFailed,
+                actionDescription: isUpdate
+                    ? $"updating the post of '{plan.EntityName}' in '{site.Registration.Name}'"
+                    : $"posting {EntityLabel(plan)} '{plan.EntityName}' automatically to '{site.Registration.Name}'",
                 cancellationToken: cancellationToken
             );
-
-            var result = await UpdatePostOfSiteAsync(plan, site, cancellationToken);
-
-            if (result.Status != AutoPostUpdateStatus.Skipped)
-            {
-                lastAttemptTimestampsByRegistrationId[site.DistributionSiteRegistrationId] =
-                    Stopwatch.GetTimestamp();
-            }
-
-            if (result.Status == AutoPostUpdateStatus.Updated)
-            {
-                updatedCount++;
-            }
-            else if (result.Status == AutoPostUpdateStatus.Failed)
-            {
-                failures.Add(Failure(plan, site, result.Errors));
-
-                await RecordFailedAttemptAsync(
-                    plan: plan,
-                    site: site,
-                    errors: result.Errors,
-                    gaveUpNotificationKind: NotificationKind.AutomaticForumPostUpdateFailed,
-                    actionDescription: $"updating the post of '{plan.EntityName}' in '{site.DistributionSiteRegistrationName}'",
-                    cancellationToken: cancellationToken
-                );
-            }
         }
-
-        return new AutoPostRunResult(postedCount, updatedCount, failures);
+        else if (result.Status == AutoPostResultStatus.ThreadSelectionNeeded)
+        {
+            await RecordWaitingForThreadSelectionAsync(
+                plan: plan,
+                site: site,
+                threadCandidates: result.ThreadCandidates,
+                cancellationToken: cancellationToken
+            );
+        }
     }
 
     private bool IsPausedAfterFailures(AutoPostSiteEntry site)
     {
-        return site.FailureState switch
+        return site.Failure switch
         {
-            ForumPostingFailureState.GaveUp => true,
-            ForumPostingFailureState.WaitingForThreadSelection => true,
-            ForumPostingFailureState.RetryScheduled => site.NextAttemptAt
+            { State: ForumPostingFailureState.GaveUp } => true,
+            { State: ForumPostingFailureState.WaitingForThreadSelection } => true,
+            { State: ForumPostingFailureState.RetryScheduled } failure => failure.NextAttemptAt
                 > timeProvider.GetLocalNow(),
             _ => false,
         };
@@ -218,12 +194,12 @@ public class AutoForumPostingRunner(
 
     private static async Task WaitForMinimumIntervalAsync(
         AutoPostSiteEntry site,
-        Dictionary<int, long> lastAttemptTimestampsByRegistrationId,
+        RunProgress progress,
         CancellationToken cancellationToken
     )
     {
         if (
-            !lastAttemptTimestampsByRegistrationId.TryGetValue(
+            !progress.LastAttemptTimestampsByRegistrationId.TryGetValue(
                 site.DistributionSiteRegistrationId,
                 out var lastAttemptTimestamp
             )
@@ -233,7 +209,7 @@ public class AutoForumPostingRunner(
         }
 
         var remaining =
-            TimeSpan.FromSeconds(site.MinimumSecondsBetweenPosts)
+            TimeSpan.FromSeconds(site.Registration.MinimumSecondsBetweenPosts)
             - Stopwatch.GetElapsedTime(lastAttemptTimestamp);
 
         if (remaining > TimeSpan.Zero)
@@ -251,7 +227,7 @@ public class AutoForumPostingRunner(
         CancellationToken cancellationToken
     )
     {
-        var failedAttemptCount = site.FailedAttemptCount + 1;
+        var failedAttemptCount = (site.Failure?.FailedAttemptCount ?? 0) + 1;
         var hasGivenUp = failedAttemptCount >= FailedAttemptCountBeforeGivingUp;
         var errorMessage = TruncateErrorMessage(string.Join(" ", errors));
 
@@ -294,7 +270,7 @@ public class AutoForumPostingRunner(
             entityType: plan.EntityType,
             entityId: plan.EntityId,
             distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            failedAttemptCount: site.FailedAttemptCount,
+            failedAttemptCount: site.Failure?.FailedAttemptCount ?? 0,
             nextAttemptAt: null,
             lastErrorMessage: TruncateErrorMessage(
                 $"Several matching threads found: {threadTitles}"
@@ -305,7 +281,7 @@ public class AutoForumPostingRunner(
 
         await notificationService.CreateAsync(
             kind: NotificationKind.AutomaticForumPostFailed,
-            message: $"Several matching threads were found for {EntityLabel(plan)} '{plan.EntityName}' in '{site.DistributionSiteRegistrationName}'. Choose the thread in the post dialog.",
+            message: $"Several matching threads were found for {EntityLabel(plan)} '{plan.EntityName}' in '{site.Registration.Name}'. Choose the thread in the post dialog.",
             cancellationToken: cancellationToken
         );
     }
@@ -322,7 +298,7 @@ public class AutoForumPostingRunner(
         return plan.EntityType == ForumPostTemplateType.Release ? "release" : "release collection";
     }
 
-    private static AutoPostRunFailure Failure(
+    private static AutoPostRunFailure BuildFailure(
         AutoPostPlan plan,
         AutoPostSiteEntry site,
         IReadOnlyList<string> messages
@@ -333,56 +309,19 @@ public class AutoForumPostingRunner(
             EntityId: plan.EntityId,
             EntityName: plan.EntityName,
             DistributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            DistributionSiteRegistrationName: site.DistributionSiteRegistrationName,
+            DistributionSiteRegistrationName: site.Registration.Name,
             Messages: messages
         );
     }
 
-    private async Task<AutoPostExecutionResult> CreatePostForSiteAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        CancellationToken cancellationToken
-    )
+    private sealed class RunProgress
     {
-        try
-        {
-            return await postCreationService.CreatePostForPlannedSiteAsync(
-                plan: plan,
-                site: site,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            return AutoPostExecutionResult.Failed([exception.Message]);
-        }
-    }
+        public int PostedCount { get; set; }
 
-    private async Task<AutoPostUpdateResult> UpdatePostOfSiteAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        CancellationToken cancellationToken
-    )
-    {
-        try
-        {
-            return await postUpdateService.UpdatePostOfPlannedSiteAsync(
-                plan: plan,
-                site: site,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            return AutoPostUpdateResult.Failed([exception.Message]);
-        }
+        public int UpdatedCount { get; set; }
+
+        public List<AutoPostRunFailure> Failures { get; } = [];
+
+        public Dictionary<int, long> LastAttemptTimestampsByRegistrationId { get; } = [];
     }
 }

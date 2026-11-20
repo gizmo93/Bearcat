@@ -18,19 +18,15 @@ public sealed record AutoPostPlan(
     public IReadOnlyList<AutoPostSiteEntry> UpdatableSites =>
         Sites
             .Where(site =>
-                site
-                    is {
-                        Status: AutoPostSiteStatus.AlreadyPosted,
-                        NeedsContentUpdate: true,
-                        PostedLocationId: not null,
-                    }
+                site is { Status: AutoPostSiteStatus.AlreadyPosted, NeedsContentUpdate: true }
             )
             .ToList();
 
     public IReadOnlyList<AutoPostSiteEntry> AutomaticallyUpdatableSites =>
         UpdatableSites
             .Where(site =>
-                site.AutomaticPostingEnabled && site.ResolvedForumPostTemplateId is not null
+                site.Registration.EnableAutomaticPosting
+                && site.ForumPostTemplateIdForUpdate is not null
             )
             .ToList();
 

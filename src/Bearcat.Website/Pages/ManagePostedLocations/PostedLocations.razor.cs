@@ -151,7 +151,7 @@ public partial class PostedLocations(
                     )
             );
 
-            if (result.Status != AutoPostUpdateStatus.Updated)
+            if (result.Status != AutoPostResultStatus.Updated)
             {
                 errorMessage = string.Join(" ", result.Errors);
                 return;

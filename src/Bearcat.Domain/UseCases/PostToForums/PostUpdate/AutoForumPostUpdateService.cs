@@ -15,11 +15,10 @@ public class AutoForumPostUpdateService(
     UploadsPostedStatusService uploadsPostedStatusService
 )
 {
-    public async Task<AutoPostUpdateResult> UpdatePostOnSiteAsync(
+    public async Task<AutoPostResult> UpdatePostOnSiteAsync(
         ForumPostTemplateType entityType,
         int entityId,
         int distributionSiteRegistrationId,
-        int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -27,58 +26,49 @@ public class AutoForumPostUpdateService(
 
         if (plan.BlockedReason is not null)
         {
-            return AutoPostUpdateResult.Skipped(
-                AutoPostUpdateSkipReason.Blocked,
-                plan.BlockedReason
-            );
+            return AutoPostResult.Skipped(AutoPostSkipReason.Blocked, plan.BlockedReason);
         }
 
         var site = plan.FindSite(distributionSiteRegistrationId);
 
         if (site is null)
         {
-            return AutoPostUpdateResult.Skipped(AutoPostUpdateSkipReason.SiteNotConfigured);
+            return AutoPostResult.Skipped(AutoPostSkipReason.SiteNotConfigured);
         }
 
-        return await UpdatePostOfPlannedSiteAsync(
-            plan: plan,
-            site: site,
-            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
-            cancellationToken: cancellationToken
-        );
+        return await UpdatePostOfPlannedSiteAsync(plan, site, cancellationToken);
     }
 
-    public async Task<AutoPostUpdateResult> UpdatePostOfPlannedSiteAsync(
+    public async Task<AutoPostResult> UpdatePostOfPlannedSiteAsync(
         AutoPostPlan plan,
         AutoPostSiteEntry site,
-        int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
     )
     {
-        if (site.Status != AutoPostSiteStatus.AlreadyPosted || site.PostedLocationId is null)
+        if (site.PostedLocation is null)
         {
-            return AutoPostUpdateResult.Skipped(AutoPostUpdateSkipReason.NotPosted);
+            return AutoPostResult.Skipped(AutoPostSkipReason.NotPosted);
         }
 
         var target = new AutoPostUpdateTarget(
-            PostedLocationId: site.PostedLocationId.Value,
+            PostedLocationId: site.PostedLocation.PostedLocationId,
             EntityType: plan.EntityType,
             EntityId: plan.EntityId,
             EntityName: plan.EntityName,
             DistributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            DistributionSiteRegistrationName: site.DistributionSiteRegistrationName,
-            PostedUrl: site.PostedUrl!,
-            ForumPostTemplateId: site.ResolvedForumPostTemplateId
+            DistributionSiteRegistrationName: site.Registration.Name,
+            PostedUrl: site.PostedLocation.Url,
+            ForumPostTemplateId: site.ForumPostTemplateIdForUpdate
         );
 
         return await UpdatePostAndNotifyAsync(
             target: target,
-            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
+            forumPostTemplateIdOverride: null,
             cancellationToken: cancellationToken
         );
     }
 
-    public async Task<AutoPostUpdateResult> UpdatePostedLocationAsync(
+    public async Task<AutoPostResult> UpdatePostedLocationAsync(
         int postedLocationId,
         int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
@@ -93,19 +83,37 @@ public class AutoForumPostUpdateService(
         );
     }
 
-    private async Task<AutoPostUpdateResult> UpdatePostAndNotifyAsync(
+    private async Task<AutoPostResult> UpdatePostAndNotifyAsync(
         AutoPostUpdateTarget target,
         int? forumPostTemplateIdOverride,
         CancellationToken cancellationToken
     )
     {
-        var result = await UpdatePostOrReturnFailureAsync(
-            target: target,
-            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
-            cancellationToken: cancellationToken
-        );
+        var forumPostTemplateId = forumPostTemplateIdOverride ?? target.ForumPostTemplateId;
 
-        if (result.Status == AutoPostUpdateStatus.Updated)
+        if (forumPostTemplateId is null)
+        {
+            return AutoPostResult.Failed([
+                $"No forum post template is known for the post at {target.PostedUrl}; pick one to update it.",
+            ]);
+        }
+
+        AutoPostResult result;
+
+        try
+        {
+            result = await RenderEditAndRecordPostAsync(
+                target: target,
+                forumPostTemplateId: forumPostTemplateId.Value,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            return AutoPostResult.Failed([exception.Message]);
+        }
+
+        if (result.Status == AutoPostResultStatus.Updated)
         {
             await repository.DeleteForumPostingFailureAsync(
                 entityType: target.EntityType,
@@ -124,36 +132,7 @@ public class AutoForumPostUpdateService(
         return result;
     }
 
-    private async Task<AutoPostUpdateResult> UpdatePostOrReturnFailureAsync(
-        AutoPostUpdateTarget target,
-        int? forumPostTemplateIdOverride,
-        CancellationToken cancellationToken
-    )
-    {
-        var forumPostTemplateId = forumPostTemplateIdOverride ?? target.ForumPostTemplateId;
-
-        if (forumPostTemplateId is null)
-        {
-            return AutoPostUpdateResult.Failed([
-                $"No forum post template is known for the post at {target.PostedUrl}; pick one to update it.",
-            ]);
-        }
-
-        try
-        {
-            return await RenderEditAndRecordPostAsync(
-                target: target,
-                forumPostTemplateId: forumPostTemplateId.Value,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (Exception exception)
-        {
-            return AutoPostUpdateResult.Failed([exception.Message]);
-        }
-    }
-
-    private async Task<AutoPostUpdateResult> RenderEditAndRecordPostAsync(
+    private async Task<AutoPostResult> RenderEditAndRecordPostAsync(
         AutoPostUpdateTarget target,
         int forumPostTemplateId,
         CancellationToken cancellationToken
@@ -168,12 +147,12 @@ public class AutoForumPostUpdateService(
 
         if (rendered.BlockedReasons.Count > 0)
         {
-            return AutoPostUpdateResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
+            return AutoPostResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
         }
 
         if (!rendered.IsSuccess)
         {
-            return AutoPostUpdateResult.Failed(rendered.Errors);
+            return AutoPostResult.Failed(rendered.Errors);
         }
 
         var editedPost = await submitter.EditPostAsync(
@@ -197,6 +176,6 @@ public class AutoForumPostUpdateService(
                 cancellationToken: cancellationToken
             );
 
-        return AutoPostUpdateResult.Updated(editedPost.Url, uploadsMarkedPosted);
+        return AutoPostResult.Updated(editedPost.Url, uploadsMarkedPosted);
     }
 }

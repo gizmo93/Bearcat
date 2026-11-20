@@ -38,7 +38,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         result.PostedUrl.ShouldBe(submitter.ReplyUrl);
         submitter.NewThreads.ShouldBeEmpty();
         submitter
@@ -83,7 +83,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.ThreadSelectionNeeded);
+        result.Status.ShouldBe(AutoPostResultStatus.ThreadSelectionNeeded);
         result
             .ThreadCandidates.Select(thread => thread.Url)
             .ShouldBe(["https://forum.test/threads/1", "https://forum.test/threads/2"]);
@@ -115,7 +115,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         submitter.SearchedReleaseNames.ShouldBeEmpty();
         submitter
             .Replies.ShouldHaveSingleItem()
@@ -146,7 +146,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.AlreadyPosted);
         submitter.NewThreads.ShouldBeEmpty();
         submitter.Replies.ShouldBeEmpty();
@@ -173,7 +173,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         result.PostedUrl.ShouldBe(submitter.NewThreadUrl);
         submitter.Replies.ShouldBeEmpty();
 
@@ -204,7 +204,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         submitter.SearchedReleaseNames.ShouldBeEmpty();
         submitter.NewThreads.ShouldHaveSingleItem().PrefixIds.ShouldBeEmpty();
     }
@@ -273,7 +273,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         result.UploadsMarkedPosted.ShouldBeFalse();
         repository.MarkedReleaseIds.ShouldBeEmpty();
     }
@@ -298,7 +298,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Failed);
+        result.Status.ShouldBe(AutoPostResultStatus.Failed);
         result.Errors.ShouldBe(["Unknown variable"]);
         submitter.NewThreads.ShouldBeEmpty();
         submitter.Replies.ShouldBeEmpty();
@@ -324,10 +324,37 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Failed);
+        result.Status.ShouldBe(AutoPostResultStatus.Failed);
         result.Errors.ShouldBe(["Login failed"]);
         repository.RecordedPostedLocations.ShouldBeEmpty();
         repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_SubmitterThrowsAfterCancellation_PropagatesTheCancellation()
+    {
+        // Arrange
+        var repository = RepositoryWith(AutoPostTestFactory.Rule());
+        var submitter = new FakeForumPostSubmitter
+        {
+            ThrowOnSubmit = new OperationCanceledException(),
+        };
+        var service = ServiceWith(repository, submitter);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        // Act
+        var createPost = () =>
+            service.CreatePostOnSiteAsync(
+                entityType: ForumPostTemplateType.Release,
+                entityId: 1,
+                distributionSiteRegistrationId: 5,
+                cancellationToken: cancellationTokenSource.Token
+            );
+
+        // Assert
+        await createPost.ShouldThrowAsync<OperationCanceledException>();
+        repository.RecordedPostedLocations.ShouldBeEmpty();
     }
 
     [Test]
@@ -347,7 +374,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.AlreadyPosted);
         submitter.NewThreads.ShouldBeEmpty();
     }
@@ -371,7 +398,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.NoMatch);
     }
 
@@ -399,7 +426,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.Blocked);
         result.BlockedReason.ShouldBe(AutoPostBlockedReason.QualityGateNotPassed);
         notificationService.Created.ShouldBeEmpty();
@@ -420,7 +447,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Skipped);
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
         result.SkipReason.ShouldBe(AutoPostSkipReason.SiteNotConfigured);
     }
 
@@ -490,7 +517,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         result.UploadsMarkedPosted.ShouldBeTrue();
         submitter
             .NewThreads.ShouldHaveSingleItem()
@@ -526,7 +553,7 @@ public class AutoForumPostCreationServiceTest
         );
 
         // Assert
-        result.Status.ShouldBe(AutoPostExecutionStatus.Posted);
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
         repository.ForumPostingFailures.ShouldBeEmpty();
     }
 
