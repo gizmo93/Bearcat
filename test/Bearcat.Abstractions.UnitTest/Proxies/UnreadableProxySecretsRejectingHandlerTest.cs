@@ -17,7 +17,8 @@ public class UnreadableProxySecretsRejectingHandlerTest
         innerHandler = new RecordingHandler();
         invoker = new HttpMessageInvoker(
             new UnreadableProxySecretsRejectingHandler(
-                new CategoryProxySelectingWebProxy(ProxyCategory.ImageHosters, proxyRoutingCache)
+                ProxyCategory.ImageHosters,
+                proxyRoutingCache
             )
             {
                 InnerHandler = innerHandler,

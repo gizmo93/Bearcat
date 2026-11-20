@@ -1,14 +1,19 @@
 namespace Bearcat.Abstractions.Proxies;
 
-public class UnreadableProxySecretsRejectingHandler(CategoryProxySelectingWebProxy webProxy)
-    : DelegatingHandler
+public class UnreadableProxySecretsRejectingHandler(
+    ProxyCategory clientCategory,
+    IProxyRoutingCache proxyRoutingCache
+) : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken
     )
     {
-        var proxyServer = webProxy.SelectProxyServer();
+        var proxyServer = ProxyServerResolver.ResolveForClientCategory(
+            clientCategory,
+            proxyRoutingCache
+        );
 
         if (proxyServer is { HasUnreadableSecrets: true })
         {

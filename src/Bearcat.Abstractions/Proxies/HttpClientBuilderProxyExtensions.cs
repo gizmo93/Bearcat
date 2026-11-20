@@ -11,7 +11,10 @@ public static class HttpClientBuilderProxyExtensions
             builder.ConfigurePrimaryHttpMessageHandler(
                 (primaryHandler, serviceProvider) =>
                 {
-                    var webProxy = CreateWebProxy(category, serviceProvider);
+                    var webProxy = new CategoryProxySelectingWebProxy(
+                        category,
+                        serviceProvider.GetRequiredService<IProxyRoutingCache>()
+                    );
 
                     switch (primaryHandler)
                     {
@@ -33,22 +36,12 @@ public static class HttpClientBuilderProxyExtensions
 
             builder.AddHttpMessageHandler(
                 serviceProvider => new UnreadableProxySecretsRejectingHandler(
-                    CreateWebProxy(category, serviceProvider)
+                    category,
+                    serviceProvider.GetRequiredService<IProxyRoutingCache>()
                 )
             );
 
             return builder;
         }
-    }
-
-    private static CategoryProxySelectingWebProxy CreateWebProxy(
-        ProxyCategory category,
-        IServiceProvider serviceProvider
-    )
-    {
-        return new CategoryProxySelectingWebProxy(
-            category,
-            serviceProvider.GetRequiredService<IProxyRoutingCache>()
-        );
     }
 }

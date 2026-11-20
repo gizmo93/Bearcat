@@ -11,20 +11,16 @@ public class CategoryProxySelectingWebProxy(
 
     public Uri? GetProxy(Uri destination)
     {
-        return SelectProxyServer()?.ProxyUri;
+        return ResolveProxyServer()?.ProxyUri;
     }
 
     public bool IsBypassed(Uri host)
     {
-        return SelectProxyServer() is null;
+        return ResolveProxyServer() is null;
     }
 
-    public ResolvedProxyServer? SelectProxyServer()
+    private ResolvedProxyServer? ResolveProxyServer()
     {
-        return ProxyServerSelection.Select(
-            clientCategory: clientCategory,
-            scopeState: ProxyCategoryScope.Current,
-            proxyRoutingCache: proxyRoutingCache
-        );
+        return ProxyServerResolver.ResolveForClientCategory(clientCategory, proxyRoutingCache);
     }
 }

@@ -3,7 +3,7 @@ using Shouldly;
 
 namespace Bearcat.Abstractions.UnitTest.Proxies;
 
-public class ProxyServerSelectionTest
+public class ProxyServerResolverTest
 {
     private FakeProxyRoutingCache proxyRoutingCache = null!;
 
@@ -14,7 +14,7 @@ public class ProxyServerSelectionTest
     }
 
     [Test]
-    public void Select_NoScope_ReturnsProxyServerOfClientCategory()
+    public void ResolveForClientCategory_NoScope_ReturnsProxyServerOfClientCategory()
     {
         // Arrange
         var uploadProxyServer = proxyRoutingCache.RouteCategory(
@@ -23,9 +23,8 @@ public class ProxyServerSelectionTest
         );
 
         // Act
-        var proxyServer = ProxyServerSelection.Select(
+        var proxyServer = ProxyServerResolver.ResolveForClientCategory(
             ProxyCategory.HosterUploads,
-            scopeState: null,
             proxyRoutingCache
         );
 
@@ -34,7 +33,7 @@ public class ProxyServerSelectionTest
     }
 
     [Test]
-    public void Select_ScopeOfOtherGroup_ReturnsProxyServerOfClientCategory()
+    public void ResolveForClientCategory_ScopeOfUnrelatedCategory_ReturnsProxyServerOfClientCategory()
     {
         // Arrange
         var uploadProxyServer = proxyRoutingCache.RouteCategory(
@@ -42,16 +41,16 @@ public class ProxyServerSelectionTest
             "http://upload-proxy.test:8080"
         );
         proxyRoutingCache.AddProxyServer(7, "http://specific-proxy.test:3128");
-        var scopeState = new ProxyCategoryScopeState(
+
+        using var scope = ProxyCategoryScope.Enter(
             ProxyCategory.ImageHosters,
             ProxySelection.SpecificProxyServer,
-            ProxyServerId: 7
+            proxyServerId: 7
         );
 
         // Act
-        var proxyServer = ProxyServerSelection.Select(
+        var proxyServer = ProxyServerResolver.ResolveForClientCategory(
             ProxyCategory.HosterUploads,
-            scopeState,
             proxyRoutingCache
         );
 
@@ -60,7 +59,7 @@ public class ProxyServerSelectionTest
     }
 
     [Test]
-    public void Select_ScopeOfSameGroupWithCategoryDefault_ReturnsProxyServerOfScopeCategory()
+    public void ResolveForClientCategory_MirrorDownloadScopeAndUploadClient_ReturnsProxyServerOfScopeCategory()
     {
         // Arrange
         proxyRoutingCache.RouteCategory(
@@ -71,16 +70,16 @@ public class ProxyServerSelectionTest
             ProxyCategory.HosterMirrorDownloads,
             "socks5://download-proxy.test:1080"
         );
-        var scopeState = new ProxyCategoryScopeState(
+
+        using var scope = ProxyCategoryScope.Enter(
             ProxyCategory.HosterMirrorDownloads,
             ProxySelection.UseCategoryDefault,
-            ProxyServerId: null
+            proxyServerId: null
         );
 
         // Act
-        var proxyServer = ProxyServerSelection.Select(
+        var proxyServer = ProxyServerResolver.ResolveForClientCategory(
             ProxyCategory.HosterUploads,
-            scopeState,
             proxyRoutingCache
         );
 
@@ -89,23 +88,23 @@ public class ProxyServerSelectionTest
     }
 
     [Test]
-    public void Select_ScopeOfSameGroupWithNoProxy_ReturnsNull()
+    public void ResolveForClientCategory_ScopeOfSameCategoryWithNoProxy_ReturnsNull()
     {
         // Arrange
         proxyRoutingCache.RouteCategory(
             ProxyCategory.HosterUploads,
             "http://upload-proxy.test:8080"
         );
-        var scopeState = new ProxyCategoryScopeState(
+
+        using var scope = ProxyCategoryScope.Enter(
             ProxyCategory.HosterUploads,
             ProxySelection.NoProxy,
-            ProxyServerId: null
+            proxyServerId: null
         );
 
         // Act
-        var proxyServer = ProxyServerSelection.Select(
+        var proxyServer = ProxyServerResolver.ResolveForClientCategory(
             ProxyCategory.HosterUploads,
-            scopeState,
             proxyRoutingCache
         );
 
@@ -114,7 +113,7 @@ public class ProxyServerSelectionTest
     }
 
     [Test]
-    public void Select_ScopeOfSameGroupWithSpecificProxyServer_ReturnsThatProxyServer()
+    public void ResolveForClientCategory_ScopeOfSameCategoryWithSpecificProxyServer_ReturnsThatProxyServer()
     {
         // Arrange
         proxyRoutingCache.RouteCategory(
@@ -125,20 +124,36 @@ public class ProxyServerSelectionTest
             7,
             "http://specific-proxy.test:3128"
         );
-        var scopeState = new ProxyCategoryScopeState(
+
+        using var scope = ProxyCategoryScope.Enter(
             ProxyCategory.HosterUploads,
             ProxySelection.SpecificProxyServer,
-            ProxyServerId: 7
+            proxyServerId: 7
         );
 
         // Act
-        var proxyServer = ProxyServerSelection.Select(
+        var proxyServer = ProxyServerResolver.ResolveForClientCategory(
             ProxyCategory.HosterUploads,
-            scopeState,
             proxyRoutingCache
         );
 
         // Assert
         proxyServer.ShouldBe(specificProxyServer);
+    }
+
+    [Test]
+    public void ResolveForCurrentScope_NoScope_ReturnsNull()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterUploads,
+            "http://upload-proxy.test:8080"
+        );
+
+        // Act
+        var proxyServer = ProxyServerResolver.ResolveForCurrentScope(proxyRoutingCache);
+
+        // Assert
+        proxyServer.ShouldBeNull();
     }
 }
