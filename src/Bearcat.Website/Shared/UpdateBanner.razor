@@ -5,9 +5,9 @@
        rel="noopener noreferrer"
        class="inline-flex items-center no-underline"
        title="@L["UpdateAvailableTooltip", status.LatestVersion ?? string.Empty]">
-        <BbBadge Variant="BadgeVariant.Default" Class="gap-1.5">
+        <BbBadge Variant="BadgeVariant.Outline" Class="gap-1.5 whitespace-nowrap px-1.5 font-normal text-muted-foreground hover:text-foreground lg:px-2.5">
             <LucideIcon Name="download" class="h-3.5 w-3.5" />
-            @L["UpdateAvailable", status.LatestVersion ?? string.Empty]
+            <span class="max-lg:hidden">@L["UpdateAvailable", status.LatestVersion ?? string.Empty]</span>
         </BbBadge>
     </a>
 }
