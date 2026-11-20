@@ -6,5 +6,6 @@ public record TvdbSeriesExtendedRecord(
     string? Slug,
     string? Image,
     string? Overview,
-    IReadOnlyList<TvdbRemoteId>? RemoteIds
+    IReadOnlyList<TvdbRemoteId>? RemoteIds,
+    IReadOnlyList<TvdbGenre>? Genres
 );
