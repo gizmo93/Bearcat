@@ -71,6 +71,26 @@ public class RuleConditionEvaluatorTest
         isMatch.ShouldBe(expected);
     }
 
+    [TestCase("Abenteuer, Animation, Familie", true)]
+    [TestCase("Drama, Thriller", false)]
+    [TestCase(null, false)]
+    public void IsMatch_GenreLike_MatchesOneGenreInJoinedGenreList(string? genre, bool expected)
+    {
+        // Arrange
+        var condition = RuleCondition.Compare(
+            RuleFieldCatalog.Genre,
+            RuleConditionOperator.Like,
+            "%animation%"
+        );
+        var context = ContextWith(genre: genre);
+
+        // Act
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+
+        // Assert
+        isMatch.ShouldBe(expected);
+    }
+
     [Test]
     public void IsMatch_NotLike_NegatesLike()
     {
@@ -477,7 +497,8 @@ public class RuleConditionEvaluatorTest
         string? releaseGroupToken = "GROUP",
         int? year = 2021,
         int? season = null,
-        int? episode = null
+        int? episode = null,
+        string? genre = null
     )
     {
         return new ReleaseRoutingContext(
@@ -493,6 +514,7 @@ public class RuleConditionEvaluatorTest
             Year: year,
             Season: season,
             Episode: episode,
+            Genre: genre,
             HasClassification: true
         );
     }

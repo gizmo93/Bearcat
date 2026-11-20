@@ -11,9 +11,11 @@ namespace Bearcat.MediaDatabases.UnitTest.Tmdb;
 public class TmdbMetadataDatabaseTest
 {
     [Test]
-    public async Task GetByExternalIdAsync_MovieFound_MapsMetadata()
+    public async Task GetByExternalIdAsync_MovieFound_MapsMetadataFromMovieDetails()
     {
+        // Arrange
         var api = new Mock<ITmdbApi>(MockBehavior.Strict);
+
         api.Setup(item =>
                 item.FindAsync(
                     "tt0109093",
@@ -33,7 +35,8 @@ public class TmdbMetadataDatabaseTest
                                 Title: "Amok",
                                 Overview: "Description",
                                 PosterPath: "/amok.jpg",
-                                ImdbId: null
+                                ImdbId: null,
+                                Genres: null
                             ),
                         ],
                         TvResults: [],
@@ -41,8 +44,28 @@ public class TmdbMetadataDatabaseTest
                     )
                 )
             );
+
+        api.Setup(item => item.GetMovieAsync(123, "secret", "de", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbMovieResponse(
+                        Id: 123,
+                        Title: "Amok",
+                        Overview: "Description",
+                        PosterPath: "/amok.jpg",
+                        ImdbId: "tt0109093",
+                        Genres:
+                        [
+                            new TmdbGenreResponse(Id: 18, Name: "Drama"),
+                            new TmdbGenreResponse(Id: 53, Name: "Thriller"),
+                        ]
+                    )
+                )
+            );
+
         var database = new TmdbMetadataDatabase(api.Object);
 
+        // Act
         var metadata = await database.GetByExternalIdAsync(
             new TmdbConfig("secret"),
             new MediaMetadataLookup(
@@ -59,9 +82,12 @@ public class TmdbMetadataDatabaseTest
             )
         );
 
+        // Assert
         metadata.ShouldNotBeNull();
         metadata.Title.ShouldBe("Amok");
         metadata.Description.ShouldBe("Description");
+        metadata.Genre.ShouldBe("Drama, Thriller");
+        metadata.ImdbId.ShouldBe("tt0109093");
         metadata.CoverUrl.ShouldBe("https://image.tmdb.org/t/p/w500/amok.jpg");
         metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/movie/123");
     }
@@ -92,10 +118,27 @@ public class TmdbMetadataDatabaseTest
                                 Name: "Game of Thrones",
                                 Overview: "Description",
                                 PosterPath: "/got.jpg",
-                                ExternalIds: null
+                                ExternalIds: null,
+                                Genres: null
                             ),
                         ],
                         TvEpisodeResults: []
+                    )
+                )
+            );
+
+        api.Setup(item =>
+                item.GetTvAsync(1399, "secret", null, "external_ids", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbTvResponse(
+                        Id: 1399,
+                        Name: "Game of Thrones",
+                        Overview: "Description",
+                        PosterPath: "/got.jpg",
+                        ExternalIds: new TmdbExternalIdsResponse("tt0944947"),
+                        Genres: [new TmdbGenreResponse(Id: 18, Name: "Drama")]
                     )
                 )
             );
@@ -124,6 +167,7 @@ public class TmdbMetadataDatabaseTest
         metadata.Title.ShouldBe("Game of Thrones");
         metadata.DatabaseUrl.ShouldBe("https://www.themoviedb.org/tv/1399");
         metadata.TmdbId.ShouldBe("tv/1399");
+        metadata.Genre.ShouldBe("Drama");
     }
 
     [Test]
@@ -148,11 +192,29 @@ public class TmdbMetadataDatabaseTest
                             Name: "Agent Kim Reactivated",
                             Overview: null,
                             PosterPath: "/agent.jpg",
-                            ExternalIds: null
+                            ExternalIds: null,
+                            Genres: null
                         ),
                     ])
                 )
             );
+
+        api.Setup(item =>
+                item.GetTvAsync(456, "secret", null, "external_ids", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new TmdbTvResponse(
+                        Id: 456,
+                        Name: "Agent Kim Reactivated",
+                        Overview: null,
+                        PosterPath: "/agent.jpg",
+                        ExternalIds: null,
+                        Genres: null
+                    )
+                )
+            );
+
         var database = new TmdbMetadataDatabase(api.Object);
 
         var metadata = await database.GetByTitleAsync(
@@ -191,7 +253,8 @@ public class TmdbMetadataDatabaseTest
                         Title: "Flesh+Blood",
                         Overview: "Description",
                         PosterPath: "/flesh.jpg",
-                        ImdbId: "tt0089153"
+                        ImdbId: "tt0089153",
+                        Genres: null
                     )
                 )
             );
@@ -229,7 +292,8 @@ public class TmdbMetadataDatabaseTest
                         Name: "Game of Thrones",
                         Overview: "Description",
                         PosterPath: "/got.jpg",
-                        ExternalIds: new TmdbExternalIdsResponse("tt0944947")
+                        ExternalIds: new TmdbExternalIdsResponse("tt0944947"),
+                        Genres: null
                     )
                 )
             );

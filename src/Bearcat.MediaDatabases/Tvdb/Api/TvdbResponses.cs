@@ -23,7 +23,8 @@ public record TvdbSearchResult(
     string? Name,
     string? Overview,
     string? Slug,
-    [property: JsonPropertyName("image_url")] string? ImageUrl
+    [property: JsonPropertyName("image_url")] string? ImageUrl,
+    IReadOnlyList<string>? Genres
 );
 
 public record TvdbTranslation(string? Name, string? Overview);

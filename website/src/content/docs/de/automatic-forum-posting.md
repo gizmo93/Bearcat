@@ -111,13 +111,14 @@ Jede Vergleichszeile hat ein Feld, einen Operator und einen Wert:
 | Jahr | Zahl |
 | Staffel | Zahl |
 | Episode | Zahl, nur für Releases |
+| Genre | Genres aus der Mediendatenbank, kommagetrennt, zum Beispiel `Animation, Familie` |
 
 Welche Operatoren verfügbar sind, hängt vom Feld ab:
 
 | Feld | Operatoren |
 | --- | --- |
 | Releasename | *ist*, *ist nicht*, Mustervergleich und *passt auf Regex* |
-| Releasegruppe, Releasegruppenkürzel | *ist*, *ist nicht*, Mustervergleich, *ist eines von*, *ist keines von*, *ist gesetzt*, *ist nicht gesetzt* |
+| Releasegruppe, Releasegruppenkürzel, Genre | *ist*, *ist nicht*, Mustervergleich, *ist eines von*, *ist keines von*, *ist gesetzt*, *ist nicht gesetzt* |
 | Hauptsprache | *ist*, *ist nicht*, *ist eines von*, *ist keines von*, *ist gesetzt*, *ist nicht gesetzt* |
 | Auflösung, Jahr, Staffel, Episode | Zusätzlich *ist mindestens* und *ist höchstens* |
 
@@ -125,6 +126,7 @@ Bei *passt auf Muster (%)* steht `%` für beliebigen Text. Das Muster muss auf d
 
 - `%German%` passt auf Namen, die `German` enthalten.
 - `%-FLAME` passt auf Namen, die auf `-FLAME` enden.
+- `%Animation%` beim Genre passt auf jedes Release, das `Animation` unter seinen Genres hat.
 
 Muster und reguläre Ausdrücke ignorieren Gross- und Kleinschreibung. Ist ein regulärer Ausdruck ungültig
 oder überschreitet der Abgleich das Zeitlimit, gilt die Bedingung als nicht erfüllt.
@@ -137,6 +139,8 @@ Fehlen Sprache oder Inhaltstyp, übernimmt Bearcat die Angaben aus den enthalten
 Auflösung, Quelle, Plattform, Jahr, Staffel, Mehrsprachigkeit und Releasegruppenkürzel stammen aus deren
 Klassifizierungen. Bearcat übernimmt einen Wert nur, wenn er bei allen klassifizierten Releases gleich ist.
 Sonst gilt er als unbekannt oder nicht gesetzt. Releases ohne Klassifizierung zählen dabei nicht mit.
+Das Genre stammt aus den Mediendaten der enthaltenen Releases und gilt nur, wenn es bei allen Releases mit
+Genre gleich ist.
 
 ## Regeln sortieren
 

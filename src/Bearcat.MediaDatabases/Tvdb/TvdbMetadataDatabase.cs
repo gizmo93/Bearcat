@@ -40,14 +40,9 @@ public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDat
             return null;
         }
 
-        return await BuildSeriesInfoAsync(
+        return await GetSeriesByIdAsync(
             config: tvdbConfig,
             seriesId: series.Id,
-            fallbackName: series.Name,
-            fallbackOverview: series.Overview,
-            image: series.Image,
-            slug: series.Slug,
-            imdbId: null,
             languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
@@ -85,6 +80,7 @@ public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDat
             image: result.ImageUrl,
             slug: result.Slug,
             imdbId: null,
+            genreNames: result.Genres,
             languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
@@ -129,29 +125,9 @@ public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDat
             seriesId = seriesBySlug.Id;
         }
 
-        var series = await client.GetSeriesExtendedAsync(
+        return await GetSeriesByIdAsync(
             config: tvdbConfig,
             seriesId: seriesId,
-            cancellationToken: cancellationToken
-        );
-
-        if (series is null)
-        {
-            return null;
-        }
-
-        var imdbId = series
-            .RemoteIds?.Select(remoteId => remoteId.Id)
-            .FirstOrDefault(remoteId => remoteId is not null && ImdbIdRegex().IsMatch(remoteId));
-
-        return await BuildSeriesInfoAsync(
-            config: tvdbConfig,
-            seriesId: series.Id,
-            fallbackName: series.Name,
-            fallbackOverview: series.Overview,
-            image: series.Image,
-            slug: series.Slug,
-            imdbId: imdbId,
             languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
@@ -197,6 +173,42 @@ public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDat
         );
     }
 
+    private async Task<MediaMetadata?> GetSeriesByIdAsync(
+        TvdbConfig config,
+        long seriesId,
+        string? languageCode,
+        CancellationToken cancellationToken
+    )
+    {
+        var series = await client.GetSeriesExtendedAsync(
+            config: config,
+            seriesId: seriesId,
+            cancellationToken: cancellationToken
+        );
+
+        if (series is null)
+        {
+            return null;
+        }
+
+        var imdbId = series
+            .RemoteIds?.Select(remoteId => remoteId.Id)
+            .FirstOrDefault(remoteId => remoteId is not null && ImdbIdRegex().IsMatch(remoteId));
+
+        return await BuildSeriesInfoAsync(
+            config: config,
+            seriesId: series.Id,
+            fallbackName: series.Name,
+            fallbackOverview: series.Overview,
+            image: series.Image,
+            slug: series.Slug,
+            imdbId: imdbId,
+            genreNames: series.Genres?.Select(genre => genre.Name).OfType<string>().ToList(),
+            languageCode: languageCode,
+            cancellationToken: cancellationToken
+        );
+    }
+
     private async Task<MediaMetadata?> BuildSeriesInfoAsync(
         TvdbConfig config,
         long seriesId,
@@ -205,6 +217,7 @@ public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDat
         string? image,
         string? slug,
         string? imdbId,
+        IReadOnlyList<string>? genreNames,
         string? languageCode,
         CancellationToken cancellationToken
     )
@@ -225,10 +238,19 @@ public partial class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDat
             return null;
         }
 
+        var nonEmptyGenreNames = genreNames
+            ?.Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToList();
+
+        var genre =
+            nonEmptyGenreNames is null || nonEmptyGenreNames.Count == 0
+                ? null
+                : string.Join(", ", nonEmptyGenreNames);
+
         return new MediaMetadata(
             Title: title,
             Description: FirstNonEmpty(translation?.Overview, fallbackOverview),
-            Genre: null,
+            Genre: genre,
             CoverUrl: NullIfWhiteSpace(image),
             DatabaseUrl: string.IsNullOrWhiteSpace(slug)
                 ? null

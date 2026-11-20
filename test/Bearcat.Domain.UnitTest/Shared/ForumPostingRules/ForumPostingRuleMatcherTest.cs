@@ -198,6 +198,7 @@ public class ForumPostingRuleMatcherTest
             Year: 2021,
             Season: null,
             Episode: null,
+            Genre: null,
             HasClassification: true
         );
     }
