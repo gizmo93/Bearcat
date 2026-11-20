@@ -5,7 +5,6 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
-using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Reimporting;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -260,38 +259,6 @@ public class LinkCrypterImportService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task StartReimportAsync(
-        int linkCrypterImportId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var linkCrypterImport = await repository.GetWithContainersAsync(
-            linkCrypterImportId,
-            cancellationToken
-        );
-
-        EnsureState(linkCrypterImport, LinkCrypterImportState.Completed);
-
-        var selectedContainerCount = GetSelectableContainers(linkCrypterImport)
-            .Count(container => container.IsSelected);
-
-        if (selectedContainerCount == 0)
-        {
-            throw new InvalidLinkCrypterImportException(
-                "At least one container that can be re-imported must be selected."
-            );
-        }
-
-        linkCrypterImport.ChangeState(
-            LinkCrypterImportState.Reimporting,
-            timeProvider.GetLocalNow()
-        );
-
-        linkCrypterImport.ErrorMessages = [];
-        linkCrypterImport.StartProgress(selectedContainerCount);
-        await repository.SaveChangesAsync(cancellationToken);
-    }
-
     public async Task DeleteAsync(
         int linkCrypterImportId,
         CancellationToken cancellationToken = default
@@ -307,7 +274,6 @@ public class LinkCrypterImportService(
             is LinkCrypterImportState.ReadingContainers
                 or LinkCrypterImportState.CheckingFiles
                 or LinkCrypterImportState.Importing
-                or LinkCrypterImportState.Reimporting
         )
         {
             throw new InvalidLinkCrypterImportException(
@@ -334,16 +300,9 @@ public class LinkCrypterImportService(
         LinkCrypterImport linkCrypterImport
     )
     {
-        return linkCrypterImport.State switch
-        {
-            LinkCrypterImportState.ReadyForReview => GetImportableContainers(linkCrypterImport),
-            LinkCrypterImportState.Completed => linkCrypterImport
-                .Containers.Where(LinkCrypterImportContainerReimportCheck.CanBeReimported)
-                .ToList(),
-            _ => throw new InvalidLinkCrypterImportException(
-                $"The containers of link crypter import {linkCrypterImport.Id} cannot be selected in state {linkCrypterImport.State}."
-            ),
-        };
+        EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
+
+        return GetImportableContainers(linkCrypterImport);
     }
 
     private static List<LinkCrypterImportContainer> GetContainersOfRelease(

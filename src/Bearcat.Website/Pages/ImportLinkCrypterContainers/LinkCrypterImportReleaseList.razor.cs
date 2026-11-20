@@ -13,7 +13,6 @@ namespace Bearcat.Website.Pages.ImportLinkCrypterContainers;
 
 public partial class LinkCrypterImportReleaseList(
     ToastService toastService,
-    DialogService dialogService,
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
@@ -45,7 +44,7 @@ public partial class LinkCrypterImportReleaseList(
     private bool CanChangeReleases => Detail.State is LinkCrypterImportState.ReadyForReview;
 
     private bool CanChangeSelection =>
-        Detail.State is LinkCrypterImportState.ReadyForReview or LinkCrypterImportState.Completed
+        Detail.State is LinkCrypterImportState.ReadyForReview
         && Detail.SelectableContainerCount > 0;
 
     private bool AreAllSelectableContainersSelected =>
@@ -226,42 +225,6 @@ public partial class LinkCrypterImportReleaseList(
             releasePreview: releasePreview,
             archivePartsWereMoved: container.Status is LinkCrypterImportContainerStatus.Imported
         );
-    }
-
-    private async Task ShowReimportDialogAsync(LinkCrypterImportContainerReadModel container)
-    {
-        var result = await dialogService.OpenAsync<LinkCrypterImportReimportDialog>(
-            new Dictionary<string, object?>
-            {
-                [nameof(LinkCrypterImportReimportDialog.LinkCrypterImportContainerId)] =
-                    container.Id,
-            },
-            new DialogOpenOptions
-            {
-                Title = L["ReimportLinkCrypterContainer"],
-                Description = L["ReimportLinkCrypterContainerDescription"],
-                Size = DialogSize.Large,
-                ShowClose = true,
-                PreventClose = true,
-            }
-        );
-
-        if (result.Cancelled)
-        {
-            return;
-        }
-
-        var releaseCountWithMovedArchiveParts = result.GetData<int>();
-
-        toastService.Success(
-            releaseCountWithMovedArchiveParts > 0
-                ? L[
-                    "LinkCrypterContainerReimportedWithMovedArchiveParts",
-                    releaseCountWithMovedArchiveParts
-                ]
-                : L["LinkCrypterContainerReimported"]
-        );
-        await OnReleasesChanged.InvokeAsync();
     }
 
     private string GetHosterName(string? hosterClassName)

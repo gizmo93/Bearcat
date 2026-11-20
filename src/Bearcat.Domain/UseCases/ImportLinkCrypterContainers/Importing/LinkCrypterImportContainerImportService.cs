@@ -108,18 +108,16 @@ public class LinkCrypterImportContainerImportService(
 
         if (preview.Releases!.Count > 1)
         {
-            var importResult = await collectionContainerImportService.ImportAsync(
+            var archivePartsMoves = await collectionContainerImportService.ImportAsync(
                 container: container,
                 releasePreviews: preview.Releases,
-                uploadsToMove: [],
-                uploadsPostedAt: null,
                 cancellationToken: cancellationToken
             );
 
-            archivePartMover.MoveArchiveParts(importResult.ArchivePartsMoves);
+            archivePartMover.MoveArchiveParts(archivePartsMoves);
             await repository.SaveChangesAsync(cancellationToken);
 
-            return importResult.ArchivePartsMoves.Count;
+            return archivePartsMoves.Count;
         }
 
         await ImportSingleReleaseContainerAsync(
@@ -154,7 +152,6 @@ public class LinkCrypterImportContainerImportService(
             linkCrypterImport: container.LinkCrypterImport,
             releasePreview: releasePreview,
             existingRelease: existingRelease,
-            uploadsToMove: [],
             archiveStorageFolders: archiveStorageFolders,
             uploadsPostedAt: localNow,
             localNow: localNow,

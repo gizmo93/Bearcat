@@ -89,8 +89,6 @@ public class LinkCrypterImportPreviewService(
             .OrderBy(container => container.Id)
             .ToList();
 
-        var run = await CreatePreviewRunAsync(linkCrypterImport, cancellationToken);
-
         var mirrorsByContainer = containers.ToDictionary(
             container => container,
             GetMirrorsWithoutDecisions
@@ -101,11 +99,17 @@ public class LinkCrypterImportPreviewService(
             entry => LinkCrypterImportMirrorSplitter.SplitByArchiveBaseName(entry.Value)
         );
 
-        run.ExistingReleasesByName = await GetExistingReleasesByNameAsync(
+        var existingReleasesByName = await GetExistingReleasesByNameAsync(
             mirrorsOfArchivesByContainer
                 .SelectMany(entry => GetReleaseNames(entry.Key, entry.Value))
                 .ToList(),
             cancellationToken
+        );
+
+        var run = await CreatePreviewRunAsync(
+            linkCrypterImport: linkCrypterImport,
+            existingReleasesByName: existingReleasesByName,
+            cancellationToken: cancellationToken
         );
 
         foreach (var container in containers)
@@ -119,7 +123,6 @@ public class LinkCrypterImportPreviewService(
                 container: container,
                 mirrors: mirrorsByContainer[container],
                 mirrorsOfArchives: mirrorsOfArchives,
-                folderPathsOfReplacedRelease: [],
                 cancellationToken: cancellationToken
             );
 
@@ -144,8 +147,9 @@ public class LinkCrypterImportPreviewService(
         }
     }
 
-    public async Task<LinkCrypterImportPreviewRun> CreatePreviewRunAsync(
+    private async Task<LinkCrypterImportPreviewRun> CreatePreviewRunAsync(
         LinkCrypterImport linkCrypterImport,
+        Dictionary<string, Release> existingReleasesByName,
         CancellationToken cancellationToken
     )
     {
@@ -163,32 +167,8 @@ public class LinkCrypterImportPreviewService(
                 linkCrypterImport,
                 cancellationToken
             ),
+            ExistingReleasesByName = existingReleasesByName,
         };
-    }
-
-    public async Task<LinkCrypterImportContainerPreviewResult> CreatePreviewOfContainerAsync(
-        LinkCrypterImportPreviewRun run,
-        LinkCrypterImportContainer container,
-        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
-        CancellationToken cancellationToken
-    )
-    {
-        var mirrors = GetMirrorsWithoutDecisions(container);
-        var mirrorsOfArchives = LinkCrypterImportMirrorSplitter.SplitByArchiveBaseName(mirrors);
-
-        run.ExistingReleasesByName = await GetExistingReleasesByNameAsync(
-            GetReleaseNames(container, mirrorsOfArchives),
-            cancellationToken
-        );
-
-        return await CreatePreviewAsync(
-            run: run,
-            container: container,
-            mirrors: mirrors,
-            mirrorsOfArchives: mirrorsOfArchives,
-            folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
-            cancellationToken: cancellationToken
-        );
     }
 
     private async Task<ReleaseTemplate> GetReleaseTemplateAsync(
@@ -503,7 +483,6 @@ public class LinkCrypterImportPreviewService(
         LinkCrypterImportContainer container,
         List<LinkCrypterImportMirror> mirrors,
         IReadOnlyList<LinkCrypterImportMirrorsOfArchive> mirrorsOfArchives,
-        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -531,7 +510,6 @@ public class LinkCrypterImportPreviewService(
                 releaseName: releaseName,
                 mirrors: releaseMirrors,
                 releaseNamesOfContainer: releaseNamesOfContainer,
-                folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
                 cancellationToken: cancellationToken
             );
 
@@ -591,7 +569,6 @@ public class LinkCrypterImportPreviewService(
         string releaseName,
         IReadOnlyList<LinkCrypterImportMirror> mirrors,
         List<string> releaseNamesOfContainer,
-        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -625,7 +602,6 @@ public class LinkCrypterImportPreviewService(
                     && releaseAction is LinkCrypterImportReleaseAction.CreateRelease
                     && releaseFolderPath is null,
                 releaseNamesOfContainer: releaseNamesOfContainer,
-                folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
                 cancellationToken: cancellationToken
             )
             : (null, false);
@@ -728,7 +704,6 @@ public class LinkCrypterImportPreviewService(
         List<LinkCrypterImportMirror> mirrors,
         bool canUseFolderWithArchivesOfOtherReleases,
         List<string> releaseNamesOfContainer,
-        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -751,7 +726,6 @@ public class LinkCrypterImportPreviewService(
                 .Select(entry => entry.Key)
                 .ToList(),
             releaseName: releaseName,
-            folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
             cancellationToken: cancellationToken
         );
 
@@ -769,7 +743,6 @@ public class LinkCrypterImportPreviewService(
                 .Select(entry => entry.Key)
                 .ToList(),
             releaseName: container.ReleaseName,
-            folderPathsOfReplacedRelease: folderPathsOfReplacedRelease,
             cancellationToken: cancellationToken
         );
 
@@ -796,7 +769,6 @@ public class LinkCrypterImportPreviewService(
         LinkCrypterImportPreviewRun run,
         List<string> folderPaths,
         string releaseName,
-        IReadOnlyCollection<string> folderPathsOfReplacedRelease,
         CancellationToken cancellationToken
     )
     {
@@ -817,8 +789,6 @@ public class LinkCrypterImportPreviewService(
                 folderPathsNotChosenForOtherRelease,
                 cancellationToken
             );
-
-        usedFolderPaths.ExceptWith(folderPathsOfReplacedRelease);
 
         return folderPathsNotChosenForOtherRelease.FirstOrDefault(folderPath =>
             !usedFolderPaths.Contains(folderPath)

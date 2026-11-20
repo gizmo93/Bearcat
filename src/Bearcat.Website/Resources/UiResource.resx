@@ -2072,7 +2072,6 @@
   <data name="CheckFiles" xml:space="preserve"><value>Check files</value></data>
   <data name="LinkCrypterImportReleaseInfoHint" xml:space="preserve"><value>Release information (xrel, PreDB, NFO) is not fetched during the import. The background task fetches it afterwards.</value></data>
   <data name="SelectAllImportableContainers" xml:space="preserve"><value>All importable</value></data>
-  <data name="SelectAllReimportableContainers" xml:space="preserve"><value>All re-importable</value></data>
   <data name="StartLinkCrypterImportWithCount" xml:space="preserve"><value>Start import ({0} releases)</value></data>
   <data name="StartLinkCrypterImportWithOneRelease" xml:space="preserve"><value>Start import (1 release)</value></data>
   <data name="StartLinkCrypterImport" xml:space="preserve"><value>Start import</value></data>
@@ -2101,7 +2100,6 @@
   <data name="LinkCrypterImportState.Importing" xml:space="preserve"><value>Importing</value></data>
   <data name="LinkCrypterImportState.Completed" xml:space="preserve"><value>Completed</value></data>
   <data name="LinkCrypterImportState.Failed" xml:space="preserve"><value>Failed</value></data>
-  <data name="LinkCrypterImportState.Reimporting" xml:space="preserve"><value>Re-importing</value></data>
   <data name="LinkCrypterImportContainerStatus.AlreadyInBearcat" xml:space="preserve"><value>Already in Bearcat</value></data>
   <data name="LinkCrypterImportContainerStatus.WaitingForLinks" xml:space="preserve"><value>Waiting for links</value></data>
   <data name="LinkCrypterImportContainerStatus.ReadingLinksFailed" xml:space="preserve"><value>Reading links failed</value></data>
@@ -2126,35 +2124,6 @@
   <data name="LinkCrypterImportUploadByBearcatReason.FileStatesUnknown" xml:space="preserve"><value>file states unknown</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesAreNotArchiveParts" xml:space="preserve"><value>files are no archive parts</value></data>
   <data name="LinkCrypterImportUploadByBearcatReason.FileNamesDifferFromFirstAdoptedMirror" xml:space="preserve"><value>file names differ from the first adopted mirror</value></data>
-  <data name="Reimport" xml:space="preserve"><value>Re-import</value></data>
-  <data name="LinkCrypterImportReimportPlanning" xml:space="preserve"><value>Planning the re-import: Bearcat checks local files and simulates the import. This can take a while.</value></data>
-  <data name="LinkCrypterImportReimportRunning" xml:space="preserve"><value>Re-importing the container.</value></data>
-  <data name="ReimportLinkCrypterContainer" xml:space="preserve"><value>Re-import container</value></data>
-  <data name="ReimportLinkCrypterContainerDescription" xml:space="preserve"><value>Splits the release of an earlier import into one release per archive of the container. Nothing is deleted at hosters or crypters.</value></data>
-  <data name="LinkCrypterContainerReimported" xml:space="preserve"><value>Container re-imported.</value></data>
-  <data name="LinkCrypterContainerReimportedWithMovedArchiveParts" xml:space="preserve"><value>Container re-imported. The parts of {0} releases were moved into subfolders.</value></data>
-  <data name="ReimportSelectedLinkCrypterContainersWithCount" xml:space="preserve"><value>Re-import selected ({0})</value></data>
-  <data name="ReimportSelectedLinkCrypterContainers" xml:space="preserve"><value>Re-import selected containers</value></data>
-  <data name="ReimportSelectedLinkCrypterContainersConfirmation" xml:space="preserve"><value>Re-import {0} selected containers in the background? Bearcat splits each release into one release per archive of the container. Containers that cannot be re-imported keep their release and show the reason.</value></data>
-  <data name="LinkCrypterImportReimportSummary" xml:space="preserve"><value>Release {0} is replaced by these releases. Its completed uploads are moved to them, its posts to the collection.</value></data>
-  <data name="LinkCrypterImportReimportBlockers" xml:space="preserve"><value>The container cannot be re-imported:</value></data>
-  <data name="LinkCrypterImportReimportBlockerReason.UploadInProgress" xml:space="preserve"><value>An upload of {0} is running.</value></data>
-  <data name="LinkCrypterImportReimportBlockerReason.ArchiveInProgress" xml:space="preserve"><value>An archive of {0} is being created or restored.</value></data>
-  <data name="LinkCrypterImportReimportBlockerReason.ImportFailed" xml:space="preserve"><value>The import fails: {0}</value></data>
-  <data name="LinkCrypterImportReimportMovedUploads" xml:space="preserve"><value>Moved uploads: {0}</value></data>
-  <data name="LinkCrypterImportReimportMovedUpload" xml:space="preserve"><value>{0} ({1} files)</value></data>
-  <data name="LinkCrypterImportReimportNoMovedUploads" xml:space="preserve"><value>No uploads are moved to this release.</value></data>
-  <data name="LinkCrypterImportReimportUploadsNotMoved" xml:space="preserve"><value>These uploads are not moved and are removed from Bearcat with the old release:</value></data>
-  <data name="LinkCrypterImportReimportUploadNotMoved" xml:space="preserve"><value>{0}: {1} ({2} files)</value></data>
-  <data name="LinkCrypterImportUploadNotMovedReason.NoReleaseWithArchiveName" xml:space="preserve"><value>no release has this archive name</value></data>
-  <data name="LinkCrypterImportUploadNotMovedReason.UploadedFileWithoutArchiveFile" xml:space="preserve"><value>files without archive file</value></data>
-  <data name="LinkCrypterImportUploadNotMovedReason.NoUploadConfigForHoster" xml:space="preserve"><value>the release has no upload config for this hoster</value></data>
-  <data name="LinkCrypterImportUploadNotMovedReason.ArchiveFileNamesDiffer" xml:space="preserve"><value>the archive file names of the release differ</value></data>
-  <data name="LinkCrypterImportUploadNotMovedReason.SameLinksAlreadyOnRelease" xml:space="preserve"><value>the release already has an upload with these links</value></data>
-  <data name="LinkCrypterImportReimportConvertedContainers" xml:space="preserve"><value>These containers become containers of the collection:</value></data>
-  <data name="LinkCrypterImportReimportContainersNotConverted" xml:space="preserve"><value>These containers are removed from Bearcat, they stay at the crypter:</value></data>
-  <data name="LinkCrypterImportReimportContainerNotConvertedReason.CollectionUploadSlotHasContainerOfLinkCrypterAccount" xml:space="preserve"><value>the upload slot already has a container of this link crypter account</value></data>
-  <data name="LinkCrypterImportReimportContainerNotConvertedReason.CollectionUploadSlotUsesLinkCrypterAccountForReleaseContainers" xml:space="preserve"><value>the upload slot uses this link crypter account for release containers</value></data>
   <data name="ReplaceHosters" xml:space="preserve"><value>Replace hosters</value></data>
   <data name="ReplaceHostersSourceHeading" xml:space="preserve"><value>Hoster to replace</value></data>
   <data name="ReplaceHostersSelectHoster" xml:space="preserve"><value>Select hoster</value></data>

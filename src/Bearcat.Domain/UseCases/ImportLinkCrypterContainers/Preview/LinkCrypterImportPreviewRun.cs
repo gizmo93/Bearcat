@@ -15,8 +15,7 @@ public class LinkCrypterImportPreviewRun
         HashSet<string>
     > ArchivePartFileNamesByFolderPath { get; init; }
 
-    public Dictionary<string, Release> ExistingReleasesByName { get; set; } =
-        new(StringComparer.OrdinalIgnoreCase);
+    public required Dictionary<string, Release> ExistingReleasesByName { get; init; }
 
     public HashSet<string> ReleaseNamesOfEarlierContainers { get; } =
         new(StringComparer.OrdinalIgnoreCase);

@@ -40,7 +40,7 @@
                             Indeterminate="AreSomeSelectableContainersSelected"
                             CheckedChanged="SetSelectionOfAllSelectableContainersAsync" />
                 <label for="link-crypter-import-select-all-selectable" class="text-sm font-medium">
-                    @(Detail.State is LinkCrypterImportState.Completed ? L["SelectAllReimportableContainers"] : L["SelectAllImportableContainers"])
+                    @L["SelectAllImportableContainers"]
                 </label>
             </div>
         }
@@ -196,16 +196,6 @@
                                             <LucideIcon Name="library" class="h-3.5 w-3.5 shrink-0" />
                                             @L["OpenImportedReleaseCollection"]
                                         </a>
-                                    }
-                                    @if (container.CanBeReimported && Detail.State is not LinkCrypterImportState.Reimporting)
-                                    {
-                                        <BbButton Variant="ButtonVariant.Outline"
-                                                  Size="ButtonSize.Small"
-                                                  Class="h-6 px-2 text-xs"
-                                                  OnClick="@(() => ShowReimportDialogAsync(container))">
-                                            <LucideIcon Name="split" class="h-3.5 w-3.5" />
-                                            @L["Reimport"]
-                                        </BbButton>
                                     }
                                 </div>
                                 @if (container.Preview.Releases is { Count: > 1 } releasePreviews)

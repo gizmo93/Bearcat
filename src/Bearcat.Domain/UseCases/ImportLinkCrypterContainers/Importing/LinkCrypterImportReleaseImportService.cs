@@ -20,7 +20,6 @@ public class LinkCrypterImportReleaseImportService(
         LinkCrypterImport linkCrypterImport,
         LinkCrypterImportReleasePreview releasePreview,
         Release? existingRelease,
-        IReadOnlyList<LinkCrypterImportUploadToMove> uploadsToMove,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime uploadsPostedAt,
         DateTime localNow,
@@ -49,18 +48,6 @@ public class LinkCrypterImportReleaseImportService(
                 ? null
                 : releasePreview.ArchiveFolderPath;
 
-        var uploadMoveResults = uploadsToMove
-            .Select(uploadToMove =>
-                MoveUploadToRelease(
-                    release: release,
-                    uploadToMove: uploadToMove,
-                    archiveFolderPath: archiveFolderPathWithOnlyArchiveOfRelease,
-                    archiveStorageFolders: archiveStorageFolders,
-                    localNow: localNow
-                )
-            )
-            .ToList();
-
         var mirrorsWithUploadConfigs = GetMirrorsWithUploadConfigs(releasePreview, release);
 
         var sourceUploads = mirrorsWithUploadConfigs
@@ -83,7 +70,6 @@ public class LinkCrypterImportReleaseImportService(
             IsNewRelease: existingRelease is null,
             MirrorsWithUploadConfigs: mirrorsWithUploadConfigs,
             SourceUploads: sourceUploads,
-            UploadMoveResults: uploadMoveResults,
             ArchivePartsMove: archivePartsMove
         );
     }
@@ -311,137 +297,6 @@ public class LinkCrypterImportReleaseImportService(
             )
             .OrderBy(uploadConfig => uploadConfig.Id)
             .ToList();
-    }
-
-    private LinkCrypterImportUploadMoveResult MoveUploadToRelease(
-        Release release,
-        LinkCrypterImportUploadToMove uploadToMove,
-        string? archiveFolderPath,
-        IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
-        DateTime localNow
-    )
-    {
-        var hosterClassName = uploadToMove.OriginalUpload.GetHosterClassName();
-        var uploadConfig = GetArchiveFilesUploadConfigs(release)
-            .FirstOrDefault(uploadConfig => uploadConfig.GetHosterClassName() == hosterClassName);
-
-        if (uploadConfig is null)
-        {
-            return new LinkCrypterImportUploadMoveResult(
-                UploadToMove: uploadToMove,
-                NewUpload: null,
-                NotMovedReason: LinkCrypterImportUploadNotMovedReason.NoUploadConfigForHoster
-            );
-        }
-
-        var hosterFileLinks = uploadToMove
-            .UploadedFiles.Select(uploadedFile => uploadedFile.HosterFileLink)
-            .ToList();
-
-        if (
-            uploadConfig.Uploads.Any(upload =>
-                upload.UploadState is UploadState.Completed && HasFileLinks(upload, hosterFileLinks)
-            )
-        )
-        {
-            return new LinkCrypterImportUploadMoveResult(
-                UploadToMove: uploadToMove,
-                NewUpload: null,
-                NotMovedReason: LinkCrypterImportUploadNotMovedReason.SameLinksAlreadyOnRelease
-            );
-        }
-
-        var archive = GetOrAddArchiveWithFileNamesOrDefault(
-            archiveConfig: uploadConfig.ArchiveConfig!,
-            fileNames: uploadToMove
-                .UploadedFiles.Select(uploadedFile =>
-                    Path.GetFileName(uploadedFile.ArchiveFile!.FullFileName)
-                )
-                .ToList(),
-            existingArchiveFolderPath: IsArchiveFolderUsedByArchiveOfRelease(
-                release,
-                archiveFolderPath
-            )
-                ? null
-                : archiveFolderPath,
-            archiveStorageFolders: archiveStorageFolders,
-            localNow: localNow
-        );
-
-        if (archive is null)
-        {
-            return new LinkCrypterImportUploadMoveResult(
-                UploadToMove: uploadToMove,
-                NewUpload: null,
-                NotMovedReason: LinkCrypterImportUploadNotMovedReason.ArchiveFileNamesDiffer
-            );
-        }
-
-        return new LinkCrypterImportUploadMoveResult(
-            UploadToMove: uploadToMove,
-            NewUpload: AddMovedUpload(
-                uploadConfig: uploadConfig,
-                archive: archive,
-                uploadToMove: uploadToMove,
-                localNow: localNow
-            ),
-            NotMovedReason: null
-        );
-    }
-
-    private static Upload AddMovedUpload(
-        UploadConfig uploadConfig,
-        Archive archive,
-        LinkCrypterImportUploadToMove uploadToMove,
-        DateTime localNow
-    )
-    {
-        var originalUpload = uploadToMove.OriginalUpload;
-        var archiveFilesByFileName = GetArchiveFilesByFileName(archive);
-
-        var upload = new Upload
-        {
-            UploadConfig = uploadConfig,
-            HosterRegistrationId = originalUpload.HosterRegistrationId,
-            HosterRegistration = originalUpload.HosterRegistration,
-            Archive = archive,
-            HosterFolderId = originalUpload.HosterFolderId,
-            CreatedAt = originalUpload.CreatedAt,
-            UploadedAt = originalUpload.UploadedAt,
-            UploadState = originalUpload.UploadState,
-            NotFullyOnlineSince = originalUpload.NotFullyOnlineSince,
-            FullyOfflineSince = originalUpload.FullyOfflineSince,
-            PremiumOnlyDownload = originalUpload.PremiumOnlyDownload,
-            ErrorMessages = originalUpload.ErrorMessages.ToList(),
-            LinkCrypterContainers = [],
-            Notifications = [],
-            UploadedFiles = [],
-        };
-
-        foreach (var uploadedFile in uploadToMove.UploadedFiles)
-        {
-            var originalArchiveFile = uploadedFile.ArchiveFile!;
-
-            originalUpload.UploadedFiles.Remove(uploadedFile);
-            originalArchiveFile.UploadedFiles.Remove(uploadedFile);
-
-            uploadedFile.Upload = upload;
-
-            uploadedFile.ArchiveFile = archiveFilesByFileName[
-                Path.GetFileName(originalArchiveFile.FullFileName)
-            ];
-
-            upload.UploadedFiles.Add(uploadedFile);
-        }
-
-        upload.SetOnlineStateAndOfflineSinceTimestamps(
-            upload.CalculateOnlineStateFromUploadedFiles(),
-            localNow
-        );
-
-        uploadConfig.Uploads.Add(upload);
-
-        return upload;
     }
 
     private static Dictionary<string, ArchiveFile> GetArchiveFilesByFileName(Archive archive)
