@@ -17,7 +17,7 @@ public class CollectionContainerImportService(
     ILogger<CollectionContainerImportService> logger
 )
 {
-    public async Task<List<ArchivePartsMove>> ImportAsync(
+    public async Task<List<ArchivePartsToMove>> ImportAsync(
         LinkCrypterImportContainer container,
         IReadOnlyList<LinkCrypterImportReleasePreview> releasePreviews,
         CancellationToken cancellationToken
@@ -96,8 +96,8 @@ public class CollectionContainerImportService(
         );
 
         return importedReleases
-            .Select(importedRelease => importedRelease.ArchivePartsMove)
-            .OfType<ArchivePartsMove>()
+            .Select(importedRelease => importedRelease.ArchivePartsToMove)
+            .OfType<ArchivePartsToMove>()
             .ToList();
     }
 

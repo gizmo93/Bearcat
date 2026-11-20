@@ -26,9 +26,9 @@ public class LinkCrypterImportReleaseImportService(
         CancellationToken cancellationToken
     )
     {
-        var archivePartsMove =
+        var archivePartsToMove =
             existingRelease is null && releasePreview.ArchiveFolderContainsArchivesOfOtherReleases
-                ? CreateArchivePartsMove(releasePreview)
+                ? CreateArchivePartsToMove(releasePreview)
                 : null;
 
         var release =
@@ -36,7 +36,7 @@ public class LinkCrypterImportReleaseImportService(
             ?? await CreateReleaseAsync(
                 container: container,
                 releasePreview: releasePreview,
-                archivePartsMove: archivePartsMove,
+                archivePartsToMove: archivePartsToMove,
                 archiveStorageFolders: archiveStorageFolders,
                 uploadsPostedAt: uploadsPostedAt,
                 localNow: localNow,
@@ -70,11 +70,13 @@ public class LinkCrypterImportReleaseImportService(
             IsNewRelease: existingRelease is null,
             MirrorsWithUploadConfigs: mirrorsWithUploadConfigs,
             SourceUploads: sourceUploads,
-            ArchivePartsMove: archivePartsMove
+            ArchivePartsToMove: archivePartsToMove
         );
     }
 
-    private ArchivePartsMove CreateArchivePartsMove(LinkCrypterImportReleasePreview releasePreview)
+    private ArchivePartsToMove CreateArchivePartsToMove(
+        LinkCrypterImportReleasePreview releasePreview
+    )
     {
         var sharedArchiveFolderPath = releasePreview.ArchiveFolderPath!;
 
@@ -97,7 +99,7 @@ public class LinkCrypterImportReleaseImportService(
             );
         }
 
-        return new ArchivePartsMove(
+        return new ArchivePartsToMove(
             ReleaseName: releasePreview.ReleaseName,
             TargetFolderPath: Path.Combine(sharedArchiveFolderPath, releasePreview.ReleaseName),
             SourceFilePaths: sourceFilePaths
@@ -107,7 +109,7 @@ public class LinkCrypterImportReleaseImportService(
     private async Task<Release> CreateReleaseAsync(
         LinkCrypterImportContainer container,
         LinkCrypterImportReleasePreview releasePreview,
-        ArchivePartsMove? archivePartsMove,
+        ArchivePartsToMove? archivePartsToMove,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime uploadsPostedAt,
         DateTime localNow,
@@ -156,7 +158,7 @@ public class LinkCrypterImportReleaseImportService(
                         release: release,
                         linkCrypterImport: linkCrypterImport,
                         releasePreview: releasePreview,
-                        archivePartsMove: archivePartsMove,
+                        archivePartsToMove: archivePartsToMove,
                         archiveStorageFolders: archiveStorageFolders,
                         localNow: localNow
                     ),
@@ -176,22 +178,22 @@ public class LinkCrypterImportReleaseImportService(
         Release release,
         LinkCrypterImport linkCrypterImport,
         LinkCrypterImportReleasePreview releasePreview,
-        ArchivePartsMove? archivePartsMove,
+        ArchivePartsToMove? archivePartsToMove,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
         DateTime localNow
     )
     {
         if (releasePreview.ArchiveFolderPath is not null)
         {
-            var archiveConfig = archivePartsMove is null
+            var archiveConfig = archivePartsToMove is null
                 ? unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
                     release: release,
                     archiveFolderPath: releasePreview.ArchiveFolderPath,
                     createdAt: localNow
                 )
-                : CreateArchiveConfigInTargetFolderOfArchivePartsMove(
+                : CreateArchiveConfigInTargetFolderOfArchivePartsToMove(
                     release: release,
-                    archivePartsMove: archivePartsMove,
+                    archivePartsToMove: archivePartsToMove,
                     localNow: localNow
                 );
 
@@ -211,19 +213,19 @@ public class LinkCrypterImportReleaseImportService(
         );
     }
 
-    private ArchiveConfig CreateArchiveConfigInTargetFolderOfArchivePartsMove(
+    private ArchiveConfig CreateArchiveConfigInTargetFolderOfArchivePartsToMove(
         Release release,
-        ArchivePartsMove archivePartsMove,
+        ArchivePartsToMove archivePartsToMove,
         DateTime localNow
     )
     {
-        var archiveFileNames = archivePartsMove
+        var archiveFileNames = archivePartsToMove
             .SourceFilePaths.Select(filePath => Path.GetFileName(filePath))
             .ToList();
 
         return unmanagedReleaseArchiveInitializationService.CreateArchiveConfigWithArchiveFiles(
             release: release,
-            archiveFolderPath: archivePartsMove.TargetFolderPath,
+            archiveFolderPath: archivePartsToMove.TargetFolderPath,
             archiveFileNames: archiveFileNames,
             archiverFileExtension: ArchivePartFileNames.GetArchiverFileExtension(
                 archiveFileNames[0]
