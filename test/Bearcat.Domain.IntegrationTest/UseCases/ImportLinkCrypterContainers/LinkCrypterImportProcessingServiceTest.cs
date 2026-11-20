@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -1341,5 +1342,197 @@ public class LinkCrypterImportProcessingServiceTest(DatabaseProvider databasePro
                 (LinkCrypterImportContainerStatus.NotImportable, false),
                 (LinkCrypterImportContainerStatus.Importable, false),
             ]);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ProcessAsync_FilesChecked_AssignsSeriesReleaseTemplateToSeriesAndMultiArchiveContainers(
+        bool importHasSeriesReleaseTemplate
+    )
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var seriesReleaseTemplateId = await AddSeriesReleaseTemplateWithFirstHosterAsync(seed);
+        AddListedContainer(
+            "https://crypter.test/movie",
+            ReleaseName,
+            [OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName)]
+        );
+        AddEpisodeContainer("https://crypter.test/episode", FirstEpisodeReleaseName);
+        AddListedContainer(
+            "https://crypter.test/several-archives",
+            "Bearcat Show Collection",
+            GetSeasonArchiveFileNames()
+                .Select(
+                    (fileName, index) =>
+                        OnlineArchiveLink($"https://first.test/several/{index}", fileName)
+                )
+                .ToList()
+        );
+        var linkCrypterImportId = await StartImportAsync(
+            seed,
+            seriesReleaseTemplateId: importHasSeriesReleaseTemplate ? seriesReleaseTemplateId : null
+        );
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var expectedSeriesContainerTemplateId = importHasSeriesReleaseTemplate
+            ? seriesReleaseTemplateId
+            : seed.ReleaseTemplateId;
+        (await LoadImportAsync(linkCrypterImportId))
+            .Containers.OrderBy(container => container.Id)
+            .Select(container => container.ReleaseTemplateId)
+            .ShouldBe([
+                seed.ReleaseTemplateId,
+                expectedSeriesContainerTemplateId,
+                expectedSeriesContainerTemplateId,
+            ]);
+    }
+
+    [Test]
+    public async Task SetReleaseTemplateAsync_ContainerOfRelease_ChangesAllContainersOfReleaseAndRecreatesPreviews()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var seriesReleaseTemplateId = await AddSeriesReleaseTemplateWithFirstHosterAsync(seed);
+        AddListedContainer(
+            "https://crypter.test/first",
+            ReleaseName,
+            [OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName)]
+        );
+        AddListedContainer(
+            "https://crypter.test/second",
+            ReleaseName.ToLowerInvariant(),
+            [OnlineArchiveLink("https://second.test/b1", FirstArchiveFileName)]
+        );
+        AddListedContainer(
+            "https://crypter.test/other",
+            OtherReleaseName,
+            [OnlineArchiveLink("https://second.test/c1", FirstArchiveFileName)]
+        );
+        var linkCrypterImportId = await StartImportAsync(
+            seed,
+            seriesReleaseTemplateId: seriesReleaseTemplateId
+        );
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+        await ProcessAsync();
+        var firstContainerId = (await LoadImportAsync(linkCrypterImportId)).Containers.Min(
+            container => container.Id
+        );
+
+        // Act
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .SetReleaseTemplateAsync(
+                linkCrypterImportId: linkCrypterImportId,
+                containerIds: [firstContainerId],
+                releaseTemplateId: seriesReleaseTemplateId
+            );
+
+        // Assert
+        (await LoadImportAsync(linkCrypterImportId))
+            .Containers.OrderBy(container => container.Id)
+            .Select(container =>
+                (
+                    container.ReleaseTemplateId,
+                    container.Status,
+                    container.NotImportableReason,
+                    container.IsSelected
+                )
+            )
+            .ShouldBe([
+                (seriesReleaseTemplateId, LinkCrypterImportContainerStatus.Importable, null, true),
+                (
+                    seriesReleaseTemplateId,
+                    LinkCrypterImportContainerStatus.NotImportable,
+                    LinkCrypterImportNotImportableReason.NoMirrorForReleaseHoster,
+                    false
+                ),
+                (seed.ReleaseTemplateId, LinkCrypterImportContainerStatus.Importable, null, true),
+            ]);
+    }
+
+    [Test]
+    public async Task SetReleaseTemplateAsync_TemplateIsNoTemplateOfImport_Throws()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var otherReleaseTemplateId = await AddSeriesReleaseTemplateWithFirstHosterAsync(seed);
+        AddListedContainer(
+            "https://crypter.test/first",
+            ReleaseName,
+            [OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName)]
+        );
+        var linkCrypterImportId = await StartImportAsync(seed);
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+        await ProcessAsync();
+        var containerId = (await LoadImportAsync(linkCrypterImportId)).Containers.Single().Id;
+
+        // Act
+        var setReleaseTemplate = () =>
+            CreateLinkCrypterImportService(CreateDbContext())
+                .SetReleaseTemplateAsync(
+                    linkCrypterImportId: linkCrypterImportId,
+                    containerIds: [containerId],
+                    releaseTemplateId: otherReleaseTemplateId
+                );
+
+        // Assert
+        await setReleaseTemplate.ShouldThrowAsync<InvalidLinkCrypterImportException>();
+        (await LoadImportAsync(linkCrypterImportId))
+            .Containers.Single()
+            .ReleaseTemplateId.ShouldBe(seed.ReleaseTemplateId);
+    }
+
+    [Test]
+    public async Task ProcessAsync_TemplateAndLanguageChangedDuringReview_CreatesReleaseWithTemplateAndLanguageOfContainer()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var seriesReleaseTemplateId = await AddSeriesReleaseTemplateWithFirstHosterAsync(seed);
+        AddListedContainer(
+            "https://crypter.test/first",
+            ReleaseName,
+            [
+                OnlineArchiveLink("https://first.test/a1", FirstArchiveFileName),
+                OnlineArchiveLink("https://first.test/a2", SecondArchiveFileName),
+            ]
+        );
+        var linkCrypterImportId = await StartImportAsync(
+            seed,
+            primaryLanguageCode: "de",
+            seriesReleaseTemplateId: seriesReleaseTemplateId
+        );
+        await ProcessAsync();
+        await ChooseDefaultHosterRegistrationsAsync(linkCrypterImportId, seed);
+        await ProcessAsync();
+        var containerId = (await LoadImportAsync(linkCrypterImportId)).Containers.Single().Id;
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .SetReleaseTemplateAsync(
+                linkCrypterImportId: linkCrypterImportId,
+                containerIds: [containerId],
+                releaseTemplateId: seriesReleaseTemplateId
+            );
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .SetPrimaryLanguageAsync(
+                linkCrypterImportId: linkCrypterImportId,
+                containerIds: [containerId],
+                primaryLanguageCode: " EN "
+            );
+
+        // Act
+        await CreateLinkCrypterImportService(CreateDbContext())
+            .StartImportAsync(linkCrypterImportId);
+        await ProcessAsync();
+
+        // Assert
+        var release = await LoadReleaseAsync(ReleaseName);
+        release.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        release.PrimaryLanguageCode.ShouldBe("en");
     }
 }

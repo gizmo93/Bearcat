@@ -19,12 +19,25 @@
             </div>
 
             <div class="flex min-w-0 flex-col gap-2">
-                <label class="text-sm font-medium">@L["ReleaseTemplate"]</label>
+                <label class="text-sm font-medium">@L["DefaultReleaseTemplate"]</label>
                 <BbSelect TValue="int?"
                           @bind-Value="releaseTemplateId"
                           Options="ReleaseTemplateOptions"
                           Placeholder="@L["SelectReleaseTemplate"]"
                           Class="w-full" />
+                <p class="text-xs text-muted-foreground">@L["LinkCrypterImportDefaultReleaseTemplateHelp"]</p>
+            </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div class="flex min-w-0 flex-col gap-2 sm:col-start-2">
+                <label class="text-sm font-medium">@L["SeriesReleaseTemplate"]</label>
+                <BbSelect TValue="int?"
+                          @bind-Value="seriesReleaseTemplateId"
+                          Options="SeriesReleaseTemplateOptions"
+                          Placeholder="@L["None"]"
+                          Class="w-full" />
+                <p class="text-xs text-muted-foreground">@L["LinkCrypterImportSeriesReleaseTemplateHelp"]</p>
             </div>
         </div>
 
@@ -46,7 +59,7 @@
 
         <BbFormFieldCombobox TValue="string"
                              @bind-Value="primaryLanguageCode"
-                             Label="@L["PrimaryLanguage"]"
+                             Label="@L["DefaultLanguage"]"
                              SearchPlaceholder="@L["SearchLanguage"]"
                              EmptyMessage="@L["NoLanguagesFound"]"
                              HelperText="@L["LinkCrypterImportPrimaryLanguageHelp"]"

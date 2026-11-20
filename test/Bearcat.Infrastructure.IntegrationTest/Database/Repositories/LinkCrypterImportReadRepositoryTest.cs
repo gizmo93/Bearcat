@@ -85,6 +85,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
         releaseA.IsSelected.ShouldBeFalse();
         releaseA.HasSelectableContainers.ShouldBeTrue();
         releaseA.ReleaseFolderPath.ShouldBe("/releases/Release.A");
+        releaseA.ReleaseTemplateName.ShouldBe(linkCrypterImport.ReleaseTemplate.Name);
         var releaseB = result.Items[1];
         releaseB
             .Containers.Select(container => container.Status)
@@ -188,6 +189,7 @@ public class LinkCrypterImportReadRepositoryTest(DatabaseProvider databaseProvid
                 ContainerUrl = $"https://crypter.test/{Guid.NewGuid():N}",
                 ContainerName = containerName,
                 ReleaseName = containerName,
+                ReleaseTemplate = linkCrypterImport.ReleaseTemplate,
                 ExternalReference = containerName,
                 Status = status,
                 IsSelected = isSelected && status is LinkCrypterImportContainerStatus.Importable,

@@ -24,6 +24,7 @@ public class LinkCrypterImportService(
     public async Task<int> StartAsync(
         int linkCrypterRegistrationId,
         int releaseTemplateId,
+        int? seriesReleaseTemplateId,
         string? archiveFilesBasePathForReleasesWithoutLocalFiles,
         string? primaryLanguageCode,
         CancellationToken cancellationToken = default
@@ -59,6 +60,16 @@ public class LinkCrypterImportService(
             );
         }
 
+        if (
+            seriesReleaseTemplateId is { } seriesTemplateId
+            && !await repository.ReleaseTemplateExistsAsync(seriesTemplateId, cancellationToken)
+        )
+        {
+            throw new InvalidLinkCrypterImportException(
+                $"Release template {seriesTemplateId} was not found."
+            );
+        }
+
         var archiveFilesBasePath = archiveFilesBasePathForReleasesWithoutLocalFiles
             .TrimOrNullWhenWhitespace()
             ?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -79,10 +90,9 @@ public class LinkCrypterImportService(
         {
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
             ReleaseTemplateId = releaseTemplateId,
+            SeriesReleaseTemplateId = seriesReleaseTemplateId,
             ArchiveFilesBasePathForReleasesWithoutLocalFiles = archiveFilesBasePath,
-            PrimaryLanguageCode = primaryLanguageCode
-                .TrimOrNullWhenWhitespace()
-                ?.ToLowerInvariant(),
+            PrimaryLanguageCode = NormalizeLanguageCode(primaryLanguageCode),
             State = LinkCrypterImportState.ReadingContainers,
             CreatedAt = localNow,
             UpdatedAt = localNow,
@@ -196,6 +206,67 @@ public class LinkCrypterImportService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task SetReleaseTemplateAsync(
+        int linkCrypterImportId,
+        IReadOnlyList<int> containerIds,
+        int releaseTemplateId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var linkCrypterImport = await repository.GetWithContainersAsync(
+            linkCrypterImportId,
+            cancellationToken
+        );
+
+        EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
+
+        if (
+            releaseTemplateId != linkCrypterImport.ReleaseTemplateId
+            && releaseTemplateId != linkCrypterImport.SeriesReleaseTemplateId
+        )
+        {
+            throw new InvalidLinkCrypterImportException(
+                $"Release template {releaseTemplateId} is not a release template of link crypter import {linkCrypterImport.Id}."
+            );
+        }
+
+        foreach (
+            var container in GetChangeableContainersOfSameReleases(linkCrypterImport, containerIds)
+        )
+        {
+            container.ReleaseTemplateId = releaseTemplateId;
+        }
+
+        await previewService.CreatePreviewsAsync(linkCrypterImport, cancellationToken);
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetPrimaryLanguageAsync(
+        int linkCrypterImportId,
+        IReadOnlyList<int> containerIds,
+        string? primaryLanguageCode,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var linkCrypterImport = await repository.GetWithContainersAsync(
+            linkCrypterImportId,
+            cancellationToken
+        );
+
+        EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
+
+        var normalizedLanguageCode = NormalizeLanguageCode(primaryLanguageCode);
+
+        foreach (
+            var container in GetChangeableContainersOfSameReleases(linkCrypterImport, containerIds)
+        )
+        {
+            container.PrimaryLanguageCode = normalizedLanguageCode;
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetReleaseSelectionAsync(
         int linkCrypterImportId,
         string releaseName,
@@ -303,6 +374,38 @@ public class LinkCrypterImportService(
         EnsureState(linkCrypterImport, LinkCrypterImportState.ReadyForReview);
 
         return GetImportableContainers(linkCrypterImport);
+    }
+
+    private static List<LinkCrypterImportContainer> GetChangeableContainersOfSameReleases(
+        LinkCrypterImport linkCrypterImport,
+        IReadOnlyList<int> containerIds
+    )
+    {
+        var containersById = linkCrypterImport.Containers.ToDictionary(container => container.Id);
+
+        var releaseNames = containerIds
+            .Select(containerId =>
+                containersById.TryGetValue(containerId, out var container)
+                    ? container.ReleaseName
+                    : throw new InvalidLinkCrypterImportException(
+                        $"Container {containerId} does not belong to link crypter import {linkCrypterImport.Id}."
+                    )
+            )
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return linkCrypterImport
+            .Containers.Where(container =>
+                releaseNames.Contains(container.ReleaseName)
+                && container.Status
+                    is LinkCrypterImportContainerStatus.Importable
+                        or LinkCrypterImportContainerStatus.NotImportable
+            )
+            .ToList();
+    }
+
+    private static string? NormalizeLanguageCode(string? languageCode)
+    {
+        return languageCode.TrimOrNullWhenWhitespace()?.ToLowerInvariant();
     }
 
     private static List<LinkCrypterImportContainer> GetContainersOfRelease(

@@ -28,8 +28,9 @@
                 </div>
                 <p class="text-sm text-muted-foreground">
                     @L["Crypter"]: <span class="text-foreground">@detail.LinkCrypterRegistrationName</span>
-                    · @L["ReleaseTemplate"]: <span class="text-foreground">@detail.ReleaseTemplateName</span>
-                    · @L["PrimaryLanguage"]: <span class="text-foreground">@GetLanguageDisplayName(detail.PrimaryLanguageCode)</span>
+                    · @L["DefaultReleaseTemplate"]: <span class="text-foreground">@detail.ReleaseTemplateName</span>
+                    · @L["SeriesReleaseTemplate"]: <span class="text-foreground">@(detail.SeriesReleaseTemplateName ?? L["None"])</span>
+                    · @L["DefaultLanguage"]: <span class="text-foreground">@GetLanguageDisplayName(detail.PrimaryLanguageCode)</span>
                 </p>
                 @if (detail.ArchiveFilesBasePathForReleasesWithoutLocalFiles is { } archiveFilesBasePath)
                 {

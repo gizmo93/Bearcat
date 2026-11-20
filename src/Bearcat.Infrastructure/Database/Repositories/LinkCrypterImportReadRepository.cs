@@ -22,6 +22,9 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                 Id: import.Id,
                 LinkCrypterRegistrationName: import.LinkCrypterRegistration.Name,
                 ReleaseTemplateName: import.ReleaseTemplate.Name,
+                SeriesReleaseTemplateName: import.SeriesReleaseTemplate != null
+                    ? import.SeriesReleaseTemplate.Name
+                    : null,
                 State: import.State,
                 CreatedAt: import.CreatedAt,
                 UpdatedAt: import.UpdatedAt,
@@ -46,6 +49,10 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                 LinkCrypterRegistrationName = import.LinkCrypterRegistration.Name,
                 import.ReleaseTemplateId,
                 ReleaseTemplateName = import.ReleaseTemplate.Name,
+                import.SeriesReleaseTemplateId,
+                SeriesReleaseTemplateName = import.SeriesReleaseTemplate != null
+                    ? import.SeriesReleaseTemplate.Name
+                    : null,
                 import.ArchiveFilesBasePathForReleasesWithoutLocalFiles,
                 import.PrimaryLanguageCode,
                 import.State,
@@ -87,6 +94,8 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             LinkCrypterRegistrationName: import.LinkCrypterRegistrationName,
             ReleaseTemplateId: import.ReleaseTemplateId,
             ReleaseTemplateName: import.ReleaseTemplateName,
+            SeriesReleaseTemplateId: import.SeriesReleaseTemplateId,
+            SeriesReleaseTemplateName: import.SeriesReleaseTemplateName,
             ArchiveFilesBasePathForReleasesWithoutLocalFiles: import.ArchiveFilesBasePathForReleasesWithoutLocalFiles,
             PrimaryLanguageCode: import.PrimaryLanguageCode,
             State: import.State,
@@ -158,6 +167,9 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                 container.Id,
                 container.ContainerName,
                 container.ReleaseName,
+                container.ReleaseTemplateId,
+                ReleaseTemplateName = container.ReleaseTemplate.Name,
+                container.PrimaryLanguageCode,
                 container.ContainerUrl,
                 container.HasBackupLinks,
                 container.IsSelected,
@@ -171,10 +183,12 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
             .ToListAsync(cancellationToken);
 
         var releases = containers
-            .Select(container => new
-            {
-                container.ReleaseName,
-                ReadModel = new LinkCrypterImportContainerReadModel(
+            .Select(container => new ContainerOfRelease(
+                ReleaseName: container.ReleaseName,
+                ReleaseTemplateId: container.ReleaseTemplateId,
+                ReleaseTemplateName: container.ReleaseTemplateName,
+                PrimaryLanguageCode: container.PrimaryLanguageCode,
+                ReadModel: new LinkCrypterImportContainerReadModel(
                     Id: container.Id,
                     ContainerName: container.ContainerName,
                     ContainerUrl: container.ContainerUrl,
@@ -187,13 +201,13 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
                     ImportedReleaseCollectionId: container.ImportedReleaseCollectionId,
                     ErrorMessages: container.ErrorMessages,
                     Preview: LinkCrypterImportContainerPreview.FromJson(container.PreviewJson)
-                ),
-            })
+                )
+            ))
             .GroupBy(container => container.ReleaseName, StringComparer.OrdinalIgnoreCase)
             .OrderBy(release => lowerReleaseNamesOfPage.IndexOf(release.Key.ToLowerInvariant()))
             .Select(release =>
                 CreateReleaseReadModel(
-                    releaseName: release.First().ReleaseName,
+                    firstContainer: release.First(),
                     containers: release.Select(container => container.ReadModel).ToList()
                 )
             )
@@ -240,7 +254,7 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
     }
 
     private static LinkCrypterImportReleaseReadModel CreateReleaseReadModel(
-        string releaseName,
+        ContainerOfRelease firstContainer,
         List<LinkCrypterImportContainerReadModel> containers
     )
     {
@@ -251,7 +265,10 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
         var selectableContainers = containers.Where(container => container.IsSelectable).ToList();
 
         return new LinkCrypterImportReleaseReadModel(
-            ReleaseName: releaseName,
+            ReleaseName: firstContainer.ReleaseName,
+            ReleaseTemplateId: firstContainer.ReleaseTemplateId,
+            ReleaseTemplateName: firstContainer.ReleaseTemplateName,
+            PrimaryLanguageCode: firstContainer.PrimaryLanguageCode,
             ReleaseAction: releasePreview?.ReleaseAction,
             ExistingReleaseId: releasePreview?.ExistingReleaseId,
             ReleaseFolderPath: releasePreview?.ReleaseFolderPath,
@@ -303,4 +320,12 @@ public class LinkCrypterImportReadRepository(IBearcatReadDbContext dbRead)
     }
 
     private sealed record SelectableContainer(string ReleaseName, bool IsSelected);
+
+    private sealed record ContainerOfRelease(
+        string ReleaseName,
+        int ReleaseTemplateId,
+        string ReleaseTemplateName,
+        string? PrimaryLanguageCode,
+        LinkCrypterImportContainerReadModel ReadModel
+    );
 }

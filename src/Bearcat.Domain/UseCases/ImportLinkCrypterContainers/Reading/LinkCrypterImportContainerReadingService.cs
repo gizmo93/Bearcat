@@ -160,6 +160,8 @@ public class LinkCrypterImportContainerReadingService(
                     ContainerUrl = listedContainer.ContainerUrl,
                     ContainerName = listedContainer.ContainerName,
                     ReleaseName = listedContainer.ContainerName.Trim(),
+                    ReleaseTemplateId = linkCrypterImport.ReleaseTemplateId,
+                    PrimaryLanguageCode = linkCrypterImport.PrimaryLanguageCode,
                     ExternalReference = listedContainer.ExternalReference,
                     Status = existingContainerUrls.Contains(listedContainer.ContainerUrl)
                         ? LinkCrypterImportContainerStatus.AlreadyInBearcat
@@ -278,20 +280,28 @@ public class LinkCrypterImportContainerReadingService(
         CancellationToken cancellationToken
     )
     {
-        var releaseTemplate =
-            await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
-                linkCrypterImport.ReleaseTemplateId,
-                cancellationToken
-            )
-            ?? throw new InvalidOperationException(
-                $"Release template {linkCrypterImport.ReleaseTemplateId} of link crypter import {linkCrypterImport.Id} was not found."
+        var archiveUploadConfigTemplates = new List<UploadConfigTemplate>();
+
+        foreach (var releaseTemplateId in linkCrypterImport.GetReleaseTemplateIds())
+        {
+            var releaseTemplate =
+                await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
+                    releaseTemplateId,
+                    cancellationToken
+                )
+                ?? throw new InvalidOperationException(
+                    $"Release template {releaseTemplateId} of link crypter import {linkCrypterImport.Id} was not found."
+                );
+
+            archiveUploadConfigTemplates.AddRange(
+                releaseTemplate
+                    .UploadConfigTemplates.Where(template =>
+                        template.UploadSource is UploadSource.ArchiveFiles
+                    )
+                    .OrderBy(template => template.Id)
             );
-        var archiveUploadConfigTemplates = releaseTemplate
-            .UploadConfigTemplates.Where(template =>
-                template.UploadSource is UploadSource.ArchiveFiles
-            )
-            .OrderBy(template => template.Id)
-            .ToList();
+        }
+
         var templateHosterClassNames = archiveUploadConfigTemplates
             .Select(template => template.GetHosterClassName())
             .ToHashSet(StringComparer.Ordinal);

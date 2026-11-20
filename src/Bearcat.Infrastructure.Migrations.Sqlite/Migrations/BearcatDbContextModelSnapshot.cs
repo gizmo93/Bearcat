@@ -1092,6 +1092,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SeriesReleaseTemplateId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("State")
                         .HasColumnType("INTEGER");
 
@@ -1104,6 +1107,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("LinkCrypterRegistrationId");
 
                     b.HasIndex("ReleaseTemplateId");
+
+                    b.HasIndex("SeriesReleaseTemplateId");
 
                     b.HasIndex("State");
 
@@ -1161,10 +1166,17 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ReleaseName")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -1174,6 +1186,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasIndex("ImportedReleaseCollectionId");
 
                     b.HasIndex("ImportedReleaseId");
+
+                    b.HasIndex("ReleaseTemplateId");
 
                     b.HasIndex("LinkCrypterImportId", "Status");
 
@@ -3292,9 +3306,16 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "SeriesReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("SeriesReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("LinkCrypterRegistration");
 
                     b.Navigation("ReleaseTemplate");
+
+                    b.Navigation("SeriesReleaseTemplate");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportContainer", b =>
@@ -3315,11 +3336,19 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("ImportedRelease");
 
                     b.Navigation("ImportedReleaseCollection");
 
                     b.Navigation("LinkCrypterImport");
+
+                    b.Navigation("ReleaseTemplate");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportHosterRegistration", b =>

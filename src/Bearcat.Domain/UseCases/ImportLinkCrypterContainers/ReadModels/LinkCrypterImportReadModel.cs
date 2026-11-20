@@ -6,6 +6,7 @@ public sealed record LinkCrypterImportReadModel(
     int Id,
     string LinkCrypterRegistrationName,
     string ReleaseTemplateName,
+    string? SeriesReleaseTemplateName,
     LinkCrypterImportState State,
     DateTime CreatedAt,
     DateTime UpdatedAt,

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Dto;
 using Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Exceptions;
@@ -19,7 +20,7 @@ public partial class LinkCrypterImportReleaseList(
     private const int PageSize = 25;
 
     private const string ReleaseGridClass =
-        "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.4fr)]";
+        "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]";
 
     private IReadOnlyList<LinkCrypterImportReleaseReadModel> releases = [];
     private LinkCrypterImportDetailReadModel? loadedDetail;
@@ -225,6 +226,17 @@ public partial class LinkCrypterImportReleaseList(
             releasePreview: releasePreview,
             archivePartsWereMoved: container.Status is LinkCrypterImportContainerStatus.Imported
         );
+    }
+
+    private string GetLanguageDisplayName(string? languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+        {
+            return L["NotSet"];
+        }
+
+        var culture = CultureInfo.GetCultureInfo(languageCode);
+        return $"{culture.NativeName} ({culture.TwoLetterISOLanguageName})";
     }
 
     private string GetHosterName(string? hosterClassName)

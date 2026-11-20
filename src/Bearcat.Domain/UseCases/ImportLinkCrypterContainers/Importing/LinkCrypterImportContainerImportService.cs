@@ -149,7 +149,7 @@ public class LinkCrypterImportContainerImportService(
         );
 
         var importedRelease = await releaseImportService.ImportReleaseAsync(
-            linkCrypterImport: container.LinkCrypterImport,
+            container: container,
             releasePreview: releasePreview,
             existingRelease: existingRelease,
             archiveStorageFolders: archiveStorageFolders,

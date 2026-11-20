@@ -16,6 +16,11 @@ public class LinkCrypterImportContainerConfiguration
         builder.Property(container => container.ContainerUrl).IsRequired().HasMaxLength(200);
         builder.Property(container => container.ContainerName).IsRequired().HasMaxLength(500);
         builder.Property(container => container.ReleaseName).IsRequired().HasMaxLength(500);
+        builder.Property(container => container.ReleaseTemplateId).IsRequired();
+        builder
+            .Property(container => container.PrimaryLanguageCode)
+            .HasMaxLength(2)
+            .IsRequired(false);
         builder
             .Property(container => container.ExternalReference)
             .IsRequired()
@@ -28,6 +33,14 @@ public class LinkCrypterImportContainerConfiguration
         builder.Property(container => container.ImportedReleaseCollectionId).IsRequired(false);
         builder.Property(container => container.ErrorMessages).IsRequired();
         builder.Property(container => container.PreviewJson).IsRequired().HasColumnType("text");
+
+        builder
+            .HasOne(container => container.ReleaseTemplate)
+            .WithMany()
+            .HasForeignKey(container => container.ReleaseTemplateId)
+            .HasPrincipalKey(template => template.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder
             .HasOne(container => container.ImportedRelease)
@@ -46,6 +59,7 @@ public class LinkCrypterImportContainerConfiguration
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(container => new { container.LinkCrypterImportId, container.Status });
+        builder.HasIndex(container => container.ReleaseTemplateId);
         builder.HasIndex(container => container.ImportedReleaseId);
         builder.HasIndex(container => container.ImportedReleaseCollectionId);
     }

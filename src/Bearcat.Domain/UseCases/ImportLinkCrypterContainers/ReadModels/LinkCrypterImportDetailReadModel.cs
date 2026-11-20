@@ -8,6 +8,8 @@ public sealed record LinkCrypterImportDetailReadModel(
     string LinkCrypterRegistrationName,
     int ReleaseTemplateId,
     string ReleaseTemplateName,
+    int? SeriesReleaseTemplateId,
+    string? SeriesReleaseTemplateName,
     string? ArchiveFilesBasePathForReleasesWithoutLocalFiles,
     string? PrimaryLanguageCode,
     LinkCrypterImportState State,

@@ -17,7 +17,7 @@ public class LinkCrypterImportReleaseImportService(
 )
 {
     public async Task<LinkCrypterImportedRelease> ImportReleaseAsync(
-        LinkCrypterImport linkCrypterImport,
+        LinkCrypterImportContainer container,
         LinkCrypterImportReleasePreview releasePreview,
         Release? existingRelease,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
@@ -34,7 +34,7 @@ public class LinkCrypterImportReleaseImportService(
         var release =
             existingRelease
             ?? await CreateReleaseAsync(
-                linkCrypterImport: linkCrypterImport,
+                container: container,
                 releasePreview: releasePreview,
                 archivePartsMove: archivePartsMove,
                 archiveStorageFolders: archiveStorageFolders,
@@ -53,7 +53,7 @@ public class LinkCrypterImportReleaseImportService(
         var sourceUploads = mirrorsWithUploadConfigs
             .Select(mirrorWithUploadConfig =>
                 GetOrAddSourceUploadOrDefault(
-                    linkCrypterImport: linkCrypterImport,
+                    linkCrypterImport: container.LinkCrypterImport,
                     release: release,
                     mirror: mirrorWithUploadConfig.Mirror,
                     uploadConfig: mirrorWithUploadConfig.UploadConfig,
@@ -105,7 +105,7 @@ public class LinkCrypterImportReleaseImportService(
     }
 
     private async Task<Release> CreateReleaseAsync(
-        LinkCrypterImport linkCrypterImport,
+        LinkCrypterImportContainer container,
         LinkCrypterImportReleasePreview releasePreview,
         ArchivePartsMove? archivePartsMove,
         IReadOnlyList<ArchiveStorageFolder> archiveStorageFolders,
@@ -115,6 +115,7 @@ public class LinkCrypterImportReleaseImportService(
     )
     {
         var releaseName = releasePreview.ReleaseName;
+        var linkCrypterImport = container.LinkCrypterImport;
         var isManaged = releasePreview.ReleaseFolderPath is not null;
         var hasAdoptedMirror = releasePreview.Mirrors.Any(mirror =>
             mirror.Decision is LinkCrypterImportMirrorDecision.Adopt
@@ -136,11 +137,11 @@ public class LinkCrypterImportReleaseImportService(
 
         var releaseTemplate =
             await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
-                linkCrypterImport.ReleaseTemplateId,
+                container.ReleaseTemplateId,
                 cancellationToken
             )
             ?? throw new InvalidOperationException(
-                $"Release template {linkCrypterImport.ReleaseTemplateId} was not found."
+                $"Release template {container.ReleaseTemplateId} was not found."
             );
 
         var releaseData = await releaseFromFolderCreationService.CreateWithReleaseTypeAsync(
@@ -159,7 +160,7 @@ public class LinkCrypterImportReleaseImportService(
                         archiveStorageFolders: archiveStorageFolders,
                         localNow: localNow
                     ),
-            primaryLanguageCode: linkCrypterImport.PrimaryLanguageCode,
+            primaryLanguageCode: container.PrimaryLanguageCode,
             resolveReleaseInfo: false,
             localNow: localNow,
             cancellationToken: cancellationToken

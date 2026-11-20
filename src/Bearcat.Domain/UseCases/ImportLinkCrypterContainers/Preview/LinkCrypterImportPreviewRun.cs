@@ -4,9 +4,7 @@ namespace Bearcat.Domain.UseCases.ImportLinkCrypterContainers.Preview;
 
 public class LinkCrypterImportPreviewRun
 {
-    public required ReleaseTemplate ReleaseTemplate { get; init; }
-
-    public required List<string> TemplateHosterClassNames { get; init; }
+    public required Dictionary<int, ReleaseTemplate> ReleaseTemplatesById { get; init; }
 
     public required List<string> ReleaseFolderBasePaths { get; init; }
 

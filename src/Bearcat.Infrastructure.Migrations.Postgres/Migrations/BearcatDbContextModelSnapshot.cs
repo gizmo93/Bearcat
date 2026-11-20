@@ -1146,6 +1146,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SeriesReleaseTemplateId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
@@ -1158,6 +1161,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasIndex("LinkCrypterRegistrationId");
 
                     b.HasIndex("ReleaseTemplateId");
+
+                    b.HasIndex("SeriesReleaseTemplateId");
 
                     b.HasIndex("State");
 
@@ -1217,10 +1222,17 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
                     b.Property<string>("ReleaseName")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1230,6 +1242,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasIndex("ImportedReleaseCollectionId");
 
                     b.HasIndex("ImportedReleaseId");
+
+                    b.HasIndex("ReleaseTemplateId");
 
                     b.HasIndex("LinkCrypterImportId", "Status");
 
@@ -3426,9 +3440,16 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "SeriesReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("SeriesReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("LinkCrypterRegistration");
 
                     b.Navigation("ReleaseTemplate");
+
+                    b.Navigation("SeriesReleaseTemplate");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportContainer", b =>
@@ -3449,11 +3470,19 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("ImportedRelease");
 
                     b.Navigation("ImportedReleaseCollection");
 
                     b.Navigation("LinkCrypterImport");
+
+                    b.Navigation("ReleaseTemplate");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterImportHosterRegistration", b =>

@@ -2297,4 +2297,9 @@
   <data name="RunUploadCompletionActionNowUnavailableForReleaseCollection" xml:space="preserve"><value>Available once all uploads in the slots are complete and the collection's link containers and images are ready.</value></data>
   <data name="UploadCompletionActionSucceeded" xml:space="preserve"><value>Action {0} succeeded</value></data>
   <data name="UploadCompletionActionFailed" xml:space="preserve"><value>Action {0} failed</value></data>
+  <data name="DefaultReleaseTemplate" xml:space="preserve"><value>Default release template</value></data>
+  <data name="SeriesReleaseTemplate" xml:space="preserve"><value>Series release template</value></data>
+  <data name="DefaultLanguage" xml:space="preserve"><value>Default language</value></data>
+  <data name="LinkCrypterImportDefaultReleaseTemplateHelp" xml:space="preserve"><value>Used for every container that does not get the series release template.</value></data>
+  <data name="LinkCrypterImportSeriesReleaseTemplateHelp" xml:space="preserve"><value>Optional. Series and season containers get this template automatically.</value></data>
 </root>

@@ -210,7 +210,8 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
     protected async Task<int> StartImportAsync(
         TemplateSeed seed,
         int? linkCrypterRegistrationId = null,
-        string? primaryLanguageCode = null
+        string? primaryLanguageCode = null,
+        int? seriesReleaseTemplateId = null
     )
     {
         return await CreateLinkCrypterImportService(CreateDbContext())
@@ -218,6 +219,7 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
                 linkCrypterRegistrationId: linkCrypterRegistrationId
                     ?? seed.LinkCrypterRegistrationId,
                 releaseTemplateId: seed.ReleaseTemplateId,
+                seriesReleaseTemplateId: seriesReleaseTemplateId,
                 archiveFilesBasePathForReleasesWithoutLocalFiles: archiveFilesBasePath,
                 primaryLanguageCode: primaryLanguageCode
             );
@@ -852,6 +854,36 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
             FirstHosterRegistrationId: firstHosterRegistration.Id,
             SecondHosterRegistrationId: secondHosterRegistration.Id
         );
+    }
+
+    protected async Task<int> AddSeriesReleaseTemplateWithFirstHosterAsync(TemplateSeed seed)
+    {
+        var archiveConfigTemplate = UnmanagedArchiveConfigTemplates.Create();
+        var releaseTemplate = new ReleaseTemplate
+        {
+            Name = "Series template",
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseContentType = ReleaseContentType.TvShowEpisode,
+            ReleaseGroupId = seed.ReleaseGroupId,
+            ReleaseCollectionDetectionMode = ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ArchiveConfigTemplates = [archiveConfigTemplate],
+        };
+        releaseTemplate.UploadConfigTemplates =
+        [
+            new UploadConfigTemplate
+            {
+                ReleaseTemplate = releaseTemplate,
+                UploadSource = UploadSource.ArchiveFiles,
+                ArchiveConfigTemplate = archiveConfigTemplate,
+                HosterRegistrationId = seed.FirstHosterRegistrationId,
+            },
+        ];
+
+        var dbContext = CreateDbContext();
+        dbContext.ReleaseTemplates.Add(releaseTemplate);
+        await dbContext.SaveChangesAsync();
+
+        return releaseTemplate.Id;
     }
 
     protected async Task AddThirdHosterUploadConfigTemplateAsync(TemplateSeed seed)

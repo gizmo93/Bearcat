@@ -49,6 +49,8 @@ public class LinkCrypterImportPreviewService(
         linkCrypterImport.StartProgress(containers.Count);
         await repository.SaveChangesAsync(cancellationToken);
 
+        await AssignSeriesReleaseTemplateAsync(linkCrypterImport, containers, cancellationToken);
+
         foreach (var container in containers)
         {
             container.IsSelected = true;
@@ -147,22 +149,65 @@ public class LinkCrypterImportPreviewService(
         }
     }
 
+    private async Task AssignSeriesReleaseTemplateAsync(
+        LinkCrypterImport linkCrypterImport,
+        List<LinkCrypterImportContainer> containers,
+        CancellationToken cancellationToken
+    )
+    {
+        if (linkCrypterImport.SeriesReleaseTemplateId is not { } seriesReleaseTemplateId)
+        {
+            return;
+        }
+
+        var seriesReleaseTemplate = await GetReleaseTemplateAsync(
+            linkCrypterImport: linkCrypterImport,
+            releaseTemplateId: seriesReleaseTemplateId,
+            cancellationToken: cancellationToken
+        );
+
+        foreach (var container in containers)
+        {
+            var containsArchivesOfSeveralReleases =
+                LinkCrypterImportMirrorSplitter
+                    .SplitByArchiveBaseName(GetMirrorsWithoutDecisions(container))
+                    .Count > 0;
+
+            var releaseNameMatchesSeriesPattern =
+                ReleaseCollectionDetectionService.Detect(
+                    container.ReleaseName,
+                    seriesReleaseTemplate
+                )
+                is not null;
+
+            if (containsArchivesOfSeveralReleases || releaseNameMatchesSeriesPattern)
+            {
+                container.ReleaseTemplateId = seriesReleaseTemplateId;
+            }
+        }
+    }
+
     private async Task<LinkCrypterImportPreviewRun> CreatePreviewRunAsync(
         LinkCrypterImport linkCrypterImport,
         Dictionary<string, Release> existingReleasesByName,
         CancellationToken cancellationToken
     )
     {
-        var releaseTemplate = await GetReleaseTemplateAsync(linkCrypterImport, cancellationToken);
+        var releaseTemplatesById = new Dictionary<int, ReleaseTemplate>();
+
+        foreach (var releaseTemplateId in linkCrypterImport.GetReleaseTemplateIds())
+        {
+            releaseTemplatesById[releaseTemplateId] = await GetReleaseTemplateAsync(
+                linkCrypterImport: linkCrypterImport,
+                releaseTemplateId: releaseTemplateId,
+                cancellationToken: cancellationToken
+            );
+        }
 
         return new LinkCrypterImportPreviewRun
         {
-            ReleaseTemplate = releaseTemplate,
-            TemplateHosterClassNames = GetTemplateHosterClassNames(releaseTemplate),
-            ReleaseFolderBasePaths = await GetReleaseFolderBasePathsAsync(
-                releaseTemplate,
-                cancellationToken
-            ),
+            ReleaseTemplatesById = releaseTemplatesById,
+            ReleaseFolderBasePaths = await GetReleaseFolderBasePathsAsync(cancellationToken),
             ArchivePartFileNamesByFolderPath = await GetArchivePartFileNamesByFolderPathAsync(
                 linkCrypterImport,
                 cancellationToken
@@ -173,15 +218,16 @@ public class LinkCrypterImportPreviewService(
 
     private async Task<ReleaseTemplate> GetReleaseTemplateAsync(
         LinkCrypterImport linkCrypterImport,
+        int releaseTemplateId,
         CancellationToken cancellationToken
     )
     {
         return await releaseWriteRepository.GetTemplateForReleaseCreationOrDefaultAsync(
-                linkCrypterImport.ReleaseTemplateId,
+                releaseTemplateId,
                 cancellationToken
             )
             ?? throw new InvalidOperationException(
-                $"Release template {linkCrypterImport.ReleaseTemplateId} of link crypter import {linkCrypterImport.Id} was not found."
+                $"Release template {releaseTemplateId} of link crypter import {linkCrypterImport.Id} was not found."
             );
     }
 
@@ -197,15 +243,9 @@ public class LinkCrypterImportPreviewService(
     }
 
     private async Task<List<string>> GetReleaseFolderBasePathsAsync(
-        ReleaseTemplate releaseTemplate,
         CancellationToken cancellationToken
     )
     {
-        if (releaseTemplate.ReleaseType is not ReleaseType.Managed)
-        {
-            return [];
-        }
-
         var releaseFolderAutomationBasePaths =
             await repository.GetReleaseFolderAutomationBasePathsAsync(cancellationToken);
 
@@ -517,7 +557,10 @@ public class LinkCrypterImportPreviewService(
         }
 
         var (releaseCollectionName, containerNotImportableReason) = isCollectionContainer
-            ? DetectReleaseCollection(releaseNamesOfContainer, run.ReleaseTemplate)
+            ? DetectReleaseCollection(
+                releaseNamesOfContainer,
+                run.ReleaseTemplatesById[container.ReleaseTemplateId]
+            )
             : (null, null);
 
         return new LinkCrypterImportContainerPreviewResult(
@@ -573,6 +616,7 @@ public class LinkCrypterImportPreviewService(
     )
     {
         var isCollectionContainer = releaseNamesOfContainer.Count > 1;
+        var releaseTemplate = run.ReleaseTemplatesById[container.ReleaseTemplateId];
         var existingRelease = run.ExistingReleasesByName.GetValueOrDefault(releaseName);
 
         var releaseAction = GetReleaseAction(
@@ -583,13 +627,14 @@ public class LinkCrypterImportPreviewService(
         var decidedMirrors = DecideMirrors(
             mirrors: mirrors,
             hosterClassNames: existingRelease is null
-                ? run.TemplateHosterClassNames
+                ? GetTemplateHosterClassNames(releaseTemplate)
                 : GetArchiveFilesHosterClassNames(existingRelease)
         );
 
-        var releaseFolderPath = existingRelease is null
-            ? await FindUnusedReleaseFolderPathAsync(run, releaseName, cancellationToken)
-            : null;
+        var releaseFolderPath =
+            existingRelease is null && releaseTemplate.ReleaseType is ReleaseType.Managed
+                ? await FindUnusedReleaseFolderPathAsync(run, releaseName, cancellationToken)
+                : null;
 
         var (archiveFolderPath, archiveFolderContainsArchivesOfOtherReleases) = existingRelease
             is null

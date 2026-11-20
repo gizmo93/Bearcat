@@ -59,6 +59,7 @@
                 <span>@L["Release"]</span>
                 <span>@L["ReleaseAction"]</span>
                 <span>@L["LocalFiles"]</span>
+                <span>@L["ReleaseTemplate"]</span>
             </div>
             @foreach (var (release, releaseNumber) in releases.Select((release, position) => (release, position)))
             {
@@ -145,6 +146,14 @@
                             <p class="bearcat-mobile-label">@L["LocalFiles"]</p>
                             <p class="text-sm text-muted-foreground [overflow-wrap:anywhere]">
                                 @GetLocalFilesText(release)
+                            </p>
+                        </div>
+
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="bearcat-mobile-label">@L["ReleaseTemplate"]</p>
+                            <p class="text-sm [overflow-wrap:anywhere]">@release.ReleaseTemplateName</p>
+                            <p class="text-xs text-muted-foreground">
+                                @L["Language"]: <span class="text-foreground">@GetLanguageDisplayName(release.PrimaryLanguageCode)</span>
                             </p>
                         </div>
                     </div>
