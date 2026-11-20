@@ -68,7 +68,7 @@ public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadResult = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     fileSize: fileInfo.Length,
                     folderHash: fileDto.FolderId,

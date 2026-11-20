@@ -377,7 +377,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
 
         return await apiClient.UploadFileAsync(
             uploadFormData: uploadFormData,
-            stream: new ProgressReportingStream(stream, progress, stream.Length),
+            stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
         );

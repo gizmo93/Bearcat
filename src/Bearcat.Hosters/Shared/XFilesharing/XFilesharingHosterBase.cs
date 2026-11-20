@@ -479,7 +479,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
         await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
 
         var uploadResponse = await apiClient.UploadFileAsync(
-            stream: new ProgressReportingStream(stream, progress, stream.Length),
+            stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
             uploadUrl: uploadRequest.UploadUrl,
             sessionId: uploadRequest.SessionId,
             fileName: Path.GetFileName(fileDto.FullFileName),

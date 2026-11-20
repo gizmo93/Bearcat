@@ -7,7 +7,7 @@ namespace Bearcat.Domain.Shared.Transfers;
 
 public sealed class TransferSpeedLimitService(
     IApplicationConfigurationProvider configurationProvider
-) : IDisposable
+)
 {
     private const decimal BytesPerMegabyte = 1024 * 1024;
 
@@ -44,15 +44,6 @@ public sealed class TransferSpeedLimitService(
             hosterRegistrationMegabytesPerSecond: registration.MirrorDownloadSpeedLimitMegabytesPerSecond,
             globalMegabytesPerSecond: globalMegabytesPerSecond
         );
-    }
-
-    public void Dispose()
-    {
-        lock (limiterUpdateLock)
-        {
-            uploadSpeedLimiters.DisposeAll();
-            mirrorDownloadSpeedLimiters.DisposeAll();
-        }
     }
 
     private IDisposable EnterScope(
@@ -105,7 +96,7 @@ public sealed class TransferSpeedLimitService(
     {
         if (megabytesPerSecond is null or <= 0)
         {
-            currentLimiter?.Dispose();
+            currentLimiter?.StopLimiting();
             return null;
         }
 
@@ -136,17 +127,5 @@ public sealed class TransferSpeedLimitService(
         public Dictionary<int, TransferSpeedLimiter> LimiterByHosterRegistrationId { get; } = [];
 
         public TransferSpeedLimiter? GlobalLimiter { get; set; }
-
-        public void DisposeAll()
-        {
-            foreach (var limiter in LimiterByHosterRegistrationId.Values)
-            {
-                limiter.Dispose();
-            }
-
-            LimiterByHosterRegistrationId.Clear();
-            GlobalLimiter?.Dispose();
-            GlobalLimiter = null;
-        }
     }
 }

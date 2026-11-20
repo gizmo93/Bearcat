@@ -173,7 +173,7 @@ public class FileSystemService : IFileSystemService
             bufferSize: CopyBufferSizeBytes,
             useAsync: true
         );
-        await using var progressStream = new ProgressReportingStream(
+        await using var progressStream = new ThrottledProgressReportingStream(
             inner: sourceStream,
             progress: progress,
             totalBytes: sourceStream.Length

@@ -51,7 +51,11 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     config: config,
-                    fileStream: new ProgressReportingStream(stream, progress, stream.Length),
+                    fileStream: new ThrottledProgressReportingStream(
+                        stream,
+                        progress,
+                        stream.Length
+                    ),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     cancellationToken: cancellationToken
                 );

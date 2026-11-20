@@ -5,81 +5,96 @@ namespace Bearcat.Abstractions.UnitTest.Transfers;
 
 public class TransferSpeedLimiterTest
 {
-    private static readonly TimeSpan CompletionTimeout = TimeSpan.FromSeconds(5);
-
     [Test]
-    public void AcquireAsync_TokensAvailable_CompletesSynchronously()
-    {
-        // Arrange
-        using var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-
-        // Act
-        var acquireTask = limiter.AcquireAsync(100, CancellationToken.None);
-
-        // Assert
-        acquireTask.IsCompletedSuccessfully.ShouldBeTrue();
-    }
-
-    [Test]
-    public void AcquireAsync_ByteCountAboveTokenLimit_IsClampedToTokenLimit()
-    {
-        // Arrange
-        using var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-
-        // Act
-        var acquireTask = limiter.AcquireAsync(10_000, CancellationToken.None);
-
-        // Assert
-        acquireTask.IsCompletedSuccessfully.ShouldBeTrue();
-        limiter.MaximumBytesPerAcquire.ShouldBe(100);
-    }
-
-    [Test]
-    public async Task AcquireAsync_MoreBytesThanAvailableTokens_Waits()
+    public void WaitForBytesAsync_BytesOfOneSecond_Waits()
     {
         // Arrange
         var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-        await limiter.AcquireAsync(100, CancellationToken.None);
 
         // Act
-        var waitingTask = limiter.AcquireAsync(100, CancellationToken.None).AsTask();
+        var waitingTask = limiter.WaitForBytesAsync(100, CancellationToken.None).AsTask();
 
         // Assert
         waitingTask.IsCompleted.ShouldBeFalse();
-        limiter.Dispose();
-        await waitingTask.WaitAsync(CompletionTimeout);
     }
 
     [Test]
-    public async Task ChangeBytesPerSecond_WhileWaiterIsQueued_WaiterCompletesOnNewLimiter()
+    public void WaitForBytesAsync_BytesFarBelowRate_CompletesSynchronously()
     {
         // Arrange
-        using var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-        await limiter.AcquireAsync(100, CancellationToken.None);
-        var waitingTask = limiter.AcquireAsync(100, CancellationToken.None).AsTask();
-        waitingTask.IsCompleted.ShouldBeFalse();
+        var limiter = new TransferSpeedLimiter(bytesPerSecond: 1_000_000);
+
+        // Act
+        var waitingTask = limiter.WaitForBytesAsync(100, CancellationToken.None).AsTask();
+
+        // Assert
+        waitingTask.IsCompletedSuccessfully.ShouldBeTrue();
+    }
+
+    [Test]
+    public void WaitForBytesAsync_ManySmallBlocks_WaitsOnceTheirDurationsAddUp()
+    {
+        // Arrange
+        var limiter = new TransferSpeedLimiter(bytesPerSecond: 1000);
+        var firstTask = limiter.WaitForBytesAsync(2, CancellationToken.None).AsTask();
+        var secondTask = limiter.WaitForBytesAsync(2, CancellationToken.None).AsTask();
+
+        // Act
+        var thirdTask = limiter.WaitForBytesAsync(2, CancellationToken.None).AsTask();
+
+        // Assert
+        firstTask.IsCompletedSuccessfully.ShouldBeTrue();
+        secondTask.IsCompletedSuccessfully.ShouldBeTrue();
+        thirdTask.IsCompleted.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task WaitForBytesAsync_CancelledWhileWaiting_ThrowsOperationCanceledException()
+    {
+        // Arrange
+        var limiter = new TransferSpeedLimiter(bytesPerSecond: 1);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var waitingTask = limiter.WaitForBytesAsync(1000, cancellationTokenSource.Token).AsTask();
+
+        // Act
+        await cancellationTokenSource.CancelAsync();
+
+        // Assert
+        await Should.ThrowAsync<OperationCanceledException>(() => waitingTask);
+    }
+
+    [Test]
+    public void ChangeBytesPerSecond_AfterSlowTransfers_NextBlockUsesOnlyNewRate()
+    {
+        // Arrange
+        var limiter = new TransferSpeedLimiter(bytesPerSecond: 1);
+        _ = limiter.WaitForBytesAsync(1000, CancellationToken.None).AsTask();
 
         // Act
         limiter.ChangeBytesPerSecond(1_000_000);
 
         // Assert
-        await Should.NotThrowAsync(() => waitingTask.WaitAsync(CompletionTimeout));
         limiter.BytesPerSecond.ShouldBe(1_000_000);
-        limiter.MaximumBytesPerAcquire.ShouldBe(1_000_000);
+        limiter
+            .WaitForBytesAsync(100, CancellationToken.None)
+            .AsTask()
+            .IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Test]
-    public async Task Dispose_WhileWaiterIsQueued_WaiterCompletes()
+    public void StopLimiting_AfterSlowTransfers_NextBlockCompletesSynchronously()
     {
         // Arrange
-        var limiter = new TransferSpeedLimiter(bytesPerSecond: 100);
-        await limiter.AcquireAsync(100, CancellationToken.None);
-        var waitingTask = limiter.AcquireAsync(100, CancellationToken.None).AsTask();
+        var limiter = new TransferSpeedLimiter(bytesPerSecond: 1);
+        _ = limiter.WaitForBytesAsync(1000, CancellationToken.None).AsTask();
 
         // Act
-        limiter.Dispose();
+        limiter.StopLimiting();
 
         // Assert
-        await Should.NotThrowAsync(() => waitingTask.WaitAsync(CompletionTimeout));
+        limiter
+            .WaitForBytesAsync(1_000_000, CancellationToken.None)
+            .AsTask()
+            .IsCompletedSuccessfully.ShouldBeTrue();
     }
 }

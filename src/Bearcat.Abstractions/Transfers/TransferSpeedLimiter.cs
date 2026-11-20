@@ -1,81 +1,46 @@
-using System.Threading.RateLimiting;
+using System.Diagnostics;
 
 namespace Bearcat.Abstractions.Transfers;
 
-public sealed class TransferSpeedLimiter(int bytesPerSecond) : IDisposable
+public sealed class TransferSpeedLimiter(int bytesPerSecond)
 {
-    private static readonly TimeSpan ReplenishmentPeriod = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan ShortestDelay = TimeSpan.FromMilliseconds(5);
 
-    private volatile TokenBucketWithRate currentTokenBucket = CreateTokenBucket(bytesPerSecond);
+    private readonly Lock nextFreeTimestampLock = new();
 
-    private volatile bool isDisposed;
+    private long nextFreeTimestamp;
 
-    public int BytesPerSecond => currentTokenBucket.BytesPerSecond;
+    public int BytesPerSecond { get; private set; } = bytesPerSecond;
 
-    public int MaximumBytesPerAcquire => currentTokenBucket.BytesPerSecond;
-
-    public async ValueTask AcquireAsync(int byteCount, CancellationToken cancellationToken)
+    public async ValueTask WaitForBytesAsync(int byteCount, CancellationToken cancellationToken)
     {
-        while (!isDisposed)
+        TimeSpan delay;
+
+        lock (nextFreeTimestampLock)
         {
-            var tokenBucket = currentTokenBucket;
-            var permitCount = Math.Min(byteCount, tokenBucket.BytesPerSecond);
+            var now = Stopwatch.GetTimestamp();
+            var transferDuration = byteCount * Stopwatch.Frequency / BytesPerSecond;
+            nextFreeTimestamp = Math.Max(nextFreeTimestamp, now) + transferDuration;
+            delay = Stopwatch.GetElapsedTime(now, nextFreeTimestamp);
+        }
 
-            RateLimitLease lease;
-
-            try
-            {
-                lease = await tokenBucket.RateLimiter.AcquireAsync(permitCount, cancellationToken);
-            }
-            catch (ObjectDisposedException)
-            {
-                continue;
-            }
-
-            using (lease)
-            {
-                if (lease.IsAcquired)
-                {
-                    return;
-                }
-            }
+        if (delay >= ShortestDelay)
+        {
+            await Task.Delay(delay, cancellationToken);
         }
     }
 
     public void ChangeBytesPerSecond(int bytesPerSecond)
     {
-        var previousTokenBucket = Interlocked.Exchange(
-            ref currentTokenBucket,
-            CreateTokenBucket(bytesPerSecond)
-        );
-        previousTokenBucket.RateLimiter.Dispose();
+        lock (nextFreeTimestampLock)
+        {
+            BytesPerSecond = bytesPerSecond;
+            nextFreeTimestamp = 0;
+        }
     }
 
-    public void Dispose()
+    public void StopLimiting()
     {
-        isDisposed = true;
-        currentTokenBucket.RateLimiter.Dispose();
+        ChangeBytesPerSecond(int.MaxValue);
     }
-
-    private static TokenBucketWithRate CreateTokenBucket(int bytesPerSecond)
-    {
-        var rateLimiter = new TokenBucketRateLimiter(
-            new TokenBucketRateLimiterOptions
-            {
-                TokenLimit = bytesPerSecond,
-                ReplenishmentPeriod = ReplenishmentPeriod,
-                TokensPerPeriod = Math.Max(1, bytesPerSecond / 10),
-                QueueLimit = int.MaxValue,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                AutoReplenishment = true,
-            }
-        );
-
-        return new TokenBucketWithRate(rateLimiter, bytesPerSecond);
-    }
-
-    private sealed record TokenBucketWithRate(
-        TokenBucketRateLimiter RateLimiter,
-        int BytesPerSecond
-    );
 }

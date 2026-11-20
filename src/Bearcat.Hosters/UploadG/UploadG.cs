@@ -51,7 +51,7 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadResponse = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new ProgressReportingStream(stream, progress, stream.Length),
+                    stream: new ThrottledProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     folderId: fileDto.FolderId,
                     fileSize: fileInfo.Length,
