@@ -19,7 +19,6 @@ public class AutoForumPostUpdateService(
         ForumPostTemplateType entityType,
         int entityId,
         int distributionSiteRegistrationId,
-        int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -37,18 +36,12 @@ public class AutoForumPostUpdateService(
             return AutoPostResult.Skipped(AutoPostSkipReason.SiteNotConfigured);
         }
 
-        return await UpdatePostOfPlannedSiteAsync(
-            plan: plan,
-            site: site,
-            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
-            cancellationToken: cancellationToken
-        );
+        return await UpdatePostOfPlannedSiteAsync(plan, site, cancellationToken);
     }
 
     public async Task<AutoPostResult> UpdatePostOfPlannedSiteAsync(
         AutoPostPlan plan,
         AutoPostSiteEntry site,
-        int? forumPostTemplateIdOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -70,7 +63,7 @@ public class AutoForumPostUpdateService(
 
         return await UpdatePostAndNotifyAsync(
             target: target,
-            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
+            forumPostTemplateIdOverride: null,
             cancellationToken: cancellationToken
         );
     }
@@ -96,11 +89,29 @@ public class AutoForumPostUpdateService(
         CancellationToken cancellationToken
     )
     {
-        var result = await UpdatePostOrReturnFailureAsync(
-            target: target,
-            forumPostTemplateIdOverride: forumPostTemplateIdOverride,
-            cancellationToken: cancellationToken
-        );
+        var forumPostTemplateId = forumPostTemplateIdOverride ?? target.ForumPostTemplateId;
+
+        if (forumPostTemplateId is null)
+        {
+            return AutoPostResult.Failed([
+                $"No forum post template is known for the post at {target.PostedUrl}; pick one to update it.",
+            ]);
+        }
+
+        AutoPostResult result;
+
+        try
+        {
+            result = await RenderEditAndRecordPostAsync(
+                target: target,
+                forumPostTemplateId: forumPostTemplateId.Value,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            return AutoPostResult.Failed([exception.Message]);
+        }
 
         if (result.Status == AutoPostResultStatus.Updated)
         {
@@ -119,35 +130,6 @@ public class AutoForumPostUpdateService(
         }
 
         return result;
-    }
-
-    private async Task<AutoPostResult> UpdatePostOrReturnFailureAsync(
-        AutoPostUpdateTarget target,
-        int? forumPostTemplateIdOverride,
-        CancellationToken cancellationToken
-    )
-    {
-        var forumPostTemplateId = forumPostTemplateIdOverride ?? target.ForumPostTemplateId;
-
-        if (forumPostTemplateId is null)
-        {
-            return AutoPostResult.Failed([
-                $"No forum post template is known for the post at {target.PostedUrl}; pick one to update it.",
-            ]);
-        }
-
-        try
-        {
-            return await RenderEditAndRecordPostAsync(
-                target: target,
-                forumPostTemplateId: forumPostTemplateId.Value,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (Exception exception)
-        {
-            return AutoPostResult.Failed([exception.Message]);
-        }
     }
 
     private async Task<AutoPostResult> RenderEditAndRecordPostAsync(

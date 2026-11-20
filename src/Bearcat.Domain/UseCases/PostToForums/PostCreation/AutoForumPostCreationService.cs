@@ -2,7 +2,6 @@ using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPosting;
-using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -48,23 +47,13 @@ public class AutoForumPostCreationService(
         CancellationToken cancellationToken = default
     )
     {
-        if (FindSkipResult(site) is { } skipResult)
-        {
-            return skipResult;
-        }
-
-        var result = await ReturnFailureOnExceptionAsync(() =>
-            SearchMatchingThreadAndCreatePostAsync(
-                plan: plan,
-                site: site,
-                rule: site.MatchedRule!,
-                cancellationToken: cancellationToken
-            )
+        return await CreatePostAsync(
+            plan: plan,
+            site: site,
+            shouldSearchMatchingThread: true,
+            chosenThreadUrl: null,
+            cancellationToken: cancellationToken
         );
-
-        await CompleteSuccessfulPostAsync(plan, site, result, cancellationToken);
-
-        return result;
     }
 
     public async Task<AutoPostResult> CreatePostWithChosenThreadAsync(
@@ -74,27 +63,22 @@ public class AutoForumPostCreationService(
         CancellationToken cancellationToken = default
     )
     {
-        if (FindSkipResult(site) is { } skipResult)
-        {
-            return skipResult;
-        }
-
-        var result = await ReturnFailureOnExceptionAsync(() =>
-            RenderAndCreatePostInChosenThreadAsync(
-                plan: plan,
-                site: site,
-                rule: site.MatchedRule!,
-                threadUrl: threadUrl,
-                cancellationToken: cancellationToken
-            )
+        return await CreatePostAsync(
+            plan: plan,
+            site: site,
+            shouldSearchMatchingThread: false,
+            chosenThreadUrl: threadUrl,
+            cancellationToken: cancellationToken
         );
-
-        await CompleteSuccessfulPostAsync(plan, site, result, cancellationToken);
-
-        return result;
     }
 
-    private static AutoPostResult? FindSkipResult(AutoPostSiteEntry site)
+    private async Task<AutoPostResult> CreatePostAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        bool shouldSearchMatchingThread,
+        string? chosenThreadUrl,
+        CancellationToken cancellationToken
+    )
     {
         if (site.Status == AutoPostSiteStatus.AlreadyPosted)
         {
@@ -106,102 +90,101 @@ public class AutoForumPostCreationService(
             return AutoPostResult.Skipped(AutoPostSkipReason.NoMatch);
         }
 
-        return null;
-    }
+        var rule = site.MatchedRule;
 
-    private static async Task<AutoPostResult> ReturnFailureOnExceptionAsync(
-        Func<Task<AutoPostResult>> createPostAsync
-    )
-    {
+        AutoPostResult result;
+
         try
         {
-            return await createPostAsync();
+            result = await RenderAndSubmitPostAsync(
+                plan: plan,
+                site: site,
+                rule: rule,
+                shouldSearchMatchingThread: shouldSearchMatchingThread,
+                chosenThreadUrl: chosenThreadUrl,
+                cancellationToken: cancellationToken
+            );
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
             return AutoPostResult.Failed([exception.Message]);
         }
+
+        if (result.Status == AutoPostResultStatus.Posted)
+        {
+            await repository.DeleteForumPostingFailureAsync(
+                entityType: plan.EntityType,
+                entityId: plan.EntityId,
+                distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
+                cancellationToken: cancellationToken
+            );
+
+            await CreatePostedNotificationAsync(
+                plan: plan,
+                site: site,
+                postedUrl: result.PostedUrl!,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        return result;
     }
 
-    private async Task CompleteSuccessfulPostAsync(
+    private async Task<AutoPostResult> RenderAndSubmitPostAsync(
         AutoPostPlan plan,
         AutoPostSiteEntry site,
-        AutoPostResult result,
+        ForumPostingRule rule,
+        bool shouldSearchMatchingThread,
+        string? chosenThreadUrl,
         CancellationToken cancellationToken
     )
     {
-        if (result.Status != AutoPostResultStatus.Posted)
-        {
-            return;
-        }
-
-        await repository.DeleteForumPostingFailureAsync(
-            entityType: plan.EntityType,
+        var rendered = await contentRenderer.RenderAsync(
             entityId: plan.EntityId,
+            forumPostTemplateId: rule.ForumPostTemplateId,
             distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
             cancellationToken: cancellationToken
         );
 
-        await CreatePostedNotificationAsync(
-            plan: plan,
-            site: site,
-            postedUrl: result.PostedUrl!,
-            cancellationToken: cancellationToken
-        );
-    }
-
-    private async Task<AutoPostResult> SearchMatchingThreadAndCreatePostAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        ForumPostingRule rule,
-        CancellationToken cancellationToken
-    )
-    {
-        var rendered = await RenderPostAsync(plan, site, rule, cancellationToken);
-
-        if (FindRenderProblemResult(rendered) is { } renderProblemResult)
+        if (rendered.BlockedReasons.Count > 0)
         {
-            return renderProblemResult;
+            return AutoPostResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
         }
 
-        var matchingThreads = await FindMatchingThreadsAsync(
-            plan: plan,
-            site: site,
-            rule: rule,
-            cancellationToken: cancellationToken
-        );
-
-        if (matchingThreads.Count > 1)
+        if (!rendered.IsSuccess)
         {
-            return AutoPostResult.ThreadSelectionNeeded(matchingThreads);
+            return AutoPostResult.Failed(rendered.Errors);
         }
 
-        return await SubmitAndRecordPostAsync(
-            plan: plan,
-            site: site,
-            rule: rule,
-            threadUrl: matchingThreads.FirstOrDefault()?.Url,
-            body: rendered.Content,
-            cancellationToken: cancellationToken
-        );
-    }
+        string? threadUrl;
 
-    private async Task<AutoPostResult> RenderAndCreatePostInChosenThreadAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        ForumPostingRule rule,
-        string? threadUrl,
-        CancellationToken cancellationToken
-    )
-    {
-        var rendered = await RenderPostAsync(plan, site, rule, cancellationToken);
-
-        if (FindRenderProblemResult(rendered) is { } renderProblemResult)
+        if (shouldSearchMatchingThread)
         {
-            return renderProblemResult;
+            var matchingThreads = await FindMatchingThreadsAsync(
+                plan: plan,
+                site: site,
+                rule: rule,
+                cancellationToken: cancellationToken
+            );
+
+            if (matchingThreads.Count > 1)
+            {
+                return AutoPostResult.ThreadSelectionNeeded(matchingThreads);
+            }
+
+            threadUrl = matchingThreads.FirstOrDefault()?.Url;
+        }
+        else
+        {
+            threadUrl = chosenThreadUrl;
         }
 
-        return await SubmitAndRecordPostAsync(
+        if (await IsAlreadyPostedAsync(plan, site, cancellationToken))
+        {
+            return AutoPostResult.Skipped(AutoPostSkipReason.AlreadyPosted);
+        }
+
+        var submittedPost = await SubmitReplyOrNewThreadAsync(
             plan: plan,
             site: site,
             rule: rule,
@@ -209,6 +192,24 @@ public class AutoForumPostCreationService(
             body: rendered.Content,
             cancellationToken: cancellationToken
         );
+
+        await repository.RecordPostedLocationAsync(
+            entityType: plan.EntityType,
+            entityId: plan.EntityId,
+            distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
+            url: submittedPost.Url,
+            forumPostTemplateId: rule.ForumPostTemplateId,
+            cancellationToken: cancellationToken
+        );
+
+        var uploadsMarkedPosted =
+            await uploadsPostedStatusService.MarkUploadsPostedWhenNoSiteIsLeftAsync(
+                entityType: plan.EntityType,
+                entityId: plan.EntityId,
+                cancellationToken: cancellationToken
+            );
+
+        return AutoPostResult.Posted(submittedPost.Url, uploadsMarkedPosted);
     }
 
     private async Task<List<ExistingThread>> FindMatchingThreadsAsync(
@@ -233,78 +234,6 @@ public class AutoForumPostCreationService(
         );
 
         return ForumThreadTitleMatcher.FindMatchingThreads(postName, existingThreads);
-    }
-
-    private async Task<ForumPostTemplateRenderResult> RenderPostAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        ForumPostingRule rule,
-        CancellationToken cancellationToken
-    )
-    {
-        return await contentRenderer.RenderAsync(
-            entityId: plan.EntityId,
-            forumPostTemplateId: rule.ForumPostTemplateId,
-            distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            cancellationToken: cancellationToken
-        );
-    }
-
-    private static AutoPostResult? FindRenderProblemResult(ForumPostTemplateRenderResult rendered)
-    {
-        if (rendered.BlockedReasons.Count > 0)
-        {
-            return AutoPostResult.SkippedForServiceRestrictions(rendered.BlockedReasons);
-        }
-
-        if (!rendered.IsSuccess)
-        {
-            return AutoPostResult.Failed(rendered.Errors);
-        }
-
-        return null;
-    }
-
-    private async Task<AutoPostResult> SubmitAndRecordPostAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        ForumPostingRule rule,
-        string? threadUrl,
-        string body,
-        CancellationToken cancellationToken
-    )
-    {
-        if (await IsAlreadyPostedAsync(plan, site, cancellationToken))
-        {
-            return AutoPostResult.Skipped(AutoPostSkipReason.AlreadyPosted);
-        }
-
-        var submittedPost = await SubmitReplyOrNewThreadAsync(
-            plan: plan,
-            site: site,
-            rule: rule,
-            threadUrl: threadUrl,
-            body: body,
-            cancellationToken: cancellationToken
-        );
-
-        await repository.RecordPostedLocationAsync(
-            entityType: plan.EntityType,
-            entityId: plan.EntityId,
-            distributionSiteRegistrationId: site.DistributionSiteRegistrationId,
-            url: submittedPost.Url,
-            forumPostTemplateId: rule.ForumPostTemplateId,
-            cancellationToken: cancellationToken
-        );
-
-        var uploadsMarkedPosted =
-            await uploadsPostedStatusService.MarkUploadsPostedWhenNoSiteIsLeftAsync(
-                entityType: plan.EntityType,
-                entityId: plan.EntityId,
-                cancellationToken: cancellationToken
-            );
-
-        return AutoPostResult.Posted(submittedPost.Url, uploadsMarkedPosted);
     }
 
     private async Task<bool> IsAlreadyPostedAsync(

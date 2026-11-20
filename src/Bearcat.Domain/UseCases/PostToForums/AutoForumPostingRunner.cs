@@ -124,7 +124,11 @@ public class AutoForumPostingRunner(
                 cancellationToken: cancellationToken
             );
 
-            var result = await CreatePostForSiteAsync(plan, site, cancellationToken);
+            var result = await postCreationService.CreatePostForPlannedSiteAsync(
+                plan: plan,
+                site: site,
+                cancellationToken: cancellationToken
+            );
 
             if (result.Status is AutoPostResultStatus.Posted or AutoPostResultStatus.Failed)
             {
@@ -174,7 +178,11 @@ public class AutoForumPostingRunner(
                 cancellationToken: cancellationToken
             );
 
-            var result = await UpdatePostOfSiteAsync(plan, site, cancellationToken);
+            var result = await postUpdateService.UpdatePostOfPlannedSiteAsync(
+                plan: plan,
+                site: site,
+                cancellationToken: cancellationToken
+            );
 
             if (result.Status != AutoPostResultStatus.Skipped)
             {
@@ -336,53 +344,5 @@ public class AutoForumPostingRunner(
             DistributionSiteRegistrationName: site.Registration.Name,
             Messages: messages
         );
-    }
-
-    private async Task<AutoPostResult> CreatePostForSiteAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        CancellationToken cancellationToken
-    )
-    {
-        try
-        {
-            return await postCreationService.CreatePostForPlannedSiteAsync(
-                plan: plan,
-                site: site,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            return AutoPostResult.Failed([exception.Message]);
-        }
-    }
-
-    private async Task<AutoPostResult> UpdatePostOfSiteAsync(
-        AutoPostPlan plan,
-        AutoPostSiteEntry site,
-        CancellationToken cancellationToken
-    )
-    {
-        try
-        {
-            return await postUpdateService.UpdatePostOfPlannedSiteAsync(
-                plan: plan,
-                site: site,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            return AutoPostResult.Failed([exception.Message]);
-        }
     }
 }

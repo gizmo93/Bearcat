@@ -331,6 +331,33 @@ public class AutoForumPostCreationServiceTest
     }
 
     [Test]
+    public async Task CreatePostOnSiteAsync_SubmitterThrowsAfterCancellation_PropagatesTheCancellation()
+    {
+        // Arrange
+        var repository = RepositoryWith(AutoPostTestFactory.Rule());
+        var submitter = new FakeForumPostSubmitter
+        {
+            ThrowOnSubmit = new OperationCanceledException(),
+        };
+        var service = ServiceWith(repository, submitter);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        // Act
+        var createPost = () =>
+            service.CreatePostOnSiteAsync(
+                entityType: ForumPostTemplateType.Release,
+                entityId: 1,
+                distributionSiteRegistrationId: 5,
+                cancellationToken: cancellationTokenSource.Token
+            );
+
+        // Assert
+        await createPost.ShouldThrowAsync<OperationCanceledException>();
+        repository.RecordedPostedLocations.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task CreatePostOnSiteAsync_AlreadyPosted_IsSkipped()
     {
         // Arrange

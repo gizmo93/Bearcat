@@ -56,18 +56,28 @@ public class AutoForumPostUpdateServiceTest
     }
 
     [Test]
-    public async Task UpdatePostOnSiteAsync_TemplateOverride_TakesPrecedenceOverTheStoredTemplate()
+    public async Task UpdatePostedLocationAsync_TemplateOverride_TakesPrecedenceOverTheStoredTemplate()
     {
         // Arrange
         var repository = OutdatedRepository(forumPostTemplateId: 3);
+        repository.UpdateTargets.Add(
+            new AutoPostUpdateTarget(
+                PostedLocationId: 9,
+                EntityType: ForumPostTemplateType.Release,
+                EntityId: 1,
+                EntityName: AutoPostTestFactory.ReleaseName,
+                DistributionSiteRegistrationId: 5,
+                DistributionSiteRegistrationName: "Board",
+                PostedUrl: "https://forum.test/threads/1",
+                ForumPostTemplateId: 3
+            )
+        );
         var renderer = new FakeForumPostContentRenderer();
         var service = ServiceWith(repository, new FakeForumPostSubmitter(), renderer);
 
         // Act
-        var result = await service.UpdatePostOnSiteAsync(
-            entityType: ForumPostTemplateType.Release,
-            entityId: 1,
-            distributionSiteRegistrationId: 5,
+        var result = await service.UpdatePostedLocationAsync(
+            postedLocationId: 9,
             forumPostTemplateIdOverride: 11
         );
 
@@ -148,6 +158,33 @@ public class AutoForumPostUpdateServiceTest
         result.Status.ShouldBe(AutoPostResultStatus.Failed);
         repository.UpdatedPostedLocations.ShouldBeEmpty();
         notificationService.Created.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task UpdatePostOnSiteAsync_SubmitterThrowsAfterCancellation_PropagatesTheCancellation()
+    {
+        // Arrange
+        var repository = OutdatedRepository(forumPostTemplateId: 3);
+        var submitter = new FakeForumPostSubmitter
+        {
+            ThrowOnSubmit = new OperationCanceledException(),
+        };
+        var service = ServiceWith(repository, submitter);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        await cancellationTokenSource.CancelAsync();
+
+        // Act
+        var updatePost = () =>
+            service.UpdatePostOnSiteAsync(
+                entityType: ForumPostTemplateType.Release,
+                entityId: 1,
+                distributionSiteRegistrationId: 5,
+                cancellationToken: cancellationTokenSource.Token
+            );
+
+        // Assert
+        await updatePost.ShouldThrowAsync<OperationCanceledException>();
+        repository.UpdatedPostedLocations.ShouldBeEmpty();
     }
 
     [Test]
