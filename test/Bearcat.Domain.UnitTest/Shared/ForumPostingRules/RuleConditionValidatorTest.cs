@@ -66,6 +66,23 @@ public class RuleConditionValidatorTest
     }
 
     [Test]
+    public void Validate_InvalidRegexPattern_ReturnsError()
+    {
+        // Arrange
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
+            RuleConditionOperator.Regex,
+            "(unclosed"
+        );
+
+        // Act
+        var errors = RuleConditionValidator.Validate(condition, RuleFieldCatalog.Fields);
+
+        // Assert
+        errors.ShouldHaveSingleItem().ShouldContain("is not a valid regular expression");
+    }
+
+    [Test]
     public void Validate_MissingValue_ReturnsError()
     {
         // Arrange

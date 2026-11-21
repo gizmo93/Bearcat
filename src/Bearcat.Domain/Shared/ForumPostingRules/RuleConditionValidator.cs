@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Bearcat.Domain.Shared.ForumPostingRules;
 
@@ -166,7 +167,31 @@ public static class RuleConditionValidator
             return;
         }
 
+        if (
+            conditionOperator is RuleConditionOperator.Regex
+            && !IsValidRegexPattern(condition.Value)
+        )
+        {
+            errors.Add($"The value '{condition.Value}' is not a valid regular expression.");
+
+            return;
+        }
+
         ValidateValue(condition.Value, descriptor, errors);
+    }
+
+    private static bool IsValidRegexPattern(string pattern)
+    {
+        try
+        {
+            _ = new Regex(pattern);
+
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 
     private static void ValidateValue(
