@@ -85,7 +85,8 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
                     Domain: "example.org",
                     Path: "/"
                 ),
-            ]
+            ],
+            AuthorizationHeader: null
         );
         SetupLogInResult(new DistributionSiteLoginResult(Session: session, ErrorMessage: null));
 

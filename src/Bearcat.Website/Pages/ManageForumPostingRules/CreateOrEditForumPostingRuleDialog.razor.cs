@@ -25,6 +25,9 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     [Parameter]
     public int? ForumPostingRuleId { get; set; }
 
+    [Parameter]
+    public ForumPostTemplateOutputFormat TemplateOutputFormat { get; set; }
+
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
@@ -97,7 +100,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     {
         templates = await operationRunner.RunAsync(
             (IForumPostTemplateReadRepository repository) =>
-                repository.GetAllAsync(outputFormat: ForumPostTemplateOutputFormat.BBCode)
+                repository.GetAllAsync(outputFormat: TemplateOutputFormat)
         );
 
         await InitializeFormModelAsync();

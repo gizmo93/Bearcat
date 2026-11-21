@@ -114,6 +114,8 @@ public partial class ForumPostingRulesPage(
         {
             [nameof(CreateOrEditForumPostingRuleDialog.DistributionSiteRegistrationId)] =
                 DistributionSiteRegistrationId,
+            [nameof(CreateOrEditForumPostingRuleDialog.TemplateOutputFormat)] =
+                registration.TemplateOutputFormat,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditForumPostingRuleDialog>(
@@ -140,6 +142,8 @@ public partial class ForumPostingRulesPage(
         {
             [nameof(CreateOrEditForumPostingRuleDialog.DistributionSiteRegistrationId)] =
                 DistributionSiteRegistrationId,
+            [nameof(CreateOrEditForumPostingRuleDialog.TemplateOutputFormat)] =
+                registration.TemplateOutputFormat,
             [nameof(CreateOrEditForumPostingRuleDialog.ForumPostingRuleId)] =
                 rule.ForumPostingRuleId,
         };

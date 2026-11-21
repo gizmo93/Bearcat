@@ -851,6 +851,7 @@
   <data name="ForumPostTemplateOutputFormat" xml:space="preserve"><value>Output format</value></data>
   <data name="ForumPostTemplateOutputFormatBBCode" xml:space="preserve"><value>BBCode</value></data>
   <data name="ForumPostTemplateOutputFormatPlainText" xml:space="preserve"><value>Plain text</value></data>
+  <data name="ForumPostTemplateOutputFormatHtml" xml:space="preserve"><value>HTML</value></data>
   <data name="SearchConfigurations" xml:space="preserve"><value>Search configurations</value></data>
   <data name="NoConfigurationsFound" xml:space="preserve"><value>No configurations found.</value></data>
   <data name="ClickVariableToInsertHint" xml:space="preserve"><value>Click a variable to insert it at the cursor.</value></data>

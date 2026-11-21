@@ -118,6 +118,7 @@ public partial class ForumPostTemplateEditorToolbar : ComponentBase
         {
             ForumPostTemplateOutputFormat.BBCode => L["ForumPostTemplateOutputFormatBBCode"],
             ForumPostTemplateOutputFormat.PlainText => L["ForumPostTemplateOutputFormatPlainText"],
+            ForumPostTemplateOutputFormat.Html => L["ForumPostTemplateOutputFormatHtml"],
             _ => outputFormat.ToString(),
         };
     }

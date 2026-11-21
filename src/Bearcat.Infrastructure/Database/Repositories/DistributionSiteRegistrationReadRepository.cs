@@ -3,6 +3,7 @@ using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -149,6 +150,9 @@ public class DistributionSiteRegistrationReadRepository(
             DistributionSiteClassName: className,
             DistributionSiteName: distributionSite.Name,
             Kind: distributionSite.Kind,
+            TemplateOutputFormat: ForumPostTemplateOutputFormatMapper.MapFromContentFormat(
+                distributionSite.ContentFormat
+            ),
             IsActive: isActive,
             HasUnreadableSecrets: hasUnreadableSecrets,
             EnableAutomaticPosting: enableAutomaticPosting,

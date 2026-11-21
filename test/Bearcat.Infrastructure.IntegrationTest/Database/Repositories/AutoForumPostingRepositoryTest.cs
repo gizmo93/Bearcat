@@ -35,9 +35,16 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
                     Name: "Test forum",
                     ClassName: ForumClassName,
                     Kind: DistributionSiteKind.Forum,
+                    ContentFormat: PostContentFormat.BBCode,
                     ConfigurationFields: []
                 ),
-                new DistributionSiteDto("Test blog", BlogClassName, DistributionSiteKind.Blog, []),
+                new DistributionSiteDto(
+                    Name: "Test blog",
+                    ClassName: BlogClassName,
+                    Kind: DistributionSiteKind.Blog,
+                    ContentFormat: PostContentFormat.Html,
+                    ConfigurationFields: []
+                ),
             ]);
 
         repository = new AutoForumPostingRepository(

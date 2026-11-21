@@ -118,6 +118,8 @@ public partial class PostedLocations(
         var parameters = new Dictionary<string, object?>
         {
             [nameof(UpdatePostedLocationDialog.PostedUrl)] = location.Url,
+            [nameof(UpdatePostedLocationDialog.DistributionSiteRegistrationId)] =
+                location.DistributionSiteRegistrationId,
             [nameof(UpdatePostedLocationDialog.ForumPostTemplateId)] = location.ForumPostTemplateId,
             [nameof(UpdatePostedLocationDialog.TemplateType)] = ReleaseCollectionId is null
                 ? ForumPostTemplateType.Release

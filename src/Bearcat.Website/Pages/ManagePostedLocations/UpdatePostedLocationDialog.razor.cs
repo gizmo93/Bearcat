@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -13,6 +14,9 @@ public partial class UpdatePostedLocationDialog(IScopedOperationRunner operation
 {
     [Parameter]
     public string PostedUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public int DistributionSiteRegistrationId { get; set; }
 
     [Parameter]
     public int? ForumPostTemplateId { get; set; }
@@ -39,11 +43,16 @@ public partial class UpdatePostedLocationDialog(IScopedOperationRunner operation
             return;
         }
 
+        var registration = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) =>
+                repository.GetByIdAsync(DistributionSiteRegistrationId)
+        );
+
         templates = await operationRunner.RunAsync(
             (IForumPostTemplateReadRepository repository) =>
                 repository.GetAllAsync(
                     TemplateType,
-                    outputFormat: ForumPostTemplateOutputFormat.BBCode
+                    outputFormat: registration!.TemplateOutputFormat
                 )
         );
 

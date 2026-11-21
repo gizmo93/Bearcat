@@ -56,7 +56,8 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
         var sessionWithoutCookies = new DistributionSession(
             BaseUrl: GetBaseUrl(config),
             UserAgent: UserAgent,
-            Cookies: []
+            Cookies: [],
+            AuthorizationHeader: null
         );
 
         using var client = CreateClient(sessionWithoutCookies);

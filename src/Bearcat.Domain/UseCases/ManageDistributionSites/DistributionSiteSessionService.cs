@@ -38,11 +38,8 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await GetForumSiteAndValidSessionAsync(
-            registrationId,
-            cancellationToken
-        );
-        return await forum.GetTargetHierarchyAsync(session, cancellationToken);
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
+        return await site.GetTargetHierarchyAsync(session, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
@@ -181,11 +178,8 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await GetForumSiteAndValidSessionAsync(
-            registrationId,
-            cancellationToken
-        );
-        return await forum.EditPostAsync(session, postedUrl, body, cancellationToken);
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
+        return await site.EditPostAsync(session, postedUrl, body, cancellationToken);
     }
 
     public async Task<string?> FindUrlOfSubmittedPostAsync(
@@ -217,22 +211,32 @@ public class DistributionSiteSessionService(
         DistributionSession Session
     )> GetForumSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
     {
-        var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
-        var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
 
         if (site is not IForumDistributionSite forum)
         {
             throw new InvalidOperationException(
-                $"Distribution site '{registration.DistributionSiteClassName}' is not a forum."
+                $"Distribution site '{site.GetType().Name}' is not a forum."
             );
         }
+
+        return (forum, session);
+    }
+
+    private async Task<(
+        IDistributionSite Site,
+        DistributionSession Session
+    )> GetSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
+    {
+        var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
+        var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
 
         var session = await GetStoredValidSessionOrLogInAsync(
             registration,
             site,
             cancellationToken
         );
-        return (forum, session);
+        return (site, session);
     }
 
     private async Task<DistributionSession> GetStoredValidSessionOrLogInAsync(
