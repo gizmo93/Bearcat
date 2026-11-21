@@ -21,7 +21,12 @@ public sealed class FakeForumPostContentRenderer : IForumPostContentRenderer
         RenderedTemplateIds.Add(forumPostTemplateId);
 
         return Task.FromResult(
-            new ForumPostTemplateRenderResult(Content, Errors, BlockedReasons: [])
+            new ForumPostTemplateRenderResult(
+                Content: Content,
+                Errors: Errors,
+                BlockedReasons: [],
+                CoverImageUrl: null
+            )
         );
     }
 }

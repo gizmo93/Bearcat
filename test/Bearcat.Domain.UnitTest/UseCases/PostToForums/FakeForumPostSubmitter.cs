@@ -64,6 +64,7 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
         string targetNodeId,
         string title,
         string body,
+        string? coverImageUrl,
         CancellationToken cancellationToken = default
     )
     {

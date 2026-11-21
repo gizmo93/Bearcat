@@ -10,11 +10,14 @@ public sealed record WordPressConfig : IDistributionSiteConfig
 
     public required string ApplicationPassword { get; init; }
 
+    public bool UploadCoverAsFeaturedImage { get; init; }
+
     public IReadOnlyDictionary<string, object?> ToDictionary() =>
         new Dictionary<string, object?>
         {
             [nameof(BaseUrl)] = BaseUrl,
             [nameof(Username)] = Username,
             [nameof(ApplicationPassword)] = ApplicationPassword,
+            [nameof(UploadCoverAsFeaturedImage)] = UploadCoverAsFeaturedImage,
         };
 }

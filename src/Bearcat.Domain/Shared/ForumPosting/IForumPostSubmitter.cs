@@ -25,6 +25,7 @@ public interface IForumPostSubmitter
         string targetNodeId,
         string title,
         string body,
+        string? coverImageUrl,
         CancellationToken cancellationToken = default
     );
 

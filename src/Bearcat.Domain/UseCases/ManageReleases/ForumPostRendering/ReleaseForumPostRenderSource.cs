@@ -70,6 +70,10 @@ public class ReleaseForumPostRenderSource(
 
         scriptObject["imagelinks"] = renderData.ImageLinks;
 
-        return new ForumPostRenderGlobals(scriptObject, blockedReasons);
+        return new ForumPostRenderGlobals(
+            Globals: scriptObject,
+            BlockedReasons: blockedReasons,
+            CoverImageUrl: renderData.CoverImageUrl
+        );
     }
 }

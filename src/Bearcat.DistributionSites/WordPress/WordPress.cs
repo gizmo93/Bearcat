@@ -28,6 +28,10 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
 
     private const string PublishPostsCapability = "publish_posts";
 
+    private const string UploadFilesCapability = "upload_files";
+
+    private const string CoverFileNameWithoutExtension = "cover";
+
     private static readonly JsonSerializerOptions ConfigSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -45,6 +49,12 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
                 nameof(WordPressConfig.ApplicationPassword),
                 ConfigurationFieldType.Password,
                 IsRequired: true
+            ),
+            new(
+                nameof(WordPressConfig.UploadCoverAsFeaturedImage),
+                ConfigurationFieldType.Boolean,
+                IsRequired: false,
+                DefaultValue: false
             ),
         ];
 
@@ -108,6 +118,17 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
             );
         }
 
+        if (
+            wordPressConfig.UploadCoverAsFeaturedImage
+            && !capabilities.GetValueOrDefault(UploadFilesCapability)
+        )
+        {
+            return new DistributionSiteLoginResult(
+                Session: null,
+                ErrorMessage: "The WordPress account is not allowed to upload files."
+            );
+        }
+
         return new DistributionSiteLoginResult(Session: session, ErrorMessage: null);
     }
 
@@ -157,18 +178,22 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
     }
 
     public async Task<PreparedDraft> PrepareNewPostDraftAsync(
+        IDistributionSiteConfig config,
         DistributionSession session,
         ForumTargetId target,
         string title,
         string body,
+        string? coverImageUrl,
         CancellationToken cancellationToken
     )
     {
         var post = await CreatePostAsync(
+            config: config,
             session: session,
             target: target,
             title: title,
             body: body,
+            coverImageUrl: coverImageUrl,
             status: DraftStatus,
             cancellationToken: cancellationToken
         );
@@ -181,18 +206,22 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
     }
 
     public async Task<SubmittedPost> SubmitNewPostAsync(
+        IDistributionSiteConfig config,
         DistributionSession session,
         ForumTargetId target,
         string title,
         string body,
+        string? coverImageUrl,
         CancellationToken cancellationToken
     )
     {
         var post = await CreatePostAsync(
+            config: config,
             session: session,
             target: target,
             title: title,
             body: body,
+            coverImageUrl: coverImageUrl,
             status: PublishStatus,
             cancellationToken: cancellationToken
         );
@@ -212,41 +241,110 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
             CultureInfo.InvariantCulture
         );
 
-        await SendPostRequestAsync(() =>
-            CreateApi(session)
-                .EditPostAsync(
-                    id: postId,
-                    request: new EditPostRequest(body),
-                    cancellationToken: cancellationToken
-                )
+        await SendRequestAsync(
+            requestName: "post",
+            sendRequest: () =>
+                CreateApi(session)
+                    .EditPostAsync(
+                        id: postId,
+                        request: new EditPostRequest(body),
+                        cancellationToken: cancellationToken
+                    )
         );
 
         return new SubmittedPost(postedUrl);
     }
 
     private async Task<PostResponse> CreatePostAsync(
+        IDistributionSiteConfig config,
         DistributionSession session,
         ForumTargetId target,
         string title,
         string body,
+        string? coverImageUrl,
         string status,
         CancellationToken cancellationToken
     )
     {
+        int? featuredMediaId =
+            config.As<WordPressConfig>().UploadCoverAsFeaturedImage && coverImageUrl is not null
+                ? await UploadCoverAsync(session, coverImageUrl, cancellationToken)
+                : null;
+
         var request = new CreatePostRequest(
             Title: title,
             Status: status,
             Categories: [int.Parse(target.Value, CultureInfo.InvariantCulture)],
-            Content: body
+            Content: body,
+            FeaturedMedia: featuredMediaId
         );
 
-        return await SendPostRequestAsync(() =>
-            CreateApi(session).CreatePostAsync(request, cancellationToken)
+        return await SendRequestAsync(
+            requestName: "post",
+            sendRequest: () => CreateApi(session).CreatePostAsync(request, cancellationToken)
         );
     }
 
-    private static async Task<PostResponse> SendPostRequestAsync(
-        Func<Task<PostResponse>> sendRequest
+    private async Task<int> UploadCoverAsync(
+        DistributionSession session,
+        string coverImageUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        var coverUri = new Uri(coverImageUrl, UriKind.Absolute);
+
+        if (coverUri.Scheme != Uri.UriSchemeHttp && coverUri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new InvalidOperationException(
+                $"The cover URL {coverImageUrl} is not an http or https URL."
+            );
+        }
+
+        using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, coverUri);
+        downloadRequest.Headers.UserAgent.ParseAdd(session.UserAgent);
+
+        using var downloadResponse = await httpClientFactory
+            .CreateClient()
+            .SendAsync(downloadRequest, cancellationToken);
+
+        if (!downloadResponse.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Unexpected response to the cover download from {coverImageUrl} (HTTP {(int)downloadResponse.StatusCode})."
+            );
+        }
+
+        var contentType = downloadResponse.Content.Headers.ContentType!;
+        var fileName = coverUri.Segments.Last();
+
+        if (!Path.HasExtension(fileName))
+        {
+            fileName =
+                $"{CoverFileNameWithoutExtension}.{contentType.MediaType!.Split('/').Last()}";
+        }
+
+        using var content = new ByteArrayContent(
+            await downloadResponse.Content.ReadAsByteArrayAsync(cancellationToken)
+        );
+
+        content.Headers.ContentType = contentType;
+
+        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+        {
+            FileName = $"\"{fileName}\"",
+        };
+
+        var media = await SendRequestAsync(
+            requestName: "cover upload",
+            sendRequest: () => CreateApi(session).UploadMediaAsync(content, cancellationToken)
+        );
+
+        return media.Id;
+    }
+
+    private static async Task<TResponse> SendRequestAsync<TResponse>(
+        string requestName,
+        Func<Task<TResponse>> sendRequest
     )
     {
         try
@@ -258,7 +356,7 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
             var content = exception.Content ?? string.Empty;
 
             throw new InvalidOperationException(
-                $"Unexpected WordPress response to the post (HTTP {(int)exception.StatusCode}): {content[..Math.Min(content.Length, 200)]}",
+                $"Unexpected WordPress response to the {requestName} (HTTP {(int)exception.StatusCode}): {content[..Math.Min(content.Length, 200)]}",
                 exception
             );
         }

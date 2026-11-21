@@ -10,7 +10,7 @@ Damit Bearcat Posts für dich absendet, verwende [Postingregeln](/Bearcat/de/aut
 
 ## Voraussetzungen
 
-- Eine Verteilungsseite, also ein Foren- oder [WordPress](/Bearcat/de/wordpress/)-Konto, das du in Bearcat hinzugefügt hast.
+- Ein in Bearcat hinzugefügtes Konto für ein Forum oder [WordPress](/Bearcat/de/wordpress/).
 - Eine [Postvorlage](/Bearcat/de/forum-post-templates/) im Ausgabeformat der Seite: BBCode für Foren, HTML für WordPress.
 - Ein Release mit abgeschlossenen Uploads und Downloadlinks.
 

@@ -16,6 +16,12 @@ public interface IWordPressApi
         CancellationToken cancellationToken
     );
 
+    [Post("/index.php?rest_route=/wp/v2/media")]
+    Task<MediaResponse> UploadMediaAsync(
+        [Body] HttpContent content,
+        CancellationToken cancellationToken
+    );
+
     [Post("/index.php?rest_route=/wp/v2/posts")]
     Task<PostResponse> CreatePostAsync(
         [Body] CreatePostRequest request,

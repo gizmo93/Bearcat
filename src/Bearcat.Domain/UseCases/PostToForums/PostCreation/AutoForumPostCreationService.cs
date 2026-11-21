@@ -191,6 +191,7 @@ public class AutoForumPostCreationService(
             rule: rule,
             threadUrl: threadUrl,
             body: rendered.Content,
+            coverImageUrl: rendered.CoverImageUrl,
             cancellationToken: cancellationToken
         );
 
@@ -263,6 +264,7 @@ public class AutoForumPostCreationService(
         ForumPostingRule rule,
         string? threadUrl,
         string body,
+        string? coverImageUrl,
         CancellationToken cancellationToken
     )
     {
@@ -273,6 +275,7 @@ public class AutoForumPostCreationService(
                 targetNodeId: rule.TargetNodeId,
                 title: PostName(plan, site),
                 body: body,
+                coverImageUrl: coverImageUrl,
                 cancellationToken: cancellationToken
             );
         }

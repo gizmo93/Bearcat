@@ -33,8 +33,9 @@ Bearcat ruft die REST-API über `index.php?rest_route=` auf. Jede Permalinkeinst
 | Feld | Wert |
 | --- | --- |
 | **Adresse** | Adresse des Blogs, zum Beispiel `https://example.org/`. Gib auch den Installationsordner an, falls WordPress in einem Unterordner läuft. |
-| **Benutzername** | Der WordPress-Benutzername |
+| **Benutzername** | Dein Benutzername in WordPress |
 | **Anwendungspasswort** | Das Anwendungspasswort, nicht das Kontopasswort |
+| **Cover als Beitragsbild hochladen** | Standardmässig aus. Siehe [Bilder](#bilder). |
 
 Speichere und klicke auf **Login testen**.
 
@@ -51,7 +52,7 @@ Bei Blogs gibt es keine Themen oder Antworten. Deshalb entfallen Themensuche, Pr
 Beim [manuellen Posten](/Bearcat/de/posting-to-forums/) bereitest du einen Entwurf vor und veröffentlichst ihn selbst:
 
 1. Klicke auf **Entwurf vorbereiten**. Bearcat erstellt einen Entwurf in WordPress.
-2. Klicke auf **Entwurf öffnen**. Der Link öffnet den WordPress-Editor (`/wp-admin/post.php?post=<ID>&action=edit`).
+2. Klicke auf **Entwurf öffnen**. Der Link öffnet den Editor von WordPress (`/wp-admin/post.php?post=<ID>&action=edit`).
    Du musst in diesem Browser in WordPress angemeldet sein.
 3. Veröffentliche den Post in WordPress.
 4. Klicke auf **Ich habe gepostet**. Bearcat speichert `<Adresse>/?p=<ID>` ohne Suche unter **Veröffentlichungsorte**.
@@ -94,11 +95,18 @@ im Repository.
 
 ## Bilder
 
-Verlinke Bilder deines Bildhosters in der Vorlage mit `imagelinks`. Bearcat lädt keine Bilder in die
-WordPress-Mediathek hoch und setzt kein Beitragsbild.
+Verlinke Bilder deines Bildhosters in der Vorlage mit `imagelinks`.
+
+Ist **Cover als Beitragsbild hochladen** an, übernimmt Bearcat das Cover des Releases oder der Collection
+in die Mediathek von WordPress und setzt es als Beitragsbild des neuen Posts oder Entwurfs.
+Ohne Cover erhält der Post kein Beitragsbild. Screenshots lädt Bearcat nicht in die Mediathek hoch.
+
+- Das Konto muss Dateien hochladen dürfen. Sonst schlägt **Login testen** fehl.
+- Für jeden neuen Post mit Cover lädt Bearcat ein eigenes Bild in die Mediathek hoch.
+- Löschst du einen Post in WordPress, bleibt sein Bild in der Mediathek.
+- Beim Aktualisieren eines Posts ändert Bearcat das Beitragsbild nicht.
 
 ## Nicht unterstützt
 
 - Schlagwörter
-- Beitragsbild
 - Mehrere Kategorien pro Post

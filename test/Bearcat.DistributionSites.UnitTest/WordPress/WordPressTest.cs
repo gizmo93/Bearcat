@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Bearcat.Abstractions.DistributionSite.Dto;
@@ -178,6 +179,138 @@ public class WordPressTest
         result.ErrorMessage.ShouldBe("The WordPress account is not allowed to publish posts.");
     }
 
+    [Test]
+    public async Task LogInAsync_UploadCoverOnWithoutUploadFilesCapability_ReturnsErrorWithoutSession()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ =>
+            JsonResponse(HttpStatusCode.OK, """{"id":2,"capabilities":{"publish_posts":true}}""")
+        );
+
+        var site = CreateSite(handler);
+
+        // Act
+        var result = await site.LogInAsync(
+            CreateConfig(site) with
+            {
+                UploadCoverAsFeaturedImage = true,
+            },
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Session.ShouldBeNull();
+        result.ErrorMessage.ShouldBe("The WordPress account is not allowed to upload files.");
+    }
+
+    [Test]
+    public async Task SubmitNewPostAsync_UploadCoverOnWithCoverUrl_UploadsCoverAndSetsFeaturedMedia()
+    {
+        // Arrange
+        var coverBytes = new byte[] { 137, 80, 78, 71 };
+        HttpRequestMessage? coverRequest = null;
+        HttpRequestMessage? mediaRequest = null;
+        byte[]? mediaBody = null;
+        string? postBody = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(request =>
+        {
+            coverRequest = request;
+            var content = new ByteArrayContent(coverBytes);
+            content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
+        });
+        handler.Enqueue(async request =>
+        {
+            mediaRequest = request;
+            mediaBody = await request.Content!.ReadAsByteArrayAsync();
+            return JsonResponse(HttpStatusCode.Created, """{"id":77,"source_url":"x"}""");
+        });
+        handler.Enqueue(async request =>
+        {
+            postBody = await request.Content!.ReadAsStringAsync();
+            return JsonResponse(HttpStatusCode.Created, """{"id":42}""");
+        });
+
+        var site = CreateSite(handler);
+
+        // Act
+        var post = await site.SubmitNewPostAsync(
+            config: CreateConfig(site) with
+            {
+                UploadCoverAsFeaturedImage = true,
+            },
+            session: CreateSession(),
+            target: new ForumTargetId("3"),
+            title: "Release.Name",
+            body: "<p>Body</p>",
+            coverImageUrl: "https://images.example.net/t/p/original/poster.png",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        post.Url.ShouldBe("https://example.org/blog/?p=42");
+        coverRequest.ShouldNotBeNull();
+        coverRequest.RequestUri!.AbsoluteUri.ShouldBe(
+            "https://images.example.net/t/p/original/poster.png"
+        );
+        coverRequest.Headers.Authorization.ShouldBeNull();
+        mediaRequest.ShouldNotBeNull();
+        mediaRequest.Method.ShouldBe(HttpMethod.Post);
+        mediaRequest.RequestUri!.AbsoluteUri.ShouldBe(
+            "https://example.org/blog/index.php?rest_route=/wp/v2/media"
+        );
+        mediaRequest.Headers.Authorization!.ToString().ShouldBe("Basic dXBsb2FkZXI6c2VjcmV0");
+        mediaRequest.Content!.Headers.ContentType!.MediaType.ShouldBe("image/png");
+        mediaRequest
+            .Content.Headers.ContentDisposition!.ToString()
+            .ShouldBe("attachment; filename=\"poster.png\"");
+        mediaBody.ShouldBe(coverBytes);
+        using var json = JsonDocument.Parse(postBody!);
+        json.RootElement.GetProperty("featured_media").GetInt32().ShouldBe(77);
+    }
+
+    [TestCase(false, "https://images.example.net/poster.png")]
+    [TestCase(true, null)]
+    public async Task SubmitNewPostAsync_UploadCoverOffOrNoCoverUrl_PostsWithoutFeaturedMedia(
+        bool uploadCoverAsFeaturedImage,
+        string? coverImageUrl
+    )
+    {
+        // Arrange
+        var requestedUrls = new List<string>();
+        string? postBody = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(async request =>
+        {
+            requestedUrls.Add(request.RequestUri!.AbsoluteUri);
+            postBody = await request.Content!.ReadAsStringAsync();
+            return JsonResponse(HttpStatusCode.Created, """{"id":42}""");
+        });
+
+        var site = CreateSite(handler);
+
+        // Act
+        await site.SubmitNewPostAsync(
+            config: CreateConfig(site) with
+            {
+                UploadCoverAsFeaturedImage = uploadCoverAsFeaturedImage,
+            },
+            session: CreateSession(),
+            target: new ForumTargetId("3"),
+            title: "Release.Name",
+            body: "<p>Body</p>",
+            coverImageUrl: coverImageUrl,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        requestedUrls.ShouldBe(["https://example.org/blog/index.php?rest_route=/wp/v2/posts"]);
+        using var json = JsonDocument.Parse(postBody!);
+        json.RootElement.TryGetProperty("featured_media", out _).ShouldBeFalse();
+    }
+
     private static DistributionSites.WordPress.WordPress CreateSite(HttpMessageHandler handler)
     {
         var httpClientFactory = new Mock<IHttpClientFactory>(MockBehavior.Strict);
@@ -185,6 +318,9 @@ public class WordPressTest
             .Setup(factory =>
                 factory.CreateClient(DistributionSites.WordPress.WordPress.HttpClientName)
             )
+            .Returns(() => new HttpClient(handler, disposeHandler: false));
+        httpClientFactory
+            .Setup(factory => factory.CreateClient(string.Empty))
             .Returns(() => new HttpClient(handler, disposeHandler: false));
 
         return new DistributionSites.WordPress.WordPress(httpClientFactory.Object);

@@ -35,6 +35,7 @@ Open **Registrations > Distribution site registrations** and add a site. Select 
 | **Address** | Blog address, for example `https://example.org/`. Include the installation folder if WordPress runs in a subfolder. |
 | **Username** | The WordPress username |
 | **Application password** | The application password, not the account password |
+| **Upload cover as featured image** | Off by default. See [Images](#images). |
 
 Save and click **Try login**.
 
@@ -94,11 +95,18 @@ in the repository.
 
 ## Images
 
-Link images from your image hoster in the template with `imagelinks`. Bearcat does not upload images
-to the WordPress media library or set a featured image.
+Link images from your image hoster in the template with `imagelinks`.
+
+With **Upload cover as featured image** on, Bearcat downloads the cover of the release or collection,
+uploads it to the WordPress media library and sets it as the featured image of the new post or draft.
+Without a cover, the post gets no featured image. Bearcat does not upload screenshots to the media library.
+
+- The account must be allowed to upload files. Otherwise **Try login** fails.
+- Each new post with a cover adds a separate image to the media library.
+- Deleting a post in WordPress does not delete its image.
+- Updating a post does not change its featured image.
 
 ## Not supported
 
 - Tags
-- Featured image
 - Several categories per post

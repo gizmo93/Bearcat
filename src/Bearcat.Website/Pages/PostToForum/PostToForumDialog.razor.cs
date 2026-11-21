@@ -60,6 +60,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     private int selectedTemplateId;
     private string postName = string.Empty;
     private string body = string.Empty;
+    private string? coverImageUrl;
     private IReadOnlyList<string> renderErrors = [];
     private IReadOnlyList<string> blockedReasons = [];
 
@@ -318,6 +319,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                     )
             );
             body = result.Content;
+            coverImageUrl = result.CoverImageUrl;
             renderErrors = result.Errors;
             blockedReasons = result.BlockedReasons;
         }
@@ -352,7 +354,8 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                         registrationId: selectedRegistrationId,
                         target: new ForumTargetId(selectedTargetId!),
                         title: postName,
-                        body: body
+                        body: body,
+                        coverImageUrl: coverImageUrl
                     )
                 : IsNewThread
                     ? service.PrepareNewThreadDraftAsync(

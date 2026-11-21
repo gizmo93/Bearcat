@@ -199,4 +199,4 @@ Vorlage, klicke auf **Post kopieren** und füge das Ergebnis in deinem Forum ode
   `upload.hoster_registration_name` zeigt den Accountnamen und bleibt leer, bis ein Account zugewiesen ist.
 - **Mehrere Foren:** Die BBCode-Unterstützung unterscheidet sich je nach Forum. Verwende bei Bedarf eine Vorlage pro Forum.
 - **HTML-Vorlagen:** Bearcat sendet das gerenderte HTML unverändert. Maskiere Werte mit `| html.escape`.
-  Ein Beispiel für den WordPress-Blockeditor findest du unter [WordPress](/Bearcat/de/wordpress/#vorlage).
+  Ein Beispiel für den Blockeditor von WordPress findest du unter [WordPress](/Bearcat/de/wordpress/#vorlage).

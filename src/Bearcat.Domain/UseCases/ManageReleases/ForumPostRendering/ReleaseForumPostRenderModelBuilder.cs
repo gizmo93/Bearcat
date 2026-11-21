@@ -135,7 +135,10 @@ public class ReleaseForumPostRenderModelBuilder(
 
             renderDataByReleaseId[releaseId] = new ReleaseForumPostRenderData(
                 RenderModel: renderModel,
-                ImageLinks: ForumPostImageLinkBuilder.ToReleaseScriptObject(serviceLinks.ImageLinks)
+                ImageLinks: ForumPostImageLinkBuilder.ToReleaseScriptObject(
+                    serviceLinks.ImageLinks
+                ),
+                CoverImageUrl: metadata?.CoverUrl
             );
         }
 
