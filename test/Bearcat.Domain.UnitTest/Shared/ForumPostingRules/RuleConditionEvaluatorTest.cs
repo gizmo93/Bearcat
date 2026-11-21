@@ -57,8 +57,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_Like_UsesPercentWildcardCaseInsensitively(string pattern, bool expected)
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.Like,
             pattern
         );
@@ -77,8 +77,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_GenreLike_MatchesOneGenreInJoinedGenreList(string? genre, bool expected)
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Genre,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Genre",
             RuleConditionOperator.Like,
             "%animation%"
         );
@@ -95,8 +95,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_NotLike_NegatesLike()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.NotLike,
             "%webrip%"
         );
@@ -116,8 +116,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_Regex_MatchesCaseInsensitively(string pattern, bool expected)
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.Regex,
             pattern
         );
@@ -134,8 +134,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_InvalidRegexPattern_ReturnsFalseWithoutThrowing()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.Regex,
             "([unclosed"
         );
@@ -158,8 +158,8 @@ public class RuleConditionEvaluatorTest
     )
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Resolution,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Resolution",
             RuleConditionOperator.GreaterOrEqual,
             "R1080p"
         );
@@ -176,13 +176,13 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_IntegerRange_MatchesYearBetweenBounds()
     {
         // Arrange
-        var condition = RuleCondition.All(
-            RuleCondition.Compare(
-                RuleFieldCatalog.Year,
+        var condition = RuleConditionFactory.CreateAll(
+            RuleConditionFactory.CreateComparison(
+                "Year",
                 RuleConditionOperator.GreaterOrEqual,
                 "2000"
             ),
-            RuleCondition.Compare(RuleFieldCatalog.Year, RuleConditionOperator.LessOrEqual, "2010")
+            RuleConditionFactory.CreateComparison("Year", RuleConditionOperator.LessOrEqual, "2010")
         );
 
         // Act + Assert
@@ -197,13 +197,13 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_IsSetAndIsNotSet_HandleNullableFields()
     {
         // Arrange
-        var isSet = RuleCondition.Compare(
-            RuleFieldCatalog.Season,
+        var isSet = RuleConditionFactory.CreateComparison(
+            "Season",
             RuleConditionOperator.IsSet,
             null
         );
-        var isNotSet = RuleCondition.Compare(
-            RuleFieldCatalog.PrimaryLanguage,
+        var isNotSet = RuleConditionFactory.CreateComparison(
+            "PrimaryLanguage",
             RuleConditionOperator.IsNotSet,
             null
         );
@@ -228,8 +228,8 @@ public class RuleConditionEvaluatorTest
     )
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.IsMultiLanguage,
+        var condition = RuleConditionFactory.CreateComparison(
+            "IsMultiLanguage",
             RuleConditionOperator.Equals,
             value
         );
@@ -246,8 +246,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_TextEquals_IgnoresCase()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.PrimaryLanguage,
+        var condition = RuleConditionFactory.CreateComparison(
+            "PrimaryLanguage",
             RuleConditionOperator.Equals,
             "german"
         );
@@ -264,8 +264,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_NotIn_IsTrueWhenValueIsMissing()
     {
         // Arrange
-        var condition = RuleCondition.CompareMany(
-            RuleFieldCatalog.PrimaryLanguage,
+        var condition = RuleConditionFactory.CreateMultiValueComparison(
+            "PrimaryLanguage",
             RuleConditionOperator.NotIn,
             "German",
             "French"
@@ -287,8 +287,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_PlatformEquals_MatchesWindowsOnly()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Platform,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Platform",
             RuleConditionOperator.Equals,
             "Windows"
         );
@@ -306,8 +306,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_PlatformIn_MatchesAnyListedPlatform()
     {
         // Arrange
-        var condition = RuleCondition.CompareMany(
-            RuleFieldCatalog.Platform,
+        var condition = RuleConditionFactory.CreateMultiValueComparison(
+            "Platform",
             RuleConditionOperator.In,
             "Windows",
             "NintendoSwitch"
@@ -329,8 +329,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_PlatformGreaterOrEqual_IsNotAllowed()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Platform,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Platform",
             RuleConditionOperator.GreaterOrEqual,
             "Windows"
         );
@@ -349,7 +349,7 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_UnknownField_ReturnsFalse()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
+        var condition = RuleConditionFactory.CreateComparison(
             "DoesNotExist",
             RuleConditionOperator.Equals,
             "whatever"
@@ -366,8 +366,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_OperatorNotAllowedForField_ReturnsFalse()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.IsMultiLanguage,
+        var condition = RuleConditionFactory.CreateComparison(
+            "IsMultiLanguage",
             RuleConditionOperator.Regex,
             "true"
         );
@@ -383,8 +383,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_UnparsableValue_ReturnsFalse()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Year,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Year",
             RuleConditionOperator.Equals,
             "twenty"
         );
@@ -400,8 +400,12 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_EmptyGroup_ReturnsFalse()
     {
         // Act + Assert
-        RuleConditionEvaluator.IsMatch(RuleCondition.All(), ContextWith()).ShouldBeFalse();
-        RuleConditionEvaluator.IsMatch(RuleCondition.Any(), ContextWith()).ShouldBeFalse();
+        RuleConditionEvaluator
+            .IsMatch(RuleConditionFactory.CreateAll(), ContextWith())
+            .ShouldBeFalse();
+        RuleConditionEvaluator
+            .IsMatch(RuleConditionFactory.CreateAny(), ContextWith())
+            .ShouldBeFalse();
         RuleConditionEvaluator
             .IsMatch(new RuleCondition { Kind = RuleConditionKind.Not }, ContextWith())
             .ShouldBeFalse();
@@ -411,30 +415,30 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_DeeplyNestedTree_CombinesAllAnyAndNot()
     {
         // Arrange
-        var condition = RuleCondition.All(
-            RuleCondition.Compare(
-                RuleFieldCatalog.ContentType,
+        var condition = RuleConditionFactory.CreateAll(
+            RuleConditionFactory.CreateComparison(
+                "ContentType",
                 RuleConditionOperator.Equals,
                 "TvShowEpisode"
             ),
-            RuleCondition.Any(
-                RuleCondition.All(
-                    RuleCondition.Compare(
-                        RuleFieldCatalog.Season,
+            RuleConditionFactory.CreateAny(
+                RuleConditionFactory.CreateAll(
+                    RuleConditionFactory.CreateComparison(
+                        "Season",
                         RuleConditionOperator.Equals,
                         "2"
                     ),
-                    RuleCondition.Not(
-                        RuleCondition.CompareMany(
-                            RuleFieldCatalog.Source,
+                    RuleConditionFactory.CreateNot(
+                        RuleConditionFactory.CreateMultiValueComparison(
+                            "Source",
                             RuleConditionOperator.In,
                             "Hdtv",
                             "TvRip"
                         )
                     )
                 ),
-                RuleCondition.Compare(
-                    RuleFieldCatalog.ReleaseGroupToken,
+                RuleConditionFactory.CreateComparison(
+                    "ReleaseGroupToken",
                     RuleConditionOperator.Equals,
                     "GROUP"
                 )
@@ -468,16 +472,16 @@ public class RuleConditionEvaluatorTest
 
     private static RuleCondition NotGermanAndHighDefinition()
     {
-        return RuleCondition.All(
-            RuleCondition.Not(
-                RuleCondition.Compare(
-                    RuleFieldCatalog.PrimaryLanguage,
+        return RuleConditionFactory.CreateAll(
+            RuleConditionFactory.CreateNot(
+                RuleConditionFactory.CreateComparison(
+                    "PrimaryLanguage",
                     RuleConditionOperator.Equals,
                     "German"
                 )
             ),
-            RuleCondition.CompareMany(
-                RuleFieldCatalog.Resolution,
+            RuleConditionFactory.CreateMultiValueComparison(
+                "Resolution",
                 RuleConditionOperator.In,
                 "R1080p",
                 "R720p"
@@ -514,8 +518,7 @@ public class RuleConditionEvaluatorTest
             Year: year,
             Season: season,
             Episode: episode,
-            Genre: genre,
-            HasClassification: true
+            Genre: genre
         );
     }
 }

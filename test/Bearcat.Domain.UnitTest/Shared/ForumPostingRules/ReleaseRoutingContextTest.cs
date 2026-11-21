@@ -47,7 +47,6 @@ public class ReleaseRoutingContextTest
         context.Year.ShouldBe(2021);
         context.Season.ShouldBe(2);
         context.Episode.ShouldBe(5);
-        context.HasClassification.ShouldBeTrue();
     }
 
     [Test]
@@ -71,7 +70,6 @@ public class ReleaseRoutingContextTest
         context.Year.ShouldBeNull();
         context.Season.ShouldBeNull();
         context.Episode.ShouldBeNull();
-        context.HasClassification.ShouldBeFalse();
     }
 
     [Test]
@@ -143,7 +141,6 @@ public class ReleaseRoutingContextTest
         context.Year.ShouldBe(2021);
         context.Season.ShouldBe(2);
         context.Episode.ShouldBeNull();
-        context.HasClassification.ShouldBeTrue();
     }
 
     [Test]
@@ -182,7 +179,6 @@ public class ReleaseRoutingContextTest
         context.ReleaseGroupToken.ShouldBeNull();
         context.Year.ShouldBeNull();
         context.Season.ShouldBeNull();
-        context.HasClassification.ShouldBeTrue();
     }
 
     [Test]
@@ -199,7 +195,6 @@ public class ReleaseRoutingContextTest
         context.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         context.PrimaryLanguage.ShouldBe("English");
         context.Season.ShouldBe(2);
-        context.HasClassification.ShouldBeTrue();
     }
 
     [Test]
@@ -218,7 +213,6 @@ public class ReleaseRoutingContextTest
         context.IsMultiLanguage.ShouldBeFalse();
         context.Year.ShouldBeNull();
         context.Season.ShouldBeNull();
-        context.HasClassification.ShouldBeFalse();
     }
 
     [Test]

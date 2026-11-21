@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UnitTest.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 
@@ -91,8 +92,8 @@ public static class AutoPostTestFactory
             SortOrder = sortOrder,
             Name = $"Rule {id}",
             ConditionJson = RuleConditionSerializer.Serialize(
-                RuleCondition.CompareMany(
-                    field: RuleFieldCatalog.Resolution,
+                RuleConditionFactory.CreateMultiValueComparison(
+                    field: "Resolution",
                     conditionOperator: RuleConditionOperator.In,
                     values: resolutions ?? ["R1080p"]
                 )

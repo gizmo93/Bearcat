@@ -32,12 +32,12 @@
         </BbButton>
     </div>
 
-    @if (Descriptor is not null && ConditionModelMapper.NeedsValue(Node.Operator))
+    @if (Descriptor is not null && Node.Operator.NeedsValue())
     {
         <div>
             <p class="mb-1 text-xs font-medium text-muted-foreground">@L["ConditionValue"]</p>
 
-            @if (ConditionModelMapper.IsMultiValue(Node.Operator))
+            @if (Node.Operator.IsMultiValue())
             {
                 @if (Descriptor.ValueKind is RuleFieldValueKind.Enumeration)
                 {

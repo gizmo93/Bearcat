@@ -150,8 +150,8 @@ public class ForumPostingRuleMatcherTest
 
     private static RuleCondition ResolutionIn(params string[] resolutions)
     {
-        return RuleCondition.CompareMany(
-            RuleFieldCatalog.Resolution,
+        return RuleConditionFactory.CreateMultiValueComparison(
+            "Resolution",
             RuleConditionOperator.In,
             resolutions
         );
@@ -198,8 +198,7 @@ public class ForumPostingRuleMatcherTest
             Year: 2021,
             Season: null,
             Episode: null,
-            Genre: null,
-            HasClassification: true
+            Genre: null
         );
     }
 }

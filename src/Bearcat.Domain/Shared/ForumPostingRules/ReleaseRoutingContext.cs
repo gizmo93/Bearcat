@@ -16,8 +16,7 @@ public sealed record ReleaseRoutingContext(
     int? Year,
     int? Season,
     int? Episode,
-    string? Genre,
-    bool HasClassification
+    string? Genre
 )
 {
     public static ReleaseRoutingContext FromRelease(Release release)
@@ -37,8 +36,7 @@ public sealed record ReleaseRoutingContext(
             Year: classification?.Year,
             Season: classification?.Season,
             Episode: classification?.Episode,
-            Genre: release.Metadata?.Genre,
-            HasClassification: classification is not null
+            Genre: release.Metadata?.Genre
         );
     }
 
@@ -95,8 +93,7 @@ public sealed record ReleaseRoutingContext(
                     .Where(genre => !string.IsNullOrWhiteSpace(genre))
                     .ToList(),
                 fallbackValue: null
-            ),
-            HasClassification: classifications.Count > 0
+            )
         );
     }
 

@@ -57,10 +57,10 @@ public static class ConditionModelMapper
         RuleConditionOperator conditionOperator
     )
     {
-        var wasMultiValue = IsMultiValue(model.Operator);
+        var wasMultiValue = model.Operator.IsMultiValue();
         model.Operator = conditionOperator;
 
-        if (wasMultiValue == IsMultiValue(conditionOperator))
+        if (wasMultiValue == conditionOperator.IsMultiValue())
         {
             return;
         }
@@ -85,17 +85,6 @@ public static class ConditionModelMapper
         {
             RemoveComparisonsWithUnsupportedFields(child, supportedFields);
         }
-    }
-
-    public static bool IsMultiValue(RuleConditionOperator conditionOperator)
-    {
-        return conditionOperator is RuleConditionOperator.In or RuleConditionOperator.NotIn;
-    }
-
-    public static bool NeedsValue(RuleConditionOperator conditionOperator)
-    {
-        return conditionOperator
-            is not (RuleConditionOperator.IsSet or RuleConditionOperator.IsNotSet);
     }
 
     public static ConditionNodeModel ToModel(RuleCondition? condition)
@@ -194,12 +183,12 @@ public static class ConditionModelMapper
             Operator = model.Operator,
         };
 
-        if (!NeedsValue(model.Operator))
+        if (!model.Operator.NeedsValue())
         {
             return condition;
         }
 
-        if (IsMultiValue(model.Operator))
+        if (model.Operator.IsMultiValue())
         {
             condition.Values = [.. model.Values];
 

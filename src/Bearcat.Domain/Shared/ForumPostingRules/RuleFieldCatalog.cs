@@ -4,36 +4,10 @@ namespace Bearcat.Domain.Shared.ForumPostingRules;
 
 public static class RuleFieldCatalog
 {
-    public const string ReleaseName = "ReleaseName";
-
-    public const string Resolution = "Resolution";
-
-    public const string PrimaryLanguage = "PrimaryLanguage";
-
-    public const string IsMultiLanguage = "IsMultiLanguage";
-
-    public const string ContentType = "ContentType";
-
-    public const string Platform = "Platform";
-
-    public const string Source = "Source";
-
-    public const string ReleaseGroupName = "ReleaseGroupName";
-
-    public const string ReleaseGroupToken = "ReleaseGroupToken";
-
-    public const string Year = "Year";
-
-    public const string Season = "Season";
-
-    public const string Episode = "Episode";
-
-    public const string Genre = "Genre";
-
     private static readonly IReadOnlyList<RuleFieldDescriptor> AllFields =
     [
         new RuleFieldDescriptor(
-            Name: ReleaseName,
+            Name: "ReleaseName",
             ValueKind: RuleFieldValueKind.Text,
             AllowedOperators:
             [
@@ -48,7 +22,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Resolution,
+            Name: "Resolution",
             ValueKind: RuleFieldValueKind.Enumeration,
             AllowedOperators:
             [
@@ -64,7 +38,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: PrimaryLanguage,
+            Name: "PrimaryLanguage",
             ValueKind: RuleFieldValueKind.Text,
             AllowedOperators:
             [
@@ -80,7 +54,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: IsMultiLanguage,
+            Name: "IsMultiLanguage",
             ValueKind: RuleFieldValueKind.Boolean,
             AllowedOperators: [RuleConditionOperator.Equals],
             Options: [],
@@ -88,7 +62,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: ContentType,
+            Name: "ContentType",
             ValueKind: RuleFieldValueKind.Enumeration,
             AllowedOperators:
             [
@@ -102,7 +76,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Platform,
+            Name: "Platform",
             ValueKind: RuleFieldValueKind.Enumeration,
             AllowedOperators:
             [
@@ -116,7 +90,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Source,
+            Name: "Source",
             ValueKind: RuleFieldValueKind.Enumeration,
             AllowedOperators:
             [
@@ -130,7 +104,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: ReleaseGroupName,
+            Name: "ReleaseGroupName",
             ValueKind: RuleFieldValueKind.Text,
             AllowedOperators: TextIdentityOperators,
             Options: [],
@@ -138,7 +112,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: ReleaseGroupToken,
+            Name: "ReleaseGroupToken",
             ValueKind: RuleFieldValueKind.Text,
             AllowedOperators: TextIdentityOperators,
             Options: [],
@@ -146,7 +120,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Year,
+            Name: "Year",
             ValueKind: RuleFieldValueKind.Integer,
             AllowedOperators: NumberOperators,
             Options: [],
@@ -154,7 +128,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Season,
+            Name: "Season",
             ValueKind: RuleFieldValueKind.Integer,
             AllowedOperators: NumberOperators,
             Options: [],
@@ -162,7 +136,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: AllEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Episode,
+            Name: "Episode",
             ValueKind: RuleFieldValueKind.Integer,
             AllowedOperators: NumberOperators,
             Options: [],
@@ -170,7 +144,7 @@ public static class RuleFieldCatalog
             SupportedEntityTypes: ReleaseOnlyEntityTypes
         ),
         new RuleFieldDescriptor(
-            Name: Genre,
+            Name: "Genre",
             ValueKind: RuleFieldValueKind.Text,
             AllowedOperators: TextIdentityOperators,
             Options: [],
