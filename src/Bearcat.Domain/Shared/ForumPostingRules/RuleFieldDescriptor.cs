@@ -5,7 +5,7 @@ public sealed record RuleFieldDescriptor(
     RuleFieldValueKind ValueKind,
     IReadOnlyList<RuleConditionOperator> AllowedOperators,
     IReadOnlyList<string> Options,
-    Func<ReleaseRoutingContext, IComparable?> GetValue,
+    Func<RuleFieldValues, IComparable?> GetValue,
     Func<string, IComparable> ParseValue,
     bool IsReleaseOnly = false
 );

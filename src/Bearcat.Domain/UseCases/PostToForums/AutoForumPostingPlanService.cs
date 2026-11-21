@@ -90,7 +90,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 Id: release.Id,
                 Name: release.Name,
                 BlockedReason: FindBlockedReason(release),
-                RoutingContext: ReleaseRoutingContext.FromRelease(release)
+                FieldValues: RuleFieldValues.FromRelease(release)
             )
         );
     }
@@ -111,7 +111,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 Id: collection.Id,
                 Name: collection.Name,
                 BlockedReason: FindBlockedReason(collection),
-                RoutingContext: ReleaseRoutingContext.FromReleaseCollection(collection)
+                FieldValues: RuleFieldValues.FromReleaseCollection(collection)
             )
         );
     }
@@ -141,7 +141,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 BuildSiteEntry(
                     registration: registration,
                     entityType: entityType,
-                    context: entityToPlan.RoutingContext,
+                    fieldValues: entityToPlan.FieldValues,
                     postedLocations: postedLocations,
                     failure: failures.FirstOrDefault(failure =>
                         failure.DistributionSiteRegistrationId
@@ -193,7 +193,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
     private static AutoPostSiteEntry BuildSiteEntry(
         AutoPostRegistration registration,
         ForumPostTemplateType entityType,
-        ReleaseRoutingContext context,
+        RuleFieldValues fieldValues,
         IReadOnlyList<AutoPostPostedLocation> postedLocations,
         ForumPostingFailure? failure,
         DateTime? latestUploadCompletedAt
@@ -202,7 +202,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         var rule = ForumPostingRuleMatcher.FindFirstMatch(
             rules: registration.EnabledRules,
             entityType: entityType,
-            context: context
+            fieldValues: fieldValues
         );
 
         var postedLocation = postedLocations.FirstOrDefault(location =>
@@ -232,6 +232,6 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         int Id,
         string Name,
         AutoPostBlockedReason? BlockedReason,
-        ReleaseRoutingContext RoutingContext
+        RuleFieldValues FieldValues
     );
 }

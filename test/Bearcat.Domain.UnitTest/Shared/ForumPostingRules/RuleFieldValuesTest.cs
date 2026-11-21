@@ -5,7 +5,7 @@ using Shouldly;
 
 namespace Bearcat.Domain.UnitTest.Shared.ForumPostingRules;
 
-public class ReleaseRoutingContextTest
+public class RuleFieldValuesTest
 {
     [Test]
     public void FromRelease_WithClassification_ReadsCanonicalValues()
@@ -32,21 +32,21 @@ public class ReleaseRoutingContextTest
         };
 
         // Act
-        var context = ReleaseRoutingContext.FromRelease(release);
+        var fieldValues = RuleFieldValues.FromRelease(release);
 
         // Assert
-        context.ReleaseName.ShouldBe("Some.Show.S02E05.1080p.WEB-DL-GROUP");
-        context.Resolution.ShouldBe(ReleaseResolution.R1080p);
-        context.PrimaryLanguage.ShouldBe("English");
-        context.IsMultiLanguage.ShouldBeTrue();
-        context.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
-        context.Platform.ShouldBe(ReleasePlatform.Windows);
-        context.Source.ShouldBe(ReleaseSource.WebDl);
-        context.ReleaseGroupName.ShouldBe("Series");
-        context.ReleaseGroupToken.ShouldBe("GROUP");
-        context.Year.ShouldBe(2021);
-        context.Season.ShouldBe(2);
-        context.Episode.ShouldBe(5);
+        fieldValues.ReleaseName.ShouldBe("Some.Show.S02E05.1080p.WEB-DL-GROUP");
+        fieldValues.Resolution.ShouldBe(ReleaseResolution.R1080p);
+        fieldValues.PrimaryLanguage.ShouldBe("English");
+        fieldValues.IsMultiLanguage.ShouldBeTrue();
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        fieldValues.Platform.ShouldBe(ReleasePlatform.Windows);
+        fieldValues.Source.ShouldBe(ReleaseSource.WebDl);
+        fieldValues.ReleaseGroupName.ShouldBe("Series");
+        fieldValues.ReleaseGroupToken.ShouldBe("GROUP");
+        fieldValues.Year.ShouldBe(2021);
+        fieldValues.Season.ShouldBe(2);
+        fieldValues.Episode.ShouldBe(5);
     }
 
     [Test]
@@ -56,20 +56,20 @@ public class ReleaseRoutingContextTest
         var release = new Release { Name = "Some.Movie.2021-GROUP" };
 
         // Act
-        var context = ReleaseRoutingContext.FromRelease(release);
+        var fieldValues = RuleFieldValues.FromRelease(release);
 
         // Assert
-        context.Resolution.ShouldBe(ReleaseResolution.Unknown);
-        context.Source.ShouldBe(ReleaseSource.Unknown);
-        context.ContentType.ShouldBe(ReleaseContentType.Other);
-        context.Platform.ShouldBe(ReleasePlatform.Unknown);
-        context.PrimaryLanguage.ShouldBeNull();
-        context.IsMultiLanguage.ShouldBeFalse();
-        context.ReleaseGroupName.ShouldBeNull();
-        context.ReleaseGroupToken.ShouldBeNull();
-        context.Year.ShouldBeNull();
-        context.Season.ShouldBeNull();
-        context.Episode.ShouldBeNull();
+        fieldValues.Resolution.ShouldBe(ReleaseResolution.Unknown);
+        fieldValues.Source.ShouldBe(ReleaseSource.Unknown);
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.Other);
+        fieldValues.Platform.ShouldBe(ReleasePlatform.Unknown);
+        fieldValues.PrimaryLanguage.ShouldBeNull();
+        fieldValues.IsMultiLanguage.ShouldBeFalse();
+        fieldValues.ReleaseGroupName.ShouldBeNull();
+        fieldValues.ReleaseGroupToken.ShouldBeNull();
+        fieldValues.Year.ShouldBeNull();
+        fieldValues.Season.ShouldBeNull();
+        fieldValues.Episode.ShouldBeNull();
     }
 
     [Test]
@@ -88,10 +88,10 @@ public class ReleaseRoutingContextTest
         };
 
         // Act
-        var context = ReleaseRoutingContext.FromRelease(release);
+        var fieldValues = RuleFieldValues.FromRelease(release);
 
         // Assert
-        context.PrimaryLanguage.ShouldBe("French");
+        fieldValues.PrimaryLanguage.ShouldBe("French");
     }
 
     [Test]
@@ -110,10 +110,10 @@ public class ReleaseRoutingContextTest
         };
 
         // Act
-        var context = ReleaseRoutingContext.FromRelease(release);
+        var fieldValues = RuleFieldValues.FromRelease(release);
 
         // Assert
-        context.ContentType.ShouldBe(ReleaseContentType.Movie);
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.Movie);
     }
 
     [Test]
@@ -126,21 +126,21 @@ public class ReleaseRoutingContextTest
         );
 
         // Act
-        var context = ReleaseRoutingContext.FromReleaseCollection(collection);
+        var fieldValues = RuleFieldValues.FromReleaseCollection(collection);
 
         // Assert
-        context.ReleaseName.ShouldBe("Some.Show.S02.1080p.WEB-DL-GROUP");
-        context.ReleaseGroupName.ShouldBe("Series");
-        context.Resolution.ShouldBe(ReleaseResolution.R1080p);
-        context.Source.ShouldBe(ReleaseSource.WebDl);
-        context.Platform.ShouldBe(ReleasePlatform.Windows);
-        context.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
-        context.PrimaryLanguage.ShouldBe("English");
-        context.IsMultiLanguage.ShouldBeTrue();
-        context.ReleaseGroupToken.ShouldBe("GROUP");
-        context.Year.ShouldBe(2021);
-        context.Season.ShouldBe(2);
-        context.Episode.ShouldBeNull();
+        fieldValues.ReleaseName.ShouldBe("Some.Show.S02.1080p.WEB-DL-GROUP");
+        fieldValues.ReleaseGroupName.ShouldBe("Series");
+        fieldValues.Resolution.ShouldBe(ReleaseResolution.R1080p);
+        fieldValues.Source.ShouldBe(ReleaseSource.WebDl);
+        fieldValues.Platform.ShouldBe(ReleasePlatform.Windows);
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        fieldValues.PrimaryLanguage.ShouldBe("English");
+        fieldValues.IsMultiLanguage.ShouldBeTrue();
+        fieldValues.ReleaseGroupToken.ShouldBe("GROUP");
+        fieldValues.Year.ShouldBe(2021);
+        fieldValues.Season.ShouldBe(2);
+        fieldValues.Episode.ShouldBeNull();
     }
 
     [Test]
@@ -167,18 +167,18 @@ public class ReleaseRoutingContextTest
         );
 
         // Act
-        var context = ReleaseRoutingContext.FromReleaseCollection(collection);
+        var fieldValues = RuleFieldValues.FromReleaseCollection(collection);
 
         // Assert
-        context.Resolution.ShouldBe(ReleaseResolution.Unknown);
-        context.Source.ShouldBe(ReleaseSource.Unknown);
-        context.Platform.ShouldBe(ReleasePlatform.Unknown);
-        context.ContentType.ShouldBe(ReleaseContentType.Other);
-        context.PrimaryLanguage.ShouldBeNull();
-        context.IsMultiLanguage.ShouldBeFalse();
-        context.ReleaseGroupToken.ShouldBeNull();
-        context.Year.ShouldBeNull();
-        context.Season.ShouldBeNull();
+        fieldValues.Resolution.ShouldBe(ReleaseResolution.Unknown);
+        fieldValues.Source.ShouldBe(ReleaseSource.Unknown);
+        fieldValues.Platform.ShouldBe(ReleasePlatform.Unknown);
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.Other);
+        fieldValues.PrimaryLanguage.ShouldBeNull();
+        fieldValues.IsMultiLanguage.ShouldBeFalse();
+        fieldValues.ReleaseGroupToken.ShouldBeNull();
+        fieldValues.Year.ShouldBeNull();
+        fieldValues.Season.ShouldBeNull();
     }
 
     [Test]
@@ -188,13 +188,13 @@ public class ReleaseRoutingContextTest
         var collection = CollectionWith(MemberWith(Classified(episode: 1)), MemberWith(null));
 
         // Act
-        var context = ReleaseRoutingContext.FromReleaseCollection(collection);
+        var fieldValues = RuleFieldValues.FromReleaseCollection(collection);
 
         // Assert
-        context.Resolution.ShouldBe(ReleaseResolution.R1080p);
-        context.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
-        context.PrimaryLanguage.ShouldBe("English");
-        context.Season.ShouldBe(2);
+        fieldValues.Resolution.ShouldBe(ReleaseResolution.R1080p);
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        fieldValues.PrimaryLanguage.ShouldBe("English");
+        fieldValues.Season.ShouldBe(2);
     }
 
     [Test]
@@ -204,15 +204,15 @@ public class ReleaseRoutingContextTest
         var collection = CollectionWith(MemberWith(null), MemberWith(null));
 
         // Act
-        var context = ReleaseRoutingContext.FromReleaseCollection(collection);
+        var fieldValues = RuleFieldValues.FromReleaseCollection(collection);
 
         // Assert
-        context.Resolution.ShouldBe(ReleaseResolution.Unknown);
-        context.ContentType.ShouldBe(ReleaseContentType.Other);
-        context.PrimaryLanguage.ShouldBeNull();
-        context.IsMultiLanguage.ShouldBeFalse();
-        context.Year.ShouldBeNull();
-        context.Season.ShouldBeNull();
+        fieldValues.Resolution.ShouldBe(ReleaseResolution.Unknown);
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.Other);
+        fieldValues.PrimaryLanguage.ShouldBeNull();
+        fieldValues.IsMultiLanguage.ShouldBeFalse();
+        fieldValues.Year.ShouldBeNull();
+        fieldValues.Season.ShouldBeNull();
     }
 
     [Test]
@@ -227,11 +227,11 @@ public class ReleaseRoutingContextTest
         collection.ReleaseContentType = ReleaseContentType.Movie;
 
         // Act
-        var context = ReleaseRoutingContext.FromReleaseCollection(collection);
+        var fieldValues = RuleFieldValues.FromReleaseCollection(collection);
 
         // Assert
-        context.PrimaryLanguage.ShouldBe("French");
-        context.ContentType.ShouldBe(ReleaseContentType.Movie);
+        fieldValues.PrimaryLanguage.ShouldBe("French");
+        fieldValues.ContentType.ShouldBe(ReleaseContentType.Movie);
     }
 
     private static ReleaseCollection CollectionWith(params Release[] releases)

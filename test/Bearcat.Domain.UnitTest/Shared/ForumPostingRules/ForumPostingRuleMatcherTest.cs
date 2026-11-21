@@ -22,7 +22,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -43,7 +43,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -73,7 +73,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -94,7 +94,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -108,7 +108,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: [],
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -129,7 +129,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -150,7 +150,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.ReleaseCollection,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -192,9 +192,9 @@ public class ForumPostingRuleMatcherTest
         };
     }
 
-    private static ReleaseRoutingContext Context()
+    private static RuleFieldValues CreateFieldValues()
     {
-        return new ReleaseRoutingContext(
+        return new RuleFieldValues(
             ReleaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP",
             Resolution: ReleaseResolution.R1080p,
             PrimaryLanguage: "English",

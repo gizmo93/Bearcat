@@ -6,24 +6,26 @@ public static class RuleConditionEvaluator
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(100);
 
-    public static bool IsMatch(RuleCondition condition, ReleaseRoutingContext context)
+    public static bool IsMatch(RuleCondition condition, RuleFieldValues fieldValues)
     {
         return condition.Kind switch
         {
             RuleConditionKind.All => condition.Children.TrueForAll(child =>
-                IsMatch(child, context)
+                IsMatch(child, fieldValues)
             ),
-            RuleConditionKind.Any => condition.Children.Exists(child => IsMatch(child, context)),
-            RuleConditionKind.Not => !IsMatch(condition.Child!, context),
-            RuleConditionKind.Comparison => IsComparisonMatch(condition, context),
+            RuleConditionKind.Any => condition.Children.Exists(child =>
+                IsMatch(child, fieldValues)
+            ),
+            RuleConditionKind.Not => !IsMatch(condition.Child!, fieldValues),
+            RuleConditionKind.Comparison => IsComparisonMatch(condition, fieldValues),
             _ => throw new InvalidOperationException($"Unknown condition kind '{condition.Kind}'."),
         };
     }
 
-    private static bool IsComparisonMatch(RuleCondition condition, ReleaseRoutingContext context)
+    private static bool IsComparisonMatch(RuleCondition condition, RuleFieldValues fieldValues)
     {
         var field = RuleFieldCatalog.Get(condition.Field);
-        var actual = field.GetValue(context);
+        var actual = field.GetValue(fieldValues);
 
         return condition.Operator switch
         {

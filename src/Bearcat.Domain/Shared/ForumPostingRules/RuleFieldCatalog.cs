@@ -66,29 +66,57 @@ public static class RuleFieldCatalog
 
     private static readonly IReadOnlyList<RuleFieldDescriptor> AllFields =
     [
-        CreateTextField("ReleaseName", ReleaseNameOperators, context => context.ReleaseName),
-        CreateEnumerationField("Resolution", ResolutionOperators, context => context.Resolution),
-        CreateTextField("PrimaryLanguage", LanguageOperators, context => context.PrimaryLanguage),
+        CreateTextField(
+            "ReleaseName",
+            ReleaseNameOperators,
+            fieldValues => fieldValues.ReleaseName
+        ),
+        CreateEnumerationField(
+            "Resolution",
+            ResolutionOperators,
+            fieldValues => fieldValues.Resolution
+        ),
+        CreateTextField(
+            "PrimaryLanguage",
+            LanguageOperators,
+            fieldValues => fieldValues.PrimaryLanguage
+        ),
         new RuleFieldDescriptor(
             Name: "IsMultiLanguage",
             ValueKind: RuleFieldValueKind.Boolean,
             AllowedOperators: [RuleConditionOperator.Equals],
             Options: [],
-            GetValue: context => context.IsMultiLanguage,
+            GetValue: fieldValues => fieldValues.IsMultiLanguage,
             ParseValue: value => bool.Parse(value)
         ),
-        CreateEnumerationField("ContentType", EnumerationOperators, context => context.ContentType),
-        CreateEnumerationField("Platform", EnumerationOperators, context => context.Platform),
-        CreateEnumerationField("Source", EnumerationOperators, context => context.Source),
-        CreateTextField("ReleaseGroupName", TextOperators, context => context.ReleaseGroupName),
-        CreateTextField("ReleaseGroupToken", TextOperators, context => context.ReleaseGroupToken),
-        CreateIntegerField("Year", context => context.Year),
-        CreateIntegerField("Season", context => context.Season),
-        CreateIntegerField("Episode", context => context.Episode) with
+        CreateEnumerationField(
+            "ContentType",
+            EnumerationOperators,
+            fieldValues => fieldValues.ContentType
+        ),
+        CreateEnumerationField(
+            "Platform",
+            EnumerationOperators,
+            fieldValues => fieldValues.Platform
+        ),
+        CreateEnumerationField("Source", EnumerationOperators, fieldValues => fieldValues.Source),
+        CreateTextField(
+            "ReleaseGroupName",
+            TextOperators,
+            fieldValues => fieldValues.ReleaseGroupName
+        ),
+        CreateTextField(
+            "ReleaseGroupToken",
+            TextOperators,
+            fieldValues => fieldValues.ReleaseGroupToken
+        ),
+        CreateIntegerField("Year", fieldValues => fieldValues.Year),
+        CreateIntegerField("Season", fieldValues => fieldValues.Season),
+        CreateIntegerField("Episode", fieldValues => fieldValues.Episode) with
         {
             IsReleaseOnly = true,
         },
-        CreateTextField("Genre", TextOperators, context => context.Genre),
+        CreateTextField("Genre", TextOperators, fieldValues => fieldValues.Genre),
     ];
 
     private static readonly Dictionary<string, RuleFieldDescriptor> FieldsByName =
@@ -111,7 +139,7 @@ public static class RuleFieldCatalog
     private static RuleFieldDescriptor CreateTextField(
         string name,
         IReadOnlyList<RuleConditionOperator> allowedOperators,
-        Func<ReleaseRoutingContext, string?> getValue
+        Func<RuleFieldValues, string?> getValue
     )
     {
         return new RuleFieldDescriptor(
@@ -127,7 +155,7 @@ public static class RuleFieldCatalog
     private static RuleFieldDescriptor CreateEnumerationField<TEnum>(
         string name,
         IReadOnlyList<RuleConditionOperator> allowedOperators,
-        Func<ReleaseRoutingContext, TEnum> getValue
+        Func<RuleFieldValues, TEnum> getValue
     )
         where TEnum : struct, Enum
     {
@@ -136,14 +164,14 @@ public static class RuleFieldCatalog
             ValueKind: RuleFieldValueKind.Enumeration,
             AllowedOperators: allowedOperators,
             Options: Enum.GetNames<TEnum>(),
-            GetValue: context => getValue(context),
+            GetValue: fieldValues => getValue(fieldValues),
             ParseValue: value => Enum.Parse<TEnum>(value, ignoreCase: true)
         );
     }
 
     private static RuleFieldDescriptor CreateIntegerField(
         string name,
-        Func<ReleaseRoutingContext, int?> getValue
+        Func<RuleFieldValues, int?> getValue
     )
     {
         return new RuleFieldDescriptor(
@@ -151,7 +179,7 @@ public static class RuleFieldCatalog
             ValueKind: RuleFieldValueKind.Integer,
             AllowedOperators: NumberOperators,
             Options: [],
-            GetValue: context => getValue(context),
+            GetValue: fieldValues => getValue(fieldValues),
             ParseValue: value => int.Parse(value, CultureInfo.InvariantCulture)
         );
     }
