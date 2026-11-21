@@ -1,6 +1,6 @@
 ---
-title: "Forum Post Templates"
-description: "Create forum posts with placeholders for release data, links, and images."
+title: "Post Templates"
+description: "Create forum and blog posts with placeholders for release data, links, and images."
 ---
 
 Write your post with placeholders for the release name, NFO, links, and images. Bearcat fills them
@@ -8,13 +8,22 @@ with data from a release or collection.
 
 You can copy the result by hand or let [posting rules](/Bearcat/automatic-forum-posting/) post it for you.
 
-![Forum post templates](images/forum-post-templates-page.png)
+![Post templates](images/forum-post-templates-page.png)
 
 ## Create a template
 
-1. Open **Release settings > Forum post templates** and click **+** next to the search field.
+1. Open **Release settings > Post templates** and click **+** next to the search field.
 2. Choose the type: **Release** or **Release collection**. You can't change it later.
-3. Choose the output format. Use **BBCode** for forum posts. Only BBCode templates can be posted to forums.
+3. Choose the output format:
+
+   | Output format | Use |
+   | --- | --- |
+   | **BBCode** | Forums |
+   | **HTML** | [WordPress](/Bearcat/wordpress/) |
+   | **Plain text** | Copying text without formatting |
+
+   When posting to a distribution site, only templates in the matching format are available:
+   BBCode for forums, HTML for WordPress.
 4. Enter a name, write the template and press **Ctrl+S** (**⌘S** on a Mac) to save.
 
 ## Use the editor
@@ -169,11 +178,11 @@ Each image upload configuration has these fields:
 
 ## Render a post
 
-Open a release or release collection and click **Render forum post** in the arrow menu of
-**Post to forum**. Without an active forum distribution site, it is a separate button. Choose a template and click
-**Copy forum post**, then paste the result into your forum.
+Open a release or release collection and click **Render post** in the arrow menu of
+**Post to site**. Without an active distribution site, it is a separate button. Choose a template and click
+**Copy post**, then paste the result into your forum or blog.
 
-![Render a forum post](images/render-template.png)
+![Render a post](images/render-template.png)
 
 ## Good to know
 
@@ -190,3 +199,5 @@ Open a release or release collection and click **Render forum post** in the arro
 - **Hoster names:** `upload.hoster_name` shows the hoster name of the latest upload, for example `Rapidgator`.
   `upload.hoster_registration_name` shows the account name and stays empty until an account is assigned.
 - **Several forums:** BBCode support varies between forums. Use one template per forum if needed.
+- **HTML templates:** Bearcat sends the rendered HTML unchanged. Escape values with `| html.escape`.
+  See [WordPress](/Bearcat/wordpress/#template) for a block editor example.

@@ -81,4 +81,4 @@ In the [post queue](/Bearcat/post-queue/), video uploads appear under their uplo
 and are marked **Video**.
 
 Use `upload.is_video_upload` and `upload.embed_links` in
-[forum post templates](/Bearcat/forum-post-templates/#video-uploads).
+[post templates](/Bearcat/forum-post-templates/#video-uploads).

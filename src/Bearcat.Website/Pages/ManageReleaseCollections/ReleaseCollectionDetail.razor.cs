@@ -1,5 +1,4 @@
 using System.Globalization;
-using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
@@ -200,7 +199,7 @@ public partial class ReleaseCollectionDetail(
             (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
         );
         hasActiveForumRegistration = distributionSiteRegistrations.Any(registration =>
-            registration.Kind == DistributionSiteKind.Forum && registration.IsActive
+            registration.IsActive
         );
     }
 

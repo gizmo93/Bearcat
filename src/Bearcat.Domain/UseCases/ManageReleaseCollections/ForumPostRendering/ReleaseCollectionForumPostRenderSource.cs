@@ -172,7 +172,11 @@ public class ReleaseCollectionForumPostRenderSource(
             restrictions.RemoveForbiddenImageLinks(collectionImageLinks)
         );
 
-        return new ForumPostRenderGlobals(scriptObject, blockedReasons);
+        return new ForumPostRenderGlobals(
+            Globals: scriptObject,
+            BlockedReasons: blockedReasons,
+            CoverImageUrl: collection.Series?.CoverUrl
+        );
     }
 
     private static string FindIdentifierValue(

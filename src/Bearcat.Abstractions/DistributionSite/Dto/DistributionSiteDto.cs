@@ -6,5 +6,6 @@ public sealed record DistributionSiteDto(
     string Name,
     string ClassName,
     DistributionSiteKind Kind,
+    PostContentFormat ContentFormat,
     IReadOnlyList<ConfigurationField> ConfigurationFields
 );

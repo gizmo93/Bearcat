@@ -3,6 +3,7 @@ using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -16,7 +17,7 @@ public class DistributionSiteRegistrationReadRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var distributionSitesByClassName = DistributionSitesByClassName();
+        var distributionSitesByClassName = GetDistributionSitesByClassName();
 
         var registrations = await dbRead
             .DistributionSiteRegistrations.OrderBy(registration => registration.Name)
@@ -88,7 +89,7 @@ public class DistributionSiteRegistrationReadRepository(
             stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
             minimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
             postingRuleCount: registration.PostingRuleCount,
-            distributionSitesByClassName: DistributionSitesByClassName()
+            distributionSitesByClassName: GetDistributionSitesByClassName()
         );
     }
 
@@ -121,7 +122,7 @@ public class DistributionSiteRegistrationReadRepository(
             .SingleAsync(cancellationToken);
     }
 
-    private IReadOnlyDictionary<string, DistributionSiteDto> DistributionSitesByClassName()
+    private IReadOnlyDictionary<string, DistributionSiteDto> GetDistributionSitesByClassName()
     {
         return distributionSiteFactory
             .GetDistributionSites()
@@ -149,6 +150,9 @@ public class DistributionSiteRegistrationReadRepository(
             DistributionSiteClassName: className,
             DistributionSiteName: distributionSite.Name,
             Kind: distributionSite.Kind,
+            TemplateOutputFormat: ForumPostTemplateOutputFormatMapper.MapFromContentFormat(
+                distributionSite.ContentFormat
+            ),
             IsActive: isActive,
             HasUnreadableSecrets: hasUnreadableSecrets,
             EnableAutomaticPosting: enableAutomaticPosting,

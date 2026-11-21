@@ -4,11 +4,6 @@ namespace Bearcat.Abstractions.DistributionSite;
 
 public interface IForumDistributionSite : IDistributionSite
 {
-    Task<IReadOnlyList<ForumTargetNode>> GetTargetHierarchyAsync(
-        DistributionSession session,
-        CancellationToken cancellationToken
-    );
-
     Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
         DistributionSession session,
         ForumTargetId target,
@@ -54,13 +49,6 @@ public interface IForumDistributionSite : IDistributionSite
         CancellationToken cancellationToken
     );
 
-    Task<SubmittedPost> EditPostAsync(
-        DistributionSession session,
-        string postedUrl,
-        string body,
-        CancellationToken cancellationToken
-    );
-
     Task<string?> FindUrlOfSubmittedPostAsync(
         DistributionSession session,
         ForumTargetId target,
@@ -68,10 +56,5 @@ public interface IForumDistributionSite : IDistributionSite
         string threadUrl,
         string title,
         CancellationToken cancellationToken
-    );
-
-    ForumTargetId CreateForumTargetIdFromStoredValue(
-        DistributionSession session,
-        string storedTargetId
     );
 }

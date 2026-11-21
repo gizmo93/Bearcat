@@ -9,6 +9,8 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
 
     public string NewThreadUrl { get; init; } = "https://forum.test/threads/new";
 
+    public string NewPostUrl { get; init; } = "https://blog.test/?p=1";
+
     public string ReplyUrl { get; init; } = "https://forum.test/threads/existing#post-2";
 
     public Exception? ThrowOnSubmit { get; init; }
@@ -17,6 +19,8 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
 
     public List<SubmittedNewThread> NewThreads { get; } = [];
 
+    public List<SubmittedNewPost> NewPosts { get; } = [];
+
     public List<SubmittedReply> Replies { get; } = [];
 
     public List<EditedPost> EditedPosts { get; } = [];
@@ -24,6 +28,12 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
     public string EditedPostUrl { get; init; } = "https://forum.test/threads/existing/post-2";
 
     public List<string> SearchedReleaseNames { get; } = [];
+
+    public List<ExistingBlogPost> ExistingBlogPosts { get; init; } = [];
+
+    public List<string> SearchedBlogPostTitles { get; } = [];
+
+    public List<PublishedExistingPost> PublishedExistingPosts { get; } = [];
 
     public Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
         int registrationId,
@@ -53,6 +63,47 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
         );
 
         return Task.FromResult(new SubmittedPost(NewThreadUrl));
+    }
+
+    public Task<SubmittedPost> SubmitNewPostAsync(
+        int registrationId,
+        string targetNodeId,
+        string title,
+        string body,
+        string? coverImageUrl,
+        CancellationToken cancellationToken = default
+    )
+    {
+        FailWhenRequested(registrationId);
+
+        NewPosts.Add(new SubmittedNewPost(registrationId, targetNodeId, title, body));
+
+        return Task.FromResult(new SubmittedPost(NewPostUrl));
+    }
+
+    public Task<IReadOnlyList<ExistingBlogPost>> FindExistingPostsAsync(
+        int registrationId,
+        string title,
+        CancellationToken cancellationToken = default
+    )
+    {
+        SearchedBlogPostTitles.Add(title);
+
+        return Task.FromResult<IReadOnlyList<ExistingBlogPost>>(ExistingBlogPosts);
+    }
+
+    public Task<SubmittedPost> PublishExistingPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        FailWhenRequested(registrationId);
+
+        PublishedExistingPosts.Add(new PublishedExistingPost(registrationId, postedUrl, body));
+
+        return Task.FromResult(new SubmittedPost(postedUrl));
     }
 
     public Task<SubmittedPost> SubmitReplyAsync(

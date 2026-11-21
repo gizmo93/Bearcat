@@ -1,5 +1,4 @@
 using System.Globalization;
-using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
@@ -258,7 +257,7 @@ public partial class ReleaseDetail(
             (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
         );
         hasActiveForumRegistration = distributionSiteRegistrations.Any(registration =>
-            registration.Kind == DistributionSiteKind.Forum && registration.IsActive
+            registration.IsActive
         );
     }
 

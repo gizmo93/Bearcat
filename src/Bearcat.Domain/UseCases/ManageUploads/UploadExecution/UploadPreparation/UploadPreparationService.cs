@@ -142,7 +142,11 @@ public class UploadPreparationService(
         if (upload.UploadConfig.UploadSource == UploadSource.ArchiveFiles)
         {
             return upload
-                .Archive!.ArchiveFiles.Select(archiveFile => new UploadSourceFile(
+                .Archive!.ArchiveFiles.OrderBy(
+                    archiveFile => archiveFile.FullFileName,
+                    StringComparer.Ordinal
+                )
+                .Select(archiveFile => new UploadSourceFile(
                     TransferFileId: archiveFile.Id,
                     ArchiveFileId: archiveFile.Id,
                     VideoFileRelativePath: null,

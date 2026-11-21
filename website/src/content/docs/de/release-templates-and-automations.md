@@ -53,7 +53,7 @@ Im Tab **Bilder** siehst du das Ergebnis oder eine Fehlermeldung. Mit **Neu erst
 Screenshots und ihre Bilduploads, etwa nachdem du die Einstellungen geändert hast. Dafür muss der
 Releaseordner noch existieren und das Release vom Typ Managed sein.
 
-Du kannst die hochgeladenen Bilder in [Forenpostvorlagen verwenden](/Bearcat/de/forum-post-templates/#screenshots).
+Du kannst die hochgeladenen Bilder in [Postvorlagen verwenden](/Bearcat/de/forum-post-templates/#screenshots).
 Bearcat löscht die lokalen Screenshotdateien, sobald alle dafür eingerichteten Bilduploadkonfigurationen
 sie hochgeladen haben. Ist kein Upload mehr dafür eingerichtet, löscht es sie sofort.
 Der Tab **Bilder** zeigt danach die Bilder vom Bildhoster.

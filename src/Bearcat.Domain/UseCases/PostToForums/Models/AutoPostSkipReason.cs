@@ -8,4 +8,6 @@ public enum AutoPostSkipReason
     NotPosted = 4,
     NoMatch = 5,
     ServiceRestrictionNotMet = 6,
+    ExistingPostOfOtherAuthor = 7,
+    SeveralExistingPosts = 8,
 }

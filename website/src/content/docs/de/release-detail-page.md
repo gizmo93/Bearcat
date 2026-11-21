@@ -9,9 +9,9 @@ description: "Uploadfortschritt, Downloadlinks, Metadaten und Archiveinstellunge
 
 ## Kopfzeile
 
-**Im Forum posten** öffnet den [Dialog zum Posten im Forum](/Bearcat/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
+**Auf Seite posten** öffnet den [Dialog zum Posten](/Bearcat/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
 wenn das Release mindestens einen Hoster online hat und noch nicht gepostet wurde. Ohne aktive
-Forenverteilungsseite siehst du stattdessen **Forenpost rendern**.
+Verteilungsseite siehst du stattdessen **Post rendern**.
 
 Mit **Uploads jetzt starten** überspringst du den [Cooldown für initiale Uploads](/Bearcat/de/upload-lifecycle/#2-der-erste-upload)
 für dieses Release. Die Schaltfläche erscheint, wenn für mindestens eine Uploadkonfiguration noch kein Upload erstellt wurde.

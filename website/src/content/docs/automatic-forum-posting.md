@@ -1,18 +1,19 @@
 ---
-title: "Post Releases and Collections to Forums Automatically"
-description: "Set up posting rules and send releases and collections to matching subforums automatically."
+title: "Automatic Posting"
+description: "Set up posting rules and send releases and collections to matching subforums and blog categories automatically."
 ---
 
-Posting rules let Bearcat choose a subforum, fill in a template and submit the post.
+Posting rules let Bearcat choose a subforum or [WordPress](/Bearcat/wordpress/) category,
+fill in a template and submit the post.
 Click **Post** in the [post queue](/Bearcat/post-queue/) or enable automatic posting.
-To review and submit drafts yourself, use [Posting to Forums](/Bearcat/posting-to-forums/).
+To review and submit drafts yourself, use [Posting to sites](/Bearcat/posting-to-forums/).
 
-Each forum has its own rules. Bearcat skips forums with no matching rule.
+Each distribution site has its own rules. Bearcat skips sites with no matching rule.
 
 ## What you need first
 
-- A forum added under **Registrations > Distribution site registrations**, with a working login.
-- A suitable [forum post template](/Bearcat/forum-post-templates/).
+- A distribution site added under **Registrations > Distribution site registrations**, with a working login.
+- A suitable [post template](/Bearcat/forum-post-templates/).
 - Releases in the [post queue](/Bearcat/post-queue/) with a classification and a passed or manually approved
   [quality gate](/Bearcat/quality-gates/). Groups without a quality profile pass the gate.
   For collections, every member release must pass or be manually approved, and at least one must be classified.
@@ -20,7 +21,7 @@ Each forum has its own rules. Bearcat skips forums with no matching rule.
 ## Opening the posting rules page
 
 Open **Registrations > Distribution site registrations** in the sidebar. The table has a **Posting rules** column that shows how
-many rules a forum has.
+many rules a site has.
 
 ![distribution-site-rules.png](images/distribution-site-rules.png)
 
@@ -36,11 +37,11 @@ It posts matching releases from the queue first, then collections.
 Change the interval under [Background tasks](/Bearcat/advanced-configuration/#background-tasks).
 
 **Thread search without dots** is on by default. Bearcat replaces dots with spaces when searching
-for threads and naming new ones. For collections, it uses the collection name.
-Turn it off to keep dots in searches and new thread titles.
+for threads and naming new threads and posts. For collections, it uses the collection name.
+Turn it off to keep dots in searches and new titles. On blogs, the setting only affects the post title.
 
 **Minimum seconds between posts** defaults to 30. The background task waits at least this long between
-two posts or updates to the same forum, including failed attempts. Clicking **Post** or **Update post** skips the wait.
+two posts or updates to the same site, including failed attempts. Clicking **Post** or **Update post** skips the wait.
 
 ## Hosters, link crypters and image hosters
 
@@ -52,7 +53,7 @@ Each of the three categories has two lists:
 - **Required**: the post must include at least one selected provider.
 - **Forbidden**: Bearcat removes uploads, containers and images from these providers.
 
-An empty list adds no restrictions. Automatic posting skips the forum if a **Required** list has no provider left in the post
+An empty list adds no restrictions. Automatic posting skips the site if a **Required** list has no provider left in the post
 or if all uploads, all containers or all images were removed.
 
 Bearcat checks all uploads, upload slots and member releases together.
@@ -60,10 +61,10 @@ Containers with several hosters, such as those for all hosters of a release or f
 are checked only against the link crypter lists. Forbidden hosters inside these containers are not filtered out.
 
 The template variable `imagelinks.<config>` is empty if its image hoster is forbidden.
-Check the value with `if` or use a separate template for this forum.
+Check the value with `if` or use a separate template for this site.
 
 Skipped posts do not trigger a notification. Click **Post** in the post queue to see the reason.
-A [manual forum draft](/Bearcat/posting-to-forums/) shows a warning. You can still submit the draft.
+A [manual draft](/Bearcat/posting-to-forums/) shows a warning. You can still submit the draft.
 
 ## Adding a rule
 
@@ -72,13 +73,14 @@ Click **New posting rule** and fill in these fields:
 - **Applies to**: choose **Release** or **Release collection** at the top of the dialog.
   Each rule applies to one type.
 - **Name**: your own name for that rule
-- **Subforum**: the destination for the post. Click **Load subforums** and select one.
-  Loading can take a few seconds.
-- **Prefix**: some subforums allow you to set prefixes on new threads
-- **Forum post template**: the template for the post body. Release rules use release templates;
+- **Target**: a subforum or blog category.
+  Click **Load targets** and select one. Loading can take a few seconds.
+- **Prefixes**: forums only. Some subforums allow you to set prefixes on new threads
+- **Post template**: the template for the post body. Release rules use release templates;
   collection rules use release collection templates. The template determines the rule type.
-- **Posting mode**: either *Reply to an existing thread, otherwise start a new one*, or *Always start
-  a new thread*.
+  Only templates in the matching output format are available: BBCode for forums, HTML for WordPress.
+- **Posting mode**: forums only. Either *Reply to an existing thread, otherwise start a new one*, or *Always start
+  a new thread*. Blogs always get a new post.
 - **Enabled**: disabled rules are skipped while matching
 
 ![add-or-edit-rule.png](images/add-or-edit-rule.png)
@@ -152,7 +154,7 @@ Drag rules by the handle on the left to reorder them. Put specific rules before 
 ## Dry run
 
 Save your rules. Under **Dry run** at the bottom of the page, select **Releases** or **Collections**
-and click **Preview**. The preview shows the matching rule and subforum, or **No match**, for recent entries.
+and click **Preview**. The preview shows the matching rule and target, or **No match**, for recent entries.
 It does not post anything.
 
 Run a preview after changing conditions or rule order, before enabling automatic posting.
@@ -162,29 +164,29 @@ Run a preview after changing conditions or rule order, before enabling automatic
 ## Posting from the post queue
 
 Every entry under **Single releases** and **Collections** in the [post queue](/Bearcat/post-queue/) has
-an **Automatic posting** section that shows, per forum, what the rules would do:
+an **Automatic posting** section that shows, per site, what the rules would do:
 
-- the matched rule and its subforum, with a **Post** button,
-- **Posted** with a link, if the release or collection was already posted to that forum,
+- the matched rule and its target, with a **Post** button,
+- **Posted** with a link, if the release or collection was already posted to that site,
 - **No matching posting rule**, if no rule matches the release or collection.
 
-The **Auto** badge shows that Bearcat posts to this forum automatically.
+The **Auto** badge shows that Bearcat posts to this site automatically.
 
-**Post** submits the template as a reply or new thread, depending on the rule. Bearcat saves the
-post URL under **Posted locations**. **Post to all matched sites** posts to the remaining matching forums
+Click **Post** to publish the post. On forums, Bearcat creates a reply or new thread, depending on the rule. On blogs, it creates a new post.
+Bearcat saves the post URL under **Posted locations**. **Post to all matched sites** posts to the remaining matching sites
 one after another.
 
 ![posting-from-post-queue.png](images/posting-from-post-queue.png)
 
-Once Bearcat has posted to all matching forums, it marks the release or collection as posted and removes it from the queue.
+Once Bearcat has posted to all matching sites, it marks the release or collection as posted and removes it from the queue.
 If you post manually, use **Mark as posted**.
 
 The same **Automatic posting** section appears in the overview of a release or collection, above **Posted locations**.
-Use it for releases and collections that are no longer in the queue, for example to post to a forum you added later.
+Use it for releases and collections that are no longer in the queue, for example to post to a site you added later.
 
 ## When a release or collection cannot be posted
 
-Instead of the forum list, the entry shows a short reason:
+Instead of the site list, the entry shows a short reason:
 
 - **Automatic posting is blocked: the quality gate has not passed.** The release must
   [pass its quality checks or be manually approved](/Bearcat/quality-gates/).
@@ -196,7 +198,7 @@ Instead of the forum list, the entry shows a short reason:
   Every member release must pass or be manually approved.
 - **Automatic posting is blocked: no release in this collection has a classification.**
   At least one member release must be classified.
-- **No forum has posting rules yet.** No forum registration has an enabled rule.
+- **No distribution site has posting rules yet.** No site has an enabled rule.
 
 The background task retries blocked releases and collections once they meet these requirements.
 
@@ -205,17 +207,17 @@ The background task retries blocked releases and collections once they meet thes
 After a reupload, Bearcat can update existing posts with the new download links.
 This also applies when you upload a new episode to a collection. Bearcat updates the existing post
 instead of adding a new reply.
-It fills the template with the current data and **replaces the entire post, including any edits you made in the forum**.
+It fills the template with the current data and **replaces the entire post, including any edits you made on the site**.
 Use this for posts with direct download links instead of a link crypter container.
 
 ### Updating from the queue
 
 A reupload or a newly uploaded episode puts the release or collection back in the post queue.
-Previously used forums show **Post content is outdated** next to the stored link.
+Previously used sites show **Post content is outdated** next to the stored link.
 Click **Update post** to replace the post.
 The template and update time are saved with the URL under **Posted locations**.
 
-For forums with **Automatic posting** enabled, the background task updates posts automatically
+For sites with **Automatic posting** enabled, the background task updates posts automatically
 if a template is available. The release or collection leaves the queue once all posts and updates are complete.
 
 ### Choosing a template
@@ -235,7 +237,7 @@ The entry must be linked to a distribution site; posts you confirmed by hand als
 
 ## Finding an existing thread
 
-In *Reply to an existing thread, otherwise start a new one* mode, Bearcat searches the subforum and compares
+On forums, *Reply to an existing thread, otherwise start a new one* mode searches the subforum and compares
 thread titles with the release or collection name. It ignores thread prefixes, case and punctuation.
 
 - Threads with an exactly matching title take priority.
@@ -247,7 +249,7 @@ thread titles with the release or collection name. It ignores thread prefixes, c
 ## Failed automatic posts
 
 When an automatic post or update fails, Bearcat waits before trying again.
-The delay applies only to this release or collection in the affected forum:
+The delay applies only to this release or collection on the affected site:
 
 | Failed attempts | Wait before the next attempt |
 | --- | --- |
@@ -274,5 +276,5 @@ Posts skipped because of the hoster rules do not trigger a notification.
 
 ## Posted locations and duplicates
 
-Bearcat records each forum in **Posted locations** and shows **Posted** instead of offering to post again.
-The background task only updates outdated posts in those forums. Changing the rules does not trigger a new post.
+Bearcat records each site in **Posted locations** and shows **Posted** instead of offering to post again.
+The background task only updates outdated posts on those sites. Changing the rules does not trigger a new post.

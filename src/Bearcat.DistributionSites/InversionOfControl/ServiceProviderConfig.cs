@@ -4,6 +4,7 @@ using Bearcat.DistributionSites.BoerseCx.InversionOfControl;
 using Bearcat.DistributionSites.DataLoadMe.InversionOfControl;
 using Bearcat.DistributionSites.GenericXenForo.InversionOfControl;
 using Bearcat.DistributionSites.Shared.XenForo.Api;
+using Bearcat.DistributionSites.WordPress.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.DistributionSites.InversionOfControl;
@@ -29,6 +30,7 @@ public static class ServiceProviderConfig
             services.AddBoerseCx();
             services.AddDataLoadMe();
             services.AddGenericXenForo();
+            services.AddWordPress();
 
             services.AddScoped<IDistributionSiteFactory, DistributionSiteFactory>();
         }

@@ -4,7 +4,7 @@ description: "Fertige Uploads posten und als erledigt markieren."
 ---
 
 Die Postwarteschlange listet Releases und Collections mit neuen Uploads, die du noch nicht gepostet hast.
-Von dort aus kannst du Forenposts vorbereiten, sie über Postingregeln absenden oder Releases als
+Von dort aus kannst du Posts für Foren und Blogs vorbereiten, sie über Postingregeln absenden oder Releases als
 gepostet markieren, nachdem du sie selbst geteilt hast.
 
 ## Wo du sie findest
@@ -33,21 +33,21 @@ Die Warteschlange hat zwei Bereiche:
 
 Wie Collections und ihre Uploadslots funktionieren, steht unter [Releasecollections](/Bearcat/de/release-collections/).
 
-## Aus der Warteschlange in ein Forum posten
+## Aus der Warteschlange auf einer Seite posten
 
 Mit eingerichteten [Postingregeln](/Bearcat/de/automatic-forum-posting/) zeigt der Bereich **Automatisches Posten**
-bei Einzelreleases und Collections die passende Regel und das Zielunterforum pro Forum.
+bei Einzelreleases und Collections die passende Regel und das Ziel pro Verteilungsseite.
 
-Mit **Posten** sendest du den Post ab. **In alle passenden Foren posten** arbeitet alle offenen Foren ab.
-Das Badge **Auto** zeigt, dass Bearcat in diesem Forum automatisch postet.
+Mit **Posten** sendest du den Post ab. **Auf allen passenden Seiten posten** postet auf allen übrigen Seiten mit passender Regel.
+Das Badge **Auto** zeigt, dass Bearcat auf dieser Seite automatisch postet.
 
 Nach einem Reupload oder dem Upload einer neuen Folge in einer Collection steht bei bestehenden Posts
 **Postinhalt ist veraltet**. Mit **Post aktualisieren** ersetzt du den Post.
-Ist automatisches Posten blockiert, zeigt der Abschnitt den Grund statt der Forenliste.
+Ist automatisches Posten blockiert, zeigt der Abschnitt den Grund statt der Seitenliste.
 
 ![posting-from-post-queue.png](../images/posting-from-post-queue.png)
 
-Sobald alle Posts in den passenden Foren erstellt oder aktualisiert sind, markiert Bearcat das Release oder die Collection
+Sobald alle Posts auf den passenden Seiten erstellt oder aktualisiert sind, markiert Bearcat das Release oder die Collection
 als gepostet und entfernt den Eintrag aus der Warteschlange.
 
 ## Als gepostet markieren
@@ -59,10 +59,10 @@ Wenn du ein Release irgendwo gepostet hast, klicke in seinem Eintrag auf **Als g
 Klicke unter Einzelreleases oder Collections auf **Workflow starten**, um die Einträge nacheinander abzuarbeiten.
 Bearcat öffnet den ersten Eintrag und zeigt deinen Fortschritt in der Workflowleiste.
 
-Verwende im Kopfbereich des Releases oder der Collection [**Im Forum posten**](/Bearcat/de/posting-to-forums/),
-um einen Entwurf vorzubereiten, oder [**Forenpost rendern**](/Bearcat/de/forum-post-templates/#post-rendern)
+Verwende im Kopfbereich des Releases oder der Collection [**Auf Seite posten**](/Bearcat/de/posting-to-forums/),
+um einen Entwurf vorzubereiten, oder [**Post rendern**](/Bearcat/de/forum-post-templates/#post-rendern)
 aus dem Pfeilmenü, um den Text zu kopieren.
-Sende den Post im Forum ab und kehre dann zur Workflowleiste zurück.
+Sende den Post auf der Seite ab und kehre dann zur Workflowleiste zurück.
 
 ![post-queue-toolbar.png](../images/post-queue-toolbar.png)
 

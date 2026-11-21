@@ -30,7 +30,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 ? await GetReleasesToPlanAsync(entityIds, cancellationToken)
                 : await GetReleaseCollectionsToPlanAsync(entityIds, cancellationToken);
 
-        var registrations = await repository.GetForumRegistrationsWithEnabledRulesAsync(
+        var registrations = await repository.GetRegistrationsWithEnabledRulesAsync(
             cancellationToken
         );
 

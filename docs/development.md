@@ -178,3 +178,12 @@ The script deletes the target artifact folder, restores runtime-specific assets,
 For `linux-x64` and `osx-arm64`, it marks the native executables as executable. The `linux-x64` output is the input for `nfpm package --config packaging/linux/nfpm.yaml`, which has to run from the repository root. For `osx-arm64`, it also creates `artifacts/desktop/osx-arm64/Bearcat Desktop.app` and ad-hoc signs the app bundle.
 
 Do not use the timestamp of `Bearcat.Desktop.exe` as the freshness check. For non-single-file .NET publishes, the `.exe` is the native app host stub; the application code is in `Bearcat.Desktop.dll`. MSBuild may preserve timestamps when copying files into the publish folder, so the local script refreshes final artifact timestamps after copying.
+
+## WordPress Test Site
+
+`tools/wordpress` contains files for testing the WordPress distribution site against a local WordPress installation.
+
+| Path | Use |
+| --- | --- |
+| `tools/wordpress/dummy-theme` | Zip the folder and upload it in WordPress as a theme. |
+| `tools/wordpress/release.scriban` | Release post template in the HTML output format. It uses the CSS classes of the dummy theme. |

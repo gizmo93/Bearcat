@@ -55,7 +55,12 @@ public class XenForoDistributionSiteBaseTest
 
     private static DistributionSession CreateSession(string baseUrl)
     {
-        return new DistributionSession(BaseUrl: baseUrl, UserAgent: "Bearcat", Cookies: []);
+        return new DistributionSession(
+            BaseUrl: baseUrl,
+            UserAgent: "Bearcat",
+            Cookies: [],
+            AuthorizationHeader: null
+        );
     }
 
     private sealed class TestForumSite(IHttpClientFactory httpClientFactory)

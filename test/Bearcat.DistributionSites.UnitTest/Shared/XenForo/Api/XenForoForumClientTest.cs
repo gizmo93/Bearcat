@@ -662,7 +662,8 @@ public class XenForoForumClientTest
                     Domain: "other.example",
                     Path: "/"
                 ),
-            ]
+            ],
+            AuthorizationHeader: null
         );
         using var client = CreateClient(
             handler: handler,
@@ -1285,7 +1286,12 @@ public class XenForoForumClientTest
             httpClientFactory: httpClientFactory.Object,
             baseUri: new Uri(baseUrl),
             session: session
-                ?? new DistributionSession(BaseUrl: baseUrl, UserAgent: "Bearcat", Cookies: [])
+                ?? new DistributionSession(
+                    BaseUrl: baseUrl,
+                    UserAgent: "Bearcat",
+                    Cookies: [],
+                    AuthorizationHeader: null
+                )
         );
     }
 

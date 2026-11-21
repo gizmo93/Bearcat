@@ -31,11 +31,13 @@
 
         case WizardStep.Compose:
             <ForumWizardComposeStep HasTemplates="templates.Count > 0"
+                                    NoTemplatesMessage="@noTemplatesMessage"
                                     TemplateOptions="TemplateOptions"
                                     SelectedTemplateId="selectedTemplateId"
                                     SelectedTemplateIdChanged="HandleTemplateChangedAsync"
                                     RenderErrors="renderErrors"
                                     BlockedReasons="blockedReasons"
+                                    ExistingPostUrls="existingBlogPosts.Select(post => post.Url).ToList()"
                                     IsNewThread="IsNewThread"
                                     @bind-PostName="postName"
                                     HasPrefixes="prefixes.Count > 0"
@@ -69,7 +71,7 @@
                     <div class="flex items-center gap-2">
                         <BbInput @bind-Value="manualUrl" class="flex-1" Placeholder="@L["PostedLocationUrlPlaceholder"]" />
                         <BbButton Disabled="isBusy" OnClick="SaveManualUrlAsync">
-                            @BusyIcon()
+                            @RenderBusyIcon()
                             @L["Save"]
                         </BbButton>
                     </div>
@@ -97,28 +99,28 @@
             {
                 case WizardStep.Site:
                     <BbButton Disabled="@(isBusy || selectedRegistrationId == 0)" OnClick="LoadHierarchyAsync">
-                        @BusyIcon()
+                        @RenderBusyIcon()
                         @L["Next"]
                     </BbButton>
                     break;
 
                 case WizardStep.Target:
-                    <BbButton Disabled="@(isBusy || selectedTargetId is null || string.IsNullOrWhiteSpace(postName))" OnClick="SearchThreadsAsync">
-                        @BusyIcon()
+                    <BbButton Disabled="@(isBusy || selectedTargetId is null || string.IsNullOrWhiteSpace(postName))" OnClick="ContinueFromTargetAsync">
+                        @RenderBusyIcon()
                         @L["Next"]
                     </BbButton>
                     break;
 
                 case WizardStep.Thread:
                     <BbButton Disabled="isBusy" OnClick="PrepareComposeAsync">
-                        @BusyIcon()
+                        @RenderBusyIcon()
                         @L["Next"]
                     </BbButton>
                     break;
 
                 case WizardStep.Compose:
                     <BbButton Disabled="@(isBusy || templates.Count == 0)" OnClick="CreateDraftAsync">
-                        @BusyIcon()
+                        @RenderBusyIcon()
                         @L["PrepareDraft"]
                     </BbButton>
                     break;
@@ -127,7 +129,7 @@
                     @if (!postRecorded && !showManualUrlEntry)
                     {
                         <BbButton Disabled="isBusy" OnClick="ConfirmPostedAsync">
-                            @BusyIcon()
+                            @RenderBusyIcon()
                             @L["IHavePosted"]
                         </BbButton>
                     }
@@ -139,6 +141,6 @@
 
 @code
 {
-    private RenderFragment BusyIcon() =>
+    private RenderFragment RenderBusyIcon() =>
         @<LucideIcon Name="loader-circle" class="@($"h-4 w-4 {(isBusy ? "animate-spin" : "hidden")}")" />;
 }

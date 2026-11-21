@@ -1,9 +1,9 @@
 ---
 title: "Bearcat mit externen Tools steuern"
-description: "Erstelle Releases, steuere Uploads und erfasse Forenposts über die REST-API."
+description: "Erstelle Releases, steuere Uploads und erfasse Posts über die REST-API."
 ---
 
-Über die [REST-API](/Bearcat/de/rest-api/) erstellst du Releases, steuerst Uploads und erfasst Forenposts.
+Über die [REST-API](/Bearcat/de/rest-api/) erstellst du Releases, steuerst Uploads und erfasst Posts.
 Alle Parameter und Antwortfelder stehen in der [API-Referenz](/Bearcat/api/).
 
 ## Befehle

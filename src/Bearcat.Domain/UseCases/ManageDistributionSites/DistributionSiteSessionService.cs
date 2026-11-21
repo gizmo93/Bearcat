@@ -23,7 +23,11 @@ public class DistributionSiteSessionService(
         var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
         var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
 
-        var loginResult = await LogInAsync(site, registration, cancellationToken);
+        var loginResult = await site.LogInAsync(
+            DeserializeConfig(site, registration),
+            cancellationToken
+        );
+
         if (loginResult.Session is null)
         {
             return new TryLoginResult(IsSuccess: false, ErrorMessage: loginResult.ErrorMessage);
@@ -38,11 +42,8 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await GetForumSiteAndValidSessionAsync(
-            registrationId,
-            cancellationToken
-        );
-        return await forum.GetTargetHierarchyAsync(session, cancellationToken);
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
+        return await site.GetTargetHierarchyAsync(session, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
@@ -174,6 +175,85 @@ public class DistributionSiteSessionService(
         return await forum.SubmitReplyAsync(session, threadUrl, body, cancellationToken);
     }
 
+    public async Task<PreparedDraft> PrepareNewPostDraftAsync(
+        int registrationId,
+        ForumTargetId target,
+        string title,
+        string body,
+        string? coverImageUrl,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, config, session) = await GetBlogSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.PrepareNewPostDraftAsync(
+            config: config,
+            session: session,
+            target: target,
+            title: title,
+            body: body,
+            coverImageUrl: coverImageUrl,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<SubmittedPost> SubmitNewPostAsync(
+        int registrationId,
+        string targetNodeId,
+        string title,
+        string body,
+        string? coverImageUrl,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, config, session) = await GetBlogSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.SubmitNewPostAsync(
+            config: config,
+            session: session,
+            target: blog.CreateForumTargetIdFromStoredValue(session, targetNodeId),
+            title: title,
+            body: body,
+            coverImageUrl: coverImageUrl,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyList<ExistingBlogPost>> FindExistingPostsAsync(
+        int registrationId,
+        string title,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, _, session) = await GetBlogSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.FindExistingPostsAsync(session, title, cancellationToken);
+    }
+
+    public async Task<SubmittedPost> PublishExistingPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, _, session) = await GetBlogSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.PublishExistingPostAsync(session, postedUrl, body, cancellationToken);
+    }
+
     public async Task<SubmittedPost> EditPostAsync(
         int registrationId,
         string postedUrl,
@@ -181,11 +261,8 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await GetForumSiteAndValidSessionAsync(
-            registrationId,
-            cancellationToken
-        );
-        return await forum.EditPostAsync(session, postedUrl, body, cancellationToken);
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
+        return await site.EditPostAsync(session, postedUrl, body, cancellationToken);
     }
 
     public async Task<string?> FindUrlOfSubmittedPostAsync(
@@ -217,27 +294,79 @@ public class DistributionSiteSessionService(
         DistributionSession Session
     )> GetForumSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
     {
-        var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
-        var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
 
         if (site is not IForumDistributionSite forum)
         {
             throw new InvalidOperationException(
-                $"Distribution site '{registration.DistributionSiteClassName}' is not a forum."
+                $"Distribution site '{site.GetType().Name}' is not a forum."
             );
         }
 
-        var session = await GetStoredValidSessionOrLogInAsync(
-            registration,
-            site,
+        return (forum, session);
+    }
+
+    private async Task<(
+        IBlogDistributionSite Blog,
+        IDistributionSiteConfig Config,
+        DistributionSession Session
+    )> GetBlogSiteConfigAndValidSessionAsync(
+        int registrationId,
+        CancellationToken cancellationToken
+    )
+    {
+        var (site, config, session) = await GetSiteConfigAndValidSessionAsync(
+            registrationId,
             cancellationToken
         );
-        return (forum, session);
+
+        if (site is not IBlogDistributionSite blog)
+        {
+            throw new InvalidOperationException(
+                $"Distribution site '{site.GetType().Name}' is not a blog."
+            );
+        }
+
+        return (blog, config, session);
+    }
+
+    private async Task<(
+        IDistributionSite Site,
+        DistributionSession Session
+    )> GetSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
+    {
+        var (site, _, session) = await GetSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return (site, session);
+    }
+
+    private async Task<(
+        IDistributionSite Site,
+        IDistributionSiteConfig Config,
+        DistributionSession Session
+    )> GetSiteConfigAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
+    {
+        var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
+        var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
+        var config = DeserializeConfig(site, registration);
+
+        var session = await GetStoredValidSessionOrLogInAsync(
+            registration: registration,
+            site: site,
+            config: config,
+            cancellationToken: cancellationToken
+        );
+
+        return (site, config, session);
     }
 
     private async Task<DistributionSession> GetStoredValidSessionOrLogInAsync(
         DistributionSiteRegistration registration,
         IDistributionSite site,
+        IDistributionSiteConfig config,
         CancellationToken cancellationToken
     )
     {
@@ -253,7 +382,7 @@ public class DistributionSiteSessionService(
             return storedSession;
         }
 
-        var loginResult = await LogInAsync(site, registration, cancellationToken);
+        var loginResult = await site.LogInAsync(config, cancellationToken);
         if (loginResult.Session is null)
         {
             throw new InvalidOperationException(
@@ -265,16 +394,11 @@ public class DistributionSiteSessionService(
         return loginResult.Session;
     }
 
-    private Task<DistributionSiteLoginResult> LogInAsync(
+    private IDistributionSiteConfig DeserializeConfig(
         IDistributionSite site,
-        DistributionSiteRegistration registration,
-        CancellationToken cancellationToken
+        DistributionSiteRegistration registration
     )
     {
-        var config = site.DeserializeConfig(
-            secretProtector.Unprotect(registration.SerializedConfig)
-        );
-
-        return site.LogInAsync(config, cancellationToken);
+        return site.DeserializeConfig(secretProtector.Unprotect(registration.SerializedConfig));
     }
 }

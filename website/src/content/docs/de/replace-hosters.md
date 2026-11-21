@@ -84,6 +84,6 @@ ein Reupload, wenn du sie anpasst.
 
 - Laufende Uploads und Uploads, die schon Dateien haben, bleiben beim alten Hoster. Brich sie ab, falls sie
   nicht fertig werden.
-- Links in bestehenden Forenposts ändern sich nicht.
-- Fest eingetragene Hosternamen in Forenpostvorlagen musst du von Hand ändern. `upload.hoster_name` zeigt
+- Links in bestehenden Posts ändern sich nicht.
+- Fest eingetragene Hosternamen in Postvorlagen musst du von Hand ändern. `upload.hoster_name` zeigt
   den Hosternamen des letzten Uploads.

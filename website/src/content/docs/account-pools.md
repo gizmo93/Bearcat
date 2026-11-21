@@ -67,9 +67,9 @@ deactivate it instead. It will receive no new uploads, but its existing uploads 
 To move all upload configurations from a pool to another account or pool, use
 [Replace Hosters](/Bearcat/replace-hosters/).
 
-## Forum posts
+## Posts
 
-In forum posts, `upload.hoster_name` is the hoster's display name (e.g. "Rapidgator"), not the pool or
+In posts, `upload.hoster_name` is the hoster's display name (e.g. "Rapidgator"), not the pool or
 account name. `upload.hoster_registration_name` shows the account name of the latest upload.
 
 ## Parallel uploads

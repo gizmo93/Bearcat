@@ -171,7 +171,7 @@ Ein Banner auf der Startseite zeigt dir, ob noch Hoster, Releasetemplate oder Qu
 **Einrichtung fortsetzen** öffnet die Einrichtung erneut.
 
 Sobald die Grundeinrichtung abgeschlossen ist, zeigt die Startseite **Optionale nächste Schritte**: Metadaten und NFOs,
-ein Bildhoster für Coverbilder, Linkcrypter, Telegrambenachrichtigungen, Forenposts und Proxyserver.
+ein Bildhoster für Coverbilder, Linkcrypter, Telegrambenachrichtigungen, Verteilungsseiten und Proxyserver.
 Jeder Eintrag führt zu den passenden Einstellungen und wird nach der Einrichtung als erledigt markiert.
 
 <details>

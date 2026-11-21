@@ -37,7 +37,8 @@ public class ForumPostRenderService(
             return new ForumPostTemplateRenderResult(
                 Content: string.Empty,
                 Errors: ["Forum post template not found."],
-                BlockedReasons: []
+                BlockedReasons: [],
+                CoverImageUrl: null
             );
         }
 
@@ -48,7 +49,8 @@ public class ForumPostRenderService(
             return new ForumPostTemplateRenderResult(
                 Content: string.Empty,
                 Errors: [$"No render source available for template type {template.Type}."],
-                BlockedReasons: []
+                BlockedReasons: [],
+                CoverImageUrl: null
             );
         }
 
@@ -66,7 +68,8 @@ public class ForumPostRenderService(
         return new ForumPostTemplateRenderResult(
             Content: result.Content,
             Errors: result.Errors.Select(FormatError).ToList(),
-            BlockedReasons: renderGlobals?.BlockedReasons ?? []
+            BlockedReasons: renderGlobals?.BlockedReasons ?? [],
+            CoverImageUrl: renderGlobals?.CoverImageUrl
         );
     }
 

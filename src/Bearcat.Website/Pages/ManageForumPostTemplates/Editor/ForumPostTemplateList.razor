@@ -67,6 +67,12 @@
                                     @L["ForumPostTemplateOutputFormatPlainText"]
                                 </BbBadge>
                             }
+                            @if (template.OutputFormat == ForumPostTemplateOutputFormat.Html)
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline" Class="bearcat-forum-template-editor-small-badge">
+                                    @L["ForumPostTemplateOutputFormatHtml"]
+                                </BbBadge>
+                            }
                             @if (selected && IsDirty)
                             {
                                 <span class="bearcat-forum-template-editor-dirty-dot" aria-label="@L["UnsavedChanges"]"></span>

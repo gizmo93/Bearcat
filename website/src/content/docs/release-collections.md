@@ -11,7 +11,7 @@ Set hosters, archive settings, and password policies for the whole collection, a
 download links in one link crypter container.
 
 With [posting rules for collections](/Bearcat/automatic-forum-posting/), Bearcat posts whole collections automatically.
-When you upload a new episode, Bearcat updates the existing forum post.
+When you upload a new episode, Bearcat updates the existing post.
 
 ## How a collection is created
 
@@ -58,9 +58,9 @@ whole season. The password and other crypter settings apply to all uploads in th
 The header shows the cover, the series title from the metadata source, the collection key and the
 series description. **Show more** expands a long description.
 
-**Post to forum** opens the [forum posting dialog](/Bearcat/posting-to-forums/). It is highlighted
+**Post to site** opens the [posting dialog](/Bearcat/posting-to-forums/). It is highlighted
 while at least one release has an online hoster and the collection is not posted yet. Without an
-active forum distribution site, only **Render forum post** is shown.
+active distribution site, only **Render post** is shown.
 
 The `...` menu contains **Edit collection settings** for the content type and primary language,
 **Edit metadata**, **Resolve metadata** and **Correct metadata match**.
@@ -82,7 +82,7 @@ Bearcat saves the corrected IDs as manual IDs for every release in the collectio
 See
 [Correct a wrong match](/Bearcat/release-information-and-metadata/#correct-a-wrong-match).
 
-Use the metadata in forum post templates and upload the cover to your image hosters.
+Use the metadata in post templates and upload the cover to your image hosters.
 See [Release Information and Metadata](/Bearcat/release-information-and-metadata/) for lookup details.
 
 ### Overview
@@ -109,7 +109,7 @@ every container with its link. Slots with a failed container are expanded when t
 
 ### Images
 
-Upload the series cover to your image hosters for use in forum posts. Configure this in either place:
+Upload the series cover to your image hosters for use in posts. Configure this in either place:
 
 - **On a release template:** enable collection detection, then add hosters under **Collection
   image upload configurations**. These settings apply to collections containing releases created from this template.
@@ -119,4 +119,4 @@ If you leave the name empty, Bearcat names the configuration after the hoster. Y
 an existing entry. To use a different hoster, add a new image upload configuration.
 
 Each entry shows its upload state. After uploading, it shows a preview and image links in different
-sizes. Copy links individually or together, or use `imagelinks` in forum post templates. See [Forum post templates](/Bearcat/forum-post-templates/) for details.
+sizes. Copy links individually or together, or use `imagelinks` in post templates. See [Post templates](/Bearcat/forum-post-templates/) for details.

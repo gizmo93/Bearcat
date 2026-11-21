@@ -6,7 +6,7 @@ namespace Bearcat.Domain.UseCases.PostToForums.Repositories;
 
 public interface IAutoForumPostingRepository
 {
-    Task<IReadOnlyList<AutoPostRegistration>> GetForumRegistrationsWithEnabledRulesAsync(
+    Task<IReadOnlyList<AutoPostRegistration>> GetRegistrationsWithEnabledRulesAsync(
         CancellationToken cancellationToken = default
     );
 

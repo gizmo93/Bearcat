@@ -71,9 +71,9 @@ neuen Uploads mehr. Seine bestehenden Uploads bleiben erhalten.
 Mit [Hoster ersetzen](/Bearcat/de/replace-hosters/) stellst du alle Uploadkonfigurationen eines Pools auf
 einen anderen Account oder Pool um.
 
-## Forenposts
+## Posts
 
-In Forenposts ist `upload.hoster_name` der Anzeigename des Hosters (z. B. "Rapidgator"), nicht der Name
+In Posts ist `upload.hoster_name` der Anzeigename des Hosters (z. B. "Rapidgator"), nicht der Name
 des Pools oder Accounts. `upload.hoster_registration_name` zeigt den Accountnamen des letzten Uploads.
 
 ## Parallele Uploads

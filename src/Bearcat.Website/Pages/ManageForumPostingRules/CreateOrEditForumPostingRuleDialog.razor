@@ -1,3 +1,4 @@
+@using Bearcat.Abstractions.DistributionSite
 @using Bearcat.Website.Pages.ManageForumPostTemplates.Editor
 
 @if (!isInitialized)
@@ -92,48 +93,51 @@
             <ValidationMessage For="@(() => formModel.TargetNodeId)" />
         </div>
 
-        <div class="space-y-2">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <label class="text-sm font-medium">@L["ThreadPrefixes"]</label>
-                <BbButton Variant="ButtonVariant.Outline"
-                          Size="ButtonSize.Small"
-                          Disabled="@(isLoadingPrefixes || SelectedTargetUrl is null)"
-                          OnClick="LoadPrefixesAsync">
-                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoadingPrefixes ? "animate-spin" : string.Empty)}")" />
-                    @(prefixesLoaded ? L["ReloadThreadPrefixes"] : L["LoadThreadPrefixes"])
-                </BbButton>
+        @if (RegistrationKind == DistributionSiteKind.Forum)
+        {
+            <div class="space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label class="text-sm font-medium">@L["ThreadPrefixes"]</label>
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="@(isLoadingPrefixes || SelectedTargetUrl is null)"
+                              OnClick="LoadPrefixesAsync">
+                        <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoadingPrefixes ? "animate-spin" : string.Empty)}")" />
+                        @(prefixesLoaded ? L["ReloadThreadPrefixes"] : L["LoadThreadPrefixes"])
+                    </BbButton>
+                </div>
+
+                @if (prefixesLoaded)
+                {
+                    <BbMultiSelect TValue="string"
+                                   Values="formModel.ThreadPrefixIds"
+                                   ValuesChanged="ChangeThreadPrefixIds"
+                                   Options="PrefixOptions"
+                                   ShowSelectAll="false"
+                                   MatchTriggerWidth="true"
+                                   Placeholder="@L["NoThreadPrefix"]"
+                                   SearchPlaceholder="@L["Search"]"
+                                   Class="w-full" />
+                }
+                else
+                {
+                    <div class="rounded-md border border-dashed border-border/70 px-3 py-2 text-sm">
+                        @(formModel.ThreadPrefixIds.Count == 0
+                            ? L["NoThreadPrefix"]
+                            : string.Join(", ", formModel.ThreadPrefixIds))
+                    </div>
+                }
+
+                <p class="text-xs text-muted-foreground">@L["ThreadPrefixRuleHelp"]</p>
+
+                @if (prefixesErrorMessage is not null)
+                {
+                    <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        @prefixesErrorMessage
+                    </div>
+                }
             </div>
-
-            @if (prefixesLoaded)
-            {
-                <BbMultiSelect TValue="string"
-                               Values="formModel.ThreadPrefixIds"
-                               ValuesChanged="ChangeThreadPrefixIds"
-                               Options="PrefixOptions"
-                               ShowSelectAll="false"
-                               MatchTriggerWidth="true"
-                               Placeholder="@L["NoThreadPrefix"]"
-                               SearchPlaceholder="@L["Search"]"
-                               Class="w-full" />
-            }
-            else
-            {
-                <div class="rounded-md border border-dashed border-border/70 px-3 py-2 text-sm">
-                    @(formModel.ThreadPrefixIds.Count == 0
-                        ? L["NoThreadPrefix"]
-                        : string.Join(", ", formModel.ThreadPrefixIds))
-                </div>
-            }
-
-            <p class="text-xs text-muted-foreground">@L["ThreadPrefixRuleHelp"]</p>
-
-            @if (prefixesErrorMessage is not null)
-            {
-                <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    @prefixesErrorMessage
-                </div>
-            }
-        </div>
+        }
 
         <BbFormFieldSelect TValue="int"
                            @bind-Value="formModel.ForumPostTemplateId"
@@ -142,10 +146,13 @@
                            Options="TemplateOptions" />
         <ValidationMessage For="@(() => formModel.ForumPostTemplateId)" />
 
-        <BbFormFieldSelect TValue="ForumPostPostMode"
-                           @bind-Value="formModel.PostMode"
-                           Label="@L["ForumPostPostMode"]"
-                           Options="PostModeOptions" />
+        @if (RegistrationKind == DistributionSiteKind.Forum)
+        {
+            <BbFormFieldSelect TValue="ForumPostPostMode"
+                               @bind-Value="formModel.PostMode"
+                               Label="@L["ForumPostPostMode"]"
+                               Options="PostModeOptions" />
+        }
 
         <BbFormFieldSwitch @bind-Checked="formModel.IsEnabled"
                            Label="@L["Enabled"]"

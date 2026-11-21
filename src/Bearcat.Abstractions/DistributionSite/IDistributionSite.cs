@@ -25,4 +25,21 @@ public interface IDistributionSite
         DistributionSession session,
         CancellationToken cancellationToken
     );
+
+    Task<IReadOnlyList<ForumTargetNode>> GetTargetHierarchyAsync(
+        DistributionSession session,
+        CancellationToken cancellationToken
+    );
+
+    Task<SubmittedPost> EditPostAsync(
+        DistributionSession session,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken
+    );
+
+    ForumTargetId CreateForumTargetIdFromStoredValue(
+        DistributionSession session,
+        string storedTargetId
+    );
 }

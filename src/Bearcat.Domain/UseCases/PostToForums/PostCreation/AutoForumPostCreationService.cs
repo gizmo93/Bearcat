@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -156,6 +157,18 @@ public class AutoForumPostCreationService(
             return AutoPostResult.Failed(rendered.Errors);
         }
 
+        if (site.Registration.Kind == DistributionSiteKind.Blog)
+        {
+            return await SubmitBlogPostAsync(
+                plan: plan,
+                site: site,
+                rule: rule,
+                body: rendered.Content,
+                coverImageUrl: rendered.CoverImageUrl,
+                cancellationToken: cancellationToken
+            );
+        }
+
         string? threadUrl;
 
         if (shouldSearchMatchingThread)
@@ -193,6 +206,89 @@ public class AutoForumPostCreationService(
             cancellationToken: cancellationToken
         );
 
+        return await RecordPostedLocationAsync(
+            plan: plan,
+            site: site,
+            rule: rule,
+            submittedPost: submittedPost,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<AutoPostResult> SubmitBlogPostAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        ForumPostingRule rule,
+        string body,
+        string? coverImageUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        if (await IsAlreadyPostedAsync(plan, site, cancellationToken))
+        {
+            return AutoPostResult.Skipped(AutoPostSkipReason.AlreadyPosted);
+        }
+
+        var postName = BuildPostName(plan, site);
+
+        var existingPosts = await submitter.FindExistingPostsAsync(
+            registrationId: site.DistributionSiteRegistrationId,
+            title: postName,
+            cancellationToken: cancellationToken
+        );
+
+        var existingPostUrls = existingPosts.Select(post => post.Url).ToList();
+
+        if (existingPosts.Count > 1)
+        {
+            return AutoPostResult.SkippedForExistingPosts(
+                AutoPostSkipReason.SeveralExistingPosts,
+                existingPostUrls
+            );
+        }
+
+        if (existingPosts.Count == 1 && !existingPosts.Single().IsOwnedByAccount)
+        {
+            return AutoPostResult.SkippedForExistingPosts(
+                AutoPostSkipReason.ExistingPostOfOtherAuthor,
+                existingPostUrls
+            );
+        }
+
+        var submittedPost =
+            existingPosts.Count == 1
+                ? await submitter.PublishExistingPostAsync(
+                    registrationId: site.DistributionSiteRegistrationId,
+                    postedUrl: existingPosts.Single().Url,
+                    body: body,
+                    cancellationToken: cancellationToken
+                )
+                : await submitter.SubmitNewPostAsync(
+                    registrationId: site.DistributionSiteRegistrationId,
+                    targetNodeId: rule.TargetNodeId,
+                    title: postName,
+                    body: body,
+                    coverImageUrl: coverImageUrl,
+                    cancellationToken: cancellationToken
+                );
+
+        return await RecordPostedLocationAsync(
+            plan: plan,
+            site: site,
+            rule: rule,
+            submittedPost: submittedPost,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<AutoPostResult> RecordPostedLocationAsync(
+        AutoPostPlan plan,
+        AutoPostSiteEntry site,
+        ForumPostingRule rule,
+        SubmittedPost submittedPost,
+        CancellationToken cancellationToken
+    )
+    {
         await repository.RecordPostedLocationAsync(
             entityType: plan.EntityType,
             entityId: plan.EntityId,
@@ -224,7 +320,7 @@ public class AutoForumPostCreationService(
             return [];
         }
 
-        var postName = PostName(plan, site);
+        var postName = BuildPostName(plan, site);
 
         var existingThreads = await submitter.FindExistingThreadsAsync(
             registrationId: site.DistributionSiteRegistrationId,
@@ -275,14 +371,14 @@ public class AutoForumPostCreationService(
         return await submitter.SubmitNewThreadAsync(
             registrationId: site.DistributionSiteRegistrationId,
             targetNodeId: rule.TargetNodeId,
-            title: PostName(plan, site),
+            title: BuildPostName(plan, site),
             prefixIds: rule.ThreadPrefixIds,
             body: body,
             cancellationToken: cancellationToken
         );
     }
 
-    private static string PostName(AutoPostPlan plan, AutoPostSiteEntry site)
+    private static string BuildPostName(AutoPostPlan plan, AutoPostSiteEntry site)
     {
         var postName = site.Registration.StripDotsForThreadSearch
             ? ReleaseNameFormatter.ToSpacedName(plan.EntityName)

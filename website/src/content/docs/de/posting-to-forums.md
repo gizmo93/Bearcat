@@ -1,28 +1,28 @@
 ---
-title: "Forenposts vorbereiten und absenden"
-description: "Erstelle einen Forenentwurf mit Releasedetails und Downloadlinks, prüfe ihn dann im Browser und sende ihn ab."
+title: "Auf Seiten posten"
+description: "Erstelle in einem Forum oder Blog einen Entwurf mit Releasedetails und Downloadlinks, prüfe ihn dann im Browser und sende ihn ab."
 ---
 
 Bearcat erstellt aus den Releasedaten und deiner Vorlage einen Entwurf für einen Post. Öffne ihn im Browser,
-prüfe Titel und Text und sende den Post ab. Du musst dabei mit demselben Forenkonto angemeldet sein.
+prüfe Titel und Text und sende den Post ab. Du musst dabei mit demselben Konto auf der Seite angemeldet sein.
 
 Damit Bearcat Posts für dich absendet, verwende [Postingregeln](/Bearcat/de/automatic-forum-posting/).
 
 ## Voraussetzungen
 
-- Eine Verteilungsseite, also ein Forenkonto, das du in Bearcat hinzugefügt hast.
-- Eine [Forenpostvorlage](/Bearcat/de/forum-post-templates/).
+- Ein in Bearcat hinzugefügtes Konto für ein Forum oder [WordPress](/Bearcat/de/wordpress/).
+- Eine [Postvorlage](/Bearcat/de/forum-post-templates/) im Ausgabeformat der Seite: BBCode für Foren, HTML für WordPress.
 - Ein Release mit abgeschlossenen Uploads und Downloadlinks.
 
 ## Eine Verteilungsseite einrichten
 
-Öffne **Registrierungen > Verteilungsseitenregistrierungen** in der Seitenleiste und füge eine hinzu. Wähle das Forum, gib Benutzername und
+Öffne **Registrierungen > Verteilungsseitenregistrierungen** in der Seitenleiste und füge eine hinzu. Wähle die Seite, gib Benutzername und
 Passwort ein und speichere. Dein Passwort wird verschlüsselt gespeichert. Aktiviere die Seite und prüfe mit **Login testen**,
 ob die Anmeldung funktioniert.
 
 Wähle für boerse.cx und data-load.me den jeweiligen Foreneintrag.
 
-Für andere XenForo-Foren wählst du **XenForo**. Gib Benutzername, Passwort und die Adresse der Forenstartseite
+Für andere XenForo-Foren wählst du **XenForo**. Gib Benutzername, Passwort und unter **Adresse** die Startseite des Forums
 ein, einschliesslich eines Installationsordners, zum Beispiel `https://example.org/community/`. Verwende die
 Adresse, die dein Browser nach Weiterleitungen anzeigt. Füge jedes Forum einzeln hinzu.
 
@@ -31,25 +31,27 @@ Routing über `index.php`, SSO, CAPTCHA und Zwei-Faktor-Login werden nicht unter
 Pflichtfelder für Threads oder Add-ons können das Posten verhindern. Teste den Login und bereite einen Entwurf vor,
 bevor du automatisches Posten aktivierst.
 
+Wie du WordPress einrichtest, steht unter [WordPress](/Bearcat/de/wordpress/).
+
 ## Ein Release posten
 
-Öffne ein Release und klicke im Kopfbereich auf **Im Forum posten**. **Forenpost rendern** findest du im Pfeilmenü
+Öffne ein Release und klicke im Kopfbereich auf **Auf Seite posten**. **Post rendern** findest du im Pfeilmenü
 derselben Schaltfläche.
 
-![Schaltfläche Im Forum posten](../images/post-to-forum-button.png)
+![Schaltfläche Auf Seite posten](../images/post-to-forum-button.png)
 
 Im Dialog:
 
 1. Wähle die Verteilungsseite, auf der du posten willst.
    ![distribution-site-selection.png](../images/distribution-site-selection.png)
-2. Suche und wähle ein Unterforum. Du kannst auch den Releasenamen bearbeiten, mit dem Bearcat
-   nach bestehenden Threads sucht und neue benennt. **Punkte → Leerzeichen** ersetzt Punkte durch Leerzeichen
+2. Wähle als Ziel ein Unterforum oder eine Blogkategorie. Du kannst auch den Releasenamen
+   bearbeiten, mit dem Bearcat nach bestehenden Threads sucht und neue Threads und Posts benennt. **Punkte → Leerzeichen** ersetzt Punkte durch Leerzeichen
    und setzt Leerzeichen um den letzten Bindestrich vor der Releasegruppe.
    ![subforum-selection.png](../images/subforum-selection.png)
-3. Bearcat sucht im Unterforum nach Threads, deren Titel zum Releasenamen passt. Dafür gelten dieselben
+3. Nur bei Foren: Bearcat sucht im Unterforum nach Threads, deren Titel zum Releasenamen passt. Dafür gelten dieselben
    [Suchregeln wie beim automatischen Posten](/Bearcat/de/automatic-forum-posting/#bestehendes-thema-finden).
    Bei genau einem passenden Thread schlägt Bearcat eine Antwort vor, sonst einen neuen Thread.
-   Du kannst auch selbst einen Thread aus den Suchergebnissen wählen.
+   Du kannst auch selbst einen Thread aus den Suchergebnissen wählen. Bei Blogs überspringt der Dialog diesen Schritt.
 
    <figure>
 
@@ -65,8 +67,9 @@ Im Dialog:
    <figcaption>Kein bestehender Thread gefunden</figcaption>
    </figure>
 
-4. Wähle eine Forenpostvorlage. Bearcat füllt sie mit den Releasedaten aus. Den fertigen Text
-   kannst du noch bearbeiten. Für einen neuen Thread legst du auch den Titel und gegebenenfalls ein Präfix wie 1080p oder x265 fest.
+4. Wähle eine Postvorlage. Die Liste zeigt nur Vorlagen im Ausgabeformat der Seite. Bearcat füllt sie mit den
+   Releasedaten aus. Den fertigen Text kannst du noch bearbeiten. Für einen neuen Thread oder Blogpost legst du auch den Titel fest.
+   In Foren kannst du zusätzlich ein Präfix wie 1080p oder x265 setzen.
 
    <figure>
 
@@ -82,18 +85,18 @@ Im Dialog:
    <figcaption>Neuen Thread vorbereiten</figcaption>
    </figure>
 
-5. Klicke auf **Entwurf vorbereiten**. Bearcat speichert den Entwurf im Forum und zeigt einen Link **Entwurf im
-   Forum öffnen**.
+5. Klicke auf **Entwurf vorbereiten**. Bearcat speichert den Entwurf auf der Seite und zeigt den Link **Entwurf öffnen**.
 
    ![draft-created.png](../images/draft-created.png)
 
 ## Den Post absenden
 
-1. Klicke auf **Entwurf im Forum öffnen** in einem Browser, der mit demselben Forenkonto angemeldet ist. Sonst
+1. Melde dich im Browser mit demselben Konto auf der Seite an und klicke auf **Entwurf öffnen**. Sonst
    zeigt der Editor den Entwurf nicht an.
-2. Prüfe Titel und Text, verwende bei Bedarf die Vorschau des Forums und sende den Post ab.
+2. Prüfe Titel und Text und nutze bei Bedarf die Vorschau. Sende den Post ab oder veröffentliche ihn im Blog.
 3. Klicke zurück in Bearcat auf **Ich habe gepostet**, um die URL des Posts unter **Veröffentlichungsorte** zu speichern.
-   Findet Bearcat den Post noch nicht, füge seine URL ein. Es kann einige Sekunden dauern, bis die Forensuche ihn findet.
+   Findet Bearcat einen Forenpost noch nicht, füge seine URL ein. Es kann einige Sekunden dauern, bis die Forensuche ihn findet.
+   Bei WordPress speichert Bearcat die URL ohne Suche.
 
 <figure>
 
@@ -115,6 +118,6 @@ Im Dialog:
 ## Veröffentlichungsorte
 
 **Veröffentlichungsorte** listet die URLs, unter denen ein Release oder eine Collection veröffentlicht wurde,
-etwa Forenthreads oder WordPress-Seiten. Das Bestätigen eines Forenposts fügt dessen URL hier hinzu.
+etwa Forenthreads oder Posts in WordPress. Wenn du einen Post bestätigst, speichert Bearcat seine URL hier.
 Du findest die Liste im Tab **Übersicht** des Releases oder der Collection.
 Dort kannst du Links auch von Hand hinzufügen oder entfernen.

@@ -81,6 +81,6 @@ configurations still use the deactivated account and cannot reupload until you c
 
 - Running uploads and uploads that already have files stay on the old hoster. Cancel them if they do
   not finish.
-- Links in existing forum posts do not change.
-- Change any hoster names typed directly into forum post templates by hand. `upload.hoster_name` shows
+- Links in existing posts do not change.
+- Change any hoster names typed directly into post templates by hand. `upload.hoster_name` shows
   the hoster name of the latest upload.

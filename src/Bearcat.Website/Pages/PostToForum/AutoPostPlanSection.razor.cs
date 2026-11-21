@@ -177,7 +177,7 @@ public partial class AutoPostPlanSection(
         }
     }
 
-    private string ThreadSelection(AutoPostSiteEntry site)
+    private string GetThreadSelection(AutoPostSiteEntry site)
     {
         return threadSelectionsByRegistrationId.GetValueOrDefault(
             site.DistributionSiteRegistrationId,
@@ -193,7 +193,7 @@ public partial class AutoPostPlanSection(
     private async Task PostToChosenThreadAsync(AutoPostSiteEntry site)
     {
         var plan = Plan;
-        var threadSelection = ThreadSelection(site);
+        var threadSelection = GetThreadSelection(site);
         var threadUrl = threadSelection == NewThreadValue ? null : threadSelection;
 
         busyRegistrationIds.Add(site.DistributionSiteRegistrationId);
@@ -309,6 +309,14 @@ public partial class AutoPostPlanSection(
             AutoPostSkipReason.ServiceRestrictionNotMet => L[
                 "AutoPostSkippedServiceRestrictionNotMet",
                 string.Join(" ", result.Errors)
+            ],
+            AutoPostSkipReason.ExistingPostOfOtherAuthor => L[
+                "AutoPostSkippedExistingPostOfOtherAuthor",
+                string.Join(" ", result.ExistingPostUrls)
+            ],
+            AutoPostSkipReason.SeveralExistingPosts => L[
+                "AutoPostSkippedSeveralExistingPosts",
+                string.Join(" ", result.ExistingPostUrls)
             ],
             _ => L["AutoPostSkippedSiteUnavailable"],
         };

@@ -37,7 +37,8 @@ public sealed class DistributionSessionRepository(
         return new DistributionSession(
             BaseUrl: serializedSession.BaseUrl,
             UserAgent: serializedSession.UserAgent,
-            Cookies: serializedSession.Cookies
+            Cookies: serializedSession.Cookies,
+            AuthorizationHeader: serializedSession.AuthorizationHeader
         );
     }
 
@@ -56,7 +57,8 @@ public sealed class DistributionSessionRepository(
             new SerializedSession(
                 BaseUrl: session.BaseUrl,
                 UserAgent: session.UserAgent,
-                Cookies: session.Cookies
+                Cookies: session.Cookies,
+                AuthorizationHeader: session.AuthorizationHeader
             )
         );
         registration.EncryptedSession = secretProtector.Protect(json);
@@ -67,6 +69,7 @@ public sealed class DistributionSessionRepository(
     private sealed record SerializedSession(
         string? BaseUrl,
         string UserAgent,
-        IReadOnlyList<SessionCookie> Cookies
+        IReadOnlyList<SessionCookie> Cookies,
+        string? AuthorizationHeader
     );
 }

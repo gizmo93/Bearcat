@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.PostToForums.Models;
@@ -119,6 +120,7 @@ public static class AutoPostTestFactory
         return new AutoPostRegistration(
             DistributionSiteRegistrationId: id,
             Name: name,
+            Kind: DistributionSiteKind.Forum,
             EnableAutomaticPosting: false,
             StripDotsForThreadSearch: true,
             MinimumSecondsBetweenPosts: 0,

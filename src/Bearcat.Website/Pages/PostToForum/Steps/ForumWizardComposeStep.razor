@@ -3,7 +3,7 @@
     {
         <div class="bearcat-release-empty">
             <LucideIcon Name="inbox" class="h-5 w-5" />
-            <span>@L["NoForumPostTemplatesFound"]</span>
+            <span>@NoTemplatesMessage</span>
         </div>
     }
     else
@@ -35,6 +35,25 @@
                 @foreach (var blockedReason in BlockedReasons)
                 {
                     <p>@blockedReason</p>
+                }
+            </div>
+        </div>
+    }
+
+    @if (ExistingPostUrls.Count > 0)
+    {
+        <div class="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <LucideIcon Name="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+            <div class="min-w-0 space-y-1">
+                <p class="font-medium">@L["ExistingBlogPostsWarning"]</p>
+                @foreach (var existingPostUrl in ExistingPostUrls)
+                {
+                    <a href="@existingPostUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="block truncate hover:underline">
+                        @existingPostUrl
+                    </a>
                 }
             </div>
         </div>
@@ -77,6 +96,9 @@
     public bool HasTemplates { get; set; }
 
     [Parameter]
+    public string NoTemplatesMessage { get; set; } = string.Empty;
+
+    [Parameter]
     public IReadOnlyList<SelectOption<int>> TemplateOptions { get; set; } = [];
 
     [Parameter]
@@ -90,6 +112,9 @@
 
     [Parameter]
     public IReadOnlyList<string> BlockedReasons { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> ExistingPostUrls { get; set; } = [];
 
     [Parameter]
     public bool IsNewThread { get; set; }

@@ -83,7 +83,13 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         var globals = new ScriptObject { ["name"] = "Bearcat" };
         renderSourceMock
             .Setup(source => source.BuildGlobalsAsync(7, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ForumPostRenderGlobals(globals, BlockedReasons: []));
+            .ReturnsAsync(
+                new ForumPostRenderGlobals(
+                    Globals: globals,
+                    BlockedReasons: [],
+                    CoverImageUrl: null
+                )
+            );
 
         // Act
         var result = await service.RenderAsync(7, template.Id, null, CancellationToken.None);
@@ -105,7 +111,13 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         );
         renderSourceMock
             .Setup(source => source.BuildGlobalsAsync(1, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ForumPostRenderGlobals(globals, BlockedReasons: []));
+            .ReturnsAsync(
+                new ForumPostRenderGlobals(
+                    Globals: globals,
+                    BlockedReasons: [],
+                    CoverImageUrl: null
+                )
+            );
 
         // Act
         var result = await service.RenderAsync(1, template.Id, null, CancellationToken.None);
@@ -122,7 +134,13 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         var template = await AddTemplateAsync(ForumPostTemplateType.Release, "first\n  {{ end }}");
         renderSourceMock
             .Setup(source => source.BuildGlobalsAsync(1, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ForumPostRenderGlobals(new ScriptObject(), BlockedReasons: []));
+            .ReturnsAsync(
+                new ForumPostRenderGlobals(
+                    Globals: new ScriptObject(),
+                    BlockedReasons: [],
+                    CoverImageUrl: null
+                )
+            );
 
         // Act
         var result = await service.RenderAsync(1, template.Id, null, CancellationToken.None);
@@ -269,7 +287,13 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     {
         renderSourceMock
             .Setup(source => source.BuildGlobalsAsync(1, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ForumPostRenderGlobals(globals, BlockedReasons: []));
+            .ReturnsAsync(
+                new ForumPostRenderGlobals(
+                    Globals: globals,
+                    BlockedReasons: [],
+                    CoverImageUrl: null
+                )
+            );
 
         var previewData = await service.LoadPreviewDataAsync(
             ForumPostTemplateType.Release,

@@ -4,7 +4,7 @@ description: "Post completed uploads and mark them as done."
 ---
 
 The post queue lists releases and collections with new uploads that you have not posted yet.
-From there, you can prepare forum posts, submit them through posting rules, or mark releases
+From there, you can prepare posts for forums and blogs, submit them through posting rules, or mark releases
 as posted after sharing them yourself.
 
 ## Where to find it
@@ -33,21 +33,21 @@ The queue has two sections:
 
 See [Release Collections](/Bearcat/release-collections/) for how collections and their upload slots work.
 
-## Posting to a forum from the queue
+## Posting to a site from the queue
 
 With [posting rules](/Bearcat/automatic-forum-posting/) configured, the **Automatic posting** section
-for single releases and collections shows the matching rule and target subforum for each forum.
+for single releases and collections shows the matching rule and target for each distribution site.
 
-Click **Post** to submit the post. **Post to all matched sites** handles all remaining forums.
-The **Auto** badge shows that Bearcat posts to this forum automatically.
+Click **Post** to submit the post. **Post to all matched sites** posts to every remaining site with a matching rule.
+The **Auto** badge shows that Bearcat posts to this site automatically.
 
 After a reupload or the upload of a new episode to a collection, existing posts show
 **Post content is outdated**. Click **Update post** to replace the post. If automatic posting is blocked,
-the section shows the reason instead of the forum list.
+the section shows the reason instead of the site list.
 
 ![posting-from-post-queue.png](images/posting-from-post-queue.png)
 
-Once all posts in the matching forums are created or updated, Bearcat marks the release or collection as posted
+Once all posts on the matching sites are created or updated, Bearcat marks the release or collection as posted
 and removes it from the queue.
 
 ## Marking something as posted
@@ -59,9 +59,9 @@ When you have posted a release somewhere, click **Mark as posted** on its entry.
 Click **Start workflow** under single releases or collections to work through the entries one at a time.
 Bearcat opens the first entry and shows your progress in the workflow bar.
 
-In the release or collection header, use [**Post to forum**](/Bearcat/posting-to-forums/) to prepare a draft,
-or [**Render forum post**](/Bearcat/forum-post-templates/#render-a-post) from its arrow menu to copy the text.
-Submit the post in the forum, then return to the workflow bar.
+In the release or collection header, use [**Post to site**](/Bearcat/posting-to-forums/) to prepare a draft,
+or [**Render post**](/Bearcat/forum-post-templates/#render-a-post) from its arrow menu to copy the text.
+Submit the post on the site, then return to the workflow bar.
 
 ![post-queue-toolbar.png](images/post-queue-toolbar.png)
 

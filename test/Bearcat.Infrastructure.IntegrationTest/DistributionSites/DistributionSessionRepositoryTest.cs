@@ -35,7 +35,8 @@ public class DistributionSessionRepositoryTest(DatabaseProvider databaseProvider
                     Domain: "example.org",
                     Path: "/community/"
                 ),
-            ]
+            ],
+            AuthorizationHeader: null
         );
         await repository.SaveAsync(registration.Id, session, CancellationToken.None);
 
