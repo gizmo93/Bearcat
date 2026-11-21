@@ -1399,6 +1399,7 @@
   <data name="DistributionSiteConfig_BaseUrl_Description" xml:space="preserve"><value>Adresse der Forenstartseite inklusive Installationsordner, z. B. https://example.org/community/. Verwende die Adresse, die der Browser nach Weiterleitungen anzeigt.</value></data>
   <data name="DistributionSiteConfig_Username" xml:space="preserve"><value>Benutzername</value></data>
   <data name="DistributionSiteConfig_Password" xml:space="preserve"><value>Passwort</value></data>
+  <data name="DistributionSiteConfig_ApplicationPassword" xml:space="preserve"><value>Anwendungspasswort</value></data>
   <data name="RemoteSourceAutomations" xml:space="preserve"><value>Remoteautomatisierungen</value></data>
   <data name="RemoteSourceAutomationsIntro" xml:space="preserve"><value>Überwacht Ordner auf Remotequellen und merkt neue Releases zum Herunterladen vor</value></data>
   <data name="NewRemoteSourceAutomation" xml:space="preserve"><value>Neue Remoteautomatisierung</value></data>

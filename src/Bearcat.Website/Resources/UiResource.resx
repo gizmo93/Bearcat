@@ -1399,6 +1399,7 @@
   <data name="DistributionSiteConfig_BaseUrl_Description" xml:space="preserve"><value>Address of the forum start page, including the installation folder, e.g. https://example.org/community/. Use the address the browser shows after redirects.</value></data>
   <data name="DistributionSiteConfig_Username" xml:space="preserve"><value>Username</value></data>
   <data name="DistributionSiteConfig_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="DistributionSiteConfig_ApplicationPassword" xml:space="preserve"><value>Application password</value></data>
   <data name="RemoteSourceAutomations" xml:space="preserve"><value>Remote automations</value></data>
   <data name="RemoteSourceAutomationsIntro" xml:space="preserve"><value>Watch folders on remote sources and queue new releases for download once they stop changing.</value></data>
   <data name="NewRemoteSourceAutomation" xml:space="preserve"><value>New remote automation</value></data>
