@@ -139,13 +139,14 @@ export default defineConfig({
 					],
 				},
 				{
-					label: 'Forum posting', translations: { de: 'Forenposting' },
+					label: 'Posting', translations: { de: 'Posten' },
 					collapsed: true,
 					items: [
-						{ label: 'Posting to forums', translations: { de: 'In Foren posten' }, slug: 'posting-to-forums' },
-						{ label: 'Forum post templates', translations: { de: 'Forenpostvorlagen' }, slug: 'forum-post-templates' },
+						{ label: 'Posting to sites', translations: { de: 'Auf Seiten posten' }, slug: 'posting-to-forums' },
+						{ label: 'Post templates', translations: { de: 'Postvorlagen' }, slug: 'forum-post-templates' },
 						{ label: 'Post queue', translations: { de: 'Postwarteschlange' }, slug: 'post-queue' },
-						{ label: 'Automatic forum posting', translations: { de: 'Automatisches Forenposting' }, slug: 'automatic-forum-posting' },
+						{ label: 'Automatic posting', translations: { de: 'Automatisches Posten' }, slug: 'automatic-forum-posting' },
+						{ label: 'WordPress', slug: 'wordpress' },
 					],
 				},
 				{

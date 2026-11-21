@@ -9,9 +9,9 @@ Open **Releases** and click a release name. For a walkthrough, see [Your first u
 
 ## Header
 
-**Post to forum** opens the [forum posting dialog](/Bearcat/posting-to-forums/). The button is highlighted
-when the release has at least one online hoster and has not been posted yet. Without an active forum
-distribution site, you see **Render forum post** instead.
+**Post to site** opens the [posting dialog](/Bearcat/posting-to-forums/). The button is highlighted
+when the release has at least one online hoster and has not been posted yet. Without an active
+distribution site, you see **Render post** instead.
 
 Click **Start uploads now** to skip the [initial upload cooldown](/Bearcat/upload-lifecycle/#2-the-first-upload)
 for this release. The button appears if at least one upload configuration has no upload yet.

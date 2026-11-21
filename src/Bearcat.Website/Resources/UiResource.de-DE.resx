@@ -842,7 +842,7 @@
   <data name="Render" xml:space="preserve"><value>Rendern</value></data>
   <data name="RenderedForumPost" xml:space="preserve"><value>Gerenderter Post</value></data>
   <data name="RenderForumPost" xml:space="preserve"><value>Post rendern</value></data>
-  <data name="RenderForumPostDescription" xml:space="preserve"><value>Rendere dieses Release mit einer Postvorlage.</value></data>
+  <data name="RenderForumPostDescription" xml:space="preserve"><value>Fülle eine Postvorlage mit den Daten dieses Releases aus.</value></data>
   <data name="RenderForumPostForRelease" xml:space="preserve"><value>Post für {0} rendern</value></data>
   <data name="RenderForumPostForCollection" xml:space="preserve"><value>Post für {0} rendern</value></data>
   <data name="ForumPostTemplateType" xml:space="preserve"><value>Typ</value></data>
@@ -1010,7 +1010,7 @@
   <data name="PostNamedReleaseToForum" xml:space="preserve"><value>{0} auf Seite posten</value></data>
   <data name="PostNamedCollectionToForum" xml:space="preserve"><value>{0} auf Seite posten</value></data>
   <data name="PostToForumDescription" xml:space="preserve"><value>Bereite einen Entwurf vor und öffne ihn zur Kontrolle.</value></data>
-  <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Wähle die Seite, auf der dieses Release gepostet werden soll. Das erste Login kann einen Moment dauern.</value></data>
+  <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Wähle die Seite, auf der du dieses Release posten willst. Das erste Login kann einen Moment dauern.</value></data>
   <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>Keine aktive Verteilungsseite vorhanden. Lege zuerst eine an.</value></data>
   <data name="Subforum" xml:space="preserve"><value>Ziel</value></data>
   <data name="SelectSubforum" xml:space="preserve"><value>Ziel auswählen</value></data>
@@ -1023,9 +1023,9 @@
   <data name="ForumPostBodyRequired" xml:space="preserve"><value>Der Beitragstext darf nicht leer sein.</value></data>
   <data name="PrepareDraft" xml:space="preserve"><value>Entwurf vorbereiten</value></data>
   <data name="DraftPrepared" xml:space="preserve"><value>Entwurf vorbereitet</value></data>
-  <data name="DraftPreparedHelp" xml:space="preserve"><value>Öffne den Link in einem neuen Tab: Titel und Text sind vorausgefüllt. Prüfe ihn und sende ihn selbst ab. Du musst im Browser mit demselben Konto auf der Seite angemeldet sein.</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Öffne den Link in einem neuen Tab. Prüfe Titel und Text und sende den Post ab. Du musst im Browser mit demselben Konto auf der Seite angemeldet sein.</value></data>
   <data name="OpenDraftInForum" xml:space="preserve"><value>Entwurf öffnen</value></data>
-  <data name="ReleaseNameHelp" xml:space="preserve"><value>Wird für die Themensuche und als Titel des neuen Themas oder Posts verwendet. Manche Seiten verlangen Leerzeichen statt Punkte.</value></data>
+  <data name="ReleaseNameHelp" xml:space="preserve"><value>Bearcat verwendet diesen Namen für die Themensuche und als Titel neuer Themen oder Posts. Manche Seiten verlangen Leerzeichen statt Punkte.</value></data>
   <data name="ReleaseNameRequired" xml:space="preserve"><value>Ein Releasename ist erforderlich.</value></data>
   <data name="NoSubforumFound" xml:space="preserve"><value>Kein Ziel gefunden.</value></data>
   <data name="ThreadPrefixes" xml:space="preserve"><value>Präfixe</value></data>
@@ -1159,7 +1159,7 @@
   <data name="NotificationKindFilter" xml:space="preserve"><value>Benachrichtigungsart</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>Alle Benachrichtigungsarten</value></data>
   <data name="ForumPostingRules" xml:space="preserve"><value>Postingregeln</value></data>
-  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Regeln bestimmen, an welches Ziel (das Unterforum eines Forums oder die Kategorie eines Blogs) ein Release oder eine Collection gepostet wird. Die erste passende Regel gewinnt, sortiere sie daher von speziell nach allgemein.</value></data>
+  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Mit Regeln legst du fest, in welchem Unterforum oder welcher Blogkategorie Bearcat Releases und Collections postet. Die erste passende Regel gilt. Sortiere die Regeln von speziell nach allgemein.</value></data>
   <data name="NewForumPostingRule" xml:space="preserve"><value>Neue Postingregel</value></data>
   <data name="NoForumPostingRulesYet" xml:space="preserve"><value>Noch keine Postingregeln. Lege eine Regel an, um Releases und Collections automatisch einem Ziel zuzuordnen.</value></data>
   <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Lege fest, wann die Regel greift und wohin das Release oder die Collection gepostet wird.</value></data>
@@ -1183,13 +1183,13 @@
   <data name="ForumPostPostMode.AlwaysNewThread" xml:space="preserve"><value>Immer ein neues Thema erstellen</value></data>
   <data name="LoadSubforums" xml:space="preserve"><value>Ziele laden</value></data>
   <data name="ReloadSubforums" xml:space="preserve"><value>Ziele neu laden</value></data>
-  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Beim Laden der Ziele meldet sich Bearcat auf der Seite an, das kann einige Sekunden dauern. Das gespeicherte Ziel bleibt ausgewählt, bis du ein anderes wählst.</value></data>
+  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Bearcat meldet sich auf der Seite an und lädt die Ziele. Das kann einige Sekunden dauern. Deine bisherige Auswahl bleibt erhalten, bis du ein anderes Ziel wählst.</value></data>
   <data name="NoSubforumSelected" xml:space="preserve"><value>Noch kein Ziel ausgewählt</value></data>
   <data name="SubforumIsRequired" xml:space="preserve"><value>Ein Ziel ist erforderlich.</value></data>
   <data name="LoadThreadPrefixes" xml:space="preserve"><value>Präfixe laden</value></data>
   <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Präfixe neu laden</value></data>
   <data name="NoThreadPrefix" xml:space="preserve"><value>Kein Präfix</value></data>
-  <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Präfixe können erst geladen werden, wenn die Unterforen geladen sind und ein Unterforum ausgewählt ist.</value></data>
+  <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Lade zuerst die Ziele und wähle eines aus, um Präfixe zu laden.</value></data>
   <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>Eine Postvorlage ist erforderlich.</value></data>
   <data name="Condition" xml:space="preserve"><value>Bedingung</value></data>
   <data name="ConditionField" xml:space="preserve"><value>Feld</value></data>
@@ -1255,12 +1255,12 @@
   <data name="AutoPostBlockedCollectionQualityGate" xml:space="preserve"><value>Automatisches Posten blockiert: Nicht jedes Release dieser Collection hat das Quality Gate bestanden.</value></data>
   <data name="AutoPostBlockedCollectionClassification" xml:space="preserve"><value>Automatisches Posten blockiert: Kein Release dieser Collection hat eine Klassifizierung.</value></data>
   <data name="AutomaticPosting" xml:space="preserve"><value>Automatisches Posten</value></data>
-  <data name="AutomaticPostingHelp" xml:space="preserve"><value>Wenn aktiviert, werden Releases automatisch auf dieser Seite gepostet, sobald eine Postingregel zutrifft.</value></data>
+  <data name="AutomaticPostingHelp" xml:space="preserve"><value>Wenn aktiviert, postet Bearcat Releases automatisch auf dieser Seite, sobald eine Postingregel passt.</value></data>
   <data name="AutomaticPostingEnabled" xml:space="preserve"><value>Automatisches Posten für {0} aktiviert</value></data>
   <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatisches Posten für {0} deaktiviert</value></data>
   <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
   <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Themensuche ohne Punkte</value></data>
-  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Ersetzt die Punkte im Releasenamen bei der Themensuche auf dieser Seite durch Leerzeichen. Neue Themen und Posts verwenden denselben Namen ohne Punkte als Titel.</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Ersetzt Punkte im Releasenamen durch Leerzeichen: bei der Themensuche und im Titel neuer Themen oder Posts.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} aktiviert</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} deaktiviert</value></data>
   <data name="AutoPostUpdatePost" xml:space="preserve"><value>Post aktualisieren</value></data>
@@ -1283,7 +1283,7 @@
   <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>Der Inhalt dieses Posts wird vollständig ersetzt. Manuelle Änderungen auf der Seite gehen verloren.</value></data>
   <data name="UpdatePostedLocationSucceeded" xml:space="preserve"><value>Post aktualisiert</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Post aktualisiert</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>Ein vorhandener Post wurde mit frisch gerendertem Inhalt aktualisiert.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>Ein bestehender Post wurde mit den aktuellen Releasedaten aktualisiert.</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Posts fehlgeschlagen</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Bearcat hat die automatische Aktualisierung eines Posts nach 5 Fehlversuchen gestoppt.</value></data>
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
@@ -2028,14 +2028,14 @@
   <data name="FirstStartOptionalSetupMetadata" xml:space="preserve"><value>Metadaten und NFOs</value></data>
   <data name="FirstStartOptionalSetupMetadataDescription" xml:space="preserve"><value>Holt NFOs, Cover und Releasedetails aus NFO-Datenbanken und Metadatenquellen.</value></data>
   <data name="FirstStartOptionalSetupImageHoster" xml:space="preserve"><value>Bildhoster für Coverbilder</value></data>
-  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Lädt Coverbilder hoch, damit Posts sie anzeigen können.</value></data>
+  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Lädt Coverbilder für deine Posts hoch.</value></data>
   <data name="FirstStartOptionalSetupLinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="FirstStartOptionalSetupLinkCryptersDescription" xml:space="preserve"><value>Legt Downloadlinks in Linkcryptercontainern ab.</value></data>
   <data name="FirstStartOptionalSetupTelegram" xml:space="preserve"><value>Telegrambenachrichtigungen</value></data>
   <data name="FirstStartOptionalSetupTelegramDescription" xml:space="preserve"><value>Leitet Benachrichtigungen an einen Telegramchat weiter.</value></data>
   <data name="FirstStartOptionalSetupTelegramLink" xml:space="preserve"><value>Telegram</value></data>
   <data name="FirstStartOptionalSetupForumPosting" xml:space="preserve"><value>Verteilungsseiten</value></data>
-  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Erstellt Postentwürfe auf Verteilungsseiten.</value></data>
+  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Bereitet Entwürfe für Foren und Blogs vor.</value></data>
   <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxyserver</value></data>
   <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Leitet ausgehende Verbindungen über einen Proxy.</value></data>
   <data name="UploadSource" xml:space="preserve"><value>Uploadquelle</value></data>
@@ -2265,7 +2265,7 @@
   <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen wechseln von {2} MB auf {3} MB.</value></data>
   <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>{0} Archivkonfigurationen und {1} Archivkonfigurationen in Vorlagen geändert. {2} Archivkonfigurationen und {3} Archivkonfigurationen in Vorlagen übersprungen.</value></data>
   <data name="ForumServiceRestrictions" xml:space="preserve"><value>Hoster, Linkcrypter und Bildhoster</value></data>
-  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Für Hoster, Linkcrypter und Bildhoster gilt jeweils: Ist eine Liste unter Erforderlich ausgefüllt, muss mindestens einer der gewählten Anbieter im Post vorkommen. Unter Verboten gewählte Anbieter entfernt Bearcat aus dem Post. Ist diese Anforderung nicht erfüllt oder wurden alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat die Seite beim automatischen Posten. Leere Listen schränken die Auswahl nicht ein.</value></data>
+  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>Für Hoster, Linkcrypter und Bildhoster gilt jeweils: Wählst du unter Erforderlich Anbieter aus, muss mindestens einer davon im Post vorkommen. Bearcat entfernt Inhalte der unter Verboten gewählten Anbieter. Ist eine Anforderung nicht erfüllt oder wurden alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat die Seite beim automatischen Posten. Leere Listen schränken die Auswahl nicht ein.</value></data>
   <data name="RequiredFileHosters" xml:space="preserve"><value>Erforderliche Hoster</value></data>
   <data name="ForbiddenFileHosters" xml:space="preserve"><value>Verbotene Hoster</value></data>
   <data name="RequiredLinkCrypters" xml:space="preserve"><value>Erforderliche Linkcrypter</value></data>

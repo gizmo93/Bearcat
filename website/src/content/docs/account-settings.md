@@ -38,7 +38,7 @@ image hoster registration. Then choose which images Bearcat should upload:
 Enable at least one option. Screenshots are uploaded once they have been created.
 Image upload configurations for collections only upload the cover.
 
-The name is also used in [forum post templates](/Bearcat/forum-post-templates/).
+The name is also used in [post templates](/Bearcat/forum-post-templates/).
 For a configuration named `ImgBB Cover`, use `imagelinks.imgbb_cover.full` to access the cover.
 
 Releases and collections enter the [post queue](/Bearcat/post-queue/) once no image uploads are pending

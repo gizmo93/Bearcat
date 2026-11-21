@@ -243,7 +243,7 @@ Auch hier darf es keinen [blockierenden Ersatzupload](#7-automatische-reuploads)
 Bearcat aktualisiert den bestehenden Container für dieselbe Uploadkonfiguration und Linkcrypterkonfiguration.
 Das gilt auch für Container von Releasecollections und für **Release (alle Hoster als Mirrors)**.
 Bei gemeinsamen Containern ersetzt der Reupload den Mirror seiner Uploadkonfiguration.
-Gelingt das, bleibt die URL gleich. Die Links in deinen Forenposts bleiben gültig.
+Gelingt das, bleibt die URL gleich. Die Links in deinen Posts bleiben gültig.
 
 Schlägt die Aktualisierung fehl, behält der Container seine URL und bekommt den Status `Aktualisierung fehlgeschlagen`.
 Bearcat versucht die Aktualisierung nach 15 Minuten erneut. Bis dahin enthält der Container noch die alten Links.

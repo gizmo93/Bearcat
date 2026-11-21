@@ -165,7 +165,7 @@ A banner on the start page shows whether you still need a hoster, release templa
 Click **Continue setup** to return to the wizard.
 
 Once basic setup is complete, the start page shows **Optional next steps**: metadata and NFOs, an image
-hoster for cover images, link crypters, Telegram notifications, forum posting, and proxy servers.
+hoster for cover images, link crypters, Telegram notifications, distribution sites, and proxy servers.
 Each item links to the relevant settings and is marked as done once configured.
 
 <details>

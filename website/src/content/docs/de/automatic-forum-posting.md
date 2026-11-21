@@ -1,18 +1,19 @@
 ---
-title: "Releases und Collections automatisch in Foren posten"
-description: "Releases und Collections mit Postingregeln automatisch in passende Unterforen posten."
+title: "Automatisches Posten"
+description: "Releases und Collections mit Postingregeln automatisch in passende Unterforen und Blogkategorien posten."
 ---
 
-Mit Postingregeln wählt Bearcat ein Unterforum, füllt eine Vorlage aus und sendet den Post ab.
+Mit Postingregeln wählt Bearcat ein Unterforum oder eine Kategorie in [WordPress](/Bearcat/de/wordpress/),
+füllt eine Vorlage aus und sendet den Post ab.
 Klicke dafür auf **Posten** in der [Postwarteschlange](/Bearcat/de/post-queue/) oder aktiviere das automatische Posten.
-Wenn du Entwürfe selbst prüfen und absenden willst, lies [In Foren posten](/Bearcat/de/posting-to-forums/).
+Wenn du Entwürfe selbst prüfen und absenden willst, lies [Auf Seiten posten](/Bearcat/de/posting-to-forums/).
 
-Jedes Forum hat eigene Regeln. Bearcat überspringt Foren ohne passende Regel.
+Jede Verteilungsseite hat eigene Regeln. Bearcat überspringt Seiten ohne passende Regel.
 
 ## Voraussetzungen
 
-- Ein Forum unter **Registrierungen > Verteilungsseitenregistrierungen** mit funktionierendem Login.
-- Eine passende [Forenpostvorlage](/Bearcat/de/forum-post-templates/).
+- Eine Verteilungsseite unter **Registrierungen > Verteilungsseitenregistrierungen** mit funktionierendem Login.
+- Eine passende [Postvorlage](/Bearcat/de/forum-post-templates/).
 - Releases in der [Postwarteschlange](/Bearcat/de/post-queue/) mit Klassifizierung und bestandener oder manuell freigegebener
   [Qualitätsprüfung](/Bearcat/de/quality-gates/). Gruppen ohne Qualitätsprofil bestehen die Prüfung.
   Bei Collections muss jedes Release die Prüfung bestehen oder manuell freigegeben sein. Mindestens eines muss klassifiziert sein.
@@ -20,7 +21,7 @@ Jedes Forum hat eigene Regeln. Bearcat überspringt Foren ohne passende Regel.
 ## Postingregeln öffnen
 
 Öffne **Registrierungen > Verteilungsseitenregistrierungen** in der Seitenleiste. Die Spalte **Postingregeln** zeigt,
-wie viele Regeln das jeweilige Forum hat.
+wie viele Regeln die jeweilige Seite hat.
 
 ![distribution-site-rules.png](../images/distribution-site-rules.png)
 
@@ -28,7 +29,7 @@ Klicke auf die Zahl, um die Seite zu öffnen, oder nutze **Postingregeln** im Ze
 
 ![posting-rules-page.png](../images/posting-rules-page.png)
 
-## Einstellungen pro Forum
+## Einstellungen pro Seite
 
 **Automatisches Posten** ist standardmässig aus. Du kannst Regeln trotzdem in der Vorschau prüfen und **Posten** in der Postwarteschlange nutzen.
 Ist es aktiviert, läuft die Hintergrundaufgabe "Automatic forum posting" standardmässig alle 15 Minuten.
@@ -36,15 +37,15 @@ Sie postet zuerst passende Releases aus der Warteschlange, danach Collections.
 Das Intervall änderst du unter [Hintergrundaufgaben](/Bearcat/de/advanced-configuration/#hintergrundaufgaben).
 
 **Themensuche ohne Punkte** ist standardmässig an. Bearcat ersetzt Punkte durch Leerzeichen, wenn es
-nach Themen sucht und neue Themen benennt. Bei Collections verwendet es den Collectionnamen.
-Schalte die Einstellung aus, um die Punkte bei der Suche und in neuen Themennamen zu behalten.
+nach Themen sucht und neue Themen und Posts benennt. Bei Collections verwendet es den Collectionnamen.
+Schalte die Einstellung aus, um die Punkte bei der Suche und in neuen Titeln zu behalten. Bei Blogs betrifft die Einstellung nur den Posttitel.
 
 **Mindestabstand zwischen Posts in Sekunden** steht standardmässig auf 30. Die Hintergrundaufgabe wartet mindestens so lange
-zwischen zwei Posts oder Aktualisierungen im selben Forum, auch nach Fehlversuchen. Wenn du selbst auf **Posten** oder **Post aktualisieren** klickst, entfällt die Wartezeit.
+zwischen zwei Posts oder Aktualisierungen auf derselben Seite, auch nach Fehlversuchen. Wenn du selbst auf **Posten** oder **Post aktualisieren** klickst, entfällt die Wartezeit.
 
 ## Hoster, Linkcrypter und Bildhoster
 
-Auf der Seite **Postingregeln** legst du unter den Einstellungen pro Forum fest, welche Hoster, Linkcrypter und Bildhoster
+Auf der Seite **Postingregeln** legst du unter den Einstellungen pro Seite fest, welche Hoster, Linkcrypter und Bildhoster
 im Post vorkommen dürfen. Diese Hosterregeln gelten für automatische Posts und manuelle Entwürfe.
 
 Für jede der drei Kategorien gibt es zwei Listen:
@@ -53,17 +54,17 @@ Für jede der drei Kategorien gibt es zwei Listen:
 - **Verboten**: Bearcat entfernt Uploads, Container und Bilder dieser Anbieter aus dem Post.
 
 Eine leere Liste schränkt die Auswahl nicht ein. Ist eine Anforderung unter **Erforderlich** nicht erfüllt oder wurden
-alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat das Forum beim automatischen Posten.
+alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat die Seite beim automatischen Posten.
 
 Bearcat prüft alle Uploads, Uploadslots und enthaltenen Releases zusammen.
 Container mit mehreren Hostern, etwa für alle Hoster eines Releases oder für Uploadslots einer Collection,
 prüft Bearcat nur anhand der Linkcrypterlisten. Verbotene Hoster innerhalb solcher Container werden nicht herausgefiltert.
 
 Die Vorlagenvariable `imagelinks.<config>` ist leer, wenn der zugehörige Bildhoster verboten ist.
-Prüfe den Wert mit `if` oder verwende für dieses Forum eine eigene Vorlage.
+Prüfe den Wert mit `if` oder verwende für diese Seite eine eigene Vorlage.
 
 Für übersprungene Posts gibt es keine Benachrichtigung. Klicke in der Postwarteschlange auf **Posten**, um den Grund zu sehen.
-Bei einem [manuellen Forenentwurf](/Bearcat/de/posting-to-forums/) erscheint eine Warnung. Du kannst den Entwurf trotzdem posten.
+Bei einem [manuellen Entwurf](/Bearcat/de/posting-to-forums/) erscheint eine Warnung. Du kannst den Entwurf trotzdem posten.
 
 ## Regel hinzufügen
 
@@ -71,13 +72,14 @@ Klicke auf **Neue Postingregel**. Fülle die folgenden Felder aus:
 
 - **Gilt für**: wähle oben im Dialog **Release** oder **Collection**. Jede Regel gilt für einen Typ.
 - **Name**: dein eigener Name für die Regel
-- **Unterforum**: das Ziel des Posts. Klicke auf **Unterforen laden** und wähle eines aus.
-  Das Laden kann einige Sekunden dauern.
-- **Präfix**: in manchen Unterforen kannst du Präfixe für neue Themen setzen
-- **Forenpostvorlage**: die Vorlage für den Posttext. Releaseregeln verwenden Releasevorlagen,
+- **Ziel**: ein Unterforum oder eine Blogkategorie.
+  Klicke auf **Ziele laden** und wähle eines aus. Das Laden kann einige Sekunden dauern.
+- **Präfixe**: nur bei Foren. In manchen Unterforen kannst du Präfixe für neue Themen setzen
+- **Postvorlage**: die Vorlage für den Posttext. Releaseregeln verwenden Releasevorlagen,
   Collectionregeln verwenden Collectionvorlagen. Die Vorlage bestimmt den Regeltyp.
-- **Postingmodus**: entweder *Auf bestehendes Thema antworten, sonst neues Thema* oder *Immer ein neues
-  Thema erstellen*.
+  Du kannst nur Vorlagen im passenden Ausgabeformat auswählen: BBCode für Foren, HTML für WordPress.
+- **Postingmodus**: nur bei Foren. Entweder *Auf bestehendes Thema antworten, sonst neues Thema* oder *Immer ein neues
+  Thema erstellen*. In Blogs entsteht immer ein neuer Post.
 - **Aktiviert**: deaktivierte Regeln werden beim Abgleich übersprungen
 
 ![add-or-edit-rule.png](../images/add-or-edit-rule.png)
@@ -151,7 +153,7 @@ Ziehe Regeln am Griff links in die gewünschte Reihenfolge. Setze spezifische Re
 ## Probelauf
 
 Speichere deine Regeln. Wähle unter **Probelauf** unten auf der Seite **Releases** oder **Collections**
-und klicke auf **Vorschau**. Die Vorschau zeigt für aktuelle Einträge die passende Regel und das Unterforum
+und klicke auf **Vorschau**. Die Vorschau zeigt für aktuelle Einträge die passende Regel und das Ziel
 oder **Kein Treffer**. Dabei wird nichts gepostet.
 
 Prüfe Änderungen an Bedingungen oder der Regelreihenfolge in der Vorschau, bevor du das automatische Posten aktivierst.
@@ -161,30 +163,30 @@ Prüfe Änderungen an Bedingungen oder der Regelreihenfolge in der Vorschau, bev
 ## Aus der Postwarteschlange posten
 
 Jeder Eintrag unter **Einzelreleases** und **Collections** in der [Postwarteschlange](/Bearcat/de/post-queue/) hat einen Abschnitt
-**Automatisches Posten**, der pro Forum zeigt, was die Regeln tun würden:
+**Automatisches Posten**, der pro Seite zeigt, was die Regeln tun würden:
 
-- die passende Regel und ihr Unterforum, mit einem Button **Posten**,
-- **Gepostet** mit einem Link, wenn das Release oder die Collection bereits in diesem Forum gepostet wurde,
+- die passende Regel und ihr Ziel, mit einem Button **Posten**,
+- **Gepostet** mit einem Link, wenn das Release oder die Collection bereits auf dieser Seite gepostet wurde,
 - **Keine passende Postingregel**, wenn keine Regel auf das Release oder die Collection passt.
 
-Das Badge **Auto** zeigt, dass Bearcat in diesem Forum automatisch postet.
+Das Badge **Auto** zeigt, dass Bearcat auf dieser Seite automatisch postet.
 
-**Posten** sendet die ausgefüllte Vorlage je nach Regel als Antwort oder neues Thema ab. Bearcat speichert
-die Post-URL unter **Veröffentlichungsorte**. **In alle passenden Foren posten** postet nacheinander in die
-übrigen passenden Foren.
+Klicke auf **Posten**, um den Post zu veröffentlichen. In Foren entsteht je nach Regel eine Antwort oder ein neues Thema,
+in Blogs ein neuer Post. Bearcat speichert die URL unter **Veröffentlichungsorte**.
+Mit **Auf allen passenden Seiten posten** veröffentlicht Bearcat den Post nacheinander auf den übrigen Seiten mit passender Regel.
 
 ![posting-from-post-queue.png](../images/posting-from-post-queue.png)
 
-Sobald Bearcat in allen passenden Foren gepostet hat, markiert es das Release oder die Collection als gepostet
+Sobald Bearcat auf allen passenden Seiten gepostet hat, markiert es das Release oder die Collection als gepostet
 und entfernt den Eintrag aus der Warteschlange. Wenn du selbst postest, verwende **Als gepostet markieren**.
 
 Den gleichen Abschnitt **Automatisches Posten** findest du auch in der Übersicht eines Releases oder einer Collection,
 über **Veröffentlichungsorte**. Damit postest du auch Releases und Collections, die nicht mehr in der Warteschlange sind,
-zum Beispiel in ein später hinzugefügtes Forum.
+zum Beispiel auf einer später hinzugefügten Seite.
 
 ## Wenn ein Release oder eine Collection nicht gepostet werden kann
 
-Statt der Forenliste zeigt der Eintrag einen kurzen Grund:
+Statt der Seitenliste zeigt der Eintrag einen kurzen Grund:
 
 - **Automatisches Posten blockiert: Das Quality Gate wurde nicht bestanden.** Das Release muss die
   [Qualitätsprüfung bestehen oder manuell freigegeben werden](/Bearcat/de/quality-gates/).
@@ -196,7 +198,7 @@ Statt der Forenliste zeigt der Eintrag einen kurzen Grund:
   Jedes Release in der Collection muss die Qualitätsprüfung bestehen oder manuell freigegeben sein.
 - **Automatisches Posten blockiert: Kein Release dieser Collection hat eine Klassifizierung.**
   Mindestens ein enthaltenes Release muss klassifiziert sein.
-- **Noch kein Forum mit Postingregeln vorhanden.** Keine Forenregistrierung hat eine aktivierte Regel.
+- **Noch keine Verteilungsseite mit Postingregeln vorhanden.** Auf keiner Seite ist eine Regel aktiviert.
 
 Die Hintergrundaufgabe versucht es erneut, sobald das Release oder die Collection diese Voraussetzungen erfüllt.
 
@@ -205,17 +207,17 @@ Die Hintergrundaufgabe versucht es erneut, sobald das Release oder die Collectio
 Nach einem Reupload kann Bearcat bestehende Posts mit den neuen Downloadlinks aktualisieren.
 Das gilt auch, wenn du eine neue Folge einer Collection hochlädst. Bearcat aktualisiert den bestehenden Post,
 statt eine neue Antwort zu posten.
-Dazu füllt es die Vorlage mit den aktuellen Daten und **ersetzt den gesamten Post, einschliesslich deiner Änderungen im Forum**.
+Dazu füllt es die Vorlage mit den aktuellen Daten und **ersetzt den gesamten Post, einschliesslich deiner Änderungen auf der Seite**.
 Verwende das für Posts mit direkten Downloadlinks statt eines Linkcryptercontainers.
 
 ### Aus der Warteschlange aktualisieren
 
 Nach einem Reupload oder dem Upload einer neuen Folge erscheint das Release oder die Collection wieder in der
-Postwarteschlange. Bei bereits genutzten Foren steht **Postinhalt ist veraltet** neben dem gespeicherten Link.
+Postwarteschlange. Bei bereits genutzten Seiten steht **Postinhalt ist veraltet** neben dem gespeicherten Link.
 Klicke auf **Post aktualisieren**, um den Post zu ersetzen.
 Vorlage und Aktualisierungszeit werden mit der URL unter **Veröffentlichungsorte** gespeichert.
 
-Bei Foren mit aktiviertem **Automatisches Posten** aktualisiert die Hintergrundaufgabe Posts automatisch,
+Bei Seiten mit aktiviertem **Automatisches Posten** aktualisiert die Hintergrundaufgabe Posts automatisch,
 sofern eine Vorlage verfügbar ist. Das Release oder die Collection verlässt die Warteschlange, sobald alle Posts und Aktualisierungen abgeschlossen sind.
 
 ### Template wählen
@@ -236,7 +238,7 @@ Der Eintrag muss mit einer Verteilungsseite verknüpft sein; auch von Hand best�
 
 ## Bestehendes Thema finden
 
-Im Postingmodus *Auf bestehendes Thema antworten, sonst neues Thema* durchsucht Bearcat das Unterforum und vergleicht die
+In Foren durchsucht Bearcat im Postingmodus *Auf bestehendes Thema antworten, sonst neues Thema* das Unterforum und vergleicht die
 Thementitel mit dem Release- oder Collectionnamen. Dabei ignoriert Bearcat Themenpräfixe, Gross- und Kleinschreibung sowie Satzzeichen.
 
 - Themen mit genau übereinstimmendem Titel haben Vorrang.
@@ -248,7 +250,7 @@ Thementitel mit dem Release- oder Collectionnamen. Dabei ignoriert Bearcat Theme
 ## Fehlgeschlagene automatische Posts
 
 Schlägt ein automatischer Post oder eine Aktualisierung fehl, wartet Bearcat vor dem nächsten Versuch.
-Die Wartezeit gilt nur für dieses Release oder diese Collection im betroffenen Forum:
+Die Wartezeit gilt nur für dieses Release oder diese Collection auf der betroffenen Seite:
 
 | Fehlversuche | Wartezeit bis zum nächsten Versuch |
 | --- | --- |
@@ -275,5 +277,5 @@ Für Posts, die Bearcat wegen der Hosterregeln überspringt, gibt es keine Benac
 
 ## Veröffentlichungsorte und Duplikate
 
-Bearcat speichert jedes Forum unter **Veröffentlichungsorte** und zeigt **Gepostet**, statt erneutes Posten anzubieten.
+Bearcat speichert jede Seite unter **Veröffentlichungsorte** und zeigt **Gepostet**, statt erneutes Posten anzubieten.
 Die Hintergrundaufgabe aktualisiert dort nur veraltete Posts. Geänderte Regeln lösen keinen neuen Post aus.

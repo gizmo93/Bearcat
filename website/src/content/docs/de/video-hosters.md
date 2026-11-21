@@ -82,5 +82,5 @@ Einbettungslink im Feld `hosterEmbedLink` zurück.
 In der [Postwarteschlange](/Bearcat/de/post-queue/) stehen Videouploads unter dem Namen ihrer
 Uploadkonfiguration und sind mit **Video** markiert.
 
-In [Forenpostvorlagen](/Bearcat/de/forum-post-templates/#videouploads) kannst du `upload.is_video_upload`
+In [Postvorlagen](/Bearcat/de/forum-post-templates/#videouploads) kannst du `upload.is_video_upload`
 und `upload.embed_links` verwenden.

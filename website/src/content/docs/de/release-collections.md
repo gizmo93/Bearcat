@@ -11,7 +11,7 @@ Lege Hoster, Archiveinstellungen und Passwortrichtlinien für die ganze Collecti
 ihre Downloadlinks in einem Linkcryptercontainer.
 
 Mit [Postingregeln für Collections](/Bearcat/de/automatic-forum-posting/) postet Bearcat ganze Collections automatisch.
-Lädst du eine neue Folge hoch, aktualisiert Bearcat den bestehenden Forenpost.
+Lädst du eine neue Folge hoch, aktualisiert Bearcat den bestehenden Post.
 
 ## Wie eine Collection entsteht
 
@@ -58,9 +58,9 @@ etwa für eine ganze Staffel. Passwort und weitere Cryptereinstellungen gelten f
 Der Kopfbereich zeigt das Cover, den Serientitel aus der Metadatenquelle, den Collectionschlüssel und die
 Serienbeschreibung. **Mehr anzeigen** klappt eine lange Beschreibung aus.
 
-**Im Forum posten** öffnet den [Dialog zum Posten im Forum](/Bearcat/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
+**Auf Seite posten** öffnet den [Dialog zum Posten](/Bearcat/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
 solange mindestens ein Release einen Hoster online hat und die Collection noch nicht gepostet wurde. Ohne
-aktive Forenverteilungsseite wird nur **Forenpost rendern** angezeigt.
+aktive Verteilungsseite wird nur **Post rendern** angezeigt.
 
 Das `...`-Menü enthält **Collectioneinstellungen bearbeiten** für Inhaltstyp und Primärsprache,
 **Metadaten bearbeiten**, **Metadaten abrufen** und **Metadatenzuordnung korrigieren**.
@@ -82,7 +82,7 @@ Bearcat speichert die korrigierten IDs bei allen Releases der Collection als man
 Details unter
 [Falsche Zuordnung korrigieren](/Bearcat/de/release-information-and-metadata/#falsche-zuordnung-korrigieren).
 
-Du kannst die Metadaten in Forenpostvorlagen verwenden und das Cover auf deine Bildhoster hochladen.
+Du kannst die Metadaten in Postvorlagen verwenden und das Cover auf deine Bildhoster hochladen.
 Details zur Suche findest du unter
 [Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
 
@@ -110,7 +110,7 @@ jeden Container mit seinem Link zu sehen. Slots mit einem fehlgeschlagenen Conta
 
 ### Bilder
 
-Lade das Seriencover auf deine Bildhoster hoch, um es in Forenposts zu verwenden. Richte das hier ein:
+Lade das Seriencover auf deine Bildhoster hoch, um es in Posts zu verwenden. Richte das hier ein:
 
 - **In einem Releasetemplate:** Aktiviere die Collectionerkennung und füge dann Hoster unter **Collectionbilduploadkonfigurationen** hinzu. Sie gelten für die Collections, denen Bearcat die Releases dieses Templates zuordnet.
 - **In einer Collection:** Wähle **Hinzufügen** im Tab **Bilder** und wähle einen Hoster.
@@ -120,5 +120,5 @@ Eintrag kannst du umbenennen. Für einen anderen Hoster fügst du eine neue Bild
 
 Jeder Eintrag zeigt seinen Uploadstatus. Nach dem Upload zeigt er eine Vorschau und Bildlinks
 in verschiedenen Grössen. Kopiere die Links einzeln oder gemeinsam, oder verwende `imagelinks`
-in Forenpostvorlagen. Details unter
-[Forenpostvorlagen](/Bearcat/de/forum-post-templates/).
+in Postvorlagen. Details unter
+[Postvorlagen](/Bearcat/de/forum-post-templates/).

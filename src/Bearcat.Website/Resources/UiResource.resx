@@ -842,7 +842,7 @@
   <data name="Render" xml:space="preserve"><value>Render</value></data>
   <data name="RenderedForumPost" xml:space="preserve"><value>Rendered post</value></data>
   <data name="RenderForumPost" xml:space="preserve"><value>Render post</value></data>
-  <data name="RenderForumPostDescription" xml:space="preserve"><value>Render this release with a post template.</value></data>
+  <data name="RenderForumPostDescription" xml:space="preserve"><value>Fill in a post template with data from this release.</value></data>
   <data name="RenderForumPostForRelease" xml:space="preserve"><value>Render post for {0}</value></data>
   <data name="RenderForumPostForCollection" xml:space="preserve"><value>Render post for {0}</value></data>
   <data name="ForumPostTemplateType" xml:space="preserve"><value>Type</value></data>
@@ -1023,9 +1023,9 @@
   <data name="ForumPostBodyRequired" xml:space="preserve"><value>The post text must not be empty.</value></data>
   <data name="PrepareDraft" xml:space="preserve"><value>Prepare draft</value></data>
   <data name="DraftPrepared" xml:space="preserve"><value>Draft prepared</value></data>
-  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab: title and text are prefilled. Review it and submit it yourself. You must be logged into the same account on the site in your browser.</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab. Check the title and body, then submit the post. You must be logged into the same account on the site in your browser.</value></data>
   <data name="OpenDraftInForum" xml:space="preserve"><value>Open draft</value></data>
-    <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the title of a new thread or post. Some sites require spaces instead of dots.</value></data>
+    <data name="ReleaseNameHelp" xml:space="preserve"><value>Bearcat uses this name to search for existing threads and as the title of new threads or posts. Some sites require spaces instead of dots.</value></data>
   <data name="ReleaseNameRequired" xml:space="preserve"><value>A release name is required.</value></data>
   <data name="NoSubforumFound" xml:space="preserve"><value>No target found.</value></data>
   <data name="ThreadPrefixes" xml:space="preserve"><value>Prefixes</value></data>
@@ -1159,9 +1159,9 @@
   <data name="NotificationKindFilter" xml:space="preserve"><value>Notification type</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>All notification types</value></data>
   <data name="ForumPostingRules" xml:space="preserve"><value>Posting rules</value></data>
-  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules decide to which target (the subforum of a forum or the category of a blog) a release or collection is posted. The first matching rule wins, so order them from specific to general.</value></data>
+  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules choose the subforum or blog category where Bearcat posts releases and collections. The first matching rule applies. Order the rules from specific to general.</value></data>
   <data name="NewForumPostingRule" xml:space="preserve"><value>New posting rule</value></data>
-  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to route releases and collections to a target automatically.</value></data>
+  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to choose a subforum or blog category for releases and collections automatically.</value></data>
   <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Define when the rule applies and where the release or collection is posted.</value></data>
   <data name="ForumPostingRuleAppliesTo" xml:space="preserve"><value>Applies to</value></data>
   <data name="ForumPostingRuleAppliesToHelp" xml:space="preserve"><value>Release rules route single releases, collection rules route release collections. Switching removes conditions on fields the other type does not support, such as the episode.</value></data>
@@ -1183,13 +1183,13 @@
   <data name="ForumPostPostMode.AlwaysNewThread" xml:space="preserve"><value>Always start a new thread</value></data>
   <data name="LoadSubforums" xml:space="preserve"><value>Load targets</value></data>
   <data name="ReloadSubforums" xml:space="preserve"><value>Reload targets</value></data>
-  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Loading the targets signs in to the site and can take a few seconds. The stored target stays selected until you pick a different one.</value></data>
+  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Bearcat signs in to the site and loads the targets. This can take a few seconds. Your current selection stays until you choose a different target.</value></data>
   <data name="NoSubforumSelected" xml:space="preserve"><value>No target selected yet</value></data>
   <data name="SubforumIsRequired" xml:space="preserve"><value>A target is required.</value></data>
   <data name="LoadThreadPrefixes" xml:space="preserve"><value>Load prefixes</value></data>
   <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Reload prefixes</value></data>
   <data name="NoThreadPrefix" xml:space="preserve"><value>No prefix</value></data>
-  <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Prefixes can only be loaded once the subforums are loaded and a subforum is selected.</value></data>
+  <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Load the targets and select one before loading prefixes.</value></data>
   <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>A post template is required.</value></data>
   <data name="Condition" xml:space="preserve"><value>Condition</value></data>
   <data name="ConditionField" xml:space="preserve"><value>Field</value></data>
@@ -1255,12 +1255,12 @@
   <data name="AutoPostBlockedCollectionQualityGate" xml:space="preserve"><value>Automatic posting is blocked: not every release in this collection has passed the quality gate.</value></data>
   <data name="AutoPostBlockedCollectionClassification" xml:space="preserve"><value>Automatic posting is blocked: no release in this collection has a classification.</value></data>
   <data name="AutomaticPosting" xml:space="preserve"><value>Automatic posting</value></data>
-  <data name="AutomaticPostingHelp" xml:space="preserve"><value>When enabled, releases are posted to this site automatically as soon as a posting rule matches.</value></data>
+  <data name="AutomaticPostingHelp" xml:space="preserve"><value>When enabled, Bearcat automatically posts releases to this site as soon as a posting rule matches.</value></data>
   <data name="AutomaticPostingEnabled" xml:space="preserve"><value>Automatic posting enabled for {0}</value></data>
   <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatic posting disabled for {0}</value></data>
   <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
   <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Thread search without dots</value></data>
-  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces when searching this site for an existing thread. New threads and posts use the same spaced name as their title.</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces dots in the release name with spaces when searching for threads and setting the title of new threads or posts.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Thread search without dots enabled for {0}</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Thread search without dots disabled for {0}</value></data>
   <data name="AutoPostUpdatePost" xml:space="preserve"><value>Update post</value></data>
@@ -1280,10 +1280,10 @@
   <data name="AutoPostUpdateCollectionNotPosted" xml:space="preserve"><value>This collection has not been posted to this site yet.</value></data>
   <data name="UpdatePostedLocationTitle" xml:space="preserve"><value>Update post</value></data>
   <data name="UpdatePostedLocationDescription" xml:space="preserve"><value>Renders the template again and replaces the content of the existing post.</value></data>
-  <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>The content of this post is replaced completely. Manual changes on the site are lost.</value></data>
+  <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>This replaces the entire post content. Any edits you made on the site will be lost.</value></data>
   <data name="UpdatePostedLocationSucceeded" xml:space="preserve"><value>Post updated</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Post updated</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>An existing post was updated with freshly rendered content.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>An existing post was updated from its template with the current data.</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Post update failed</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Bearcat stopped automatically updating a post after 5 failed attempts.</value></data>
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Restoring</value></data>
@@ -2028,14 +2028,14 @@
   <data name="FirstStartOptionalSetupMetadata" xml:space="preserve"><value>Metadata and NFOs</value></data>
   <data name="FirstStartOptionalSetupMetadataDescription" xml:space="preserve"><value>Fetches NFOs, covers and release details from NFO databases and metadata sources.</value></data>
   <data name="FirstStartOptionalSetupImageHoster" xml:space="preserve"><value>Image hoster for cover images</value></data>
-  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Uploads cover images so posts can show them.</value></data>
+  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Uploads cover images for your posts.</value></data>
   <data name="FirstStartOptionalSetupLinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="FirstStartOptionalSetupLinkCryptersDescription" xml:space="preserve"><value>Puts download links into link crypter containers.</value></data>
   <data name="FirstStartOptionalSetupTelegram" xml:space="preserve"><value>Telegram notifications</value></data>
   <data name="FirstStartOptionalSetupTelegramDescription" xml:space="preserve"><value>Forwards notifications to a Telegram chat.</value></data>
   <data name="FirstStartOptionalSetupTelegramLink" xml:space="preserve"><value>Telegram</value></data>
   <data name="FirstStartOptionalSetupForumPosting" xml:space="preserve"><value>Distribution sites</value></data>
-  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Creates post drafts on distribution sites.</value></data>
+  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Prepares drafts for forums and blogs.</value></data>
   <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
   <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Routes outbound connections through a proxy.</value></data>
   <data name="UploadSource" xml:space="preserve"><value>Upload source</value></data>
@@ -2265,7 +2265,7 @@
   <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} archive configurations and {1} archive configurations in templates change from {2} MB to {3} MB.</value></data>
   <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>Changed {0} archive configurations and {1} archive configurations in templates. Skipped {2} archive configurations and {3} archive configurations in templates.</value></data>
   <data name="ForumServiceRestrictions" xml:space="preserve"><value>Hosters, link crypters and image hosters</value></data>
-  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>These rules apply separately to hosters, link crypters and image hosters. If a Required list is filled in, the post must include at least one selected provider. Bearcat removes content from Forbidden providers. Automatic posting skips the site if this requirement is not met or all uploads, all containers or all images were removed. Empty lists add no restrictions.</value></data>
+  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>For hosters, link crypters and image hosters: if you select Required providers, the post must include at least one of them. Bearcat removes content from Forbidden providers. Automatic posting skips the site if a requirement is not met or all uploads, all containers or all images were removed. Empty lists add no restrictions.</value></data>
   <data name="RequiredFileHosters" xml:space="preserve"><value>Required hosters</value></data>
   <data name="ForbiddenFileHosters" xml:space="preserve"><value>Forbidden hosters</value></data>
   <data name="RequiredLinkCrypters" xml:space="preserve"><value>Required link crypters</value></data>

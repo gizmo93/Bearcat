@@ -1,6 +1,6 @@
 ---
-title: "Forenpostvorlagen"
-description: "Forenposts mit Platzhaltern für Releasedaten, Links und Bilder erstellen."
+title: "Postvorlagen"
+description: "Foren- und Blogposts mit Platzhaltern für Releasedaten, Links und Bilder erstellen."
 ---
 
 Schreibe deinen Post mit Platzhaltern für Releasename, NFO, Links und Bilder.
@@ -8,13 +8,22 @@ Bearcat setzt die Daten eines Releases oder einer Collection ein.
 
 Du kannst das Ergebnis von Hand kopieren oder es von [Postingregeln](/Bearcat/de/automatic-forum-posting/) posten lassen.
 
-![Forenpostvorlagen](../images/forum-post-templates-page.png)
+![Postvorlagen](../images/forum-post-templates-page.png)
 
 ## Eine Vorlage erstellen
 
-1. Öffne **Releaseeinstellungen > Forenpostvorlagen** und klicke auf **+** neben dem Suchfeld.
+1. Öffne **Releaseeinstellungen > Postvorlagen** und klicke auf **+** neben dem Suchfeld.
 2. Wähle den Typ: **Release** oder **Releasecollection**. Du kannst ihn später nicht ändern.
-3. Wähle das Ausgabeformat. Verwende **BBCode** für Forenposts. Nur BBCode-Vorlagen können in Foren gepostet werden.
+3. Wähle das Ausgabeformat:
+
+   | Ausgabeformat | Verwendung |
+   | --- | --- |
+   | **BBCode** | Foren |
+   | **HTML** | [WordPress](/Bearcat/de/wordpress/) |
+   | **Klartext** | Zum Kopieren von Text ohne Formatierung |
+
+   Beim Posten auf einer Verteilungsseite kannst du nur Vorlagen im passenden Format auswählen:
+   BBCode für Foren, HTML für WordPress.
 4. Gib einen Namen ein, schreibe die Vorlage und drücke **Ctrl+S** (**⌘S** auf einem Mac), um zu speichern.
 
 ## Den Editor verwenden
@@ -169,11 +178,11 @@ Jede Bilduploadkonfiguration hat dafür diese Felder:
 
 ## Post rendern
 
-Öffne ein Release oder eine Releasecollection und klicke im Pfeilmenü von **Im Forum posten** auf
-**Forenpost rendern**. Ohne aktive Verteilungsseite für ein Forum ist es ein eigener Button. Wähle eine
-Vorlage, klicke auf **Forenpost kopieren** und füge das Ergebnis in deinem Forum ein.
+Öffne ein Release oder eine Releasecollection und klicke im Pfeilmenü von **Auf Seite posten** auf
+**Post rendern**. Ohne aktive Verteilungsseite ist es ein eigener Button. Wähle eine
+Vorlage, klicke auf **Post kopieren** und füge das Ergebnis in deinem Forum oder Blog ein.
 
-![Einen Forenpost rendern](../images/render-template.png)
+![Einen Post rendern](../images/render-template.png)
 
 ## Gut zu wissen
 
@@ -189,3 +198,5 @@ Vorlage, klicke auf **Forenpost kopieren** und füge das Ergebnis in deinem Foru
 - **Hosternamen:** `upload.hoster_name` zeigt den Hosternamen des letzten Uploads, zum Beispiel `Rapidgator`.
   `upload.hoster_registration_name` zeigt den Accountnamen und bleibt leer, bis ein Account zugewiesen ist.
 - **Mehrere Foren:** Die BBCode-Unterstützung unterscheidet sich je nach Forum. Verwende bei Bedarf eine Vorlage pro Forum.
+- **HTML-Vorlagen:** Bearcat sendet das gerenderte HTML unverändert. Maskiere Werte mit `| html.escape`.
+  Ein Beispiel für den WordPress-Blockeditor findest du unter [WordPress](/Bearcat/de/wordpress/#vorlage).

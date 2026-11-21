@@ -52,7 +52,7 @@ The **Images** tab shows the result or an error message. Use **Regenerate** to r
 and their image uploads, for example after changing the settings. The release must still be managed,
 and its release folder must exist.
 
-You can use the uploaded images in [forum post templates](/Bearcat/forum-post-templates/#screenshots).
+You can use the uploaded images in [post templates](/Bearcat/forum-post-templates/#screenshots).
 Bearcat deletes the local screenshot files once every image upload configuration set up for them has
 uploaded them. If no upload is configured for them any more, it deletes them immediately.
 The **Images** tab then shows the images from the image hoster.

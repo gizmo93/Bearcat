@@ -241,7 +241,7 @@ The same [replacement upload rules](#7-automatic-reuploads) apply.
 Bearcat updates the existing container for the same upload configuration and link crypter
 configuration. This also applies to release collection containers and **Release (all hosters as mirrors)**.
 In shared containers, the reupload replaces the mirror for its upload configuration.
-If it succeeds, the URL stays the same and links in existing forum posts remain valid.
+If it succeeds, the URL stays the same and links in existing posts remain valid.
 
 If the update fails, the container keeps its URL and gets the state `Update failed`.
 Bearcat retries the update after 15 minutes. Until then, the container still holds the old links.

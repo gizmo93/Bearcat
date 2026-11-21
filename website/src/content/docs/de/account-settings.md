@@ -38,7 +38,7 @@ Namen und eine Bildhosterregistrierung. Wähle dann, welche Bilder Bearcat hochl
 Mindestens eine Option muss aktiv sein. Screenshots werden hochgeladen, sobald sie erstellt wurden.
 Bilduploadkonfigurationen von Collections laden immer nur das Cover hoch.
 
-Der Name wird auch in [Forenpostvorlagen](/Bearcat/de/forum-post-templates/) verwendet.
+Der Name wird auch in [Postvorlagen](/Bearcat/de/forum-post-templates/) verwendet.
 Heisst die Konfiguration `ImgBB Cover`, greifst du über `imagelinks.imgbb_cover.full` auf das Cover zu.
 
 Releases und Collections kommen erst in die [Postwarteschlange](/Bearcat/de/post-queue/), wenn kein Bildupload

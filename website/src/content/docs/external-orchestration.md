@@ -1,9 +1,9 @@
 ---
 title: "Control Bearcat from External Tools"
-description: "Create releases, control uploads and record forum posts through the REST API."
+description: "Create releases, control uploads and record posts through the REST API."
 ---
 
-Use the [REST API](/Bearcat/rest-api/) to create releases, control uploads, and record forum posts.
+Use the [REST API](/Bearcat/rest-api/) to create releases, control uploads, and record posts.
 See the [API reference](/Bearcat/api/) for parameters and response fields.
 
 ## Commands
