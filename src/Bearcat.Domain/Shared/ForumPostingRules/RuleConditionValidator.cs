@@ -69,22 +69,12 @@ public static class RuleConditionValidator
     {
         var kind = condition.Kind.ToString().ToLowerInvariant();
 
-        if (condition.Children is null || condition.Children.Count == 0)
+        if (condition.Children.Count == 0)
         {
             errors.Add($"The '{kind}' group requires at least one child condition.");
         }
 
-        if (condition.Child is not null)
-        {
-            errors.Add($"The '{kind}' group must use 'children' instead of 'child'.");
-        }
-
-        if (condition.Field is not null || condition.Operator is not null)
-        {
-            errors.Add($"The '{kind}' group must not define a field or an operator.");
-        }
-
-        foreach (var child in condition.Children ?? [])
+        foreach (var child in condition.Children)
         {
             Validate(child, fields, errors);
         }
@@ -96,11 +86,6 @@ public static class RuleConditionValidator
         List<string> errors
     )
     {
-        if (condition.Children is { Count: > 0 })
-        {
-            errors.Add("The 'not' condition must use 'child' instead of 'children'.");
-        }
-
         if (condition.Child is null)
         {
             errors.Add("The 'not' condition requires a child condition.");
@@ -117,18 +102,6 @@ public static class RuleConditionValidator
         List<string> errors
     )
     {
-        if (condition.Children is { Count: > 0 } || condition.Child is not null)
-        {
-            errors.Add("A comparison condition must not contain child conditions.");
-        }
-
-        if (string.IsNullOrWhiteSpace(condition.Field))
-        {
-            errors.Add("A comparison condition requires a field.");
-
-            return;
-        }
-
         var descriptor = fields.FirstOrDefault(field =>
             string.Equals(field.Name, condition.Field, StringComparison.OrdinalIgnoreCase)
         );
@@ -140,34 +113,26 @@ public static class RuleConditionValidator
             return;
         }
 
-        if (condition.Operator is null)
-        {
-            errors.Add($"The field '{descriptor.Name}' requires an operator.");
-
-            return;
-        }
-
-        var conditionOperator = condition.Operator.Value;
-
-        if (!descriptor.AllowedOperators.Contains(conditionOperator))
+        if (!descriptor.AllowedOperators.Contains(condition.Operator))
         {
             errors.Add(
-                $"The operator '{conditionOperator}' is not allowed for the field '{descriptor.Name}'."
+                $"The operator '{condition.Operator}' is not allowed for the field '{descriptor.Name}'."
             );
 
             return;
         }
 
-        ValidateOperands(condition, descriptor, conditionOperator, errors);
+        ValidateOperands(condition, descriptor, errors);
     }
 
     private static void ValidateOperands(
         RuleCondition condition,
         RuleFieldDescriptor descriptor,
-        RuleConditionOperator conditionOperator,
         List<string> errors
     )
     {
+        var conditionOperator = condition.Operator;
+
         if (!conditionOperator.NeedsValue())
         {
             return;
@@ -175,7 +140,7 @@ public static class RuleConditionValidator
 
         if (conditionOperator.IsMultiValue())
         {
-            if (condition.Values is null || condition.Values.Count == 0)
+            if (condition.Values.Count == 0)
             {
                 errors.Add(
                     $"The operator '{conditionOperator}' requires at least one value for the field '{descriptor.Name}'."

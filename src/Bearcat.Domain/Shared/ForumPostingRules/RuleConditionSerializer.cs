@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,7 +22,10 @@ public static class RuleConditionSerializer
         return JsonSerializer.Deserialize<RuleCondition>(json, Options)!;
     }
 
-    public static bool TryDeserialize(string? json, out RuleCondition? condition)
+    public static bool TryDeserialize(
+        string? json,
+        [NotNullWhen(true)] out RuleCondition? condition
+    )
     {
         condition = null;
 

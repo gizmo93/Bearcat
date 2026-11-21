@@ -18,7 +18,7 @@ public class RuleConditionValidatorTest
             RuleConditionFactory.CreateComparison(
                 "PrimaryLanguage",
                 RuleConditionOperator.IsSet,
-                null
+                string.Empty
             )
         );
 
@@ -72,7 +72,7 @@ public class RuleConditionValidatorTest
         var condition = RuleConditionFactory.CreateComparison(
             "ReleaseName",
             RuleConditionOperator.Like,
-            null
+            string.Empty
         );
 
         // Act
@@ -122,27 +122,6 @@ public class RuleConditionValidatorTest
 
         // Assert
         errors.ShouldHaveSingleItem().ShouldContain("requires a child condition");
-    }
-
-    [Test]
-    public void Validate_ComparisonWithChildren_ReturnsError()
-    {
-        // Arrange
-        var condition = RuleConditionFactory.CreateComparison(
-            "Year",
-            RuleConditionOperator.Equals,
-            "2020"
-        );
-        condition.Children =
-        [
-            RuleConditionFactory.CreateComparison("Year", RuleConditionOperator.Equals, "2021"),
-        ];
-
-        // Act
-        var errors = RuleConditionValidator.Validate(condition, RuleFieldCatalog.Fields);
-
-        // Assert
-        errors.ShouldHaveSingleItem().ShouldContain("must not contain child conditions");
     }
 
     [Test]

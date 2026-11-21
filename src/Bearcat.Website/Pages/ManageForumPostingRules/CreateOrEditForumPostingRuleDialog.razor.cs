@@ -36,7 +36,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     public IDialogReference DialogRef { get; set; } = null!;
 
     private ForumPostingRuleFormModel formModel = new();
-    private ConditionNodeModel conditionRoot = ConditionModelMapper.CreateDefaultRoot();
+    private RuleCondition conditionRoot = ConditionTreeOperations.CreateGroup();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
     private bool isInitialized;
@@ -121,7 +121,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
         {
             formModel = new ForumPostingRuleFormModel();
             formModel.ForumPostTemplateId = TemplateOptions.FirstOrDefault()?.Value ?? 0;
-            conditionRoot = ConditionModelMapper.CreateDefaultRoot();
+            conditionRoot = ConditionTreeOperations.CreateGroup();
 
             return;
         }
@@ -150,7 +150,13 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             PostMode = detail.PostMode,
             IsEnabled = detail.IsEnabled,
         };
-        conditionRoot = ConditionModelMapper.FromJson(detail.ConditionJson);
+
+        conditionRoot = RuleConditionSerializer.TryDeserialize(
+            detail.ConditionJson,
+            out var condition
+        )
+            ? condition
+            : ConditionTreeOperations.CreateGroup();
     }
 
     private void ChangeTemplateType(ForumPostTemplateType templateType)
@@ -162,7 +168,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             formModel.ForumPostTemplateId = TemplateOptions.FirstOrDefault()?.Value ?? 0;
         }
 
-        ConditionModelMapper.RemoveComparisonsWithUnsupportedFields(
+        ConditionTreeOperations.RemoveComparisonsWithUnsupportedFields(
             conditionRoot,
             RuleFieldCatalog.GetFields(templateType)
         );
@@ -255,7 +261,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
 
         var input = new ForumPostingRuleInput(
             Name: formModel.Name,
-            ConditionJson: ConditionModelMapper.ToJson(conditionRoot),
+            ConditionJson: RuleConditionSerializer.Serialize(conditionRoot),
             TargetNodeId: formModel.TargetNodeId ?? string.Empty,
             TargetPathSnapshot: formModel.TargetPathSnapshot,
             ThreadPrefixIds: formModel.ThreadPrefixIds,

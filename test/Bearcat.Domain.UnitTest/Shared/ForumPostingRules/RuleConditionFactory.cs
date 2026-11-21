@@ -22,7 +22,7 @@ public static class RuleConditionFactory
     public static RuleCondition CreateComparison(
         string field,
         RuleConditionOperator conditionOperator,
-        string? value
+        string value
     )
     {
         return new RuleCondition

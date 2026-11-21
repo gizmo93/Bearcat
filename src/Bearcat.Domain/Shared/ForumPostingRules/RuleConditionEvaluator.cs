@@ -10,10 +10,10 @@ public static class RuleConditionEvaluator
     {
         return condition.Kind switch
         {
-            RuleConditionKind.All => condition.Children!.TrueForAll(child =>
+            RuleConditionKind.All => condition.Children.TrueForAll(child =>
                 IsMatch(child, context)
             ),
-            RuleConditionKind.Any => condition.Children!.Exists(child => IsMatch(child, context)),
+            RuleConditionKind.Any => condition.Children.Exists(child => IsMatch(child, context)),
             RuleConditionKind.Not => !IsMatch(condition.Child!, context),
             RuleConditionKind.Comparison => IsComparisonMatch(condition, context),
             _ => throw new InvalidOperationException($"Unknown condition kind '{condition.Kind}'."),
@@ -22,24 +22,24 @@ public static class RuleConditionEvaluator
 
     private static bool IsComparisonMatch(RuleCondition condition, ReleaseRoutingContext context)
     {
-        var field = RuleFieldCatalog.Get(condition.Field!);
+        var field = RuleFieldCatalog.Get(condition.Field);
         var actual = field.GetValue(context);
 
         return condition.Operator switch
         {
             RuleConditionOperator.IsSet => IsSet(actual),
             RuleConditionOperator.IsNotSet => !IsSet(actual),
-            RuleConditionOperator.Equals => IsEqual(field, actual, condition.Value!),
-            RuleConditionOperator.NotEquals => !IsEqual(field, actual, condition.Value!),
-            RuleConditionOperator.In => IsOneOf(field, actual, condition.Values!),
-            RuleConditionOperator.NotIn => !IsOneOf(field, actual, condition.Values!),
-            RuleConditionOperator.Like => IsLike(actual, condition.Value!),
-            RuleConditionOperator.NotLike => !IsLike(actual, condition.Value!),
-            RuleConditionOperator.Regex => IsRegexMatch(actual, condition.Value!),
+            RuleConditionOperator.Equals => IsEqual(field, actual, condition.Value),
+            RuleConditionOperator.NotEquals => !IsEqual(field, actual, condition.Value),
+            RuleConditionOperator.In => IsOneOf(field, actual, condition.Values),
+            RuleConditionOperator.NotIn => !IsOneOf(field, actual, condition.Values),
+            RuleConditionOperator.Like => IsLike(actual, condition.Value),
+            RuleConditionOperator.NotLike => !IsLike(actual, condition.Value),
+            RuleConditionOperator.Regex => IsRegexMatch(actual, condition.Value),
             RuleConditionOperator.GreaterOrEqual => actual is not null
-                && actual.CompareTo(field.ParseValue(condition.Value!)) >= 0,
+                && actual.CompareTo(field.ParseValue(condition.Value)) >= 0,
             RuleConditionOperator.LessOrEqual => actual is not null
-                && actual.CompareTo(field.ParseValue(condition.Value!)) <= 0,
+                && actual.CompareTo(field.ParseValue(condition.Value)) <= 0,
             _ => throw new InvalidOperationException(
                 $"Unknown condition operator '{condition.Operator}'."
             ),

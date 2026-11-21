@@ -103,18 +103,6 @@ public static class RuleFieldCatalog
             .ToList();
     }
 
-    public static bool TryGet(string? name, out RuleFieldDescriptor descriptor)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            descriptor = null!;
-
-            return false;
-        }
-
-        return FieldsByName.TryGetValue(name, out descriptor!);
-    }
-
     public static RuleFieldDescriptor Get(string name)
     {
         return FieldsByName[name];

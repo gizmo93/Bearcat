@@ -51,6 +51,36 @@ public class ForumPostingRuleMatcherTest
     }
 
     [Test]
+    public void FindFirstMatch_ConditionJsonWithoutEmptyProperties_IsEvaluated()
+    {
+        // Arrange
+        const string conditionJson = """
+            {"kind":"all","children":[
+                {"kind":"comparison","field":"Resolution","operator":"in","values":["R1080p","R720p"]},
+                {"kind":"not","child":{"kind":"comparison","field":"PrimaryLanguage","operator":"equals","value":"German"}},
+                {"kind":"any","children":[
+                    {"kind":"comparison","field":"Season","operator":"isSet"},
+                    {"kind":"comparison","field":"Year","operator":"greaterOrEqual","value":"2020"}
+                ]}
+            ]}
+            """;
+        var rules = new List<ForumPostingRule>
+        {
+            RuleWith(id: 1, sortOrder: 0, conditionJson: conditionJson),
+        };
+
+        // Act
+        var match = ForumPostingRuleMatcher.FindFirstMatch(
+            rules: rules,
+            entityType: ForumPostTemplateType.Release,
+            context: Context()
+        );
+
+        // Assert
+        match.ShouldNotBeNull().Id.ShouldBe(1);
+    }
+
+    [Test]
     public void FindFirstMatch_NothingMatches_ReturnsNull()
     {
         // Arrange

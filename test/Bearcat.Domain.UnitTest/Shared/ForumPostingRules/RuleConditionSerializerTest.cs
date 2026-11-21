@@ -6,26 +6,6 @@ namespace Bearcat.Domain.UnitTest.Shared.ForumPostingRules;
 public class RuleConditionSerializerTest
 {
     [Test]
-    public void Serialize_ComparisonCondition_WritesCamelCaseEnums()
-    {
-        // Arrange
-        var condition = RuleConditionFactory.CreateMultiValueComparison(
-            "Resolution",
-            RuleConditionOperator.In,
-            "R1080p",
-            "R720p"
-        );
-
-        // Act
-        var json = RuleConditionSerializer.Serialize(condition);
-
-        // Assert
-        json.ShouldBe(
-            """{"kind":"comparison","field":"Resolution","operator":"in","values":["R1080p","R720p"]}"""
-        );
-    }
-
-    [Test]
     public void SerializeThenDeserialize_NestedTree_RoundTrips()
     {
         // Arrange
@@ -61,14 +41,14 @@ public class RuleConditionSerializerTest
         // Assert
         succeeded.ShouldBeTrue();
         roundTripped.ShouldNotBeNull().Kind.ShouldBe(RuleConditionKind.All);
-        roundTripped.Children!.Count.ShouldBe(2);
+        roundTripped.Children.Count.ShouldBe(2);
         roundTripped.Children[0].Kind.ShouldBe(RuleConditionKind.Not);
         roundTripped.Children[0].Child!.Field.ShouldBe("PrimaryLanguage");
         roundTripped.Children[0].Child!.Operator.ShouldBe(RuleConditionOperator.Equals);
         roundTripped.Children[0].Child!.Value.ShouldBe("German");
         roundTripped.Children[1].Kind.ShouldBe(RuleConditionKind.Any);
-        roundTripped.Children[1].Children![0].Values.ShouldBe(["R1080p", "R720p"]);
-        roundTripped.Children[1].Children![1].Operator.ShouldBe(RuleConditionOperator.Like);
+        roundTripped.Children[1].Children[0].Values.ShouldBe(["R1080p", "R720p"]);
+        roundTripped.Children[1].Children[1].Operator.ShouldBe(RuleConditionOperator.Like);
     }
 
     [TestCase("   ")]

@@ -200,12 +200,12 @@ public class RuleConditionEvaluatorTest
         var isSet = RuleConditionFactory.CreateComparison(
             "Season",
             RuleConditionOperator.IsSet,
-            null
+            string.Empty
         );
         var isNotSet = RuleConditionFactory.CreateComparison(
             "PrimaryLanguage",
             RuleConditionOperator.IsNotSet,
-            null
+            string.Empty
         );
 
         // Act + Assert

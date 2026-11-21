@@ -32,7 +32,7 @@
         </BbButton>
     </div>
 
-    @if (Descriptor is not null && Node.Operator.NeedsValue())
+    @if (Node.Operator.NeedsValue())
     {
         <div>
             <p class="mb-1 text-xs font-medium text-muted-foreground">@L["ConditionValue"]</p>
@@ -132,7 +132,7 @@
 @code
 {
     [Parameter]
-    public ConditionNodeModel Node { get; set; } = null!;
+    public RuleCondition Node { get; set; } = null!;
 
     [Parameter]
     public ForumPostTemplateType TemplateType { get; set; }
@@ -142,8 +142,7 @@
 
     private string? pendingValue;
 
-    private RuleFieldDescriptor? Descriptor =>
-        RuleFieldCatalog.TryGet(Node.Field, out var descriptor) ? descriptor : null;
+    private RuleFieldDescriptor Descriptor => RuleFieldCatalog.Get(Node.Field);
 
     private IReadOnlyList<SelectOption<string>> FieldOptions =>
         RuleFieldCatalog
@@ -155,15 +154,15 @@
             .ToList();
 
     private IReadOnlyList<SelectOption<RuleConditionOperator>> OperatorOptions =>
-        (Descriptor?.AllowedOperators ?? [Node.Operator])
-            .Select(allowed => new SelectOption<RuleConditionOperator>(
+        Descriptor
+            .AllowedOperators.Select(allowed => new SelectOption<RuleConditionOperator>(
                 allowed,
                 L.Localize(allowed)
             ))
             .ToList();
 
     private IReadOnlyList<SelectOption<string>> OptionValues =>
-        (Descriptor?.Options ?? []).Select(option => new SelectOption<string>(option, option)).ToList();
+        Descriptor.Options.Select(option => new SelectOption<string>(option, option)).ToList();
 
     private IReadOnlyList<SelectOption<string>> BooleanOptions =>
         [new("true", L["Yes"]), new("false", L["No"])];
@@ -175,13 +174,13 @@
             return;
         }
 
-        ConditionModelMapper.ApplyField(Node, field);
+        ConditionTreeOperations.ChangeField(Node, field);
         pendingValue = null;
     }
 
     private void ChangeOperator(RuleConditionOperator conditionOperator)
     {
-        ConditionModelMapper.ApplyOperator(Node, conditionOperator);
+        ConditionTreeOperations.ChangeOperator(Node, conditionOperator);
         pendingValue = null;
     }
 
