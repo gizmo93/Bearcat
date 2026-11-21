@@ -4,136 +4,143 @@ namespace Bearcat.Domain.Shared.ForumPostingRules;
 
 public static class RuleFieldCatalog
 {
+    private static readonly IReadOnlyList<RuleConditionOperator> ReleaseNameOperators =
+    [
+        RuleConditionOperator.Equals,
+        RuleConditionOperator.NotEquals,
+        RuleConditionOperator.Like,
+        RuleConditionOperator.NotLike,
+        RuleConditionOperator.Regex,
+    ];
+
+    private static readonly IReadOnlyList<RuleConditionOperator> TextOperators =
+    [
+        RuleConditionOperator.Equals,
+        RuleConditionOperator.NotEquals,
+        RuleConditionOperator.In,
+        RuleConditionOperator.NotIn,
+        RuleConditionOperator.Like,
+        RuleConditionOperator.NotLike,
+        RuleConditionOperator.IsSet,
+        RuleConditionOperator.IsNotSet,
+    ];
+
+    private static readonly IReadOnlyList<RuleConditionOperator> LanguageOperators =
+    [
+        RuleConditionOperator.Equals,
+        RuleConditionOperator.NotEquals,
+        RuleConditionOperator.In,
+        RuleConditionOperator.NotIn,
+        RuleConditionOperator.IsSet,
+        RuleConditionOperator.IsNotSet,
+    ];
+
+    private static readonly IReadOnlyList<RuleConditionOperator> EnumerationOperators =
+    [
+        RuleConditionOperator.Equals,
+        RuleConditionOperator.NotEquals,
+        RuleConditionOperator.In,
+        RuleConditionOperator.NotIn,
+    ];
+
+    private static readonly IReadOnlyList<RuleConditionOperator> ResolutionOperators =
+    [
+        RuleConditionOperator.Equals,
+        RuleConditionOperator.NotEquals,
+        RuleConditionOperator.In,
+        RuleConditionOperator.NotIn,
+        RuleConditionOperator.GreaterOrEqual,
+        RuleConditionOperator.LessOrEqual,
+    ];
+
+    private static readonly IReadOnlyList<RuleConditionOperator> NumberOperators =
+    [
+        RuleConditionOperator.Equals,
+        RuleConditionOperator.NotEquals,
+        RuleConditionOperator.GreaterOrEqual,
+        RuleConditionOperator.LessOrEqual,
+        RuleConditionOperator.IsSet,
+        RuleConditionOperator.IsNotSet,
+    ];
+
     private static readonly IReadOnlyList<RuleFieldDescriptor> AllFields =
     [
         new RuleFieldDescriptor(
             Name: "ReleaseName",
             ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators:
-            [
-                RuleConditionOperator.Equals,
-                RuleConditionOperator.NotEquals,
-                RuleConditionOperator.Like,
-                RuleConditionOperator.NotLike,
-                RuleConditionOperator.Regex,
-            ],
+            AllowedOperators: ReleaseNameOperators,
             Options: [],
-            ValueAccessor: context => context.ReleaseName,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.ReleaseName
         ),
         new RuleFieldDescriptor(
             Name: "Resolution",
             ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators:
-            [
-                RuleConditionOperator.Equals,
-                RuleConditionOperator.NotEquals,
-                RuleConditionOperator.In,
-                RuleConditionOperator.NotIn,
-                RuleConditionOperator.GreaterOrEqual,
-                RuleConditionOperator.LessOrEqual,
-            ],
+            AllowedOperators: ResolutionOperators,
             Options: Enum.GetNames<ReleaseResolution>(),
-            ValueAccessor: context => context.Resolution,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.Resolution
         ),
         new RuleFieldDescriptor(
             Name: "PrimaryLanguage",
             ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators:
-            [
-                RuleConditionOperator.Equals,
-                RuleConditionOperator.NotEquals,
-                RuleConditionOperator.In,
-                RuleConditionOperator.NotIn,
-                RuleConditionOperator.IsSet,
-                RuleConditionOperator.IsNotSet,
-            ],
+            AllowedOperators: LanguageOperators,
             Options: [],
-            ValueAccessor: context => context.PrimaryLanguage,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.PrimaryLanguage
         ),
         new RuleFieldDescriptor(
             Name: "IsMultiLanguage",
             ValueKind: RuleFieldValueKind.Boolean,
             AllowedOperators: [RuleConditionOperator.Equals],
             Options: [],
-            ValueAccessor: context => context.IsMultiLanguage,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.IsMultiLanguage
         ),
         new RuleFieldDescriptor(
             Name: "ContentType",
             ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators:
-            [
-                RuleConditionOperator.Equals,
-                RuleConditionOperator.NotEquals,
-                RuleConditionOperator.In,
-                RuleConditionOperator.NotIn,
-            ],
+            AllowedOperators: EnumerationOperators,
             Options: Enum.GetNames<ReleaseContentType>(),
-            ValueAccessor: context => context.ContentType,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.ContentType
         ),
         new RuleFieldDescriptor(
             Name: "Platform",
             ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators:
-            [
-                RuleConditionOperator.Equals,
-                RuleConditionOperator.NotEquals,
-                RuleConditionOperator.In,
-                RuleConditionOperator.NotIn,
-            ],
+            AllowedOperators: EnumerationOperators,
             Options: Enum.GetNames<ReleasePlatform>(),
-            ValueAccessor: context => context.Platform,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.Platform
         ),
         new RuleFieldDescriptor(
             Name: "Source",
             ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators:
-            [
-                RuleConditionOperator.Equals,
-                RuleConditionOperator.NotEquals,
-                RuleConditionOperator.In,
-                RuleConditionOperator.NotIn,
-            ],
+            AllowedOperators: EnumerationOperators,
             Options: Enum.GetNames<ReleaseSource>(),
-            ValueAccessor: context => context.Source,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.Source
         ),
         new RuleFieldDescriptor(
             Name: "ReleaseGroupName",
             ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: TextIdentityOperators,
+            AllowedOperators: TextOperators,
             Options: [],
-            ValueAccessor: context => context.ReleaseGroupName,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.ReleaseGroupName
         ),
         new RuleFieldDescriptor(
             Name: "ReleaseGroupToken",
             ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: TextIdentityOperators,
+            AllowedOperators: TextOperators,
             Options: [],
-            ValueAccessor: context => context.ReleaseGroupToken,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.ReleaseGroupToken
         ),
         new RuleFieldDescriptor(
             Name: "Year",
             ValueKind: RuleFieldValueKind.Integer,
             AllowedOperators: NumberOperators,
             Options: [],
-            ValueAccessor: context => context.Year,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.Year
         ),
         new RuleFieldDescriptor(
             Name: "Season",
             ValueKind: RuleFieldValueKind.Integer,
             AllowedOperators: NumberOperators,
             Options: [],
-            ValueAccessor: context => context.Season,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.Season
         ),
         new RuleFieldDescriptor(
             Name: "Episode",
@@ -141,15 +148,14 @@ public static class RuleFieldCatalog
             AllowedOperators: NumberOperators,
             Options: [],
             ValueAccessor: context => context.Episode,
-            SupportedEntityTypes: ReleaseOnlyEntityTypes
+            IsReleaseOnly: true
         ),
         new RuleFieldDescriptor(
             Name: "Genre",
             ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: TextIdentityOperators,
+            AllowedOperators: TextOperators,
             Options: [],
-            ValueAccessor: context => context.Genre,
-            SupportedEntityTypes: AllEntityTypes
+            ValueAccessor: context => context.Genre
         ),
     ];
 
@@ -160,7 +166,9 @@ public static class RuleFieldCatalog
 
     public static IReadOnlyList<RuleFieldDescriptor> GetFields(ForumPostTemplateType entityType)
     {
-        return AllFields.Where(field => field.SupportedEntityTypes.Contains(entityType)).ToList();
+        return AllFields
+            .Where(field => entityType == ForumPostTemplateType.Release || !field.IsReleaseOnly)
+            .ToList();
     }
 
     public static bool TryGet(string? name, out RuleFieldDescriptor descriptor)
@@ -174,32 +182,4 @@ public static class RuleFieldCatalog
 
         return FieldsByName.TryGetValue(name, out descriptor!);
     }
-
-    private static IReadOnlyList<RuleConditionOperator> TextIdentityOperators =>
-        [
-            RuleConditionOperator.Equals,
-            RuleConditionOperator.NotEquals,
-            RuleConditionOperator.In,
-            RuleConditionOperator.NotIn,
-            RuleConditionOperator.Like,
-            RuleConditionOperator.NotLike,
-            RuleConditionOperator.IsSet,
-            RuleConditionOperator.IsNotSet,
-        ];
-
-    private static IReadOnlyList<RuleConditionOperator> NumberOperators =>
-        [
-            RuleConditionOperator.Equals,
-            RuleConditionOperator.NotEquals,
-            RuleConditionOperator.GreaterOrEqual,
-            RuleConditionOperator.LessOrEqual,
-            RuleConditionOperator.IsSet,
-            RuleConditionOperator.IsNotSet,
-        ];
-
-    private static IReadOnlyList<ForumPostTemplateType> AllEntityTypes =>
-        [ForumPostTemplateType.Release, ForumPostTemplateType.ReleaseCollection];
-
-    private static IReadOnlyList<ForumPostTemplateType> ReleaseOnlyEntityTypes =>
-        [ForumPostTemplateType.Release];
 }
