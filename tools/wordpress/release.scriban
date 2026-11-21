@@ -1,0 +1,91 @@
+<!-- wp:html -->
+<div class="release-layout">
+  {{~ if imagelinks.cover.full ~}}
+  <figure class="release-cover">
+    <img src="{{ imagelinks.cover.full | html.escape }}" alt="{{ classification.title | html.escape }}" width="300" height="450" loading="lazy">
+  </figure>
+  {{~ end ~}}
+  <div class="release-body">
+    {{~ if release_info.genre ~}}
+    <p class="release-label">{{ release_info.genre | html.escape }}</p>
+    {{~ end ~}}
+    <dl class="release-facts">
+      {{~ if classification.resolution ~}}
+      <div><dt>Resolution</dt><dd>{{ classification.resolution | html.escape }}</dd></div>
+      {{~ end ~}}
+      {{~ if classification.source ~}}
+      <div><dt>Source</dt><dd>{{ classification.source | html.escape }}</dd></div>
+      {{~ end ~}}
+      {{~ if release.main_video.video.codec ~}}
+      <div><dt>Video</dt><dd>{{ release.main_video.video.codec | html.escape }}</dd></div>
+      {{~ end ~}}
+      {{~ if release.primary_language ~}}
+      <div><dt>Language</dt><dd>{{ release.primary_language | html.escape }}</dd></div>
+      {{~ end ~}}
+      {{~ if release_info.size ~}}
+      <div><dt>Size</dt><dd>{{ release_info.size | html.escape }}</dd></div>
+      {{~ end ~}}
+      {{~ if release.main_video.duration ~}}
+      <div><dt>Duration</dt><dd>{{ release.main_video.duration | html.escape }}</dd></div>
+      {{~ end ~}}
+    </dl>
+    {{~ if release.imdb_url ~}}
+    <p><a href="{{ release.imdb_url | html.escape }}" rel="noopener">IMDb</a></p>
+    {{~ end ~}}
+    {{~ if release_info.description ~}}
+    <p class="release-description">{{ release_info.description | html.escape }}</p>
+    {{~ end ~}}
+    {{~ if release.nfo ~}}
+    <details class="release-fold">
+      <summary>NFO</summary>
+      <pre>{{ release.nfo | html.escape }}</pre>
+    </details>
+    {{~ end ~}}
+    {{~ if release.main_video.media_info ~}}
+    <details class="release-fold">
+      <summary>MediaInfo</summary>
+      <pre>{{ release.main_video.media_info | html.escape }}</pre>
+    </details>
+    {{~ end ~}}
+    {{~ if imagelinks.cover.screenshots.size > 0 ~}}
+    <div class="screenshots">
+      {{~ for screenshot in imagelinks.cover.screenshots ~}}
+      <a href="{{ screenshot.full | html.escape }}"><img src="{{ screenshot.thumbnail | html.escape }}" alt="Screenshot {{ screenshot.index }}" loading="lazy"></a>
+      {{~ end ~}}
+    </div>
+    {{~ end ~}}
+    <div class="download-area">
+      <h2>Download links</h2>
+      {{~ if link_crypters.size > 0 ~}}
+      <div class="download-links">
+        {{~ for crypter in link_crypters ~}}
+        <a class="download-button" href="{{ crypter.container_link | html.escape }}" rel="nofollow noopener">{{ crypter.name | html.escape }}</a>
+        {{~ end ~}}
+      </div>
+      {{~ else ~}}
+      {{~ for upload in uploads ~}}
+      {{~ if upload.link_crypters.size > 0 || upload.links.size > 0 ~}}
+      <div class="upload-group">
+        <h3>{{ upload.name | html.escape }}</h3>
+        <div class="download-links">
+          {{~ if upload.link_crypters.size > 0 ~}}
+          {{~ for crypter in upload.link_crypters ~}}
+          <a class="download-button" href="{{ crypter.container_link | html.escape }}" rel="nofollow noopener">{{ crypter.name | html.escape }}</a>
+          {{~ end ~}}
+          {{~ else ~}}
+          {{~ for link in upload.links ~}}
+          <a class="download-button" href="{{ link | html.escape }}" rel="nofollow noopener">{{ upload.hoster_name | html.escape }} · Part {{ for.index + 1 }}</a>
+          {{~ end ~}}
+          {{~ end ~}}
+        </div>
+        {{~ if upload.archive_password ~}}
+        <p class="download-note">Archive password: {{ upload.archive_password | html.escape }}</p>
+        {{~ end ~}}
+      </div>
+      {{~ end ~}}
+      {{~ end ~}}
+      {{~ end ~}}
+    </div>
+  </div>
+</div>
+<!-- /wp:html -->
