@@ -11,6 +11,7 @@ using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageForumPostTemplates.Editor;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -58,6 +59,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
     private IReadOnlyList<ForumPostTemplateSummaryReadModel> templates = [];
     private int selectedTemplateId;
+    private string noTemplatesMessage = string.Empty;
     private string postName = string.Empty;
     private string body = string.Empty;
     private string? coverImageUrl;
@@ -265,6 +267,13 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                 (IForumPostTemplateReadRepository repository) =>
                     repository.GetAllAsync(TemplateType, outputFormat: templateOutputFormat)
             );
+
+            noTemplatesMessage = L[
+                "NoMatchingForumPostTemplateFound",
+                ForumPostTemplateTypeLabels.Get(L, TemplateType),
+                L[$"ForumPostTemplateOutputFormat{templateOutputFormat}"]
+            ];
+
             selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
 
             if (!IsBlog && IsNewThread)

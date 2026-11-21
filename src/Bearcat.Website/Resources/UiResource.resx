@@ -838,6 +838,7 @@
   <data name="ForumPostTemplates" xml:space="preserve"><value>Post templates</value></data>
   <data name="NewForumPostTemplate" xml:space="preserve"><value>New post template</value></data>
   <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>No post templates found.</value></data>
+  <data name="NoMatchingForumPostTemplateFound" xml:space="preserve"><value>No post template of type {0} with output format {1} found.</value></data>
   <data name="NoVariablesFound" xml:space="preserve"><value>No variables found.</value></data>
   <data name="Render" xml:space="preserve"><value>Render</value></data>
   <data name="RenderedForumPost" xml:space="preserve"><value>Rendered post</value></data>

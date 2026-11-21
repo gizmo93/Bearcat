@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageForumPostTemplates.Editor;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -28,6 +29,7 @@ public partial class UpdatePostedLocationDialog(IScopedOperationRunner operation
     public IDialogReference DialogRef { get; set; } = null!;
 
     private IReadOnlyList<ForumPostTemplateSummaryReadModel> templates = [];
+    private string noTemplatesMessage = string.Empty;
     private int selectedTemplateId;
 
     private IReadOnlyList<SelectOption<int>> TemplateOptions =>
@@ -55,6 +57,12 @@ public partial class UpdatePostedLocationDialog(IScopedOperationRunner operation
                     outputFormat: registration!.TemplateOutputFormat
                 )
         );
+
+        noTemplatesMessage = L[
+            "NoMatchingForumPostTemplateFound",
+            ForumPostTemplateTypeLabels.Get(L, TemplateType),
+            L[$"ForumPostTemplateOutputFormat{registration!.TemplateOutputFormat}"]
+        ];
 
         selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
     }

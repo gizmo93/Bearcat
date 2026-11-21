@@ -3,7 +3,7 @@
     {
         <div class="bearcat-release-empty">
             <LucideIcon Name="inbox" class="h-5 w-5" />
-            <span>@L["NoForumPostTemplatesFound"]</span>
+            <span>@NoTemplatesMessage</span>
         </div>
     }
     else
@@ -75,6 +75,9 @@
 {
     [Parameter]
     public bool HasTemplates { get; set; }
+
+    [Parameter]
+    public string NoTemplatesMessage { get; set; } = string.Empty;
 
     [Parameter]
     public IReadOnlyList<SelectOption<int>> TemplateOptions { get; set; } = [];
