@@ -24,7 +24,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
     private IFolderSelectionSource source = null!;
     private string? selectedItem;
-    private string? searchText;
+    private string searchText = string.Empty;
     private HashSet<string> expandedItems = [];
     private List<FolderSelectionNode> rootNodes = [];
     private bool isInitializing = true;
@@ -81,6 +81,11 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
     private async Task CancelAsync()
     {
         await DialogRef.CancelAsync();
+    }
+
+    private void ChangeSearchText(string changedSearchText)
+    {
+        searchText = changedSearchText;
     }
 
     private async Task<IEnumerable<FolderSelectionNode>> LoadChildrenForTreeAsync(

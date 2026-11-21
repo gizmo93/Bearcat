@@ -8,11 +8,8 @@
     }
     else
     {
-        <BbInput @bind-Value="searchText"
-                 UpdateTiming="UpdateTiming.Debounced"
-                 DebounceInterval="300"
-                 Placeholder="@(IncludeFiles ? L["SearchFoldersAndFiles"] : L["SearchFolders"])"
-                 Class="bb:h-8 bb:text-sm" />
+        <DebouncedSearchInput Placeholder="@(IncludeFiles ? L["SearchFoldersAndFiles"] : L["SearchFolders"])"
+                              OnSearchTextChanged="ChangeSearchText" />
         <BbTreeView TItem="FolderSelectionNode"
                     Items="rootNodes"
                     TextField="@(node => node.Name)"
@@ -24,7 +21,7 @@
                     @bind-SelectedValue="selectedItem"
                     @bind-ExpandedValues="expandedItems"
                     OnLoadChildren="LoadChildrenForTreeAsync"
-                    SearchText="@(searchText ?? string.Empty)"
+                    SearchText="@searchText"
                     AriaLabel="@L["FolderSelectionTree"]"
                     Class="bearcat-folder-tree" />
     }
