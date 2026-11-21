@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Shared.ForumPostingRules;
@@ -65,98 +66,29 @@ public static class RuleFieldCatalog
 
     private static readonly IReadOnlyList<RuleFieldDescriptor> AllFields =
     [
-        new RuleFieldDescriptor(
-            Name: "ReleaseName",
-            ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: ReleaseNameOperators,
-            Options: [],
-            ValueAccessor: context => context.ReleaseName
-        ),
-        new RuleFieldDescriptor(
-            Name: "Resolution",
-            ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators: ResolutionOperators,
-            Options: Enum.GetNames<ReleaseResolution>(),
-            ValueAccessor: context => context.Resolution
-        ),
-        new RuleFieldDescriptor(
-            Name: "PrimaryLanguage",
-            ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: LanguageOperators,
-            Options: [],
-            ValueAccessor: context => context.PrimaryLanguage
-        ),
+        CreateTextField("ReleaseName", ReleaseNameOperators, context => context.ReleaseName),
+        CreateEnumerationField("Resolution", ResolutionOperators, context => context.Resolution),
+        CreateTextField("PrimaryLanguage", LanguageOperators, context => context.PrimaryLanguage),
         new RuleFieldDescriptor(
             Name: "IsMultiLanguage",
             ValueKind: RuleFieldValueKind.Boolean,
             AllowedOperators: [RuleConditionOperator.Equals],
             Options: [],
-            ValueAccessor: context => context.IsMultiLanguage
+            GetValue: context => context.IsMultiLanguage,
+            ParseValue: value => bool.Parse(value)
         ),
-        new RuleFieldDescriptor(
-            Name: "ContentType",
-            ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators: EnumerationOperators,
-            Options: Enum.GetNames<ReleaseContentType>(),
-            ValueAccessor: context => context.ContentType
-        ),
-        new RuleFieldDescriptor(
-            Name: "Platform",
-            ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators: EnumerationOperators,
-            Options: Enum.GetNames<ReleasePlatform>(),
-            ValueAccessor: context => context.Platform
-        ),
-        new RuleFieldDescriptor(
-            Name: "Source",
-            ValueKind: RuleFieldValueKind.Enumeration,
-            AllowedOperators: EnumerationOperators,
-            Options: Enum.GetNames<ReleaseSource>(),
-            ValueAccessor: context => context.Source
-        ),
-        new RuleFieldDescriptor(
-            Name: "ReleaseGroupName",
-            ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: TextOperators,
-            Options: [],
-            ValueAccessor: context => context.ReleaseGroupName
-        ),
-        new RuleFieldDescriptor(
-            Name: "ReleaseGroupToken",
-            ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: TextOperators,
-            Options: [],
-            ValueAccessor: context => context.ReleaseGroupToken
-        ),
-        new RuleFieldDescriptor(
-            Name: "Year",
-            ValueKind: RuleFieldValueKind.Integer,
-            AllowedOperators: NumberOperators,
-            Options: [],
-            ValueAccessor: context => context.Year
-        ),
-        new RuleFieldDescriptor(
-            Name: "Season",
-            ValueKind: RuleFieldValueKind.Integer,
-            AllowedOperators: NumberOperators,
-            Options: [],
-            ValueAccessor: context => context.Season
-        ),
-        new RuleFieldDescriptor(
-            Name: "Episode",
-            ValueKind: RuleFieldValueKind.Integer,
-            AllowedOperators: NumberOperators,
-            Options: [],
-            ValueAccessor: context => context.Episode,
-            IsReleaseOnly: true
-        ),
-        new RuleFieldDescriptor(
-            Name: "Genre",
-            ValueKind: RuleFieldValueKind.Text,
-            AllowedOperators: TextOperators,
-            Options: [],
-            ValueAccessor: context => context.Genre
-        ),
+        CreateEnumerationField("ContentType", EnumerationOperators, context => context.ContentType),
+        CreateEnumerationField("Platform", EnumerationOperators, context => context.Platform),
+        CreateEnumerationField("Source", EnumerationOperators, context => context.Source),
+        CreateTextField("ReleaseGroupName", TextOperators, context => context.ReleaseGroupName),
+        CreateTextField("ReleaseGroupToken", TextOperators, context => context.ReleaseGroupToken),
+        CreateIntegerField("Year", context => context.Year),
+        CreateIntegerField("Season", context => context.Season),
+        CreateIntegerField("Episode", context => context.Episode) with
+        {
+            IsReleaseOnly = true,
+        },
+        CreateTextField("Genre", TextOperators, context => context.Genre),
     ];
 
     private static readonly Dictionary<string, RuleFieldDescriptor> FieldsByName =
@@ -181,5 +113,58 @@ public static class RuleFieldCatalog
         }
 
         return FieldsByName.TryGetValue(name, out descriptor!);
+    }
+
+    public static RuleFieldDescriptor Get(string name)
+    {
+        return FieldsByName[name];
+    }
+
+    private static RuleFieldDescriptor CreateTextField(
+        string name,
+        IReadOnlyList<RuleConditionOperator> allowedOperators,
+        Func<ReleaseRoutingContext, string?> getValue
+    )
+    {
+        return new RuleFieldDescriptor(
+            Name: name,
+            ValueKind: RuleFieldValueKind.Text,
+            AllowedOperators: allowedOperators,
+            Options: [],
+            GetValue: getValue,
+            ParseValue: value => value
+        );
+    }
+
+    private static RuleFieldDescriptor CreateEnumerationField<TEnum>(
+        string name,
+        IReadOnlyList<RuleConditionOperator> allowedOperators,
+        Func<ReleaseRoutingContext, TEnum> getValue
+    )
+        where TEnum : struct, Enum
+    {
+        return new RuleFieldDescriptor(
+            Name: name,
+            ValueKind: RuleFieldValueKind.Enumeration,
+            AllowedOperators: allowedOperators,
+            Options: Enum.GetNames<TEnum>(),
+            GetValue: context => getValue(context),
+            ParseValue: value => Enum.Parse<TEnum>(value, ignoreCase: true)
+        );
+    }
+
+    private static RuleFieldDescriptor CreateIntegerField(
+        string name,
+        Func<ReleaseRoutingContext, int?> getValue
+    )
+    {
+        return new RuleFieldDescriptor(
+            Name: name,
+            ValueKind: RuleFieldValueKind.Integer,
+            AllowedOperators: NumberOperators,
+            Options: [],
+            GetValue: context => getValue(context),
+            ParseValue: value => int.Parse(value, CultureInfo.InvariantCulture)
+        );
     }
 }

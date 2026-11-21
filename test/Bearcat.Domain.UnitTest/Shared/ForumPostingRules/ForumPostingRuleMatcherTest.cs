@@ -51,27 +51,6 @@ public class ForumPostingRuleMatcherTest
     }
 
     [Test]
-    public void FindFirstMatch_BrokenConditionJson_IsSkipped()
-    {
-        // Arrange
-        var rules = new List<ForumPostingRule>
-        {
-            RuleWith(id: 1, sortOrder: 0, conditionJson: "{ broken"),
-            RuleWith(id: 2, sortOrder: 1, condition: ResolutionIn("R1080p")),
-        };
-
-        // Act
-        var match = ForumPostingRuleMatcher.FindFirstMatch(
-            rules: rules,
-            entityType: ForumPostTemplateType.Release,
-            context: Context()
-        );
-
-        // Assert
-        match.ShouldNotBeNull().Id.ShouldBe(2);
-    }
-
-    [Test]
     public void FindFirstMatch_NothingMatches_ReturnsNull()
     {
         // Arrange

@@ -16,6 +16,11 @@ public static class RuleConditionSerializer
         return JsonSerializer.Serialize(condition, Options);
     }
 
+    public static RuleCondition Deserialize(string json)
+    {
+        return JsonSerializer.Deserialize<RuleCondition>(json, Options)!;
+    }
+
     public static bool TryDeserialize(string? json, out RuleCondition? condition)
     {
         condition = null;
