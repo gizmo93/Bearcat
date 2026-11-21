@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.PostToForums;
@@ -207,6 +208,63 @@ public class AutoForumPostCreationServiceTest
         result.Status.ShouldBe(AutoPostResultStatus.Posted);
         submitter.SearchedReleaseNames.ShouldBeEmpty();
         submitter.NewThreads.ShouldHaveSingleItem().PrefixIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_BlogWithReplyModeRule_SubmitsNewPostWithoutThreadSearch()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations =
+            [
+                AutoPostTestFactory.Registration(
+                    id: 5,
+                    name: "Blog",
+                    AutoPostTestFactory.Rule(
+                        postMode: ForumPostPostMode.ReplyToExistingElseNewThread
+                    )
+                ) with
+                {
+                    Kind = DistributionSiteKind.Blog,
+                },
+            ],
+        };
+        var submitter = new FakeForumPostSubmitter
+        {
+            ExistingThreads =
+            [
+                new ExistingThread(
+                    "Some Movie 2021 1080p BluRay GROUP",
+                    "https://forum.test/threads/matching"
+                ),
+            ],
+        };
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
+        result.PostedUrl.ShouldBe(submitter.NewPostUrl);
+        submitter.SearchedReleaseNames.ShouldBeEmpty();
+        submitter.NewThreads.ShouldBeEmpty();
+        submitter.Replies.ShouldBeEmpty();
+
+        var newPost = submitter.NewPosts.ShouldHaveSingleItem();
+        newPost.RegistrationId.ShouldBe(5);
+        newPost.TargetNodeId.ShouldBe("42");
+        newPost.Title.ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
+        newPost.Body.ShouldBe("Rendered body");
+        repository
+            .RecordedPostedLocations.ShouldHaveSingleItem()
+            .Url.ShouldBe(submitter.NewPostUrl);
     }
 
     [Test]

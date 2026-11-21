@@ -513,7 +513,11 @@ public sealed partial class XenForoForumClient : IDisposable
             cancellationToken: cancellationToken
         );
 
-        return new PreparedDraft(formUrl.ToString(), RequiresSameAccountBrowserSession: true);
+        return new PreparedDraft(
+            DraftEditorUrl: formUrl.ToString(),
+            RequiresSameAccountBrowserSession: true,
+            PostUrl: null
+        );
     }
 
     public async Task<PreparedDraft> PrepareReplyDraftAsync(
@@ -532,7 +536,11 @@ public sealed partial class XenForoForumClient : IDisposable
             cancellationToken: cancellationToken
         );
 
-        return new PreparedDraft(thread.ToString(), RequiresSameAccountBrowserSession: true);
+        return new PreparedDraft(
+            DraftEditorUrl: thread.ToString(),
+            RequiresSameAccountBrowserSession: true,
+            PostUrl: null
+        );
     }
 
     public async Task<SubmittedPost> SubmitNewThreadAsync(

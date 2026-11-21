@@ -171,6 +171,50 @@ public class DistributionSiteSessionService(
         return await forum.SubmitReplyAsync(session, threadUrl, body, cancellationToken);
     }
 
+    public async Task<PreparedDraft> PrepareNewPostDraftAsync(
+        int registrationId,
+        ForumTargetId target,
+        string title,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, session) = await GetBlogSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.PrepareNewPostDraftAsync(
+            session: session,
+            target: target,
+            title: title,
+            body: body,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<SubmittedPost> SubmitNewPostAsync(
+        int registrationId,
+        string targetNodeId,
+        string title,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, session) = await GetBlogSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.SubmitNewPostAsync(
+            session: session,
+            target: blog.CreateForumTargetIdFromStoredValue(session, targetNodeId),
+            title: title,
+            body: body,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task<SubmittedPost> EditPostAsync(
         int registrationId,
         string postedUrl,
@@ -221,6 +265,23 @@ public class DistributionSiteSessionService(
         }
 
         return (forum, session);
+    }
+
+    private async Task<(
+        IBlogDistributionSite Blog,
+        DistributionSession Session
+    )> GetBlogSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
+    {
+        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
+
+        if (site is not IBlogDistributionSite blog)
+        {
+            throw new InvalidOperationException(
+                $"Distribution site '{site.GetType().Name}' is not a blog."
+            );
+        }
+
+        return (blog, session);
     }
 
     private async Task<(

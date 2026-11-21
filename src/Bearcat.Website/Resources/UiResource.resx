@@ -830,21 +830,21 @@
         <value>&lt;random-name&gt;</value>
     </data>
   <data name="AvailableVariables" xml:space="preserve"><value>Available variables</value></data>
-  <data name="CopyForumPost" xml:space="preserve"><value>Copy forum post</value></data>
-  <data name="DeleteForumPostTemplateConfirmation" xml:space="preserve"><value>Are you sure you want to delete forum post template {0}?</value></data>
-  <data name="ForumPostTemplate" xml:space="preserve"><value>Forum post template</value></data>
+  <data name="CopyForumPost" xml:space="preserve"><value>Copy post</value></data>
+  <data name="DeleteForumPostTemplateConfirmation" xml:space="preserve"><value>Are you sure you want to delete post template {0}?</value></data>
+  <data name="ForumPostTemplate" xml:space="preserve"><value>Post template</value></data>
   <data name="ForumPostTemplateBodyPlaceholder" xml:space="preserve"><value>Write BBCode with {{ release.name }} variables</value></data>
-  <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Name this forum post template</value></data>
-  <data name="ForumPostTemplates" xml:space="preserve"><value>Forum post templates</value></data>
-  <data name="NewForumPostTemplate" xml:space="preserve"><value>New forum post template</value></data>
-  <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>No forum post templates found.</value></data>
+  <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Name this post template</value></data>
+  <data name="ForumPostTemplates" xml:space="preserve"><value>Post templates</value></data>
+  <data name="NewForumPostTemplate" xml:space="preserve"><value>New post template</value></data>
+  <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>No post templates found.</value></data>
   <data name="NoVariablesFound" xml:space="preserve"><value>No variables found.</value></data>
   <data name="Render" xml:space="preserve"><value>Render</value></data>
-  <data name="RenderedForumPost" xml:space="preserve"><value>Rendered forum post</value></data>
-  <data name="RenderForumPost" xml:space="preserve"><value>Render forum post</value></data>
-  <data name="RenderForumPostDescription" xml:space="preserve"><value>Render this release with a forum post template.</value></data>
-  <data name="RenderForumPostForRelease" xml:space="preserve"><value>Render forum post for {0}</value></data>
-  <data name="RenderForumPostForCollection" xml:space="preserve"><value>Render forum post for {0}</value></data>
+  <data name="RenderedForumPost" xml:space="preserve"><value>Rendered post</value></data>
+  <data name="RenderForumPost" xml:space="preserve"><value>Render post</value></data>
+  <data name="RenderForumPostDescription" xml:space="preserve"><value>Render this release with a post template.</value></data>
+  <data name="RenderForumPostForRelease" xml:space="preserve"><value>Render post for {0}</value></data>
+  <data name="RenderForumPostForCollection" xml:space="preserve"><value>Render post for {0}</value></data>
   <data name="ForumPostTemplateType" xml:space="preserve"><value>Type</value></data>
   <data name="ForumPostTemplateTypeRelease" xml:space="preserve"><value>Release</value></data>
   <data name="ForumPostTemplateTypeReleaseCollection" xml:space="preserve"><value>Release collection</value></data>
@@ -857,7 +857,7 @@
   <data name="ClickVariableToInsertHint" xml:space="preserve"><value>Click a variable to insert it at the cursor.</value></data>
   <data name="InsertVariableNamed" xml:space="preserve"><value>Insert {0}</value></data>
   <data name="SearchVariables" xml:space="preserve"><value>Search variables</value></data>
-  <data name="SelectForumPostTemplate" xml:space="preserve"><value>Select a forum post template</value></data>
+  <data name="SelectForumPostTemplate" xml:space="preserve"><value>Select a post template</value></data>
   <data name="Template" xml:space="preserve"><value>Template</value></data>
   <data name="TemplateSyntaxValid" xml:space="preserve"><value>Syntax OK</value></data>
   <data name="CaptchaCode" xml:space="preserve"><value>Captcha code</value></data>
@@ -969,7 +969,7 @@
   <data name="PostedLocation" xml:space="preserve"><value>Posted location</value></data>
   <data name="PostedLocations" xml:space="preserve"><value>Posted locations</value></data>
   <data name="NoPostedLocationsYet" xml:space="preserve"><value>No posted locations yet.</value></data>
-  <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.example/threads/...</value></data>
+  <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://example.org/...</value></data>
   <data name="PostedLocationRecorded" xml:space="preserve"><value>Saved where you posted.</value></data>
   <data name="PostedLocationManualHelp" xml:space="preserve"><value>Could not detect the post automatically. Paste the URL of your post to save it.</value></data>
   <data name="PostedLocationUrlRequired" xml:space="preserve"><value>A URL is required.</value></data>
@@ -1006,28 +1006,28 @@
   <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Distribution site registration {0} deactivated</value></data>
   <data name="Forum" xml:space="preserve"><value>Forum</value></data>
   <data name="Blog" xml:space="preserve"><value>Blog</value></data>
-  <data name="PostToForum" xml:space="preserve"><value>Post to forum</value></data>
-  <data name="PostNamedReleaseToForum" xml:space="preserve"><value>Post {0} to forum</value></data>
-  <data name="PostNamedCollectionToForum" xml:space="preserve"><value>Post {0} to forum</value></data>
-  <data name="PostToForumDescription" xml:space="preserve"><value>Prepare a forum draft and open it for review.</value></data>
-  <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Pick the forum to post this release to. The first login may take a moment.</value></data>
-  <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>No active forum distribution sites. Add one first.</value></data>
-  <data name="Subforum" xml:space="preserve"><value>Subforum</value></data>
-  <data name="SelectSubforum" xml:space="preserve"><value>Select a subforum</value></data>
+  <data name="PostToForum" xml:space="preserve"><value>Post to site</value></data>
+  <data name="PostNamedReleaseToForum" xml:space="preserve"><value>Post {0} to site</value></data>
+  <data name="PostNamedCollectionToForum" xml:space="preserve"><value>Post {0} to site</value></data>
+  <data name="PostToForumDescription" xml:space="preserve"><value>Prepare a draft and open it for review.</value></data>
+  <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Pick the site to post this release to. The first login may take a moment.</value></data>
+  <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>No active distribution sites. Add one first.</value></data>
+  <data name="Subforum" xml:space="preserve"><value>Target</value></data>
+  <data name="SelectSubforum" xml:space="preserve"><value>Select a target</value></data>
   <data name="StartNewThread" xml:space="preserve"><value>Start a new thread</value></data>
   <data name="ExistingThreadsFound" xml:space="preserve"><value>{0} existing threads found for "{1}".</value></data>
   <data name="Thread" xml:space="preserve"><value>Thread</value></data>
-  <data name="ThreadTitle" xml:space="preserve"><value>Thread title</value></data>
-  <data name="ThreadTitleRequired" xml:space="preserve"><value>A thread title is required.</value></data>
+  <data name="ThreadTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="ThreadTitleRequired" xml:space="preserve"><value>A title is required.</value></data>
   <data name="ForumPostBody" xml:space="preserve"><value>Post text</value></data>
   <data name="ForumPostBodyRequired" xml:space="preserve"><value>The post text must not be empty.</value></data>
   <data name="PrepareDraft" xml:space="preserve"><value>Prepare draft</value></data>
   <data name="DraftPrepared" xml:space="preserve"><value>Draft prepared</value></data>
-  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab: title and text are prefilled. Review it and submit it yourself. You must be logged into the same forum account in your browser.</value></data>
-  <data name="OpenDraftInForum" xml:space="preserve"><value>Open draft in forum</value></data>
-    <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the new thread title. Some forums require spaces instead of dots.</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab: title and text are prefilled. Review it and submit it yourself. You must be logged into the same account on the site in your browser.</value></data>
+  <data name="OpenDraftInForum" xml:space="preserve"><value>Open draft</value></data>
+    <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the title of a new thread or post. Some sites require spaces instead of dots.</value></data>
   <data name="ReleaseNameRequired" xml:space="preserve"><value>A release name is required.</value></data>
-  <data name="NoSubforumFound" xml:space="preserve"><value>No subforum found.</value></data>
+  <data name="NoSubforumFound" xml:space="preserve"><value>No target found.</value></data>
   <data name="ThreadPrefixes" xml:space="preserve"><value>Prefixes</value></data>
   <data name="ThreadPrefixesHelp" xml:space="preserve"><value>Optional. Pick the prefixes required by the forum's rules (e.g. 1080p/x265, [Ads], English).</value></data>
   <data name="SelectThreadPrefixes" xml:space="preserve"><value>Select prefixes...</value></data>
@@ -1153,15 +1153,15 @@
   <data name="NotificationKind.ReleaseCreationSkippedBecauseNameExists" xml:space="preserve"><value>Release creation skipped because the name exists</value></data>
   <data name="NotificationKind.ReleaseCreationSkippedBecauseNameExists.Description" xml:space="preserve"><value>A folder found by a folder automation or remote source was skipped because a release with the same name already exists. No release was created.</value></data>
   <data name="NotificationKind.LinkCrypterImportFailed" xml:space="preserve"><value>Link crypter import failed</value></data><data name="NotificationKind.LinkCrypterImportFailed.Description" xml:space="preserve"><value>A link crypter import failed or some of its containers could not be imported.</value></data>
-  <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatic forum post created</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>A release was posted automatically to a forum.</value></data>
-  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatic forum post failed</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Bearcat stopped automatic posting to a forum after 5 failed attempts.</value></data>
+  <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatic post created</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>A release was posted automatically to a distribution site.</value></data>
+  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatic post failed</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Bearcat stopped automatic posting to a distribution site after 5 failed attempts.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Severity</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Notification type</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>All notification types</value></data>
   <data name="ForumPostingRules" xml:space="preserve"><value>Posting rules</value></data>
-  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules decide in which subforum a release or collection is posted. The first matching rule wins, so order them from specific to general.</value></data>
+  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules decide to which target (the subforum of a forum or the category of a blog) a release or collection is posted. The first matching rule wins, so order them from specific to general.</value></data>
   <data name="NewForumPostingRule" xml:space="preserve"><value>New posting rule</value></data>
-  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to route releases and collections to a subforum automatically.</value></data>
+  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to route releases and collections to a target automatically.</value></data>
   <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Define when the rule applies and where the release or collection is posted.</value></data>
   <data name="ForumPostingRuleAppliesTo" xml:space="preserve"><value>Applies to</value></data>
   <data name="ForumPostingRuleAppliesToHelp" xml:space="preserve"><value>Release rules route single releases, collection rules route release collections. Switching removes conditions on fields the other type does not support, such as the episode.</value></data>
@@ -1181,16 +1181,16 @@
   <data name="ForumPostPostMode" xml:space="preserve"><value>Posting mode</value></data>
   <data name="ForumPostPostMode.ReplyToExistingElseNewThread" xml:space="preserve"><value>Reply to an existing thread, otherwise start a new one</value></data>
   <data name="ForumPostPostMode.AlwaysNewThread" xml:space="preserve"><value>Always start a new thread</value></data>
-  <data name="LoadSubforums" xml:space="preserve"><value>Load subforums</value></data>
-  <data name="ReloadSubforums" xml:space="preserve"><value>Reload subforums</value></data>
-  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Loading the subforums signs in to the site and can take a few seconds. The stored subforum stays selected until you pick a different one.</value></data>
-  <data name="NoSubforumSelected" xml:space="preserve"><value>No subforum selected yet</value></data>
-  <data name="SubforumIsRequired" xml:space="preserve"><value>A subforum is required.</value></data>
+  <data name="LoadSubforums" xml:space="preserve"><value>Load targets</value></data>
+  <data name="ReloadSubforums" xml:space="preserve"><value>Reload targets</value></data>
+  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Loading the targets signs in to the site and can take a few seconds. The stored target stays selected until you pick a different one.</value></data>
+  <data name="NoSubforumSelected" xml:space="preserve"><value>No target selected yet</value></data>
+  <data name="SubforumIsRequired" xml:space="preserve"><value>A target is required.</value></data>
   <data name="LoadThreadPrefixes" xml:space="preserve"><value>Load prefixes</value></data>
   <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Reload prefixes</value></data>
   <data name="NoThreadPrefix" xml:space="preserve"><value>No prefix</value></data>
   <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Prefixes can only be loaded once the subforums are loaded and a subforum is selected.</value></data>
-  <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>A forum post template is required.</value></data>
+  <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>A post template is required.</value></data>
   <data name="Condition" xml:space="preserve"><value>Condition</value></data>
   <data name="ConditionField" xml:space="preserve"><value>Field</value></data>
   <data name="ConditionSelectField" xml:space="preserve"><value>Select field</value></data>
@@ -1244,28 +1244,28 @@
   <data name="AutoPostAllMatchedSites" xml:space="preserve"><value>Post to all matched sites</value></data>
   <data name="AutoPostAlreadyPosted" xml:space="preserve"><value>Posted</value></data>
   <data name="AutoPostNoMatchingRule" xml:space="preserve"><value>No matching posting rule</value></data>
-  <data name="AutoPostNoSitesConfigured" xml:space="preserve"><value>No forum has posting rules yet.</value></data>
+  <data name="AutoPostNoSitesConfigured" xml:space="preserve"><value>No distribution site has posting rules yet.</value></data>
   <data name="AutoPostSucceeded" xml:space="preserve"><value>Posted to {0}</value></data>
   <data name="AutoPostFailed" xml:space="preserve"><value>Posting to {0} failed</value></data>
-  <data name="AutoPostSkippedAlreadyPosted" xml:space="preserve"><value>This release has already been posted to this forum.</value></data>
-  <data name="AutoPostSkippedCollectionAlreadyPosted" xml:space="preserve"><value>This collection has already been posted to this forum.</value></data>
-  <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>This forum no longer takes part in automatic posting.</value></data>
+  <data name="AutoPostSkippedAlreadyPosted" xml:space="preserve"><value>This release has already been posted to this site.</value></data>
+  <data name="AutoPostSkippedCollectionAlreadyPosted" xml:space="preserve"><value>This collection has already been posted to this site.</value></data>
+  <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>This site no longer takes part in automatic posting.</value></data>
   <data name="AutoPostBlockedQualityGate" xml:space="preserve"><value>Automatic posting is blocked: the quality gate has not passed.</value></data>
   <data name="AutoPostBlockedClassification" xml:space="preserve"><value>Automatic posting is blocked: the release has no classification.</value></data>
   <data name="AutoPostBlockedCollectionQualityGate" xml:space="preserve"><value>Automatic posting is blocked: not every release in this collection has passed the quality gate.</value></data>
   <data name="AutoPostBlockedCollectionClassification" xml:space="preserve"><value>Automatic posting is blocked: no release in this collection has a classification.</value></data>
   <data name="AutomaticPosting" xml:space="preserve"><value>Automatic posting</value></data>
-  <data name="AutomaticPostingHelp" xml:space="preserve"><value>When enabled, releases are posted to this forum automatically as soon as a posting rule matches.</value></data>
+  <data name="AutomaticPostingHelp" xml:space="preserve"><value>When enabled, releases are posted to this site automatically as soon as a posting rule matches.</value></data>
   <data name="AutomaticPostingEnabled" xml:space="preserve"><value>Automatic posting enabled for {0}</value></data>
   <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatic posting disabled for {0}</value></data>
   <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
   <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Thread search without dots</value></data>
-  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces when searching this forum for an existing thread. A new thread uses the same spaced name as its title.</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces when searching this site for an existing thread. New threads and posts use the same spaced name as their title.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Thread search without dots enabled for {0}</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Thread search without dots disabled for {0}</value></data>
   <data name="AutoPostUpdatePost" xml:space="preserve"><value>Update post</value></data>
   <data name="MinimumSecondsBetweenPosts" xml:space="preserve"><value>Minimum seconds between posts</value></data>
-  <data name="MinimumSecondsBetweenPostsHelp" xml:space="preserve"><value>Bearcat waits at least this long between automatic posts or updates in this forum, including failed attempts. Clicking Post or Update post skips the wait.</value></data>
+  <data name="MinimumSecondsBetweenPostsHelp" xml:space="preserve"><value>Bearcat waits at least this long between automatic posts or updates on this site, including failed attempts. Clicking Post or Update post skips the wait.</value></data>
   <data name="MinimumSecondsBetweenPostsSaved" xml:space="preserve"><value>Minimum seconds between posts saved for {0}</value></data>
   <data name="AutoPostPausedAfterFailedAttempts" xml:space="preserve"><value>Automatic posting paused until {0} after {1} failed attempts. Last error: {2}</value></data>
   <data name="AutoPostGaveUpAfterFailedAttempts" xml:space="preserve"><value>Automatic posting stopped after {0} failed attempts. Last error: {1}</value></data>
@@ -1276,16 +1276,16 @@
   <data name="AutoPostContentOutdated" xml:space="preserve"><value>Post content is outdated</value></data>
   <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} updated</value></data>
   <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Updating the post in {0} failed</value></data>
-  <data name="AutoPostUpdateNotPosted" xml:space="preserve"><value>This release has not been posted to this forum yet.</value></data>
-  <data name="AutoPostUpdateCollectionNotPosted" xml:space="preserve"><value>This collection has not been posted to this forum yet.</value></data>
-  <data name="UpdatePostedLocationTitle" xml:space="preserve"><value>Update forum post</value></data>
+  <data name="AutoPostUpdateNotPosted" xml:space="preserve"><value>This release has not been posted to this site yet.</value></data>
+  <data name="AutoPostUpdateCollectionNotPosted" xml:space="preserve"><value>This collection has not been posted to this site yet.</value></data>
+  <data name="UpdatePostedLocationTitle" xml:space="preserve"><value>Update post</value></data>
   <data name="UpdatePostedLocationDescription" xml:space="preserve"><value>Renders the template again and replaces the content of the existing post.</value></data>
-  <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>The content of this post is replaced completely. Manual changes in the forum are lost.</value></data>
-  <data name="UpdatePostedLocationSucceeded" xml:space="preserve"><value>Forum post updated</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Forum post updated</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>An existing forum post was updated with freshly rendered content.</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Forum post update failed</value></data>
-  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Bearcat stopped automatically updating a forum post after 5 failed attempts.</value></data>
+  <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>The content of this post is replaced completely. Manual changes on the site are lost.</value></data>
+  <data name="UpdatePostedLocationSucceeded" xml:space="preserve"><value>Post updated</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Post updated</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>An existing post was updated with freshly rendered content.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Post update failed</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Bearcat stopped automatically updating a post after 5 failed attempts.</value></data>
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Restoring</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archive restore failed</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>An archive could not be restored from an online mirror.</value></data>
@@ -1395,8 +1395,8 @@
   <data name="RemoteSourceConfig_TlsProvider_Description" xml:space="preserve"><value>BouncyCastle works with most FTPS servers. Switch to System only if the connection fails.</value></data>
   <data name="RemoteSourceConfig_ValidateCertificate" xml:space="preserve"><value>Validate certificate</value></data>
   <data name="RemoteSourceConfig_ValidateCertificate_Description" xml:space="preserve"><value>Many FTP servers use self signed certificates. Enable this only if the server has a trusted certificate.</value></data>
-  <data name="DistributionSiteConfig_BaseUrl" xml:space="preserve"><value>Forum address</value></data>
-  <data name="DistributionSiteConfig_BaseUrl_Description" xml:space="preserve"><value>Address of the forum start page, including the installation folder, e.g. https://example.org/community/. Use the address the browser shows after redirects.</value></data>
+  <data name="DistributionSiteConfig_BaseUrl" xml:space="preserve"><value>Address</value></data>
+  <data name="DistributionSiteConfig_BaseUrl_Description" xml:space="preserve"><value>Address of the site's start page, including the installation folder, e.g. https://example.org/community/. Use the address the browser shows after redirects.</value></data>
   <data name="DistributionSiteConfig_Username" xml:space="preserve"><value>Username</value></data>
   <data name="DistributionSiteConfig_Password" xml:space="preserve"><value>Password</value></data>
   <data name="DistributionSiteConfig_ApplicationPassword" xml:space="preserve"><value>Application password</value></data>
@@ -1637,7 +1637,7 @@
   <data name="CreateNonceFileHelp" xml:space="preserve"><value>Writes __nonce.txt with a random value into every new archive so repacked archives get different hashes. Only affects newly created archives.</value></data>
   <data name="WithoutReleaseRootFolder" xml:space="preserve"><value>Without release root folder</value></data>
   <data name="WithoutNonceFile" xml:space="preserve"><value>Without nonce file</value></data>
-  <data name="ShowForumPostTemplates" xml:space="preserve"><value>Show forum post templates</value></data>
+  <data name="ShowForumPostTemplates" xml:space="preserve"><value>Show post templates</value></data>
   <data name="UnsavedChanges" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Duplicate" xml:space="preserve"><value>Duplicate</value></data>
   <data name="Editor" xml:space="preserve"><value>Editor</value></data>
@@ -1663,7 +1663,7 @@
   <data name="CharacterCount" xml:space="preserve"><value>{0} characters</value></data>
   <data name="SaveShortcutHint" xml:space="preserve"><value>to save</value></data>
   <data name="LeaveWithoutSavingTitle" xml:space="preserve"><value>Leave without saving?</value></data>
-  <data name="LeaveWithoutSavingMessage" xml:space="preserve"><value>Your changes to this forum post template have not been saved. If you leave now, they are lost.</value></data>
+  <data name="LeaveWithoutSavingMessage" xml:space="preserve"><value>Your changes to this post template have not been saved. If you leave now, they are lost.</value></data>
   <data name="StayOnPage" xml:space="preserve"><value>Stay on this page</value></data>
   <data name="LeaveAndDiscardChanges" xml:space="preserve"><value>Leave and discard</value></data>
   <data name="SearchForumPostTemplates" xml:space="preserve"><value>Search templates</value></data>
@@ -1671,17 +1671,17 @@
   <data name="ForumPostingRuleCountOne" xml:space="preserve"><value>1 rule</value></data>
   <data name="ForumPostingRuleCount" xml:space="preserve"><value>{0} rules</value></data>
   <data name="DiscardChangesTitle" xml:space="preserve"><value>Discard unsaved changes?</value></data>
-  <data name="DiscardChangesMessage" xml:space="preserve"><value>Your changes to this forum post template have not been saved. Do you want to discard them?</value></data>
+  <data name="DiscardChangesMessage" xml:space="preserve"><value>Your changes to this post template have not been saved. Do you want to discard them?</value></data>
   <data name="DiscardChanges" xml:space="preserve"><value>Discard changes</value></data>
-  <data name="ForumPostTemplateNameAlreadyExists" xml:space="preserve"><value>A forum post template named {0} already exists.</value></data>
+  <data name="ForumPostTemplateNameAlreadyExists" xml:space="preserve"><value>A post template named {0} already exists.</value></data>
   <data name="FixTemplateSyntaxErrorsBeforeSaving" xml:space="preserve"><value>Fix the template syntax errors before saving.</value></data>
   <data name="CopyName" xml:space="preserve"><value>{0} (copy)</value></data>
   <data name="NumberedCopyName" xml:space="preserve"><value>{0} (copy {1})</value></data>
-  <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Forum post template cannot be deleted</value></data>
+  <data name="ForumPostTemplateCannotBeDeleted" xml:space="preserve"><value>Post template cannot be deleted</value></data>
   <data name="ForumPostTemplateUsedByOnePostingRule" xml:space="preserve"><value>{0} is used by 1 posting rule. Replace the template in that rule first, then delete it.</value></data>
   <data name="ForumPostTemplateUsedByPostingRules" xml:space="preserve"><value>{0} is used by {1} posting rules. Replace the template in those rules first, then delete it.</value></data>
   <data name="CopyFolderPath" xml:space="preserve"><value>Copy folder path</value></data>
-  <data name="MoreForumPostOptions" xml:space="preserve"><value>More forum post options</value></data>
+  <data name="MoreForumPostOptions" xml:space="preserve"><value>More post options</value></data>
   <data name="ReleaseProgress" xml:space="preserve"><value>Release progress</value></data>
   <data name="ReleaseProgressInfo" xml:space="preserve"><value>Info</value></data>
   <data name="ReleaseProgressArchived" xml:space="preserve"><value>Archived</value></data>
@@ -1697,8 +1697,8 @@
   <data name="ReleaseProgressNoContainers" xml:space="preserve"><value>None</value></data>
   <data name="ReleaseProgressContainersCreated" xml:space="preserve"><value>{0} created</value></data>
   <data name="ReleaseProgressContainersFailed" xml:space="preserve"><value>{0} failed</value></data>
-  <data name="ReleaseProgressForumCountOne" xml:space="preserve"><value>1 forum</value></data>
-  <data name="ReleaseProgressForumCount" xml:space="preserve"><value>{0} forums</value></data>
+  <data name="ReleaseProgressForumCountOne" xml:space="preserve"><value>1 site</value></data>
+  <data name="ReleaseProgressForumCount" xml:space="preserve"><value>{0} sites</value></data>
   <data name="ReleaseProgressMarkedAsPosted" xml:space="preserve"><value>Marked as posted</value></data>
   <data name="ReleaseProgressNotPostedYet" xml:space="preserve"><value>Not posted yet</value></data>
   <data name="HostersOnline" xml:space="preserve"><value>Hosters online</value></data>
@@ -2028,14 +2028,14 @@
   <data name="FirstStartOptionalSetupMetadata" xml:space="preserve"><value>Metadata and NFOs</value></data>
   <data name="FirstStartOptionalSetupMetadataDescription" xml:space="preserve"><value>Fetches NFOs, covers and release details from NFO databases and metadata sources.</value></data>
   <data name="FirstStartOptionalSetupImageHoster" xml:space="preserve"><value>Image hoster for cover images</value></data>
-  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Uploads cover images so forum posts can show them.</value></data>
+  <data name="FirstStartOptionalSetupImageHosterDescription" xml:space="preserve"><value>Uploads cover images so posts can show them.</value></data>
   <data name="FirstStartOptionalSetupLinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="FirstStartOptionalSetupLinkCryptersDescription" xml:space="preserve"><value>Puts download links into link crypter containers.</value></data>
   <data name="FirstStartOptionalSetupTelegram" xml:space="preserve"><value>Telegram notifications</value></data>
   <data name="FirstStartOptionalSetupTelegramDescription" xml:space="preserve"><value>Forwards notifications to a Telegram chat.</value></data>
   <data name="FirstStartOptionalSetupTelegramLink" xml:space="preserve"><value>Telegram</value></data>
-  <data name="FirstStartOptionalSetupForumPosting" xml:space="preserve"><value>Forum posting</value></data>
-  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Creates forum post drafts on distribution sites.</value></data>
+  <data name="FirstStartOptionalSetupForumPosting" xml:space="preserve"><value>Distribution sites</value></data>
+  <data name="FirstStartOptionalSetupForumPostingDescription" xml:space="preserve"><value>Creates post drafts on distribution sites.</value></data>
   <data name="FirstStartOptionalSetupProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
   <data name="FirstStartOptionalSetupProxyServersDescription" xml:space="preserve"><value>Routes outbound connections through a proxy.</value></data>
   <data name="UploadSource" xml:space="preserve"><value>Upload source</value></data>
@@ -2265,7 +2265,7 @@
   <data name="ChangeArchivePartSizeConfirmation" xml:space="preserve"><value>{0} archive configurations and {1} archive configurations in templates change from {2} MB to {3} MB.</value></data>
   <data name="ChangeArchivePartSizeApplied" xml:space="preserve"><value>Changed {0} archive configurations and {1} archive configurations in templates. Skipped {2} archive configurations and {3} archive configurations in templates.</value></data>
   <data name="ForumServiceRestrictions" xml:space="preserve"><value>Hosters, link crypters and image hosters</value></data>
-  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>These rules apply separately to hosters, link crypters and image hosters. If a Required list is filled in, the post must include at least one selected provider. Bearcat removes content from Forbidden providers. Automatic posting skips the forum if this requirement is not met or all uploads, all containers or all images were removed. Empty lists add no restrictions.</value></data>
+  <data name="ForumServiceRestrictionsHelp" xml:space="preserve"><value>These rules apply separately to hosters, link crypters and image hosters. If a Required list is filled in, the post must include at least one selected provider. Bearcat removes content from Forbidden providers. Automatic posting skips the site if this requirement is not met or all uploads, all containers or all images were removed. Empty lists add no restrictions.</value></data>
   <data name="RequiredFileHosters" xml:space="preserve"><value>Required hosters</value></data>
   <data name="ForbiddenFileHosters" xml:space="preserve"><value>Forbidden hosters</value></data>
   <data name="RequiredLinkCrypters" xml:space="preserve"><value>Required link crypters</value></data>
@@ -2273,8 +2273,8 @@
   <data name="RequiredImageHosters" xml:space="preserve"><value>Required image hosters</value></data>
   <data name="ForbiddenImageHosters" xml:space="preserve"><value>Forbidden image hosters</value></data>
   <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Hoster rules saved for {0}</value></data>
-  <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>This post does not meet the forum's hoster rules. Bearcat would skip it during automatic posting.</value></data>
-  <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Skipped because of this forum's hoster rules: {0}</value></data>
+  <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>This post does not meet the site's hoster rules. Bearcat would skip it during automatic posting.</value></data>
+  <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Skipped because of this site's hoster rules: {0}</value></data>
   <data name="UploadCompletionActions" xml:space="preserve"><value>Actions after upload</value></data>
   <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Choose what Bearcat does after upload, such as exporting a release for IntelligeN.</value></data>
   <data name="NewUploadCompletionAction" xml:space="preserve"><value>New action</value></data>

@@ -73,7 +73,14 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     private bool showManualUrlEntry;
     private string manualUrl = string.Empty;
 
-    private bool IsNewThread => threadSelection == NewThreadValue;
+    private bool IsBlog =>
+        registrations
+            .Single(registration =>
+                registration.DistributionSiteRegistrationId == selectedRegistrationId
+            )
+            .Kind == DistributionSiteKind.Blog;
+
+    private bool IsNewThread => IsBlog || threadSelection == NewThreadValue;
 
     private bool IsCollection => TemplateType == ForumPostTemplateType.ReleaseCollection;
 
@@ -111,12 +118,9 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         var all = await operationRunner.RunAsync(
             (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
         );
-        var forums = all.Where(registration =>
-                registration.Kind == DistributionSiteKind.Forum && registration.IsActive
-            )
-            .ToList();
+        var activeRegistrations = all.Where(registration => registration.IsActive).ToList();
 
-        registrations = await OrderByPostingHistoryAsync(forums);
+        registrations = await OrderByPostingHistoryAsync(activeRegistrations);
 
         selectedRegistrationId =
             registrations.FirstOrDefault()?.DistributionSiteRegistrationId ?? 0;
@@ -124,17 +128,17 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
     private async Task<
         IReadOnlyList<DistributionSiteRegistrationReadModel>
-    > OrderByPostingHistoryAsync(List<DistributionSiteRegistrationReadModel> forums)
+    > OrderByPostingHistoryAsync(List<DistributionSiteRegistrationReadModel> activeRegistrations)
     {
         var postedHosts = await GetPostedHostsAsync();
         var alreadyPostedRegistrationIds = await GetAlreadyPostedRegistrationIdsAsync(
-            registrationIds: forums
+            registrationIds: activeRegistrations
                 .Select(registration => registration.DistributionSiteRegistrationId)
                 .ToList(),
             postedHosts: postedHosts
         );
 
-        return forums
+        return activeRegistrations
             .OrderBy(registration =>
                 alreadyPostedRegistrationIds.Contains(registration.DistributionSiteRegistrationId)
                     ? 1
@@ -206,7 +210,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         });
     }
 
-    private async Task SearchThreadsAsync()
+    private async Task ContinueFromTargetAsync()
     {
         if (selectedTargetId is null)
         {
@@ -216,6 +220,12 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         if (string.IsNullOrWhiteSpace(postName))
         {
             errorMessage = L["ReleaseNameRequired"];
+            return;
+        }
+
+        if (IsBlog)
+        {
+            await PrepareComposeAsync();
             return;
         }
 
@@ -256,7 +266,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
             );
             selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
 
-            if (IsNewThread)
+            if (!IsBlog && IsNewThread)
             {
                 prefixes = await operationRunner.RunAsync(
                     (DistributionSiteSessionService service) =>
@@ -337,7 +347,14 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                 DistributionSiteSessionService,
                 PreparedDraft
             >(service =>
-                IsNewThread
+                IsBlog
+                    ? service.PrepareNewPostDraftAsync(
+                        registrationId: selectedRegistrationId,
+                        target: new ForumTargetId(selectedTargetId!),
+                        title: postName,
+                        body: body
+                    )
+                : IsNewThread
                     ? service.PrepareNewThreadDraftAsync(
                         registrationId: selectedRegistrationId,
                         target: new ForumTargetId(selectedTargetId!),
@@ -345,11 +362,11 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                         prefixIds: selectedPrefixIds,
                         body: body
                     )
-                    : service.PrepareReplyDraftAsync(
-                        registrationId: selectedRegistrationId,
-                        threadUrl: threadSelection,
-                        body: body
-                    )
+                : service.PrepareReplyDraftAsync(
+                    registrationId: selectedRegistrationId,
+                    threadUrl: threadSelection,
+                    body: body
+                )
             );
 
             step = WizardStep.Done;
@@ -363,6 +380,12 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
         try
         {
+            if (preparedDraft!.PostUrl is not null)
+            {
+                await SavePostedLocationAsync(preparedDraft.PostUrl);
+                return;
+            }
+
             var url = await operationRunner.RunAsync(
                 (DistributionSiteSessionService service) =>
                     service.FindUrlOfSubmittedPostAsync(
@@ -451,7 +474,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         {
             WizardStep.Target => WizardStep.Site,
             WizardStep.Thread => WizardStep.Target,
-            WizardStep.Compose => WizardStep.Thread,
+            WizardStep.Compose => IsBlog ? WizardStep.Target : WizardStep.Thread,
             _ => step,
         };
     }

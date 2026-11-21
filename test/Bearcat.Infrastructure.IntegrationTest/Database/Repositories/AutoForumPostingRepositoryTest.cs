@@ -56,7 +56,7 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task GetForumRegistrationsWithEnabledRulesAsync_SeveralRegistrations_ReturnsActiveForumsWithEnabledRulesInSortOrder()
+    public async Task GetRegistrationsWithEnabledRulesAsync_SeveralRegistrations_ReturnsActiveKnownSitesWithEnabledRulesInSortOrder()
     {
         // Arrange
         var template = AddForumPostTemplate("Release post");
@@ -76,34 +76,38 @@ public class AutoForumPostingRepositoryTest(DatabaseProvider databaseProvider)
         var inactiveForum = AddRegistration("Forum C", isActive: false);
         AddRule(inactiveForum, template, "Inactive", sortOrder: 0);
         var blog = AddRegistration("Blog", className: BlogClassName);
-        AddRule(blog, template, "Blog rule", sortOrder: 0);
+        var blogRule = AddRule(blog, template, "Blog rule", sortOrder: 0);
+        var unknownSite = AddRegistration("Unknown", className: "RemovedSite");
+        AddRule(unknownSite, template, "Unknown rule", sortOrder: 0);
         var forumWithoutEnabledRules = AddRegistration("Forum D");
         AddRule(forumWithoutEnabledRules, template, "Disabled", sortOrder: 0, isEnabled: false);
         AddRegistration("Forum E");
         await DbContext.SaveChangesAsync();
 
         // Act
-        var result = await repository.GetForumRegistrationsWithEnabledRulesAsync(
-            CancellationToken.None
-        );
+        var result = await repository.GetRegistrationsWithEnabledRulesAsync(CancellationToken.None);
 
         // Assert
-        result.Count.ShouldBe(2);
-        result[0].DistributionSiteRegistrationId.ShouldBe(firstForum.Id);
-        result[0].Name.ShouldBe("Forum A");
-        result[0].EnableAutomaticPosting.ShouldBeFalse();
-        result[0].StripDotsForThreadSearch.ShouldBeFalse();
-        result[0].EnabledRules.Select(rule => rule.Id).ShouldBe([firstForumRule.Id]);
-        result[1].DistributionSiteRegistrationId.ShouldBe(secondForum.Id);
-        result[1].Name.ShouldBe("Forum B");
-        result[1].EnableAutomaticPosting.ShouldBeTrue();
-        result[1].StripDotsForThreadSearch.ShouldBeTrue();
-        result[1]
+        result.Count.ShouldBe(3);
+        result[0].DistributionSiteRegistrationId.ShouldBe(blog.Id);
+        result[0].Kind.ShouldBe(DistributionSiteKind.Blog);
+        result[0].EnabledRules.Select(rule => rule.Id).ShouldBe([blogRule.Id]);
+        result[1].DistributionSiteRegistrationId.ShouldBe(firstForum.Id);
+        result[1].Name.ShouldBe("Forum A");
+        result[1].Kind.ShouldBe(DistributionSiteKind.Forum);
+        result[1].EnableAutomaticPosting.ShouldBeFalse();
+        result[1].StripDotsForThreadSearch.ShouldBeFalse();
+        result[1].EnabledRules.Select(rule => rule.Id).ShouldBe([firstForumRule.Id]);
+        result[2].DistributionSiteRegistrationId.ShouldBe(secondForum.Id);
+        result[2].Name.ShouldBe("Forum B");
+        result[2].EnableAutomaticPosting.ShouldBeTrue();
+        result[2].StripDotsForThreadSearch.ShouldBeTrue();
+        result[2]
             .EnabledRules.Select(rule => rule.Id)
             .ShouldBe([secondForumFirstRule.Id, secondForumTiedRule.Id, secondForumLastRule.Id]);
-        result[1].EnabledRules[0].ConditionJson.ShouldBe("{\"kind\":\"Café\"}");
-        result[1].EnabledRules[0].ForumPostTemplateId.ShouldBe(template.Id);
-        result[1].EnabledRules[0].ForumPostTemplate.Type.ShouldBe(ForumPostTemplateType.Release);
+        result[2].EnabledRules[0].ConditionJson.ShouldBe("{\"kind\":\"Café\"}");
+        result[2].EnabledRules[0].ForumPostTemplateId.ShouldBe(template.Id);
+        result[2].EnabledRules[0].ForumPostTemplate.Type.ShouldBe(ForumPostTemplateType.Release);
     }
 
     [Test]

@@ -20,6 +20,14 @@ public interface IForumPostSubmitter
         CancellationToken cancellationToken = default
     );
 
+    Task<SubmittedPost> SubmitNewPostAsync(
+        int registrationId,
+        string targetNodeId,
+        string title,
+        string body,
+        CancellationToken cancellationToken = default
+    );
+
     Task<SubmittedPost> SubmitReplyAsync(
         int registrationId,
         string threadUrl,

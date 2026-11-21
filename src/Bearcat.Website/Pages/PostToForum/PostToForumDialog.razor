@@ -103,7 +103,7 @@
                     break;
 
                 case WizardStep.Target:
-                    <BbButton Disabled="@(isBusy || selectedTargetId is null || string.IsNullOrWhiteSpace(postName))" OnClick="SearchThreadsAsync">
+                    <BbButton Disabled="@(isBusy || selectedTargetId is null || string.IsNullOrWhiteSpace(postName))" OnClick="ContinueFromTargetAsync">
                         @BusyIcon()
                         @L["Next"]
                     </BbButton>

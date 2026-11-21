@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -219,7 +220,10 @@ public class AutoForumPostCreationService(
         CancellationToken cancellationToken
     )
     {
-        if (rule.PostMode != ForumPostPostMode.ReplyToExistingElseNewThread)
+        if (
+            site.Registration.Kind == DistributionSiteKind.Blog
+            || rule.PostMode != ForumPostPostMode.ReplyToExistingElseNewThread
+        )
         {
             return [];
         }
@@ -262,6 +266,17 @@ public class AutoForumPostCreationService(
         CancellationToken cancellationToken
     )
     {
+        if (site.Registration.Kind == DistributionSiteKind.Blog)
+        {
+            return await submitter.SubmitNewPostAsync(
+                registrationId: site.DistributionSiteRegistrationId,
+                targetNodeId: rule.TargetNodeId,
+                title: PostName(plan, site),
+                body: body,
+                cancellationToken: cancellationToken
+            );
+        }
+
         if (threadUrl is not null)
         {
             return await submitter.SubmitReplyAsync(

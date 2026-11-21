@@ -38,7 +38,7 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
 
     public DateTime Now { get; set; } = new(2026, 9, 16, 12, 0, 0, DateTimeKind.Unspecified);
 
-    public Task<IReadOnlyList<AutoPostRegistration>> GetForumRegistrationsWithEnabledRulesAsync(
+    public Task<IReadOnlyList<AutoPostRegistration>> GetRegistrationsWithEnabledRulesAsync(
         CancellationToken cancellationToken = default
     )
     {

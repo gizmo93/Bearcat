@@ -15,20 +15,22 @@ public class AutoForumPostingRepository(
     TimeProvider timeProvider
 ) : IAutoForumPostingRepository
 {
-    public async Task<
-        IReadOnlyList<AutoPostRegistration>
-    > GetForumRegistrationsWithEnabledRulesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AutoPostRegistration>> GetRegistrationsWithEnabledRulesAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        var forumClassNames = distributionSiteFactory
+        var kindsByClassName = distributionSiteFactory
             .GetDistributionSites()
-            .Where(distributionSite => distributionSite.Kind == DistributionSiteKind.Forum)
-            .Select(distributionSite => distributionSite.ClassName)
-            .ToList();
+            .ToDictionary(
+                distributionSite => distributionSite.ClassName,
+                distributionSite => distributionSite.Kind
+            );
+        var knownClassNames = kindsByClassName.Keys.ToList();
 
         var registrations = await dbRead
             .DistributionSiteRegistrations.Where(registration =>
                 registration.IsActive
-                && forumClassNames.Contains(registration.DistributionSiteClassName)
+                && knownClassNames.Contains(registration.DistributionSiteClassName)
                 && registration.PostingRules.Any(rule => rule.IsEnabled)
             )
             .OrderBy(registration => registration.Name)
@@ -37,6 +39,7 @@ public class AutoForumPostingRepository(
             {
                 registration.Id,
                 registration.Name,
+                registration.DistributionSiteClassName,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
                 registration.MinimumSecondsBetweenPosts,
@@ -57,6 +60,7 @@ public class AutoForumPostingRepository(
             .Select(registration => new AutoPostRegistration(
                 DistributionSiteRegistrationId: registration.Id,
                 Name: registration.Name,
+                Kind: kindsByClassName[registration.DistributionSiteClassName],
                 EnableAutomaticPosting: registration.EnableAutomaticPosting,
                 StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
                 MinimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,

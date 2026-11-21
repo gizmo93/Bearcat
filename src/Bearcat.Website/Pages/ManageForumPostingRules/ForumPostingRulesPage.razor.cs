@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.LinkCrypter;
@@ -55,7 +54,7 @@ public partial class ForumPostingRulesPage(
                 repository.GetByIdAsync(DistributionSiteRegistrationId)
         );
 
-        if (detail is null || detail.Kind != DistributionSiteKind.Forum)
+        if (detail is null)
         {
             navigationManager.NotFound();
 
@@ -116,6 +115,7 @@ public partial class ForumPostingRulesPage(
                 DistributionSiteRegistrationId,
             [nameof(CreateOrEditForumPostingRuleDialog.TemplateOutputFormat)] =
                 registration.TemplateOutputFormat,
+            [nameof(CreateOrEditForumPostingRuleDialog.RegistrationKind)] = registration.Kind,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditForumPostingRuleDialog>(
@@ -144,6 +144,7 @@ public partial class ForumPostingRulesPage(
                 DistributionSiteRegistrationId,
             [nameof(CreateOrEditForumPostingRuleDialog.TemplateOutputFormat)] =
                 registration.TemplateOutputFormat,
+            [nameof(CreateOrEditForumPostingRuleDialog.RegistrationKind)] = registration.Kind,
             [nameof(CreateOrEditForumPostingRuleDialog.ForumPostingRuleId)] =
                 rule.ForumPostingRuleId,
         };

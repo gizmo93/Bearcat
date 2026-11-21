@@ -1,3 +1,7 @@
 namespace Bearcat.Abstractions.DistributionSite.Dto;
 
-public sealed record PreparedDraft(string DraftEditorUrl, bool RequiresSameAccountBrowserSession);
+public sealed record PreparedDraft(
+    string DraftEditorUrl,
+    bool RequiresSameAccountBrowserSession,
+    string? PostUrl
+);

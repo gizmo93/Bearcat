@@ -175,7 +175,8 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
 
         return new PreparedDraft(
             DraftEditorUrl: $"{session.BaseUrl.TrimEnd('/')}/wp-admin/post.php?post={post.Id}&action=edit",
-            RequiresSameAccountBrowserSession: true
+            RequiresSameAccountBrowserSession: true,
+            PostUrl: $"{session.BaseUrl.TrimEnd('/')}/?p={post.Id}"
         );
     }
 

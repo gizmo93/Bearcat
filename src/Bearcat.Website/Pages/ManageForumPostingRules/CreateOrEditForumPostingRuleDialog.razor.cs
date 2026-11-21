@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
@@ -27,6 +28,9 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
 
     [Parameter]
     public ForumPostTemplateOutputFormat TemplateOutputFormat { get; set; }
+
+    [Parameter]
+    public DistributionSiteKind RegistrationKind { get; set; }
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
