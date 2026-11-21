@@ -223,7 +223,7 @@ public class AutoForumPostingRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var failure = await ForumPostingFailuresOf(
+        var failure = await GetForumPostingFailuresOf(
                 failures: dbWrite.ForumPostingFailures,
                 entityType: entityType,
                 entityId: entityId,
@@ -259,7 +259,7 @@ public class AutoForumPostingRepository(
         CancellationToken cancellationToken = default
     )
     {
-        await ForumPostingFailuresOf(
+        await GetForumPostingFailuresOf(
                 failures: dbWrite.ForumPostingFailures,
                 entityType: entityType,
                 entityId: entityId,
@@ -370,7 +370,7 @@ public class AutoForumPostingRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    private static IQueryable<ForumPostingFailure> ForumPostingFailuresOf(
+    private static IQueryable<ForumPostingFailure> GetForumPostingFailuresOf(
         IQueryable<ForumPostingFailure> failures,
         ForumPostTemplateType entityType,
         int entityId,

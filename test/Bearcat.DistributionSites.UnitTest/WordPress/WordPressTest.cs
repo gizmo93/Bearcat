@@ -22,7 +22,7 @@ public class WordPressTest
         handler.Enqueue(request =>
         {
             sentRequest = request;
-            return JsonResponse(
+            return CreateJsonResponse(
                 HttpStatusCode.OK,
                 """{"id":1,"capabilities":{"publish_posts":true}}"""
             );
@@ -57,7 +57,7 @@ public class WordPressTest
         {
             sentRequest = request;
             requestBody = await request.Content!.ReadAsStringAsync();
-            return JsonResponse(HttpStatusCode.OK, """{"id":42,"status":"publish"}""");
+            return CreateJsonResponse(HttpStatusCode.OK, """{"id":42,"status":"publish"}""");
         });
 
         var site = CreateSite(handler);
@@ -93,7 +93,7 @@ public class WordPressTest
         handler.Enqueue(request =>
         {
             requestedUrls.Add(request.RequestUri!.AbsoluteUri);
-            return JsonResponse(
+            return CreateJsonResponse(
                 HttpStatusCode.OK,
                 """{"id":3,"capabilities":{"publish_posts":true}}"""
             );
@@ -101,7 +101,7 @@ public class WordPressTest
         handler.Enqueue(request =>
         {
             requestedUrls.Add(request.RequestUri!.AbsoluteUri);
-            return JsonResponse(
+            return CreateJsonResponse(
                 HttpStatusCode.OK,
                 """
                 [
@@ -153,7 +153,7 @@ public class WordPressTest
         {
             sentRequest = request;
             requestBody = await request.Content!.ReadAsStringAsync();
-            return JsonResponse(HttpStatusCode.OK, """{"id":42,"status":"publish"}""");
+            return CreateJsonResponse(HttpStatusCode.OK, """{"id":42,"status":"publish"}""");
         });
 
         var site = CreateSite(handler);
@@ -195,12 +195,12 @@ public class WordPressTest
         handler.Enqueue(request =>
         {
             requestedUrls.Add(request.RequestUri!.AbsoluteUri);
-            return JsonResponse(HttpStatusCode.OK, $"[{string.Join(",", firstPage)}]");
+            return CreateJsonResponse(HttpStatusCode.OK, $"[{string.Join(",", firstPage)}]");
         });
         handler.Enqueue(request =>
         {
             requestedUrls.Add(request.RequestUri!.AbsoluteUri);
-            return JsonResponse(
+            return CreateJsonResponse(
                 HttpStatusCode.OK,
                 """[{"id":101,"name":"Child","parent":1},{"id":102,"name":"Grandchild","parent":101}]"""
             );
@@ -237,7 +237,7 @@ public class WordPressTest
         // Arrange
         using var handler = new TestHttpMessageHandler();
         handler.Enqueue(_ =>
-            JsonResponse(
+            CreateJsonResponse(
                 HttpStatusCode.Unauthorized,
                 """{"code":"rest_not_logged_in","message":"Du bist derzeit nicht angemeldet.","data":{"status":401}}"""
             )
@@ -259,7 +259,7 @@ public class WordPressTest
         // Arrange
         using var handler = new TestHttpMessageHandler();
         handler.Enqueue(_ =>
-            JsonResponse(
+            CreateJsonResponse(
                 HttpStatusCode.OK,
                 """{"id":2,"capabilities":{"read":true,"edit_posts":true}}"""
             )
@@ -281,7 +281,10 @@ public class WordPressTest
         // Arrange
         using var handler = new TestHttpMessageHandler();
         handler.Enqueue(_ =>
-            JsonResponse(HttpStatusCode.OK, """{"id":2,"capabilities":{"publish_posts":true}}""")
+            CreateJsonResponse(
+                HttpStatusCode.OK,
+                """{"id":2,"capabilities":{"publish_posts":true}}"""
+            )
         );
 
         var site = CreateSite(handler);
@@ -321,12 +324,12 @@ public class WordPressTest
         {
             mediaRequest = request;
             mediaBody = await request.Content!.ReadAsByteArrayAsync();
-            return JsonResponse(HttpStatusCode.Created, """{"id":77,"source_url":"x"}""");
+            return CreateJsonResponse(HttpStatusCode.Created, """{"id":77,"source_url":"x"}""");
         });
         handler.Enqueue(async request =>
         {
             postBody = await request.Content!.ReadAsStringAsync();
-            return JsonResponse(HttpStatusCode.Created, """{"id":42}""");
+            return CreateJsonResponse(HttpStatusCode.Created, """{"id":42}""");
         });
 
         var site = CreateSite(handler);
@@ -382,7 +385,7 @@ public class WordPressTest
         {
             requestedUrls.Add(request.RequestUri!.AbsoluteUri);
             postBody = await request.Content!.ReadAsStringAsync();
-            return JsonResponse(HttpStatusCode.Created, """{"id":42}""");
+            return CreateJsonResponse(HttpStatusCode.Created, """{"id":42}""");
         });
 
         var site = CreateSite(handler);
@@ -440,7 +443,7 @@ public class WordPressTest
         );
     }
 
-    private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json)
+    private static HttpResponseMessage CreateJsonResponse(HttpStatusCode statusCode, string json)
     {
         return new HttpResponseMessage(statusCode)
         {

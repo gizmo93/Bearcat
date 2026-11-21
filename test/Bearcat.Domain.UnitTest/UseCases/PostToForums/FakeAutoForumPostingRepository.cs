@@ -127,7 +127,8 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
         return Task.FromResult<IReadOnlyList<ForumPostingFailure>>(
             ForumPostingFailures
                 .Where(failure =>
-                    EntityIdOf(failure, entityType) is { } entityId && entityIds.Contains(entityId)
+                    GetEntityIdOf(failure, entityType) is { } entityId
+                    && entityIds.Contains(entityId)
                 )
                 .ToList()
         );
@@ -289,12 +290,12 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
     )
     {
         return ForumPostingFailures.FirstOrDefault(failure =>
-            EntityIdOf(failure, entityType) == entityId
+            GetEntityIdOf(failure, entityType) == entityId
             && failure.DistributionSiteRegistrationId == distributionSiteRegistrationId
         );
     }
 
-    private static int? EntityIdOf(ForumPostingFailure failure, ForumPostTemplateType entityType)
+    private static int? GetEntityIdOf(ForumPostingFailure failure, ForumPostTemplateType entityType)
     {
         return entityType == ForumPostTemplateType.Release
             ? failure.ReleaseId

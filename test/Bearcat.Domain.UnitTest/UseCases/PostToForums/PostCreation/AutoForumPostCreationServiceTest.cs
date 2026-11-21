@@ -278,7 +278,7 @@ public class AutoForumPostCreationServiceTest
     )
     {
         // Arrange
-        var repository = BlogRepository();
+        var repository = CreateBlogRepository();
         var submitter = new FakeForumPostSubmitter
         {
             ExistingBlogPosts =
@@ -317,7 +317,7 @@ public class AutoForumPostCreationServiceTest
     public async Task CreatePostOnSiteAsync_BlogWithPostOfOtherAuthor_SkipsWithoutTouchingIt()
     {
         // Arrange
-        var repository = BlogRepository();
+        var repository = CreateBlogRepository();
         var submitter = new FakeForumPostSubmitter
         {
             ExistingBlogPosts =
@@ -351,7 +351,7 @@ public class AutoForumPostCreationServiceTest
     public async Task CreatePostOnSiteAsync_BlogWithSeveralPostsOfSameTitle_SkipsWithoutTouchingThem()
     {
         // Arrange
-        var repository = BlogRepository();
+        var repository = CreateBlogRepository();
         var submitter = new FakeForumPostSubmitter
         {
             ExistingBlogPosts =
@@ -752,7 +752,7 @@ public class AutoForumPostCreationServiceTest
         };
     }
 
-    private static FakeAutoForumPostingRepository BlogRepository()
+    private static FakeAutoForumPostingRepository CreateBlogRepository()
     {
         return new FakeAutoForumPostingRepository
         {

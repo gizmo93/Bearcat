@@ -229,7 +229,7 @@ public class AutoForumPostCreationService(
             return AutoPostResult.Skipped(AutoPostSkipReason.AlreadyPosted);
         }
 
-        var postName = PostName(plan, site);
+        var postName = BuildPostName(plan, site);
 
         var existingPosts = await submitter.FindExistingPostsAsync(
             registrationId: site.DistributionSiteRegistrationId,
@@ -320,7 +320,7 @@ public class AutoForumPostCreationService(
             return [];
         }
 
-        var postName = PostName(plan, site);
+        var postName = BuildPostName(plan, site);
 
         var existingThreads = await submitter.FindExistingThreadsAsync(
             registrationId: site.DistributionSiteRegistrationId,
@@ -371,14 +371,14 @@ public class AutoForumPostCreationService(
         return await submitter.SubmitNewThreadAsync(
             registrationId: site.DistributionSiteRegistrationId,
             targetNodeId: rule.TargetNodeId,
-            title: PostName(plan, site),
+            title: BuildPostName(plan, site),
             prefixIds: rule.ThreadPrefixIds,
             body: body,
             cancellationToken: cancellationToken
         );
     }
 
-    private static string PostName(AutoPostPlan plan, AutoPostSiteEntry site)
+    private static string BuildPostName(AutoPostPlan plan, AutoPostSiteEntry site)
     {
         var postName = site.Registration.StripDotsForThreadSearch
             ? ReleaseNameFormatter.ToSpacedName(plan.EntityName)

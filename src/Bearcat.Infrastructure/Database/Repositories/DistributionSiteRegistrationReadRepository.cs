@@ -17,7 +17,7 @@ public class DistributionSiteRegistrationReadRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var distributionSitesByClassName = DistributionSitesByClassName();
+        var distributionSitesByClassName = GetDistributionSitesByClassName();
 
         var registrations = await dbRead
             .DistributionSiteRegistrations.OrderBy(registration => registration.Name)
@@ -89,7 +89,7 @@ public class DistributionSiteRegistrationReadRepository(
             stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
             minimumSecondsBetweenPosts: registration.MinimumSecondsBetweenPosts,
             postingRuleCount: registration.PostingRuleCount,
-            distributionSitesByClassName: DistributionSitesByClassName()
+            distributionSitesByClassName: GetDistributionSitesByClassName()
         );
     }
 
@@ -122,7 +122,7 @@ public class DistributionSiteRegistrationReadRepository(
             .SingleAsync(cancellationToken);
     }
 
-    private IReadOnlyDictionary<string, DistributionSiteDto> DistributionSitesByClassName()
+    private IReadOnlyDictionary<string, DistributionSiteDto> GetDistributionSitesByClassName()
     {
         return distributionSiteFactory
             .GetDistributionSites()
