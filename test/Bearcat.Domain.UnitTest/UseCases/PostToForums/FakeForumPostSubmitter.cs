@@ -29,6 +29,12 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
 
     public List<string> SearchedReleaseNames { get; } = [];
 
+    public List<ExistingBlogPost> ExistingBlogPosts { get; init; } = [];
+
+    public List<string> SearchedBlogPostTitles { get; } = [];
+
+    public List<PublishedExistingPost> PublishedExistingPosts { get; } = [];
+
     public Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
         int registrationId,
         string targetNodeId,
@@ -73,6 +79,31 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
         NewPosts.Add(new SubmittedNewPost(registrationId, targetNodeId, title, body));
 
         return Task.FromResult(new SubmittedPost(NewPostUrl));
+    }
+
+    public Task<IReadOnlyList<ExistingBlogPost>> FindExistingPostsAsync(
+        int registrationId,
+        string title,
+        CancellationToken cancellationToken = default
+    )
+    {
+        SearchedBlogPostTitles.Add(title);
+
+        return Task.FromResult<IReadOnlyList<ExistingBlogPost>>(ExistingBlogPosts);
+    }
+
+    public Task<SubmittedPost> PublishExistingPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        FailWhenRequested(registrationId);
+
+        PublishedExistingPosts.Add(new PublishedExistingPost(registrationId, postedUrl, body));
+
+        return Task.FromResult(new SubmittedPost(postedUrl));
     }
 
     public Task<SubmittedPost> SubmitReplyAsync(

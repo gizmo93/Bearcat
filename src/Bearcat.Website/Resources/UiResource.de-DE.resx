@@ -2278,6 +2278,9 @@
   <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Hosterregeln für {0} gespeichert</value></data>
   <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>Dieser Post erfüllt die Hosterregeln der Seite nicht. Bearcat würde ihn beim automatischen Posten überspringen.</value></data>
   <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Wegen der Hosterregeln dieser Seite übersprungen: {0}</value></data>
+  <data name="AutoPostSkippedExistingPostOfOtherAuthor" xml:space="preserve"><value>Übersprungen: Auf dieser Seite gibt es bereits einen Post eines anderen Autors mit diesem Titel: {0}</value></data>
+  <data name="AutoPostSkippedSeveralExistingPosts" xml:space="preserve"><value>Übersprungen: Auf dieser Seite gibt es bereits mehrere Posts mit diesem Titel: {0}</value></data>
+  <data name="ExistingBlogPostsWarning" xml:space="preserve"><value>Auf dieser Seite gibt es bereits einen Post mit diesem Titel.</value></data>
   <data name="UploadCompletionActions" xml:space="preserve"><value>Aktionen nach dem Upload</value></data>
   <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Lege fest, was Bearcat nach dem Upload tun soll, etwa ein Release für IntelligeN exportieren.</value></data>
   <data name="NewUploadCompletionAction" xml:space="preserve"><value>Neue Aktion</value></data>

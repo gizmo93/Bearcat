@@ -23,6 +23,8 @@ public sealed record AutoPostResult
 
     public IReadOnlyList<ExistingThread> ThreadCandidates { get; private init; } = [];
 
+    public IReadOnlyList<string> ExistingPostUrls { get; private init; } = [];
+
     public static AutoPostResult Posted(string url, bool uploadsMarkedPosted)
     {
         return new AutoPostResult(AutoPostResultStatus.Posted)
@@ -59,6 +61,18 @@ public sealed record AutoPostResult
         {
             SkipReason = AutoPostSkipReason.ServiceRestrictionNotMet,
             Errors = blockedReasons,
+        };
+    }
+
+    public static AutoPostResult SkippedForExistingPosts(
+        AutoPostSkipReason reason,
+        IReadOnlyList<string> existingPostUrls
+    )
+    {
+        return new AutoPostResult(AutoPostResultStatus.Skipped)
+        {
+            SkipReason = reason,
+            ExistingPostUrls = existingPostUrls,
         };
     }
 

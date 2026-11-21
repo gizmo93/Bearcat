@@ -62,6 +62,24 @@ Bearcat replaces dots in the post title with spaces.
 
 Updating a post replaces its entire content.
 
+## Existing posts
+
+Before automatic posting, Bearcat searches the blog for posts with the same title. Trashed posts do not count.
+
+| Posts found | Action |
+| --- | --- |
+| No post | Creates a new post. |
+| One published post from your account | Replaces its content and saves the URL under **Posted locations**. |
+| One post from your account with a different status, for example a draft | Replaces its content, publishes it and saves the URL under **Posted locations**. |
+| One post by another author | Skips the site and leaves the post unchanged. |
+| Several posts | Skips the site and leaves the posts unchanged. |
+
+When Bearcat updates an existing post, any manual edits to its content are lost. Its featured image stays unchanged.
+A skipped site stays pending and is checked again on every automatic run.
+
+With manual posting, the compose step shows **A post with this title already exists on the site.** with links to the posts.
+You can still prepare a draft.
+
 ## Template
 
 Create a [post template](/Bearcat/forum-post-templates/) with the output format **HTML**.

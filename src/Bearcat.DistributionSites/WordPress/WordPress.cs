@@ -201,7 +201,7 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
         return new PreparedDraft(
             DraftEditorUrl: $"{session.BaseUrl.TrimEnd('/')}/wp-admin/post.php?post={post.Id}&action=edit",
             RequiresSameAccountBrowserSession: true,
-            PostUrl: $"{session.BaseUrl.TrimEnd('/')}/?p={post.Id}"
+            PostUrl: BuildPostUrl(session, post.Id)
         );
     }
 
@@ -226,7 +226,7 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
             cancellationToken: cancellationToken
         );
 
-        return new SubmittedPost($"{session.BaseUrl.TrimEnd('/')}/?p={post.Id}");
+        return new SubmittedPost(BuildPostUrl(session, post.Id));
     }
 
     public async Task<SubmittedPost> EditPostAsync(
@@ -236,23 +236,85 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
         CancellationToken cancellationToken
     )
     {
-        var postId = int.Parse(
-            HttpUtility.ParseQueryString(new Uri(postedUrl).Query)["p"]!,
-            CultureInfo.InvariantCulture
-        );
-
         await SendRequestAsync(
             requestName: "post",
             sendRequest: () =>
                 CreateApi(session)
                     .EditPostAsync(
-                        id: postId,
-                        request: new EditPostRequest(body),
+                        id: GetPostId(postedUrl),
+                        request: new EditPostRequest(Content: body, Status: null),
                         cancellationToken: cancellationToken
                     )
         );
 
         return new SubmittedPost(postedUrl);
+    }
+
+    public async Task<IReadOnlyList<ExistingBlogPost>> FindExistingPostsAsync(
+        DistributionSession session,
+        string title,
+        CancellationToken cancellationToken
+    )
+    {
+        var api = CreateApi(session);
+
+        var currentUser = await SendRequestAsync(
+            requestName: "current user request",
+            sendRequest: async () =>
+            {
+                using var response = await api.GetCurrentUserAsync(cancellationToken);
+                await response.EnsureSuccessStatusCodeAsync();
+                return response.Content!;
+            }
+        );
+
+        var posts = await SendRequestAsync(
+            requestName: "post search",
+            sendRequest: () => api.SearchPostsAsync(title, cancellationToken)
+        );
+
+        return posts
+            .Where(post => string.Equals(post.Title.Raw, title, StringComparison.Ordinal))
+            .Select(post => new ExistingBlogPost(
+                Url: BuildPostUrl(session, post.Id),
+                IsPublished: post.Status == PublishStatus,
+                IsOwnedByAccount: post.Author == currentUser.Id
+            ))
+            .ToList();
+    }
+
+    public async Task<SubmittedPost> PublishExistingPostAsync(
+        DistributionSession session,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken
+    )
+    {
+        await SendRequestAsync(
+            requestName: "post",
+            sendRequest: () =>
+                CreateApi(session)
+                    .EditPostAsync(
+                        id: GetPostId(postedUrl),
+                        request: new EditPostRequest(Content: body, Status: PublishStatus),
+                        cancellationToken: cancellationToken
+                    )
+        );
+
+        return new SubmittedPost(postedUrl);
+    }
+
+    private static int GetPostId(string postedUrl)
+    {
+        return int.Parse(
+            HttpUtility.ParseQueryString(new Uri(postedUrl).Query)["p"]!,
+            CultureInfo.InvariantCulture
+        );
+    }
+
+    private static string BuildPostUrl(DistributionSession session, int postId)
+    {
+        return $"{session.BaseUrl.TrimEnd('/')}/?p={postId}";
     }
 
     private async Task<PostResponse> CreatePostAsync(

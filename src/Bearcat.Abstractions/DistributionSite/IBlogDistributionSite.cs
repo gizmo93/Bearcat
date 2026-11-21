@@ -23,4 +23,17 @@ public interface IBlogDistributionSite : IDistributionSite
         string? coverImageUrl,
         CancellationToken cancellationToken
     );
+
+    Task<IReadOnlyList<ExistingBlogPost>> FindExistingPostsAsync(
+        DistributionSession session,
+        string title,
+        CancellationToken cancellationToken
+    );
+
+    Task<SubmittedPost> PublishExistingPostAsync(
+        DistributionSession session,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken
+    );
 }

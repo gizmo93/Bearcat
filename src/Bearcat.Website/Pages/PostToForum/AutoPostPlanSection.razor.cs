@@ -310,6 +310,14 @@ public partial class AutoPostPlanSection(
                 "AutoPostSkippedServiceRestrictionNotMet",
                 string.Join(" ", result.Errors)
             ],
+            AutoPostSkipReason.ExistingPostOfOtherAuthor => L[
+                "AutoPostSkippedExistingPostOfOtherAuthor",
+                string.Join(" ", result.ExistingPostUrls)
+            ],
+            AutoPostSkipReason.SeveralExistingPosts => L[
+                "AutoPostSkippedSeveralExistingPosts",
+                string.Join(" ", result.ExistingPostUrls)
+            ],
             _ => L["AutoPostSkippedSiteUnavailable"],
         };
     }

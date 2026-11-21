@@ -16,6 +16,14 @@ public interface IWordPressApi
         CancellationToken cancellationToken
     );
 
+    [Get(
+        "/index.php?rest_route=/wp/v2/posts&search={search}&status=any&context=edit&per_page=100&_fields=id,status,author,title"
+    )]
+    Task<IReadOnlyList<PostSearchResponse>> SearchPostsAsync(
+        string search,
+        CancellationToken cancellationToken
+    );
+
     [Post("/index.php?rest_route=/wp/v2/media")]
     Task<MediaResponse> UploadMediaAsync(
         [Body] HttpContent content,

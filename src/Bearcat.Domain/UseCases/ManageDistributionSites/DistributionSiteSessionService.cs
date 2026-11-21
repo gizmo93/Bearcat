@@ -225,6 +225,35 @@ public class DistributionSiteSessionService(
         );
     }
 
+    public async Task<IReadOnlyList<ExistingBlogPost>> FindExistingPostsAsync(
+        int registrationId,
+        string title,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, _, session) = await GetBlogSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.FindExistingPostsAsync(session, title, cancellationToken);
+    }
+
+    public async Task<SubmittedPost> PublishExistingPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (blog, _, session) = await GetBlogSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await blog.PublishExistingPostAsync(session, postedUrl, body, cancellationToken);
+    }
+
     public async Task<SubmittedPost> EditPostAsync(
         int registrationId,
         string postedUrl,

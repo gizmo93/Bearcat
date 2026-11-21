@@ -37,6 +37,7 @@
                                     SelectedTemplateIdChanged="HandleTemplateChangedAsync"
                                     RenderErrors="renderErrors"
                                     BlockedReasons="blockedReasons"
+                                    ExistingPostUrls="existingBlogPosts.Select(post => post.Url).ToList()"
                                     IsNewThread="IsNewThread"
                                     @bind-PostName="postName"
                                     HasPrefixes="prefixes.Count > 0"

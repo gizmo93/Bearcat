@@ -2278,6 +2278,9 @@
   <data name="ForumServiceRestrictionsSaved" xml:space="preserve"><value>Hoster rules saved for {0}</value></data>
   <data name="ForumServiceRestrictionsNotMet" xml:space="preserve"><value>This post does not meet the site's hoster rules. Bearcat would skip it during automatic posting.</value></data>
   <data name="AutoPostSkippedServiceRestrictionNotMet" xml:space="preserve"><value>Skipped because of this site's hoster rules: {0}</value></data>
+  <data name="AutoPostSkippedExistingPostOfOtherAuthor" xml:space="preserve"><value>Skipped: another author already has a post with this title on the site: {0}</value></data>
+  <data name="AutoPostSkippedSeveralExistingPosts" xml:space="preserve"><value>Skipped: several posts with this title already exist on the site: {0}</value></data>
+  <data name="ExistingBlogPostsWarning" xml:space="preserve"><value>A post with this title already exists on the site.</value></data>
   <data name="UploadCompletionActions" xml:space="preserve"><value>Actions after upload</value></data>
   <data name="UploadCompletionActionsIntro" xml:space="preserve"><value>Choose what Bearcat does after upload, such as exporting a release for IntelligeN.</value></data>
   <data name="NewUploadCompletionAction" xml:space="preserve"><value>New action</value></data>

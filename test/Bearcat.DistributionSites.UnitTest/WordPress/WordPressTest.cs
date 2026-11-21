@@ -80,6 +80,102 @@ public class WordPressTest
         sentRequest.Headers.Authorization!.ToString().ShouldBe("Basic dXBsb2FkZXI6c2VjcmV0");
         using var json = JsonDocument.Parse(requestBody!);
         json.RootElement.GetProperty("content").GetString().ShouldBe("<p>Updated</p>");
+        json.RootElement.TryGetProperty("status", out _).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task FindExistingPostsAsync_FuzzySearchResult_ReturnsExactRawTitleMatchesWithOwnershipAndStatus()
+    {
+        // Arrange
+        const string title = "Bearcat Dup & \"Probe\" \u2013 B";
+        var requestedUrls = new List<string>();
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(request =>
+        {
+            requestedUrls.Add(request.RequestUri!.AbsoluteUri);
+            return JsonResponse(
+                HttpStatusCode.OK,
+                """{"id":3,"capabilities":{"publish_posts":true}}"""
+            );
+        });
+        handler.Enqueue(request =>
+        {
+            requestedUrls.Add(request.RequestUri!.AbsoluteUri);
+            return JsonResponse(
+                HttpStatusCode.OK,
+                """
+                [
+                  {"id":11,"status":"publish","author":3,"title":{"raw":"Bearcat Dup & \"Probe\" \u2013 B","rendered":"Bearcat Dup &#038; &#171;Probe&#187; &#8211; B"}},
+                  {"id":12,"status":"draft","author":9,"title":{"raw":"Bearcat Dup & \"Probe\" \u2013 B","rendered":"Bearcat Dup &#038; &#171;Probe&#187; &#8211; B"}},
+                  {"id":13,"status":"publish","author":3,"title":{"raw":"Bearcat Dup & \"Probe\" \u2013 B.Extended","rendered":"Bearcat Dup &#038; &#171;Probe&#187; &#8211; B.Extended"}},
+                  {"id":14,"status":"publish","author":3,"title":{"raw":"bearcat dup & \"probe\" \u2013 b","rendered":"bearcat dup &#038; &#171;probe&#187; &#8211; b"}}
+                ]
+                """
+            );
+        });
+
+        var site = CreateSite(handler);
+
+        // Act
+        var posts = await site.FindExistingPostsAsync(
+            CreateSession(),
+            title,
+            CancellationToken.None
+        );
+
+        // Assert
+        requestedUrls.ShouldBe([
+            "https://example.org/blog/index.php?rest_route=/wp/v2/users/me&context=edit",
+            "https://example.org/blog/index.php?rest_route=/wp/v2/posts&search=Bearcat%20Dup%20%26%20%22Probe%22%20%E2%80%93%20B&status=any&context=edit&per_page=100&_fields=id,status,author,title",
+        ]);
+        posts.ShouldBe([
+            new ExistingBlogPost(
+                Url: "https://example.org/blog/?p=11",
+                IsPublished: true,
+                IsOwnedByAccount: true
+            ),
+            new ExistingBlogPost(
+                Url: "https://example.org/blog/?p=12",
+                IsPublished: false,
+                IsOwnedByAccount: false
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task PublishExistingPostAsync_PostedUrlWithPostId_PostsContentAndPublishStatusToThatPost()
+    {
+        // Arrange
+        HttpRequestMessage? sentRequest = null;
+        string? requestBody = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(async request =>
+        {
+            sentRequest = request;
+            requestBody = await request.Content!.ReadAsStringAsync();
+            return JsonResponse(HttpStatusCode.OK, """{"id":42,"status":"publish"}""");
+        });
+
+        var site = CreateSite(handler);
+
+        // Act
+        var post = await site.PublishExistingPostAsync(
+            CreateSession(),
+            "https://example.org/blog/?p=42",
+            "<p>Adopted</p>",
+            CancellationToken.None
+        );
+
+        // Assert
+        post.Url.ShouldBe("https://example.org/blog/?p=42");
+        sentRequest.ShouldNotBeNull();
+        sentRequest.Method.ShouldBe(HttpMethod.Post);
+        sentRequest.RequestUri!.AbsoluteUri.ShouldBe(
+            "https://example.org/blog/index.php?rest_route=/wp/v2/posts/42"
+        );
+        using var json = JsonDocument.Parse(requestBody!);
+        json.RootElement.GetProperty("content").GetString().ShouldBe("<p>Adopted</p>");
+        json.RootElement.GetProperty("status").GetString().ShouldBe("publish");
     }
 
     [Test]

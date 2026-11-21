@@ -62,6 +62,24 @@ ersetzt Bearcat Punkte im Posttitel durch Leerzeichen.
 
 Beim Aktualisieren ersetzt Bearcat den gesamten Inhalt des Posts.
 
+## Bestehende Posts
+
+Vor dem automatischen Posten sucht Bearcat im Blog nach Posts mit demselben Titel. Posts im Papierkorb zählen nicht.
+
+| Gefundene Posts | Verhalten |
+| --- | --- |
+| Kein Post | Erstellt einen neuen Post. |
+| Ein veröffentlichter Post deines Kontos | Ersetzt den Inhalt und speichert die URL unter **Veröffentlichungsorte**. |
+| Ein Post deines Kontos mit anderem Status, zum Beispiel ein Entwurf | Ersetzt den Inhalt, veröffentlicht ihn und speichert die URL unter **Veröffentlichungsorte**. |
+| Ein Post eines anderen Autors | Überspringt die Seite und lässt den Post unverändert. |
+| Mehrere Posts | Überspringt die Seite und lässt die Posts unverändert. |
+
+Wenn Bearcat einen bestehenden Post aktualisiert, gehen deine manuellen Änderungen am Inhalt verloren. Sein Beitragsbild bleibt unverändert.
+Bearcat prüft übersprungene Seiten bei jedem automatischen Lauf erneut.
+
+Beim manuellen Posten erscheint beim Verfassen die Warnung **Auf dieser Seite gibt es bereits einen Post mit diesem Titel.** mit Links zu den Posts.
+Du kannst trotzdem einen Entwurf vorbereiten.
+
 ## Vorlage
 
 Erstelle eine [Postvorlage](/Bearcat/de/forum-post-templates/) mit dem Ausgabeformat **HTML**.

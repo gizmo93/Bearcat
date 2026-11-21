@@ -254,8 +254,12 @@ public class AutoForumPostCreationServiceTest
         result.Status.ShouldBe(AutoPostResultStatus.Posted);
         result.PostedUrl.ShouldBe(submitter.NewPostUrl);
         submitter.SearchedReleaseNames.ShouldBeEmpty();
+        submitter
+            .SearchedBlogPostTitles.ShouldHaveSingleItem()
+            .ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
         submitter.NewThreads.ShouldBeEmpty();
         submitter.Replies.ShouldBeEmpty();
+        submitter.PublishedExistingPosts.ShouldBeEmpty();
 
         var newPost = submitter.NewPosts.ShouldHaveSingleItem();
         newPost.RegistrationId.ShouldBe(5);
@@ -265,6 +269,121 @@ public class AutoForumPostCreationServiceTest
         repository
             .RecordedPostedLocations.ShouldHaveSingleItem()
             .Url.ShouldBe(submitter.NewPostUrl);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task CreatePostOnSiteAsync_BlogWithOneOwnPostOfSameTitle_PublishesItWithNewContentAndRecordsItsUrl(
+        bool isPublished
+    )
+    {
+        // Arrange
+        var repository = BlogRepository();
+        var submitter = new FakeForumPostSubmitter
+        {
+            ExistingBlogPosts =
+            [
+                new ExistingBlogPost(
+                    Url: "https://blog.test/?p=17",
+                    IsPublished: isPublished,
+                    IsOwnedByAccount: true
+                ),
+            ],
+        };
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostResultStatus.Posted);
+        result.PostedUrl.ShouldBe("https://blog.test/?p=17");
+        submitter.NewPosts.ShouldBeEmpty();
+
+        var publishedPost = submitter.PublishedExistingPosts.ShouldHaveSingleItem();
+        publishedPost.RegistrationId.ShouldBe(5);
+        publishedPost.PostedUrl.ShouldBe("https://blog.test/?p=17");
+        publishedPost.Body.ShouldBe("Rendered body");
+        repository
+            .RecordedPostedLocations.ShouldHaveSingleItem()
+            .Url.ShouldBe("https://blog.test/?p=17");
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_BlogWithPostOfOtherAuthor_SkipsWithoutTouchingIt()
+    {
+        // Arrange
+        var repository = BlogRepository();
+        var submitter = new FakeForumPostSubmitter
+        {
+            ExistingBlogPosts =
+            [
+                new ExistingBlogPost(
+                    Url: "https://blog.test/?p=17",
+                    IsPublished: true,
+                    IsOwnedByAccount: false
+                ),
+            ],
+        };
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
+        result.SkipReason.ShouldBe(AutoPostSkipReason.ExistingPostOfOtherAuthor);
+        result.ExistingPostUrls.ShouldBe(["https://blog.test/?p=17"]);
+        submitter.NewPosts.ShouldBeEmpty();
+        submitter.PublishedExistingPosts.ShouldBeEmpty();
+        repository.RecordedPostedLocations.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CreatePostOnSiteAsync_BlogWithSeveralPostsOfSameTitle_SkipsWithoutTouchingThem()
+    {
+        // Arrange
+        var repository = BlogRepository();
+        var submitter = new FakeForumPostSubmitter
+        {
+            ExistingBlogPosts =
+            [
+                new ExistingBlogPost(
+                    Url: "https://blog.test/?p=17",
+                    IsPublished: false,
+                    IsOwnedByAccount: true
+                ),
+                new ExistingBlogPost(
+                    Url: "https://blog.test/?p=18",
+                    IsPublished: true,
+                    IsOwnedByAccount: true
+                ),
+            ],
+        };
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        var result = await service.CreatePostOnSiteAsync(
+            entityType: ForumPostTemplateType.Release,
+            entityId: 1,
+            distributionSiteRegistrationId: 5
+        );
+
+        // Assert
+        result.Status.ShouldBe(AutoPostResultStatus.Skipped);
+        result.SkipReason.ShouldBe(AutoPostSkipReason.SeveralExistingPosts);
+        result.ExistingPostUrls.ShouldBe(["https://blog.test/?p=17", "https://blog.test/?p=18"]);
+        submitter.NewPosts.ShouldBeEmpty();
+        submitter.PublishedExistingPosts.ShouldBeEmpty();
+        repository.RecordedPostedLocations.ShouldBeEmpty();
     }
 
     [Test]
@@ -628,6 +747,25 @@ public class AutoForumPostCreationServiceTest
                 AutoPostTestFactory.Registration(id: 5, name: "Board", rule) with
                 {
                     StripDotsForThreadSearch = stripDotsForThreadSearch,
+                },
+            ],
+        };
+    }
+
+    private static FakeAutoForumPostingRepository BlogRepository()
+    {
+        return new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations =
+            [
+                AutoPostTestFactory.Registration(
+                    id: 5,
+                    name: "Blog",
+                    AutoPostTestFactory.Rule()
+                ) with
+                {
+                    Kind = DistributionSiteKind.Blog,
                 },
             ],
         };

@@ -57,6 +57,8 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     private IReadOnlyList<ExistingThread> existingThreads = [];
     private string threadSelection = NewThreadValue;
 
+    private IReadOnlyList<ExistingBlogPost> existingBlogPosts = [];
+
     private IReadOnlyList<ForumPostTemplateSummaryReadModel> templates = [];
     private int selectedTemplateId;
     private string noTemplatesMessage = string.Empty;
@@ -275,6 +277,13 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
             ];
 
             selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
+
+            existingBlogPosts = IsBlog
+                ? await operationRunner.RunAsync(
+                    (DistributionSiteSessionService service) =>
+                        service.FindExistingPostsAsync(selectedRegistrationId, postName)
+                )
+                : [];
 
             if (!IsBlog && IsNewThread)
             {
