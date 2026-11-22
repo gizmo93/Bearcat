@@ -118,6 +118,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool FilesOffline { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ImagesOffline",
+        "NotificationKind.ImagesOffline.Description"
+    )]
+    public bool ImagesOffline { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.UploadMarkedOffline",
         "NotificationKind.UploadMarkedOffline.Description"
     )]

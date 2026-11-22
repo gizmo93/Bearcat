@@ -1,6 +1,8 @@
+using System.Linq.Expressions;
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageImageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -22,6 +24,7 @@ public class ImageUploadOnlineCheckServiceTest
     private Mock<IImageUploadRepository> repositoryMock = null!;
     private Mock<IImageHoster> imageHosterMock = null!;
     private Mock<ISupportsImageOnlineCheck> imageOnlineCheckMock = null!;
+    private Mock<INotificationService> notificationServiceMock = null!;
     private ImageHosterRegistration registration = null!;
 
     [SetUp]
@@ -46,6 +49,7 @@ public class ImageUploadOnlineCheckServiceTest
             .Setup(x => x.DeserializeConfig(It.IsAny<string>()))
             .Returns(Mock.Of<IImageHosterConfig>());
         imageOnlineCheckMock = imageHosterMock.As<ISupportsImageOnlineCheck>();
+        notificationServiceMock = new Mock<INotificationService>();
     }
 
     [Test]
@@ -68,10 +72,12 @@ public class ImageUploadOnlineCheckServiceTest
     }
 
     [Test]
-    public async Task CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync_ImageDoesNotExist_SetsOfflineAndOfflineSince()
+    public async Task CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync_CoverImageDoesNotExist_ResetsUploadToPendingWithoutNotification()
     {
         // Arrange
         var imageUpload = CreateImageUpload(id: 1);
+        imageUpload.ErrorMessages = ["Old error"];
+        imageUpload.SetOnlineStateAndCheckedAt(OnlineState.Online, LocalNow.AddDays(-1));
         SetUpImageUploads(imageUpload);
         SetUpImageExists("https://images.test/1.jpg", imageExists: false);
 
@@ -80,9 +86,84 @@ public class ImageUploadOnlineCheckServiceTest
             .CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync(CancellationToken.None);
 
         // Assert
-        imageUpload.OnlineState.ShouldBe(OnlineState.Offline);
-        imageUpload.OnlineCheckedAt.ShouldBe(LocalNow);
-        imageUpload.OfflineSince.ShouldBe(LocalNow);
+        imageUpload.UploadState.ShouldBe(UploadState.Pending);
+        imageUpload.ImageUrls.ShouldBeEmpty();
+        imageUpload.ErrorMessages.ShouldBeEmpty();
+        imageUpload.OnlineState.ShouldBe(OnlineState.Unknown);
+        imageUpload.OnlineCheckedAt.ShouldBeNull();
+        imageUpload.OfflineSince.ShouldBeNull();
+        notificationServiceMock.VerifyNoOtherCalls();
+        repositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync_SeveralScreenshotsOfOneReleaseWentOffline_KeepsThemCompletedOfflineAndCreatesOneNotification()
+    {
+        // Arrange
+        var release = new Release { Id = 3, Name = "Bodies.2023.S01E01-GRP" };
+        var firstScreenshotUpload = CreateImageUpload(
+            id: 1,
+            release: release,
+            releaseScreenshotId: 11
+        );
+        var secondScreenshotUpload = CreateImageUpload(
+            id: 2,
+            release: release,
+            releaseScreenshotId: 12
+        );
+        secondScreenshotUpload.SetOnlineStateAndCheckedAt(OnlineState.Online, LocalNow.AddDays(-1));
+        SetUpImageUploads(firstScreenshotUpload, secondScreenshotUpload);
+        SetUpImageExists("https://images.test/1.jpg", imageExists: false);
+        SetUpImageExists("https://images.test/2.jpg", imageExists: false);
+
+        // Act
+        await CreateService(imageHosterMock.Object)
+            .CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync(CancellationToken.None);
+
+        // Assert
+        foreach (var screenshotUpload in new[] { firstScreenshotUpload, secondScreenshotUpload })
+        {
+            screenshotUpload.UploadState.ShouldBe(UploadState.Completed);
+            screenshotUpload.OnlineState.ShouldBe(OnlineState.Offline);
+            screenshotUpload.OnlineCheckedAt.ShouldBe(LocalNow);
+            screenshotUpload.OfflineSince.ShouldBe(LocalNow);
+            screenshotUpload.ImageUrls.ShouldHaveSingleItem();
+        }
+
+        notificationServiceMock.Verify(
+            x =>
+                x.Create(
+                    NotificationKind.ImagesOffline,
+                    "2 screenshot images are offline on image hoster 'Fake'. Regenerate the screenshots to upload them again.",
+                    release,
+                    It.IsAny<Expression<Func<Notification, Release?>>>()
+                ),
+            Times.Once
+        );
+        notificationServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync_ScreenshotAlreadyOffline_CreatesNoNotification()
+    {
+        // Arrange
+        var offlineSince = LocalNow.AddDays(-1);
+        var release = new Release { Id = 3, Name = "Bodies.2023.S01E01-GRP" };
+        var screenshotUpload = CreateImageUpload(id: 1, release: release, releaseScreenshotId: 11);
+        screenshotUpload.SetOnlineStateAndCheckedAt(OnlineState.Offline, offlineSince);
+        SetUpImageUploads(screenshotUpload);
+        SetUpImageExists("https://images.test/1.jpg", imageExists: false);
+
+        // Act
+        await CreateService(imageHosterMock.Object)
+            .CheckOnlineStateOfLeastRecentlyCheckedImageUploadsAsync(CancellationToken.None);
+
+        // Assert
+        screenshotUpload.UploadState.ShouldBe(UploadState.Completed);
+        screenshotUpload.OnlineState.ShouldBe(OnlineState.Offline);
+        screenshotUpload.OnlineCheckedAt.ShouldBe(LocalNow);
+        screenshotUpload.OfflineSince.ShouldBe(offlineSince);
+        notificationServiceMock.VerifyNoOtherCalls();
     }
 
     [Test]
@@ -174,6 +255,7 @@ public class ImageUploadOnlineCheckServiceTest
             repository: repositoryMock.Object,
             imageHosterFactory: imageHosterFactoryMock.Object,
             timeProvider: timeProviderMock.Object,
+            notificationService: notificationServiceMock.Object,
             logger: NullLogger<ImageUploadOnlineCheckService>.Instance
         );
     }
@@ -205,14 +287,21 @@ public class ImageUploadOnlineCheckServiceTest
             .ReturnsAsync(imageExists);
     }
 
-    private ImageUpload CreateImageUpload(int id)
+    private ImageUpload CreateImageUpload(
+        int id,
+        Release? release = null,
+        int? releaseScreenshotId = null
+    )
     {
         return new ImageUpload
         {
             Id = id,
+            ReleaseScreenshotId = releaseScreenshotId,
             ImageUploadConfig = new ImageUploadConfig
             {
                 Name = "Cover",
+                ReleaseId = release?.Id,
+                Release = release,
                 ImageHosterRegistrationId = RegistrationId,
                 ImageHosterRegistration = registration,
             },

@@ -821,6 +821,84 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
     }
 
     [Test]
+    public async Task GetReleaseImageLinksByReleaseIdAsync_OfflineCoverScreenshotAndGridUploads_ReturnsOnlyOnlineAndUnknownUploads()
+    {
+        // Arrange
+        var release = testData.AddRelease("Bearcat.OfflineImageLinks.2026-GRP");
+        var onlineScreenshot = testData.AddReleaseScreenshot(
+            release,
+            ReleaseScreenshotKind.Screenshot,
+            1,
+            TimeSpan.FromMinutes(10)
+        );
+        var offlineScreenshot = testData.AddReleaseScreenshot(
+            release,
+            ReleaseScreenshotKind.Screenshot,
+            2,
+            TimeSpan.FromMinutes(20)
+        );
+        var unknownScreenshot = testData.AddReleaseScreenshot(
+            release,
+            ReleaseScreenshotKind.Screenshot,
+            3,
+            TimeSpan.FromMinutes(30)
+        );
+        var offlineScreenshotGrid = testData.AddReleaseScreenshot(
+            release,
+            ReleaseScreenshotKind.ScreenshotGrid,
+            1,
+            null
+        );
+
+        var config = testData.AddImageUploadConfig("PiXhost", release);
+        AddImageUploadWithOnlineState(config, "https://img.example/cover", OnlineState.Offline);
+        AddImageUploadWithOnlineState(
+            config: config,
+            url: "https://img.example/screenshot-1",
+            onlineState: OnlineState.Online,
+            releaseScreenshot: onlineScreenshot
+        );
+        AddImageUploadWithOnlineState(
+            config: config,
+            url: "https://img.example/screenshot-2",
+            onlineState: OnlineState.Offline,
+            releaseScreenshot: offlineScreenshot
+        );
+        AddImageUploadWithOnlineState(
+            config: config,
+            url: "https://img.example/screenshot-3",
+            onlineState: OnlineState.Unknown,
+            releaseScreenshot: unknownScreenshot
+        );
+        AddImageUploadWithOnlineState(
+            config: config,
+            url: "https://img.example/grid",
+            onlineState: OnlineState.Offline,
+            releaseScreenshot: offlineScreenshotGrid
+        );
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var imageLinksByReleaseId = await repository.GetReleaseImageLinksByReleaseIdAsync(
+            [release.Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        var imageLink = imageLinksByReleaseId[release.Id].ShouldHaveSingleItem();
+        imageLink.Urls.ShouldBeEmpty();
+        imageLink.ScreenshotGridUrls.ShouldBeEmpty();
+        imageLink
+            .Screenshots.SelectMany(screenshot =>
+                screenshot.Urls.Select(url => (screenshot.Index, url.Url))
+            )
+            .ShouldBe([
+                (1, "https://img.example/screenshot-1"),
+                (3, "https://img.example/screenshot-3"),
+            ]);
+    }
+
+    [Test]
     public async Task GetReleaseImageLinksByReleaseIdAsync_UrlsStoredInDifferentSizeOrder_ReturnsUrlsOrderedByImageSize()
     {
         // Arrange
@@ -1116,6 +1194,23 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
         sampleFile.AudioStreams.ShouldBeEmpty();
         sampleFile.SubtitleStreams.ShouldBeEmpty();
         sampleFile.MediaInfoText.ShouldBe("No media info");
+    }
+
+    private void AddImageUploadWithOnlineState(
+        ImageUploadConfig config,
+        string url,
+        OnlineState onlineState,
+        ReleaseScreenshot? releaseScreenshot = null
+    )
+    {
+        var imageUpload = testData.AddImageUpload(
+            imageUploadConfig: config,
+            createdAt: MidnightUtc,
+            uploadedAt: MidnightUtc,
+            imageUrls: [ReleaseReadRepositoryTestData.CreateImageUrl(ImageSize.Full, url)],
+            releaseScreenshot: releaseScreenshot
+        );
+        imageUpload.OnlineState = onlineState;
     }
 
     private static ReleaseScreenshot AddScreenshot(

@@ -141,6 +141,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.FilesOffline.Description"
         ),
         new(
+            Kind: NotificationKind.ImagesOffline,
+            Severity: NotificationSeverity.Warning,
+            Group: NotificationGroup.Availability,
+            DisplayName: "NotificationKind.ImagesOffline",
+            Description: "NotificationKind.ImagesOffline.Description"
+        ),
+        new(
             Kind: NotificationKind.UploadMarkedOffline,
             Severity: NotificationSeverity.Warning,
             Group: NotificationGroup.Availability,

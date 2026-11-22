@@ -145,6 +145,7 @@ public class NotificationService(
                 configuration.UploadCancellationRequested,
             NotificationKind.UploadCanceled => configuration.UploadCanceled,
             NotificationKind.FilesOffline => configuration.FilesOffline,
+            NotificationKind.ImagesOffline => configuration.ImagesOffline,
             NotificationKind.UploadMarkedOffline => configuration.UploadMarkedOffline,
             NotificationKind.HosterStatusCheckFailed => configuration.HosterStatusCheckFailed,
             NotificationKind.AutomaticReuploadCreated => configuration.AutomaticReuploadCreated,

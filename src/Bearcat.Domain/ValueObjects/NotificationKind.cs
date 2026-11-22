@@ -44,4 +44,5 @@ public enum NotificationKind
     ReleaseCreationSkippedBecauseNameExists = 40,
     LocalArchiveSizeLimitExceeded = 41,
     UploadCompletionActionFailed = 42,
+    ImagesOffline = 43,
 }

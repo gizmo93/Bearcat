@@ -36,4 +36,14 @@ public class ImageUpload
         OnlineCheckedAt = checkedAt;
         OfflineSince = onlineState == OnlineState.Offline ? OfflineSince ?? checkedAt : null;
     }
+
+    public void ResetToPendingForReupload()
+    {
+        UploadState = UploadState.Pending;
+        ImageUrls.Clear();
+        ErrorMessages = [];
+        OnlineState = OnlineState.Unknown;
+        OnlineCheckedAt = null;
+        OfflineSince = null;
+    }
 }

@@ -168,9 +168,12 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
             .Include(upload => upload.ImageUrls)
             .Include(upload => upload.ImageUploadConfig)
                 .ThenInclude(config => config.ImageHosterRegistration)
+            .Include(upload => upload.ImageUploadConfig)
+                .ThenInclude(config => config.Release)
             .Where(upload =>
                 upload.UploadState == UploadState.Completed
                 && upload.ImageUploadConfig.ImageHosterRegistrationId == imageHosterRegistrationId
+                && (upload.UploadedAt == null || upload.UploadedAt < checkedBefore)
                 && (upload.OnlineCheckedAt == null || upload.OnlineCheckedAt < checkedBefore)
             )
             .OrderBy(upload => upload.OnlineCheckedAt != null)

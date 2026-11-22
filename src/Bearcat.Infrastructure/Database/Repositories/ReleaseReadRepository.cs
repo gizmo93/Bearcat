@@ -1151,6 +1151,7 @@ public class ReleaseReadRepository(
             .ImageUploadUrls.Where(url =>
                 url.ImageUpload.ReleaseScreenshotId != null
                 && url.ImageUpload.UploadState == UploadState.Completed
+                && url.ImageUpload.OnlineState != OnlineState.Offline
                 && EF.Parameter(releaseIds).Contains(url.ImageUpload.ReleaseScreenshot!.ReleaseId)
                 && url.ImageUploadId
                     == dbRead
@@ -1250,17 +1251,18 @@ public class ReleaseReadRepository(
                 Urls = config
                     .ImageUploads.Where(upload =>
                         upload.Id
-                        == dbRead
-                            .ImageUploads.Where(latestUpload =>
-                                latestUpload.ImageUploadConfigId == upload.ImageUploadConfigId
-                                && latestUpload.ReleaseScreenshotId == null
-                            )
-                            .OrderByDescending(latestUpload =>
-                                latestUpload.UploadedAt ?? latestUpload.CreatedAt
-                            )
-                            .ThenByDescending(latestUpload => latestUpload.Id)
-                            .Select(latestUpload => latestUpload.Id)
-                            .FirstOrDefault()
+                            == dbRead
+                                .ImageUploads.Where(latestUpload =>
+                                    latestUpload.ImageUploadConfigId == upload.ImageUploadConfigId
+                                    && latestUpload.ReleaseScreenshotId == null
+                                )
+                                .OrderByDescending(latestUpload =>
+                                    latestUpload.UploadedAt ?? latestUpload.CreatedAt
+                                )
+                                .ThenByDescending(latestUpload => latestUpload.Id)
+                                .Select(latestUpload => latestUpload.Id)
+                                .FirstOrDefault()
+                        && upload.OnlineState != OnlineState.Offline
                     )
                     .SelectMany(upload =>
                         upload.ImageUrls.Select(url => new

@@ -335,6 +335,12 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
         await AddImageUploadAsync(config, onlineCheckedAt: null, uploadState: UploadState.Failed);
         await AddImageUploadAsync(config, onlineCheckedAt: null, uploadState: UploadState.Pending);
 
+        await AddImageUploadAsync(
+            config,
+            onlineCheckedAt: null,
+            uploadedAt: checkedBefore.AddMinutes(1)
+        );
+
         // Act
         var result = await repository.GetLeastRecentlyCheckedImageUploadsAsync(
             imageHosterRegistrationId: config.ImageHosterRegistrationId,
@@ -387,10 +393,43 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
             ]);
     }
 
+    [Test]
+    public async Task ResetToPendingForReupload_CheckedCoverUploadSaved_DeletesUrlsAndReturnsUploadAsPending()
+    {
+        // Arrange
+        var config = await AddReleaseImageUploadConfigAsync(coverUrl: "https://cover.test/1.jpg");
+        var coverUpload = await AddImageUploadAsync(config, onlineCheckedAt: null);
+        var checkedUpload = (
+            await repository.GetLeastRecentlyCheckedImageUploadsAsync(
+                imageHosterRegistrationId: config.ImageHosterRegistrationId,
+                checkedBefore: CreatedAt,
+                maximumImageUploadCount: 10,
+                cancellationToken: CancellationToken.None
+            )
+        ).ShouldHaveSingleItem();
+
+        // Act
+        checkedUpload.ResetToPendingForReupload();
+        await repository.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (
+            await DbContext.ImageUploadUrls.CountAsync(url => url.ImageUploadId == coverUpload.Id)
+        ).ShouldBe(0);
+        var pendingUpload = (
+            await repository.GetPendingImageUploadsAsync(CancellationToken.None)
+        ).ShouldHaveSingleItem();
+        pendingUpload.Id.ShouldBe(coverUpload.Id);
+        pendingUpload.ImageUrls.ShouldBeEmpty();
+        pendingUpload.OnlineState.ShouldBe(OnlineState.Unknown);
+    }
+
     private async Task<ImageUpload> AddImageUploadAsync(
         ImageUploadConfig config,
         DateTime? onlineCheckedAt,
-        UploadState uploadState = UploadState.Completed
+        UploadState uploadState = UploadState.Completed,
+        DateTime? uploadedAt = null
     )
     {
         var upload = new ImageUpload
@@ -398,6 +437,7 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
             ImageUploadConfigId = config.Id,
             CreatedAt = CreatedAt.AddDays(-10),
             UploadState = uploadState,
+            UploadedAt = uploadedAt,
             OnlineCheckedAt = onlineCheckedAt,
             ErrorMessages = [],
             ImageUrls =
