@@ -163,6 +163,109 @@ function initScrollAwareHeader() {
 
 initScrollAwareHeader();
 
+function initScrollPositionRestoration() {
+    const storageKey = "bearcat.scrollPositions";
+    const maxStoredPositions = 200;
+    const persistDelayMs = 150;
+    const restoreTimeoutMs = 3000;
+    const userInputEvents = ["wheel", "touchstart", "keydown", "mousedown"];
+    const positions = loadPositions();
+    let persistTimer = 0;
+    let activeRestore = null;
+
+    function loadPositions() {
+        try {
+            return new Map(JSON.parse(sessionStorage.getItem(storageKey) ?? "[]"));
+        } catch {
+            return new Map();
+        }
+    }
+
+    function persistPositions() {
+        try {
+            sessionStorage.setItem(storageKey, JSON.stringify([...positions]));
+        } catch {
+            // Ignore storage failures (e.g. disabled or full storage).
+        }
+    }
+
+    function getHistoryEntryKey() {
+        return (
+            window.navigation?.currentEntry?.key ??
+            `${history.state?._index ?? 0}:${location.pathname}${location.search}`
+        );
+    }
+
+    function rememberPosition() {
+        const key = getHistoryEntryKey();
+        positions.delete(key);
+        positions.set(key, Math.round(window.scrollY));
+
+        if (positions.size > maxStoredPositions) {
+            positions.delete(positions.keys().next().value);
+        }
+
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(persistPositions, persistDelayMs);
+    }
+
+    function restorePosition() {
+        activeRestore?.stop();
+
+        const key = getHistoryEntryKey();
+        const targetY = positions.get(key) ?? 0;
+
+        if (targetY === 0) {
+            window.scrollTo({ top: 0, behavior: "instant" });
+            return;
+        }
+
+        const apply = () => {
+            if (getHistoryEntryKey() !== key) {
+                stop();
+                return;
+            }
+
+            const isTargetReachable =
+                document.documentElement.scrollHeight >= targetY + window.innerHeight;
+
+            if (isTargetReachable && Math.abs(window.scrollY - targetY) > 1) {
+                window.scrollTo({ top: targetY, behavior: "instant" });
+            }
+        };
+
+        const stop = () => {
+            observer.disconnect();
+            clearTimeout(timeout);
+            userInputEvents.forEach((name) => window.removeEventListener(name, stop));
+            activeRestore = null;
+        };
+
+        const observer = new ResizeObserver(apply);
+        const timeout = setTimeout(stop, restoreTimeoutMs);
+        userInputEvents.forEach((name) => window.addEventListener(name, stop, { passive: true }));
+        activeRestore = { apply, stop };
+        observer.observe(document.body);
+    }
+
+    function handleScroll() {
+        if (activeRestore) {
+            activeRestore.apply();
+            return;
+        }
+
+        rememberPosition();
+    }
+
+    history.scrollRestoration = "manual";
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("popstate", restorePosition);
+    window.addEventListener("pagehide", persistPositions);
+    restorePosition();
+}
+
+initScrollPositionRestoration();
+
 const lineNumberedTextarea = (() => {
     const registry = new WeakMap();
 
