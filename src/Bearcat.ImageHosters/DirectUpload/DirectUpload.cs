@@ -3,12 +3,16 @@ using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.DirectUpload.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.ImageHosters.DirectUpload;
 
-public class DirectUpload(IDirectUploadApiClient apiClient, ILogger<DirectUpload> logger)
-    : IImageHoster
+public class DirectUpload(
+    IDirectUploadApiClient apiClient,
+    ImageUrlExistenceChecker imageUrlExistenceChecker,
+    ILogger<DirectUpload> logger
+) : IImageHoster, ISupportsImageOnlineCheck
 {
     public string Name => "directupload.eu";
 
@@ -61,6 +65,15 @@ public class DirectUpload(IDirectUploadApiClient apiClient, ILogger<DirectUpload
     public IImageHosterConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<DirectUploadConfig>(serializedConfig)!;
+    }
+
+    public Task<bool> CheckImageExistsAsync(
+        IReadOnlyList<ImageUrl> imageUrls,
+        IImageHosterConfig imageHosterConfig,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return imageUrlExistenceChecker.CheckAllImageUrlsExistAsync(imageUrls, cancellationToken);
     }
 
     private static List<ImageUrl> GetImageUrls(UploadResponse response)

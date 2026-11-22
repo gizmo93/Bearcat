@@ -1,5 +1,6 @@
 using System.Net;
 using Bearcat.Abstractions.ImageHoster.Dto;
+using Bearcat.Abstractions.ImageHoster.Exceptions;
 using Bearcat.ImageHosters.LoePic.Api;
 using Moq;
 using Refit;
@@ -187,6 +188,72 @@ public class LoePicApiClientTest
         // Assert
         exception.Message.ShouldContain("401");
         exception.Message.ShouldContain("Invalid API key");
+    }
+
+    [Test]
+    public async Task CheckImageExistsAsync_ImageIsFound_ReturnsTrue()
+    {
+        // Arrange
+        apiMock
+            .Setup(api => api.GetImageAsync(ApiKey, "aX3kF9mQp2", CancellationToken.None))
+            .ReturnsAsync(CreateEnvelope(new UploadResponse { Id = "aX3kF9mQp2" }));
+
+        // Act
+        var exists = await apiClient.CheckImageExistsAsync(
+            ApiKey,
+            "aX3kF9mQp2",
+            CancellationToken.None
+        );
+
+        // Assert
+        exists.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CheckImageExistsAsync_NotFoundErrorCode_ReturnsFalse()
+    {
+        // Arrange
+        var envelope = await CreateErrorEnvelopeAsync<UploadResponse>(
+            HttpStatusCode.NotFound,
+            """{"success":false,"error":{"code":"not_found","message":"Image not found"}}"""
+        );
+
+        apiMock
+            .Setup(api => api.GetImageAsync(ApiKey, "aX3kF9mQp2", CancellationToken.None))
+            .ReturnsAsync(envelope);
+
+        // Act
+        var exists = await apiClient.CheckImageExistsAsync(
+            ApiKey,
+            "aX3kF9mQp2",
+            CancellationToken.None
+        );
+
+        // Assert
+        exists.ShouldBeFalse();
+    }
+
+    [TestCase(
+        HttpStatusCode.Unauthorized,
+        """{"success":false,"error":{"code":"invalid_key","message":"Unknown, revoked, or disabled API key"}}"""
+    )]
+    [TestCase(HttpStatusCode.NotFound, "<html>Not Found</html>")]
+    public async Task CheckImageExistsAsync_UnrecognizedResponse_Throws(
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        // Arrange
+        var envelope = await CreateErrorEnvelopeAsync<UploadResponse>(statusCode, content);
+
+        apiMock
+            .Setup(api => api.GetImageAsync(ApiKey, "aX3kF9mQp2", CancellationToken.None))
+            .ReturnsAsync(envelope);
+
+        // Act and Assert
+        await Should.ThrowAsync<ImageOnlineCheckFailedException>(() =>
+            apiClient.CheckImageExistsAsync(ApiKey, "aX3kF9mQp2", CancellationToken.None)
+        );
     }
 
     private static ApiResponse<LoePicResponse<T>> CreateEnvelope<T>(T content)

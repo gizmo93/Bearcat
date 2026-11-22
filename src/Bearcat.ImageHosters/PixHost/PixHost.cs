@@ -3,13 +3,20 @@ using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.PixHost.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
 
 namespace Bearcat.ImageHosters.PixHost;
 
-public class PixHost(IPixHostApiClient apiClient, ILogger<PixHost> logger) : IImageHoster
+public class PixHost(
+    IPixHostApiClient apiClient,
+    ImageUrlExistenceChecker imageUrlExistenceChecker,
+    ILogger<PixHost> logger
+) : IImageHoster, ISupportsImageOnlineCheck
 {
+    private const string RemovedImagePlaceholderUrl = "https://pixhost.to/image/removed.png";
+
     // PiXhost requires a content_type (0 = family safe, 1 = NSFW). Uploads are anonymous and the
     // content rating is currently hardcoded to family safe.
     private const int FamilySafeContentType = 0;
@@ -83,6 +90,19 @@ public class PixHost(IPixHostApiClient apiClient, ILogger<PixHost> logger) : IIm
     public IImageHosterConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<PixHostConfig>(serializedConfig)!;
+    }
+
+    public Task<bool> CheckImageExistsAsync(
+        IReadOnlyList<ImageUrl> imageUrls,
+        IImageHosterConfig imageHosterConfig,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return imageUrlExistenceChecker.CheckAllImageUrlsExistAsync(
+            imageUrls: imageUrls,
+            removedImagePlaceholderUrl: RemovedImagePlaceholderUrl,
+            cancellationToken: cancellationToken
+        );
     }
 
     private static List<ImageUrl> GetImageUrls(UploadImageResponse response)

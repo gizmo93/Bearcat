@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.DirectUpload;
 using Bearcat.ImageHosters.DirectUpload.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
@@ -19,6 +20,7 @@ public class DirectUploadTest
         apiClientMock = new Mock<IDirectUploadApiClient>(MockBehavior.Strict);
         service = new ImageHosters.DirectUpload.DirectUpload(
             apiClientMock.Object,
+            new ImageUrlExistenceChecker(new HttpClient()),
             NullLogger<ImageHosters.DirectUpload.DirectUpload>.Instance
         );
     }

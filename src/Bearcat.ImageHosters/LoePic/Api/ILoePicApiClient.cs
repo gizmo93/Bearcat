@@ -10,6 +10,12 @@ public interface ILoePicApiClient
         CancellationToken cancellationToken = default
     );
 
+    Task<bool> CheckImageExistsAsync(
+        string apiKey,
+        string imageId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<AccountResponse> GetAccountAsync(
         string apiKey,
         CancellationToken cancellationToken = default

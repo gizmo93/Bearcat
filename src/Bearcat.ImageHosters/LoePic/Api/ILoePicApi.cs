@@ -26,6 +26,13 @@ public interface ILoePicApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/images/{imageId}")]
+    Task<ApiResponse<LoePicResponse<UploadResponse>>> GetImageAsync(
+        [Header("X-API-Key")] string apiKey,
+        string imageId,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/me")]
     Task<ApiResponse<LoePicResponse<AccountResponse>>> GetAccountAsync(
         [Header("X-API-Key")] string apiKey,

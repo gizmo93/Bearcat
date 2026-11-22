@@ -4,13 +4,16 @@ using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.Extensions;
 using Bearcat.ImageHosters.PixelFox.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.ImageHosters.PixelFox;
 
-public class PixelFox(IPixelFoxApiClient apiClient, ILogger<PixelFox> logger)
-    : IImageHoster,
-        ISupportsLogin
+public class PixelFox(
+    IPixelFoxApiClient apiClient,
+    ImageUrlExistenceChecker imageUrlExistenceChecker,
+    ILogger<PixelFox> logger
+) : IImageHoster, ISupportsLogin, ISupportsImageOnlineCheck
 {
     // The PixelFox API requires an API key for every request. Creating an upload session validates
     // the key without leaving a leftover image on the account, so it doubles as the login check.
@@ -73,6 +76,15 @@ public class PixelFox(IPixelFoxApiClient apiClient, ILogger<PixelFox> logger)
     public IImageHosterConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<PixelFoxConfig>(serializedConfig)!;
+    }
+
+    public Task<bool> CheckImageExistsAsync(
+        IReadOnlyList<ImageUrl> imageUrls,
+        IImageHosterConfig imageHosterConfig,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return imageUrlExistenceChecker.CheckAllImageUrlsExistAsync(imageUrls, cancellationToken);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

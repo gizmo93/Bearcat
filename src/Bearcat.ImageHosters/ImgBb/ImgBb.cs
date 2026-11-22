@@ -5,11 +5,16 @@ using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.Extensions;
 using Bearcat.ImageHosters.ImgBb.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.ImageHosters.ImgBb;
 
-public class ImgBb(IImgBbApiClient apiClient, ILogger<ImgBb> logger) : IImageHoster, ISupportsLogin
+public class ImgBb(
+    IImgBbApiClient apiClient,
+    ImageUrlExistenceChecker imageUrlExistenceChecker,
+    ILogger<ImgBb> logger
+) : IImageHoster, ISupportsLogin, ISupportsImageOnlineCheck
 {
     private const string LoginTestImageResourceName =
         "Bearcat.ImageHosters.ImgBb.Resources.LoginTestImage.png.base64";
@@ -69,6 +74,15 @@ public class ImgBb(IImgBbApiClient apiClient, ILogger<ImgBb> logger) : IImageHos
     public IImageHosterConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<ImgBbConfig>(serializedConfig)!;
+    }
+
+    public Task<bool> CheckImageExistsAsync(
+        IReadOnlyList<ImageUrl> imageUrls,
+        IImageHosterConfig imageHosterConfig,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return imageUrlExistenceChecker.CheckAllImageUrlsExistAsync(imageUrls, cancellationToken);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

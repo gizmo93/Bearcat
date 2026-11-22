@@ -10,7 +10,8 @@ namespace Bearcat.ImageHosters.LoePic;
 
 public class LoePic(ILoePicApiClient apiClient, ILogger<LoePic> logger)
     : IImageHoster,
-        ISupportsLogin
+        ISupportsLogin,
+        ISupportsImageOnlineCheck
 {
     public string Name => "LoePic";
 
@@ -69,6 +70,19 @@ public class LoePic(ILoePicApiClient apiClient, ILogger<LoePic> logger)
     public IImageHosterConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<LoePicConfig>(serializedConfig)!;
+    }
+
+    public Task<bool> CheckImageExistsAsync(
+        IReadOnlyList<ImageUrl> imageUrls,
+        IImageHosterConfig imageHosterConfig,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var config = imageHosterConfig.As<LoePicConfig>();
+        var directUrl = imageUrls.Single(url => url.Size == ImageSize.Full).Url;
+        var imageId = Path.GetFileNameWithoutExtension(new Uri(directUrl).AbsolutePath);
+
+        return apiClient.CheckImageExistsAsync(config.ApiKey, imageId, cancellationToken);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

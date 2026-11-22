@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.ImgBb;
 using Bearcat.ImageHosters.ImgBb.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
@@ -19,6 +20,7 @@ public class ImgBbTest
         apiClientMock = new Mock<IImgBbApiClient>(MockBehavior.Strict);
         service = new ImageHosters.ImgBb.ImgBb(
             apiClientMock.Object,
+            new ImageUrlExistenceChecker(new HttpClient()),
             NullLogger<ImageHosters.ImgBb.ImgBb>.Instance
         );
     }

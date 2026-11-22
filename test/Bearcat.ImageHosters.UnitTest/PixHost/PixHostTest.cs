@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.ImageHosters.PixHost;
 using Bearcat.ImageHosters.PixHost.Api;
+using Bearcat.ImageHosters.Shared;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
@@ -19,6 +20,7 @@ public class PixHostTest
         apiClientMock = new Mock<IPixHostApiClient>(MockBehavior.Strict);
         service = new ImageHosters.PixHost.PixHost(
             apiClientMock.Object,
+            new ImageUrlExistenceChecker(new HttpClient()),
             NullLogger<ImageHosters.PixHost.PixHost>.Instance
         );
     }

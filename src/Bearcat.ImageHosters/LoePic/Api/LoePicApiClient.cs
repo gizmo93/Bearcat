@@ -1,12 +1,16 @@
+using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.ImageHoster.Dto;
+using Bearcat.Abstractions.ImageHoster.Exceptions;
 using Refit;
 
 namespace Bearcat.ImageHosters.LoePic.Api;
 
 public class LoePicApiClient(ILoePicApi api) : ILoePicApiClient
 {
-    public const string BaseUrl = "https://www.loepic.me";
+    public const string BaseUrl = "https://loepic.me";
+
+    private const string ImageNotFoundErrorCode = "not_found";
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -82,6 +86,32 @@ public class LoePicApiClient(ILoePicApi api) : ILoePicApiClient
         );
     }
 
+    public async Task<bool> CheckImageExistsAsync(
+        string apiKey,
+        string imageId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await api.GetImageAsync(apiKey, imageId, cancellationToken);
+
+        if (response.IsSuccessStatusCode && response.Content is { Success: true })
+        {
+            return true;
+        }
+
+        if (
+            response.StatusCode == HttpStatusCode.NotFound
+            && GetErrorCode(response) == ImageNotFoundErrorCode
+        )
+        {
+            return false;
+        }
+
+        throw new ImageOnlineCheckFailedException(
+            $"LoePic image lookup for {imageId} failed with status code {(int?)response.StatusCode}: {GetErrorMessage(response)}"
+        );
+    }
+
     private static T ReadContent<T>(ApiResponse<LoePicResponse<T>> response, string operationName)
     {
         if (!response.IsSuccessStatusCode || response.Content is null)
@@ -123,6 +153,30 @@ public class LoePicApiClient(ILoePicApi api) : ILoePicApiClient
         catch (JsonException)
         {
             return content;
+        }
+    }
+
+    private static string? GetErrorCode(IApiResponse response)
+    {
+        var content = (response.Error as ApiException)?.Content;
+
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        try
+        {
+            var error = JsonSerializer.Deserialize<LoePicResponse<object>>(
+                content,
+                JsonSerializerOptions
+            );
+
+            return error?.Error?.Code;
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 
