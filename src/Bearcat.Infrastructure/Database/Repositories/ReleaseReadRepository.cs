@@ -1025,6 +1025,7 @@ public class ReleaseReadRepository(
                 upload.CreatedAt,
                 upload.UploadedAt,
                 upload.UploadState,
+                upload.OnlineState,
                 upload.ErrorMessages,
             })
             .ToListAsync(cancellationToken);
@@ -1106,6 +1107,7 @@ public class ReleaseReadRepository(
                             Index: screenshot.Index,
                             Timestamp: screenshot.Timestamp,
                             UploadState: screenshotImageUpload?.UploadState,
+                            OnlineState: screenshotImageUpload?.OnlineState,
                             ErrorMessages: screenshotImageUpload?.ErrorMessages ?? [],
                             PreviewUrl: HostedScreenshotUrls.SelectPreviewUrl(
                                 screenshot.Kind,

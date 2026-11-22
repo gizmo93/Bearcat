@@ -468,6 +468,7 @@
                                 var uploadedScreenshotGrid = GetUploadedScreenshots(imageUpload, ReleaseScreenshotKind.ScreenshotGrid).FirstOrDefault();
                                 var completedScreenshotCount = imageUpload.ScreenshotImageUploads.Count(screenshot => screenshot.UploadState is UploadState.Completed);
                                 var screenshotProblemState = GetScreenshotUploadProblemState(imageUpload);
+                                var offlineScreenshotCount = imageUpload.ScreenshotImageUploads.Count(IsScreenshotOffline);
                                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                                     @if (uploadedScreenshots.Count > 0 || uploadedScreenshotGrid is not null)
                                     {
@@ -517,6 +518,17 @@
                                         <span class="@(completedScreenshotCount == imageUpload.ScreenshotImageUploads.Count ? "text-xs text-muted-foreground" : "text-xs font-medium")">
                                             @completedScreenshotCount/@imageUpload.ScreenshotImageUploads.Count
                                         </span>
+                                        @if (offlineScreenshotCount > 0)
+                                        {
+                                            <BbTooltip DelayDuration="150">
+                                                <BbTooltipTrigger Class="inline-flex">
+                                                    <BbBadge Variant="BadgeVariant.Destructive">@L["OfflineCount", offlineScreenshotCount]</BbBadge>
+                                                </BbTooltipTrigger>
+                                                <BbTooltipContent Class="max-w-xs text-xs">
+                                                    @L["NotificationKind.ImagesOffline.Description"]
+                                                </BbTooltipContent>
+                                            </BbTooltip>
+                                        }
                                         @if (screenshotProblemState is { } problemState)
                                         {
                                             <UploadStateBadge State="problemState" />

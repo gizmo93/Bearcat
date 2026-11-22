@@ -2,15 +2,18 @@ using Bearcat.Domain.UseCases.ManageImageUploads;
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.ManageImageUploads;
 
 public partial class ReleaseImageUploads(
     IScopedOperationRunner operationRunner,
-    DialogService dialogService
+    DialogService dialogService,
+    TimeProvider timeProvider
 ) : ComponentBase
 {
     [Parameter]
@@ -96,6 +99,8 @@ public partial class ReleaseImageUploads(
             _ => L["ScreenshotNumber", upload.ScreenshotIndex!.Value],
         };
     }
+
+    private string HumanizeTimestamp(DateTime value) => timeProvider.Humanize(value);
 
     private static BadgeVariant GetUploadVariant(UploadState state)
     {

@@ -550,6 +550,7 @@
   <data name="Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Unlinked" xml:space="preserve"><value>Unlinked</value></data>
   <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} unresolved</value></data>
+  <data name="OfflineCount" xml:space="preserve"><value>{0} offline</value></data>
   <data name="NoNotificationsFound" xml:space="preserve"><value>No notifications found</value></data>
   <data name="ShowResolvedNotifications" xml:space="preserve"><value>Show resolved</value></data>
   <data name="Unresolved" xml:space="preserve"><value>Unresolved</value></data>

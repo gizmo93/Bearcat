@@ -30,6 +30,7 @@ Click a step to open its tab.
 
 Under **Image uploads**, each image upload configuration shows its cover and screenshot previews.
 Use the copy buttons to copy the image links.
+Offline screenshots are hidden and counted in a red **offline** badge.
 
 ![overview-image-uploads.png](images/overview-image-uploads.png)
 
@@ -73,6 +74,7 @@ Cover uploads need a cover URL, for example from TMDB or xREL.
 An [image upload configuration](/Bearcat/account-settings/#image-upload-configuration) can also upload
 screenshots and the screenshot grid. The **Image uploads** list shows each upload's image type:
 cover, screenshot, or screenshot grid.
+Completed uploads also show their [online state](/Bearcat/account-settings/#online-checks-for-images) and when it was last checked.
 
 The **Screenshots** card shows the created [screenshots](/Bearcat/release-templates-and-automations/#screenshots).
 Click an image to open it at full size.

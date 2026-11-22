@@ -334,7 +334,7 @@ public partial class ReleaseOverview(
         {
             return imageUpload
                 .ScreenshotImageUploads.FirstOrDefault(screenshot =>
-                    screenshot.PreviewUrl is not null
+                    screenshot.PreviewUrl is not null && !IsScreenshotOffline(screenshot)
                 )
                 ?.PreviewUrl;
         }
@@ -352,9 +352,19 @@ public partial class ReleaseOverview(
     {
         return imageUpload
             .ScreenshotImageUploads.Where(screenshot =>
-                screenshot.Kind == kind && screenshot.FullUrl is not null
+                screenshot.Kind == kind
+                && screenshot.FullUrl is not null
+                && !IsScreenshotOffline(screenshot)
             )
             .ToList();
+    }
+
+    private static bool IsScreenshotOffline(
+        ReleaseOverviewScreenshotImageUploadReadModel screenshot
+    )
+    {
+        return screenshot.UploadState is UploadState.Completed
+            && screenshot.OnlineState is OnlineState.Offline;
     }
 
     private static UploadState? GetScreenshotUploadProblemState(

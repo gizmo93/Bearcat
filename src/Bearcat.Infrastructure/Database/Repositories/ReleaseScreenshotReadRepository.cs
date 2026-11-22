@@ -55,6 +55,7 @@ public class ReleaseScreenshotReadRepository(IBearcatReadDbContext dbRead)
             .ImageUploadUrls.Where(url =>
                 url.ImageUpload.ReleaseScreenshot!.ReleaseId == releaseId
                 && url.ImageUpload.UploadState == UploadState.Completed
+                && url.ImageUpload.OnlineState != OnlineState.Offline
             )
             .Select(url => new
             {

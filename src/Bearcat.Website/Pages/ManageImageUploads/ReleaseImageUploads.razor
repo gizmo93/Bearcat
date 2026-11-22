@@ -37,12 +37,20 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="bearcat-mobile-label">@L["State"]</p>
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-2">
                                     <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
                                         @L.Localize(upload.UploadState)
                                     </BbBadge>
+                                    @if (upload.UploadState is UploadState.Completed)
+                                    {
+                                        <OnlineStateBadge Value="upload.OnlineState" NotFullyOnlineSince="upload.OfflineSince" />
+                                    }
                                     <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
                                 </div>
+                                @if (upload.OnlineCheckedAt is { } onlineCheckedAt)
+                                {
+                                    <p class="mt-1 truncate text-xs text-muted-foreground" title="@onlineCheckedAt.ToString("g")">@L["LastChecked"]: @HumanizeTimestamp(onlineCheckedAt)</p>
+                                }
                             </div>
                             <div class="min-w-0">
                                 <p class="bearcat-mobile-label">@L["UploadedAt"]</p>

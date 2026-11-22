@@ -29,6 +29,9 @@ public class ImageUploadReadRepository(IBearcatReadDbContext dbRead) : IImageUpl
                 CreatedAt: upload.CreatedAt,
                 UploadedAt: upload.UploadedAt,
                 UploadState: upload.UploadState,
+                OnlineState: upload.OnlineState,
+                OnlineCheckedAt: upload.OnlineCheckedAt,
+                OfflineSince: upload.OfflineSince,
                 UrlCount: upload.ImageUrls.Count,
                 ErrorMessages: upload.ErrorMessages
             ))

@@ -30,6 +30,7 @@ Unten findest du die [Veröffentlichungsorte](/Bearcat/de/posting-to-forums/#ver
 
 Unter **Bilduploads** siehst du pro Bilduploadkonfiguration das Cover und eine Vorschau der Screenshots.
 Mit den Kopierbuttons kopierst du die Bildlinks.
+Screenshots, die offline sind, werden ausgeblendet und in einem roten Badge **offline** gezählt.
 
 ![Bilduploads in der Übersicht](../images/overview-image-uploads.png)
 
@@ -73,6 +74,7 @@ Für Coveruploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL.
 Eine [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration) kann auch Screenshots
 und das Screenshotraster hochladen. In der Liste **Bilduploads** siehst du den Bildtyp jedes Uploads:
 Cover, Screenshot oder Screenshotraster.
+Abgeschlossene Uploads zeigen zusätzlich ihren [Onlinestatus](/Bearcat/de/account-settings/#onlineprüfung-von-bildern) und wann er zuletzt geprüft wurde.
 
 Die Karte **Screenshots** zeigt die erstellten [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots).
 Klicke auf ein Bild, um es in voller Grösse zu öffnen.

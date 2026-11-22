@@ -32,6 +32,7 @@ All tasks are enabled by default.
 | Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/Bearcat/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
 | Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
+| Image upload state check | Every 5 minutes | Checks uploaded images about every 6 hours and uploads offline covers again. See [Online checks for images](/Bearcat/account-settings/#online-checks-for-images). |
 | Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/Bearcat/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |

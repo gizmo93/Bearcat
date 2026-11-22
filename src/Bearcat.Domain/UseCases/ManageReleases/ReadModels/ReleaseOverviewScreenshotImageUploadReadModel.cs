@@ -7,6 +7,7 @@ public record ReleaseOverviewScreenshotImageUploadReadModel(
     int Index,
     TimeSpan? Timestamp,
     UploadState? UploadState,
+    OnlineState? OnlineState,
     IReadOnlyList<string> ErrorMessages,
     string? PreviewUrl,
     string? FullUrl

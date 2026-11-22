@@ -11,6 +11,9 @@ public record ReleaseImageUploadReadModel(
     DateTime CreatedAt,
     DateTime? UploadedAt,
     UploadState UploadState,
+    OnlineState OnlineState,
+    DateTime? OnlineCheckedAt,
+    DateTime? OfflineSince,
     int UrlCount,
     IReadOnlyList<string> ErrorMessages
 );

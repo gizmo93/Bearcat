@@ -45,6 +45,17 @@ Releases und Collections kommen erst in die [Postwarteschlange](/Bearcat/de/post
 mehr wartet oder läuft. Fehlgeschlagene Bilduploads blockieren das Posten nicht. Lösche einen fehlgeschlagenen
 Upload im Tab **Bilder**, um ihn erneut zu starten.
 
+### Onlineprüfung von Bildern
+
+Bearcat prüft jedes hochgeladene Bild etwa alle 6 Stunden, zum ersten Mal 6 Stunden nach dem Upload.
+
+- Ein Cover, das offline ist, lädt Bearcat automatisch erneut hoch.
+- Sind Screenshots oder das Screenshotraster offline, erhältst du die Benachrichtigung **Bilder offline**.
+  Klicke im Tab **Bilder** auf **Neu erstellen**, um die [Screenshots neu zu erstellen](/Bearcat/de/release-templates-and-automations/#screenshots)
+  und erneut hochzuladen.
+- Bilder, die offline sind, fehlen in `imagelinks` von Forenposts und in den [Aktionen nach dem Upload](/Bearcat/de/upload-completion-actions/).
+- Ein erneuter Upload aktualisiert bestehende Forenposts nicht. Das nächste **Post aktualisieren** verwendet die neuen Links.
+
 ## Automatische Reuploads
 
 Öffne **Releaseeinstellungen > Releasegruppen** und bearbeite die Gruppe.

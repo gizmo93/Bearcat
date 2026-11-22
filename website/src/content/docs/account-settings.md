@@ -44,6 +44,17 @@ For a configuration named `ImgBB Cover`, use `imagelinks.imgbb_cover.full` to ac
 Releases and collections enter the [post queue](/Bearcat/post-queue/) once no image uploads are pending
 or running. Failed image uploads do not block posting. Delete a failed upload on the **Images** tab to retry it.
 
+### Online checks for images
+
+Bearcat checks every uploaded image about every 6 hours, the first time 6 hours after the upload.
+
+- An offline cover is uploaded again automatically.
+- Offline screenshots or screenshot grids raise the **Images offline** notification. Click **Regenerate**
+  on the **Images** tab to [create the screenshots again](/Bearcat/release-templates-and-automations/#screenshots)
+  and upload them.
+- Offline images are left out of `imagelinks` in forum posts and of [upload completion actions](/Bearcat/upload-completion-actions/).
+- A new upload does not update existing forum posts. The next **Update post** uses the new links.
+
 ## Automatic reuploads
 
 Open **Release settings > Release groups** and edit the group.
