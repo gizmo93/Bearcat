@@ -64,10 +64,11 @@ public class WordPressTest
 
         // Act
         var post = await site.EditPostAsync(
-            CreateSession(),
-            "https://example.org/blog/?p=42",
-            "<p>Updated</p>",
-            CancellationToken.None
+            config: CreateConfig(site),
+            session: CreateSession(),
+            postedUrl: "https://example.org/blog/?p=42",
+            body: "<p>Updated</p>",
+            cancellationToken: CancellationToken.None
         );
 
         // Assert

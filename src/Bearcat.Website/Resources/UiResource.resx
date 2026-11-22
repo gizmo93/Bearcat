@@ -1403,6 +1403,8 @@
   <data name="DistributionSiteConfig_ApplicationPassword" xml:space="preserve"><value>Application password</value></data>
   <data name="DistributionSiteConfig_UploadCoverAsFeaturedImage" xml:space="preserve"><value>Upload cover as featured image</value></data>
   <data name="DistributionSiteConfig_UploadCoverAsFeaturedImage_Description" xml:space="preserve"><value>Uploads the cover to the WordPress media library and sets it as the featured image. The account must be allowed to upload files.</value></data>
+  <data name="DistributionSiteConfig_RemoveAttachmentsOnPostUpdate" xml:space="preserve"><value>Remove attachments on post update</value></data>
+  <data name="DistributionSiteConfig_RemoveAttachmentsOnPostUpdate_Description" xml:space="preserve"><value>Deletes all attachments of a post before Bearcat updates it. Enable this for forums that turn image links into attachments, otherwise every update adds another copy.</value></data>
   <data name="RemoteSourceAutomations" xml:space="preserve"><value>Remote automations</value></data>
   <data name="RemoteSourceAutomationsIntro" xml:space="preserve"><value>Watch folders on remote sources and queue new releases for download once they stop changing.</value></data>
   <data name="NewRemoteSourceAutomation" xml:space="preserve"><value>New remote automation</value></data>

@@ -10,11 +10,14 @@ public sealed record GenericXenForoConfig : IXenForoDistributionSiteConfig
 
     public required string Password { get; init; }
 
+    public bool RemoveAttachmentsOnPostUpdate { get; init; }
+
     public IReadOnlyDictionary<string, object?> ToDictionary() =>
         new Dictionary<string, object?>
         {
             [nameof(BaseUrl)] = BaseUrl,
             [nameof(Username)] = Username,
             [nameof(Password)] = Password,
+            [nameof(RemoveAttachmentsOnPostUpdate)] = RemoveAttachmentsOnPostUpdate,
         };
 }

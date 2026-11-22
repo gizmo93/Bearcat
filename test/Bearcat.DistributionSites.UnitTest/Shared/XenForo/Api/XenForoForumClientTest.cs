@@ -387,6 +387,7 @@ public class XenForoForumClientTest
         var submitted = await client.EditPostAsync(
             postedUrl: "https://www.data-load.me/threads/my-release.42/post-99",
             message: "Reupped body",
+            removeExistingAttachments: false,
             cancellationToken: CancellationToken.None
         );
 
@@ -405,6 +406,80 @@ public class XenForoForumClientTest
         requestBody.ShouldNotContain("_xfResponseType=html");
         requestBody.ShouldNotContain("silent");
         requestBody.ShouldNotContain("save");
+    }
+
+    [Test]
+    public async Task EditPostAsync_RemoveExistingAttachments_DeletesEveryAttachmentBeforeSavingThePost()
+    {
+        // Arrange
+        var requests = new List<string>();
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse(EditPostWithAttachmentsPage));
+        handler.Enqueue(async request =>
+        {
+            requests.Add($"{request.RequestUri} {await request.Content!.ReadAsStringAsync()}");
+            return JsonResponse("""{"status":"ok","delete":2149717}""");
+        });
+        handler.Enqueue(async request =>
+        {
+            requests.Add($"{request.RequestUri} {await request.Content!.ReadAsStringAsync()}");
+            return JsonResponse("""{"status":"ok","delete":2149718}""");
+        });
+        handler.Enqueue(_ => HtmlResponse(EditPostPage));
+        handler.Enqueue(async request =>
+        {
+            requests.Add($"{request.RequestUri} {await request.Content!.ReadAsStringAsync()}");
+            return JsonResponse(
+                """
+                {"status":"ok","redirect":"/threads/my-release.42/post-99"}
+                """
+            );
+        });
+
+        using var client = CreateClient(handler);
+
+        // Act
+        await client.EditPostAsync(
+            postedUrl: "https://www.data-load.me/posts/99/",
+            message: "Reupped body",
+            removeExistingAttachments: true,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        const string manageUrl =
+            "https://www.data-load.me/attachments/upload?type=post&context[post_id]=99&hash=hash-789";
+
+        requests.Count.ShouldBe(3);
+        requests[0]
+            .ShouldBe($"{manageUrl} delete=2149717&_xfToken=page-token&_xfResponseType=json");
+        requests[1]
+            .ShouldBe($"{manageUrl} delete=2149718&_xfToken=page-token&_xfResponseType=json");
+        requests[2].ShouldStartWith("https://www.data-load.me/posts/99/edit ");
+    }
+
+    [Test]
+    public async Task EditPostAsync_AttachmentDeletionNotConfirmed_ThrowsWithoutSavingThePost()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse(EditPostWithAttachmentsPage));
+        handler.Enqueue(_ => JsonResponse("""{"status":"error","errors":["No permission"]}"""));
+
+        using var client = CreateClient(handler);
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            client.EditPostAsync(
+                postedUrl: "https://www.data-load.me/posts/99/",
+                message: "Reupped body",
+                removeExistingAttachments: true,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldContain("2149717");
     }
 
     [Test]
@@ -430,6 +505,7 @@ public class XenForoForumClientTest
         await client.EditPostAsync(
             postedUrl: "https://www.data-load.me/posts/99/",
             message: "Reupped body",
+            removeExistingAttachments: false,
             cancellationToken: CancellationToken.None
         );
 
@@ -466,6 +542,7 @@ public class XenForoForumClientTest
         await client.EditPostAsync(
             postedUrl: "https://www.data-load.me/threads/my-release.42/",
             message: "Reupped body",
+            removeExistingAttachments: false,
             cancellationToken: CancellationToken.None
         );
 
@@ -1210,6 +1287,28 @@ public class XenForoForumClientTest
                     <option value="7" selected>UHD</option>
                 </select>
                 <textarea name="message">Old body</textarea>
+            </form>
+        </html>
+        """;
+
+    private const string EditPostWithAttachmentsPage = """
+        <html data-csrf="page-token">
+            <form action="/posts/99/edit" method="post" data-xf-init="attachment-manager post-edit ajax-submit">
+                <input type="hidden" name="_xfToken" value="form-token">
+                <textarea name="message">[ATTACH=full]2149717[/ATTACH][ATTACH=full]2149718[/ATTACH]</textarea>
+                <ul class="attachUploadList js-attachmentFiles">
+                    <li class="js-attachmentFile file" data-attachment-id="2149717">
+                        <a class="file-deleteLink js-attachmentAction" data-action="delete" data-type="image"></a>
+                    </li>
+                    <li class="js-attachmentFile file" data-attachment-id="2149718">
+                        <a class="file-deleteLink js-attachmentAction" data-action="delete" data-type="image"></a>
+                    </li>
+                </ul>
+                <script type="text/template">
+                    <li class="js-attachmentFile file" data-attachment-id="{{attachment_id}}"></li>
+                </script>
+                <a href="/attachments/upload?type=post&amp;context[post_id]=99&amp;hash=hash-789" class="js-attachmentUpload">Dateien anhängen</a>
+                <input type="hidden" name="attachment_hash" value="hash-789">
             </form>
         </html>
         """;

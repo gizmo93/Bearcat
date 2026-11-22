@@ -230,6 +230,7 @@ public sealed class WordPress(IHttpClientFactory httpClientFactory) : IBlogDistr
     }
 
     public async Task<SubmittedPost> EditPostAsync(
+        IDistributionSiteConfig config,
         DistributionSession session,
         string postedUrl,
         string body,

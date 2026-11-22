@@ -261,8 +261,18 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (site, session) = await GetSiteAndValidSessionAsync(registrationId, cancellationToken);
-        return await site.EditPostAsync(session, postedUrl, body, cancellationToken);
+        var (site, config, session) = await GetSiteConfigAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
+
+        return await site.EditPostAsync(
+            config: config,
+            session: session,
+            postedUrl: postedUrl,
+            body: body,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task<string?> FindUrlOfSubmittedPostAsync(

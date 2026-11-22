@@ -8,6 +8,11 @@ public sealed class DataLoadMe(IHttpClientFactory httpClientFactory)
 {
     public override string Name => "data-load.me";
 
+    protected override bool ShouldRemoveAttachmentsOnPostUpdate(DataLoadMeConfig config)
+    {
+        return true;
+    }
+
     public override string GetBaseUrl(IDistributionSiteConfig config) =>
         "https://www.data-load.me/";
 }

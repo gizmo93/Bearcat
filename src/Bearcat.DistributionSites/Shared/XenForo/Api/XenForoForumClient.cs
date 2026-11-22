@@ -585,11 +585,17 @@ public sealed partial class XenForoForumClient : IDisposable
     public async Task<SubmittedPost> EditPostAsync(
         string postedUrl,
         string message,
+        bool removeExistingAttachments,
         CancellationToken cancellationToken
     )
     {
         var postId = await GetPostIdFromUrlOrPageAsync(postedUrl, cancellationToken);
         var editPath = $"posts/{postId}/edit";
+
+        if (removeExistingAttachments)
+        {
+            await DeleteAttachmentsOfPostAsync(editPath, cancellationToken);
+        }
 
         return await SubmitFormAsync(
             pageUrl: new Uri(baseUri, editPath),
@@ -598,6 +604,83 @@ public sealed partial class XenForoForumClient : IDisposable
             cancellationToken: cancellationToken,
             keepExistingFieldValues: true
         );
+    }
+
+    private async Task DeleteAttachmentsOfPostAsync(
+        string editPath,
+        CancellationToken cancellationToken
+    )
+    {
+        var document = await GetDocumentAsync(editPath, cancellationToken);
+
+        var form =
+            FindForm(document, editPath)
+            ?? throw new InvalidOperationException(
+                $"Could not locate the '{editPath}' form to remove its attachments."
+            );
+
+        var attachmentIds = form.QuerySelectorAll(".js-attachmentFile[data-attachment-id]")
+            .Select(file => file.GetAttribute("data-attachment-id")!)
+            .ToList();
+
+        if (attachmentIds.Count == 0)
+        {
+            return;
+        }
+
+        var manageHref =
+            form.QuerySelector(".js-attachmentUpload")?.GetAttribute("href")
+            ?? throw new InvalidOperationException(
+                $"Could not locate the attachment manage URL in the '{editPath}' form."
+            );
+
+        var manageUrl = new Uri(baseUri, manageHref);
+        var token = GetCsrfToken(document);
+
+        foreach (var attachmentId in attachmentIds)
+        {
+            await DeleteAttachmentAsync(
+                manageUrl: manageUrl,
+                attachmentId: attachmentId,
+                token: token,
+                cancellationToken: cancellationToken
+            );
+        }
+    }
+
+    private async Task DeleteAttachmentAsync(
+        Uri manageUrl,
+        string attachmentId,
+        string token,
+        CancellationToken cancellationToken
+    )
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, manageUrl)
+        {
+            Content = new FormUrlEncodedContent([
+                new KeyValuePair<string, string>("delete", attachmentId),
+                new KeyValuePair<string, string>("_xfToken", token),
+                new KeyValuePair<string, string>("_xfResponseType", "json"),
+            ]),
+        };
+
+        request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+
+        using var response = await SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        using var json = ParseJson(body);
+
+        if (
+            json.RootElement.ValueKind is not JsonValueKind.Object
+            || !json.RootElement.TryGetProperty("delete", out _)
+        )
+        {
+            throw new InvalidOperationException(
+                $"XenForo did not delete attachment {attachmentId}: {body[..Math.Min(body.Length, 200)]}"
+            );
+        }
     }
 
     private async Task<string> GetPostIdFromUrlOrPageAsync(

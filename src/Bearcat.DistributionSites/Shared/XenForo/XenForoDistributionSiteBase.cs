@@ -34,6 +34,11 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
             ),
         ];
 
+    protected virtual bool ShouldRemoveAttachmentsOnPostUpdate(TConfig config)
+    {
+        return false;
+    }
+
     public abstract string GetBaseUrl(IDistributionSiteConfig config);
 
     public IDistributionSiteConfig DeserializeConfig(string serializedConfig)
@@ -172,6 +177,7 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
     }
 
     public async Task<SubmittedPost> EditPostAsync(
+        IDistributionSiteConfig config,
         DistributionSession session,
         string postedUrl,
         string body,
@@ -179,7 +185,12 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
     )
     {
         using var client = CreateClient(session);
-        return await client.EditPostAsync(postedUrl, body, cancellationToken);
+        return await client.EditPostAsync(
+            postedUrl: postedUrl,
+            message: body,
+            removeExistingAttachments: ShouldRemoveAttachmentsOnPostUpdate(config.As<TConfig>()),
+            cancellationToken: cancellationToken
+        );
     }
 
     public ForumTargetId CreateForumTargetIdFromStoredValue(

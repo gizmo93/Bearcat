@@ -32,6 +32,7 @@ public interface IDistributionSite
     );
 
     Task<SubmittedPost> EditPostAsync(
+        IDistributionSiteConfig config,
         DistributionSession session,
         string postedUrl,
         string body,
