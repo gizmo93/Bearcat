@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UnitTest.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Dto;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
@@ -35,7 +36,7 @@ public class ForumPostingRuleServiceTest
     public async Task CreateAsync_CollectionTemplateWithSeasonCondition_AddsRule()
     {
         // Arrange
-        var input = InputWith(RuleFieldCatalog.Season);
+        var input = InputWith("Season");
 
         // Act
         await service.CreateAsync(distributionSiteRegistrationId: 5, input);
@@ -56,7 +57,7 @@ public class ForumPostingRuleServiceTest
     public async Task CreateAsync_CollectionTemplateWithEpisodeCondition_Throws()
     {
         // Arrange
-        var input = InputWith(RuleFieldCatalog.Episode);
+        var input = InputWith("Episode");
 
         // Act
         var exception = await Should.ThrowAsync<ArgumentException>(() =>
@@ -64,7 +65,7 @@ public class ForumPostingRuleServiceTest
         );
 
         // Assert
-        exception.Message.ShouldContain(RuleFieldCatalog.Episode);
+        exception.Message.ShouldContain("Episode");
         writeRepositoryMock.Verify(
             repository => repository.Add(It.IsAny<ForumPostingRule>()),
             Times.Never
@@ -76,7 +77,7 @@ public class ForumPostingRuleServiceTest
         return new ForumPostingRuleInput(
             Name: "Seasons",
             ConditionJson: RuleConditionSerializer.Serialize(
-                RuleCondition.Compare(field, RuleConditionOperator.Equals, "2")
+                RuleConditionFactory.CreateComparison(field, RuleConditionOperator.Equals, "2")
             ),
             TargetNodeId: "42",
             TargetPathSnapshot: "Board > Series",

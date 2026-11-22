@@ -56,14 +56,14 @@ else
             </div>
         </div>
 
-        @if (Node.Children.Count == 0)
+        @if (ChildNodes.Count == 0)
         {
             <p class="text-xs text-muted-foreground">@L["ConditionGroupEmpty"]</p>
         }
         else
         {
             <div class="space-y-2">
-                @foreach (var child in Node.Children)
+                @foreach (var child in ChildNodes)
                 {
                     <ConditionNodeEditor @key="child"
                                          Node="child"
@@ -79,7 +79,7 @@ else
 @code
 {
     [Parameter]
-    public ConditionNodeModel Node { get; set; } = null!;
+    public RuleCondition Node { get; set; } = null!;
 
     [Parameter]
     public int Depth { get; set; }
@@ -101,8 +101,20 @@ else
                 _ => "border-l-4 border-l-orange-500",
             };
 
-    private bool CanAddChild =>
-        Node.IsGroup || (Node.Kind is RuleConditionKind.Not && Node.Children.Count == 0);
+    private IReadOnlyList<RuleCondition> ChildNodes
+    {
+        get
+        {
+            if (Node.Kind is not RuleConditionKind.Not)
+            {
+                return Node.Children;
+            }
+
+            return Node.Child is null ? [] : [Node.Child];
+        }
+    }
+
+    private bool CanAddChild => Node.Kind is not RuleConditionKind.Not || Node.Child is null;
 
     private IReadOnlyList<SelectOption<RuleConditionKind>> GroupKindOptions =>
         [
@@ -117,21 +129,40 @@ else
 
     private void AddComparison()
     {
-        Node.Children.Add(ConditionModelMapper.CreateComparison());
+        AddChild(ConditionTreeOperations.CreateComparison());
     }
 
     private void AddGroup()
     {
-        Node.Children.Add(ConditionModelMapper.CreateGroup(RuleConditionKind.All));
+        AddChild(ConditionTreeOperations.CreateGroup());
     }
 
     private void AddNot()
     {
-        Node.Children.Add(ConditionModelMapper.CreateNot());
+        AddChild(ConditionTreeOperations.CreateNot());
     }
 
-    private void RemoveChild(ConditionNodeModel child)
+    private void AddChild(RuleCondition child)
     {
+        if (Node.Kind is RuleConditionKind.Not)
+        {
+            Node.Child = child;
+
+            return;
+        }
+
+        Node.Children.Add(child);
+    }
+
+    private void RemoveChild(RuleCondition child)
+    {
+        if (Node.Kind is RuleConditionKind.Not)
+        {
+            Node.Child = null;
+
+            return;
+        }
+
         Node.Children.Remove(child);
     }
 }

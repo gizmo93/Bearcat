@@ -11,10 +11,13 @@ public class RuleConditionEvaluatorTest
     {
         // Arrange
         var condition = NotGermanAndHighDefinition();
-        var context = ContextWith(primaryLanguage: "English", resolution: ReleaseResolution.R1080p);
+        var fieldValues = CreateFieldValuesWith(
+            primaryLanguage: "English",
+            resolution: ReleaseResolution.R1080p
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBeTrue();
@@ -25,10 +28,13 @@ public class RuleConditionEvaluatorTest
     {
         // Arrange
         var condition = NotGermanAndHighDefinition();
-        var context = ContextWith(primaryLanguage: "German", resolution: ReleaseResolution.R1080p);
+        var fieldValues = CreateFieldValuesWith(
+            primaryLanguage: "German",
+            resolution: ReleaseResolution.R1080p
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBeFalse();
@@ -39,10 +45,13 @@ public class RuleConditionEvaluatorTest
     {
         // Arrange
         var condition = NotGermanAndHighDefinition();
-        var context = ContextWith(primaryLanguage: "English", resolution: ReleaseResolution.R480p);
+        var fieldValues = CreateFieldValuesWith(
+            primaryLanguage: "English",
+            resolution: ReleaseResolution.R480p
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBeFalse();
@@ -57,15 +66,17 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_Like_UsesPercentWildcardCaseInsensitively(string pattern, bool expected)
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.Like,
             pattern
         );
-        var context = ContextWith(releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP");
+        var fieldValues = CreateFieldValuesWith(
+            releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP"
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBe(expected);
@@ -77,15 +88,15 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_GenreLike_MatchesOneGenreInJoinedGenreList(string? genre, bool expected)
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Genre,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Genre",
             RuleConditionOperator.Like,
             "%animation%"
         );
-        var context = ContextWith(genre: genre);
+        var fieldValues = CreateFieldValuesWith(genre: genre);
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBe(expected);
@@ -95,15 +106,17 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_NotLike_NegatesLike()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.NotLike,
             "%webrip%"
         );
-        var context = ContextWith(releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP");
+        var fieldValues = CreateFieldValuesWith(
+            releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP"
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBeTrue();
@@ -116,15 +129,17 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_Regex_MatchesCaseInsensitively(string pattern, bool expected)
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.Regex,
             pattern
         );
-        var context = ContextWith(releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP");
+        var fieldValues = CreateFieldValuesWith(
+            releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP"
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBe(expected);
@@ -134,15 +149,17 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_InvalidRegexPattern_ReturnsFalseWithoutThrowing()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.ReleaseName,
+        var condition = RuleConditionFactory.CreateComparison(
+            "ReleaseName",
             RuleConditionOperator.Regex,
             "([unclosed"
         );
-        var context = ContextWith(releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP");
+        var fieldValues = CreateFieldValuesWith(
+            releaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP"
+        );
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBeFalse();
@@ -158,15 +175,15 @@ public class RuleConditionEvaluatorTest
     )
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Resolution,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Resolution",
             RuleConditionOperator.GreaterOrEqual,
             "R1080p"
         );
-        var context = ContextWith(resolution: resolution);
+        var fieldValues = CreateFieldValuesWith(resolution: resolution);
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBe(expected);
@@ -176,44 +193,52 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_IntegerRange_MatchesYearBetweenBounds()
     {
         // Arrange
-        var condition = RuleCondition.All(
-            RuleCondition.Compare(
-                RuleFieldCatalog.Year,
+        var condition = RuleConditionFactory.CreateAll(
+            RuleConditionFactory.CreateComparison(
+                "Year",
                 RuleConditionOperator.GreaterOrEqual,
                 "2000"
             ),
-            RuleCondition.Compare(RuleFieldCatalog.Year, RuleConditionOperator.LessOrEqual, "2010")
+            RuleConditionFactory.CreateComparison("Year", RuleConditionOperator.LessOrEqual, "2010")
         );
 
         // Act + Assert
-        RuleConditionEvaluator.IsMatch(condition, ContextWith(year: 2005)).ShouldBeTrue();
-        RuleConditionEvaluator.IsMatch(condition, ContextWith(year: 2000)).ShouldBeTrue();
-        RuleConditionEvaluator.IsMatch(condition, ContextWith(year: 2010)).ShouldBeTrue();
-        RuleConditionEvaluator.IsMatch(condition, ContextWith(year: 1999)).ShouldBeFalse();
-        RuleConditionEvaluator.IsMatch(condition, ContextWith(year: null)).ShouldBeFalse();
+        RuleConditionEvaluator
+            .IsMatch(condition, CreateFieldValuesWith(year: 2005))
+            .ShouldBeTrue();
+        RuleConditionEvaluator.IsMatch(condition, CreateFieldValuesWith(year: 2000)).ShouldBeTrue();
+        RuleConditionEvaluator.IsMatch(condition, CreateFieldValuesWith(year: 2010)).ShouldBeTrue();
+        RuleConditionEvaluator
+            .IsMatch(condition, CreateFieldValuesWith(year: 1999))
+            .ShouldBeFalse();
+        RuleConditionEvaluator
+            .IsMatch(condition, CreateFieldValuesWith(year: null))
+            .ShouldBeFalse();
     }
 
     [Test]
     public void IsMatch_IsSetAndIsNotSet_HandleNullableFields()
     {
         // Arrange
-        var isSet = RuleCondition.Compare(
-            RuleFieldCatalog.Season,
+        var isSet = RuleConditionFactory.CreateComparison(
+            "Season",
             RuleConditionOperator.IsSet,
-            null
+            string.Empty
         );
-        var isNotSet = RuleCondition.Compare(
-            RuleFieldCatalog.PrimaryLanguage,
+        var isNotSet = RuleConditionFactory.CreateComparison(
+            "PrimaryLanguage",
             RuleConditionOperator.IsNotSet,
-            null
+            string.Empty
         );
 
         // Act + Assert
-        RuleConditionEvaluator.IsMatch(isSet, ContextWith(season: 3)).ShouldBeTrue();
-        RuleConditionEvaluator.IsMatch(isSet, ContextWith(season: null)).ShouldBeFalse();
-        RuleConditionEvaluator.IsMatch(isNotSet, ContextWith(primaryLanguage: null)).ShouldBeTrue();
+        RuleConditionEvaluator.IsMatch(isSet, CreateFieldValuesWith(season: 3)).ShouldBeTrue();
+        RuleConditionEvaluator.IsMatch(isSet, CreateFieldValuesWith(season: null)).ShouldBeFalse();
         RuleConditionEvaluator
-            .IsMatch(isNotSet, ContextWith(primaryLanguage: "German"))
+            .IsMatch(isNotSet, CreateFieldValuesWith(primaryLanguage: null))
+            .ShouldBeTrue();
+        RuleConditionEvaluator
+            .IsMatch(isNotSet, CreateFieldValuesWith(primaryLanguage: "German"))
             .ShouldBeFalse();
     }
 
@@ -228,15 +253,15 @@ public class RuleConditionEvaluatorTest
     )
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.IsMultiLanguage,
+        var condition = RuleConditionFactory.CreateComparison(
+            "IsMultiLanguage",
             RuleConditionOperator.Equals,
             value
         );
-        var context = ContextWith(isMultiLanguage: isMultiLanguage);
+        var fieldValues = CreateFieldValuesWith(isMultiLanguage: isMultiLanguage);
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBe(expected);
@@ -246,15 +271,15 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_TextEquals_IgnoresCase()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.PrimaryLanguage,
+        var condition = RuleConditionFactory.CreateComparison(
+            "PrimaryLanguage",
             RuleConditionOperator.Equals,
             "german"
         );
-        var context = ContextWith(primaryLanguage: "German");
+        var fieldValues = CreateFieldValuesWith(primaryLanguage: "German");
 
         // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, context);
+        var isMatch = RuleConditionEvaluator.IsMatch(condition, fieldValues);
 
         // Assert
         isMatch.ShouldBeTrue();
@@ -264,8 +289,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_NotIn_IsTrueWhenValueIsMissing()
     {
         // Arrange
-        var condition = RuleCondition.CompareMany(
-            RuleFieldCatalog.PrimaryLanguage,
+        var condition = RuleConditionFactory.CreateMultiValueComparison(
+            "PrimaryLanguage",
             RuleConditionOperator.NotIn,
             "German",
             "French"
@@ -273,13 +298,13 @@ public class RuleConditionEvaluatorTest
 
         // Act + Assert
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(primaryLanguage: "English"))
+            .IsMatch(condition, CreateFieldValuesWith(primaryLanguage: "English"))
             .ShouldBeTrue();
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(primaryLanguage: "german"))
+            .IsMatch(condition, CreateFieldValuesWith(primaryLanguage: "german"))
             .ShouldBeFalse();
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(primaryLanguage: null))
+            .IsMatch(condition, CreateFieldValuesWith(primaryLanguage: null))
             .ShouldBeTrue();
     }
 
@@ -287,18 +312,18 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_PlatformEquals_MatchesWindowsOnly()
     {
         // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Platform,
+        var condition = RuleConditionFactory.CreateComparison(
+            "Platform",
             RuleConditionOperator.Equals,
             "Windows"
         );
 
         // Act + Assert
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Windows))
+            .IsMatch(condition, CreateFieldValuesWith(platform: ReleasePlatform.Windows))
             .ShouldBeTrue();
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Unknown))
+            .IsMatch(condition, CreateFieldValuesWith(platform: ReleasePlatform.Unknown))
             .ShouldBeFalse();
     }
 
@@ -306,8 +331,8 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_PlatformIn_MatchesAnyListedPlatform()
     {
         // Arrange
-        var condition = RuleCondition.CompareMany(
-            RuleFieldCatalog.Platform,
+        var condition = RuleConditionFactory.CreateMultiValueComparison(
+            "Platform",
             RuleConditionOperator.In,
             "Windows",
             "NintendoSwitch"
@@ -315,95 +340,13 @@ public class RuleConditionEvaluatorTest
 
         // Act + Assert
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Windows))
+            .IsMatch(condition, CreateFieldValuesWith(platform: ReleasePlatform.Windows))
             .ShouldBeTrue();
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(platform: ReleasePlatform.NintendoSwitch))
+            .IsMatch(condition, CreateFieldValuesWith(platform: ReleasePlatform.NintendoSwitch))
             .ShouldBeTrue();
         RuleConditionEvaluator
-            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Unknown))
-            .ShouldBeFalse();
-    }
-
-    [Test]
-    public void IsMatch_PlatformGreaterOrEqual_IsNotAllowed()
-    {
-        // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Platform,
-            RuleConditionOperator.GreaterOrEqual,
-            "Windows"
-        );
-
-        // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(
-            condition,
-            ContextWith(platform: ReleasePlatform.NintendoSwitch)
-        );
-
-        // Assert
-        isMatch.ShouldBeFalse();
-    }
-
-    [Test]
-    public void IsMatch_UnknownField_ReturnsFalse()
-    {
-        // Arrange
-        var condition = RuleCondition.Compare(
-            "DoesNotExist",
-            RuleConditionOperator.Equals,
-            "whatever"
-        );
-
-        // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, ContextWith());
-
-        // Assert
-        isMatch.ShouldBeFalse();
-    }
-
-    [Test]
-    public void IsMatch_OperatorNotAllowedForField_ReturnsFalse()
-    {
-        // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.IsMultiLanguage,
-            RuleConditionOperator.Regex,
-            "true"
-        );
-
-        // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, ContextWith(isMultiLanguage: true));
-
-        // Assert
-        isMatch.ShouldBeFalse();
-    }
-
-    [Test]
-    public void IsMatch_UnparsableValue_ReturnsFalse()
-    {
-        // Arrange
-        var condition = RuleCondition.Compare(
-            RuleFieldCatalog.Year,
-            RuleConditionOperator.Equals,
-            "twenty"
-        );
-
-        // Act
-        var isMatch = RuleConditionEvaluator.IsMatch(condition, ContextWith(year: 2020));
-
-        // Assert
-        isMatch.ShouldBeFalse();
-    }
-
-    [Test]
-    public void IsMatch_EmptyGroup_ReturnsFalse()
-    {
-        // Act + Assert
-        RuleConditionEvaluator.IsMatch(RuleCondition.All(), ContextWith()).ShouldBeFalse();
-        RuleConditionEvaluator.IsMatch(RuleCondition.Any(), ContextWith()).ShouldBeFalse();
-        RuleConditionEvaluator
-            .IsMatch(new RuleCondition { Kind = RuleConditionKind.Not }, ContextWith())
+            .IsMatch(condition, CreateFieldValuesWith(platform: ReleasePlatform.Unknown))
             .ShouldBeFalse();
     }
 
@@ -411,49 +354,49 @@ public class RuleConditionEvaluatorTest
     public void IsMatch_DeeplyNestedTree_CombinesAllAnyAndNot()
     {
         // Arrange
-        var condition = RuleCondition.All(
-            RuleCondition.Compare(
-                RuleFieldCatalog.ContentType,
+        var condition = RuleConditionFactory.CreateAll(
+            RuleConditionFactory.CreateComparison(
+                "ContentType",
                 RuleConditionOperator.Equals,
                 "TvShowEpisode"
             ),
-            RuleCondition.Any(
-                RuleCondition.All(
-                    RuleCondition.Compare(
-                        RuleFieldCatalog.Season,
+            RuleConditionFactory.CreateAny(
+                RuleConditionFactory.CreateAll(
+                    RuleConditionFactory.CreateComparison(
+                        "Season",
                         RuleConditionOperator.Equals,
                         "2"
                     ),
-                    RuleCondition.Not(
-                        RuleCondition.CompareMany(
-                            RuleFieldCatalog.Source,
+                    RuleConditionFactory.CreateNot(
+                        RuleConditionFactory.CreateMultiValueComparison(
+                            "Source",
                             RuleConditionOperator.In,
                             "Hdtv",
                             "TvRip"
                         )
                     )
                 ),
-                RuleCondition.Compare(
-                    RuleFieldCatalog.ReleaseGroupToken,
+                RuleConditionFactory.CreateComparison(
+                    "ReleaseGroupToken",
                     RuleConditionOperator.Equals,
                     "GROUP"
                 )
             )
         );
 
-        var matching = ContextWith(
+        var matching = CreateFieldValuesWith(
             contentType: ReleaseContentType.TvShowEpisode,
             season: 2,
             source: ReleaseSource.WebDl,
             releaseGroupToken: "OTHER"
         );
-        var nonMatching = ContextWith(
+        var nonMatching = CreateFieldValuesWith(
             contentType: ReleaseContentType.TvShowEpisode,
             season: 2,
             source: ReleaseSource.Hdtv,
             releaseGroupToken: "OTHER"
         );
-        var matchingByToken = ContextWith(
+        var matchingByToken = CreateFieldValuesWith(
             contentType: ReleaseContentType.TvShowEpisode,
             season: 9,
             source: ReleaseSource.Hdtv,
@@ -468,16 +411,16 @@ public class RuleConditionEvaluatorTest
 
     private static RuleCondition NotGermanAndHighDefinition()
     {
-        return RuleCondition.All(
-            RuleCondition.Not(
-                RuleCondition.Compare(
-                    RuleFieldCatalog.PrimaryLanguage,
+        return RuleConditionFactory.CreateAll(
+            RuleConditionFactory.CreateNot(
+                RuleConditionFactory.CreateComparison(
+                    "PrimaryLanguage",
                     RuleConditionOperator.Equals,
                     "German"
                 )
             ),
-            RuleCondition.CompareMany(
-                RuleFieldCatalog.Resolution,
+            RuleConditionFactory.CreateMultiValueComparison(
+                "Resolution",
                 RuleConditionOperator.In,
                 "R1080p",
                 "R720p"
@@ -485,7 +428,7 @@ public class RuleConditionEvaluatorTest
         );
     }
 
-    private static ReleaseRoutingContext ContextWith(
+    private static RuleFieldValues CreateFieldValuesWith(
         string releaseName = "Some.Movie.2021.1080p.BluRay.REMUX-GROUP",
         ReleaseResolution resolution = ReleaseResolution.R1080p,
         string? primaryLanguage = "English",
@@ -501,7 +444,7 @@ public class RuleConditionEvaluatorTest
         string? genre = null
     )
     {
-        return new ReleaseRoutingContext(
+        return new RuleFieldValues(
             ReleaseName: releaseName,
             Resolution: resolution,
             PrimaryLanguage: primaryLanguage,
@@ -514,8 +457,7 @@ public class RuleConditionEvaluatorTest
             Year: year,
             Season: season,
             Episode: episode,
-            Genre: genre,
-            HasClassification: true
+            Genre: genre
         );
     }
 }

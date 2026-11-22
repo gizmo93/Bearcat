@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UnitTest.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
@@ -115,8 +116,8 @@ public class ForumPostingRulePreviewServiceTest
             SortOrder = sortOrder,
             Name = $"Rule {id}",
             ConditionJson = RuleConditionSerializer.Serialize(
-                RuleCondition.CompareMany(
-                    RuleFieldCatalog.Resolution,
+                RuleConditionFactory.CreateMultiValueComparison(
+                    "Resolution",
                     RuleConditionOperator.In,
                     resolutions
                 )

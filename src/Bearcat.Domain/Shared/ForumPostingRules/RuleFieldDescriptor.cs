@@ -1,5 +1,3 @@
-using Bearcat.Domain.ValueObjects;
-
 namespace Bearcat.Domain.Shared.ForumPostingRules;
 
 public sealed record RuleFieldDescriptor(
@@ -7,6 +5,7 @@ public sealed record RuleFieldDescriptor(
     RuleFieldValueKind ValueKind,
     IReadOnlyList<RuleConditionOperator> AllowedOperators,
     IReadOnlyList<string> Options,
-    Func<ReleaseRoutingContext, object?> ValueAccessor,
-    IReadOnlyList<ForumPostTemplateType> SupportedEntityTypes
+    Func<RuleFieldValues, IComparable?> GetValue,
+    Func<string, IComparable> ParseValue,
+    bool IsReleaseOnly = false
 );

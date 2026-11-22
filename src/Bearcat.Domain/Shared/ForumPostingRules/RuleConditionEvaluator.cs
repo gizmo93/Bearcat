@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Bearcat.Domain.Shared.ForumPostingRules;
@@ -7,220 +6,90 @@ public static class RuleConditionEvaluator
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(100);
 
-    public static bool IsMatch(RuleCondition? condition, ReleaseRoutingContext context)
+    public static bool IsMatch(RuleCondition condition, RuleFieldValues fieldValues)
     {
-        if (condition is null)
-        {
-            return false;
-        }
-
         return condition.Kind switch
         {
-            RuleConditionKind.All => condition.Children is { Count: > 0 }
-                && condition.Children.TrueForAll(child => IsMatch(child, context)),
-            RuleConditionKind.Any => condition.Children is { Count: > 0 }
-                && condition.Children.Exists(child => IsMatch(child, context)),
-            RuleConditionKind.Not => condition.Child is not null
-                && !IsMatch(condition.Child, context),
-            RuleConditionKind.Comparison => IsComparisonMatch(condition, context),
-            _ => false,
+            RuleConditionKind.All => condition.Children.TrueForAll(child =>
+                IsMatch(child, fieldValues)
+            ),
+            RuleConditionKind.Any => condition.Children.Exists(child =>
+                IsMatch(child, fieldValues)
+            ),
+            RuleConditionKind.Not => !IsMatch(condition.Child!, fieldValues),
+            RuleConditionKind.Comparison => IsComparisonMatch(condition, fieldValues),
+            _ => throw new InvalidOperationException($"Unknown condition kind '{condition.Kind}'."),
         };
     }
 
-    private static bool IsComparisonMatch(RuleCondition condition, ReleaseRoutingContext context)
+    private static bool IsComparisonMatch(RuleCondition condition, RuleFieldValues fieldValues)
     {
-        if (!RuleFieldCatalog.TryGet(condition.Field, out var descriptor))
-        {
-            return false;
-        }
+        var field = RuleFieldCatalog.Get(condition.Field);
+        var actual = field.GetValue(fieldValues);
 
-        if (condition.Operator is not { } conditionOperator)
-        {
-            return false;
-        }
-
-        if (!descriptor.AllowedOperators.Contains(conditionOperator))
-        {
-            return false;
-        }
-
-        var actual = descriptor.ValueAccessor(context);
-
-        return conditionOperator switch
+        return condition.Operator switch
         {
             RuleConditionOperator.IsSet => IsSet(actual),
             RuleConditionOperator.IsNotSet => !IsSet(actual),
-            RuleConditionOperator.NotEquals => !IsPositiveMatch(
-                RuleConditionOperator.Equals,
-                condition,
-                descriptor,
-                actual
+            RuleConditionOperator.Equals => IsEqual(field, actual, condition.Value),
+            RuleConditionOperator.NotEquals => !IsEqual(field, actual, condition.Value),
+            RuleConditionOperator.In => IsOneOf(field, actual, condition.Values),
+            RuleConditionOperator.NotIn => !IsOneOf(field, actual, condition.Values),
+            RuleConditionOperator.Like => IsLike(actual, condition.Value),
+            RuleConditionOperator.NotLike => !IsLike(actual, condition.Value),
+            RuleConditionOperator.Regex => IsRegexMatch(actual, condition.Value),
+            RuleConditionOperator.GreaterOrEqual => actual is not null
+                && actual.CompareTo(field.ParseValue(condition.Value)) >= 0,
+            RuleConditionOperator.LessOrEqual => actual is not null
+                && actual.CompareTo(field.ParseValue(condition.Value)) <= 0,
+            _ => throw new InvalidOperationException(
+                $"Unknown condition operator '{condition.Operator}'."
             ),
-            RuleConditionOperator.NotIn => !IsPositiveMatch(
-                RuleConditionOperator.In,
-                condition,
-                descriptor,
-                actual
-            ),
-            RuleConditionOperator.NotLike => !IsPositiveMatch(
-                RuleConditionOperator.Like,
-                condition,
-                descriptor,
-                actual
-            ),
-            _ => IsPositiveMatch(conditionOperator, condition, descriptor, actual),
         };
     }
 
-    private static bool IsPositiveMatch(
-        RuleConditionOperator conditionOperator,
-        RuleCondition condition,
-        RuleFieldDescriptor descriptor,
-        object? actual
-    )
+    private static bool IsSet(IComparable? actual)
     {
-        if (actual is null)
+        if (actual is string text)
+        {
+            return !string.IsNullOrWhiteSpace(text);
+        }
+
+        return actual is not null;
+    }
+
+    private static bool IsEqual(RuleFieldDescriptor field, IComparable? actual, string value)
+    {
+        if (actual is string text)
+        {
+            return string.Equals(text, value, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return actual is not null && actual.CompareTo(field.ParseValue(value)) == 0;
+    }
+
+    private static bool IsOneOf(RuleFieldDescriptor field, IComparable? actual, List<string> values)
+    {
+        return values.Exists(value => IsEqual(field, actual, value));
+    }
+
+    private static bool IsLike(IComparable? actual, string likePattern)
+    {
+        var segments = likePattern.Split('%').Select(Regex.Escape);
+
+        return IsRegexMatch(actual, $"^{string.Join(".*", segments)}$");
+    }
+
+    private static bool IsRegexMatch(IComparable? actual, string pattern)
+    {
+        if (actual is not string text)
         {
             return false;
         }
 
-        if (conditionOperator is RuleConditionOperator.In)
-        {
-            return condition.Values is { Count: > 0 }
-                && condition.Values.Exists(value =>
-                    IsPositiveMatch(RuleConditionOperator.Equals, descriptor, actual, value)
-                );
-        }
-
-        return IsPositiveMatch(conditionOperator, descriptor, actual, condition.Value);
-    }
-
-    private static bool IsPositiveMatch(
-        RuleConditionOperator conditionOperator,
-        RuleFieldDescriptor descriptor,
-        object actual,
-        string? value
-    )
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        return descriptor.ValueKind switch
-        {
-            RuleFieldValueKind.Text => IsTextMatch(conditionOperator, actual.ToString(), value),
-            RuleFieldValueKind.Enumeration => IsEnumerationMatch(conditionOperator, actual, value),
-            RuleFieldValueKind.Integer => IsIntegerMatch(conditionOperator, actual, value),
-            RuleFieldValueKind.Boolean => IsBooleanMatch(conditionOperator, actual, value),
-            _ => false,
-        };
-    }
-
-    private static bool IsTextMatch(
-        RuleConditionOperator conditionOperator,
-        string? actual,
-        string value
-    )
-    {
-        if (actual is null)
-        {
-            return false;
-        }
-
-        return conditionOperator switch
-        {
-            RuleConditionOperator.Equals => string.Equals(
-                actual,
-                value,
-                StringComparison.OrdinalIgnoreCase
-            ),
-            RuleConditionOperator.Like => IsRegexMatch(actual, ToLikePattern(value)),
-            RuleConditionOperator.Regex => IsRegexMatch(actual, value),
-            _ => false,
-        };
-    }
-
-    private static bool IsEnumerationMatch(
-        RuleConditionOperator conditionOperator,
-        object actual,
-        string value
-    )
-    {
-        if (!Enum.TryParse(actual.GetType(), value, ignoreCase: true, out var parsed))
-        {
-            return false;
-        }
-
-        var actualNumber = Convert.ToInt64(actual, CultureInfo.InvariantCulture);
-        var expectedNumber = Convert.ToInt64(parsed!, CultureInfo.InvariantCulture);
-
-        return conditionOperator switch
-        {
-            RuleConditionOperator.Equals => actualNumber == expectedNumber,
-            RuleConditionOperator.GreaterOrEqual => actualNumber >= expectedNumber,
-            RuleConditionOperator.LessOrEqual => actualNumber <= expectedNumber,
-            _ => false,
-        };
-    }
-
-    private static bool IsIntegerMatch(
-        RuleConditionOperator conditionOperator,
-        object actual,
-        string value
-    )
-    {
-        if (
-            actual is not int actualNumber
-            || !int.TryParse(
-                value,
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out var expectedNumber
-            )
-        )
-        {
-            return false;
-        }
-
-        return conditionOperator switch
-        {
-            RuleConditionOperator.Equals => actualNumber == expectedNumber,
-            RuleConditionOperator.GreaterOrEqual => actualNumber >= expectedNumber,
-            RuleConditionOperator.LessOrEqual => actualNumber <= expectedNumber,
-            _ => false,
-        };
-    }
-
-    private static bool IsBooleanMatch(
-        RuleConditionOperator conditionOperator,
-        object actual,
-        string value
-    )
-    {
-        if (actual is not bool actualFlag || !bool.TryParse(value, out var expectedFlag))
-        {
-            return false;
-        }
-
-        return conditionOperator == RuleConditionOperator.Equals && actualFlag == expectedFlag;
-    }
-
-    private static bool IsSet(object? actual)
-    {
-        return actual switch
-        {
-            null => false,
-            string text => !string.IsNullOrWhiteSpace(text),
-            _ => true,
-        };
-    }
-
-    private static bool IsRegexMatch(string actual, string pattern)
-    {
         try
         {
-            return Regex.IsMatch(actual, pattern, RegexOptions.IgnoreCase, RegexTimeout);
+            return Regex.IsMatch(text, pattern, RegexOptions.IgnoreCase, RegexTimeout);
         }
         catch (ArgumentException)
         {
@@ -230,12 +99,5 @@ public static class RuleConditionEvaluator
         {
             return false;
         }
-    }
-
-    private static string ToLikePattern(string value)
-    {
-        var segments = value.Split('%').Select(Regex.Escape);
-
-        return $"^{string.Join(".*", segments)}$";
     }
 }

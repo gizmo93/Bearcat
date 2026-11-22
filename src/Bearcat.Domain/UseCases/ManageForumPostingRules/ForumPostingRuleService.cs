@@ -147,7 +147,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
             );
         }
 
-        var errors = RuleConditionSerializer.ValidateJson(
+        var errors = RuleConditionValidator.ValidateJson(
             input.ConditionJson,
             RuleFieldCatalog.GetFields(templateType.Value)
         );

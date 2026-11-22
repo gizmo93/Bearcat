@@ -8,7 +8,7 @@ public static class ForumPostingRuleMatcher
     public static ForumPostingRule? FindFirstMatch(
         IReadOnlyList<ForumPostingRule> rules,
         ForumPostTemplateType entityType,
-        ReleaseRoutingContext context
+        RuleFieldValues fieldValues
     )
     {
         var candidates = rules
@@ -17,19 +17,11 @@ public static class ForumPostingRuleMatcher
             .ThenBy(rule => rule.Id)
             .ToList();
 
-        foreach (var rule in candidates)
-        {
-            if (!RuleConditionSerializer.TryDeserialize(rule.ConditionJson, out var condition))
-            {
-                continue;
-            }
-
-            if (RuleConditionEvaluator.IsMatch(condition, context))
-            {
-                return rule;
-            }
-        }
-
-        return null;
+        return candidates.FirstOrDefault(rule =>
+            RuleConditionEvaluator.IsMatch(
+                RuleConditionSerializer.Deserialize(rule.ConditionJson),
+                fieldValues
+            )
+        );
     }
 }

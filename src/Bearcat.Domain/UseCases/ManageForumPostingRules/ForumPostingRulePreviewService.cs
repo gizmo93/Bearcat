@@ -36,7 +36,7 @@ public class ForumPostingRulePreviewService(IForumPostingRuleReadRepository read
                         entityType: entityType,
                         entityId: release.Id,
                         entityName: release.Name,
-                        context: ReleaseRoutingContext.FromRelease(release)
+                        fieldValues: RuleFieldValues.FromRelease(release)
                     )
                 )
                 .ToList();
@@ -54,7 +54,7 @@ public class ForumPostingRulePreviewService(IForumPostingRuleReadRepository read
                     entityType: entityType,
                     entityId: collection.Id,
                     entityName: collection.Name,
-                    context: ReleaseRoutingContext.FromReleaseCollection(collection)
+                    fieldValues: RuleFieldValues.FromReleaseCollection(collection)
                 )
             )
             .ToList();
@@ -65,13 +65,13 @@ public class ForumPostingRulePreviewService(IForumPostingRuleReadRepository read
         ForumPostTemplateType entityType,
         int entityId,
         string entityName,
-        ReleaseRoutingContext context
+        RuleFieldValues fieldValues
     )
     {
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: entityType,
-            context: context
+            fieldValues: fieldValues
         );
 
         return new ForumPostingRulePreviewReadModel(

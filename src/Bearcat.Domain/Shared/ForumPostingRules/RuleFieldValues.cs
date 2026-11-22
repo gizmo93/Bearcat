@@ -3,7 +3,7 @@ using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Shared.ForumPostingRules;
 
-public sealed record ReleaseRoutingContext(
+public sealed record RuleFieldValues(
     string ReleaseName,
     ReleaseResolution Resolution,
     string? PrimaryLanguage,
@@ -16,15 +16,14 @@ public sealed record ReleaseRoutingContext(
     int? Year,
     int? Season,
     int? Episode,
-    string? Genre,
-    bool HasClassification
+    string? Genre
 )
 {
-    public static ReleaseRoutingContext FromRelease(Release release)
+    public static RuleFieldValues FromRelease(Release release)
     {
         var classification = release.Classification;
 
-        return new ReleaseRoutingContext(
+        return new RuleFieldValues(
             ReleaseName: release.Name,
             Resolution: classification?.Resolution ?? ReleaseResolution.Unknown,
             PrimaryLanguage: ReleaseLanguageResolver.Resolve(release),
@@ -37,66 +36,65 @@ public sealed record ReleaseRoutingContext(
             Year: classification?.Year,
             Season: classification?.Season,
             Episode: classification?.Episode,
-            Genre: release.Metadata?.Genre,
-            HasClassification: classification is not null
+            Genre: release.Metadata?.Genre
         );
     }
 
-    public static ReleaseRoutingContext FromReleaseCollection(ReleaseCollection collection)
+    public static RuleFieldValues FromReleaseCollection(ReleaseCollection collection)
     {
         var classifications = collection
             .Releases.Select(release => release.Classification)
             .OfType<ReleaseClassification>()
             .ToList();
 
-        return new ReleaseRoutingContext(
+        return new RuleFieldValues(
             ReleaseName: collection.Name,
-            Resolution: GetValueOrFallback(
-                values: classifications
-                    .Select(classification => classification.Resolution)
-                    .ToList(),
+            Resolution: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.Resolution,
                 fallbackValue: ReleaseResolution.Unknown
             ),
             PrimaryLanguage: ResolveCollectionLanguage(collection),
-            IsMultiLanguage: GetValueOrFallback(
-                values: classifications
-                    .Select(classification => classification.IsMultiLanguage)
-                    .ToList(),
+            IsMultiLanguage: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.IsMultiLanguage,
                 fallbackValue: false
             ),
             ContentType: ResolveCollectionContentType(collection),
-            Platform: GetValueOrFallback(
-                values: classifications.Select(classification => classification.Platform).ToList(),
+            Platform: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.Platform,
                 fallbackValue: ReleasePlatform.Unknown
             ),
-            Source: GetValueOrFallback(
-                values: classifications.Select(classification => classification.Source).ToList(),
+            Source: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.Source,
                 fallbackValue: ReleaseSource.Unknown
             ),
             ReleaseGroupName: collection.ReleaseGroup.Name,
-            ReleaseGroupToken: GetValueOrFallback(
-                values: classifications
-                    .Select(classification => classification.ReleaseGroupToken)
-                    .ToList(),
+            ReleaseGroupToken: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.ReleaseGroupToken,
                 fallbackValue: null
             ),
-            Year: GetValueOrFallback(
-                values: classifications.Select(classification => classification.Year).ToList(),
+            Year: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.Year,
                 fallbackValue: null
             ),
-            Season: GetValueOrFallback(
-                values: classifications.Select(classification => classification.Season).ToList(),
+            Season: GetCommonValueOrFallback(
+                classifications,
+                selectValue: classification => classification.Season,
                 fallbackValue: null
             ),
             Episode: null,
-            Genre: GetValueOrFallback(
-                values: collection
+            Genre: GetCommonValueOrFallback(
+                collection
                     .Releases.Select(release => release.Metadata?.Genre)
                     .Where(genre => !string.IsNullOrWhiteSpace(genre))
                     .ToList(),
                 fallbackValue: null
-            ),
-            HasClassification: classifications.Count > 0
+            )
         );
     }
 
@@ -122,7 +120,7 @@ public sealed record ReleaseRoutingContext(
             .OfType<ReleaseContentType>()
             .ToList();
 
-        return GetValueOrFallback(memberContentTypes, ReleaseContentType.Other);
+        return GetCommonValueOrFallback(memberContentTypes, ReleaseContentType.Other);
     }
 
     private static string? ResolveCollectionLanguage(ReleaseCollection collection)
@@ -139,10 +137,25 @@ public sealed record ReleaseRoutingContext(
             .OfType<string>()
             .ToList();
 
-        return GetValueOrFallback(memberLanguages, null);
+        return GetCommonValueOrFallback(memberLanguages, null);
     }
 
-    private static TValue? GetValueOrFallback<TValue>(List<TValue> values, TValue? fallbackValue)
+    private static TValue? GetCommonValueOrFallback<TValue>(
+        List<ReleaseClassification> classifications,
+        Func<ReleaseClassification, TValue> selectValue,
+        TValue? fallbackValue
+    )
+    {
+        return GetCommonValueOrFallback(
+            classifications.Select(selectValue).ToList(),
+            fallbackValue
+        );
+    }
+
+    private static TValue? GetCommonValueOrFallback<TValue>(
+        List<TValue> values,
+        TValue? fallbackValue
+    )
     {
         var distinctValues = values.Distinct().ToList();
 

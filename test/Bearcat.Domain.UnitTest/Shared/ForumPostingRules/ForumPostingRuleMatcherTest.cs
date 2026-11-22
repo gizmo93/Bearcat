@@ -22,7 +22,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -43,7 +43,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -51,24 +51,33 @@ public class ForumPostingRuleMatcherTest
     }
 
     [Test]
-    public void FindFirstMatch_BrokenConditionJson_IsSkipped()
+    public void FindFirstMatch_ConditionJsonWithoutEmptyProperties_IsEvaluated()
     {
         // Arrange
+        const string conditionJson = """
+            {"kind":"all","children":[
+                {"kind":"comparison","field":"Resolution","operator":"in","values":["R1080p","R720p"]},
+                {"kind":"not","child":{"kind":"comparison","field":"PrimaryLanguage","operator":"equals","value":"German"}},
+                {"kind":"any","children":[
+                    {"kind":"comparison","field":"Season","operator":"isSet"},
+                    {"kind":"comparison","field":"Year","operator":"greaterOrEqual","value":"2020"}
+                ]}
+            ]}
+            """;
         var rules = new List<ForumPostingRule>
         {
-            RuleWith(id: 1, sortOrder: 0, conditionJson: "{ broken"),
-            RuleWith(id: 2, sortOrder: 1, condition: ResolutionIn("R1080p")),
+            RuleWith(id: 1, sortOrder: 0, conditionJson: conditionJson),
         };
 
         // Act
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
-        match.ShouldNotBeNull().Id.ShouldBe(2);
+        match.ShouldNotBeNull().Id.ShouldBe(1);
     }
 
     [Test]
@@ -85,7 +94,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -99,7 +108,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: [],
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -120,7 +129,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.Release,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -141,7 +150,7 @@ public class ForumPostingRuleMatcherTest
         var match = ForumPostingRuleMatcher.FindFirstMatch(
             rules: rules,
             entityType: ForumPostTemplateType.ReleaseCollection,
-            context: Context()
+            fieldValues: CreateFieldValues()
         );
 
         // Assert
@@ -150,8 +159,8 @@ public class ForumPostingRuleMatcherTest
 
     private static RuleCondition ResolutionIn(params string[] resolutions)
     {
-        return RuleCondition.CompareMany(
-            RuleFieldCatalog.Resolution,
+        return RuleConditionFactory.CreateMultiValueComparison(
+            "Resolution",
             RuleConditionOperator.In,
             resolutions
         );
@@ -183,9 +192,9 @@ public class ForumPostingRuleMatcherTest
         };
     }
 
-    private static ReleaseRoutingContext Context()
+    private static RuleFieldValues CreateFieldValues()
     {
-        return new ReleaseRoutingContext(
+        return new RuleFieldValues(
             ReleaseName: "Some.Movie.2021.1080p.BluRay.REMUX-GROUP",
             Resolution: ReleaseResolution.R1080p,
             PrimaryLanguage: "English",
@@ -198,8 +207,7 @@ public class ForumPostingRuleMatcherTest
             Year: 2021,
             Season: null,
             Episode: null,
-            Genre: null,
-            HasClassification: true
+            Genre: null
         );
     }
 }

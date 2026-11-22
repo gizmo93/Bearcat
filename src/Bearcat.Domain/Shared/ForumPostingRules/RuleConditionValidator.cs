@@ -1,0 +1,237 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+
+namespace Bearcat.Domain.Shared.ForumPostingRules;
+
+public static class RuleConditionValidator
+{
+    public static List<string> Validate(
+        RuleCondition? condition,
+        IReadOnlyList<RuleFieldDescriptor> fields
+    )
+    {
+        var errors = new List<string>();
+
+        if (condition is null)
+        {
+            errors.Add("A rule condition is required.");
+
+            return errors;
+        }
+
+        Validate(condition, fields, errors);
+
+        return errors;
+    }
+
+    public static List<string> ValidateJson(string? json, IReadOnlyList<RuleFieldDescriptor> fields)
+    {
+        if (!RuleConditionSerializer.TryDeserialize(json, out var condition))
+        {
+            return ["The rule condition is not valid JSON."];
+        }
+
+        return Validate(condition, fields);
+    }
+
+    private static void Validate(
+        RuleCondition condition,
+        IReadOnlyList<RuleFieldDescriptor> fields,
+        List<string> errors
+    )
+    {
+        switch (condition.Kind)
+        {
+            case RuleConditionKind.All:
+            case RuleConditionKind.Any:
+                ValidateGroup(condition, fields, errors);
+
+                break;
+            case RuleConditionKind.Not:
+                ValidateNot(condition, fields, errors);
+
+                break;
+            case RuleConditionKind.Comparison:
+                ValidateComparison(condition, fields, errors);
+
+                break;
+            default:
+                errors.Add($"Unknown condition kind '{condition.Kind}'.");
+
+                break;
+        }
+    }
+
+    private static void ValidateGroup(
+        RuleCondition condition,
+        IReadOnlyList<RuleFieldDescriptor> fields,
+        List<string> errors
+    )
+    {
+        var kind = condition.Kind.ToString().ToLowerInvariant();
+
+        if (condition.Children.Count == 0)
+        {
+            errors.Add($"The '{kind}' group requires at least one child condition.");
+        }
+
+        foreach (var child in condition.Children)
+        {
+            Validate(child, fields, errors);
+        }
+    }
+
+    private static void ValidateNot(
+        RuleCondition condition,
+        IReadOnlyList<RuleFieldDescriptor> fields,
+        List<string> errors
+    )
+    {
+        if (condition.Child is null)
+        {
+            errors.Add("The 'not' condition requires a child condition.");
+
+            return;
+        }
+
+        Validate(condition.Child, fields, errors);
+    }
+
+    private static void ValidateComparison(
+        RuleCondition condition,
+        IReadOnlyList<RuleFieldDescriptor> fields,
+        List<string> errors
+    )
+    {
+        var descriptor = fields.FirstOrDefault(field =>
+            string.Equals(field.Name, condition.Field, StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (descriptor is null)
+        {
+            errors.Add($"Unknown field '{condition.Field}'.");
+
+            return;
+        }
+
+        if (!descriptor.AllowedOperators.Contains(condition.Operator))
+        {
+            errors.Add(
+                $"The operator '{condition.Operator}' is not allowed for the field '{descriptor.Name}'."
+            );
+
+            return;
+        }
+
+        ValidateOperands(condition, descriptor, errors);
+    }
+
+    private static void ValidateOperands(
+        RuleCondition condition,
+        RuleFieldDescriptor descriptor,
+        List<string> errors
+    )
+    {
+        var conditionOperator = condition.Operator;
+
+        if (!conditionOperator.NeedsValue())
+        {
+            return;
+        }
+
+        if (conditionOperator.IsMultiValue())
+        {
+            if (condition.Values.Count == 0)
+            {
+                errors.Add(
+                    $"The operator '{conditionOperator}' requires at least one value for the field '{descriptor.Name}'."
+                );
+
+                return;
+            }
+
+            foreach (var value in condition.Values)
+            {
+                ValidateValue(value, descriptor, errors);
+            }
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(condition.Value))
+        {
+            errors.Add(
+                $"The operator '{conditionOperator}' requires a value for the field '{descriptor.Name}'."
+            );
+
+            return;
+        }
+
+        if (
+            conditionOperator is RuleConditionOperator.Regex
+            && !IsValidRegexPattern(condition.Value)
+        )
+        {
+            errors.Add($"The value '{condition.Value}' is not a valid regular expression.");
+
+            return;
+        }
+
+        ValidateValue(condition.Value, descriptor, errors);
+    }
+
+    private static bool IsValidRegexPattern(string pattern)
+    {
+        try
+        {
+            _ = new Regex(pattern);
+
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    private static void ValidateValue(
+        string? value,
+        RuleFieldDescriptor descriptor,
+        List<string> errors
+    )
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            errors.Add($"The field '{descriptor.Name}' requires a value.");
+
+            return;
+        }
+
+        switch (descriptor.ValueKind)
+        {
+            case RuleFieldValueKind.Enumeration
+                when !descriptor.Options.Contains(value, StringComparer.OrdinalIgnoreCase):
+                errors.Add($"The value '{value}' is not valid for the field '{descriptor.Name}'.");
+
+                break;
+            case RuleFieldValueKind.Integer
+                when !int.TryParse(
+                    value,
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out _
+                ):
+                errors.Add(
+                    $"The value '{value}' is not a number for the field '{descriptor.Name}'."
+                );
+
+                break;
+            case RuleFieldValueKind.Boolean when !bool.TryParse(value, out _):
+                errors.Add(
+                    $"The value '{value}' is not a boolean for the field '{descriptor.Name}'."
+                );
+
+                break;
+        }
+    }
+}
