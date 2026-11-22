@@ -111,7 +111,6 @@ using Bearcat.Domain.UseCases.PostToForums.PostCreation;
 using Bearcat.Domain.UseCases.PostToForums.PostUpdate;
 using Bearcat.Domain.UseCases.ReplaceHosters;
 using Bearcat.Domain.UseCases.RunUploadCompletionActions;
-using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -314,11 +313,6 @@ public static class ServiceProviderConfig
                 ApplicationConfigurationProvider
             >();
             services.AddScoped<ApplicationConfigurationService>();
-        }
-
-        public void AddSqliteDomainServices()
-        {
-            services.AddScoped<QueryPlannerStatisticsUpdateService>();
         }
     }
 }

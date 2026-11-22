@@ -35,7 +35,7 @@ All tasks are enabled by default.
 | Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/Bearcat/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
-| SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. |
+| SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. Also compacts the database file (`VACUUM`) when at least 20 % of it is unused, for example after deleting many releases. Writes wait while this runs. |
 
 ## Configurations
 

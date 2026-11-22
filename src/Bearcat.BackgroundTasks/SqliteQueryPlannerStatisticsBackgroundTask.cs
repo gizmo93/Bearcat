@@ -1,4 +1,5 @@
-using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics;
+using Bearcat.Domain.UseCases.CompactDatabase.Repositories;
+using Bearcat.Domain.UseCases.UpdateQueryPlannerStatistics.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +19,12 @@ public class SqliteQueryPlannerStatisticsBackgroundTask(
         CancellationToken stoppingToken
     )
     {
-        var service = serviceProvider.GetRequiredService<QueryPlannerStatisticsUpdateService>();
-        await service.UpdateQueryPlannerStatisticsAsync(stoppingToken);
+        var compactionRepository =
+            serviceProvider.GetRequiredService<IDatabaseCompactionRepository>();
+        await compactionRepository.CompactDatabaseWithManyFreePagesAsync(stoppingToken);
+
+        var statisticsRepository =
+            serviceProvider.GetRequiredService<IQueryPlannerStatisticsRepository>();
+        await statisticsRepository.UpdateQueryPlannerStatisticsAsync(stoppingToken);
     }
 }

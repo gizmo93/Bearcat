@@ -4,6 +4,7 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
 namespace Bearcat.Infrastructure.IntegrationTest.Database.Repositories;
@@ -48,7 +49,10 @@ public class SqliteQueryPlannerStatisticsRepositoryTest
         );
         await dbContext.SaveChangesAsync();
         await using var repositoryDbContext = database.CreateDbContext();
-        var repository = new SqliteQueryPlannerStatisticsRepository(repositoryDbContext);
+        var repository = new SqliteQueryPlannerStatisticsRepository(
+            repositoryDbContext,
+            NullLogger<SqliteQueryPlannerStatisticsRepository>.Instance
+        );
 
         // Act
         await repository.UpdateQueryPlannerStatisticsAsync(CancellationToken.None);

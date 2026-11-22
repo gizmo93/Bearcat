@@ -8,6 +8,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Rep
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Repositories;
+using Bearcat.Domain.UseCases.CompactDatabase.Repositories;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
@@ -119,6 +120,7 @@ public static class ServiceProviderConfig
                 IQueryPlannerStatisticsRepository,
                 SqliteQueryPlannerStatisticsRepository
             >();
+            services.AddScoped<IDatabaseCompactionRepository, SqliteDatabaseCompactionRepository>();
         }
 
         private void AddRepositories()
