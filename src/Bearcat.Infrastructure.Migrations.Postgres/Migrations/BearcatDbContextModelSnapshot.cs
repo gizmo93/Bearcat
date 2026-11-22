@@ -892,6 +892,15 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<int>("ImageUploadConfigId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("OfflineSince")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("OnlineCheckedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("OnlineState")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ReleaseScreenshotId")
                         .HasColumnType("integer");
 
@@ -904,6 +913,8 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("ImageUploadConfigId");
+
+                    b.HasIndex("OnlineCheckedAt");
 
                     b.HasIndex("ReleaseScreenshotId");
 

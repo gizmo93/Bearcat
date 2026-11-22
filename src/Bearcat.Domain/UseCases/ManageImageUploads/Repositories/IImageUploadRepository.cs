@@ -17,6 +17,13 @@ public interface IImageUploadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ImageUpload>> GetLeastRecentlyCheckedImageUploadsAsync(
+        int imageHosterRegistrationId,
+        DateTime checkedBefore,
+        int maximumImageUploadCount,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyDictionary<int, string>> GetConfigByImageHosterRegistrationIdAsync(
         CancellationToken cancellationToken = default
     );

@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -315,6 +316,105 @@ public class ImageUploadRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.Count.ShouldBe(3);
         result.ShouldAllBe(screenshot => screenshot.ReleaseId == config.ReleaseId);
+    }
+
+    [Test]
+    public async Task GetLeastRecentlyCheckedImageUploadsAsync_UploadsOfSeveralStatesAndRegistrations_ReturnsOnlyDueCompletedUploadsOfRegistration()
+    {
+        // Arrange
+        var checkedBefore = CreatedAt.AddHours(-6);
+        var config = await AddReleaseImageUploadConfigAsync(coverUrl: null);
+        var otherRegistrationConfig = await AddReleaseImageUploadConfigAsync(coverUrl: null);
+        var neverCheckedUpload = await AddImageUploadAsync(config, onlineCheckedAt: null);
+        var checkedLongAgoUpload = await AddImageUploadAsync(
+            config,
+            onlineCheckedAt: checkedBefore.AddMinutes(-1)
+        );
+        await AddImageUploadAsync(config, onlineCheckedAt: checkedBefore.AddMinutes(1));
+        await AddImageUploadAsync(otherRegistrationConfig, onlineCheckedAt: null);
+        await AddImageUploadAsync(config, onlineCheckedAt: null, uploadState: UploadState.Failed);
+        await AddImageUploadAsync(config, onlineCheckedAt: null, uploadState: UploadState.Pending);
+
+        // Act
+        var result = await repository.GetLeastRecentlyCheckedImageUploadsAsync(
+            imageHosterRegistrationId: config.ImageHosterRegistrationId,
+            checkedBefore: checkedBefore,
+            maximumImageUploadCount: 10,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(upload => upload.Id)
+            .ShouldBe([neverCheckedUpload.Id, checkedLongAgoUpload.Id], ignoreOrder: true);
+        result.ShouldAllBe(upload =>
+            upload.ImageUploadConfig.ImageHosterRegistration.Id == config.ImageHosterRegistrationId
+        );
+        result.ShouldAllBe(upload => upload.ImageUrls.Count == 1);
+    }
+
+    [Test]
+    public async Task GetLeastRecentlyCheckedImageUploadsAsync_MoreUploadsThanMaximum_ReturnsNeverCheckedFirstThenOldestChecked()
+    {
+        // Arrange
+        var config = await AddReleaseImageUploadConfigAsync(coverUrl: null);
+        var checkedSecondOldestUpload = await AddImageUploadAsync(
+            config,
+            onlineCheckedAt: CreatedAt.AddDays(-2)
+        );
+        await AddImageUploadAsync(config, onlineCheckedAt: CreatedAt.AddDays(-1));
+        var checkedOldestUpload = await AddImageUploadAsync(
+            config,
+            onlineCheckedAt: CreatedAt.AddDays(-3)
+        );
+        var neverCheckedUpload = await AddImageUploadAsync(config, onlineCheckedAt: null);
+
+        // Act
+        var result = await repository.GetLeastRecentlyCheckedImageUploadsAsync(
+            imageHosterRegistrationId: config.ImageHosterRegistrationId,
+            checkedBefore: CreatedAt,
+            maximumImageUploadCount: 3,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Select(upload => upload.Id)
+            .ShouldBe([
+                neverCheckedUpload.Id,
+                checkedOldestUpload.Id,
+                checkedSecondOldestUpload.Id,
+            ]);
+    }
+
+    private async Task<ImageUpload> AddImageUploadAsync(
+        ImageUploadConfig config,
+        DateTime? onlineCheckedAt,
+        UploadState uploadState = UploadState.Completed
+    )
+    {
+        var upload = new ImageUpload
+        {
+            ImageUploadConfigId = config.Id,
+            CreatedAt = CreatedAt.AddDays(-10),
+            UploadState = uploadState,
+            OnlineCheckedAt = onlineCheckedAt,
+            ErrorMessages = [],
+            ImageUrls =
+            [
+                new ImageUploadUrl
+                {
+                    ImageSize = ImageSize.Full,
+                    Url = $"https://images.test/{Guid.NewGuid():N}.jpg",
+                },
+            ],
+        };
+
+        DbContext.ImageUploads.Add(upload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return upload;
     }
 
     private async Task<List<ImageUpload>> GetImageUploadsAsync(ImageUploadConfig config)

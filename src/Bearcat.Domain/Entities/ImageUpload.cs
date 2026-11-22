@@ -23,4 +23,17 @@ public class ImageUpload
     public List<string> ErrorMessages { get; set; } = [];
 
     public List<ImageUploadUrl> ImageUrls { get; set; } = [];
+
+    public OnlineState OnlineState { get; set; } = OnlineState.Unknown;
+
+    public DateTime? OnlineCheckedAt { get; set; }
+
+    public DateTime? OfflineSince { get; set; }
+
+    public void SetOnlineStateAndCheckedAt(OnlineState onlineState, DateTime checkedAt)
+    {
+        OnlineState = onlineState;
+        OnlineCheckedAt = checkedAt;
+        OfflineSince = onlineState == OnlineState.Offline ? OfflineSince ?? checkedAt : null;
+    }
 }

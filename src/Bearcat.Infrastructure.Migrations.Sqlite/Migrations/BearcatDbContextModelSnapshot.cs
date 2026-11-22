@@ -848,6 +848,15 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<int>("ImageUploadConfigId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("OfflineSince")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("OnlineCheckedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OnlineState")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("ReleaseScreenshotId")
                         .HasColumnType("INTEGER");
 
@@ -860,6 +869,8 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("ImageUploadConfigId");
+
+                    b.HasIndex("OnlineCheckedAt");
 
                     b.HasIndex("ReleaseScreenshotId");
 

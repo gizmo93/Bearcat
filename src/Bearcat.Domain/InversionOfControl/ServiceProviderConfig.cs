@@ -60,6 +60,7 @@ using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageImageUploads;
+using Bearcat.Domain.UseCases.ManageImageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.MultiUploadContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.ReleaseAllHosters;
@@ -143,6 +144,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ImageUploadConfigService>();
             services.AddScoped<PostedLocationService>();
             services.AddScoped<ImageUploadService>();
+            services.AddScoped<ImageUploadOnlineCheckService>();
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<ReleaseFolderAutomationPreviewService>();

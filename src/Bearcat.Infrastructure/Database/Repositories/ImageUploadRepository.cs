@@ -156,6 +156,30 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ImageUpload>> GetLeastRecentlyCheckedImageUploadsAsync(
+        int imageHosterRegistrationId,
+        DateTime checkedBefore,
+        int maximumImageUploadCount,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .ImageUploads.AsSplitQuery()
+            .Include(upload => upload.ImageUrls)
+            .Include(upload => upload.ImageUploadConfig)
+                .ThenInclude(config => config.ImageHosterRegistration)
+            .Where(upload =>
+                upload.UploadState == UploadState.Completed
+                && upload.ImageUploadConfig.ImageHosterRegistrationId == imageHosterRegistrationId
+                && (upload.OnlineCheckedAt == null || upload.OnlineCheckedAt < checkedBefore)
+            )
+            .OrderBy(upload => upload.OnlineCheckedAt != null)
+            .ThenBy(upload => upload.OnlineCheckedAt)
+            .ThenBy(upload => upload.Id)
+            .Take(maximumImageUploadCount)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<int, string>> GetConfigByImageHosterRegistrationIdAsync(
         CancellationToken cancellationToken = default
     )

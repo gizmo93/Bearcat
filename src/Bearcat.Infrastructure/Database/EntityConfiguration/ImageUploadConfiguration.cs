@@ -15,6 +15,11 @@ public class ImageUploadConfiguration : IEntityTypeConfiguration<ImageUpload>
         builder.Property(upload => upload.UploadedAt).IsRequired(false);
         builder.Property(upload => upload.UploadState).IsRequired();
         builder.Property(upload => upload.ErrorMessages).HasColumnType("jsonb");
+        builder.Property(upload => upload.OnlineState).IsRequired();
+        builder.Property(upload => upload.OnlineCheckedAt).IsRequired(false);
+        builder.Property(upload => upload.OfflineSince).IsRequired(false);
+
+        builder.HasIndex(upload => upload.OnlineCheckedAt);
 
         builder
             .HasOne(upload => upload.ImageUploadConfig)
