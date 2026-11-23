@@ -550,8 +550,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         };
         var assignmentService = new ReleaseCollectionAssignmentService(
             repository,
-            CreateTimeProvider(),
-            NullLogger<ReleaseCollectionAssignmentService>.Instance
+            CreateTimeProvider()
         );
 
         // Act
@@ -708,34 +707,6 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             uc.ReleaseId == upload.UploadConfig.ReleaseId
         );
         uploadConfig.CollectionUploadSlotId.ShouldBe(secondSlot.Id);
-    }
-
-    [Test]
-    public async Task AddReleaseAsync_WrongReleaseGroup_Throws()
-    {
-        // Arrange
-        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
-        var otherGroup = new ReleaseGroup
-        {
-            Name = "Other",
-            EnableAutomaticReuploads = false,
-            NumberOfHoursUntilReupload = 24,
-        };
-        var otherRelease = new Release
-        {
-            Name = "Other.Release",
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/tmp/other",
-            ReleaseGroup = otherGroup,
-        };
-        DbContext.Releases.Add(otherRelease);
-        await DbContext.SaveChangesAsync();
-        DbContext.ChangeTracker.Clear();
-
-        // Act & Assert
-        await Should.ThrowAsync<InvalidOperationException>(() =>
-            service.AddReleaseAsync(seed.CollectionId, otherRelease.Id)
-        );
     }
 
     [Test]

@@ -5,8 +5,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 
 public interface IReleaseCollectionWriteRepository
 {
-    Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
-        int releaseGroupId,
+    Task<ReleaseCollection?> GetByKeyAsync(
         string key,
         CancellationToken cancellationToken = default
     );

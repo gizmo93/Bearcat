@@ -373,13 +373,6 @@ public class ReleaseCollectionService(
             cancellationToken
         );
 
-        if (release.ReleaseGroupId != releaseCollection.ReleaseGroupId)
-        {
-            throw new InvalidOperationException(
-                "The release must belong to the same release group as the collection."
-            );
-        }
-
         if (release.ReleaseCollectionId == releaseCollectionId)
         {
             return;

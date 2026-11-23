@@ -920,8 +920,7 @@ public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
                     dbWrite: dbContext,
                     metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
                 ),
-                timeProvider,
-                NullLogger<ReleaseCollectionAssignmentService>.Instance
+                timeProvider
             )
         );
     }

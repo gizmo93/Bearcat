@@ -7,7 +7,6 @@ using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -30,8 +29,7 @@ public class ReleaseCollectionAssignmentServiceTest(DatabaseProvider databasePro
         );
         assignmentService = new ReleaseCollectionAssignmentService(
             writeRepository: repository,
-            timeProvider: CreateTimeProvider(),
-            logger: NullLogger<ReleaseCollectionAssignmentService>.Instance
+            timeProvider: CreateTimeProvider()
         );
     }
 
@@ -62,12 +60,21 @@ public class ReleaseCollectionAssignmentServiceTest(DatabaseProvider databasePro
     }
 
     [Test]
-    public async Task AssignFromTemplateAsync_CollectionWithSameNameInOtherReleaseGroup_LeavesReleaseUnassigned()
+    [TestCase("Hostage S01", "hostage.s01.other")]
+    [TestCase("Renamed collection", "hostage.s01.german.1080p.web.x264.grp")]
+    public async Task AssignFromTemplateAsync_CollectionInOtherReleaseGroup_AssignsReleaseToExistingCollection(
+        string collectionName,
+        string collectionKey
+    )
     {
         // Arrange
         var otherReleaseGroup = await AddReleaseGroupAsync("Other series");
         var releaseGroup = await AddReleaseGroupAsync("Series");
-        await AddCollectionAsync(otherReleaseGroup, name: "Hostage S01", key: "hostage.s01");
+        var existingCollection = await AddCollectionAsync(
+            otherReleaseGroup,
+            name: collectionName,
+            key: collectionKey
+        );
         var release = new Release { Name = "Hostage.S01E01.German.1080p.WEB.x264-GRP" };
 
         // Act
@@ -80,7 +87,7 @@ public class ReleaseCollectionAssignmentServiceTest(DatabaseProvider databasePro
         await repository.SaveChangesAsync();
 
         // Assert
-        release.ReleaseCollection.ShouldBeNull();
+        release.ReleaseCollection.ShouldBeSameAs(existingCollection);
         (await DbContext.ReleaseCollections.CountAsync()).ShouldBe(1);
     }
 

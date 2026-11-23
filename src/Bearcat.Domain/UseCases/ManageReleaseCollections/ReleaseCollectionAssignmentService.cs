@@ -3,21 +3,16 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public class ReleaseCollectionAssignmentService(
     IReleaseCollectionWriteRepository writeRepository,
-    TimeProvider timeProvider,
-    ILogger<ReleaseCollectionAssignmentService> logger
+    TimeProvider timeProvider
 ) : IReleaseCollectionAssigner
 {
-    private readonly Dictionary<
-        ReleaseCollectionCacheKey,
-        ReleaseCollection
-    > releaseCollectionsByKey = [];
+    private readonly Dictionary<string, ReleaseCollection> releaseCollectionsByKey = [];
 
     public async Task AssignFromTemplateAsync(
         Release release,
@@ -36,19 +31,10 @@ public class ReleaseCollectionAssignmentService(
             return;
         }
 
-        var cacheKey = new ReleaseCollectionCacheKey(
-            releaseTemplate.ReleaseGroupId,
-            detectionResult.Key
-        );
-
-        if (!releaseCollectionsByKey.TryGetValue(cacheKey, out var releaseCollection))
+        if (!releaseCollectionsByKey.TryGetValue(detectionResult.Key, out var releaseCollection))
         {
             releaseCollection =
-                await writeRepository.GetByReleaseGroupAndKeyAsync(
-                    releaseTemplate.ReleaseGroupId,
-                    detectionResult.Key,
-                    cancellationToken
-                )
+                await writeRepository.GetByKeyAsync(detectionResult.Key, cancellationToken)
                 ?? await GetByNameOrCreateAsync(
                     release: release,
                     releaseTemplate: releaseTemplate,
@@ -56,12 +42,7 @@ public class ReleaseCollectionAssignmentService(
                     cancellationToken: cancellationToken
                 );
 
-            if (releaseCollection is null)
-            {
-                return;
-            }
-
-            releaseCollectionsByKey[cacheKey] = releaseCollection;
+            releaseCollectionsByKey[detectionResult.Key] = releaseCollection;
         }
 
         if (releaseCollection.PrimaryLanguageCode is null)
@@ -132,14 +113,14 @@ public class ReleaseCollectionAssignmentService(
         releaseCollectionsByKey.Clear();
     }
 
-    private async Task<ReleaseCollection?> GetByNameOrCreateAsync(
+    private async Task<ReleaseCollection> GetByNameOrCreateAsync(
         Release release,
         ReleaseTemplate releaseTemplate,
         ReleaseCollectionDetectionResult detectionResult,
         CancellationToken cancellationToken
     )
     {
-        var releaseCollectionWithSameName =
+        var existingReleaseCollection =
             GetReleaseCollectionOfCurrentBatchByName(detectionResult.Name)
             ?? await writeRepository.GetByNameAsync(
                 name: detectionResult.Name,
@@ -147,36 +128,24 @@ public class ReleaseCollectionAssignmentService(
                 cancellationToken: cancellationToken
             );
 
-        if (releaseCollectionWithSameName is null)
+        if (existingReleaseCollection is not null)
         {
-            var releaseCollection = new ReleaseCollection
-            {
-                ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-                ReleaseContentType = releaseTemplate.ReleaseContentType,
-                Key = detectionResult.Key,
-                Name = detectionResult.Name,
-                PrimaryLanguageCode = release.PrimaryLanguageCode,
-                CreatedAt = timeProvider.GetLocalNow(),
-            };
-
-            writeRepository.Add(releaseCollection);
-
-            return releaseCollection;
+            return existingReleaseCollection;
         }
 
-        if (releaseCollectionWithSameName.ReleaseGroupId == releaseTemplate.ReleaseGroupId)
+        var releaseCollection = new ReleaseCollection
         {
-            return releaseCollectionWithSameName;
-        }
+            ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+            ReleaseContentType = releaseTemplate.ReleaseContentType,
+            Key = detectionResult.Key,
+            Name = detectionResult.Name,
+            PrimaryLanguageCode = release.PrimaryLanguageCode,
+            CreatedAt = timeProvider.GetLocalNow(),
+        };
 
-        logger.LogWarning(
-            "Release {ReleaseName} was not assigned to a release collection because the detected collection name {ReleaseCollectionName} is already used by release collection {ReleaseCollectionId} of another release group",
-            release.Name,
-            detectionResult.Name,
-            releaseCollectionWithSameName.Id
-        );
+        writeRepository.Add(releaseCollection);
 
-        return null;
+        return releaseCollection;
     }
 
     private ReleaseCollection? GetReleaseCollectionOfCurrentBatchByName(string name)
@@ -221,6 +190,4 @@ public class ReleaseCollectionAssignmentService(
             );
         }
     }
-
-    private sealed record ReleaseCollectionCacheKey(int ReleaseGroupId, string Key);
 }

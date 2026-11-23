@@ -528,7 +528,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task SearchAvailableReleasesAsync_SearchTermWithNonAsciiCharacters_ReturnsMatchingReleasesOfGroupOutsideCollection()
+    public async Task SearchAvailableReleasesAsync_SearchTermWithNonAsciiCharacters_ReturnsMatchingReleasesOutsideCollection()
     {
         // Arrange
         var releaseGroup = await AddReleaseGroupAsync("Series");
@@ -539,7 +539,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         var releaseWithoutCollection = AddRelease(releaseGroup, "Éclair.S01E02", null);
         var releaseInOtherCollection = AddRelease(releaseGroup, "Éclair.S02E01", otherCollection);
         AddRelease(releaseGroup, "Bodies.S01E01", null);
-        AddRelease(otherGroup, "Éclair.S01E03", null);
+        var releaseInOtherGroup = AddRelease(otherGroup, "Éclair.S01E03", null);
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
@@ -553,6 +553,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldBe([
             new AvailableReleaseReadModel(releaseWithoutCollection.Id, "Éclair.S01E02"),
+            new AvailableReleaseReadModel(releaseInOtherGroup.Id, "Éclair.S01E03"),
             new AvailableReleaseReadModel(releaseInOtherCollection.Id, "Éclair.S02E01"),
         ]);
     }

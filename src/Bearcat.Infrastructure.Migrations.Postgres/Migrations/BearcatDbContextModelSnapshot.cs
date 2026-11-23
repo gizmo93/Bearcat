@@ -1832,15 +1832,17 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Key")
+                        .IsUnique();
+
                     b.HasIndex("OnlineState");
+
+                    b.HasIndex("ReleaseGroupId");
 
                     b.HasIndex("CreatedAt", "Id")
                         .IsDescending();
 
                     b.HasIndex("Name", "Id");
-
-                    b.HasIndex("ReleaseGroupId", "Key")
-                        .IsUnique();
 
                     b.ToTable("ReleaseCollections");
                 });

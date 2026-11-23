@@ -25,11 +25,11 @@ Choose how Bearcat groups releases:
 - **Custom regex** lets you describe your own pattern when your names do not follow the usual
   series layout.
 
-For a matching release, Bearcat creates a collection or adds it to an existing one.
+For a matching release, Bearcat creates a collection or adds it to an existing one. Releases from
+different release groups can share a collection.
 Find them under **Release collections**.
 
-To add a release manually, open a collection and select **Add release**. Only releases from the
-same release group can be added.
+To add a release manually, open a collection and select **Add release**.
 
 Existing uploads to the hoster account or pool of a slot move into that slot, and their links are added
 to its container. If the release has an archive configuration with the same name as in the slot, only

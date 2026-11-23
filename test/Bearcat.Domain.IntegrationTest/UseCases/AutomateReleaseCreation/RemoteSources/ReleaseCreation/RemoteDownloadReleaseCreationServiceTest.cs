@@ -212,8 +212,7 @@ public class RemoteDownloadReleaseCreationServiceTest(DatabaseProvider databaseP
                         dbWrite: dbContext,
                         metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
                     ),
-                    timeProvider,
-                    NullLogger<ReleaseCollectionAssignmentService>.Instance
+                    timeProvider
                 )
             ),
             new NotificationService(

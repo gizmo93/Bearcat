@@ -313,8 +313,7 @@ public abstract class LinkCrypterImportIntegrationTest(DatabaseProvider database
                 dbWrite: dbContext,
                 metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
             ),
-            timeProvider,
-            NullLogger<ReleaseCollectionAssignmentService>.Instance
+            timeProvider
         );
     }
 

@@ -25,11 +25,11 @@ Wähle, wie Bearcat Releases gruppiert:
 - Mit **Eigenes Regex** beschreibst du ein eigenes Muster, wenn deine Namen nicht dem üblichen
   Serienschema folgen.
 
-Für ein passendes Release erstellt Bearcat eine Collection oder fügt es der bestehenden hinzu.
+Für ein passendes Release erstellt Bearcat eine Collection oder fügt es der bestehenden hinzu. Releases
+verschiedener Releasegruppen können in derselben Collection liegen.
 Du findest sie unter **Releasecollections**.
 
-Um ein Release manuell hinzuzufügen, öffne eine Collection und wähle **Release hinzufügen**. Nur Releases
-derselben Releasegruppe können hinzugefügt werden.
+Um ein Release manuell hinzuzufügen, öffne eine Collection und wähle **Release hinzufügen**.
 
 Vorhandene Uploads beim Hosteraccount oder Pool eines Slots werden in den Slot übernommen und ihre Links in
 dessen Container aufgenommen. Hat das Release eine Archivkonfiguration mit dem gleichen Namen wie im Slot,

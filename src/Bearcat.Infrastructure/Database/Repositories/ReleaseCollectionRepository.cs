@@ -85,8 +85,7 @@ public class ReleaseCollectionRepository(
         );
     }
 
-    public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
-        int releaseGroupId,
+    public async Task<ReleaseCollection?> GetByKeyAsync(
         string key,
         CancellationToken cancellationToken = default
     )
@@ -97,10 +96,7 @@ public class ReleaseCollectionRepository(
                 .ThenInclude(slot => slot.UploadConfigs)
                     .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
             .Include(collection => collection.ImageUploadConfigs)
-            .FirstOrDefaultAsync(
-                collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
-                cancellationToken
-            );
+            .FirstOrDefaultAsync(collection => collection.Key == key, cancellationToken);
     }
 
     public async Task<ReleaseCollection?> GetByNameAsync(
@@ -883,14 +879,8 @@ public class ReleaseCollectionRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var releaseGroupId = await dbRead
-            .ReleaseCollections.Where(collection => collection.Id == releaseCollectionId)
-            .Select(collection => collection.ReleaseGroupId)
-            .FirstAsync(cancellationToken);
-
         var query = dbRead.Releases.Where(release =>
-            release.ReleaseGroupId == releaseGroupId
-            && release.ReleaseCollectionId != releaseCollectionId
+            release.ReleaseCollectionId != releaseCollectionId
         );
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

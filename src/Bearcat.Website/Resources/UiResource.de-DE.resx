@@ -940,7 +940,7 @@
   <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Uploadkonfiguration über die Collection teilen</value></data>
   <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collectioncontainer für diese Gruppe.</value></data>
   <data name="AddRelease" xml:space="preserve"><value>Release hinzufügen</value></data>
-  <data name="AddReleaseToCollectionDescription" xml:space="preserve"><value>Suche nach einem Release in der gleichen Releasegruppe, um es dieser Collection hinzuzufügen.</value></data>
+  <data name="AddReleaseToCollectionDescription" xml:space="preserve"><value>Suche nach einem Release, um es dieser Collection hinzuzufügen.</value></data>
   <data name="SearchRelease" xml:space="preserve"><value>Suchen</value></data>
   <data name="SearchReleasePlaceholder" xml:space="preserve"><value>Nach Releasename suchen</value></data>
   <data name="NoAvailableReleasesFound" xml:space="preserve"><value>Keine verfügbaren Releases gefunden.</value></data>

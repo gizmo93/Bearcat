@@ -19,7 +19,7 @@ public class ReleaseCollectionConfiguration : IEntityTypeConfiguration<ReleaseCo
         builder.Property(c => c.UploadsPostedAt).HasPrecision(4).IsRequired(false);
         builder.Property(c => c.OnlineState).IsRequired();
 
-        builder.HasIndex(c => new { c.ReleaseGroupId, c.Key }).IsUnique();
+        builder.HasIndex(c => c.Key).IsUnique();
         builder.HasIndex(c => c.OnlineState);
         builder.HasIndex(c => new { c.CreatedAt, c.Id }).IsDescending();
         builder.HasIndex(c => new { c.Name, c.Id });
