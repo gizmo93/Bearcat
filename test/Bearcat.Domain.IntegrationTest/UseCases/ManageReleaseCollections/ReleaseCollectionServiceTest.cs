@@ -620,6 +620,97 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    [TestCase("Episode 1 archive")]
+    [TestCase("Other archive")]
+    public async Task AddReleaseAsync_ReleaseAlreadyUploadedToHosterOfSlot_MovesExistingUploadsIntoSlot(
+        string archiveConfigName
+    )
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithUploadSlotAsync(
+            linkCrypterPassword: "collection-password",
+            enableCaptcha: false
+        );
+        var upload = await AddUploadedReleaseAsync(seed, archiveConfigName);
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.AddReleaseAsync(seed.ReleaseCollectionId, upload.UploadConfig.ReleaseId);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var uploadConfig = await DbContext
+            .UploadConfigs.Include(uc => uc.LinkCrypters)
+            .SingleAsync(uc => uc.ReleaseId == upload.UploadConfig.ReleaseId);
+        uploadConfig.Id.ShouldBe(upload.UploadConfigId);
+        uploadConfig.CollectionUploadSlotId.ShouldBe(seed.CollectionUploadSlotId);
+
+        uploadConfig
+            .LinkCrypters.Single(linkCrypter =>
+                linkCrypter.ContainerScope == LinkCrypterContainerScope.Release
+            )
+            .Password.ShouldBe("release-password");
+
+        var collectionLinkCrypter = uploadConfig.LinkCrypters.Single(linkCrypter =>
+            linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+        );
+        collectionLinkCrypter.Password.ShouldBe("collection-password");
+        collectionLinkCrypter.EnableCaptcha.ShouldBeFalse();
+
+        var uploadsWithMissingContainers = await new LinkCrypterContainerCreationWriteRepository(
+            DbContext
+        ).GetUploadsWithMissingLinkCrypterContainersAsync(CancellationToken.None);
+        uploadsWithMissingContainers.ShouldContain(u => u.Id == upload.Id);
+    }
+
+    [Test]
+    public async Task AddReleaseAsync_OnlySecondSlotHasSameArchiveConfigName_MovesExistingUploadsIntoSecondSlot()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithUploadSlotAsync();
+        var upload = await AddUploadedReleaseAsync(seed, "Second slot archive");
+        var secondSlot = new CollectionUploadSlot
+        {
+            ReleaseCollectionId = seed.ReleaseCollectionId,
+            Key = "second-slot",
+            Name = "Second slot",
+            PasswordPolicy = CollectionUploadSlotPasswordPolicy.Ignore,
+        };
+        var episode = await DbContext.Releases.SingleAsync(r => r.Name == "Episode 1");
+        DbContext.UploadConfigs.Add(
+            new UploadConfig
+            {
+                UploadSource = UploadSource.ArchiveFiles,
+                Release = episode,
+                ArchiveConfig = new ArchiveConfig
+                {
+                    Release = episode,
+                    Name = "Second slot archive",
+                    ArchiveFilesBasePath = "/tmp/archive",
+                    ArchiverName = "rar",
+                    ArchiveFileSizeMb = 512,
+                },
+                HosterRegistrationId = upload.UploadConfig.HosterRegistrationId,
+                CollectionUploadSlot = secondSlot,
+                Name = "Second slot upload",
+                LinkCrypters = [],
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.AddReleaseAsync(seed.ReleaseCollectionId, upload.UploadConfig.ReleaseId);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync(uc =>
+            uc.ReleaseId == upload.UploadConfig.ReleaseId
+        );
+        uploadConfig.CollectionUploadSlotId.ShouldBe(secondSlot.Id);
+    }
+
+    [Test]
     public async Task AddReleaseAsync_WrongReleaseGroup_Throws()
     {
         // Arrange
@@ -648,30 +739,88 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
-    public async Task RemoveReleaseAsync_ReleaseInCollection_DetachesAndCleansUpSlotUploadConfigs()
+    [TestCase(UploadState.Completed, true)]
+    [TestCase(UploadState.Pending, false)]
+    public async Task RemoveReleaseAsync_ReleaseInCollection_KeepsOnlyUploadConfigsWithCompletedUploads(
+        UploadState uploadState,
+        bool keepsUploadConfig
+    )
     {
         // Arrange
-        var seed = await AddReleaseCollectionWithUploadSlotAsync();
-        var releaseId = await DbContext
+        var seed = await AddReleaseCollectionWithUploadSlotAsync(
+            linkCrypterPassword: "collection-password"
+        );
+        var slotUploadConfig = await DbContext
             .UploadConfigs.Where(uc => uc.CollectionUploadSlotId == seed.CollectionUploadSlotId)
-            .Select(uc => uc.ReleaseId)
+            .OrderBy(uc => uc.Id)
             .FirstAsync();
+        DbContext.Uploads.Add(
+            new Upload
+            {
+                UploadConfig = slotUploadConfig,
+                UploadState = uploadState,
+                OnlineState = OnlineState.Online,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();
 
         // Act
-        await service.RemoveReleaseAsync(seed.ReleaseCollectionId, releaseId);
+        await service.RemoveReleaseAsync(seed.ReleaseCollectionId, slotUploadConfig.ReleaseId);
 
         // Assert
         DbContext.ChangeTracker.Clear();
-        var release = await DbContext.Releases.FindAsync(releaseId);
+        var release = await DbContext.Releases.FindAsync(slotUploadConfig.ReleaseId);
         release!.ReleaseCollectionId.ShouldBeNull();
 
-        var slotUploadConfigs = await DbContext
-            .UploadConfigs.Where(uc =>
-                uc.ReleaseId == releaseId && uc.CollectionUploadSlotId != null
-            )
+        var uploadConfigs = await DbContext
+            .UploadConfigs.Include(uc => uc.LinkCrypters)
+            .Include(uc => uc.Uploads)
+            .Where(uc => uc.ReleaseId == slotUploadConfig.ReleaseId)
             .ToListAsync();
-        slotUploadConfigs.ShouldBeEmpty();
+        uploadConfigs.Count.ShouldBe(keepsUploadConfig ? 1 : 0);
+        uploadConfigs.ShouldAllBe(uc => uc.CollectionUploadSlotId == null);
+        uploadConfigs.ShouldAllBe(uc => uc.LinkCrypters.Count == 0);
+        uploadConfigs.ShouldAllBe(uc => uc.Uploads.Count == 1);
+    }
+
+    [Test]
+    public async Task RemoveReleaseAsync_LastReleaseOfSlot_KeepsLinkCrypterContainer()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithUploadSlotAsync(
+            linkCrypterPassword: "collection-password"
+        );
+
+        var releaseIds = await DbContext
+            .UploadConfigs.Where(uc => uc.CollectionUploadSlotId == seed.CollectionUploadSlotId)
+            .Select(uc => uc.ReleaseId)
+            .ToListAsync();
+
+        var container = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.ReleaseCollection,
+            CollectionUploadSlotId = seed.CollectionUploadSlotId,
+            LinkCrypterRegistrationId = seed.LinkCrypterRegistrationId,
+            ContainerUrl = "https://crypter.example/container",
+            State = LinkCrypterContainerState.Created,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.LinkCrypterContainers.Add(container);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        foreach (var releaseId in releaseIds)
+        {
+            await service.RemoveReleaseAsync(seed.ReleaseCollectionId, releaseId);
+        }
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.LinkCrypterContainers.AnyAsync(c => c.Id == container.Id)).ShouldBeTrue();
     }
 
     [Test]
@@ -700,6 +849,70 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         await Should.ThrowAsync<InvalidOperationException>(() =>
             service.RemoveReleaseAsync(seed.CollectionId, otherRelease.Id)
         );
+    }
+
+    private async Task<Upload> AddUploadedReleaseAsync(
+        ReleaseCollectionUploadSlotSeed seed,
+        string archiveConfigName
+    )
+    {
+        var slotUploadConfig = await DbContext
+            .UploadConfigs.Where(uc => uc.CollectionUploadSlotId == seed.CollectionUploadSlotId)
+            .OrderBy(uc => uc.Id)
+            .FirstAsync();
+        var release = new Release
+        {
+            Name = "Episode 3",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/e03",
+            ReleaseGroupId = seed.ReleaseGroupId,
+        };
+        var upload = new Upload
+        {
+            UploadConfig = new UploadConfig
+            {
+                UploadSource = UploadSource.ArchiveFiles,
+                Release = release,
+                ArchiveConfig = new ArchiveConfig
+                {
+                    Release = release,
+                    Name = archiveConfigName,
+                    ArchiveFilesBasePath = "/tmp/archive",
+                    ArchiverName = "rar",
+                    ArchiveFileSizeMb = 512,
+                },
+                HosterRegistrationId = slotUploadConfig.HosterRegistrationId,
+                Name = "Existing upload",
+                LinkCrypters =
+                [
+                    new UploadConfigLinkCrypter
+                    {
+                        LinkCrypterRegistrationId = seed.LinkCrypterRegistrationId,
+                        ContainerScope = LinkCrypterContainerScope.Release,
+                        Password = "release-password",
+                        LinkCrypterContainers = [],
+                    },
+                ],
+            },
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    VideoFileRelativePath = "e03.rar",
+                    HosterFileLink = "https://hoster.example/e03.rar",
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = DateTime.UtcNow,
+                },
+            ],
+        };
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
+
+        return upload;
     }
 
     private async Task<ReleaseCollectionUploadSlotSeed> AddReleaseCollectionWithUploadSlotAsync(

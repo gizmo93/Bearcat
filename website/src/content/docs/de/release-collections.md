@@ -31,6 +31,10 @@ Du findest sie unter **Releasecollections**.
 Um ein Release manuell hinzuzufügen, öffne eine Collection und wähle **Release hinzufügen**. Nur Releases
 derselben Releasegruppe können hinzugefügt werden.
 
+Vorhandene Uploads beim Hosteraccount oder Pool eines Slots werden in den Slot übernommen und ihre Links in
+dessen Container aufgenommen. Hat das Release eine Archivkonfiguration mit dem gleichen Namen wie im Slot,
+zählen nur deren Uploads. Gibt es davon keine, lädt Bearcat das Release mit dieser Archivkonfiguration hoch.
+
 ## Uploadslots
 
 Öffne die Collection und wechsle zum Tab **Uploadslots**. Ein Slot legt gemeinsame Uploadeinstellungen
@@ -90,7 +94,8 @@ Details zur Suche findest du unter
 
 **Releases** zeigt jedes Release mit seiner Folgennummer, etwa `E01` oder `S01E01`, wenn die
 Collection mehrere Staffeln umfasst. Der Balken zeigt, wie viele Hoster online sind. Über das
-`...`-Menü einer Zeile öffnest du das Release oder entfernst es aus der Collection.
+`...`-Menü einer Zeile öffnest du das Release oder entfernst es aus der Collection. Fertige Uploads
+bleiben dabei beim Release.
 
 **Linkcontainer** listet die Container jedes Slots und die Anzahl enthaltener Uploads.
 **Noch nicht erstellt** bedeutet, dass der Crypter keinen Container hat. Fehlgeschlagene Container

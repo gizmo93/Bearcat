@@ -945,7 +945,7 @@
   <data name="SearchReleasePlaceholder" xml:space="preserve"><value>Nach Releasename suchen</value></data>
   <data name="NoAvailableReleasesFound" xml:space="preserve"><value>Keine verfügbaren Releases gefunden.</value></data>
   <data name="RemoveFromCollection" xml:space="preserve"><value>Aus Collection entfernen</value></data>
-  <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Uploadkonfigurationen, die durch Uploadslots der Collection erstellt wurden, werden gelöscht.</value></data>
+  <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Fertige Uploads bleiben beim Release. Uploadkonfigurationen der Uploadslots ohne fertigen Upload werden gelöscht.</value></data>
   <data name="Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="MediaDatabaseRegistrations" xml:space="preserve"><value>Metadatenquellen</value></data>
   <data name="MediaDatabases" xml:space="preserve"><value>Metadatenquellen</value></data>

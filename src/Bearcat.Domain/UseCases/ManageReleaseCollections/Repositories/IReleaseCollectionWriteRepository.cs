@@ -32,7 +32,10 @@ public interface IReleaseCollectionWriteRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<Release> GetReleaseByIdAsync(int releaseId, CancellationToken cancellationToken = default);
+    Task<Release> GetReleaseForAddingToCollectionAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
 
     Task<Release> GetReleaseWithSlotUploadConfigsAsync(
         int releaseId,
@@ -63,14 +66,6 @@ public interface IReleaseCollectionWriteRepository
     Task<IReadOnlyList<CollectionReleaseArchiveConfigTarget>> GetArchiveConfigTargetsAsync(
         int releaseCollectionId,
         string archiveConfigName,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<
-        IReadOnlyList<CollectionReleaseArchiveConfigTarget>
-    > GetArchiveConfigTargetsForReleaseAsync(
-        int releaseId,
-        IReadOnlyList<string> archiveConfigNames,
         CancellationToken cancellationToken = default
     );
 

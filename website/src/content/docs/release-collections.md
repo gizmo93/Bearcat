@@ -31,6 +31,10 @@ Find them under **Release collections**.
 To add a release manually, open a collection and select **Add release**. Only releases from the
 same release group can be added.
 
+Existing uploads to the hoster account or pool of a slot move into that slot, and their links are added
+to its container. If the release has an archive configuration with the same name as in the slot, only
+uploads using it count, and Bearcat uploads the release with it if there are none.
+
 ## Upload slots
 
 Open the collection and switch to **Upload slots**. A slot defines shared upload settings
@@ -89,7 +93,7 @@ See [Release Information and Metadata](/Bearcat/release-information-and-metadata
 
 **Releases** shows each release with its episode number, such as `E01`, or `S01E01` for a collection
 spanning several seasons. The bar shows how many hosters are online. Use a row's `...` menu to open
-the release or remove it from the collection.
+the release or remove it from the collection. Completed uploads stay with the removed release.
 
 **Link containers** lists each slot's containers and the number of uploads they include.
 **Not created yet** means the crypter has no container. You can delete failed containers here.

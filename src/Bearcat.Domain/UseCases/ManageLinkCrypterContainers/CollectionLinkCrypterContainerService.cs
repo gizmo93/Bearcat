@@ -24,6 +24,12 @@ public class CollectionLinkCrypterContainerService(
             collectionUploadSlotId,
             cancellationToken
         );
+
+        if (slot.UploadConfigs.Count == 0)
+        {
+            return;
+        }
+
         var existingContainers = await repository.GetCollectionContainersAsync(
             collectionUploadSlotId,
             cancellationToken

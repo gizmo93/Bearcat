@@ -368,7 +368,10 @@ public class ReleaseCollectionService(
             cancellationToken: cancellationToken
         );
 
-        var release = await writeRepository.GetReleaseByIdAsync(releaseId, cancellationToken);
+        var release = await writeRepository.GetReleaseForAddingToCollectionAsync(
+            releaseId,
+            cancellationToken
+        );
 
         if (release.ReleaseGroupId != releaseCollection.ReleaseGroupId)
         {
@@ -384,64 +387,114 @@ public class ReleaseCollectionService(
 
         release.ReleaseCollectionId = releaseCollectionId;
 
-        if (releaseCollection.UploadSlots.Count > 0)
+        var slotsWithReferenceUploadConfig = releaseCollection
+            .UploadSlots.Where(slot => slot.UploadConfigs.Count > 0)
+            .Select(slot => (Slot: slot, ReferenceUploadConfig: GetReferenceUploadConfig(slot)))
+            .OrderByDescending(item => HasArchiveConfigOf(release, item.ReferenceUploadConfig))
+            .ToList();
+
+        foreach (var (slot, referenceUploadConfig) in slotsWithReferenceUploadConfig)
         {
-            var archiveConfigNames = releaseCollection
-                .UploadSlots.Select(slot =>
-                    slot.UploadConfigs.Select(uc => uc.ArchiveConfig!.Name).FirstOrDefault()
-                )
-                .Where(name => name is not null)
-                .Distinct()
-                .ToList();
-
-            var archiveConfigTargets = await writeRepository.GetArchiveConfigTargetsForReleaseAsync(
-                releaseId,
-                archiveConfigNames!,
-                cancellationToken
-            );
-
-            var targetsByName = archiveConfigTargets.ToDictionary(
-                target => target.ArchiveConfigName!,
-                StringComparer.Ordinal
-            );
-
-            foreach (var slot in releaseCollection.UploadSlots)
-            {
-                var referenceUploadConfig = slot.UploadConfigs.FirstOrDefault();
-                if (referenceUploadConfig is null)
-                {
-                    continue;
-                }
-
-                var archiveConfigName = referenceUploadConfig.ArchiveConfig!.Name;
-                if (!targetsByName.TryGetValue(archiveConfigName, out var target))
-                {
-                    continue;
-                }
-
-                var uploadConfig = new UploadConfig
-                {
-                    UploadSource = UploadSource.ArchiveFiles,
-                    ReleaseId = releaseId,
-                    ArchiveConfigId = target.ArchiveConfigId,
-                    HosterRegistrationId = referenceUploadConfig.HosterRegistrationId,
-                    HosterAccountPoolId = referenceUploadConfig.HosterAccountPoolId,
-                    Name = referenceUploadConfig.Name,
-                    PremiumOnlyDownload = referenceUploadConfig.PremiumOnlyDownload,
-                    LinkCrypters = [],
-                    Uploads = [],
-                };
-
-                CollectionLinkCrypterSync.ApplyToNewUploadConfig(
-                    uploadConfig,
-                    CollectionLinkCrypterSync.GetSettingsFromSlot(slot)
-                );
-
-                slot.UploadConfigs.Add(uploadConfig);
-            }
+            AddReleaseToUploadSlot(release, slot, referenceUploadConfig);
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private static UploadConfig GetReferenceUploadConfig(CollectionUploadSlot slot)
+    {
+        return slot
+            .UploadConfigs.GroupBy(uploadConfig => uploadConfig.ArchiveConfig!.Name)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Min(uploadConfig => uploadConfig.Id))
+            .First()
+            .OrderBy(uploadConfig => uploadConfig.Id)
+            .First();
+    }
+
+    private static bool HasArchiveConfigOf(Release release, UploadConfig referenceUploadConfig)
+    {
+        return release.ArchiveConfigs.Any(archiveConfig =>
+            archiveConfig.Name == referenceUploadConfig.ArchiveConfig!.Name
+        );
+    }
+
+    private void AddReleaseToUploadSlot(
+        Release release,
+        CollectionUploadSlot slot,
+        UploadConfig referenceUploadConfig
+    )
+    {
+        var linkCrypterSettings = CollectionLinkCrypterSync.GetSettingsFromSlot(slot);
+
+        var existingUploadConfig = GetUploadConfigToMoveIntoSlot(release, referenceUploadConfig);
+
+        if (existingUploadConfig is not null)
+        {
+            CollectionLinkCrypterSync.ApplyToExistingUploadConfig(
+                writeRepository,
+                existingUploadConfig,
+                linkCrypterSettings
+            );
+
+            existingUploadConfig.CollectionUploadSlot = slot;
+            return;
+        }
+
+        var archiveConfig = release.ArchiveConfigs.FirstOrDefault(archiveConfig =>
+            archiveConfig.Name == referenceUploadConfig.ArchiveConfig!.Name
+        );
+
+        if (archiveConfig is null)
+        {
+            return;
+        }
+
+        var uploadConfig = new UploadConfig
+        {
+            UploadSource = UploadSource.ArchiveFiles,
+            ReleaseId = release.Id,
+            ArchiveConfigId = archiveConfig.Id,
+            HosterRegistrationId = referenceUploadConfig.HosterRegistrationId,
+            HosterAccountPoolId = referenceUploadConfig.HosterAccountPoolId,
+            Name = referenceUploadConfig.Name,
+            PremiumOnlyDownload = referenceUploadConfig.PremiumOnlyDownload,
+            LinkCrypters = [],
+            Uploads = [],
+        };
+
+        CollectionLinkCrypterSync.ApplyToNewUploadConfig(uploadConfig, linkCrypterSettings);
+
+        slot.UploadConfigs.Add(uploadConfig);
+    }
+
+    private static UploadConfig? GetUploadConfigToMoveIntoSlot(
+        Release release,
+        UploadConfig referenceUploadConfig
+    )
+    {
+        var mustUseSameArchiveConfigName = HasArchiveConfigOf(release, referenceUploadConfig);
+
+        return release
+            .UploadConfigs.Where(uploadConfig =>
+                uploadConfig.UploadSource == UploadSource.ArchiveFiles
+                && uploadConfig.CollectionUploadSlotId is null
+                && uploadConfig.CollectionUploadSlot is null
+                && uploadConfig.HosterRegistrationId == referenceUploadConfig.HosterRegistrationId
+                && uploadConfig.HosterAccountPoolId == referenceUploadConfig.HosterAccountPoolId
+                && (
+                    !mustUseSameArchiveConfigName
+                    || uploadConfig.ArchiveConfig!.Name == referenceUploadConfig.ArchiveConfig!.Name
+                )
+            )
+            .OrderByDescending(uploadConfig =>
+                uploadConfig.Uploads.Any(upload =>
+                    upload.UploadState == UploadState.Completed
+                    && upload.OnlineState == OnlineState.Online
+                )
+            )
+            .ThenBy(uploadConfig => uploadConfig.Id)
+            .FirstOrDefault();
     }
 
     public async Task RemoveReleaseAsync(
@@ -466,12 +519,42 @@ public class ReleaseCollectionService(
             .UploadConfigs.Where(uc => uc.CollectionUploadSlotId is not null)
             .ToList();
 
+        var collectionUploadSlotIds = slotUploadConfigs
+            .Select(uc => uc.CollectionUploadSlotId!.Value)
+            .Distinct()
+            .ToList();
+
         foreach (var uploadConfig in slotUploadConfigs)
         {
-            writeRepository.Remove(uploadConfig);
+            RemoveUploadConfigFromSlot(uploadConfig);
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        foreach (var collectionUploadSlotId in collectionUploadSlotIds)
+        {
+            await collectionContainerUpdater.UpdateContainersAsync(
+                collectionUploadSlotId,
+                cancellationToken
+            );
+        }
+    }
+
+    private void RemoveUploadConfigFromSlot(UploadConfig uploadConfig)
+    {
+        if (uploadConfig.Uploads.All(upload => upload.UploadState != UploadState.Completed))
+        {
+            writeRepository.Remove(uploadConfig);
+            return;
+        }
+
+        uploadConfig.CollectionUploadSlotId = null;
+
+        CollectionLinkCrypterSync.ApplyToExistingUploadConfig(
+            writeRepository,
+            uploadConfig,
+            CollectionLinkCrypterSync.NormalizeSettings([])
+        );
     }
 
     public async Task UpdateSharedLinkCryptersAsync(
