@@ -6,12 +6,12 @@ description: "Create a draft with release details and download links on a forum 
 Bearcat creates a draft on a forum or blog from your template and release data. Open it in your browser, check
 the title and body, and submit it. You must be logged into the same account on the site.
 
-To let Bearcat submit posts for you, use [posting rules](/Bearcat/automatic-forum-posting/).
+To let Bearcat submit posts for you, use [posting rules](/automatic-forum-posting/).
 
 ## What you need first
 
-- A distribution site, which is a forum or [WordPress](/Bearcat/wordpress/) account you added to Bearcat.
-- A [post template](/Bearcat/forum-post-templates/) in the output format of the site: BBCode for forums, HTML for WordPress.
+- A distribution site, which is a forum or [WordPress](/wordpress/) account you added to Bearcat.
+- A [post template](/forum-post-templates/) in the output format of the site: BBCode for forums, HTML for WordPress.
 - A release with completed uploads and download links.
 
 ## Setting up a distribution site
@@ -31,7 +31,7 @@ Routing through `index.php`, SSO, CAPTCHA and two-factor login are not supported
 required thread fields or add-ons can prevent posting. Test the login and prepare a draft
 before enabling automatic posting.
 
-See [WordPress](/Bearcat/wordpress/) for setup instructions.
+See [WordPress](/wordpress/) for setup instructions.
 
 ## Posting a release
 
@@ -49,7 +49,7 @@ In the dialog:
    and adds spaces around the final hyphen before the release group.
    ![subforum-selection.png](images/subforum-selection.png)
 3. Forums only: Bearcat searches the subforum for threads whose titles match the release name, using the same
-   [matching rules as automatic posting](/Bearcat/automatic-forum-posting/#finding-an-existing-thread).
+   [matching rules as automatic posting](/automatic-forum-posting/#finding-an-existing-thread).
    If exactly one thread matches, Bearcat suggests a reply. Otherwise, it suggests a new thread.
    You can also choose a thread from the search results yourself. For blogs, the dialog skips this step.
 
@@ -113,7 +113,7 @@ In the dialog:
 </figure>
 
 **I have posted** saves the URL but does not remove the release from the
-[post queue](/Bearcat/post-queue/). Use **Mark as posted** there when you have finished posting.
+[post queue](/post-queue/). Use **Mark as posted** there when you have finished posting.
 
 ## Posted locations
 

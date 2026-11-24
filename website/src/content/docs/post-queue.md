@@ -31,11 +31,11 @@ The queue has two sections:
 - **Single releases**: releases uploaded outside a collection.
 - **Collections**: new uploads made through collection slots. A TV season appears as one entry.
 
-See [Release Collections](/Bearcat/release-collections/) for how collections and their upload slots work.
+See [Release Collections](/release-collections/) for how collections and their upload slots work.
 
 ## Posting to a site from the queue
 
-With [posting rules](/Bearcat/automatic-forum-posting/) configured, the **Automatic posting** section
+With [posting rules](/automatic-forum-posting/) configured, the **Automatic posting** section
 for single releases and collections shows the matching rule and target for each distribution site.
 
 Click **Post** to submit the post. **Post to all matched sites** posts to every remaining site with a matching rule.
@@ -59,8 +59,8 @@ When you have posted a release somewhere, click **Mark as posted** on its entry.
 Click **Start workflow** under single releases or collections to work through the entries one at a time.
 Bearcat opens the first entry and shows your progress in the workflow bar.
 
-In the release or collection header, use [**Post to site**](/Bearcat/posting-to-forums/) to prepare a draft,
-or [**Render post**](/Bearcat/forum-post-templates/#render-a-post) from its arrow menu to copy the text.
+In the release or collection header, use [**Post to site**](/posting-to-forums/) to prepare a draft,
+or [**Render post**](/forum-post-templates/#render-a-post) from its arrow menu to copy the text.
 Submit the post on the site, then return to the workflow bar.
 
 ![post-queue-toolbar.png](images/post-queue-toolbar.png)

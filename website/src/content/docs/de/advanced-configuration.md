@@ -26,13 +26,13 @@ Standardmässig sind alle Aufgaben aktiv.
 | Remote source download | Alle 20 Sekunden | Lädt geplante Remoteordner herunter. |
 | Remote download verification and extraction | Alle 20 Sekunden | Prüft abgeschlossene Downloads anhand ihrer SFV-Dateien und entpackt Archive, falls konfiguriert. |
 | Remote download release creation | Alle 20 Sekunden | Erstellt Releases aus abgeschlossenen Downloads mit den jeweils gewählten Templates. |
-| Remote download raw file cleanup | Alle 2 Minuten | Wandelt heruntergeladene Releases in Unmanaged um und entfernt ihre Rohdateien, wenn [Rohdateien behalten](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) ausgeschaltet ist und die Bedingungen für das Löschen erfüllt sind. |
+| Remote download raw file cleanup | Alle 2 Minuten | Wandelt heruntergeladene Releases in Unmanaged um und entfernt ihre Rohdateien, wenn [Rohdateien behalten](/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) ausgeschaltet ist und die Bedingungen für das Löschen erfüllt sind. |
 | Release info resolution | Alle 10 Minuten | Ergänzt fehlende Sceneinfos, NFOs, externe IDs und Metadaten aus den aktiven Quellen. |
 | Archive creation & restore | Alle 20 Sekunden | Verwendet Archive wieder, stellt sie wieder her oder erstellt neue für wartende Uploads. |
-| Auto cleanup | Alle 30 Minuten | Wendet aktivierte [Aufräumregeln](#automatisches-aufräumen) nach Ablauf ihrer Aufbewahrungsfristen an. Löscht [lokale Arbeitskopien](/Bearcat/de/archive-storage-folders/#reuploads) gespeicherter Archive, sobald ihre Uploads abgeschlossen sind. |
+| Auto cleanup | Alle 30 Minuten | Wendet aktivierte [Aufräumregeln](#automatisches-aufräumen) nach Ablauf ihrer Aufbewahrungsfristen an. Löscht [lokale Arbeitskopien](/de/archive-storage-folders/#reuploads) gespeicherter Archive, sobald ihre Uploads abgeschlossen sind. |
 | Archive upload | Alle 20 Sekunden | Lädt Archive zu den konfigurierten Hostern hoch. |
 | Image upload | Alle 30 Sekunden | Lädt Coverbilder von Releases zu konfigurierten Bildhostern hoch, wenn eine Cover-URL vorhanden ist. |
-| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/Bearcat/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, wenn die entsprechenden Optionen aktiv sind. |
+| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, wenn die entsprechenden Optionen aktiv sind. |
 | Upload state check | Alle 20 Sekunden | Prüft Links und plant erste Uploads sowie automatische Reuploads. |
 | Link crypter container creation | Alle 20 Sekunden | Erstellt Linkcryptercontainer für abgeschlossene Uploads. |
 | SQLite query planner statistics | Beim Start, dann täglich | Nur mit SQLite. Aktualisiert die Statistiken, mit denen SQLite Indizes auswählt. Der erste Lauf kann bei grossen Datenbanken mehrere Sekunden dauern. Verkleinert ausserdem die Datenbankdatei (`VACUUM`), wenn mindestens 20 % davon ungenutzt sind, zum Beispiel nach dem Löschen vieler Releases. Schreibzugriffe warten währenddessen. |
@@ -66,8 +66,8 @@ Die Frist beginnt mit dem Postingdatum oder dem ersten abgeschlossenen Upload, w
 als gepostet markiert wurde. Ohne eines dieser Daten bleibt es managed.
 
 Bearcat wandelt das Release nur um, wenn kein Upload läuft und jede Archivkonfiguration ein lokales
-Archiv oder einen vollständig verfügbaren [Mirror](/Bearcat/de/mirror-downloads/) hat. Releases mit einer
-[Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) bleiben managed.
+Archiv oder einen vollständig verfügbaren [Mirror](/de/mirror-downloads/) hat. Releases mit einer
+[Videouploadkonfiguration](/de/video-hosters/#releaseordner) bleiben managed.
 
 Standardmässig bleibt der Releaseordner erhalten. Eine Benachrichtigung enthält seinen Pfad.
 Du kannst die Releasedateien selbst löschen. Liegen dort auch Archive, behalte diese Dateien.
@@ -91,7 +91,7 @@ Bearcat überspringt Archive, solange ein Upload dieser Archivkonfiguration wart
 | --- | --- |
 | **Behalten** | Archivdateien bleiben an ihrem Speicherort. |
 | **Löschen** | Löscht Archivdateien nur, wenn Bearcat sie von einem vollständig verfügbaren Mirror wiederherstellen oder aus dem Ordner eines Managed Releases neu packen kann. |
-| **In Speicherordner verschieben** | Verschiebt Archive in einen aktiven [Speicherordner](/Bearcat/de/archive-storage-folders/#archive-verschieben). Ein Mirror ist dafür nicht nötig. |
+| **In Speicherordner verschieben** | Verschiebt Archive in einen aktiven [Speicherordner](/de/archive-storage-folders/#archive-verschieben). Ein Mirror ist dafür nicht nötig. |
 
 Beim Löschen entfernt Bearcat den Archivordner nur, wenn er leer ist. Dateien auf dem Hoster bleiben erhalten.
 Archive in Speicherordnern werden nie automatisch gelöscht.
@@ -105,7 +105,7 @@ Standardmässig ist die Grenze ausgeschaltet (`0`). Sie gilt unabhängig von der
 
 Bevor Bearcat ein lokales Archiv schreibt, löscht es bei Bedarf andere lokale Archive, um Platz innerhalb der Grenze zu schaffen.
 Das gilt beim Packen, beim Wiederherstellen von einem Mirror und beim Erstellen einer
-[lokalen Arbeitskopie](/Bearcat/de/archive-storage-folders/#reuploads).
+[lokalen Arbeitskopie](/de/archive-storage-folders/#reuploads).
 Bearcat beginnt mit den Archiven, bei denen der letzte Upload der Archivkonfiguration am längsten zurückliegt.
 
 Dabei gelten dieselben Bedingungen wie bei der Aktion **Löschen**:
@@ -127,7 +127,7 @@ damit beide Aufräumregeln und die Grössengrenze für dieses Release nicht gelt
 
 ![exclude-from-auto-cleanup.png](../images/exclude-from-auto-cleanup.png)
 
-[Remotedownloads](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) haben eine eigene Aufräumoption.
+[Remotedownloads](/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) haben eine eigene Aufräumoption.
 Lass **Rohdateien behalten** in der Automatisierung aktiviert, wenn du den heruntergeladenen Releaseordner behalten willst.
 
 ### Einheit der Partgrösse
@@ -136,7 +136,7 @@ Wähle **Einheit der Partgrösse** unter **Konfigurationen > Archiverstellung**.
 Die Einstellung gilt für alle Archivkonfigurationen.
 **Megabytes** (Standard) bedeutet 1 MB = `1.000.000` Bytes, **Mebibytes** bedeutet 1 MB = `1.048.576` Bytes.
 Das gilt für RAR und 7-Zip.
-Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Partgrösse ändern](/Bearcat/de/change-archive-part-size/).
+Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Partgrösse ändern](/de/change-archive-part-size/).
 
 ![archive-part-size-unit.png](../images/archive-part-size-unit.png)
 
@@ -197,7 +197,7 @@ Manuelles Erstellen von Releases und die Metadatenabfrage unter **Releaseinfo** 
 
 ### Remotedownloads
 
-Die Einstellungen für [FTP-/FTPS-Downloads](/Bearcat/de/remote-downloads/) findest du unter
+Die Einstellungen für [FTP-/FTPS-Downloads](/de/remote-downloads/) findest du unter
 **Konfigurationen > Remotedownloads**. Sie gelten unabhängig von der lokalen Ordnerautomatisierung.
 
 | Einstellung | Standard | Wirkung |
@@ -226,17 +226,17 @@ Unter **Konfigurationen > Uploadparallelität** begrenzt du mit **Maximale paral
 die gleichzeitig laufenden Dateiuploads über alle Hoster hinweg (Standard: `10`).
 Das Limit jedes Hosters gilt zusätzlich.
 
-Auf der Seite **Hosterregistrierungen** siehst du die einzelnen Limits und kannst sie, wo möglich, überschreiben. Siehe [Parallele Uploads pro Hoster](/Bearcat/de/account-settings/#parallele-uploads-pro-hoster).
+Auf der Seite **Hosterregistrierungen** siehst du die einzelnen Limits und kannst sie, wo möglich, überschreiben. Siehe [Parallele Uploads pro Hoster](/de/account-settings/#parallele-uploads-pro-hoster).
 
 **Maximale Uploadgeschwindigkeit** (MB/s) ist standardmässig leer, also ohne Limit. Der Wert begrenzt die gesamte
 Uploadgeschwindigkeit aller laufenden Uploads über alle Hoster hinweg. Kommazahlen wie `0.5` oder `0,5` sind erlaubt.
 Jede Hosterregistrierung kann zusätzlich ein eigenes Limit setzen. Siehe
-[Uploadgeschwindigkeit pro Hoster begrenzen](/Bearcat/de/account-settings/#uploadgeschwindigkeit-pro-hoster-begrenzen).
+[Uploadgeschwindigkeit pro Hoster begrenzen](/de/account-settings/#uploadgeschwindigkeit-pro-hoster-begrenzen).
 
 Bei sehr niedrigen Geschwindigkeitslimits können Uploads wegen Zeitüberschreitungen scheitern.
 
 Unter **Startreihenfolge der Uploads** wählst du, welche wartenden Uploads zuerst starten: **Älteste zuerst**
-(Standard) oder **Initiale Uploads vor Reuploads**. Siehe [Startreihenfolge](/Bearcat/de/upload-lifecycle/#startreihenfolge).
+(Standard) oder **Initiale Uploads vor Reuploads**. Siehe [Startreihenfolge](/de/upload-lifecycle/#startreihenfolge).
 
 ### ffmpeg
 
@@ -264,8 +264,8 @@ Die Datenbankeinstellungen werden beim Start aus Umgebungsvariablen oder einer E
 
 | Installation | Wo du sie setzt |
 | --- | --- |
-| Docker | `docker-compose.yml`, oder `docker-compose.postgres.yml` für PostgreSQL. Siehe [Bearcat in Docker ausführen](/Bearcat/de/use-the-docker-image/#datenbank). |
-| Desktopanwendung | **Database type** in den Einstellungen der [Desktopanwendung](/Bearcat/de/use-the-desktop-launcher/#datenbanktyp). |
+| Docker | `docker-compose.yml`, oder `docker-compose.postgres.yml` für PostgreSQL. Siehe [Bearcat in Docker ausführen](/de/use-the-docker-image/#datenbank). |
+| Desktopanwendung | **Database type** in den Einstellungen der [Desktopanwendung](/de/use-the-desktop-launcher/#datenbanktyp). |
 | Windows-Dienst | Abschnitt `Database` in `%ProgramData%\Bearcat\config.json`, geschrieben von `Bearcat.Cli.exe setup`. |
 
 | Einstellung | Umgebungsvariable | Wert |
@@ -302,7 +302,7 @@ Standardmässig gilt die Zeitzone des Betriebssystems.
 | --- | --- | --- |
 | Desktopanwendung | Zeitzone deines Computers | Ändere die Zeitzone deines Computers. |
 | Windows-Dienst | Zeitzone des Windows-Servers | Füge `"LocalTimezone": "Europe/Berlin"` zu `%ProgramData%\Bearcat\config.json` hinzu und starte den Dienst neu. |
-| Docker | UTC | Setze `BEARCAT_TIMEZONE` in `.env`. Siehe [Dockereinstellungen](/Bearcat/de/use-the-docker-image/#docker-einstellungen). |
+| Docker | UTC | Setze `BEARCAT_TIMEZONE` in `.env`. Siehe [Dockereinstellungen](/de/use-the-docker-image/#docker-einstellungen). |
 
 Der Wert ist eine Zeitzonen-ID wie `Europe/Berlin` oder `America/New_York`.
 Bei einer unbekannten ID bricht Bearcat den Start ab.

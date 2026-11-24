@@ -18,8 +18,8 @@ Der Releaseordner enthält die Dateien, die Bearcat packen soll, zum Beispiel Vi
 Ausgabeordner, Partgrösse und optional ein Passwort fest. Bearcat packt die Dateien und lädt sie zu den gewählten Hostern hoch.
 
 Bearcat verwendet vorhandene Archive wenn möglich wieder. Fehlen sie lokal, lädt es sie von einem
-[Mirrorhoster](/Bearcat/de/mirror-downloads/) herunter oder packt sie aus den Rohdateien neu.
-Das [Archivformat](/Bearcat/de/upload-lifecycle/#archivwiederverwendung-und-repackaging)
+[Mirrorhoster](/de/mirror-downloads/) herunter oder packt sie aus den Rohdateien neu.
+Das [Archivformat](/de/upload-lifecycle/#archivwiederverwendung-und-repackaging)
 bestimmt, ob für neue Hashes neu gepackt werden muss.
 
 ## Unmanaged Releases
@@ -28,7 +28,7 @@ Ein Unmanaged Release verwendet vorhandene Archive und hat **keinen Releaseordne
 Jede Archivkonfiguration verweist direkt auf einen Archivordner. Bearcat erkennt das Archivformat an den Dateiendungen.
 
 Fehlen Archivdateien, kehrt der Upload zu `WaitingForArchive` zurück. Bearcat lädt sie von einem
-aktivierten [Mirrorhoster](/Bearcat/de/mirror-downloads/) herunter, auf dem sie noch online sind. Ohne Mirror
+aktivierten [Mirrorhoster](/de/mirror-downloads/) herunter, auf dem sie noch online sind. Ohne Mirror
 musst du die Archive selbst bereitstellen. Ein Unmanaged Release hat keine Rohdateien zum Neupacken.
 
 Nach einem Mirrordownload läuft der Upload automatisch weiter. Stellst du die Dateien selbst bereit,
@@ -36,7 +36,7 @@ aktualisiere die Unmanaged Archive im Aktionsmenü. Ändere den Archivordner, we
 
 ![Archivordner eines Unmanaged Release aktualisieren](../images/unmanaged-releases-refresh-folder.png)
 
-[Qualitätsprüfungen](/Bearcat/de/quality-gates/) prüfen bei Unmanaged Releases nur die Releaseinfos (Cover, Beschreibung, NFO).
+[Qualitätsprüfungen](/de/quality-gates/) prüfen bei Unmanaged Releases nur die Releaseinfos (Cover, Beschreibung, NFO).
 Die Prüfungen des Releaseordners entfallen.
 
 ## Zwischen Typen umwandeln
@@ -44,7 +44,7 @@ Die Prüfungen des Releaseordners entfallen.
 Über das Aktionsmenü auf der Releasedetailseite wandelst du zwischen den Typen um.
 
 - **In Unmanaged umwandeln** setzt ein erstelltes Archiv für jede Archivkonfiguration voraus.
-  Releases mit einer [Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) kannst du nicht umwandeln.
+  Releases mit einer [Videouploadkonfiguration](/de/video-hosters/#releaseordner) kannst du nicht umwandeln.
   Bearcat entfernt den gespeicherten Pfad zum Releaseordner. Archive und Uploads bleiben erhalten.
   Die Rohdateien kannst du danach selbst löschen.
 - **In Managed umwandeln** lässt dich einen Releaseordner mit den Rohdateien wählen. Archivkonfigurationen und Uploads bleiben erhalten.
@@ -52,4 +52,4 @@ Die Prüfungen des Releaseordners entfallen.
 
 Bei Releases, die per FTP oder FTPS heruntergeladen wurden, kannst du in der Remoteautomatisierung auch **Rohdateien behalten**
 deaktivieren. Bearcat wandelt sie dann in Unmanaged Releases um und entfernt den heruntergeladenen Ordner nach den
-ersten Uploads, sobald die [Bedingungen für das Aufräumen](/Bearcat/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) erfüllt sind.
+ersten Uploads, sobald die [Bedingungen für das Aufräumen](/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) erfüllt sind.

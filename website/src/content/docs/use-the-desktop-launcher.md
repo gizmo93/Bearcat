@@ -3,10 +3,10 @@ title: "Install Bearcat on Windows, macOS, and Linux"
 description: "Install the desktop app, choose your release folder, and start Bearcat with SQLite."
 prev:
   label: "Choose an installation"
-  link: "/Bearcat/#get-started"
+  link: "/#get-started"
 next:
   label: "Your first upload"
-  link: "/Bearcat/post-installation/"
+  link: "/post-installation/"
 ---
 
 :::tip[Already installed Bearcat?]
@@ -106,11 +106,11 @@ Keep the defaults for **SQLite (recommended)**, **Database file**, **Bearcat Hos
 Click **Save**, then **Start Bearcat**. Once it is ready, click **Open Bearcat** or open
 [http://127.0.0.1:17208](http://127.0.0.1:17208).
 
-**Next: [Set up Bearcat and upload your first release](/Bearcat/post-installation/).**
+**Next: [Set up Bearcat and upload your first release](/post-installation/).**
 
 Closing the settings window keeps Bearcat running. Use **Stop** or **Quit** to stop it.
 On GNOME, the tray icon needs the [AppIndicator extension](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu includes it.
-To run Bearcat on Windows without logging in, use the [Windows service](/Bearcat/use-the-windows-service/).
+To run Bearcat on Windows without logging in, use the [Windows service](/use-the-windows-service/).
 
 ## Updating Bearcat
 
@@ -147,7 +147,7 @@ macOS: ~/Library/Application Support/Bearcat/bearcat.db
 Linux: ~/.config/Bearcat/bearcat.db
 ```
 
-To use PostgreSQL, [set up a PostgreSQL server](/Bearcat/install-postgresql-for-desktop/), select
+To use PostgreSQL, [set up a PostgreSQL server](/install-postgresql-for-desktop/), select
 **PostgreSQL**, and enter its host, port, database name, username, and password.
 Bearcat updates the database on startup and creates it if the user has permission.
 
@@ -164,7 +164,7 @@ Keep `17208` unless another application uses that port. If you change it, use th
 
 ### API key
 
-Leave this empty unless you want to [control Bearcat through the REST API](/Bearcat/external-orchestration/#api-key).
+Leave this empty unless you want to [control Bearcat through the REST API](/external-orchestration/#api-key).
 
 ## Settings and backups
 

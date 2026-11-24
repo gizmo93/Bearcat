@@ -3,19 +3,19 @@ title: "Automatic Posting"
 description: "Set up posting rules and send releases and collections to matching subforums and blog categories automatically."
 ---
 
-Posting rules let Bearcat choose a subforum or [WordPress](/Bearcat/wordpress/) category,
+Posting rules let Bearcat choose a subforum or [WordPress](/wordpress/) category,
 fill in a template and submit the post.
-Click **Post** in the [post queue](/Bearcat/post-queue/) or enable automatic posting.
-To review and submit drafts yourself, use [Posting to sites](/Bearcat/posting-to-forums/).
+Click **Post** in the [post queue](/post-queue/) or enable automatic posting.
+To review and submit drafts yourself, use [Posting to sites](/posting-to-forums/).
 
 Each distribution site has its own rules. Bearcat skips sites with no matching rule.
 
 ## What you need first
 
 - A distribution site added under **Registrations > Distribution site registrations**, with a working login.
-- A suitable [post template](/Bearcat/forum-post-templates/).
-- Releases in the [post queue](/Bearcat/post-queue/) with a classification and a passed or manually approved
-  [quality gate](/Bearcat/quality-gates/). Groups without a quality profile pass the gate.
+- A suitable [post template](/forum-post-templates/).
+- Releases in the [post queue](/post-queue/) with a classification and a passed or manually approved
+  [quality gate](/quality-gates/). Groups without a quality profile pass the gate.
   For collections, every member release must pass or be manually approved, and at least one must be classified.
 
 ## Opening the posting rules page
@@ -34,7 +34,7 @@ Click the number to open the page, or use **Posting rules** in the row menu.
 **Automatic posting** is off by default. You can still preview rules and use **Post** in the post queue.
 When enabled, the "Automatic forum posting" background task runs every 15 minutes by default.
 It posts matching releases from the queue first, then collections.
-Change the interval under [Background tasks](/Bearcat/advanced-configuration/#background-tasks).
+Change the interval under [Background tasks](/advanced-configuration/#background-tasks).
 
 **Thread search without dots** is on by default. Bearcat replaces dots with spaces when searching
 for threads and naming new threads and posts. For collections, it uses the collection name.
@@ -64,7 +64,7 @@ The template variable `imagelinks.<config>` is empty if its image hoster is forb
 Check the value with `if` or use a separate template for this site.
 
 Skipped posts do not trigger a notification. Click **Post** in the post queue to see the reason.
-A [manual draft](/Bearcat/posting-to-forums/) shows a warning. You can still submit the draft.
+A [manual draft](/posting-to-forums/) shows a warning. You can still submit the draft.
 
 ## Adding a rule
 
@@ -163,7 +163,7 @@ Run a preview after changing conditions or rule order, before enabling automatic
 
 ## Posting from the post queue
 
-Every entry under **Single releases** and **Collections** in the [post queue](/Bearcat/post-queue/) has
+Every entry under **Single releases** and **Collections** in the [post queue](/post-queue/) has
 an **Automatic posting** section that shows, per site, what the rules would do:
 
 - the matched rule and its target, with a **Post** button,
@@ -189,7 +189,7 @@ Use it for releases and collections that are no longer in the queue, for example
 Instead of the site list, the entry shows a short reason:
 
 - **Automatic posting is blocked: the quality gate has not passed.** The release must
-  [pass its quality checks or be manually approved](/Bearcat/quality-gates/).
+  [pass its quality checks or be manually approved](/quality-gates/).
   Bearcat checks unevaluated releases on the next background run.
 - **Automatic posting is blocked: the release has no classification.** Bearcat classifies releases
   every 30 minutes and after extracting media data. Wait for the next run or click

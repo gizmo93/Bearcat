@@ -57,7 +57,7 @@ In **Hoster registrations**, there are two separate fields:
 
 - **Proxy for uploads and account requests** also applies to **Try login** and link checks.
 - **Proxy for mirror downloads** applies when restoring archives. This field is available for
-  hosters that support [mirror downloads](/Bearcat/mirror-downloads/).
+  hosters that support [mirror downloads](/mirror-downloads/).
 
 ![hoster-proxy-override.png](images/hoster-proxy-override.png)
 

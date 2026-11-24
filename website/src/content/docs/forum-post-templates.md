@@ -6,7 +6,7 @@ description: "Create forum and blog posts with placeholders for release data, li
 Write your post with placeholders for the release name, NFO, links, and images. Bearcat fills them
 with data from a release or collection.
 
-You can copy the result by hand or let [posting rules](/Bearcat/automatic-forum-posting/) post it for you.
+You can copy the result by hand or let [posting rules](/automatic-forum-posting/) post it for you.
 
 ![Post templates](images/forum-post-templates-page.png)
 
@@ -19,7 +19,7 @@ You can copy the result by hand or let [posting rules](/Bearcat/automatic-forum-
    | Output format | Use |
    | --- | --- |
    | **BBCode** | Forums |
-   | **HTML** | [WordPress](/Bearcat/wordpress/) |
+   | **HTML** | [WordPress](/wordpress/) |
    | **Plain text** | Copying text without formatting |
 
    When posting to a distribution site, only templates in the matching format are available:
@@ -137,7 +137,7 @@ Each upload included in a shared container also lists it in `upload.link_crypter
 
 ### Video uploads
 
-For [video uploads](/Bearcat/video-hosters/), you can use two more variables inside the
+For [video uploads](/video-hosters/), you can use two more variables inside the
 `{{~ for upload in uploads ~}}` loop:
 
 - `upload.is_video_upload`: `true` for a video upload.
@@ -158,7 +158,7 @@ For video uploads, `upload.archive_format` and `upload.archive_password` are emp
 
 ### Screenshots
 
-Access uploaded [screenshots](/Bearcat/release-templates-and-automations/#screenshots) like cover links:
+Access uploaded [screenshots](/release-templates-and-automations/#screenshots) like cover links:
 use `imagelinks` in release templates and `release.imagelinks` in collection templates.
 Each image upload configuration has these fields:
 
@@ -200,4 +200,4 @@ Open a release or release collection and click **Render post** in the arrow menu
   `upload.hoster_registration_name` shows the account name and stays empty until an account is assigned.
 - **Several forums:** BBCode support varies between forums. Use one template per forum if needed.
 - **HTML templates:** Bearcat sends the rendered HTML unchanged. Escape values with `| html.escape`.
-  See [WordPress](/Bearcat/wordpress/#template) for a block editor example.
+  See [WordPress](/wordpress/#template) for a block editor example.

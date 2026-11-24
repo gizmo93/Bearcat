@@ -26,13 +26,13 @@ All tasks are enabled by default.
 | Remote source download | Every 20 seconds | Downloads queued remote folders. |
 | Remote download verification and extraction | Every 20 seconds | Checks completed downloads against their SFV files and extracts archives when the automation is set to do so. |
 | Remote download release creation | Every 20 seconds | Creates releases from completed downloads using their selected templates. |
-| Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
+| Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
 | Release info resolution | Every 10 minutes | Fills in missing scene information, NFOs, external IDs, and metadata from active sources. |
 | Archive creation & restore | Every 20 seconds | Reuses, restores, or creates archives for waiting uploads. |
-| Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/Bearcat/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
+| Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
 | Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
-| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/Bearcat/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
+| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
 | SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. Also compacts the database file (`VACUUM`) when at least 20 % of it is unused, for example after deleting many releases. Writes wait while this runs. |
@@ -65,8 +65,8 @@ The period starts at the posting date, or the first completed upload if the rele
 as posted. Without either date, it stays managed.
 
 Bearcat converts the release only when no upload is running and every archive configuration has
-a local archive or a fully online [mirror](/Bearcat/mirror-downloads/). Releases with a
-[video upload configuration](/Bearcat/video-hosters/#release-folder) stay managed.
+a local archive or a fully online [mirror](/mirror-downloads/). Releases with a
+[video upload configuration](/video-hosters/#release-folder) stay managed.
 
 By default, Bearcat keeps the release folder and sends you its path in a notification.
 You can delete the release files yourself. If the folder also holds archives, keep those files.
@@ -90,7 +90,7 @@ Bearcat skips archives while an upload of that archive configuration is waiting,
 | --- | --- |
 | **Keep** | Leave archive files where they are. |
 | **Delete** | Delete archive files only if they can be restored from a fully online mirror or repacked from a managed release's folder. |
-| **Move to storage folder** | Move archives to an active [storage folder](/Bearcat/archive-storage-folders/#moving-archives). No mirror is required. |
+| **Move to storage folder** | Move archives to an active [storage folder](/archive-storage-folders/#moving-archives). No mirror is required. |
 
 Deleting archives removes their folder only if it is empty. Files on the hoster are kept.
 Archives in storage folders are never deleted automatically.
@@ -104,7 +104,7 @@ The limit is off by default (`0`) and applies regardless of the retention period
 
 Before writing a local archive, Bearcat deletes other local archives as needed to make room within the limit.
 This applies when packing, restoring from a mirror, or creating a
-[local working copy](/Bearcat/archive-storage-folders/#reuploads).
+[local working copy](/archive-storage-folders/#reuploads).
 Bearcat sorts archives by their archive configuration's last upload, oldest first.
 
 The same conditions apply as for the **Delete** action:
@@ -125,7 +125,7 @@ Enable **Exclude from auto cleanup** when creating or editing a release to exemp
 
 ![exclude-from-auto-cleanup.png](images/exclude-from-auto-cleanup.png)
 
-[Remote downloads](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) have a separate cleanup option.
+[Remote downloads](/remote-downloads/#delete-raw-files-after-uploading) have a separate cleanup option.
 Leave **Keep raw files** enabled in the automation if you want to keep the downloaded release folder.
 
 ### Part size unit
@@ -134,7 +134,7 @@ Choose **Part size unit** under **Configurations > Archive creation**.
 This setting applies to all archive configurations.
 **Megabytes** (default) means 1 MB = `1,000,000` bytes, **Mebibytes** means 1 MB = `1,048,576` bytes.
 This applies to RAR and 7-Zip.
-To change the part size of many archive configurations at once, see [Change part size](/Bearcat/change-archive-part-size/).
+To change the part size of many archive configurations at once, see [Change part size](/change-archive-part-size/).
 
 ![archive-part-size-unit.png](images/archive-part-size-unit.png)
 
@@ -195,7 +195,7 @@ Manual release creation and metadata lookup under **Release info** are unaffecte
 
 ### Remote downloads
 
-Find settings for [FTP / FTPS downloads](/Bearcat/remote-downloads/) under **Configurations > Remote downloads**.
+Find settings for [FTP / FTPS downloads](/remote-downloads/) under **Configurations > Remote downloads**.
 They apply independently of local folder automation.
 
 | Setting | Default | Effect |
@@ -224,17 +224,17 @@ Under **Configurations > Upload concurrency**, **Maximum parallel uploads** limi
 of files uploaded at once across all hosters (default: `10`).
 Each hoster's own limit also applies.
 
-View and, where allowed, override individual limits on the **Hoster registrations** page. See [Parallel uploads per hoster](/Bearcat/account-settings/#parallel-uploads-per-hoster).
+View and, where allowed, override individual limits on the **Hoster registrations** page. See [Parallel uploads per hoster](/account-settings/#parallel-uploads-per-hoster).
 
 **Maximum upload speed** (MB/s) is empty by default, which means no limit. It caps the combined upload
 speed of all running uploads across all hosters. Decimal values such as `0.5` or `0,5` are allowed.
 Each hoster registration can set its own limit as well. See
-[Upload speed limit per hoster](/Bearcat/account-settings/#upload-speed-limit-per-hoster).
+[Upload speed limit per hoster](/account-settings/#upload-speed-limit-per-hoster).
 
 Very low speed limits can cause uploads to time out.
 
 Under **Upload start order**, choose which waiting uploads start first: **Oldest first** (default) or
-**Initial uploads before reuploads**. See [Start order](/Bearcat/upload-lifecycle/#start-order).
+**Initial uploads before reuploads**. See [Start order](/upload-lifecycle/#start-order).
 
 ### ffmpeg
 
@@ -262,8 +262,8 @@ Database settings are read at startup from environment variables or a settings f
 
 | Installation | Where to set them |
 | --- | --- |
-| Docker | `docker-compose.yml`, or `docker-compose.postgres.yml` for PostgreSQL. See [Run Bearcat in Docker](/Bearcat/use-the-docker-image/#database). |
-| Desktop app | **Database type** in the [Desktop app](/Bearcat/use-the-desktop-launcher/#database-type) settings. |
+| Docker | `docker-compose.yml`, or `docker-compose.postgres.yml` for PostgreSQL. See [Run Bearcat in Docker](/use-the-docker-image/#database). |
+| Desktop app | **Database type** in the [Desktop app](/use-the-desktop-launcher/#database-type) settings. |
 | Windows service | `Database` section in `%ProgramData%\Bearcat\config.json`, written by `Bearcat.Cli.exe setup`. |
 
 | Setting | Environment variable | Value |
@@ -300,7 +300,7 @@ By default, it uses the operating system's time zone.
 | --- | --- | --- |
 | Desktop app | Time zone of your computer | Change the time zone of your computer. |
 | Windows service | Time zone of the Windows server | Add `"LocalTimezone": "Europe/Berlin"` to `%ProgramData%\Bearcat\config.json` and restart the service. |
-| Docker | UTC | Set `BEARCAT_TIMEZONE` in `.env`. See [Docker settings](/Bearcat/use-the-docker-image/#docker-settings). |
+| Docker | UTC | Set `BEARCAT_TIMEZONE` in `.env`. See [Docker settings](/use-the-docker-image/#docker-settings). |
 
 The value is an IANA time zone ID such as `Europe/Berlin` or `America/New_York`.
 An unknown ID stops Bearcat on startup.

@@ -9,7 +9,7 @@ Die Registrierung geht nur mit Einladung. Auf der Website erfährst du, wo du ei
 
 Öffne in Bearcat **Registrierungen > Crypter > Crypterregistrierungen**, füge filecrypt.cc hinzu
 und trage deinen API-Schlüssel ein. Verbinde den Account danach mit einer
-[Uploadkonfiguration](/Bearcat/de/account-settings/#linkcrypter-und-metadatenquellen-einrichten).
+[Uploadkonfiguration](/de/account-settings/#linkcrypter-und-metadatenquellen-einrichten).
 
-Um bestehende Ordner zu übernehmen, folge [Linkcrypterordner importieren](/Bearcat/de/import-link-crypter-folders/).
+Um bestehende Ordner zu übernehmen, folge [Linkcrypterordner importieren](/de/import-link-crypter-folders/).
 Dafür braucht der API-Schlüssel das Recht `LIST`.

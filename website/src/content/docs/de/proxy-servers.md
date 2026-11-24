@@ -58,7 +58,7 @@ In **Hosterregistrierungen** gibt es zwei getrennte Felder:
 
 - **Proxy für Uploads und Kontoabfragen** gilt auch für **Login testen** und Linkprüfungen.
 - **Proxy für Mirrordownloads** gilt beim Wiederherstellen von Archiven. Dieses Feld gibt es bei
-  Hostern, die [Mirrordownloads](/Bearcat/de/mirror-downloads/) unterstützen.
+  Hostern, die [Mirrordownloads](/de/mirror-downloads/) unterstützen.
 
 ![hoster-proxy-override.png](../images/hoster-proxy-override.png)
 

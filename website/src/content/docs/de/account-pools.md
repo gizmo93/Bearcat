@@ -68,7 +68,7 @@ neuen Uploads mehr. Seine bestehenden Uploads bleiben erhalten.
 
 ## Pool ersetzen
 
-Mit [Hoster ersetzen](/Bearcat/de/replace-hosters/) stellst du alle Uploadkonfigurationen eines Pools auf
+Mit [Hoster ersetzen](/de/replace-hosters/) stellst du alle Uploadkonfigurationen eines Pools auf
 einen anderen Account oder Pool um.
 
 ## Posts
@@ -79,4 +79,4 @@ des Pools oder Accounts. `upload.hoster_registration_name` zeigt den Accountname
 ## Parallele Uploads
 
 Das Limit für parallele Uploads gilt gemeinsam für alle Accounts desselben Hosters.
-Siehe [Parallele Uploads pro Hoster](/Bearcat/de/account-settings/#parallele-uploads-pro-hoster).
+Siehe [Parallele Uploads pro Hoster](/de/account-settings/#parallele-uploads-pro-hoster).

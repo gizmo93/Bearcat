@@ -3,10 +3,10 @@ title: "Run Bearcat as a Windows Service"
 description: "Start Bearcat automatically with Windows, even when nobody is logged in."
 prev:
   label: "Choose an installation"
-  link: "/Bearcat/#get-started"
+  link: "/#get-started"
 next:
   label: "Your first upload"
-  link: "/Bearcat/post-installation/"
+  link: "/post-installation/"
 ---
 
 :::tip[Already installed Bearcat?]
@@ -15,7 +15,7 @@ next:
 
 The Windows service starts Bearcat with Windows and keeps it running when you are not logged in.
 New installations use **SQLite**, which needs no database server.
-To start and stop Bearcat yourself, use the [Desktop app](/Bearcat/use-the-desktop-launcher/).
+To start and stop Bearcat yourself, use the [Desktop app](/use-the-desktop-launcher/).
 
 ## 1. Install the archive tools and download Bearcat
 
@@ -57,7 +57,7 @@ Setup saves the configuration, installs the service, and starts Bearcat.
 
 Open [http://127.0.0.1:17208](http://127.0.0.1:17208), or use the port you chose during setup.
 
-**Next: [Set up Bearcat and upload your first release](/Bearcat/post-installation/).**
+**Next: [Set up Bearcat and upload your first release](/post-installation/).**
 
 ## Updating
 
@@ -91,7 +91,7 @@ Bearcat updates the database automatically on startup.
 Run `.\Bearcat.Cli.exe setup` again to change paths, the port, or the database.
 It preselects your current database and keeps the service registration and account.
 
-To use PostgreSQL, [set up a PostgreSQL server](/Bearcat/install-postgresql-for-desktop/) first.
+To use PostgreSQL, [set up a PostgreSQL server](/install-postgresql-for-desktop/) first.
 Select **PostgreSQL** during setup and enter its host, port, database name, username, and password.
 Setup tests the connection.
 
@@ -123,7 +123,7 @@ Without `bearcat.key`, Bearcat cannot decrypt your saved credentials.
 
 `setup` and `set-db-password` keep custom sections such as `Logging` or `Bearcat`.
 
-To enable the REST API command endpoints, add `Bearcat.ApiKey`. See [Control Bearcat from External Tools](/Bearcat/external-orchestration/#windows-service).
+To enable the REST API command endpoints, add `Bearcat.ApiKey`. See [Control Bearcat from External Tools](/external-orchestration/#windows-service).
 
 ## Managing the service
 

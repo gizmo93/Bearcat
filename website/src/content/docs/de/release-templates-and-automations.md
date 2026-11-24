@@ -3,7 +3,7 @@ title: "Releasetemplates und Ordnerautomatisierungen"
 description: "Uploadeinstellungen wiederverwenden und Releases automatisch aus neuen Ordnern erstellen."
 ---
 
-Speichere die Einstellungen deines [ersten Uploads](/Bearcat/de/post-installation/) als Template.
+Speichere die Einstellungen deines [ersten Uploads](/de/post-installation/) als Template.
 Damit erstellst du weitere Releases von Hand oder automatisch aus neuen Ordnern.
 
 ## Releasetemplates einrichten
@@ -17,7 +17,7 @@ Einstellungen für Archive, Uploads, Bilder und Linkcrypter. Du kannst es auf dr
 
 Mit **Container erstellen für** wählst du in der Linkcrypterkonfiguration, ob jeder Hoster einen eigenen
 Container bekommt oder alle Hoster eines Releases als Mirrors in einem Container erscheinen.
-Siehe [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontainer).
+Siehe [Linkcryptercontainer](/de/upload-lifecycle/#5-linkcryptercontainer).
 
 ![Releasetemplates](../images/release-templates-page.png)
 
@@ -29,7 +29,7 @@ ein Release zu erstellen. Wähle die Unterordner ab, die du nicht willst. Bereit
 Unterordner lassen sich nicht auswählen.
 
 Aktiviere **Collectionerkennung** im Template, um zusammengehörige Releases zu gruppieren, etwa die Folgen
-einer TV-Staffel. Siehe [Releasecollections](/Bearcat/de/release-collections/).
+einer TV-Staffel. Siehe [Releasecollections](/de/release-collections/).
 
 ### Screenshots
 
@@ -45,15 +45,15 @@ Unter **Screenshots** im Template und in den Releaseeinstellungen findest du zwe
 - Screenshots lassen sich nur für Releases vom Typ Managed erstellen, deren Releaseordner noch existiert.
 - Bearcat verwendet die grösste Videodatei im Releaseordner.
 - Videos mit HDR10 oder HLG werden auf SDR umgerechnet. Dolby Vision ohne Basisschicht in HDR10 oder HLG wird nicht unterstützt.
-- Die Hintergrundaufgabe **Screenshot creation** erstellt die Bilder. ffmpeg wird [bei Bedarf heruntergeladen](/Bearcat/de/advanced-configuration/#ffmpeg).
+- Die Hintergrundaufgabe **Screenshot creation** erstellt die Bilder. ffmpeg wird [bei Bedarf heruntergeladen](/de/advanced-configuration/#ffmpeg).
 - Bearcat erstellt nur Bilder, für die ein Upload eingerichtet ist. Aktiviere dafür **Screenshots** oder
-  **Screenshotraster** in einer [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration) mit aktivem Bildhoster.
+  **Screenshotraster** in einer [Bilduploadkonfiguration](/de/account-settings/#bilduploadkonfiguration) mit aktivem Bildhoster.
 
 Im Tab **Bilder** siehst du das Ergebnis oder eine Fehlermeldung. Mit **Neu erstellen** ersetzt du die
 Screenshots und ihre Bilduploads, etwa nachdem du die Einstellungen geändert hast. Dafür muss der
 Releaseordner noch existieren und das Release vom Typ Managed sein.
 
-Du kannst die hochgeladenen Bilder in [Postvorlagen verwenden](/Bearcat/de/forum-post-templates/#screenshots).
+Du kannst die hochgeladenen Bilder in [Postvorlagen verwenden](/de/forum-post-templates/#screenshots).
 Bearcat löscht die lokalen Screenshotdateien, sobald alle dafür eingerichteten Bilduploadkonfigurationen
 sie hochgeladen haben. Ist kein Upload mehr dafür eingerichtet, löscht es sie sofort.
 Der Tab **Bilder** zeigt danach die Bilder vom Bildhoster.
@@ -86,7 +86,7 @@ Beispiel für einen Basisordner:
 Das Muster `*1080p*` wählt nur `Movie.One.2026.1080p` aus. Ein leeres Muster schliesst alle drei Ordner ein.
 
 Bearcat scannt etwa alle zwei Minuten und überspringt Ordner, die schon ein Release haben. Sobald
-ein Ordner die [Vorgaben für Stabilität und Mindestgrösse](/Bearcat/de/advanced-configuration/#ordnerautomatisierung)
+ein Ordner die [Vorgaben für Stabilität und Mindestgrösse](/de/advanced-configuration/#ordnerautomatisierung)
 erfüllt, erstellt Bearcat das Release und ruft die Metadaten ab. Danach packt es die Dateien und
 lädt sie mit den Einstellungen des Templates hoch.
 
@@ -115,7 +115,7 @@ standardmässig deaktiviert und gilt nicht für Unmanaged Templates.
 Bevor das Release erstellt wird, prüft Bearcat den Ordner anhand seiner `.sfv`-Dateien, falls vorhanden,
 und entpackt alle RAR- und 7z-Archive im Ordner und in seinen Unterordnern. Nach erfolgreichem Entpacken
 löscht es die Archivparts und die `.sfv`-Dateien, die nur diese Parts auflisten. Es gelten dieselben
-Regeln wie bei [Remotedownloads](/Bearcat/de/remote-downloads/#archive-vor-der-releaseerstellung-entpacken).
+Regeln wie bei [Remotedownloads](/de/remote-downloads/#archive-vor-der-releaseerstellung-entpacken).
 
 Laufende Prüfungen und Entpackvorgänge erscheinen auf der Seite **Home** unter **Ordnerautomatisierungen**.
 
@@ -128,4 +128,4 @@ verarbeitet. Bearcat versucht es auch erneut, wenn sich die Dateien im Ordner ä
 
 Mit **Remotequellen** und **Remoteautomatisierungen** lädst du neue Ordner von einem Server herunter und
 erstellst daraus Releases mit einem Template. Einrichtung und Beispiele findest du unter
-[FTP/FTPS-Downloads](/Bearcat/de/remote-downloads/).
+[FTP/FTPS-Downloads](/de/remote-downloads/).

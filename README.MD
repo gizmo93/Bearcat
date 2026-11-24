@@ -9,13 +9,13 @@ Bearcat also watches FTP and FTPS servers for new releases, downloads matching f
 
 Run it on your own desktop, NAS, or server and manage it through a web interface.
 
-[Downloads](https://github.com/gizmo93/Bearcat/releases) · [Getting started guide](https://gizmo93.github.io/Bearcat/#get-started) · [User documentation](https://gizmo93.github.io/Bearcat/)
+[Downloads](https://github.com/gizmo93/Bearcat/releases) · [Getting started guide](https://bearcat.to/#get-started) · [User documentation](https://bearcat.to/)
 
 ![Bearcat web interface for managing releases and uploads](docs/images/gui.png)
 
 ## Features
 
-- [Automatically download releases from FTP/FTPS servers](https://gizmo93.github.io/Bearcat/remote-downloads/), verify SFV checksums, and optionally extract RAR or 7z archives before uploading.
+- [Automatically download releases from FTP/FTPS servers](https://bearcat.to/remote-downloads/), verify SFV checksums, and optionally extract RAR or 7z archives before uploading.
 - Create RAR or 7z archives, or upload archives you already have.
 - Upload releases to multiple hosters and check link availability automatically.
 - Repackage and reupload managed releases when links go offline.
@@ -24,14 +24,14 @@ Run it on your own desktop, NAS, or server and manage it through a web interface
 - Track releases waiting to be posted and prepare forum drafts for you to review and submit.
 - Forward upload notifications and errors to Telegram.
 
-See the [supported hosters and link crypters](https://gizmo93.github.io/Bearcat/#which-hosters-and-linkcrypters-are-supported) for the full list.
+See the [supported hosters and link crypters](https://bearcat.to/#which-hosters-and-linkcrypters-are-supported) for the full list.
 
 ## Documentation
 
-- [User guide](https://gizmo93.github.io/Bearcat/)
-- [Automatic FTP/FTPS downloads and archive extraction](https://gizmo93.github.io/Bearcat/remote-downloads/)
-- [Archives, link checks, and automatic reuploads](https://gizmo93.github.io/Bearcat/upload-lifecycle/)
-- [Managed releases and existing archives](https://gizmo93.github.io/Bearcat/release-types/)
+- [User guide](https://bearcat.to/)
+- [Automatic FTP/FTPS downloads and archive extraction](https://bearcat.to/remote-downloads/)
+- [Archives, link checks, and automatic reuploads](https://bearcat.to/upload-lifecycle/)
+- [Managed releases and existing archives](https://bearcat.to/release-types/)
 - [Development notes](docs/development.md)
 
 ## Local development

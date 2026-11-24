@@ -3,10 +3,10 @@ title: "Bearcat als Windows-Dienst ausführen"
 description: "Starte Bearcat automatisch mit Windows, auch wenn niemand angemeldet ist."
 prev:
   label: "Installation wählen"
-  link: "/Bearcat/de/#erste-schritte"
+  link: "/de/#erste-schritte"
 next:
   label: "Dein erster Upload"
-  link: "/Bearcat/de/post-installation/"
+  link: "/de/post-installation/"
 ---
 
 :::tip[Bearcat ist bereits installiert?]
@@ -15,7 +15,7 @@ next:
 
 Der Windows-Dienst startet Bearcat mit Windows und läuft auch ohne Anmeldung.
 Neue Installationen verwenden **SQLite** und brauchen keinen Datenbankserver.
-Um Bearcat selbst zu starten und zu beenden, verwende die [Desktopanwendung](/Bearcat/de/use-the-desktop-launcher/).
+Um Bearcat selbst zu starten und zu beenden, verwende die [Desktopanwendung](/de/use-the-desktop-launcher/).
 
 ## 1. Archivprogramme installieren und Bearcat herunterladen
 
@@ -57,7 +57,7 @@ Das Setup speichert die Konfiguration, installiert den Dienst und startet Bearca
 
 Öffne [http://127.0.0.1:17208](http://127.0.0.1:17208) oder verwende den Port, den du im Setup gewählt hast.
 
-**Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
+**Weiter: [Bearcat einrichten und erstes Release hochladen](/de/post-installation/).**
 
 ## Aktualisieren
 
@@ -91,7 +91,7 @@ Bearcat aktualisiert die Datenbank beim Start automatisch.
 Führe `.\Bearcat.Cli.exe setup` erneut aus, um Pfade, Port oder Datenbank zu ändern.
 Die aktuelle Datenbank ist vorausgewählt. Dienstregistrierung und Dienstkonto bleiben erhalten.
 
-Für PostgreSQL [richtest du zuerst einen PostgreSQL-Server ein](/Bearcat/de/install-postgresql-for-desktop/).
+Für PostgreSQL [richtest du zuerst einen PostgreSQL-Server ein](/de/install-postgresql-for-desktop/).
 Wähle im Setup **PostgreSQL** und gib Host, Port, Datenbankname, Benutzername und Passwort ein.
 Das Setup testet die Verbindung.
 
@@ -123,7 +123,7 @@ Ohne `bearcat.key` kann Bearcat deine gespeicherten Zugangsdaten nicht mehr ents
 
 `setup` und `set-db-password` behalten eigene Abschnitte wie `Logging` oder `Bearcat` bei.
 
-Um die Befehlsendpunkte der REST-API zu aktivieren, füge `Bearcat.ApiKey` hinzu. Siehe [Bearcat mit externen Tools steuern](/Bearcat/de/external-orchestration/#windows-dienst).
+Um die Befehlsendpunkte der REST-API zu aktivieren, füge `Bearcat.ApiKey` hinzu. Siehe [Bearcat mit externen Tools steuern](/de/external-orchestration/#windows-dienst).
 
 ## Dienst verwalten
 

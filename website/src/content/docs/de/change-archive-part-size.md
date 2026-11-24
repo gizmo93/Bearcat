@@ -6,7 +6,7 @@ description: "Die Partgrösse vieler Archivkonfigurationen und Releasetemplates 
 Öffne **Uploads und Archive > Archive** und klicke auf **Partgrösse ändern**. Wähle die aktuelle Partgrösse, gib
 die neue ein und klicke auf **Partgrösse ändern**. Die Vorschau aktualisiert sich bei jeder Änderung.
 
-Die Partgrösse richtet sich nach der globalen [Einheit der Partgrösse](/Bearcat/de/advanced-configuration/#einheit-der-partgrösse).
+Die Partgrösse richtet sich nach der globalen [Einheit der Partgrösse](/de/advanced-configuration/#einheit-der-partgrösse).
 
 ## Was sich ändert
 

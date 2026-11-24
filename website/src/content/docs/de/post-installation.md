@@ -35,7 +35,7 @@ eines vorhanden und beschreibbar sein.
 - **Docker:** Der Hostordner `RELEASES_DIR` aus deiner Datei `.env` erscheint als `/mnt/data/releases`.
 - **Desktopanwendung:** Ändere **Working directories** in den Einstellungen und starte Bearcat neu.
 - **Windows-Dienst:** Führe `Bearcat.Cli.exe setup` erneut als Administrator aus und ändere die Arbeitsverzeichnisse.
-  Siehe [Setup später ändern](/Bearcat/de/use-the-windows-service/#setup-später-ändern).
+  Siehe [Setup später ändern](/de/use-the-windows-service/#setup-später-ändern).
 
 Klicke danach in der Weboberfläche auf **Erneut prüfen**.
 
@@ -108,7 +108,7 @@ Eine Quelle legt fest, wo Bearcat nach neuen Releases sucht. Wähle **Lokaler Or
 1. Wähle unter **Releasebasispfad** den Ordner, dessen direkte Unterordner zu Releases werden sollen.
 2. Gib bei Bedarf ein **Muster für Ordnernamen** ein, etwa `*1080p*`.
 3. Liegen RAR- oder 7z-Archive in den Ordnern, aktiviere **Archive vor der Releaseerstellung entpacken**.
-   Siehe [Archive vor der Releaseerstellung entpacken](/Bearcat/de/release-templates-and-automations/#archive-vor-der-releaseerstellung-entpacken).
+   Siehe [Archive vor der Releaseerstellung entpacken](/de/release-templates-and-automations/#archive-vor-der-releaseerstellung-entpacken).
 
 Die **Ordnervorschau** listet die passenden Ordner und zeigt, wie viele davon bereits verwendet werden.
 Archivausgabeordner gelten als belegt und werden nie zu Releases.
@@ -137,7 +137,7 @@ Wähle einen kleinen Testordner, um Archive und Uploads schnell zu prüfen. Klic
    Remoteordner und den lokalen Downloadordner.
 
 Vorhandene Ordner auf dem Server werden ignoriert. Mehr zu den Einstellungen findest du unter
-[FTP/FTPS-Downloads](/Bearcat/de/remote-downloads/).
+[FTP/FTPS-Downloads](/de/remote-downloads/).
 
 Nach dem Anlegen bestätigt Bearcat die neue Quelle. Falls du einen Testordner gewählt hast, siehst du auch,
 ob seine Uploads erstellt wurden. Mit **Release öffnen** gelangst du zum Testrelease, mit **Zur Aktivität**
@@ -147,12 +147,12 @@ zur Startseite.
 
 - **Testrelease:** Das Packen startet kurz nach dem Klick auf **Quelle anlegen**.
 - **Neue lokale Ordner:** Bearcat scannt etwa alle zwei Minuten. Ein Ordner muss für die eingestellte
-  [Stabilitätsdauer](/Bearcat/de/advanced-configuration/#ordnerautomatisierung) unverändert bleiben
+  [Stabilitätsdauer](/de/advanced-configuration/#ordnerautomatisierung) unverändert bleiben
   (Standard: 5 Minuten). Danach erstellt Bearcat das Release.
 - **Neue Ordner auf dem Server:** Auch hier wartet Bearcat, bis der Ordner für die eingestellte
-  [Stabilitätsdauer](/Bearcat/de/advanced-configuration/#remotedownloads) unverändert bleibt
+  [Stabilitätsdauer](/de/advanced-configuration/#remotedownloads) unverändert bleibt
   (Standard: 5 Minuten). Dann lädt es ihn herunter und erstellt das Release.
-- **Uploads** starten nach dem [Cooldown für initiale Uploads](/Bearcat/de/advanced-configuration/#cooldown-für-initiale-uploads)
+- **Uploads** starten nach dem [Cooldown für initiale Uploads](/de/advanced-configuration/#cooldown-für-initiale-uploads)
   (Standard: 5 Minuten). Um die Wartezeit für ein Release zu überspringen, klicke auf seiner Detailseite auf **Uploads jetzt starten**.
 
 Laufende Archiverstellungen und Uploads erscheinen auf der Startseite. Öffne auf der Releasedetailseite
@@ -163,7 +163,7 @@ Downloadlinks aus der **Übersicht**.
 
 Schlägt der Upload fehl oder startet er nicht, prüfe die Fehler unter der Benachrichtigungsglocke.
 Stelle sicher, dass **Login testen** erfolgreich ist und der Archivausgabeordner beschreibbar ist.
-Mehr dazu findest du unter [Ablauf eines Uploads](/Bearcat/de/upload-lifecycle/).
+Mehr dazu findest du unter [Ablauf eines Uploads](/de/upload-lifecycle/).
 
 ### Startseite
 
@@ -193,7 +193,7 @@ anzuzeigen, aktiviere **Assistent auf der Aktivitätsseite anzeigen** unter **Ko
 3. **Release:** Lege deine Dateien in einen Unterordner eines Arbeitsverzeichnisses, zum Beispiel `releases/My.First.Upload/`.
    Öffne **Releases**, klicke auf **Neues Release**, wähle **Managed**, den Ordner und die Gruppe und klicke
    auf **Release erstellen**. In Docker erscheint `RELEASES_DIR` als `/mnt/data/releases`. Für bereits fertige
-   Archive verwende ein [Unmanaged Release](/Bearcat/de/release-types/#unmanaged-releases).
+   Archive verwende ein [Unmanaged Release](/de/release-types/#unmanaged-releases).
 4. **Archive:** Klicke im Tab **Archive** des Releases auf **Hinzufügen** und wähle RAR oder 7z.
    Wähle einen beschreibbaren Ausgabeordner in einem Arbeitsverzeichnis, getrennt von den Quelldateien.
    Gib ein Dateipräfix und eine Partgrösse in MB ein, die das Dateigrössenlimit deines Hosters einhält.
@@ -211,14 +211,14 @@ Der Upload startet nach dem Cooldown für initiale Uploads oder sofort mit **Upl
 </details>
 
 Um Releases automatisch aus neuen Ordnern zu erstellen, speichere die Einstellungen als Template und lege eine
-[Ordnerautomatisierung](/Bearcat/de/release-templates-and-automations/) an.
+[Ordnerautomatisierung](/de/release-templates-and-automations/) an.
 
 ## Nach deinem ersten Upload
 
 Für weitere Uploads kannst du:
 
-- [Template speichern und Ordner überwachen](/Bearcat/de/release-templates-and-automations/), um diese Einstellungen wiederzuverwenden.
-- [Reuploads aktivieren oder Linkcrypter hinzufügen](/Bearcat/de/account-settings/), um deine Uploadlinks zu verwalten.
-- [Von FTP oder FTPS herunterladen](/Bearcat/de/remote-downloads/), um Releases automatisch abzurufen.
-- [Metadaten und Coverbilder hinzufügen](/Bearcat/de/release-information-and-metadata/) für deine Releases.
-- [Die Releasedetailseite ansehen](/Bearcat/de/release-detail-page/), um weitere Einstellungen zu finden.
+- [Template speichern und Ordner überwachen](/de/release-templates-and-automations/), um diese Einstellungen wiederzuverwenden.
+- [Reuploads aktivieren oder Linkcrypter hinzufügen](/de/account-settings/), um deine Uploadlinks zu verwalten.
+- [Von FTP oder FTPS herunterladen](/de/remote-downloads/), um Releases automatisch abzurufen.
+- [Metadaten und Coverbilder hinzufügen](/de/release-information-and-metadata/) für deine Releases.
+- [Die Releasedetailseite ansehen](/de/release-detail-page/), um weitere Einstellungen zu finden.

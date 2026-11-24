@@ -6,7 +6,7 @@ description: "Delete local archives and download them from a mirror hoster when 
 Enable a hoster as a mirror so Bearcat can restore archive files when a reupload needs them.
 You can then delete local archives to free disk space, as long as a mirror still has the required files online.
 
-This works for both [managed and unmanaged releases](/Bearcat/release-types/).
+This works for both [managed and unmanaged releases](/release-types/).
 
 ![running-mirror-download.png](images/running-mirror-download.png)
 
@@ -18,12 +18,12 @@ It downloads missing files from active mirror hosters. The required parts can co
 Bearcat keeps links still online from the previous upload to the same hoster.
 It only downloads files needed for the reupload.
 
-If no suitable mirror is available, Bearcat can repack [managed releases](/Bearcat/release-types/)
+If no suitable mirror is available, Bearcat can repack [managed releases](/release-types/)
 from the release folder. For unmanaged releases, you need to provide the missing archive files yourself.
-See [Unmanaged Releases](/Bearcat/release-types/#unmanaged-releases).
+See [Unmanaged Releases](/release-types/#unmanaged-releases).
 
 7-Zip archives need repacking for new hashes even when the files are available.
-See [Archive reuse](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) for the format differences.
+See [Archive reuse](/upload-lifecycle/#archive-reuse-and-repackaging) for the format differences.
 
 ## Enable a hoster as a mirror
 
@@ -36,7 +36,7 @@ Turn on **Use for mirror downloads** and save.
 
 Set **Proxy for mirror downloads** in the hoster registration to use a proxy for archive restores.
 It is separate from the proxy used for uploads and account requests. Leave it on **Category default**
-to follow the global **Hoster mirror downloads** setting. See [Proxy Servers](/Bearcat/proxy-servers/).
+to follow the global **Hoster mirror downloads** setting. See [Proxy Servers](/proxy-servers/).
 
 ### Mirror priority
 
@@ -120,11 +120,11 @@ Bearcat only offers this when the release stays recoverable:
   downloads, **or** the release is managed and still has its release folder for repacking.
 
 Bearcat deletes the archive files and removes the folder only if it is then empty. Other files are kept.
-Archives in a [storage folder](/Bearcat/archive-storage-folders/) are not deleted. If all archives of
+Archives in a [storage folder](/archive-storage-folders/) are not deleted. If all archives of
 the release are in storage folders, Bearcat has nothing to delete and says so.
 
 ## Automatic cleanup
 
-Under [Auto cleanup](/Bearcat/advanced-configuration/#local-archives-after-retention), set
+Under [Auto cleanup](/advanced-configuration/#local-archives-after-retention), set
 **Local archives after retention** to **Delete**. Bearcat removes them after the configured period
 and restores them when a reupload needs them.

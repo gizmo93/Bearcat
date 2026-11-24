@@ -4,7 +4,7 @@ description: "Linkcrypter und Bildhoster hinzufügen, Reuploads aktivieren und U
 ---
 
 Hosterkonten findest du unter **Registrierungen > Hoster > Hosterregistrierungen**.
-Wie du dein erstes Konto hinzufügst, steht unter [Dein erster Upload](/Bearcat/de/post-installation/#manuell-einrichten).
+Wie du dein erstes Konto hinzufügst, steht unter [Dein erster Upload](/de/post-installation/#manuell-einrichten).
 Hier richtest du weitere Dienste, Reuploads und Uploadlimits ein.
 
 ## Linkcrypter und Metadatenquellen einrichten
@@ -15,7 +15,7 @@ Hier richtest du weitere Dienste, Reuploads und Uploadlimits ein.
 - Öffne **Registrierungen > NFO-Datenbankregistrierungen**, um NFOs automatisch abzurufen.
 - Öffne **Registrierungen > Metadatenquellen**, um Quellen für Titel, Beschreibungen, Genres und Coverbilder hinzuzufügen.
 
-Details findest du unter [Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
+Details findest du unter [Releaseinformationen und Metadaten](/de/release-information-and-metadata/).
 
 ## Bildhosteraccounts einrichten
 
@@ -32,16 +32,16 @@ Namen und eine Bildhosterregistrierung. Wähle dann, welche Bilder Bearcat hochl
 | Option | Standard | Lädt hoch |
 | --- | --- | --- |
 | **Cover** | An | Das Cover, sobald eine Cover-URL vorhanden ist. |
-| **Screenshots** | Aus | Die einzelnen [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots) des Releases. |
+| **Screenshots** | Aus | Die einzelnen [Screenshots](/de/release-templates-and-automations/#screenshots) des Releases. |
 | **Screenshotraster** | Aus | Das Screenshotraster des Releases. |
 
 Mindestens eine Option muss aktiv sein. Screenshots werden hochgeladen, sobald sie erstellt wurden.
 Bilduploadkonfigurationen von Collections laden immer nur das Cover hoch.
 
-Der Name wird auch in [Postvorlagen](/Bearcat/de/forum-post-templates/) verwendet.
+Der Name wird auch in [Postvorlagen](/de/forum-post-templates/) verwendet.
 Heisst die Konfiguration `ImgBB Cover`, greifst du über `imagelinks.imgbb_cover.full` auf das Cover zu.
 
-Releases und Collections kommen erst in die [Postwarteschlange](/Bearcat/de/post-queue/), wenn kein Bildupload
+Releases und Collections kommen erst in die [Postwarteschlange](/de/post-queue/), wenn kein Bildupload
 mehr wartet oder läuft. Fehlgeschlagene Bilduploads blockieren das Posten nicht. Lösche einen fehlgeschlagenen
 Upload im Tab **Bilder**, um ihn erneut zu starten.
 
@@ -54,7 +54,7 @@ Mit `0` kann es sofort einen Reupload einplanen.
 
 Wähle die Releasegruppe beim Erstellen oder Bearbeiten eines Releases. Um mehrere Releases gemeinsam zu ändern,
 wähle sie in der Releaseliste aus und ändere dort die **Releasegruppe**.
-Details findest du unter [Automatische Reuploads](/Bearcat/de/upload-lifecycle/#7-automatische-reuploads).
+Details findest du unter [Automatische Reuploads](/de/upload-lifecycle/#7-automatische-reuploads).
 
 ## Reuploadoverrides pro Hoster
 
@@ -72,7 +72,7 @@ der Releasegruppe zu verwenden.
 ![Reuploadoverrides eines Hosters](../images/edit-hoster-reupload-overrides.png)
 
 Diese Einstellungen gelten nur, wenn automatische Reuploads in der Releasegruppe aktiviert sind.
-Unter [Overrides pro Hoster](/Bearcat/de/upload-lifecycle/#overrides-pro-hoster) siehst du, wann welche Option sinnvoll ist.
+Unter [Overrides pro Hoster](/de/upload-lifecycle/#overrides-pro-hoster) siehst du, wann welche Option sinnvoll ist.
 
 Die Spalte **Reupload** zeigt die Overrides oder **Standard der Releasegruppe**, wenn keine gesetzt sind.
 **Volle Reuploads** zeigt an, dass **Immer alle Dateien neu hochladen** aktiviert ist.
@@ -84,7 +84,7 @@ lässt sich nicht ändern. Bei anderen Hostern setzt du unter **Neuer Hoster** o
 eigenes Limit im Feld **Maximale parallele Uploads**. Ein leeres Feld verwendet den angezeigten Standard.
 
 Die Spalte **Parallele Uploads** zeigt das aktive Limit und bei eigenen Werten ein Badge **Override**.
-Das [globale Uploadlimit](/Bearcat/de/advanced-configuration/#parallele-uploads) gilt zusätzlich.
+Das [globale Uploadlimit](/de/advanced-configuration/#parallele-uploads) gilt zusätzlich.
 Uploads müssen beide Limits einhalten.
 
 ## Uploadgeschwindigkeit pro Hoster begrenzen
@@ -93,11 +93,11 @@ Setze unter **Neuer Hoster** oder **Bearbeiten** die **Maximale Uploadgeschwindi
 gesamte Uploadgeschwindigkeit für diesen Account zu begrenzen. Kommazahlen wie `0.5` oder `0,5` sind
 erlaubt. Ein leeres Feld bedeutet kein Limit.
 
-Das [globale Limit für die Uploadgeschwindigkeit](/Bearcat/de/advanced-configuration/#parallele-uploads)
+Das [globale Limit für die Uploadgeschwindigkeit](/de/advanced-configuration/#parallele-uploads)
 gilt zusätzlich. Uploads müssen beide Limits einhalten. Die Spalte **Parallele Uploads** zeigt
 das konfigurierte Limit an.
 
 ## Einen Proxy verwenden
 
-Unter [Proxyserver](/Bearcat/de/proxy-servers/) richtest du HTTP- oder SOCKS5-Proxys für Uploads und
+Unter [Proxyserver](/de/proxy-servers/) richtest du HTTP- oder SOCKS5-Proxys für Uploads und
 Mirrordownloads ein. Du kannst einen Standard pro Kategorie festlegen oder einen Proxy für einzelne Accounts wählen.

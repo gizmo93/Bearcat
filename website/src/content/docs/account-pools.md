@@ -65,7 +65,7 @@ deactivate it instead. It will receive no new uploads, but its existing uploads 
 ## Replace a pool
 
 To move all upload configurations from a pool to another account or pool, use
-[Replace Hosters](/Bearcat/replace-hosters/).
+[Replace Hosters](/replace-hosters/).
 
 ## Posts
 
@@ -75,4 +75,4 @@ account name. `upload.hoster_registration_name` shows the account name of the la
 ## Parallel uploads
 
 All accounts of the same hoster share the parallel upload limit.
-See [Parallel uploads per hoster](/Bearcat/account-settings/#parallel-uploads-per-hoster).
+See [Parallel uploads per hoster](/account-settings/#parallel-uploads-per-hoster).

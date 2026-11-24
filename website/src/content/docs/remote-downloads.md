@@ -30,7 +30,7 @@ server has a trusted certificate.
 
 ## Watch a remote folder
 
-First, [create a release template](/Bearcat/release-templates-and-automations/#setting-up-release-templates).
+First, [create a release template](/release-templates-and-automations/#setting-up-release-templates).
 Choose **managed** to pack the downloaded files or **unmanaged** to upload the provided archives.
 
 ![remote-automations-page.png](images/remote-automations-page.png)
@@ -87,7 +87,7 @@ has that name. It skips the duplicate even if the first download fails or is can
 
 Bearcat scans about every two minutes. By default, a folder must be at least `1` MB and its file
 count and total size must stay unchanged for five minutes before it is queued.
-You can adjust these checks under [Remote downloads settings](/Bearcat/advanced-configuration/#remote-downloads).
+You can adjust these checks under [Remote downloads settings](/advanced-configuration/#remote-downloads).
 
 Open **Activity > Remote downloads** to see folders, status, and errors. The usual sequence is:
 
@@ -160,13 +160,13 @@ Bearcat waits until:
 
 - Every upload configuration has a completed upload.
 - No uploads are waiting or running, and no archives are being created.
-- Every archive configuration has a created archive or an online [mirror](/Bearcat/mirror-downloads/).
+- Every archive configuration has a created archive or an online [mirror](/mirror-downloads/).
 
-It then converts the release to [unmanaged](/Bearcat/release-types/#unmanaged-releases) and deletes
+It then converts the release to [unmanaged](/release-types/#unmanaged-releases) and deletes
 the downloaded folder. Future reuploads use the existing archives or mirrors.
 
 Store archives outside the downloaded release folder. If it contains archives, Bearcat keeps
 the folder and notifies you. This option does not apply to unmanaged templates.
 
-For releases with a [video upload configuration](/Bearcat/video-hosters/#release-folder), Bearcat keeps
+For releases with a [video upload configuration](/video-hosters/#release-folder), Bearcat keeps
 the downloaded folder.

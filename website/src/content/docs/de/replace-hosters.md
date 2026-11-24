@@ -26,7 +26,7 @@ Nach dem Ersetzen zeigt eine Meldung, wie viele Konfigurationen und Uploads umge
 - Uploads, die noch nicht gestartet sind und keine Dateien haben, wechseln zum Ersatz.
 
 Die Pools selbst bleiben unverändert. Unbenutzte Pools kannst du unter
-[Accountpools](/Bearcat/de/account-pools/) löschen.
+[Accountpools](/de/account-pools/) löschen.
 
 Bestehende Uploads bleiben beim alten Hoster. Erst der nächste Reupload verwendet den gewählten Account
 oder Pool.
@@ -75,7 +75,7 @@ Mit **Hoster ist tot** führt Bearcat zwei weitere Schritte aus:
 
 Die Option steht nicht zur Verfügung, wenn der Ersatz beim selben Hoster liegt.
 
-[Automatische Reuploads](/Bearcat/de/upload-lifecycle/#7-automatische-reuploads) starten nach der üblichen
+[Automatische Reuploads](/de/upload-lifecycle/#7-automatische-reuploads) starten nach der üblichen
 Wartezeit beim neuen Account oder Pool. Dafür müssen **Automatische Reuploads** in der Releasegruppe aktiv
 sein. Übersprungene Konfigurationen verwenden weiterhin den deaktivierten Account. Für sie startet erst
 ein Reupload, wenn du sie anpasst.

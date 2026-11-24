@@ -4,7 +4,7 @@ description: "Set up automatic actions for uploads and reuploads, check their re
 ---
 
 Bearcat can run an action automatically after uploading a release or a release collection.
-One available action is the [IntelligeN XML export](/Bearcat/intelligen-xml-export/).
+One available action is the [IntelligeN XML export](/intelligen-xml-export/).
 
 ## Set up an action
 
@@ -26,16 +26,16 @@ If the action fails, Bearcat notifies you on the first failure and retries on th
 
 ## Actions for release collections
 
-If a [release collection](/Bearcat/release-collections/) uses [upload slots](/Bearcat/release-collections/#upload-slots),
+If a [release collection](/release-collections/) uses [upload slots](/release-collections/#upload-slots),
 the action runs for the whole collection. Bearcat waits until all uploads in the slots are complete and the collection's link containers and images are ready.
-Every release must also pass the [quality gate](/Bearcat/quality-gates/) or have manual approval.
+Every release must also pass the [quality gate](/quality-gates/) or have manual approval.
 
 Uploading a new episode triggers **After the first upload**. **After a reupload** applies only if all new uploads in the slots are reuploads.
 Uploads outside the slots trigger the action for the individual release.
 
 ## Check the result or run an action manually
 
-On the [release detail page](/Bearcat/release-detail-page/), open the **Overview** tab.
+On the [release detail page](/release-detail-page/), open the **Overview** tab.
 Under **Actions after upload**, you can see the latest result for each active action. The collection detail page has the same section.
 
 Once the uploads, link containers, and images are ready, you can choose **Run now** even if the action has already run or the matching trigger is off.

@@ -47,7 +47,7 @@ Archives that no longer count as stored lose their reference to the deleted stor
 
 ## Moving archives
 
-Under [Auto cleanup](/Bearcat/advanced-configuration/#local-archives-after-retention), set
+Under [Auto cleanup](/advanced-configuration/#local-archives-after-retention), set
 **Local archives after retention** to **Move to storage folder**.
 Bearcat then moves archives once their retention period has passed.
 
@@ -90,7 +90,7 @@ are reused.
 - Hash changes and the upload use the local files.
 - The storage folder is never written to by a reupload. The archive stays assigned to its storage folder.
 - After the uploads of the archive configuration have finished, the
-  [Auto cleanup](/Bearcat/advanced-configuration/#available-background-tasks) task points the archive
+  [Auto cleanup](/advanced-configuration/#available-background-tasks) task points the archive
   back to the storage folder and deletes the working copy. This runs regardless of the cleanup rules.
   Failed uploads do not delay it.
 
@@ -102,7 +102,7 @@ folder. This also applies when the **Archive files base path** does not exist: B
 it, only the subfolder inside it. Bearcat notifies you once per archive until you resolve the notification.
 
 If archive files are missing in the storage folder, Bearcat downloads only the missing files from a
-[mirror](/Bearcat/mirror-downloads/) and puts them back into the archive's folder in the storage folder.
+[mirror](/mirror-downloads/) and puts them back into the archive's folder in the storage folder.
 Without a mirror, it repacks managed releases. If the storage folder is not available, the restore fails
 with a notification instead of downloading. Bearcat never creates the storage folder.
 

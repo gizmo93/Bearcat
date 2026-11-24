@@ -18,7 +18,7 @@ The release folder contains the files Bearcat should pack, such as videos and NF
 password in the archive configuration. Bearcat packs the files and uploads them to your chosen hosters.
 
 Bearcat reuses existing archives when possible. If they are missing locally, it downloads them from a
-[mirror hoster](/Bearcat/mirror-downloads/) or repacks them from the raw files. The [archive format](/Bearcat/upload-lifecycle/#archive-reuse-and-repackaging) determines
+[mirror hoster](/mirror-downloads/) or repacks them from the raw files. The [archive format](/upload-lifecycle/#archive-reuse-and-repackaging) determines
 whether new hashes require repacking.
 
 ## Unmanaged Releases
@@ -27,7 +27,7 @@ An unmanaged release uses existing archives and has **no release folder** with r
 Each archive configuration points to an archive folder. Bearcat detects the archive format from the file extensions.
 
 If archive files are missing, the upload returns to `WaitingForArchive`. Bearcat downloads them
-from an enabled [mirror hoster](/Bearcat/mirror-downloads/) that still has them online. Without a mirror,
+from an enabled [mirror hoster](/mirror-downloads/) that still has them online. Without a mirror,
 you must provide the archives yourself. An unmanaged release has no raw files to repack.
 
 After a mirror download, the upload continues automatically. If you provide the files yourself,
@@ -35,7 +35,7 @@ refresh the unmanaged archives from the actions menu. Change the archive folder 
 
 ![unmanaged-releases-refresh-folder.png](images/unmanaged-releases-refresh-folder.png)
 
-[Quality gates](/Bearcat/quality-gates/) only check the release infos (cover, description, NFO) of
+[Quality gates](/quality-gates/) only check the release infos (cover, description, NFO) of
 unmanaged releases. Release folder checks are skipped.
 
 ## Converting between types
@@ -43,7 +43,7 @@ unmanaged releases. Release folder checks are skipped.
 Use the actions menu on the release detail page to convert between types.
 
 - **Convert to unmanaged** requires a created archive for every archive configuration.
-  You cannot convert releases with a [video upload configuration](/Bearcat/video-hosters/#release-folder).
+  You cannot convert releases with a [video upload configuration](/video-hosters/#release-folder).
   Bearcat removes the stored release folder path. Archives and uploads are kept.
   You can then delete the raw files yourself.
 - **Convert to managed** lets you choose a release folder with the raw files. Archive configurations and uploads are kept.
@@ -51,4 +51,4 @@ Use the actions menu on the release detail page to convert between types.
 
 For releases downloaded from FTP or FTPS, you can also turn off **Keep raw files** in the remote
 automation. Bearcat then converts them to unmanaged and removes the downloaded folder after the
-first uploads, once the [cleanup conditions](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) are met.
+first uploads, once the [cleanup conditions](/remote-downloads/#delete-raw-files-after-uploading) are met.

@@ -21,7 +21,7 @@ another page.
 
 ## Requirements
 
-Video uploads require a [managed release](/Bearcat/release-types/) with the content type **Movie** or
+Video uploads require a [managed release](/release-types/) with the content type **Movie** or
 **TV show episode**. Release templates must also be managed and use one of these content types.
 
 ## Main video
@@ -34,7 +34,7 @@ that file. If the media data is missing or no file has a video stream, the uploa
 1. Open the release and click **Add** under **Uploads > Configuration**.
 2. Choose **Video file** under **Upload source**. The field only appears when the release meets the
    requirements for video uploads.
-3. Choose an account or [account pool](/Bearcat/account-pools/) of a video hoster as **Upload target**.
+3. Choose an account or [account pool](/account-pools/) of a video hoster as **Upload target**.
 
 With **Video file**, you do not need an archive configuration. The upload targets only include video
 hoster accounts and pools. With **Archive files**, you only see the other hosters.
@@ -42,7 +42,7 @@ You cannot change the upload source later.
 
 ## Release templates
 
-In the [release template](/Bearcat/release-templates-and-automations/), add an upload configuration
+In the [release template](/release-templates-and-automations/), add an upload configuration
 template and choose **Video file** as the upload source. All releases created from this template inherit
 the video upload configuration, including those from folder automations and FTP downloads.
 
@@ -50,7 +50,7 @@ the video upload configuration, including those from folder automations and FTP 
 
 - Video uploads do not support link crypters. Templates with the upload source **Video file** therefore
   have no link crypter templates to choose from.
-- Video upload configurations cannot be assigned to [release collection](/Bearcat/release-collections/)
+- Video upload configurations cannot be assigned to [release collection](/release-collections/)
   upload slots. The collection slot fields are also absent from these templates.
 
 ## Release folder
@@ -59,8 +59,8 @@ Bearcat needs the main video in the release folder for video uploads. While the 
 upload configuration:
 
 - Bearcat keeps the release folder. The release is not
-  [automatically converted to unmanaged](/Bearcat/advanced-configuration/#convert-releases-to-unmanaged-automatically),
-  and its [raw files are kept after remote downloads](/Bearcat/remote-downloads/#delete-raw-files-after-uploading).
+  [automatically converted to unmanaged](/advanced-configuration/#convert-releases-to-unmanaged-automatically),
+  and its [raw files are kept after remote downloads](/remote-downloads/#delete-raw-files-after-uploading).
 - You cannot manually **convert to unmanaged** either.
 - The content type must stay **Movie** or **TV show episode**.
 
@@ -69,16 +69,16 @@ Release templates with video uploads must also keep the content type **Movie** o
 ## Uploads, online checks and reuploads
 
 Video uploads go straight to the upload queue without creating an archive. Online checks and reuploads
-work the same way as for archive uploads. See [Upload lifecycle](/Bearcat/upload-lifecycle/).
+work the same way as for archive uploads. See [Upload lifecycle](/upload-lifecycle/).
 
 ## Links
 
 You can find the file name, file link, and **Embed link** on the release detail page and in the upload
-links dialog. You can copy both links. The [REST API](/Bearcat/rest-api/) returns the embed link in
+links dialog. You can copy both links. The [REST API](/rest-api/) returns the embed link in
 `hosterEmbedLink`.
 
-In the [post queue](/Bearcat/post-queue/), video uploads appear under their upload configuration's name
+In the [post queue](/post-queue/), video uploads appear under their upload configuration's name
 and are marked **Video**.
 
 Use `upload.is_video_upload` and `upload.embed_links` in
-[post templates](/Bearcat/forum-post-templates/#video-uploads).
+[post templates](/forum-post-templates/#video-uploads).

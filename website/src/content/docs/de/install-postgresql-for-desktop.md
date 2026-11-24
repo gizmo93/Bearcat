@@ -3,11 +3,11 @@ title: "PostgreSQL für Bearcat einrichten"
 description: "PostgreSQL für die Desktopanwendung oder den Windows-Dienst installieren."
 ---
 
-Folge dieser Anleitung, wenn du in der [Desktopanwendung](/Bearcat/de/use-the-desktop-launcher/)
-oder im [Windows-Dienst](/Bearcat/de/use-the-windows-service/) **PostgreSQL** wählst.
+Folge dieser Anleitung, wenn du in der [Desktopanwendung](/de/use-the-desktop-launcher/)
+oder im [Windows-Dienst](/de/use-the-windows-service/) **PostgreSQL** wählst.
 Die Standardeinrichtung mit SQLite braucht keinen Datenbankserver.
 
-Für Docker startet `docker-compose.postgres.yml` PostgreSQL in einem eigenen Container. Siehe [Bearcat in Docker ausführen](/Bearcat/de/use-the-docker-image/#datenbank).
+Für Docker startet `docker-compose.postgres.yml` PostgreSQL in einem eigenen Container. Siehe [Bearcat in Docker ausführen](/de/use-the-docker-image/#datenbank).
 
 Verwende PostgreSQL 18. Ältere PostgreSQL-Versionen sind derzeit ungetestet.
 

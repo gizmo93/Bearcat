@@ -51,17 +51,17 @@ Hat das Release für einen Hoster bereits einen Container desselben Crypteraccou
 
 ## Staffelordner
 
-Enthält ein Mirror mehrere Folgen, legt Bearcat anhand der Archivnamen ein Release pro Folge an. Dazu muss die [Collectionerkennung](/Bearcat/de/release-collections/#wie-eine-collection-entsteht) im Template aktiv sein und alle Folgen derselben Collection zuordnen.
+Enthält ein Mirror mehrere Folgen, legt Bearcat anhand der Archivnamen ein Release pro Folge an. Dazu muss die [Collectionerkennung](/de/release-collections/#wie-eine-collection-entsteht) im Template aktiv sein und alle Folgen derselben Collection zuordnen.
 
 Liegen die Archive mehrerer Folgen im selben lokalen Ordner, verschiebt Bearcat die Archivteile in einen Unterordner pro Folge. Solche Verschiebungen stehen in der Vorschau und in der Abschlussmeldung.
 
-Der Crypterordner wird zum Container des [Uploadslots](/Bearcat/de/release-collections/#uploadslots) der Collection. Die Mirrors müssen zum selben Slot gehören. Bearcat überspringt Mirrors, die sich keiner Folge zuordnen lassen. Der Import schlägt fehl, wenn der Slot schon einen anderen Container desselben Crypteraccounts hat oder ein Release der Collection diesen Account für eigene Container nutzt. Beim Import einer einzelnen Folge kann Bearcat die Links direkt in den vorhandenen Collectioncontainer desselben Accounts übernehmen.
+Der Crypterordner wird zum Container des [Uploadslots](/de/release-collections/#uploadslots) der Collection. Die Mirrors müssen zum selben Slot gehören. Bearcat überspringt Mirrors, die sich keiner Folge zuordnen lassen. Der Import schlägt fehl, wenn der Slot schon einen anderen Container desselben Crypteraccounts hat oder ein Release der Collection diesen Account für eigene Container nutzt. Beim Import einer einzelnen Folge kann Bearcat die Links direkt in den vorhandenen Collectioncontainer desselben Accounts übernehmen.
 
 ## Nach dem Import
 
-Ein Ordner mit einem Mirror wird zum [Linkcryptercontainer](/Bearcat/de/upload-lifecycle/#5-linkcryptercontainer) des passenden Hosters. Ein Ordner mit mehreren Mirrors wird zum Container für alle Hoster des Releases.
+Ein Ordner mit einem Mirror wird zum [Linkcryptercontainer](/de/upload-lifecycle/#5-linkcryptercontainer) des passenden Hosters. Ein Ordner mit mehreren Mirrors wird zum Container für alle Hoster des Releases.
 
-Bearcat ruft die Releaseinformationen im Hintergrund ab. Neue Releases verwenden die Sprache aus der Vorschau. Bestehende Releases behalten ihre Sprache. Importierte Releases und Collections gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/Bearcat/de/post-queue/).
+Bearcat ruft die Releaseinformationen im Hintergrund ab. Neue Releases verwenden die Sprache aus der Vorschau. Bestehende Releases behalten ihre Sprache. Importierte Releases und Collections gelten als gepostet und erscheinen nicht in der [Postwarteschlange](/de/post-queue/).
 
 ## Archivordner nachträglich zuordnen
 

@@ -15,8 +15,7 @@ public partial class FirstStartSetupHosterStep(
     IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
-    private const string PostInstallationDocumentationUrl =
-        "https://gizmo93.github.io/Bearcat/post-installation/";
+    private const string PostInstallationDocumentationUrl = "https://bearcat.to/post-installation/";
 
     [Parameter]
     [EditorRequired]

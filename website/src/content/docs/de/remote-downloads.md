@@ -30,7 +30,7 @@ prüfen, ob der Server ein vertrauenswürdiges Zertifikat hat.
 
 ## Remoteordner überwachen
 
-[Erstelle zuerst ein Releasetemplate](/Bearcat/de/release-templates-and-automations/#releasetemplates-einrichten).
+[Erstelle zuerst ein Releasetemplate](/de/release-templates-and-automations/#releasetemplates-einrichten).
 Wähle **Managed**, um die heruntergeladenen Dateien zu packen, oder **Unmanaged**, um die vorhandenen Archive hochzuladen.
 
 ![remote-automations-page.png](../images/remote-automations-page.png)
@@ -87,7 +87,7 @@ fehlschlägt oder abgebrochen wird. Mit **Download neu starten** unter **Remoted
 
 Bearcat scannt etwa alle zwei Minuten. Standardmässig muss ein Ordner mindestens `1` MB gross sein, und
 seine Dateianzahl und Gesamtgrösse müssen fünf Minuten lang unverändert bleiben, bevor er vorgemerkt wird.
-Diese Prüfungen passt du unter [Einstellungen für Remotedownloads](/Bearcat/de/advanced-configuration/#remotedownloads) an.
+Diese Prüfungen passt du unter [Einstellungen für Remotedownloads](/de/advanced-configuration/#remotedownloads) an.
 
 Unter **Aktivität > Remotedownloads** siehst du Ordner, Status und Fehler. Der übliche Ablauf ist:
 
@@ -161,13 +161,13 @@ Bearcat wartet, bis:
 
 - jede Uploadkonfiguration einen abgeschlossenen Upload hat.
 - keine Uploads warten oder laufen und keine Archive erstellt werden.
-- jede Archivkonfiguration ein erstelltes Archiv oder einen [Mirror](/Bearcat/de/mirror-downloads/) hat, der online ist.
+- jede Archivkonfiguration ein erstelltes Archiv oder einen [Mirror](/de/mirror-downloads/) hat, der online ist.
 
-Dann wandelt es das Release in ein [Unmanaged Release](/Bearcat/de/release-types/#unmanaged-releases) um und löscht
+Dann wandelt es das Release in ein [Unmanaged Release](/de/release-types/#unmanaged-releases) um und löscht
 den heruntergeladenen Ordner. Künftige Reuploads nutzen die vorhandenen Archive oder Mirrors.
 
 Speichere Archive ausserhalb des heruntergeladenen Releaseordners. Enthält er Archive, behält Bearcat
 den Ordner und benachrichtigt dich. Diese Option gilt nicht für Unmanaged Templates.
 
-Bei Releases mit einer [Videouploadkonfiguration](/Bearcat/de/video-hosters/#releaseordner) behält Bearcat
+Bei Releases mit einer [Videouploadkonfiguration](/de/video-hosters/#releaseordner) behält Bearcat
 den heruntergeladenen Ordner.

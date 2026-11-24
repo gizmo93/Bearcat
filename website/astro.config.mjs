@@ -5,16 +5,11 @@ import starlightThemeNova from 'starlight-theme-nova';
 import mermaid from 'astro-mermaid';
 
 const isGitHubActionsBuild = process.env.GITHUB_ACTIONS === 'true';
-const base = '/Bearcat';
 
 const redirectToPreferredLocaleScript = `
 (() => {
 	const storageKey = 'bearcat-docs-locale';
-	const basePath = '${base}/';
-	const isGermanPath = (path) => {
-		const rest = path.slice(basePath.length);
-		return rest === 'de' || rest.startsWith('de/');
-	};
+	const isGermanPath = (path) => path === '/de' || path.startsWith('/de/');
 	const readStoredLocale = () => {
 		try {
 			return localStorage.getItem(storageKey);
@@ -35,24 +30,21 @@ const redirectToPreferredLocaleScript = `
 	}, true);
 
 	const path = location.pathname;
-	if (!path.startsWith(basePath) && path !== '${base}') return;
 	const browserPrefersGerman = (navigator.languages?.[0] ?? navigator.language ?? '').toLowerCase().startsWith('de');
 	const currentLocale = isGermanPath(path) ? 'de' : 'en';
 	const preferredLocale = readStoredLocale() ?? (browserPrefersGerman ? 'de' : currentLocale);
 	if (preferredLocale === currentLocale) return;
 
-	const rest = path.slice(basePath.length);
 	const target = preferredLocale === 'de'
-		? basePath + 'de/' + rest
-		: basePath + rest.replace(/^de(\\/|$)/, '');
+		? '/de' + path
+		: path.replace(/^\\/de(\\/|$)/, '/');
 	location.replace(target + location.search + location.hash);
 })();
 `;
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://gizmo93.github.io',
-	base,
+	site: 'https://bearcat.to',
 	integrations: [
 		mermaid({
 			theme: 'dark',
@@ -69,8 +61,8 @@ export default defineConfig({
 			plugins: [
 				starlightThemeNova({
 					nav: [
-						{ label: 'Start', href: { en: '/Bearcat/', de: '/Bearcat/de/' } },
-						{ label: 'API', href: '/Bearcat/api/' },
+						{ label: 'Start', href: { en: '/', de: '/de/' } },
+						{ label: 'API', href: '/api/' },
 						{ label: 'GitHub', href: 'https://github.com/gizmo93/Bearcat' },
 					],
 					stylingSystem: 'css',

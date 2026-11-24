@@ -28,14 +28,14 @@ flowchart TD
 
 Öffne ein Release und gehe zu **Uploads > Konfiguration**. Mit **Hinzufügen** legst du eine
 Uploadkonfiguration an. Darin wählst du die Archivkonfiguration und das Uploadziel:
-eine einzelne Hosterregistrierung oder einen [Accountpool](/Bearcat/de/account-pools/).
+eine einzelne Hosterregistrierung oder einen [Accountpool](/de/account-pools/).
 Optional wählst du Linkcrypterkonfigurationen dazu.
 
 Erstelle für jeden Hoster eine eigene Uploadkonfiguration. Mehrere Konfigurationen für denselben
 Hoster sind möglich, etwa mit unterschiedlichen Partgrössen.
 
 Mit der Uploadquelle **Videodatei** lädt Bearcat das Hauptvideo direkt zu einem
-[Videohoster](/Bearcat/de/video-hosters/) hoch. Diese Uploads starten im Status `Pending` und überspringen
+[Videohoster](/de/video-hosters/) hoch. Diese Uploads starten im Status `Pending` und überspringen
 `WaitingForArchive` und die Archiverstellung.
 
 ## 2. Der erste Upload
@@ -45,28 +45,28 @@ Unter **System > Konfigurationen > Initiale Uploads** stellst du die Wartezeit e
 
 Sobald der Cooldown abgelaufen ist und eine Uploadkonfiguration existiert, plant Bearcat den ersten
 Upload bei der nächsten Prüfung ein. Mit `0` Minuten entfällt die Wartezeit.
-Das Release muss auch die [Qualitätsprüfungen](/Bearcat/de/quality-gates/) bestehen oder manuell freigegeben sein.
+Das Release muss auch die [Qualitätsprüfungen](/de/quality-gates/) bestehen oder manuell freigegeben sein.
 
 Du kannst die Wartezeit für ein Release überspringen: Klicke oben auf der Releasedetailseite auf
 **Uploads jetzt starten**. Die Schaltfläche erscheint, wenn für mindestens eine Uploadkonfiguration noch
 kein Upload erstellt wurde. Bearcat erstellt die fehlenden Uploads sofort und packt die Dateien beim
 nächsten Durchlauf der Archiverstellung. Die Qualitätsprüfungen gelten weiterhin. Du kannst die Uploads
-auch über die [REST-API](/Bearcat/de/rest-api/) starten.
+auch über die [REST-API](/de/rest-api/) starten.
 
 ## 3. Archiv erstellen
 
 Für jeden wartenden Upload stellt Bearcat ein Archiv bereit:
 
 1. Wenn möglich, ein fertiges Archiv derselben Archivkonfiguration wiederverwenden. Liegt das Archiv in einem
-   [Speicherordner](/Bearcat/de/archive-storage-folders/#reuploads), liest der Upload es dort, oder Bearcat
+   [Speicherordner](/de/archive-storage-folders/#reuploads), liest der Upload es dort, oder Bearcat
    kopiert je nach Speicherordner zuerst die hochzuladenden Dateien in eine temporäre lokale Arbeitskopie.
-2. Fehlende lokale Dateien von einem konfigurierten [Mirrorhoster](/Bearcat/de/mirror-downloads/) wiederherstellen.
+2. Fehlende lokale Dateien von einem konfigurierten [Mirrorhoster](/de/mirror-downloads/) wiederherstellen.
 3. Wenn beides nicht möglich ist, ein neues Archiv aus dem Releaseordner erstellen.
 
 Ist ein Speicherordner nicht erreichbar, schlägt die Wiederherstellung fehl. Prüfe dann die Verbindung
-zum Laufwerk oder zur Freigabe. Siehe [Reuploads aus Speicherordnern](/Bearcat/de/archive-storage-folders/#reuploads).
+zum Laufwerk oder zur Freigabe. Siehe [Reuploads aus Speicherordnern](/de/archive-storage-folders/#reuploads).
 
-Neu packen kann Bearcat nur [Managed Releases](/Bearcat/de/release-types/).
+Neu packen kann Bearcat nur [Managed Releases](/de/release-types/).
 Unmanaged Releases brauchen lokale Archivdateien oder einen verfügbaren Mirror.
 
 Die Archivkonfiguration legt Archiver, Ausgabeordner, Dateinamenpräfix, Passwort und Partgrösse fest.
@@ -79,7 +79,7 @@ Dazu kommen zwei Packoptionen:
   [Die Noncedatei und Repackaging](#die-noncedatei-und-repackaging).
 
 Änderungen an diesen Optionen gelten nur für danach erstellte Archive.
-Du kannst ausserdem [zusätzliche Archivinhalte](/Bearcat/de/additional-archive-contents/) zuweisen, zum Beispiel
+Du kannst ausserdem [zusätzliche Archivinhalte](/de/additional-archive-contents/) zuweisen, zum Beispiel
 eine Textdatei mit einem Empfehlungslink, die Bearcat in jedes neu erstellte Archiv aufnimmt.
 
 Nach dem Packen hat das Archiv den Status `Created` und der Upload `Pending`.
@@ -144,7 +144,7 @@ Laufende Dateiuploads werden nicht unterbrochen. Mit **Priorisierung entfernen**
 Nach einem erfolgreichen Upload erstellt Bearcat für jede aktive Linkcrypterkonfiguration einen
 Container mit den Downloadlinks. Schlägt das fehl, erscheint der Fehler am Container und als Benachrichtigung.
 
-Mit einer [Releasecollection](/Bearcat/de/release-collections/) sammelst du Links mehrerer Releases
+Mit einer [Releasecollection](/de/release-collections/) sammelst du Links mehrerer Releases
 in einem gemeinsamen Container, etwa für eine TV-Staffel.
 
 In der Linkcrypterkonfiguration wählst du unter **Container erstellen für**, welche Links der Container enthält:
@@ -153,11 +153,11 @@ In der Linkcrypterkonfiguration wählst du unter **Container erstellen für**, w
 | --- | --- |
 | **Jedes Release einzeln** | Ein Container pro Uploadkonfiguration mit den Links ihres neuesten Uploads. |
 | **Release (alle Hoster als Mirrors)** | Ein Container pro Release und Linkcrypter. Jede Uploadkonfiguration mit dieser Einstellung fügt ihren neuesten abgeschlossenen Upload als Mirror hinzu. |
-| **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/Bearcat/de/release-collections/). |
+| **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/de/release-collections/). |
 
 ![Container erstellen für in der Linkcrypterkonfiguration](../images/add-link-crypter-container-dialog.png)
 
-Du kannst auch [bestehende Linkcrypterordner importieren](/Bearcat/de/import-link-crypter-folders/),
+Du kannst auch [bestehende Linkcrypterordner importieren](/de/import-link-crypter-folders/),
 um Releases aus FileCrypt-, Hide.cx- oder ToLink-Ordnern anzulegen.
 
 Bei **Release (alle Hoster als Mirrors)** müssen Passwort, Captcha, Containerdownload und Click'n'Load in allen
@@ -199,7 +199,7 @@ Bearcat erstellt einen automatischen Reupload, wenn alle diese Bedingungen erfü
 - Jede hochgeladene Datei wurde mindestens einmal geprüft.
 - Die Wartezeit **Stunden bis Reupload** ist abgelaufen.
 - Für dieselbe Uploadkonfiguration gibt es keinen blockierenden Ersatzupload.
-- Das Release hat die [Qualitätsprüfungen](/Bearcat/de/quality-gates/) bestanden oder wurde manuell freigegeben.
+- Das Release hat die [Qualitätsprüfungen](/de/quality-gates/) bestanden oder wurde manuell freigegeben.
 
 Ein Ersatzupload blockiert weitere Reuploads, solange er `Online` ist oder den Status `Pending`,
 `Uploading`, `WaitingForArchive`, `Failed` oder `CancellationRequested` hat.
@@ -218,7 +218,7 @@ da seine Parts nicht mit den alten zusammenpassen.
 
 ### Overrides pro Hoster
 
-In der Hosterregistrierung kannst du [Reuploadoverrides](/Bearcat/de/account-settings/#reuploadoverrides-pro-hoster) setzen:
+In der Hosterregistrierung kannst du [Reuploadoverrides](/de/account-settings/#reuploadoverrides-pro-hoster) setzen:
 
 | Einstellung | Wirkung |
 | --- | --- |
@@ -249,7 +249,7 @@ Schlägt die Aktualisierung fehl, behält der Container seine URL und bekommt de
 Bearcat versucht die Aktualisierung nach 15 Minuten erneut. Bis dahin enthält der Container noch die alten Links.
 
 Meldet der Anbieter, dass der Container nicht mehr existiert, erstellt Bearcat einen neuen Container mit
-neuer URL und schickt eine Benachrichtigung. Das Release oder die Releasecollection kommt zurück in die [Postwarteschlange](/Bearcat/de/post-queue/),
+neuer URL und schickt eine Benachrichtigung. Das Release oder die Releasecollection kommt zurück in die [Postwarteschlange](/de/post-queue/),
 damit bestehende Posts mit der neuen URL aktualisiert werden können.
 
 Du kannst einen Container auch manuell aktualisieren oder neu erstellen:
@@ -263,12 +263,12 @@ Du kannst einen Container auch manuell aktualisieren oder neu erstellen:
 
 ## 10. Aufräumen nach erfolgreichem Upload
 
-Unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#automatisches-aufräumen) kannst du
+Unter [Automatisches Aufräumen](/de/advanced-configuration/#automatisches-aufräumen) kannst du
 Managed Releases nach einer Frist in Unmanaged umwandeln und optional den Releaseordner löschen lassen.
-Lokale Archive kannst du behalten, löschen oder in einen [Speicherordner](/Bearcat/de/archive-storage-folders/) verschieben lassen.
+Lokale Archive kannst du behalten, löschen oder in einen [Speicherordner](/de/archive-storage-folders/) verschieben lassen.
 Standardmässig sind beide Aufräumregeln ausgeschaltet.
 
-Fehlen Archive beim nächsten Reupload, stellt Bearcat sie von einem [Mirror](/Bearcat/de/mirror-downloads/)
+Fehlen Archive beim nächsten Reupload, stellt Bearcat sie von einem [Mirror](/de/mirror-downloads/)
 wieder her oder packt sie bei Managed Releases neu. Das Aufräumen löscht keine Dateien auf dem Hoster.
 
 ## Archivwiederverwendung und Repackaging
@@ -286,7 +286,7 @@ Neue Hashes brauchen nur Dateien, die erneut hochgeladen werden. Die übrigen Pa
 
 Bevor Bearcat ein wiederverwendetes Archiv ändert, prüft es, ob ein anderer aktiver Upload es verwendet.
 Falls ja, wartet es auf einen späteren Durchlauf. Fehlt eine hochzuladende Datei lokal, stellt Bearcat
-sie zuerst von einem [Mirrorhoster](/Bearcat/de/mirror-downloads/) wieder her und ändert danach die Hashes.
+sie zuerst von einem [Mirrorhoster](/de/mirror-downloads/) wieder her und ändert danach die Hashes.
 Liegt das Archiv in einem Speicherordner mit aktiviertem **Lokale Arbeitskopie für Reuploads**, ändert
 Bearcat die Hashes der lokalen Arbeitskopie. Sonst ändert es sie im Speicherordner.
 
@@ -299,5 +299,5 @@ RAR bekommt neue Hashes durch angehängte Nullbytes, mit oder ohne Noncedatei.
 Diese Bytes zählen zum Dateigrössenlimit des Hosters.
 
 7-Zip muss die Dateien mit geänderter Nonce, Kompression oder grösseren Parts neu packen.
-Unter [Archivrepackaging](/Bearcat/de/advanced-configuration/#archivrepackaging) findest du die Strategien
+Unter [Archivrepackaging](/de/advanced-configuration/#archivrepackaging) findest du die Strategien
 und die Ausnahme für ältere RAR-Archive mit fehlenden Hashes.

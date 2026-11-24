@@ -3,7 +3,7 @@ title: "Release Templates and Folder Automations"
 description: "Reuse your upload settings and create releases from new folders automatically."
 ---
 
-Save your [first upload](/Bearcat/post-installation/) settings as a template.
+Save your [first upload](/post-installation/) settings as a template.
 Use it to create more releases manually or automatically from new folders.
 
 ## Setting up release templates
@@ -17,7 +17,7 @@ for new releases. You can create one in three ways:
 
 Use **Create container for** in the link crypter configuration to give each hoster its own container
 or group all hosters of a release as mirrors in one container.
-See [link crypter containers](/Bearcat/upload-lifecycle/#5-link-crypter-containers).
+See [link crypter containers](/upload-lifecycle/#5-link-crypter-containers).
 
 ![Release templates](images/release-templates-page.png)
 
@@ -28,7 +28,7 @@ Enable **One release per subfolder** to create a release for every direct subfol
 folder. Deselect the subfolders you do not want. Subfolders already in use cannot be selected.
 
 Enable **Collection detection** in the template to group related releases, such as episodes of a TV
-season. See [Release Collections](/Bearcat/release-collections/).
+season. See [Release Collections](/release-collections/).
 
 ### Screenshots
 
@@ -44,15 +44,15 @@ Under **Screenshots** in the template and release settings, you can enable two o
 - Screenshots can only be created for managed releases whose release folder still exists.
 - Bearcat uses the largest video file in the release folder.
 - HDR10 and HLG videos are tonemapped to SDR. Dolby Vision without an HDR10 or HLG base layer is not supported.
-- The **Screenshot creation** background task creates the images. ffmpeg is [downloaded on demand](/Bearcat/advanced-configuration/#ffmpeg).
+- The **Screenshot creation** background task creates the images. ffmpeg is [downloaded on demand](/advanced-configuration/#ffmpeg).
 - Bearcat only creates images configured for upload. Enable **Screenshots** or **Screenshot grid** in an
-  [image upload configuration](/Bearcat/account-settings/#image-upload-configuration) with an active image hoster.
+  [image upload configuration](/account-settings/#image-upload-configuration) with an active image hoster.
 
 The **Images** tab shows the result or an error message. Use **Regenerate** to replace the screenshots
 and their image uploads, for example after changing the settings. The release must still be managed,
 and its release folder must exist.
 
-You can use the uploaded images in [post templates](/Bearcat/forum-post-templates/#screenshots).
+You can use the uploaded images in [post templates](/forum-post-templates/#screenshots).
 Bearcat deletes the local screenshot files once every image upload configuration set up for them has
 uploaded them. If no upload is configured for them any more, it deletes them immediately.
 The **Images** tab then shows the images from the image hoster.
@@ -83,7 +83,7 @@ For this base folder:
 The pattern `*1080p*` selects only `Movie.One.2026.1080p`. An empty pattern includes all three folders.
 
 Bearcat scans about every two minutes and skips folders that already have a release. Once a folder
-meets the [stability and minimum size requirements](/Bearcat/advanced-configuration/#folder-automation),
+meets the [stability and minimum size requirements](/advanced-configuration/#folder-automation),
 Bearcat creates the release, looks up its metadata, and packs and uploads it using the template.
 
 ### Existing folders
@@ -111,7 +111,7 @@ is off by default and does not apply to unmanaged templates.
 Before the release is created, Bearcat checks the folder against its `.sfv` files, if there are any,
 and extracts every RAR and 7z archive in the folder and its subfolders. After a successful extraction,
 it deletes the archive volumes and `.sfv` files that only list those volumes. The extraction rules are
-the same as for [remote downloads](/Bearcat/remote-downloads/#extract-archives-before-release-creation).
+the same as for [remote downloads](/remote-downloads/#extract-archives-before-release-creation).
 
 Running checks and extractions appear on the **Home** page under **Folder automations**.
 
@@ -122,4 +122,4 @@ the folder on the next scan. Bearcat also retries when the folder's files change
 ### Download releases from FTP or FTPS
 
 Use **Remote sources** and **Remote automations** to download new folders from a server and create
-releases from a template. See [FTP / FTPS Downloads](/Bearcat/remote-downloads/) for setup and examples.
+releases from a template. See [FTP / FTPS Downloads](/remote-downloads/) for setup and examples.

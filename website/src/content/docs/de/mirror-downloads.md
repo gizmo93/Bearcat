@@ -6,7 +6,7 @@ description: "Lokale Archive löschen und bei Bedarf für Reuploads von einem Mi
 Aktiviere einen Hoster als Mirror, damit Bearcat Archivdateien wiederherstellen kann, wenn ein Reupload sie braucht.
 Danach kannst du lokale Archive löschen, um Speicherplatz freizugeben, solange ein Mirror die benötigten Dateien noch online hat.
 
-Das funktioniert für [Managed und Unmanaged Releases](/Bearcat/de/release-types/).
+Das funktioniert für [Managed und Unmanaged Releases](/de/release-types/).
 
 ![running-mirror-download.png](../images/running-mirror-download.png)
 
@@ -19,12 +19,12 @@ mehrere Mirrors verteilt sein.
 Bearcat übernimmt Links, die vom vorherigen Upload zum selben Hoster noch online sind.
 Es lädt nur die Dateien herunter, die für den Reupload fehlen.
 
-Ist kein passender Mirror verfügbar, kann Bearcat [Managed Releases](/Bearcat/de/release-types/) aus
+Ist kein passender Mirror verfügbar, kann Bearcat [Managed Releases](/de/release-types/) aus
 dem Releaseordner neu packen. Bei Unmanaged Releases musst du die fehlenden Archivdateien selbst bereitstellen.
-Siehe [Unmanaged Releases](/Bearcat/de/release-types/#unmanaged-releases).
+Siehe [Unmanaged Releases](/de/release-types/#unmanaged-releases).
 
 7-Zip-Archive müssen für neue Hashes neu gepackt werden, auch wenn die Dateien vorhanden sind.
-Die Unterschiede stehen unter [Archivwiederverwendung](/Bearcat/de/upload-lifecycle/#archivwiederverwendung-und-repackaging).
+Die Unterschiede stehen unter [Archivwiederverwendung](/de/upload-lifecycle/#archivwiederverwendung-und-repackaging).
 
 ## Hoster als Mirror aktivieren
 
@@ -37,7 +37,7 @@ Schalte **Für Mirrordownloads verwenden** ein und speichere.
 
 Setze **Proxy für Mirrordownloads** in der Hosterregistrierung, um für Archivwiederherstellungen einen Proxy
 zu verwenden. Er ist unabhängig vom Proxy für Uploads und Accountanfragen. Lass ihn auf **Kategoriestandard**,
-um der globalen Einstellung **Mirrordownloads von Hostern** zu folgen. Siehe [Proxyserver](/Bearcat/de/proxy-servers/).
+um der globalen Einstellung **Mirrordownloads von Hostern** zu folgen. Siehe [Proxyserver](/de/proxy-servers/).
 
 ### Mirrorpriorität
 
@@ -122,11 +122,11 @@ Bearcat bietet das nur an, wenn das Release wiederherstellbar bleibt:
   Mirrordownloads aktiviert ist, **oder** das Release ist managed und hat noch seinen Releaseordner zum Neupacken.
 
 Bearcat löscht die Archivdateien und entfernt den Ordner nur, wenn er danach leer ist. Andere Dateien bleiben erhalten.
-Archive in einem [Speicherordner](/Bearcat/de/archive-storage-folders/) löscht Bearcat nicht. Liegen alle
+Archive in einem [Speicherordner](/de/archive-storage-folders/) löscht Bearcat nicht. Liegen alle
 Archive des Releases in Speicherordnern, gibt es nichts zu löschen und Bearcat meldet das.
 
 ## Automatisches Aufräumen
 
-Unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#lokale-archive-nach-aufbewahrung)
+Unter [Automatisches Aufräumen](/de/advanced-configuration/#lokale-archive-nach-aufbewahrung)
 kannst du **Lokale Archive nach Aufbewahrung** auf **Löschen** stellen.
 Bearcat entfernt sie nach der eingestellten Frist und stellt sie bei Bedarf für einen Reupload wieder her.

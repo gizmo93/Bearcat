@@ -5,7 +5,7 @@ description: "Add your own files, folders, or text files when Bearcat packs a re
 
 Include your own files, folders, or text files in archives, such as a `Premium.txt` with your referral link.
 
-Available for [managed releases](/Bearcat/release-types/) only, since Bearcat does not pack unmanaged releases.
+Available for [managed releases](/release-types/) only, since Bearcat does not pack unmanaged releases.
 
 ## Create an entry
 

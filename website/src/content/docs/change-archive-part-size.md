@@ -6,7 +6,7 @@ description: "Change the part size of many archive configurations and release te
 Open **Uploads and archives > Archives** and click **Change part size**. Select the current part size, enter the
 new one and click **Change part size**. The preview updates with every change.
 
-The part size uses the global [part size unit](/Bearcat/advanced-configuration/#part-size-unit).
+The part size uses the global [part size unit](/advanced-configuration/#part-size-unit).
 
 ## What changes
 

@@ -9,7 +9,7 @@ The Filecrypt website shows where you can request an invitation.
 
 In Bearcat, open **Registrations > Crypters > Crypter registrations**, add filecrypt.cc,
 and enter your API key. Then connect the account to an
-[upload configuration](/Bearcat/account-settings/#setting-up-link-crypters-and-metadata-sources).
+[upload configuration](/account-settings/#setting-up-link-crypters-and-metadata-sources).
 
-To bring in existing folders, follow [Import link crypter folders](/Bearcat/import-link-crypter-folders/).
+To bring in existing folders, follow [Import link crypter folders](/import-link-crypter-folders/).
 The API key needs the `LIST` permission for this.

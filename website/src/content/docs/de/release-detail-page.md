@@ -3,20 +3,20 @@ title: "Die Releasedetailseite"
 description: "Uploadfortschritt, Downloadlinks, Metadaten und Archiveinstellungen eines Releases finden."
 ---
 
-Öffne **Releases** und klicke auf einen Releasenamen. Eine Anleitung findest du unter [Dein erster Upload](/Bearcat/de/post-installation/).
+Öffne **Releases** und klicke auf einen Releasenamen. Eine Anleitung findest du unter [Dein erster Upload](/de/post-installation/).
 
 ![Releasedetailseite](../images/release-detail-page.png)
 
 ## Kopfzeile
 
-**Auf Seite posten** öffnet den [Dialog zum Posten](/Bearcat/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
+**Auf Seite posten** öffnet den [Dialog zum Posten](/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
 wenn das Release mindestens einen Hoster online hat und noch nicht gepostet wurde. Ohne aktive
 Verteilungsseite siehst du stattdessen **Post rendern**.
 
-Mit **Uploads jetzt starten** überspringst du den [Cooldown für initiale Uploads](/Bearcat/de/upload-lifecycle/#2-der-erste-upload)
+Mit **Uploads jetzt starten** überspringst du den [Cooldown für initiale Uploads](/de/upload-lifecycle/#2-der-erste-upload)
 für dieses Release. Die Schaltfläche erscheint, wenn für mindestens eine Uploadkonfiguration noch kein Upload erstellt wurde.
 
-Über das `...`-Menü wandelst du zwischen den [Releasetypen](/Bearcat/de/release-types/#zwischen-typen-umwandeln) um.
+Über das `...`-Menü wandelst du zwischen den [Releasetypen](/de/release-types/#zwischen-typen-umwandeln) um.
 
 Die Statusanzeige unter der Kopfzeile zeigt den Fortschritt. Rot weist auf ein Problem oder einen offenen Schritt hin.
 Klicke auf einen Schritt, um den passenden Tab zu öffnen.
@@ -26,7 +26,7 @@ Klicke auf einen Schritt, um den passenden Tab zu öffnen.
 ![Tab Übersicht](../images/overview.png)
 
 **Alle Links kopieren** kopiert die Containerlinks eines Linkcrypters für alle Hoster.
-Unten findest du die [Veröffentlichungsorte](/Bearcat/de/posting-to-forums/#veröffentlichungsorte).
+Unten findest du die [Veröffentlichungsorte](/de/posting-to-forums/#veröffentlichungsorte).
 
 Unter **Bilduploads** siehst du pro Bilduploadkonfiguration das Cover und eine Vorschau der Screenshots.
 Mit den Kopierbuttons kopierst du die Bildlinks.
@@ -40,17 +40,17 @@ Mit den Kopierbuttons kopierst du die Bildlinks.
 Hier siehst und bearbeitest du Titel, Beschreibung, Cover, NFO und Mediendaten.
 Mit **Metadaten abrufen** suchst du erneut bei den eingerichteten Anbietern.
 Wie du Quellen einrichtest oder falsche Treffer korrigierst, steht unter
-[Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
+[Releaseinformationen und Metadaten](/de/release-information-and-metadata/).
 
 ## Archive
 
 ![Tab Archive](../images/archive-configurations-tab.png)
 
 Um ein Managed Release als Archiv hochzuladen, füge hier eine Archivkonfiguration hinzu. Die Packoptionen sind unter
-[Archiv erstellen](/Bearcat/de/upload-lifecycle/#3-archiv-erstellen) beschrieben.
+[Archiv erstellen](/de/upload-lifecycle/#3-archiv-erstellen) beschrieben.
 
-Archive in einem [Speicherordner](/Bearcat/de/archive-storage-folders/) zeigen den Namen des Speicherordners
-neben ihrem Status. Solange ein Reupload eine [lokale Arbeitskopie](/Bearcat/de/archive-storage-folders/#reuploads)
+Archive in einem [Speicherordner](/de/archive-storage-folders/) zeigen den Namen des Speicherordners
+neben ihrem Status. Solange ein Reupload eine [lokale Arbeitskopie](/de/archive-storage-folders/#reuploads)
 verwendet, folgt dem Namen **lokale Arbeitskopie**.
 
 ## Uploads
@@ -70,11 +70,11 @@ verwendet, folgt dem Namen **lokale Arbeitskopie**.
 ![Konfiguration für Bilduploads](../images/image-upload-config.png)
 
 Für Coveruploads braucht das Release eine Cover-URL, etwa von TMDB oder xREL.
-Eine [Bilduploadkonfiguration](/Bearcat/de/account-settings/#bilduploadkonfiguration) kann auch Screenshots
+Eine [Bilduploadkonfiguration](/de/account-settings/#bilduploadkonfiguration) kann auch Screenshots
 und das Screenshotraster hochladen. In der Liste **Bilduploads** siehst du den Bildtyp jedes Uploads:
 Cover, Screenshot oder Screenshotraster.
 
-Die Karte **Screenshots** zeigt die erstellten [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots).
+Die Karte **Screenshots** zeigt die erstellten [Screenshots](/de/release-templates-and-automations/#screenshots).
 Klicke auf ein Bild, um es in voller Grösse zu öffnen.
 
 ![Karte Screenshots](../images/release-screenshots.png)

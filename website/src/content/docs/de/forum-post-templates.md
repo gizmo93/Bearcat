@@ -6,7 +6,7 @@ description: "Foren- und Blogposts mit Platzhaltern für Releasedaten, Links und
 Schreibe deinen Post mit Platzhaltern für Releasename, NFO, Links und Bilder.
 Bearcat setzt die Daten eines Releases oder einer Collection ein.
 
-Du kannst das Ergebnis von Hand kopieren oder es von [Postingregeln](/Bearcat/de/automatic-forum-posting/) posten lassen.
+Du kannst das Ergebnis von Hand kopieren oder es von [Postingregeln](/de/automatic-forum-posting/) posten lassen.
 
 ![Postvorlagen](../images/forum-post-templates-page.png)
 
@@ -19,7 +19,7 @@ Du kannst das Ergebnis von Hand kopieren oder es von [Postingregeln](/Bearcat/de
    | Ausgabeformat | Verwendung |
    | --- | --- |
    | **BBCode** | Foren |
-   | **HTML** | [WordPress](/Bearcat/de/wordpress/) |
+   | **HTML** | [WordPress](/de/wordpress/) |
    | **Klartext** | Zum Kopieren von Text ohne Formatierung |
 
    Beim Posten auf einer Verteilungsseite kannst du nur Vorlagen im passenden Format auswählen:
@@ -137,7 +137,7 @@ Jeder beteiligte Upload enthält den gemeinsamen Container auch in seiner Liste 
 
 ### Videouploads
 
-Für [Videouploads](/Bearcat/de/video-hosters/) kannst du in der Schleife
+Für [Videouploads](/de/video-hosters/) kannst du in der Schleife
 `{{~ for upload in uploads ~}}` zwei weitere Variablen verwenden:
 
 - `upload.is_video_upload`: `true` bei einem Videoupload.
@@ -158,7 +158,7 @@ Bei Videouploads sind `upload.archive_format` und `upload.archive_password` leer
 
 ### Screenshots
 
-Auf hochgeladene [Screenshots](/Bearcat/de/release-templates-and-automations/#screenshots) greifst du
+Auf hochgeladene [Screenshots](/de/release-templates-and-automations/#screenshots) greifst du
 wie auf Coverlinks zu: in Releasevorlagen über `imagelinks`, in Collectionvorlagen über `release.imagelinks`.
 Jede Bilduploadkonfiguration hat dafür diese Felder:
 
@@ -199,4 +199,4 @@ Vorlage, klicke auf **Post kopieren** und füge das Ergebnis in deinem Forum ode
   `upload.hoster_registration_name` zeigt den Accountnamen und bleibt leer, bis ein Account zugewiesen ist.
 - **Mehrere Foren:** Die BBCode-Unterstützung unterscheidet sich je nach Forum. Verwende bei Bedarf eine Vorlage pro Forum.
 - **HTML-Vorlagen:** Bearcat sendet das gerenderte HTML unverändert. Maskiere Werte mit `| html.escape`.
-  Ein Beispiel für den Blockeditor von WordPress findest du unter [WordPress](/Bearcat/de/wordpress/#vorlage).
+  Ein Beispiel für den Blockeditor von WordPress findest du unter [WordPress](/de/wordpress/#vorlage).

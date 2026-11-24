@@ -3,10 +3,10 @@ title: "Run Bearcat in Docker"
 description: "Start Bearcat with Docker Compose and SQLite on a Linux computer, NAS, or server."
 prev:
   label: "Choose an installation"
-  link: "/Bearcat/#get-started"
+  link: "/#get-started"
 next:
   label: "Your first upload"
-  link: "/Bearcat/post-installation/"
+  link: "/post-installation/"
 ---
 
 :::tip[Already installed Bearcat?]
@@ -17,7 +17,7 @@ The Docker image includes RAR and 7-Zip and uses **SQLite**, so you only need on
 You need Docker with Docker Compose. The image supports `linux/amd64` only. Raspberry Pi is not supported.
 
 For Windows or an Apple Silicon Mac, you can use the
-[native Desktop app](/Bearcat/use-the-desktop-launcher/).
+[native Desktop app](/use-the-desktop-launcher/).
 
 ## 0. Install Docker
 
@@ -94,7 +94,7 @@ docker compose up -d
 Open [http://localhost:8080](http://localhost:8080). If Docker runs on another computer or a NAS,
 open `http://<server-address>:8080` instead. The first start may take a moment.
 
-**Next: [Set up Bearcat and upload your first release](/Bearcat/post-installation/).**
+**Next: [Set up Bearcat and upload your first release](/post-installation/).**
 
 In Bearcat's folder picker, your release folder appears as `/mnt/data/releases`.
 
@@ -186,8 +186,8 @@ Keep `bearcat.key` with your database backup. Without it, Bearcat cannot read yo
 | `RELEASES_DIR` | Host directory containing your release files. Required. |
 | `BEARCAT_DATA_DIR` | Database (`bearcat.db` with SQLite) and encryption key (`bearcat.key`). |
 | `BEARCAT_PORT` | Web interface port, normally `8080`. |
-| `BEARCAT_API_KEY` | Key for the REST API command endpoints. Empty disables them. See [Control Bearcat from External Tools](/Bearcat/external-orchestration/#api-key). |
-| `BEARCAT_TIMEZONE` | Time zone for displayed times, for example `Europe/Berlin`. Empty uses UTC. See [Time zone](/Bearcat/advanced-configuration/#time-zone). |
+| `BEARCAT_API_KEY` | Key for the REST API command endpoints. Empty disables them. See [Control Bearcat from External Tools](/external-orchestration/#api-key). |
+| `BEARCAT_TIMEZONE` | Time zone for displayed times, for example `Europe/Berlin`. Empty uses UTC. See [Time zone](/advanced-configuration/#time-zone). |
 | `BEARCAT_IMAGE` | Image to run, normally `ghcr.io/gizmo93/bearcat:latest`. Set a version tag or your own image here. |
 | `BEARCAT_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
 | `BEARCAT_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |

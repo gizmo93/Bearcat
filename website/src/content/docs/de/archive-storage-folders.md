@@ -47,7 +47,7 @@ Archive, die nicht mehr als gespeichert zählen, verlieren ihren Verweis auf den
 
 ## Archive verschieben
 
-Stelle unter [Automatisches Aufräumen](/Bearcat/de/advanced-configuration/#lokale-archive-nach-aufbewahrung)
+Stelle unter [Automatisches Aufräumen](/de/advanced-configuration/#lokale-archive-nach-aufbewahrung)
 **Lokale Archive nach Aufbewahrung** auf **In Speicherordner verschieben**.
 Bearcat verschiebt die Archive dann nach Ablauf der Aufbewahrungsfrist.
 
@@ -90,7 +90,7 @@ verwendet Bearcat wieder.
 - Hashänderungen und der Upload verwenden die lokalen Dateien.
 - Ein Reupload schreibt nie in den Speicherordner. Das Archiv bleibt seinem Speicherordner zugeordnet.
 - Sind die Uploads der Archivkonfiguration abgeschlossen, stellt die Aufgabe
-  [Auto cleanup](/Bearcat/de/advanced-configuration/#verfügbare-hintergrundaufgaben) das Archiv wieder auf
+  [Auto cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben) das Archiv wieder auf
   den Speicherordner um und löscht die Arbeitskopie. Das passiert unabhängig von den Aufräumregeln.
   Fehlgeschlagene Uploads verzögern es nicht.
 
@@ -104,7 +104,7 @@ an, nur den Unterordner darin. Bearcat benachrichtigt dich pro Archiv einmal, bi
 erledigt hast.
 
 Fehlen Archivdateien im Speicherordner, lädt Bearcat nur die fehlenden Dateien von einem
-[Mirror](/Bearcat/de/mirror-downloads/) herunter und legt sie wieder in den Ordner des Archivs im Speicherordner.
+[Mirror](/de/mirror-downloads/) herunter und legt sie wieder in den Ordner des Archivs im Speicherordner.
 Ohne Mirror packt Bearcat Managed Releases neu. Ist der Speicherordner nicht erreichbar, schlägt die
 Wiederherstellung mit einer Benachrichtigung fehl, statt Dateien herunterzuladen. Bearcat legt den
 Speicherordner nie an.

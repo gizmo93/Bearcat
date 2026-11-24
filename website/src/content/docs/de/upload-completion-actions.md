@@ -4,7 +4,7 @@ description: "Automatische Aktionen für Uploads und Reuploads einrichten, Ergeb
 ---
 
 Bearcat kann nach dem Upload eines Releases oder einer Releasecollection automatisch eine Aktion ausführen.
-Eine solche Aktion ist der [XML-Export für IntelligeN](/Bearcat/de/intelligen-xml-export/).
+Eine solche Aktion ist der [XML-Export für IntelligeN](/de/intelligen-xml-export/).
 
 ## Aktion einrichten
 
@@ -27,16 +27,16 @@ Schlägt die Aktion fehl, benachrichtigt dich Bearcat beim ersten Fehler und ver
 
 ## Aktionen für Releasecollections
 
-Nutzt eine [Releasecollection](/Bearcat/de/release-collections/) [Uploadslots](/Bearcat/de/release-collections/#uploadslots),
+Nutzt eine [Releasecollection](/de/release-collections/) [Uploadslots](/de/release-collections/#uploadslots),
 läuft die Aktion für die ganze Collection. Bearcat wartet, bis alle Uploads in den Slots, die Linkcontainer und die Bilder
-der Collection fertig sind. Ausserdem muss jedes Release das [Quality Gate](/Bearcat/de/quality-gates/) bestanden haben oder manuell freigegeben sein.
+der Collection fertig sind. Ausserdem muss jedes Release das [Quality Gate](/de/quality-gates/) bestanden haben oder manuell freigegeben sein.
 
 Kommt eine neue Folge hinzu, gilt für ihren Upload **Nach dem ersten Upload**. **Nach einem Reupload** gilt nur,
 wenn alle neuen Uploads in den Slots Reuploads sind. Uploads ausserhalb der Slots lösen die Aktion für das einzelne Release aus.
 
 ## Ergebnis prüfen oder Aktion manuell starten
 
-Im Tab **Übersicht** auf der [Releasedetailseite](/Bearcat/de/release-detail-page/) siehst du unter
+Im Tab **Übersicht** auf der [Releasedetailseite](/de/release-detail-page/) siehst du unter
 **Aktionen nach dem Upload** das letzte Ergebnis jeder aktiven Aktion. Auf der Detailseite einer Collection findest du denselben Abschnitt.
 
 Sobald Uploads, Linkcontainer und Bilder fertig sind, kannst du eine Aktion mit **Jetzt ausführen** manuell starten.

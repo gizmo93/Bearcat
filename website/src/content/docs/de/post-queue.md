@@ -31,11 +31,11 @@ Die Warteschlange hat zwei Bereiche:
 - **Einzelreleases**: Releases, die ausserhalb einer Collection hochgeladen wurden.
 - **Collections**: Neue Uploads über Uploadslots einer Collection. Eine TV-Staffel erscheint als ein Eintrag.
 
-Wie Collections und ihre Uploadslots funktionieren, steht unter [Releasecollections](/Bearcat/de/release-collections/).
+Wie Collections und ihre Uploadslots funktionieren, steht unter [Releasecollections](/de/release-collections/).
 
 ## Aus der Warteschlange auf einer Seite posten
 
-Mit eingerichteten [Postingregeln](/Bearcat/de/automatic-forum-posting/) zeigt der Bereich **Automatisches Posten**
+Mit eingerichteten [Postingregeln](/de/automatic-forum-posting/) zeigt der Bereich **Automatisches Posten**
 bei Einzelreleases und Collections die passende Regel und das Ziel pro Verteilungsseite.
 
 Mit **Posten** sendest du den Post ab. **Auf allen passenden Seiten posten** postet auf allen übrigen Seiten mit passender Regel.
@@ -59,8 +59,8 @@ Wenn du ein Release irgendwo gepostet hast, klicke in seinem Eintrag auf **Als g
 Klicke unter Einzelreleases oder Collections auf **Workflow starten**, um die Einträge nacheinander abzuarbeiten.
 Bearcat öffnet den ersten Eintrag und zeigt deinen Fortschritt in der Workflowleiste.
 
-Verwende im Kopfbereich des Releases oder der Collection [**Auf Seite posten**](/Bearcat/de/posting-to-forums/),
-um einen Entwurf vorzubereiten, oder [**Post rendern**](/Bearcat/de/forum-post-templates/#post-rendern)
+Verwende im Kopfbereich des Releases oder der Collection [**Auf Seite posten**](/de/posting-to-forums/),
+um einen Entwurf vorzubereiten, oder [**Post rendern**](/de/forum-post-templates/#post-rendern)
 aus dem Pfeilmenü, um den Text zu kopieren.
 Sende den Post auf der Seite ab und kehre dann zur Workflowleiste zurück.
 

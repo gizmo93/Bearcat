@@ -17,7 +17,7 @@ For a collection, the file contains links for all episodes. Within each upload s
 ![IntelligeN export settings with both triggers enabled and the default file path template](images/intelligen-xml-export-settings.png)
 
 Each export creates a new file. If the filename is already in use, Bearcat adds a number, as in `Release.Name (2).xml`.
-To check the result, open the release or collection detail page and look under [Actions after upload](/Bearcat/upload-completion-actions/).
+To check the result, open the release or collection detail page and look under [Actions after upload](/upload-completion-actions/).
 
 ![Exported IntelligeN XML file showing the release name, cover URL and runtime](images/intelligen-xml-export-example.png)
 

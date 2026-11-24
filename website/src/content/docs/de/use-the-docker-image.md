@@ -3,10 +3,10 @@ title: "Bearcat in Docker ausführen"
 description: "Starte Bearcat mit Docker Compose und SQLite auf einem Linux-Rechner, NAS oder Server."
 prev:
   label: "Installation wählen"
-  link: "/Bearcat/de/#erste-schritte"
+  link: "/de/#erste-schritte"
 next:
   label: "Dein erster Upload"
-  link: "/Bearcat/de/post-installation/"
+  link: "/de/post-installation/"
 ---
 
 :::tip[Bearcat ist bereits installiert?]
@@ -17,7 +17,7 @@ Das Docker-Image enthält RAR und 7-Zip und verwendet **SQLite**. Du brauchst da
 Du brauchst Docker mit Docker Compose. Das Image unterstützt nur `linux/amd64`. Raspberry Pi wird nicht unterstützt.
 
 Unter Windows oder auf einem Mac mit Apple Silicon kannst du die
-[native Desktopanwendung](/Bearcat/de/use-the-desktop-launcher/) verwenden.
+[native Desktopanwendung](/de/use-the-desktop-launcher/) verwenden.
 
 ## 0. Docker installieren
 
@@ -95,7 +95,7 @@ docker compose up -d
 Öffne [http://localhost:8080](http://localhost:8080). Läuft Docker auf einem anderen Rechner oder einem NAS,
 öffne stattdessen `http://<server-address>:8080`. Der erste Start kann einen Moment dauern.
 
-**Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
+**Weiter: [Bearcat einrichten und erstes Release hochladen](/de/post-installation/).**
 
 In Bearcats Ordnerauswahl erscheint dein Releaseordner als `/mnt/data/releases`.
 
@@ -186,8 +186,8 @@ Bewahre `bearcat.key` zusammen mit deinem Datenbankbackup auf. Ohne diese Datei 
 | `RELEASES_DIR` | Verzeichnis auf dem Host mit deinen Releasedateien. Erforderlich. |
 | `BEARCAT_DATA_DIR` | Datenbank (`bearcat.db` bei SQLite) und Verschlüsselungsschlüssel (`bearcat.key`). |
 | `BEARCAT_PORT` | Port der Weboberfläche, normalerweise `8080`. |
-| `BEARCAT_API_KEY` | Schlüssel für die Befehlsendpunkte der REST-API. Leer deaktiviert sie. Siehe [Bearcat mit externen Tools steuern](/Bearcat/de/external-orchestration/#api-schlüssel). |
-| `BEARCAT_TIMEZONE` | Zeitzone für angezeigte Zeiten, zum Beispiel `Europe/Berlin`. Leer verwendet UTC. Siehe [Zeitzone](/Bearcat/de/advanced-configuration/#zeitzone). |
+| `BEARCAT_API_KEY` | Schlüssel für die Befehlsendpunkte der REST-API. Leer deaktiviert sie. Siehe [Bearcat mit externen Tools steuern](/de/external-orchestration/#api-schlüssel). |
+| `BEARCAT_TIMEZONE` | Zeitzone für angezeigte Zeiten, zum Beispiel `Europe/Berlin`. Leer verwendet UTC. Siehe [Zeitzone](/de/advanced-configuration/#zeitzone). |
 | `BEARCAT_IMAGE` | Image, standardmässig `ghcr.io/gizmo93/bearcat:latest`. Trage hier einen Versionstag oder ein eigenes Image ein. |
 | `BEARCAT_CPU_LIMIT` | CPU-Limit in Kernen, zum Beispiel `0.5` für einen halben Kern. |
 | `BEARCAT_MEMORY_LIMIT` | Speicherlimit, zum Beispiel `512m` oder `1g`. |

@@ -3,7 +3,7 @@ title: "WordPress"
 description: "Set up WordPress as a distribution site and post releases to your blog."
 ---
 
-Use Bearcat to prepare drafts in WordPress, publish posts through [posting rules](/Bearcat/automatic-forum-posting/)
+Use Bearcat to prepare drafts in WordPress, publish posts through [posting rules](/automatic-forum-posting/)
 and update existing posts. WordPress appears as **Blog** in the list of distribution sites.
 Bearcat connects through the WordPress REST API.
 
@@ -46,10 +46,10 @@ for example `Movies › HD Movies`. Each post and each rule has one category.
 
 ## Posting
 
-[Automatic posting](/Bearcat/automatic-forum-posting/) publishes the post directly.
+[Automatic posting](/automatic-forum-posting/) publishes the post directly.
 Blogs have no threads or replies, so thread search, prefixes and posting mode do not apply.
 
-With [manual posting](/Bearcat/posting-to-forums/), you prepare a draft and publish it yourself:
+With [manual posting](/posting-to-forums/), you prepare a draft and publish it yourself:
 
 1. Click **Prepare draft**. Bearcat creates a draft in WordPress.
 2. Click **Open draft**. The link opens the WordPress editor (`/wp-admin/post.php?post=<ID>&action=edit`).
@@ -82,7 +82,7 @@ You can still prepare a draft.
 
 ## Template
 
-Create a [post template](/Bearcat/forum-post-templates/) with the output format **HTML**.
+Create a [post template](/forum-post-templates/) with the output format **HTML**.
 Only HTML templates are available when posting to WordPress.
 
 Bearcat sends the rendered template unchanged as the post content. Wrap it in a `wp:html` block so the

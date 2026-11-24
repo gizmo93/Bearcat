@@ -6,7 +6,7 @@ description: "Block uploads until a release passes the quality checks you define
 Quality gates prevent new uploads until a release passes your checks or you approve it manually.
 Use them to catch missing NFOs, cover images, or incomplete release folders before uploading.
 
-[Unmanaged releases](/Bearcat/release-types/) have no release folder, so only the
+[Unmanaged releases](/release-types/) have no release folder, so only the
 **Required release infos** check runs for them. Without a quality profile, the gate does not block uploads.
 
 ## Quality profiles and release groups
@@ -46,7 +46,7 @@ checks. The release groups list shows which profile each group uses.
 
 ## What the gate does
 
-The checks apply to the first upload and to [automatic reuploads](/Bearcat/upload-lifecycle/#7-automatic-reuploads).
+The checks apply to the first upload and to [automatic reuploads](/upload-lifecycle/#7-automatic-reuploads).
 If a check fails later, automatic reuploads pause until the release passes again or you approve it manually.
 
 Each release has a check status:
@@ -62,7 +62,7 @@ Bearcat checks releases:
 
 - before creating an upload,
 - periodically in the background through the **"Quality gate re-evaluation"** task (every 30 minutes
-  by default; you can change the interval on the [Background Tasks](/Bearcat/advanced-configuration/#background-tasks)
+  by default; you can change the interval on the [Background Tasks](/advanced-configuration/#background-tasks)
   page), and
 - on demand when you press **Recheck** on a release in the quality issues list.
 

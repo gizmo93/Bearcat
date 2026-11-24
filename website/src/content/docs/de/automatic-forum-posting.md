@@ -3,19 +3,19 @@ title: "Automatisches Posten"
 description: "Releases und Collections mit Postingregeln automatisch in passende Unterforen und Blogkategorien posten."
 ---
 
-Mit Postingregeln wählt Bearcat ein Unterforum oder eine Kategorie in [WordPress](/Bearcat/de/wordpress/),
+Mit Postingregeln wählt Bearcat ein Unterforum oder eine Kategorie in [WordPress](/de/wordpress/),
 füllt eine Vorlage aus und sendet den Post ab.
-Klicke dafür auf **Posten** in der [Postwarteschlange](/Bearcat/de/post-queue/) oder aktiviere das automatische Posten.
-Wenn du Entwürfe selbst prüfen und absenden willst, lies [Auf Seiten posten](/Bearcat/de/posting-to-forums/).
+Klicke dafür auf **Posten** in der [Postwarteschlange](/de/post-queue/) oder aktiviere das automatische Posten.
+Wenn du Entwürfe selbst prüfen und absenden willst, lies [Auf Seiten posten](/de/posting-to-forums/).
 
 Jede Verteilungsseite hat eigene Regeln. Bearcat überspringt Seiten ohne passende Regel.
 
 ## Voraussetzungen
 
 - Eine Verteilungsseite unter **Registrierungen > Verteilungsseitenregistrierungen** mit funktionierendem Login.
-- Eine passende [Postvorlage](/Bearcat/de/forum-post-templates/).
-- Releases in der [Postwarteschlange](/Bearcat/de/post-queue/) mit Klassifizierung und bestandener oder manuell freigegebener
-  [Qualitätsprüfung](/Bearcat/de/quality-gates/). Gruppen ohne Qualitätsprofil bestehen die Prüfung.
+- Eine passende [Postvorlage](/de/forum-post-templates/).
+- Releases in der [Postwarteschlange](/de/post-queue/) mit Klassifizierung und bestandener oder manuell freigegebener
+  [Qualitätsprüfung](/de/quality-gates/). Gruppen ohne Qualitätsprofil bestehen die Prüfung.
   Bei Collections muss jedes Release die Prüfung bestehen oder manuell freigegeben sein. Mindestens eines muss klassifiziert sein.
 
 ## Postingregeln öffnen
@@ -34,7 +34,7 @@ Klicke auf die Zahl, um die Seite zu öffnen, oder nutze **Postingregeln** im Ze
 **Automatisches Posten** ist standardmässig aus. Du kannst Regeln trotzdem in der Vorschau prüfen und **Posten** in der Postwarteschlange nutzen.
 Ist es aktiviert, läuft die Hintergrundaufgabe "Automatic forum posting" standardmässig alle 15 Minuten.
 Sie postet zuerst passende Releases aus der Warteschlange, danach Collections.
-Das Intervall änderst du unter [Hintergrundaufgaben](/Bearcat/de/advanced-configuration/#hintergrundaufgaben).
+Das Intervall änderst du unter [Hintergrundaufgaben](/de/advanced-configuration/#hintergrundaufgaben).
 
 **Themensuche ohne Punkte** ist standardmässig an. Bearcat ersetzt Punkte durch Leerzeichen, wenn es
 nach Themen sucht und neue Themen und Posts benennt. Bei Collections verwendet es den Collectionnamen.
@@ -64,7 +64,7 @@ Die Vorlagenvariable `imagelinks.<config>` ist leer, wenn der zugehörige Bildho
 Prüfe den Wert mit `if` oder verwende für diese Seite eine eigene Vorlage.
 
 Für übersprungene Posts gibt es keine Benachrichtigung. Klicke in der Postwarteschlange auf **Posten**, um den Grund zu sehen.
-Bei einem [manuellen Entwurf](/Bearcat/de/posting-to-forums/) erscheint eine Warnung. Du kannst den Entwurf trotzdem posten.
+Bei einem [manuellen Entwurf](/de/posting-to-forums/) erscheint eine Warnung. Du kannst den Entwurf trotzdem posten.
 
 ## Regel hinzufügen
 
@@ -162,7 +162,7 @@ Prüfe Änderungen an Bedingungen oder der Regelreihenfolge in der Vorschau, bev
 
 ## Aus der Postwarteschlange posten
 
-Jeder Eintrag unter **Einzelreleases** und **Collections** in der [Postwarteschlange](/Bearcat/de/post-queue/) hat einen Abschnitt
+Jeder Eintrag unter **Einzelreleases** und **Collections** in der [Postwarteschlange](/de/post-queue/) hat einen Abschnitt
 **Automatisches Posten**, der pro Seite zeigt, was die Regeln tun würden:
 
 - die passende Regel und ihr Ziel, mit einem Button **Posten**,
@@ -189,7 +189,7 @@ zum Beispiel auf einer später hinzugefügten Seite.
 Statt der Seitenliste zeigt der Eintrag einen kurzen Grund:
 
 - **Automatisches Posten blockiert: Das Quality Gate wurde nicht bestanden.** Das Release muss die
-  [Qualitätsprüfung bestehen oder manuell freigegeben werden](/Bearcat/de/quality-gates/).
+  [Qualitätsprüfung bestehen oder manuell freigegeben werden](/de/quality-gates/).
   Noch ungeprüfte Releases prüft Bearcat beim nächsten Hintergrundlauf.
 - **Automatisches Posten blockiert: Das Release hat keine Klassifizierung.** Bearcat klassifiziert Releases
   alle 30 Minuten und nach dem Auslesen der Mediendaten. Warte auf den nächsten Lauf oder klicke

@@ -6,12 +6,12 @@ description: "Erstelle in einem Forum oder Blog einen Entwurf mit Releasedetails
 Bearcat erstellt aus den Releasedaten und deiner Vorlage einen Entwurf für einen Post. Öffne ihn im Browser,
 prüfe Titel und Text und sende den Post ab. Du musst dabei mit demselben Konto auf der Seite angemeldet sein.
 
-Damit Bearcat Posts für dich absendet, verwende [Postingregeln](/Bearcat/de/automatic-forum-posting/).
+Damit Bearcat Posts für dich absendet, verwende [Postingregeln](/de/automatic-forum-posting/).
 
 ## Voraussetzungen
 
-- Ein in Bearcat hinzugefügtes Konto für ein Forum oder [WordPress](/Bearcat/de/wordpress/).
-- Eine [Postvorlage](/Bearcat/de/forum-post-templates/) im Ausgabeformat der Seite: BBCode für Foren, HTML für WordPress.
+- Ein in Bearcat hinzugefügtes Konto für ein Forum oder [WordPress](/de/wordpress/).
+- Eine [Postvorlage](/de/forum-post-templates/) im Ausgabeformat der Seite: BBCode für Foren, HTML für WordPress.
 - Ein Release mit abgeschlossenen Uploads und Downloadlinks.
 
 ## Eine Verteilungsseite einrichten
@@ -31,7 +31,7 @@ Routing über `index.php`, SSO, CAPTCHA und Zwei-Faktor-Login werden nicht unter
 Pflichtfelder für Threads oder Add-ons können das Posten verhindern. Teste den Login und bereite einen Entwurf vor,
 bevor du automatisches Posten aktivierst.
 
-Wie du WordPress einrichtest, steht unter [WordPress](/Bearcat/de/wordpress/).
+Wie du WordPress einrichtest, steht unter [WordPress](/de/wordpress/).
 
 ## Ein Release posten
 
@@ -49,7 +49,7 @@ Im Dialog:
    und setzt Leerzeichen um den letzten Bindestrich vor der Releasegruppe.
    ![subforum-selection.png](../images/subforum-selection.png)
 3. Nur bei Foren: Bearcat sucht im Unterforum nach Threads, deren Titel zum Releasenamen passt. Dafür gelten dieselben
-   [Suchregeln wie beim automatischen Posten](/Bearcat/de/automatic-forum-posting/#bestehendes-thema-finden).
+   [Suchregeln wie beim automatischen Posten](/de/automatic-forum-posting/#bestehendes-thema-finden).
    Bei genau einem passenden Thread schlägt Bearcat eine Antwort vor, sonst einen neuen Thread.
    Du kannst auch selbst einen Thread aus den Suchergebnissen wählen. Bei Blogs überspringt der Dialog diesen Schritt.
 
@@ -113,7 +113,7 @@ Im Dialog:
 </figure>
 
 **Ich habe gepostet** speichert die URL, entfernt das Release aber nicht aus der
-[Postwarteschlange](/Bearcat/de/post-queue/). Verwende dort **Als gepostet markieren**, wenn du mit dem Posten fertig bist.
+[Postwarteschlange](/de/post-queue/). Verwende dort **Als gepostet markieren**, wenn du mit dem Posten fertig bist.
 
 ## Veröffentlichungsorte
 

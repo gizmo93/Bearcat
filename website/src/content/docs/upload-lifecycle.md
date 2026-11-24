@@ -28,14 +28,14 @@ flowchart TD
 
 Open a release and go to **Uploads > Configuration**. Click **Add** to create an upload
 configuration, then choose its archive configuration and upload target:
-a single hoster registration or an [account pool](/Bearcat/account-pools/).
+a single hoster registration or an [account pool](/account-pools/).
 You can also choose link crypter configurations.
 
 Create an upload configuration for each hoster. Several configurations for the same hoster are
 possible, for example with different part sizes.
 
 With the upload source **Video file**, Bearcat uploads the main video directly to a
-[video hoster](/Bearcat/video-hosters/). These uploads start as `Pending` and skip `WaitingForArchive`
+[video hoster](/video-hosters/). These uploads start as `Pending` and skip `WaitingForArchive`
 and archive creation.
 
 ## 2. The first upload
@@ -45,27 +45,27 @@ Set it under **System > Configurations > Initial uploads** (default: `5` minutes
 
 Once the cooldown has passed and an upload configuration exists, Bearcat schedules the first upload
 on its next check. Set `0` minutes to skip the wait.
-The release must also pass [quality checks](/Bearcat/quality-gates/) or be manually approved.
+The release must also pass [quality checks](/quality-gates/) or be manually approved.
 
 To skip the wait for a release, click **Start uploads now** at the top of its detail page. The button
 appears if at least one upload configuration has no upload yet. Bearcat creates the missing uploads
 right away and packs the files on the next archive creation run. Quality checks still apply.
-You can also start these uploads through the [REST API](/Bearcat/rest-api/).
+You can also start these uploads through the [REST API](/rest-api/).
 
 ## 3. Creating the archive
 
 For each waiting upload, Bearcat prepares an archive:
 
 1. Reuse a finished archive for the same archive configuration, if possible. If the archive lies in a
-   [storage folder](/Bearcat/archive-storage-folders/#reuploads), the upload reads it there, or Bearcat
+   [storage folder](/archive-storage-folders/#reuploads), the upload reads it there, or Bearcat
    first copies the files to upload into a temporary local working copy, depending on the storage folder.
-2. Restore missing local files from a configured [mirror hoster](/Bearcat/mirror-downloads/).
+2. Restore missing local files from a configured [mirror hoster](/mirror-downloads/).
 3. If neither is possible, create a new archive from the release folder.
 
 If a storage folder is unreachable, the restore fails. Check the connection to the drive or share.
-See [Reuploads from storage folders](/Bearcat/archive-storage-folders/#reuploads).
+See [Reuploads from storage folders](/archive-storage-folders/#reuploads).
 
-Bearcat can only repack [managed releases](/Bearcat/release-types/). Unmanaged releases need local
+Bearcat can only repack [managed releases](/release-types/). Unmanaged releases need local
 archive files or an available mirror.
 
 The archive configuration sets the archiver, output folder, filename prefix, password, and part size.
@@ -78,7 +78,7 @@ It also has two packing options:
   [The nonce file and repackaging](#the-nonce-file-and-repackaging).
 
 Changing either option only affects archives created afterwards.
-You can also assign [additional archive contents](/Bearcat/additional-archive-contents/), such as
+You can also assign [additional archive contents](/additional-archive-contents/), such as
 a text file with a referral link, to include whenever Bearcat creates a new archive.
 
 After packing succeeds, the archive becomes `Created` and the upload moves to `Pending`.
@@ -143,7 +143,7 @@ Running file uploads are not interrupted. **Remove prioritization** returns the 
 After a successful upload, Bearcat creates a container with the download links for each active link
 crypter configuration. If this fails, the error appears on the container and in a notification.
 
-A [release collection](/Bearcat/release-collections/) gathers links from several releases in a shared
+A [release collection](/release-collections/) gathers links from several releases in a shared
 container, for example for a TV season.
 
 In the link crypter configuration, use **Create container for** to choose which links the container holds:
@@ -152,12 +152,12 @@ In the link crypter configuration, use **Create container for** to choose which 
 | --- | --- |
 | **Each release separately** | One container per upload configuration with the links of its latest upload. |
 | **Release (all hosters as mirrors)** | One container per release and link crypter. Each upload configuration with this setting adds its latest completed upload as a mirror. |
-| **The whole release collection** | One container per collection upload slot, see [release collections](/Bearcat/release-collections/). |
+| **The whole release collection** | One container per collection upload slot, see [release collections](/release-collections/). |
 
 ![Create container for in the link crypter configuration](images/add-link-crypter-container-dialog.png)
 
 To create releases from existing FileCrypt, Hide.cx or ToLink folders, see
-[Import existing link crypter folders](/Bearcat/import-link-crypter-folders/).
+[Import existing link crypter folders](/import-link-crypter-folders/).
 
 For **Release (all hosters as mirrors)**, the password, captcha, container download and Click'n'Load settings
 must be the same in all upload configurations of the release. Otherwise Bearcat marks the container as failed
@@ -198,7 +198,7 @@ Bearcat creates an automatic reupload when all of these conditions are met:
 - every uploaded file has been checked at least once
 - the **Hours until reupload** waiting time has passed
 - no replacement upload blocks a reupload for the same upload configuration
-- the release has passed [quality checks](/Bearcat/quality-gates/) or was manually approved
+- the release has passed [quality checks](/quality-gates/) or was manually approved
 
 A replacement upload blocks another reupload if it is `Online` or has the state `Pending`,
 `Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
@@ -216,7 +216,7 @@ A newly packed archive must be uploaded in full because its parts cannot be mixe
 
 ### Per-hoster overrides
 
-Set [reupload overrides](/Bearcat/account-settings/#reupload-overrides-per-hoster) in the hoster registration:
+Set [reupload overrides](/account-settings/#reupload-overrides-per-hoster) in the hoster registration:
 
 | Setting | Effect |
 | --- | --- |
@@ -247,7 +247,7 @@ If the update fails, the container keeps its URL and gets the state `Update fail
 Bearcat retries the update after 15 minutes. Until then, the container still holds the old links.
 
 If the provider reports that the container no longer exists, Bearcat creates a new container with a
-new URL and sends a notification. The release or release collection goes back into the [post queue](/Bearcat/post-queue/),
+new URL and sends a notification. The release or release collection goes back into the [post queue](/post-queue/),
 so existing posts can be updated with the new URL.
 
 You can also update or recreate a container manually:
@@ -261,12 +261,12 @@ You can also update or recreate a container manually:
 
 ## 10. Cleanup after a successful upload
 
-Under [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup), you can convert managed releases
+Under [Auto cleanup](/advanced-configuration/#auto-cleanup), you can convert managed releases
 to unmanaged after a set period and optionally delete their release folders.
-You can keep local archives, delete them, or move them to a [storage folder](/Bearcat/archive-storage-folders/).
+You can keep local archives, delete them, or move them to a [storage folder](/archive-storage-folders/).
 Both cleanup rules are off by default.
 
-If a later reupload needs missing archives, Bearcat restores them from a [mirror](/Bearcat/mirror-downloads/)
+If a later reupload needs missing archives, Bearcat restores them from a [mirror](/mirror-downloads/)
 or repacks them for managed releases. Cleanup never deletes files from the hoster.
 
 ## Archive reuse and repackaging
@@ -284,7 +284,7 @@ Only files that are uploaded again need new hashes. The other parts keep their h
 
 Before changing a reused archive, Bearcat checks whether another active upload is using it.
 If so, it waits until a later run. If a file to upload is missing locally, Bearcat first restores
-it from a [mirror hoster](/Bearcat/mirror-downloads/) and changes the hashes afterwards.
+it from a [mirror hoster](/mirror-downloads/) and changes the hashes afterwards.
 For an archive in a storage folder with **Local working copy for reuploads** enabled, Bearcat
 changes the hashes of the local working copy. Otherwise it changes them in the storage folder.
 
@@ -297,5 +297,5 @@ RAR gets new hashes from appended zero bytes, with or without the nonce file.
 These bytes count towards the hoster's file size limit.
 
 7-Zip relies on repacking with a changed nonce, compression, or a larger part size.
-See [Archive repackaging](/Bearcat/advanced-configuration/#archive-repackaging) for the strategies
+See [Archive repackaging](/advanced-configuration/#archive-repackaging) for the strategies
 and the exception for older RAR archives with missing hashes.

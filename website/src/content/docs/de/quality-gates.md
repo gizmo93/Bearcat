@@ -6,7 +6,7 @@ description: "Blockiere Uploads, bis ein Release die von dir definierten Qualit�
 Bearcat erstellt erst Uploads, wenn ein Release die festgelegten Qualitätsprüfungen besteht oder du es manuell freigibst.
 So erkennst du fehlende NFOs, Coverbilder oder unvollständige Releaseordner vor dem Upload.
 
-[Unmanaged Releases](/Bearcat/de/release-types/) haben keinen Releaseordner, deshalb läuft für sie nur
+[Unmanaged Releases](/de/release-types/) haben keinen Releaseordner, deshalb läuft für sie nur
 die Prüfung **Erforderliche Releaseinfos**. Ohne Qualitätsprofil blockiert die Qualitätsprüfung keine Uploads.
 
 ## Qualitätsprofile und Releasegruppen
@@ -46,7 +46,7 @@ Profil jede Gruppe verwendet.
 
 ## Was die Qualitätsprüfung bewirkt
 
-Die Prüfungen gelten für den ersten Upload und für [automatische Reuploads](/Bearcat/de/upload-lifecycle/#7-automatische-reuploads).
+Die Prüfungen gelten für den ersten Upload und für [automatische Reuploads](/de/upload-lifecycle/#7-automatische-reuploads).
 Schlägt eine Prüfung später fehl, pausieren automatische Reuploads, bis das Release wieder besteht oder du es manuell freigibst.
 
 Jedes Release hat einen aktuellen Prüfstatus:
@@ -62,7 +62,7 @@ Bearcat prüft Releases:
 
 - vor dem Erstellen eines Uploads,
 - regelmässig im Hintergrund über die Aufgabe **"Quality gate re-evaluation"** (standardmässig alle 30 Minuten,
-  das Intervall änderst du auf der Seite [Hintergrundaufgaben](/Bearcat/de/advanced-configuration/#hintergrundaufgaben)), und
+  das Intervall änderst du auf der Seite [Hintergrundaufgaben](/de/advanced-configuration/#hintergrundaufgaben)), und
 - auf Anforderung, wenn du bei einem Release in der Liste der Qualitätsprobleme auf **Neu prüfen** klickst.
 
 Die Hintergrundaufgabe prüft auch ältere Releases mit fehlgeschlagener oder noch ausstehender Prüfung.

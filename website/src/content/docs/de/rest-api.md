@@ -18,7 +18,7 @@ Bei der Desktopanwendung und dem Windows-Dienst öffnest du normalerweise
 `http://127.0.0.1:17208/api/docs`, bei Docker `http://localhost:8080/api/docs`.
 Passe Adresse und Port an, wenn Bearcat auf einem anderen Rechner oder Port läuft.
 
-Die [API-Referenz](/Bearcat/api/) listet ebenfalls die Endpunkte, Parameter und Schemas auf.
+Die [API-Referenz](/api/) listet ebenfalls die Endpunkte, Parameter und Schemas auf.
 
 ## Authentifizierung
 
@@ -26,7 +26,7 @@ Wer Bearcat erreichen kann, kann Daten über `GET`-Endpunkte lesen. Betreibe Bea
 Netzwerk oder beschränke den Zugriff mit einem Reverse Proxy mit Basic Auth oder einem VPN.
 
 Befehle (`POST`) brauchen einen API-Schlüssel im Header `X-Api-Key`.
-Einrichtung und Beispiele findest du unter [Bearcat mit externen Tools steuern](/Bearcat/de/external-orchestration/).
+Einrichtung und Beispiele findest du unter [Bearcat mit externen Tools steuern](/de/external-orchestration/).
 
 ## Client generieren
 

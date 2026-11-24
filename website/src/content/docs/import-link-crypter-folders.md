@@ -51,17 +51,17 @@ The import fails if the release already has a container from the same crypter ac
 
 ## Season folders
 
-If a mirror contains several episodes, Bearcat creates one release per episode based on the archive names. The template's [collection detection](/Bearcat/release-collections/#how-a-collection-is-created) must assign all episodes to the same collection.
+If a mirror contains several episodes, Bearcat creates one release per episode based on the archive names. The template's [collection detection](/release-collections/#how-a-collection-is-created) must assign all episodes to the same collection.
 
 If archives for several episodes share a local folder, Bearcat moves the archive parts into one subfolder per episode. The preview and completion notification show these moves.
 
-The crypter folder becomes the container for the collection's [upload slot](/Bearcat/release-collections/#upload-slots). The mirrors must belong to the same slot. Bearcat skips mirrors it cannot match to an episode. The import fails if the slot already has another container from the same crypter account or a release in the collection uses that account for its own containers. When importing a single episode, Bearcat can add its links to the existing collection container for that account.
+The crypter folder becomes the container for the collection's [upload slot](/release-collections/#upload-slots). The mirrors must belong to the same slot. Bearcat skips mirrors it cannot match to an episode. The import fails if the slot already has another container from the same crypter account or a release in the collection uses that account for its own containers. When importing a single episode, Bearcat can add its links to the existing collection container for that account.
 
 ## After the import
 
-A folder with one mirror becomes the [link crypter container](/Bearcat/upload-lifecycle/#5-link-crypter-containers) for that hoster. A folder with several mirrors becomes the container for all hosters on the release.
+A folder with one mirror becomes the [link crypter container](/upload-lifecycle/#5-link-crypter-containers) for that hoster. A folder with several mirrors becomes the container for all hosters on the release.
 
-Bearcat fetches release information in the background. New releases use the language from the preview. Existing releases keep their language. Imported releases and collections count as posted and stay out of the [post queue](/Bearcat/post-queue/).
+Bearcat fetches release information in the background. New releases use the language from the preview. Existing releases keep their language. Imported releases and collections count as posted and stay out of the [post queue](/post-queue/).
 
 ## Assign archive folders after import
 

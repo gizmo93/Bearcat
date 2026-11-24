@@ -10,13 +10,13 @@ hero:
     alt: "Bearcat holding a RAR archive"
   actions:
     - text: "Getting started"
-      link: "/Bearcat/#get-started"
+      link: "/#get-started"
     - text: "Download"
       link: "https://github.com/gizmo93/Bearcat/releases/latest"
       variant: secondary
       icon: external
     - text: "Docker image"
-      link: "/Bearcat/use-the-docker-image/"
+      link: "/use-the-docker-image/"
       variant: minimal
       icon: right-arrow
 ---
@@ -30,15 +30,15 @@ create archives, and upload them to your hosters. Bearcat checks the links and r
 
 You can:
 
-- [Automatically download releases from FTP/FTPS servers](/Bearcat/remote-downloads/), verify SFV checksums, and optionally extract RAR or 7z archives.
+- [Automatically download releases from FTP/FTPS servers](/remote-downloads/), verify SFV checksums, and optionally extract RAR or 7z archives.
 - Pack releases into RAR or 7z archives, or upload archives you already have.
 - Upload to Rapidgator, DDownload, Keep2Share, and the other hosters listed below.
-- Free local disk space and [restore archives from a mirror hoster](/Bearcat/mirror-downloads/) when a reupload needs them.
+- Free local disk space and [restore archives from a mirror hoster](/mirror-downloads/) when a reupload needs them.
 - Look up release information and NFOs through xREL and SRRDB, movie or TV metadata through TMDB and TheTVDB and game metadata through Steam.
 - Read resolution, codecs, and audio and subtitle tracks from your video files with MediaInfo.
-- Upload cover images and [create video screenshots or screenshot grids](/Bearcat/release-templates-and-automations/#screenshots). Use the images alongside download links and NFOs in [post templates](/Bearcat/forum-post-templates/).
-- [Prepare drafts on forums and WordPress blogs](/Bearcat/posting-to-forums/) and submit them yourself, or use [posting rules to post automatically](/Bearcat/automatic-forum-posting/).
-- Find releases ready to post in the [post queue](/Bearcat/post-queue/).
+- Upload cover images and [create video screenshots or screenshot grids](/release-templates-and-automations/#screenshots). Use the images alongside download links and NFOs in [post templates](/forum-post-templates/).
+- [Prepare drafts on forums and WordPress blogs](/posting-to-forums/) and submit them yourself, or use [posting rules to post automatically](/automatic-forum-posting/).
+- Find releases ready to post in the [post queue](/post-queue/).
 
 ![Bearcat web interface](images/gui.png)
 
@@ -51,7 +51,7 @@ You can:
 - Rapidgator
 - DDownload
 - GoFile
-- [Keep2Share](/Bearcat/keep2share/)
+- [Keep2Share](/keep2share/)
 - Alfafile
 - NitroFlare
 - 1fichier
@@ -70,7 +70,7 @@ You can:
 - freedl.ink (minimum file size: 1 MB)
 - mega4upload.net
 - filer.net (free accounts: maximum file size 2 GB)
-- [FileFactory](/Bearcat/filefactory/) (free accounts: maximum file size 2 GB)
+- [FileFactory](/filefactory/) (free accounts: maximum file size 2 GB)
 - turbobit.net (API key from cabinet.costaction.com)
 - hitfile.net (API key from cabinet.costaction.com)
 - Zippyshare.day
@@ -90,7 +90,7 @@ You can:
 - Hide.cx
 - Keeplinks
 - tolink.to
-- [filecrypt.cc](/Bearcat/filecrypt/)
+- [filecrypt.cc](/filecrypt/)
 
 ### Image hosters
 
@@ -107,35 +107,35 @@ The XenForo plugin should work with most XenForo forums without a captcha at log
 
 ### Blogs
 
-[WordPress](/Bearcat/wordpress/) 5.6 or later, with an application password.
+[WordPress](/wordpress/) 5.6 or later, with an application password.
 
 <span id="installing--running-bearcat" />
 
 ## Get started
 
 Install Bearcat using one of the options below. Setup starts when you first open Bearcat.
-See [Your first upload](/Bearcat/post-installation/) for the steps.
+See [Your first upload](/post-installation/) for the steps.
 
 <CardGrid>
 	<LinkCard
 		title="Desktop app"
 		description="Run Bearcat on Windows, macOS with Apple Silicon, or Linux."
-		href="/Bearcat/use-the-desktop-launcher/"
+		href="/use-the-desktop-launcher/"
 	/>
 	<LinkCard
 		title="Windows service"
 		description="Run Bearcat in the background, even when you are not logged in."
-		href="/Bearcat/use-the-windows-service/"
+		href="/use-the-windows-service/"
 	/>
 	<LinkCard
 		title="Docker container"
 		description="Run Bearcat on Linux, a NAS, or a server with Docker."
-		href="/Bearcat/use-the-docker-image/"
+		href="/use-the-docker-image/"
 	/>
 	<LinkCard
 		title="Your first upload"
 		description="Add a hoster account, create a template, and add a source."
-		href="/Bearcat/post-installation/"
+		href="/post-installation/"
 	/>
 </CardGrid>
 
@@ -143,21 +143,21 @@ See [Your first upload](/Bearcat/post-installation/) for the steps.
 
 | You want to … | Guide |
 | --- | --- |
-| Upload new folders automatically | [Release templates and folder automations](/Bearcat/release-templates-and-automations/) |
-| Download releases from a server | [FTP/FTPS downloads](/Bearcat/remote-downloads/) |
-| Free disk space | [Mirror downloads](/Bearcat/mirror-downloads/) or [archive storage folders](/Bearcat/archive-storage-folders/) |
-| Post completed uploads to forums or blogs | [Posting to sites](/Bearcat/posting-to-forums/) or [automatic posting](/Bearcat/automatic-forum-posting/) |
+| Upload new folders automatically | [Release templates and folder automations](/release-templates-and-automations/) |
+| Download releases from a server | [FTP/FTPS downloads](/remote-downloads/) |
+| Free disk space | [Mirror downloads](/mirror-downloads/) or [archive storage folders](/archive-storage-folders/) |
+| Post completed uploads to forums or blogs | [Posting to sites](/posting-to-forums/) or [automatic posting](/automatic-forum-posting/) |
 
 ## Common questions
 
 ### Can I use PostgreSQL?
 
-Yes. New installations use SQLite, but you can [set up PostgreSQL](/Bearcat/install-postgresql-for-desktop/) or use the [Docker option](/Bearcat/use-the-docker-image/#database). Existing PostgreSQL installations keep their settings.
+Yes. New installations use SQLite, but you can [set up PostgreSQL](/install-postgresql-for-desktop/) or use the [Docker option](/use-the-docker-image/#database). Existing PostgreSQL installations keep their settings.
 
 ### Can I upload existing archives?
 
 Yes. Use an unmanaged release for existing archives, or a managed release to let Bearcat create them.
-See [release types](/Bearcat/release-types/).
+See [release types](/release-types/).
 
 ### Do I have to keep every archive on disk?
 
@@ -165,7 +165,7 @@ No. Enable a hoster as a mirror so Bearcat can download archives when needed for
 Delete local copies yourself or set a retention period for automatic cleanup.
 
 The hoster must support downloads through its API, and some hosters require a premium account.
-See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and setup instructions.
+See [mirror downloads](/mirror-downloads/) for supported hosters and setup instructions.
 
 ## Learn more
 
@@ -173,26 +173,26 @@ See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and set
 	<LinkCard
 		title="Upload lifecycle"
 		description="How Bearcat creates archives, checks upload links, and schedules reuploads."
-		href="/Bearcat/upload-lifecycle/"
+		href="/upload-lifecycle/"
 	/>
 	<LinkCard
 		title="Release collections"
 		description="Share upload settings and container links across related releases."
-		href="/Bearcat/release-collections/"
+		href="/release-collections/"
 	/>
 	<LinkCard
 		title="Release information and metadata"
 		description="Set up metadata sources, fetch NFOs, and correct release information."
-		href="/Bearcat/release-information-and-metadata/"
+		href="/release-information-and-metadata/"
 	/>
 	<LinkCard
 		title="Post templates"
 		description="Build forum and blog posts with release details, cover images, screenshots, NFOs, and download links."
-		href="/Bearcat/forum-post-templates/"
+		href="/forum-post-templates/"
 	/>
 	<LinkCard
 		title="Advanced configuration"
 		description="Configure upload limits, automatic cleanup, and background tasks."
-		href="/Bearcat/advanced-configuration/"
+		href="/advanced-configuration/"
 	/>
 </CardGrid>

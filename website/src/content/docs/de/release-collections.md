@@ -10,7 +10,7 @@ Eine Releasecollection fasst zusammengehörige Releases zusammen, zum Beispiel d
 Lege Hoster, Archiveinstellungen und Passwortrichtlinien für die ganze Collection fest und sammle
 ihre Downloadlinks in einem Linkcryptercontainer.
 
-Mit [Postingregeln für Collections](/Bearcat/de/automatic-forum-posting/) postet Bearcat ganze Collections automatisch.
+Mit [Postingregeln für Collections](/de/automatic-forum-posting/) postet Bearcat ganze Collections automatisch.
 Lädst du eine neue Folge hoch, aktualisiert Bearcat den bestehenden Post.
 
 ## Wie eine Collection entsteht
@@ -62,7 +62,7 @@ etwa für eine ganze Staffel. Passwort und weitere Cryptereinstellungen gelten f
 Der Kopfbereich zeigt das Cover, den Serientitel aus der Metadatenquelle, den Collectionschlüssel und die
 Serienbeschreibung. **Mehr anzeigen** klappt eine lange Beschreibung aus.
 
-**Auf Seite posten** öffnet den [Dialog zum Posten](/Bearcat/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
+**Auf Seite posten** öffnet den [Dialog zum Posten](/de/posting-to-forums/). Die Schaltfläche ist hervorgehoben,
 solange mindestens ein Release einen Hoster online hat und die Collection noch nicht gepostet wurde. Ohne
 aktive Verteilungsseite wird nur **Post rendern** angezeigt.
 
@@ -84,11 +84,11 @@ des Anbieters. Bearcat sucht über eine IMDb-ID aus den enthaltenen Releases ode
 Hat Bearcat die falsche Serie gefunden, wähle **Metadatenzuordnung korrigieren** im `...`-Menü.
 Bearcat speichert die korrigierten IDs bei allen Releases der Collection als manuelle IDs.
 Details unter
-[Falsche Zuordnung korrigieren](/Bearcat/de/release-information-and-metadata/#falsche-zuordnung-korrigieren).
+[Falsche Zuordnung korrigieren](/de/release-information-and-metadata/#falsche-zuordnung-korrigieren).
 
 Du kannst die Metadaten in Postvorlagen verwenden und das Cover auf deine Bildhoster hochladen.
 Details zur Suche findest du unter
-[Releaseinformationen und Metadaten](/Bearcat/de/release-information-and-metadata/).
+[Releaseinformationen und Metadaten](/de/release-information-and-metadata/).
 
 ### Übersicht
 
@@ -101,7 +101,7 @@ bleiben dabei beim Release.
 **Noch nicht erstellt** bedeutet, dass der Crypter keinen Container hat. Fehlgeschlagene Container
 kannst du hier löschen. **Alle Links kopieren** kopiert die Container-URLs eines Crypters über alle Slots.
 
-Zur Liste unten auf der Seite siehe [Veröffentlichungsorte](/Bearcat/de/posting-to-forums/#veröffentlichungsorte).
+Zur Liste unten auf der Seite siehe [Veröffentlichungsorte](/de/posting-to-forums/#veröffentlichungsorte).
 
 ### Uploadslots
 
@@ -126,4 +126,4 @@ Eintrag kannst du umbenennen. Für einen anderen Hoster fügst du eine neue Bild
 Jeder Eintrag zeigt seinen Uploadstatus. Nach dem Upload zeigt er eine Vorschau und Bildlinks
 in verschiedenen Grössen. Kopiere die Links einzeln oder gemeinsam, oder verwende `imagelinks`
 in Postvorlagen. Details unter
-[Postvorlagen](/Bearcat/de/forum-post-templates/).
+[Postvorlagen](/de/forum-post-templates/).

@@ -8,5 +8,5 @@ Bearcat defaults to three parallel uploads for FileFactory.
 
 If you raised the limit and FileFactory blocks uploads, restore the default.
 Open **Registrations > Hosters > Hoster registrations**, select **Edit** for FileFactory, and clear the
-[**Maximum parallel uploads**](/Bearcat/account-settings/#parallel-uploads-per-hoster) field.
+[**Maximum parallel uploads**](/account-settings/#parallel-uploads-per-hoster) field.
 Save the change.

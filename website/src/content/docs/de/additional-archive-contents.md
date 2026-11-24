@@ -6,7 +6,7 @@ description: "Eigene Dateien, Ordner oder Textdateien hinzufügen, wenn Bearcat 
 Du kannst eigene Dateien, Ordner oder Textdateien in deine Archive aufnehmen, zum Beispiel eine
 `Premium.txt` mit deinem Referrallink.
 
-Das geht nur bei [Managed Releases](/Bearcat/de/release-types/), da Bearcat Unmanaged Releases nicht packt.
+Das geht nur bei [Managed Releases](/de/release-types/), da Bearcat Unmanaged Releases nicht packt.
 
 ## Einen Eintrag erstellen
 

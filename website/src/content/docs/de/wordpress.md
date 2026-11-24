@@ -3,7 +3,7 @@ title: "WordPress"
 description: "WordPress als Verteilungsseite einrichten und Releases im Blog posten."
 ---
 
-Mit Bearcat kannst du Entwürfe in WordPress vorbereiten, Posts über [Postingregeln](/Bearcat/de/automatic-forum-posting/)
+Mit Bearcat kannst du Entwürfe in WordPress vorbereiten, Posts über [Postingregeln](/de/automatic-forum-posting/)
 veröffentlichen und bestehende Posts aktualisieren. WordPress erscheint unter den Verteilungsseiten als **Blog**.
 Bearcat verwendet dafür die REST-API von WordPress.
 
@@ -46,10 +46,10 @@ zum Beispiel `Filme › Filme HD Deutsch`. Jeder Post und jede Regel hat genau e
 
 ## Posten
 
-[Automatisches Posten](/Bearcat/de/automatic-forum-posting/) veröffentlicht den Post direkt.
+[Automatisches Posten](/de/automatic-forum-posting/) veröffentlicht den Post direkt.
 Bei Blogs gibt es keine Themen oder Antworten. Deshalb entfallen Themensuche, Präfixe und Postingmodus.
 
-Beim [manuellen Posten](/Bearcat/de/posting-to-forums/) bereitest du einen Entwurf vor und veröffentlichst ihn selbst:
+Beim [manuellen Posten](/de/posting-to-forums/) bereitest du einen Entwurf vor und veröffentlichst ihn selbst:
 
 1. Klicke auf **Entwurf vorbereiten**. Bearcat erstellt einen Entwurf in WordPress.
 2. Klicke auf **Entwurf öffnen**. Der Link öffnet den Editor von WordPress (`/wp-admin/post.php?post=<ID>&action=edit`).
@@ -82,7 +82,7 @@ Du kannst trotzdem einen Entwurf vorbereiten.
 
 ## Vorlage
 
-Erstelle eine [Postvorlage](/Bearcat/de/forum-post-templates/) mit dem Ausgabeformat **HTML**.
+Erstelle eine [Postvorlage](/de/forum-post-templates/) mit dem Ausgabeformat **HTML**.
 Beim Posten auf WordPress kannst du nur HTML-Vorlagen auswählen.
 
 Bearcat sendet die gerenderte Vorlage unverändert als Postinhalt. Umschliesse sie mit einem `wp:html`-Block, damit

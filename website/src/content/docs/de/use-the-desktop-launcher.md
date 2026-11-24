@@ -3,10 +3,10 @@ title: "Bearcat unter Windows, macOS und Linux installieren"
 description: "Installiere die Desktopanwendung, wähle deinen Releaseordner und starte Bearcat mit SQLite."
 prev:
   label: "Installation wählen"
-  link: "/Bearcat/de/#erste-schritte"
+  link: "/de/#erste-schritte"
 next:
   label: "Dein erster Upload"
-  link: "/Bearcat/de/post-installation/"
+  link: "/de/post-installation/"
 ---
 
 :::tip[Bearcat ist bereits installiert?]
@@ -106,11 +106,11 @@ Behalte die Standardwerte für **SQLite (recommended)**, **Database file**, **Be
 Klicke auf **Save** und dann auf **Start Bearcat**. Sobald Bearcat bereit ist, klicke auf **Open Bearcat** oder öffne
 [http://127.0.0.1:17208](http://127.0.0.1:17208).
 
-**Weiter: [Bearcat einrichten und erstes Release hochladen](/Bearcat/de/post-installation/).**
+**Weiter: [Bearcat einrichten und erstes Release hochladen](/de/post-installation/).**
 
 Schliesst du das Einstellungsfenster, läuft Bearcat weiter. Mit **Stop** oder **Quit** beendest du es.
 Unter GNOME braucht das Symbol im Infobereich die [AppIndicator-Erweiterung](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu bringt sie mit.
-Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Dienst](/Bearcat/de/use-the-windows-service/).
+Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Dienst](/de/use-the-windows-service/).
 
 ## Bearcat aktualisieren
 
@@ -147,7 +147,7 @@ macOS: ~/Library/Application Support/Bearcat/bearcat.db
 Linux: ~/.config/Bearcat/bearcat.db
 ```
 
-Für PostgreSQL [richtest du einen PostgreSQL-Server ein](/Bearcat/de/install-postgresql-for-desktop/), wählst
+Für PostgreSQL [richtest du einen PostgreSQL-Server ein](/de/install-postgresql-for-desktop/), wählst
 **PostgreSQL** und gibst Host, Port, Datenbankname, Benutzername und Passwort ein.
 Bearcat aktualisiert die Datenbank beim Start und legt sie an, wenn der Benutzer die Berechtigung dazu hat.
 
@@ -164,7 +164,7 @@ Behalte `17208`, ausser eine andere Anwendung belegt diesen Port. Änderst du ih
 
 ### API key
 
-Lass das Feld leer, ausser du willst [Bearcat über die REST-API steuern](/Bearcat/de/external-orchestration/#api-schlüssel).
+Lass das Feld leer, ausser du willst [Bearcat über die REST-API steuern](/de/external-orchestration/#api-schlüssel).
 
 ## Einstellungen und Backups
 

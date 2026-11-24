@@ -17,7 +17,7 @@ Bei einer Collection enthält die Datei die Links aller Folgen. Innerhalb jedes 
 ![IntelligeN-Exporteinstellungen mit beiden Auslösern und der Standardvorlage für den Dateipfad](../images/intelligen-xml-export-settings.png)
 
 Jeder Export erstellt eine neue Datei. Ist der Dateiname bereits vergeben, hängt Bearcat eine Nummer an, etwa `Release.Name (2).xml`.
-Das Ergebnis siehst du auf der Detailseite des Releases oder der Collection unter [Aktionen nach dem Upload](/Bearcat/de/upload-completion-actions/).
+Das Ergebnis siehst du auf der Detailseite des Releases oder der Collection unter [Aktionen nach dem Upload](/de/upload-completion-actions/).
 
 ![Exportierte XML-Datei für IntelligeN mit Releasename, Coverlink und Laufzeit](../images/intelligen-xml-export-example.png)
 

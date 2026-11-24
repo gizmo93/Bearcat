@@ -3,21 +3,21 @@ title: "Bearcat mit externen Tools steuern"
 description: "Erstelle Releases, steuere Uploads und erfasse Posts über die REST-API."
 ---
 
-Über die [REST-API](/Bearcat/de/rest-api/) erstellst du Releases, steuerst Uploads und erfasst Posts.
-Alle Parameter und Antwortfelder stehen in der [API-Referenz](/Bearcat/api/).
+Über die [REST-API](/de/rest-api/) erstellst du Releases, steuerst Uploads und erfasst Posts.
+Alle Parameter und Antwortfelder stehen in der [API-Referenz](/api/).
 
 ## Befehle
 
 | Endpunkt | Zweck |
 | --- | --- |
 | `POST /api/v1/releases` | Erstellt ein Release aus einem Ordner und einem Releasetemplate. |
-| `POST /api/v1/releases/{releaseId}/start-initial-uploads` | Erstellt die ersten Uploads ohne [Wartezeit](/Bearcat/de/upload-lifecycle/#2-der-erste-upload). |
+| `POST /api/v1/releases/{releaseId}/start-initial-uploads` | Erstellt die ersten Uploads ohne [Wartezeit](/de/upload-lifecycle/#2-der-erste-upload). |
 | `POST /api/v1/uploads/{uploadId}/reupload` | Erstellt einen neuen Upload, wenn der bisherige `Offline`, `PartiallyOnline`, `Canceled` oder `Failed` ist. |
 | `POST /api/v1/uploads/{uploadId}/cancel` | Bricht einen anstehenden oder laufenden Upload ab. |
 | `POST /api/v1/uploads/{uploadId}/resume` | Stellt einen abgebrochenen Upload erneut in die Warteschlange. |
 | `POST /api/v1/uploads/{uploadId}/check-state` | Prüft sofort den Onlinestatus beim Hoster. |
 | `POST /api/v1/releases/{releaseId}/posted-locations` | Speichert die URL, unter der das Release gepostet wurde. |
-| `POST /api/v1/releases/{releaseId}/mark-posted` | Entfernt das Release aus der [Postwarteschlange](/Bearcat/de/post-queue/). |
+| `POST /api/v1/releases/{releaseId}/mark-posted` | Entfernt das Release aus der [Postwarteschlange](/de/post-queue/). |
 
 Die API kann keine Hoster, Templates, Regeln oder Zugangsdaten ändern und keine Daten löschen.
 
@@ -60,11 +60,11 @@ Lege den Abschnitt an, falls er fehlt. Behalte die übrigen Einstellungen; die `
 
 Starte den Dienst mit `sc.exe stop Bearcat` und `sc.exe start Bearcat` neu.
 
-`Bearcat.Cli.exe setup` und `Bearcat.Cli.exe set-db-password` behalten den Abschnitt bei. Siehe [Bearcat als Windows-Dienst ausführen](/Bearcat/de/use-the-windows-service/#speicherort-der-konfiguration).
+`Bearcat.Cli.exe setup` und `Bearcat.Cli.exe set-db-password` behalten den Abschnitt bei. Siehe [Bearcat als Windows-Dienst ausführen](/de/use-the-windows-service/#speicherort-der-konfiguration).
 
 ### Desktopanwendung
 
-Gib den Schlüssel im Feld **API key** der [Desktopanwendung](/Bearcat/de/use-the-desktop-launcher/) ein und klicke auf **Save**. Läuft Bearcat, klicke auf **Stop** und **Start Bearcat**.
+Gib den Schlüssel im Feld **API key** der [Desktopanwendung](/de/use-the-desktop-launcher/) ein und klicke auf **Save**. Läuft Bearcat, klicke auf **Stop** und **Start Bearcat**.
 
 ### Direkt gestarteter Bearcat.Host
 
@@ -117,7 +117,7 @@ Antwort: `201 Created` mit dem Release.
 
 ### 2. Uploads beobachten
 
-Bearcat erstellt Archive und Uploads im Hintergrund nach dem [Cooldown für initiale Uploads](/Bearcat/de/advanced-configuration/#cooldown-für-initiale-uploads).
+Bearcat erstellt Archive und Uploads im Hintergrund nach dem [Cooldown für initiale Uploads](/de/advanced-configuration/#cooldown-für-initiale-uploads).
 
 Uploads eines Releases:
 
@@ -143,7 +143,7 @@ curl -G "$BEARCAT/api/v1/uploads" \
 curl "$BEARCAT/api/v1/releases?inPostQueue=true&pageSize=100"
 ```
 
-Liefert dieselben Releases wie die [Postwarteschlange](/Bearcat/de/post-queue/).
+Liefert dieselben Releases wie die [Postwarteschlange](/de/post-queue/).
 
 ### 4. Links abrufen
 
