@@ -60,6 +60,7 @@ public class ApiClientTest
         )
         {
             RateLimitRetryDelay = TimeSpan.Zero,
+            FolderListRequestDelay = TimeSpan.Zero,
         };
     }
 
@@ -634,6 +635,7 @@ public class ApiClientTest
         // Arrange
         var config = new FichierConfig { ApiKey = "api-key" };
 
+        SetupRootFolderList(23703607, 23703608, 23703609, 23703610);
         SetupFolderList(
             23703607,
             """{"folder_id":23703607,"files":0,"name":"Empty.Release_ArchiveId_1","create_date":"2026-11-26 01:08:13","pass":0,"status":"OK","size":0}"""
@@ -670,6 +672,194 @@ public class ApiClientTest
             new HosterFolderContentStateDto("23703608", HosterFolderContentState.NotEmpty),
             new HosterFolderContentStateDto("23703609", HosterFolderContentState.NotEmpty),
         ]);
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderNotFoundAndOtherError_MapsNotFoundAndOmitsOtherError()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        var folderNotFoundResponse = await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+            HttpStatusCode.NotFound,
+            """{"status":"KO","message":"Folder not found #236"}"""
+        );
+
+        var serverErrorResponse = await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+            HttpStatusCode.InternalServerError,
+            """{"status":"KO","message":"Other error"}"""
+        );
+
+        SetupRootFolderList(23703607, 23703608);
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 23703607),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(folderNotFoundResponse.Error!);
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 23703608),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(serverErrorResponse.Error!);
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["23703607", "23703608"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("23703607", HosterFolderContentState.NotFound),
+        ]);
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderMissingInRootFolderList_MapsNotFoundWithoutRequestingFolder()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        SetupRootFolderList(23703607);
+        SetupFolderList(
+            23703607,
+            """{"folder_id":23703607,"files":0,"name":"Empty.Release","create_date":"2026-11-26 01:08:13","pass":0,"status":"OK","size":0}"""
+        );
+
+        // Act
+        var firstResult = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["23703607", "21561843"],
+            cancellationToken: CancellationToken.None
+        );
+        var secondResult = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["21561704"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        firstResult.ShouldBe([
+            new HosterFolderContentStateDto("23703607", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("21561843", HosterFolderContentState.NotFound),
+        ]);
+        secondResult.ShouldBe([
+            new HosterFolderContentStateDto("21561704", HosterFolderContentState.NotFound),
+        ]);
+        apiMock.Verify(
+            x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.IsAny<FolderListRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
+    }
+
+    [TestCase(HttpStatusCode.Forbidden)]
+    [TestCase(HttpStatusCode.TooManyRequests)]
+    public async Task GetFolderContentStatesAsync_FolderListBlocked_ThrowsWithoutRequestingFurtherFolders(
+        HttpStatusCode blockedStatusCode
+    )
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        var blockedResponse = await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+            blockedStatusCode,
+            """{"status":"KO","message":"Blocked"}"""
+        );
+
+        SetupRootFolderList(23703607, 23703608);
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 23703607),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(blockedResponse.Error!);
+
+        // Act
+        var getFolderContentStatesAsync = () =>
+            apiClient.GetFolderContentStatesAsync(
+                config: config,
+                folderIds: ["23703607", "23703608"],
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await Should.ThrowAsync<HttpRequestException>(getFolderContentStatesAsync);
+        apiMock.Verify(
+            x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 23703608),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_AccountLocked_ReturnsNoStatesAndRequestsRootFolderListOnce()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        var accountLockedResponse = await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+            HttpStatusCode.Forbidden,
+            """{"status":"KO","message":"Account locked #211"}"""
+        );
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 0),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(accountLockedResponse.Error!);
+
+        // Act
+        var firstResult = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["23703607"],
+            cancellationToken: CancellationToken.None
+        );
+        var secondResult = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["23703608"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        firstResult.ShouldBeEmpty();
+        secondResult.ShouldBeEmpty();
+        apiMock.Verify(
+            x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.IsAny<FolderListRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
     }
 
     [Test]
@@ -751,6 +941,21 @@ public class ApiClientTest
 
         // Assert
         exception.Message.ShouldBe("Resource not found");
+    }
+
+    private void SetupRootFolderList(params int[] subFolderIds)
+    {
+        var subFoldersJson = string.Join(
+            ",",
+            subFolderIds.Select(subFolderId =>
+                $$"""{"id":{{subFolderId}},"name":"Folder.{{subFolderId}}","create_date":"2026-11-26 01:08:13","pass":0}"""
+            )
+        );
+
+        SetupFolderList(
+            0,
+            $$"""{"folder_id":0,"files":0,"name":"","status":"OK","sub_folders":[{{subFoldersJson}}]}"""
+        );
     }
 
     private void SetupFolderList(int folderId, string json)

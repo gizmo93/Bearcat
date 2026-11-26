@@ -83,6 +83,10 @@ public class ApiClientTest
         """{"msg":"OK","result":{"files":[],"folders":[{"code":null,"fld_id":1037117,"name":"sub-folder"}]},"status":200}""",
         HosterFolderContentState.NotEmpty
     )]
+    [TestCase(
+        """{"msg":"Folder not exist or not yours","status":403}""",
+        HosterFolderContentState.NotFound
+    )]
     public async Task GetFolderContentStateAsync_FolderListResponse_MapsFilesAndSubFoldersToState(
         string json,
         HosterFolderContentState expectedState

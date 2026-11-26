@@ -41,13 +41,25 @@ public class ApiClient(
 
     private const int RootFolderId = 0;
 
+    private const string FolderNotFoundMessage = "Folder not found";
+
+    private const string AccountLockedMessage = "Account locked";
+
+    private const int MaxListedFolders = 5000;
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
         PropertyNameCaseInsensitive = true,
     };
 
+    private readonly Dictionary<string, RootFolderList> rootFolderListPerApiKey = new(
+        StringComparer.Ordinal
+    );
+
     public TimeSpan RateLimitRetryDelay { get; init; } = TimeSpan.FromSeconds(5);
+
+    public TimeSpan FolderListRequestDelay { get; init; } = TimeSpan.FromMilliseconds(400);
 
     public async Task<EndUploadResponse> UploadFileAsync(
         FichierConfig config,
@@ -135,10 +147,25 @@ public class ApiClient(
     )
     {
         var authorization = GetAuthorizationHeader(config.ApiKey);
+        var rootFolderList = await GetRootFolderListAsync(config.ApiKey, cancellationToken);
         var folderContentStates = new List<HosterFolderContentStateDto>();
 
         foreach (var folderId in folderIds)
         {
+            if (!rootFolderList.FolderIds.Contains(folderId))
+            {
+                if (rootFolderList.IsComplete)
+                {
+                    folderContentStates.Add(
+                        new HosterFolderContentStateDto(folderId, HosterFolderContentState.NotFound)
+                    );
+                }
+
+                continue;
+            }
+
+            await Task.Delay(FolderListRequestDelay, cancellationToken);
+
             try
             {
                 var folder = await SendApiRequestAsync(() =>
@@ -163,6 +190,29 @@ public class ApiClient(
                     new HosterFolderContentStateDto(folderId, folderContentState)
                 );
             }
+            catch (ApiException exception)
+                when (exception.StatusCode == HttpStatusCode.NotFound
+                    && TryDeserializeErrorResponse(exception.Content)
+                        ?.Message?.StartsWith(FolderNotFoundMessage, StringComparison.Ordinal)
+                        == true
+                )
+            {
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, HosterFolderContentState.NotFound)
+                );
+            }
+            catch (ApiException exception)
+                when (exception.StatusCode
+                        is HttpStatusCode.Forbidden
+                            or HttpStatusCode.TooManyRequests
+                )
+            {
+                throw new HttpRequestException(
+                    $"1fichier blocked the folder list of folder {folderId} with status code {(int)exception.StatusCode}, stopping to avoid a ban: {exception.Content}",
+                    exception,
+                    exception.StatusCode
+                );
+            }
             catch (Exception ex)
                 when (ex is not HosterCredentialsRejectedException
                     && !cancellationToken.IsCancellationRequested
@@ -170,8 +220,9 @@ public class ApiClient(
             {
                 logger.LogWarning(
                     ex,
-                    "Failed to get the content state of folder {FolderId} on 1fichier",
-                    folderId
+                    "Failed to get the content state of folder {FolderId} on 1fichier: {ErrorContent}",
+                    folderId,
+                    (ex as ApiException)?.Content
                 );
             }
         }
@@ -209,7 +260,7 @@ public class ApiClient(
         if (
             response.StatusCode == HttpStatusCode.NotFound
             && message is not null
-            && message.StartsWith("Folder not found", StringComparison.Ordinal)
+            && message.StartsWith(FolderNotFoundMessage, StringComparison.Ordinal)
         )
         {
             return;
@@ -616,6 +667,68 @@ public class ApiClient(
         );
     }
 
+    private async Task<RootFolderList> GetRootFolderListAsync(
+        string apiKey,
+        CancellationToken cancellationToken
+    )
+    {
+        if (rootFolderListPerApiKey.TryGetValue(apiKey, out var cachedRootFolderList))
+        {
+            return cachedRootFolderList;
+        }
+
+        FolderListResponse rootFolder;
+
+        try
+        {
+            rootFolder = await SendApiRequestAsync(() =>
+                api.GetFolderListAsync(
+                    GetAuthorizationHeader(apiKey),
+                    new FolderListRequest { FolderId = RootFolderId },
+                    cancellationToken
+                )
+            );
+        }
+        catch (ApiException exception)
+            when (exception.StatusCode == HttpStatusCode.Forbidden
+                && TryDeserializeErrorResponse(exception.Content)
+                    ?.Message?.StartsWith(AccountLockedMessage, StringComparison.Ordinal) == true
+            )
+        {
+            logger.LogWarning(
+                "Skipped the empty folder check on 1fichier because the account is locked: {ErrorContent}",
+                exception.Content
+            );
+
+            var lockedAccountFolderList = new RootFolderList(FolderIds: [], IsComplete: false);
+            rootFolderListPerApiKey[apiKey] = lockedAccountFolderList;
+
+            return lockedAccountFolderList;
+        }
+        catch (ApiException exception)
+        {
+            throw new HttpRequestException(
+                $"1fichier root folder list failed with status code {(int)exception.StatusCode}: {exception.Content}",
+                exception,
+                exception.StatusCode
+            );
+        }
+
+        EnsureOk(rootFolder.Status, rootFolder.Message, "1fichier folder list failed");
+
+        var rootFolderList = new RootFolderList(
+            FolderIds: rootFolder
+                .SubFolders.Where(folder => folder.Id is not null)
+                .Select(folder => folder.Id!.Value.ToString(CultureInfo.InvariantCulture))
+                .ToHashSet(StringComparer.Ordinal),
+            IsComplete: rootFolder.SubFolders.Count < MaxListedFolders
+        );
+
+        rootFolderListPerApiKey[apiKey] = rootFolderList;
+
+        return rootFolderList;
+    }
+
     private static string GetFileId(string fileUrl)
     {
         var query = fileUrl[(fileUrl.IndexOf('?') + 1)..];
@@ -795,4 +908,6 @@ public class ApiClient(
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
     }
+
+    private sealed record RootFolderList(HashSet<string> FolderIds, bool IsComplete);
 }

@@ -28,6 +28,8 @@ public class CostActionApiClient(
 
     private const string FolderIdProperty = "folder_id";
 
+    private const string FolderNotFoundMessage = "Folder not found or wrong ID";
+
     private const int MaxFileIdsPerRequest = 100;
 
     private const int MaxFolderIdsPerRequest = 50;
@@ -327,12 +329,27 @@ public class CostActionApiClient(
 
                 try
                 {
-                    var children = await SendAsync(
-                        request: () =>
-                            api.GetFolderChildrenAsync(apiKey, folderId, cancellationToken),
-                        operationName: "Folder children request",
-                        cancellationToken: cancellationToken
+                    var childrenResponse = await SendRawAsync(
+                        () => api.GetFolderChildrenAsync(apiKey, folderId, cancellationToken),
+                        cancellationToken
                     );
+
+                    if (
+                        childrenResponse.StatusCode == HttpStatusCode.NotFound
+                        && DeserializeError(childrenResponse)?.Message == FolderNotFoundMessage
+                    )
+                    {
+                        folderContentStates.Add(
+                            new HosterFolderContentStateDto(
+                                folderId,
+                                HosterFolderContentState.NotFound
+                            )
+                        );
+
+                        continue;
+                    }
+
+                    var children = ReadContent(childrenResponse, "Folder children request");
 
                     var folderContentState =
                         children.Total > 0 || children.Data is { Count: > 0 }

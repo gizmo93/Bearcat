@@ -29,6 +29,8 @@ public abstract class XFilesharingApiClient<TApi>(
 
     private const int RateLimitRetryAttempts = 5;
 
+    private const string FolderNotExistingMessage = "Folder not exist or not yours";
+
     public TimeSpan RateLimitRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     protected TApi Api => api;
@@ -357,6 +359,14 @@ public abstract class XFilesharingApiClient<TApi>(
                 cancellationToken: cancellationToken
             )
         );
+
+        if (
+            response.Status == (int)HttpStatusCode.Forbidden
+            && response.Msg == FolderNotExistingMessage
+        )
+        {
+            return HosterFolderContentState.NotFound;
+        }
 
         if (response.Status != (int)HttpStatusCode.OK)
         {

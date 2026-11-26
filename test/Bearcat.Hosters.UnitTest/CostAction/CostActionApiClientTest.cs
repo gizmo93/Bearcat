@@ -685,6 +685,39 @@ public class CostActionApiClientTest
     }
 
     [Test]
+    public async Task GetFolderContentStatesAsync_FolderNoLongerExists_MapsNotFound()
+    {
+        // Arrange
+        SetupFolderFiles(
+            folderIds: ["2479858"],
+            page: 1,
+            json: """{"files":[],"current_page":1,"per_page":100,"last_page":1,"total":0,"status":"success"}"""
+        );
+
+        var notFound = await CreateErrorResponseAsync<FolderChildrenResponse>(
+            HttpStatusCode.NotFound,
+            """{"status":"error","message":"Folder not found or wrong ID","errors":[]}"""
+        );
+
+        apiMock
+            .Setup(x => x.GetFolderChildrenAsync(ApiKey, "2479858", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(notFound);
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            apiKey: ApiKey,
+            appType: AppType,
+            folderIds: ["2479858"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("2479858", HosterFolderContentState.NotFound),
+        ]);
+    }
+
+    [Test]
     public async Task DeleteFolderAsync_FolderNotFound_ReturnsWithoutThrowing()
     {
         // Arrange
