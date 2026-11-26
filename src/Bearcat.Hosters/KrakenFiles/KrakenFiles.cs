@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.KrakenFiles;
 
 public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> logger)
-    : IHosterWithFolders,
+    : IHosterWithEmptyFolderCleanup,
         IHosterWithFileInfo
 {
     private const int MaxParallelUploads = 10;
@@ -206,6 +206,32 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
         var config = hosterConfig.As<KrakenFilesConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<KrakenFilesConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<KrakenFilesConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

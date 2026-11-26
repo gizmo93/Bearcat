@@ -3,10 +3,12 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
+using Bearcat.Hosters.Alfafile.Api.Folder;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared;
@@ -100,6 +102,85 @@ public class ApiClient(
         }
 
         return createdFolder.Response.Folder.FolderId;
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        AlfafileConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var rootFolder = await SendWithAuthTokenAsync(
+            config,
+            token =>
+                api.GetFolderInfoAsync(
+                    token: token,
+                    folderId: null,
+                    cancellationToken: cancellationToken
+                ),
+            cancellationToken
+        );
+
+        if (
+            !((HttpStatusCode)rootFolder.Status).IsSuccessStatusCode
+            || rootFolder.Response?.Folder is null
+        )
+        {
+            throw new HttpRequestException(
+                rootFolder.Details ?? $"Alfafile folder info failed with status {rootFolder.Status}"
+            );
+        }
+
+        var subFoldersById = rootFolder
+            .Response.Folder.Folders.Where(folder => !string.IsNullOrWhiteSpace(folder.FolderId))
+            .ToDictionary(folder => folder.FolderId!);
+
+        return folderIds
+            .Where(subFoldersById.ContainsKey)
+            .Select(folderId => new HosterFolderContentStateDto(
+                folderId,
+                GetFolderContentState(subFoldersById[folderId])
+            ))
+            .ToList();
+    }
+
+    public async Task DeleteFolderAsync(
+        AlfafileConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await SendWithAuthTokenAsync(
+            config,
+            token => api.DeleteFolderAsync(token, folderId, cancellationToken),
+            cancellationToken
+        );
+
+        var result = response.Response?.Result;
+
+        if (
+            result is { Success: 0, Fail: 1, Errors: [var error] }
+            && result.FailIds.Contains(folderId)
+            && error == $"Folder with folder_id: '{folderId}' doesn't exist"
+        )
+        {
+            return;
+        }
+
+        if (
+            !((HttpStatusCode)response.Status).IsSuccessStatusCode
+            || result is null
+            || result.Fail > 0
+            || !result.SuccessIds.Contains(folderId)
+        )
+        {
+            throw new HttpRequestException(
+                result?.Errors.Count > 0
+                    ? $"Alfafile folder deletion failed: {string.Join(", ", result.Errors)}"
+                    : response.Details
+                        ?? $"Alfafile folder deletion failed with status {response.Status}"
+            );
+        }
     }
 
     public async Task MoveFileToFolderAsync(
@@ -527,6 +608,13 @@ public class ApiClient(
                 && !string.IsNullOrWhiteSpace(folder.FolderId)
             )
             ?.FolderId;
+    }
+
+    private static HosterFolderContentState GetFolderContentState(FolderResponse.Folder folder)
+    {
+        return folder.NbFiles == 0 && folder.NbFolders == 0
+            ? HosterFolderContentState.Empty
+            : HosterFolderContentState.NotEmpty;
     }
 
     private Task<TResponse> SendWithAuthTokenAsync<TResponse>(

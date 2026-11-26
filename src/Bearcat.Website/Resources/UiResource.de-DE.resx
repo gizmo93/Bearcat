@@ -722,6 +722,8 @@
   <data name="AlwaysReuploadAllFiles" xml:space="preserve"><value>Immer alle Dateien neu hochladen</value></data>
   <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>Lädt alle Dateien erneut hoch, auch die noch verfügbaren. Bei Hostern, die inaktive Dateien löschen, beginnt damit die Aufbewahrungsfrist für alle Dateien gleichzeitig neu.</value></data>
   <data name="AlwaysReuploadAllFilesShort" xml:space="preserve"><value>Volle Reuploads</value></data>
+  <data name="DeleteEmptyFolders" xml:space="preserve"><value>Leere Ordner automatisch löschen</value></data>
+  <data name="DeleteEmptyFoldersHelp" xml:space="preserve"><value>Löscht regelmässig leere Ordner auf diesem Account, die Bearcat angelegt hat und die kein laufender Upload verwendet.</value></data>
   <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Teilweise oder komplett offline</value></data>
   <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Erst wenn komplett offline</value></data>
   <data name="ParallelUploads" xml:space="preserve"><value>Parallele Uploads</value></data>

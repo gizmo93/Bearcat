@@ -26,11 +26,9 @@ public class UploadHosterFolderService(ILogger<UploadHosterFolderService> logger
             return null;
         }
 
-        var folderName = $"{upload.UploadConfig.Release.Name}_UploadId_{upload.Id}";
-
         return await CreateFolderWithRetryAsync(
             folderHoster: folderHoster,
-            folderName: folderName,
+            folderName: BuildFolderName(upload),
             hosterConfig: hosterConfig,
             uploadId: upload.Id,
             cancellationToken: cancellationToken
@@ -84,6 +82,11 @@ public class UploadHosterFolderService(ILogger<UploadHosterFolderService> logger
                 cancellationToken: cancellationToken
             );
         }
+    }
+
+    private static string BuildFolderName(Upload upload)
+    {
+        return $"{upload.UploadConfig.Release.Name}_ReleaseId_{upload.UploadConfig.ReleaseId}";
     }
 
     private async Task MoveUploadedFilesIntoFolderInOneRequestAsync(

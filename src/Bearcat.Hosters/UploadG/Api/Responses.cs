@@ -12,7 +12,7 @@ public record MultipartCreateResponse(
     [property: JsonPropertyName("status")] string? Status,
     [property: JsonPropertyName("key")] string? Key,
     [property: JsonPropertyName("uploadId")] string? UploadId,
-    [property: JsonPropertyName("storageBucket")] string? StorageBucket,
+    [property: JsonPropertyName("uploadToken")] string? UploadToken,
     [property: JsonPropertyName("acl")] string? Acl
 );
 
@@ -31,7 +31,10 @@ public record UploadedPart(
     [property: JsonPropertyName("PartNumber")] int PartNumber
 );
 
-public record StatusResponse([property: JsonPropertyName("status")] string? Status);
+public record StatusResponse(
+    [property: JsonPropertyName("status")] string? Status,
+    [property: JsonPropertyName("message")] string? Message = null
+);
 
 public record UploadFileResponse(
     [property: JsonPropertyName("status")] string? Status,

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Filer;
@@ -447,6 +448,141 @@ public class ApiClientTest
         exception.Message.ShouldContain("file not found");
     }
 
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderListOnTwoPages_MapsStatesAndOmitsUnlistedFolders()
+    {
+        // Arrange
+        SetupLogin();
+        var folderListPages = new Queue<string>([
+            $$"""{"folders":[{{CreateListedFolderJson("aa1ea9176b7b5b95", fileCount: 0, children: "[]")}},{{CreateListedFolderJson("aa2ea9176b7b5b95", fileCount: 3, children: "[]")}}],"total":3,"hasMore":true}""",
+            $$"""{"folders":[{{CreateListedFolderJson("aa3ea9176b7b5b95", fileCount: 0, children: "[{}]")}}],"total":3,"hasMore":false}""",
+        ]);
+        httpMessageHandler.Respond(
+            "/api/user/folders",
+            () => CreateJsonResponse(HttpStatusCode.OK, folderListPages.Dequeue())
+        );
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds:
+            [
+                "aa1ea9176b7b5b95",
+                "aa2ea9176b7b5b95",
+                "aa3ea9176b7b5b95",
+                "aa4ea9176b7b5b95",
+            ],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("aa1ea9176b7b5b95", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("aa2ea9176b7b5b95", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("aa3ea9176b7b5b95", HosterFolderContentState.NotEmpty),
+        ]);
+        httpMessageHandler
+            .Requests("/api/user/folders")
+            .Select(request => request.Uri.Query)
+            .ShouldBe([
+                "?limit=50&offset=0&sort=createdAt&order=DESC",
+                "?limit=50&offset=2&sort=createdAt&order=DESC",
+            ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_SendsListedEditCodeAndReturnsWithoutThrowing()
+    {
+        // Arrange
+        SetupLogin();
+        SetupFolderList(CreateListedFolderJson(FolderHash, fileCount: 0, children: "[]"));
+        httpMessageHandler.Respond(
+            $"/api/user/folders/{FolderHash}/{EditCode}",
+            () => CreateJsonResponse(HttpStatusCode.NotFound, """{"message":"Folder not found"}""")
+        );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, FolderHash, CancellationToken.None);
+
+        // Assert
+        var deleteRequest = httpMessageHandler.SingleRequest(
+            $"/api/user/folders/{FolderHash}/{EditCode}"
+        );
+        deleteRequest.Method.ShouldBe(HttpMethod.Delete);
+        deleteRequest.Headers["Cookie"].ShouldBe($"jwt={LoggedInSessionCookie}");
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderWasReportedEmptyBefore_DeletesWithoutListingFoldersAgain()
+    {
+        // Arrange
+        SetupLogin();
+        SetupFolderList(CreateListedFolderJson(FolderHash, fileCount: 0, children: "[]"));
+        httpMessageHandler.Respond(
+            $"/api/user/folders/{FolderHash}/{EditCode}",
+            () => CreateJsonResponse(HttpStatusCode.OK, """{"message":"Folder deleted"}""")
+        );
+        await apiClient.GetFolderContentStatesAsync(config, [FolderHash], CancellationToken.None);
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, FolderHash, CancellationToken.None);
+
+        // Assert
+        httpMessageHandler.CountRequests("/api/user/folders").ShouldBe(1);
+        httpMessageHandler.CountRequests($"/api/user/folders/{FolderHash}/{EditCode}").ShouldBe(1);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderNotListed_ThrowsWithoutDeleting()
+    {
+        // Arrange
+        SetupLogin();
+        SetupFolderList(CreateListedFolderJson("aa1ea9176b7b5b95", fileCount: 0, children: "[]"));
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync(config, FolderHash, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("edit code is unknown");
+        httpMessageHandler.CountRequests($"/api/user/folders/{FolderHash}/{EditCode}").ShouldBe(0);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderContainsFiles_ThrowsWithoutDeleting()
+    {
+        // Arrange
+        SetupLogin();
+        SetupFolderList(CreateListedFolderJson(FolderHash, fileCount: 1, children: "[]"));
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync(config, FolderHash, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("no longer empty");
+        httpMessageHandler.CountRequests($"/api/user/folders/{FolderHash}/{EditCode}").ShouldBe(0);
+    }
+
+    private void SetupFolderList(string folderJson)
+    {
+        httpMessageHandler.Respond(
+            "/api/user/folders",
+            () =>
+                CreateJsonResponse(
+                    HttpStatusCode.OK,
+                    $$"""{"folders":[{{folderJson}}],"total":1,"hasMore":false}"""
+                )
+        );
+    }
+
+    private static string CreateListedFolderJson(string hash, int fileCount, string children)
+    {
+        return $$$"""{"id":"1","hash":"{{{hash}}}","name":"Release.Name","size":0,"fileCount":{{{fileCount}}},"actualFileCount":{{{fileCount}}},"viewCount":0,"editCode":"{{{EditCode}}}","hasPassword":false,"createdDate":"2026-11-26T00:00:00.000Z","parentPath":"","path":"/Release.Name","children":{{{children}}}}""";
+    }
+
     private void SetupMoveResponse(int movedFiles)
     {
         httpMessageHandler.Respond(
@@ -568,6 +704,7 @@ public class ApiClientTest
     }
 
     private sealed record RecordedRequest(
+        HttpMethod Method,
         Uri Uri,
         IReadOnlyDictionary<string, string> Headers,
         string Body
@@ -589,6 +726,11 @@ public class ApiClientTest
             return requests.Single(request => request.Uri.AbsolutePath == path);
         }
 
+        public List<RecordedRequest> Requests(string path)
+        {
+            return requests.Where(request => request.Uri.AbsolutePath == path).ToList();
+        }
+
         public int CountRequests(string path)
         {
             return requests.Count(request => request.Uri.AbsolutePath == path);
@@ -607,7 +749,7 @@ public class ApiClientTest
                 header => string.Join("; ", header.Value)
             );
 
-            requests.Add(new RecordedRequest(request.RequestUri!, headers, body));
+            requests.Add(new RecordedRequest(request.Method, request.RequestUri!, headers, body));
 
             var response = responders[request.RequestUri!.AbsolutePath]();
             response.RequestMessage = request;

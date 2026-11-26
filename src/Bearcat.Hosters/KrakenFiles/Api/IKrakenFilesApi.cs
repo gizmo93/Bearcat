@@ -17,6 +17,7 @@ public interface IKrakenFilesApi
     [Get("/api/file")]
     Task<ApiResponse<ListFilesResponse>> ListFilesAsync(
         [Header("X-AUTH-TOKEN")] string apiToken,
+        [Query] string folderId,
         [Query] int page,
         [Query] int perPage,
         CancellationToken cancellationToken
@@ -32,6 +33,13 @@ public interface IKrakenFilesApi
     Task<FolderCreateResponse> CreateFolderAsync(
         [Header("X-AUTH-TOKEN")] string apiToken,
         [Body] CreateFolderRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Delete("/api/folder/{folderId}")]
+    Task<ApiResponse<DeleteFolderResponse>> DeleteFolderAsync(
+        string folderId,
+        [Header("X-AUTH-TOKEN")] string apiToken,
         CancellationToken cancellationToken
     );
 

@@ -101,6 +101,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.UploadSources;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.EmptyFolderCleanup;
 using Bearcat.Domain.UseCases.ManageUploads.HosterAccountPoolSelection;
 using Bearcat.Domain.UseCases.ManageUploads.OnlineChecks;
 using Bearcat.Domain.UseCases.ManageUploads.UploadCreation;
@@ -252,6 +253,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadStateService>();
             services.AddScoped<RunningUploadReadService>();
             services.AddScoped<UploadOnlineCheckService>();
+            services.AddScoped<EmptyHosterFolderCleanupService>();
             services.AddScoped<UploadCreationService>();
             services.AddScoped<QualityGateEvaluator>();
             services.AddScoped<QualityGateService>();

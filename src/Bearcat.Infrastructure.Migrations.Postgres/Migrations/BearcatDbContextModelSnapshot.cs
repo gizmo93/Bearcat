@@ -762,6 +762,9 @@ namespace Bearcat.Infrastructure.Migrations.Postgres
                     b.Property<bool>("AlwaysReuploadAllFiles")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("DeleteEmptyFolders")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("HasUnreadableSecrets")
                         .HasColumnType("boolean");
 

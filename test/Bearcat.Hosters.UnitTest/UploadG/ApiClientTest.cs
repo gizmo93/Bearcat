@@ -54,8 +54,9 @@ public class ApiClientTest
                 x.CreateMultipartUploadAsync(
                     "Bearer api-key",
                     It.Is<MultipartCreateRequest>(request =>
-                        request.Filename == "file"
+                        request.Filename == "file.bin"
                         && request.Extension == "bin"
+                        && request.ParentId == 42
                         && request.Size == 3
                     ),
                     It.IsAny<CancellationToken>()
@@ -66,7 +67,7 @@ public class ApiClientTest
                     Status: "success",
                     Key: "uploads/uuid/storage-name",
                     UploadId: "upload-id",
-                    StorageBucket: "bucket",
+                    UploadToken: "upload-token",
                     Acl: "private"
                 )
             );
@@ -79,7 +80,7 @@ public class ApiClientTest
                         request.PartNumbers.SequenceEqual(ExpectedPartNumbersWithOnlyFirstPart)
                         && request.UploadId == "upload-id"
                         && request.Key == "uploads/uuid/storage-name"
-                        && request.StorageBucket == "bucket"
+                        && request.UploadToken == "upload-token"
                     ),
                     It.IsAny<CancellationToken>()
                 )
@@ -103,7 +104,7 @@ public class ApiClientTest
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(new StatusResponse("success"));
+            .ReturnsAsync(new StatusResponse("verified"));
 
         apiMock
             .Setup(x =>
@@ -113,6 +114,9 @@ public class ApiClientTest
                         request.ClientName == "file.bin"
                         && request.Filename == "storage-name"
                         && request.ParentId == 42
+                        && request.Key == "uploads/uuid/storage-name"
+                        && request.UploadId == "upload-id"
+                        && request.UploadToken == "upload-token"
                     ),
                     It.IsAny<CancellationToken>()
                 )
@@ -167,7 +171,7 @@ public class ApiClientTest
                     Status: "success",
                     Key: "uploads/uuid/storage-name",
                     UploadId: "upload-id",
-                    StorageBucket: "bucket",
+                    UploadToken: "upload-token",
                     Acl: "private"
                 )
             );
@@ -391,6 +395,128 @@ public class ApiClientTest
 
         // Assert
         exception.Message.ShouldBe("Unauthenticated.");
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderTotals_MapsStatesAndOmitsFailedFolder()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+        SetupFolderEntries("101", new FolderEntriesResponse(Total: 0));
+        SetupFolderEntries("102", new FolderEntriesResponse(Total: 3));
+
+        apiMock
+            .Setup(x =>
+                x.ListFolderEntriesAsync(
+                    "Bearer api-key",
+                    "folder",
+                    "103",
+                    1,
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("network down"));
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["101", "102", "103"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("101", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("102", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderEntryNoLongerExists_MapsNotFound()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://uploadg.test/api/v1/test");
+        var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            RequestMessage = request,
+            Content = new StringContent(
+                """{"message":"No query results for model [App\\Models\\FileEntry]."}"""
+            ),
+        };
+        var notFoundException = await ApiException.Create(
+            request,
+            HttpMethod.Get,
+            response,
+            new RefitSettings()
+        );
+
+        apiMock
+            .Setup(x =>
+                x.ListFolderEntriesAsync(
+                    "Bearer api-key",
+                    "folder",
+                    "101",
+                    1,
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(notFoundException);
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["101"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("101", HosterFolderContentState.NotFound),
+        ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_Folder_MovesFolderToTrashWithoutDeletingForever()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.DeleteEntriesAsync(
+                    "Bearer api-key",
+                    It.Is<DeleteEntriesRequest>(request =>
+                        request.EntryIds.SequenceEqual(new long[] { 101 }) && !request.DeleteForever
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new StatusResponse("success"));
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "101", CancellationToken.None);
+
+        // Assert
+        apiMock.VerifyAll();
+    }
+
+    private void SetupFolderEntries(string folderId, FolderEntriesResponse response)
+    {
+        apiMock
+            .Setup(x =>
+                x.ListFolderEntriesAsync(
+                    "Bearer api-key",
+                    "folder",
+                    folderId,
+                    1,
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(response);
     }
 
     private static async Task<ApiException> CreateUnauthorizedExceptionAsync(string content)

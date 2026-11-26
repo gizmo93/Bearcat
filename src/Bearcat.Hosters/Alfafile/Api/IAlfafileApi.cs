@@ -45,6 +45,13 @@ public interface IAlfafileApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/v1/folder/delete")]
+    Task<DeleteFolderResponse> DeleteFolderAsync(
+        [Query] string token,
+        [Query] [AliasAs("folder_id")] string folderId,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/v1/folder/content")]
     Task<ApiResponse<FolderContentResponse>> GetFolderContentAsync(
         [Query] string token,

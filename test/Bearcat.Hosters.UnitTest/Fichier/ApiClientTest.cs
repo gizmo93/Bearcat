@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
@@ -18,6 +21,12 @@ namespace Bearcat.Hosters.UnitTest.Fichier;
 
 public class ApiClientTest
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        PropertyNameCaseInsensitive = true,
+    };
+
     private Mock<IFichierApi> apiMock = null!;
     private Mock<IHttpClientFactory> httpClientFactoryMock = null!;
     private TestHttpMessageHandler httpMessageHandler = null!;
@@ -617,6 +626,159 @@ public class ApiClientTest
             );
         result[fileUrls[1]]
             .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FilesSubFoldersAndFailingRequest_MapsStatesAndOmitsFailedFolder()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        SetupFolderList(
+            23703607,
+            """{"folder_id":23703607,"files":0,"name":"Empty.Release_ArchiveId_1","create_date":"2026-11-26 01:08:13","pass":0,"status":"OK","size":0}"""
+        );
+        SetupFolderList(
+            23703608,
+            """{"folder_id":23703608,"files":2,"name":"Files.Release_ArchiveId_2","create_date":"2026-11-26 01:08:14","pass":0,"status":"OK","size":2048}"""
+        );
+        SetupFolderList(
+            23703609,
+            """{"folder_id":23703609,"files":0,"name":"Sub.Folder.Release_ArchiveId_3","create_date":"2026-11-26 01:08:15","pass":0,"status":"OK","size":0,"sub_folders":[{"pass":0,"create_date":"2026-11-26 01:08:16","name":"sub-folder","id":23703611}]}"""
+        );
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 23703610),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("1fichier folder list failed"));
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["23703607", "23703608", "23703609", "23703610"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("23703607", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("23703608", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("23703609", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_Success_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        SetupDeleteFolder(
+            CreateApiResponse(
+                HttpStatusCode.OK,
+                JsonSerializer.Deserialize<DeleteFolderResponse>(
+                    """{"status":"OK","message":"Folder removed #389"}""",
+                    JsonSerializerOptions
+                )
+            )
+        );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "23703607", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x =>
+                x.DeleteFolderAsync(
+                    "Bearer api-key",
+                    It.Is<DeleteFolderRequest>(request => request.FolderId == 23703607),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderNotFound_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        SetupDeleteFolder(
+            await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+                HttpStatusCode.NotFound,
+                """{"message":"Folder not found #236","status":"KO"}"""
+            )
+        );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "23703607", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x =>
+                x.DeleteFolderAsync(
+                    "Bearer api-key",
+                    It.IsAny<DeleteFolderRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_NotFoundWithOtherMessage_ThrowsWithMessage()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        SetupDeleteFolder(
+            await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+                HttpStatusCode.NotFound,
+                """{"message":"Resource not found","status":"KO"}"""
+            )
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync(config, "23703607", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Resource not found");
+    }
+
+    private void SetupFolderList(int folderId, string json)
+    {
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == folderId),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                JsonSerializer.Deserialize<FolderListResponse>(json, JsonSerializerOptions)!
+            );
+    }
+
+    private void SetupDeleteFolder(ApiResponse<DeleteFolderResponse> response)
+    {
+        apiMock
+            .Setup(x =>
+                x.DeleteFolderAsync(
+                    "Bearer api-key",
+                    It.Is<DeleteFolderRequest>(request => request.FolderId == 23703607),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(response);
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content)

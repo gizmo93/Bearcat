@@ -722,6 +722,9 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("AlwaysReuploadAllFiles")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("DeleteEmptyFolders")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("HasUnreadableSecrets")
                         .HasColumnType("INTEGER");
 

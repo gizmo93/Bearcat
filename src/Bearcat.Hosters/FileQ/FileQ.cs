@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.FileQ.Api;
 using Bearcat.Hosters.Shared.XFilesharing;
 using Microsoft.Extensions.Logging;
@@ -5,7 +6,8 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.FileQ;
 
 public class FileQ(IFileQApiClient apiClient, ILogger<FileQ> logger)
-    : XFilesharingHosterBase<FileQConfig>(apiClient, logger)
+    : XFilesharingHosterBase<FileQConfig>(apiClient, logger),
+        IHosterWithEmptyFolderCleanup
 {
     public override string Name => "fileq.net";
 

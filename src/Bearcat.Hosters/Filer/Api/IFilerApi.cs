@@ -39,6 +39,25 @@ public interface IFilerApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/user/folders")]
+    Task<ApiResponse<FolderListResponse>> ListFoldersAsync(
+        [Header("Cookie")] string cookie,
+        int limit,
+        int offset,
+        string sort,
+        string order,
+        CancellationToken cancellationToken
+    );
+
+    [Delete("/api/user/folders/{folderHash}/{editCode}")]
+    [Headers("Origin: " + ApiClient.ApiBaseUrl)]
+    Task<ApiResponse<MessageResponse>> DeleteFolderAsync(
+        [Header("Cookie")] string cookie,
+        string folderHash,
+        string editCode,
+        CancellationToken cancellationToken
+    );
+
     [Post("/api/user/batch/move")]
     [Headers("Origin: " + ApiClient.ApiBaseUrl)]
     Task<ApiResponse<MoveFilesResponse>> MoveFilesAsync(

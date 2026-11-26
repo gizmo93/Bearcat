@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
 
@@ -42,6 +43,15 @@ public interface ICostActionApiClient
         string folderId,
         CancellationToken cancellationToken
     );
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        string apiKey,
+        string appType,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(string apiKey, string folderId, CancellationToken cancellationToken);
 
     Task VerifyAccessAsync(string apiKey, string appType, CancellationToken cancellationToken);
 }

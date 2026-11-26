@@ -73,6 +73,7 @@ public partial class AllHostersPage(
                     hosterRegistration.NumberOfHoursUntilReuploadOverride,
                 ReuploadTriggerOverride = hosterRegistration.ReuploadTriggerOverride,
                 AlwaysReuploadAllFiles = hosterRegistration.AlwaysReuploadAllFiles,
+                DeleteEmptyFolders = hosterRegistration.DeleteEmptyFolders,
                 UseForMirrorDownloads = hosterRegistration.UseForMirrorDownloads,
                 MirrorPriority = hosterRegistration.MirrorPriority,
                 MirrorDownloadSpeedLimitMegabytesPerSecondInput =

@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
@@ -19,6 +21,7 @@ public class ApiClientTest
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
         PropertyNameCaseInsensitive = true,
     };
 
@@ -720,6 +723,77 @@ public class ApiClientTest
                 CancellationToken.None
             )
         );
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_RootFolderWithStringAndNumericCounters_MapsEmptyAndNotEmptyAndOmitsUnlistedFolders()
+    {
+        // Arrange
+        var json = """
+            {"response":{"folder":{"folder_id":"560","name":"root","parent_folder_id":null,"nb_folders":4,"nb_files":0,"size_files":0,"created":1764100000,"folders":[{"folder_id":"561","name":"Empty.With.String.Counters_ArchiveId_1","parent_folder_id":"560","nb_folders":"0","nb_files":"0","size_files":"0","created":1764100001},{"folder_id":"562","name":"Empty.With.Numeric.Counters_ArchiveId_2","parent_folder_id":"560","nb_folders":0,"nb_files":0,"size_files":0,"created":1764100002},{"folder_id":"563","name":"Files.With.String.Counters_ArchiveId_3","parent_folder_id":"560","nb_folders":"0","nb_files":"2","size_files":"2048","created":1764100003},{"folder_id":"564","name":"Sub.Folder.With.Numeric.Counters_ArchiveId_4","parent_folder_id":"560","nb_folders":1,"nb_files":0,"size_files":0,"created":1764100004}]}},"status":200,"details":null}
+            """;
+
+        apiMock
+            .Setup(x => x.GetFolderInfoAsync("auth-token", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DeserializeResponse<FolderResponse>(json));
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config,
+            ["561", "562", "563", "564", "565"],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("561", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("562", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("563", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("564", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var json = """
+            {"response":{"result":{"success":0,"success_ids":[],"fail":1,"fail_ids":["Ge35"],"errors":["Folder with folder_id: 'Ge35' doesn't exist"]}},"status":200,"details":null}
+            """;
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("auth-token", "Ge35", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DeserializeResponse<DeleteFolderResponse>(json));
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "Ge35", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync("auth-token", "Ge35", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_ApiReportsFailedId_ThrowsWithErrors()
+    {
+        // Arrange
+        var json = """
+            {"response":{"result":{"success":0,"success_ids":[],"fail":1,"fail_ids":["564"],"errors":["Error: Folder not found"]}},"status":200,"details":null}
+            """;
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("auth-token", "564", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DeserializeResponse<DeleteFolderResponse>(json));
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync(config, "564", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("Error: Folder not found");
     }
 
     private string CreateTemporaryFilePath()

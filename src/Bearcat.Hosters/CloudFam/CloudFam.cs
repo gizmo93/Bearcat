@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.CloudFam;
 
 public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger)
-    : IHosterWithFolders,
+    : IHosterWithEmptyFolderCleanup,
         IHosterWithFileInfo
 {
     private const int MinimumFileIdLength = 8;
@@ -214,6 +214,32 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger)
         var config = hosterConfig.As<CloudFamConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<CloudFamConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<CloudFamConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

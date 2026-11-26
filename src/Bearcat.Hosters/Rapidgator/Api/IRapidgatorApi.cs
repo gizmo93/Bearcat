@@ -62,6 +62,13 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken
     );
 
+    [Post("/api/v2/folder/delete")]
+    Task<DeleteFolderResponse> DeleteFolderAsync(
+        [Query] string token,
+        [Query] [AliasAs("folder_id")] string folderId,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/v2/folder/content")]
     Task<ApiResponse<FolderContentResponse>> GetFolderContentAsync(
         [Query] string token,

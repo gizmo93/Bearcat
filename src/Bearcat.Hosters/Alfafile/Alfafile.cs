@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Alfafile;
 
 public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
-    : IHosterWithFolders,
+    : IHosterWithEmptyFolderCleanup,
         IHosterWithDownload,
         IHosterWithStorageQuota,
         IHosterWithFileInfo
@@ -221,6 +221,32 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
         var config = hosterConfig.As<AlfafileConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<AlfafileConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<AlfafileConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

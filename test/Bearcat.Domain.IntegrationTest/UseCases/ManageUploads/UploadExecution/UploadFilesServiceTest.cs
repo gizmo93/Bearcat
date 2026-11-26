@@ -332,7 +332,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         folderHosterMock
             .Setup(h =>
                 h.CreateFolderAsync(
-                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    $"Bearcat.Release.001_ReleaseId_{upload.UploadConfig.ReleaseId}",
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
                 )
@@ -381,7 +381,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         folderHosterMock.Verify(
             h =>
                 h.CreateFolderAsync(
-                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    $"Bearcat.Release.001_ReleaseId_{upload.UploadConfig.ReleaseId}",
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
                 ),
@@ -425,7 +425,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         folderHosterMock
             .Setup(h =>
                 h.CreateFolderAsync(
-                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    $"Bearcat.Release.001_ReleaseId_{upload.UploadConfig.ReleaseId}",
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
                 )
@@ -600,7 +600,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         folderHosterMock
             .Setup(h =>
                 h.CreateFolderAsync(
-                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    $"Bearcat.Release.001_ReleaseId_{upload.UploadConfig.ReleaseId}",
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
                 )

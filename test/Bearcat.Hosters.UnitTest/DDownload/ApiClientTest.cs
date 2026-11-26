@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.DDownload.Api;
 using Bearcat.Hosters.Shared;
@@ -68,6 +69,89 @@ public class ApiClientTest
             x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()),
             Times.Exactly(2)
         );
+    }
+
+    [TestCase(
+        """{"msg":"OK","result":{"files":[],"folders":[]},"status":200}""",
+        HosterFolderContentState.Empty
+    )]
+    [TestCase(
+        """{"msg":"OK","result":{"files":[{"file_code":"oejag2gpfcr0","fld_id":208401,"link":"https://ddownload.com/oejag2gpfcr0","name":"part01.rar","uploaded":"2026-11-20 10:00:00"},{"file_code":"ni6z27dyros2","fld_id":"208401","link":"https://ddownload.com/ni6z27dyros2","name":"part02.rar","uploaded":"2026-11-20 10:01:00"}],"folders":[]},"status":200}""",
+        HosterFolderContentState.NotEmpty
+    )]
+    [TestCase(
+        """{"msg":"OK","result":{"files":[],"folders":[{"code":null,"fld_id":1037117,"name":"sub-folder"}]},"status":200}""",
+        HosterFolderContentState.NotEmpty
+    )]
+    public async Task GetFolderContentStateAsync_FolderListResponse_MapsFilesAndSubFoldersToState(
+        string json,
+        HosterFolderContentState expectedState
+    )
+    {
+        // Arrange
+        apiMock
+            .As<IXFilesharingApi>()
+            .Setup(x => x.GetFolderListAsync("api-key", "208401", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                JsonSerializer.Deserialize<FolderListResponse>(json, JsonSerializerOptions)!
+            );
+
+        // Act
+        var result = await apiClient.GetFolderContentStateAsync(
+            apiKey: "api-key",
+            folderId: "208401",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(expectedState);
+    }
+
+    [TestCase(
+        """{"msg":"OK","result":{"deleted_folder":"name","files_moved_to_root":0,"subfolders_moved_to_parent":0},"status":200}"""
+    )]
+    [TestCase("""{"msg":"Folder not found","status":404}""")]
+    public async Task DeleteFolderAsync_SuccessOrFolderNotFound_ReturnsWithoutThrowing(string json)
+    {
+        // Arrange
+        apiMock
+            .As<IXFilesharingApi>()
+            .Setup(x => x.DeleteFolderAsync("api-key", "208401", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(JsonSerializer.Deserialize<StatusResponse>(json, JsonSerializerOptions)!);
+
+        // Act
+        await apiClient.DeleteFolderAsync("api-key", "208401", CancellationToken.None);
+
+        // Assert
+        apiMock
+            .As<IXFilesharingApi>()
+            .Verify(
+                x => x.DeleteFolderAsync("api-key", "208401", It.IsAny<CancellationToken>()),
+                Times.Once
+            );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_InvalidOperation_ThrowsWithMessage()
+    {
+        // Arrange
+        apiMock
+            .As<IXFilesharingApi>()
+            .Setup(x => x.DeleteFolderAsync("api-key", "208401", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                JsonSerializer.Deserialize<StatusResponse>(
+                    """{"msg":"Invalid operation","status":400}""",
+                    JsonSerializerOptions
+                )!
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync("api-key", "208401", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("Invalid operation");
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(T? content, HttpStatusCode statusCode)

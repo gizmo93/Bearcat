@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.FileFactory.Api.Requests;
@@ -143,20 +144,9 @@ public class ApiClient(
     )
     {
         var userId = await GetCurrentUserIdAsync(config, cancellationToken);
+        var folders = await GetFolderSelectOptionsAsync(config, userId, cancellationToken);
 
-        var folders = await SendConvexRequestAsync(
-            config: config,
-            request: new ConvexRequest<UserIdArguments>(
-                Path: "file_manager/folders:getFolderSelectOptions",
-                Arguments: new UserIdArguments(userId),
-                Format: ConvexResponseFormat
-            ),
-            sendRequestAsync: convexApi.QueryFolderSelectOptionsAsync,
-            isAuthTokenRejected: IsUnauthorized,
-            cancellationToken: cancellationToken
-        );
-
-        var existingRootFolder = folders!.FirstOrDefault(folder =>
+        var existingRootFolder = folders.FirstOrDefault(folder =>
             folder.Level == RootFolderLevel && folder.Name == folderName
         );
 
@@ -206,6 +196,112 @@ public class ApiClient(
             isAuthTokenRejected: IsUnauthorized,
             cancellationToken: cancellationToken
         );
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        FileFactoryConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var userId = await GetCurrentUserIdAsync(config, cancellationToken);
+        var folders = await GetFolderSelectOptionsAsync(config, userId, cancellationToken);
+
+        if (folders.Any(folder => folder.Level != RootFolderLevel))
+        {
+            logger.LogWarning(
+                "Skipped the empty folder check on FileFactory because the account contains subfolders and the folder list does not tell which folder they belong to"
+            );
+
+            return [];
+        }
+
+        var listedFolderIds = folders.Select(folder => folder.Id).ToHashSet();
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var folderId in folderIds.Where(listedFolderIds.Contains))
+        {
+            try
+            {
+                var filePage = await SendConvexRequestAsync(
+                    config: config,
+                    request: new ConvexRequest<ListFilesArguments>(
+                        Path: "file_manager/files:listFiles",
+                        Arguments: new ListFilesArguments(
+                            UserId: userId,
+                            FolderId: folderId,
+                            PaginationOptions: new PaginationOptions(NumItems: 1, Cursor: null)
+                        ),
+                        Format: ConvexResponseFormat
+                    ),
+                    sendRequestAsync: convexApi.QueryFilesAsync,
+                    isAuthTokenRejected: IsUnauthorized,
+                    cancellationToken: cancellationToken
+                );
+
+                var folderContentState =
+                    filePage!.Page.Count == 0 && filePage.IsDone
+                        ? HosterFolderContentState.Empty
+                        : HosterFolderContentState.NotEmpty;
+
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, folderContentState)
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to get the content state of folder {FolderId} on FileFactory",
+                    folderId
+                );
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        FileFactoryConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        await SendConvexRequestAsync(
+            config: config,
+            request: new ConvexRequest<FolderIdArguments>(
+                Path: "file_manager/folders:softDeleteFolder",
+                Arguments: new FolderIdArguments(folderId),
+                Format: ConvexResponseFormat
+            ),
+            sendRequestAsync: convexApi.SoftDeleteFolderAsync,
+            isAuthTokenRejected: IsUnauthorized,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<List<FolderSelectOptionResponse>> GetFolderSelectOptionsAsync(
+        FileFactoryConfig config,
+        string userId,
+        CancellationToken cancellationToken
+    )
+    {
+        var folders = await SendConvexRequestAsync(
+            config: config,
+            request: new ConvexRequest<UserIdArguments>(
+                Path: "file_manager/folders:getFolderSelectOptions",
+                Arguments: new UserIdArguments(userId),
+                Format: ConvexResponseFormat
+            ),
+            sendRequestAsync: convexApi.QueryFolderSelectOptionsAsync,
+            isAuthTokenRejected: IsUnauthorized,
+            cancellationToken: cancellationToken
+        );
+
+        return folders!;
     }
 
     private async Task<string> GetCurrentUserIdAsync(

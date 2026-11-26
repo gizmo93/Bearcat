@@ -13,6 +13,8 @@ public class FolderListResponse
 
     public string? Message { get; init; }
 
+    public int Files { get; init; }
+
     [JsonPropertyName("sub_folders")]
     public IReadOnlyList<Folder> SubFolders { get; init; } = [];
 

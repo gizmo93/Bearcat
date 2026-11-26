@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Fichier;
 
 public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
-    : IHosterWithFolders,
+    : IHosterWithEmptyFolderCleanup,
         IHosterWithDownload,
         IHosterWithFileInfo
 {
@@ -283,6 +283,32 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
         var config = hosterConfig.As<FichierConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<FichierConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<FichierConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

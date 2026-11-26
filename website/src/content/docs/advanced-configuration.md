@@ -34,6 +34,7 @@ All tasks are enabled by default.
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
 | Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
+| Empty hoster folder cleanup | At startup, then daily | Deletes [empty hoster folders](/account-settings/#delete-empty-folders) for accounts with **Delete empty folders automatically** enabled. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
 | SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. Also compacts the database file (`VACUUM`) when at least 20 % of it is unused, for example after deleting many releases. Writes wait while this runs. |
 

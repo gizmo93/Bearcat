@@ -24,6 +24,10 @@ public class ApiClient(
 
     private const int MaxParallelLinkChecks = 5;
 
+    private const string FolderEntryNotFoundMessage = "No query results for model";
+
+    private const string VerifiedCompletionStatus = "verified";
+
     public TimeSpan FastApiRequestTimeout { get; set; } = TimeSpan.FromMinutes(2);
 
     public async Task<UploadFileResponse> UploadFileAsync(
@@ -43,6 +47,7 @@ public class ApiClient(
             fileName: fileName,
             extension: extension,
             fileSize: fileSize,
+            folderId: folderId,
             cancellationToken: cancellationToken
         );
 
@@ -77,6 +82,7 @@ public class ApiClient(
         string fileName,
         string extension,
         long fileSize,
+        string? folderId,
         CancellationToken cancellationToken
     )
     {
@@ -86,10 +92,11 @@ public class ApiClient(
                 api.CreateMultipartUploadAsync(
                     authorization: authorization,
                     request: new MultipartCreateRequest(
-                        Filename: Path.GetFileNameWithoutExtension(fileName),
+                        Filename: Path.GetFileName(fileName),
                         Mime: "application/octet-stream",
                         Size: fileSize,
-                        Extension: extension
+                        Extension: extension,
+                        ParentId: TryParseId(folderId)
                     ),
                     cancellationToken: token
                 ),
@@ -100,7 +107,7 @@ public class ApiClient(
             !IsSuccess(response.Status)
             || string.IsNullOrWhiteSpace(response.Key)
             || string.IsNullOrWhiteSpace(response.UploadId)
-            || string.IsNullOrWhiteSpace(response.StorageBucket)
+            || string.IsNullOrWhiteSpace(response.UploadToken)
         )
         {
             throw new HttpRequestException("UploadG multipart upload creation failed");
@@ -109,7 +116,7 @@ public class ApiClient(
         return new MultipartUpload(
             Key: response.Key,
             UploadId: response.UploadId,
-            StorageBucket: response.StorageBucket
+            UploadToken: response.UploadToken
         );
     }
 
@@ -128,7 +135,7 @@ public class ApiClient(
                     request: new MultipartCompleteRequest(
                         Key: multipartUpload.Key,
                         UploadId: multipartUpload.UploadId,
-                        StorageBucket: multipartUpload.StorageBucket,
+                        UploadToken: multipartUpload.UploadToken,
                         Parts: parts
                     ),
                     cancellationToken: token
@@ -136,9 +143,18 @@ public class ApiClient(
             cancellationToken: cancellationToken
         );
 
-        if (!IsSuccess(response.Status))
+        if (
+            !IsSuccess(response.Status)
+            && !string.Equals(
+                response.Status,
+                VerifiedCompletionStatus,
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
         {
-            throw new HttpRequestException("UploadG multipart upload completion failed");
+            throw new HttpRequestException(
+                $"UploadG multipart upload completion failed with status {response.Status}: {response.Message}"
+            );
         }
     }
 
@@ -164,7 +180,9 @@ public class ApiClient(
                         Filename: multipartUpload.Key.Split('/').Last(),
                         Size: fileSize,
                         ParentId: TryParseId(folderId),
-                        StorageBucket: multipartUpload.StorageBucket
+                        Key: multipartUpload.Key,
+                        UploadId: multipartUpload.UploadId,
+                        UploadToken: multipartUpload.UploadToken
                     ),
                     cancellationToken: token
                 ),
@@ -216,6 +234,98 @@ public class ApiClient(
         }
 
         return response.Folder.Id.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        UploadGConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var folderId in folderIds)
+        {
+            try
+            {
+                var response = await ExecuteFastApiRequestAsync(
+                    operationName: "folder entry list",
+                    action: token =>
+                        api.ListFolderEntriesAsync(
+                            authorization: authorization,
+                            section: "folder",
+                            folderId: folderId,
+                            page: 1,
+                            perPage: 1,
+                            cancellationToken: token
+                        ),
+                    cancellationToken: cancellationToken
+                );
+
+                var folderContentState =
+                    response.Total == 0
+                        ? HosterFolderContentState.Empty
+                        : HosterFolderContentState.NotEmpty;
+
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, folderContentState)
+                );
+            }
+            catch (HttpRequestException exception)
+                when (exception.StatusCode == HttpStatusCode.NotFound
+                    && exception.Message.Contains(
+                        FolderEntryNotFoundMessage,
+                        StringComparison.Ordinal
+                    )
+                )
+            {
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, HosterFolderContentState.NotFound)
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to get the content state of folder {FolderId} on UploadG",
+                    folderId
+                );
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        UploadGConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await ExecuteFastApiRequestAsync(
+            operationName: "folder deletion",
+            action: token =>
+                api.DeleteEntriesAsync(
+                    authorization: GetAuthorizationHeader(config.ApiKey),
+                    request: new DeleteEntriesRequest(
+                        EntryIds: [long.Parse(folderId, CultureInfo.InvariantCulture)],
+                        DeleteForever: false
+                    ),
+                    cancellationToken: token
+                ),
+            cancellationToken: cancellationToken
+        );
+
+        if (!IsSuccess(response.Status))
+        {
+            throw new HttpRequestException(
+                $"UploadG folder deletion failed with status {response.Status}"
+            );
+        }
     }
 
     public async Task MoveFileToFolderAsync(
@@ -374,7 +484,7 @@ public class ApiClient(
                             PartNumbers: [partNumber],
                             UploadId: multipartUpload.UploadId,
                             Key: multipartUpload.Key,
-                            StorageBucket: multipartUpload.StorageBucket
+                            UploadToken: multipartUpload.UploadToken
                         ),
                         cancellationToken: token
                     ),
@@ -583,6 +693,14 @@ public class ApiClient(
         {
             throw CreateApiKeyRejectedException(exception.Content);
         }
+        catch (ApiException exception) when (TryReadErrorMessage(exception.Content) is { } message)
+        {
+            throw new HttpRequestException(
+                $"UploadG {operationName} failed with status code {(int)exception.StatusCode}: {message}",
+                exception,
+                exception.StatusCode
+            );
+        }
         catch (OperationCanceledException)
             when (timeoutCancellationTokenSource.IsCancellationRequested
                 && !cancellationToken.IsCancellationRequested
@@ -668,7 +786,7 @@ public class ApiClient(
         return string.Equals(status, "success", StringComparison.OrdinalIgnoreCase);
     }
 
-    private sealed record MultipartUpload(string Key, string UploadId, string StorageBucket);
+    private sealed record MultipartUpload(string Key, string UploadId, string UploadToken);
 
     private sealed class StreamPartContent(Stream source, long length) : HttpContent
     {

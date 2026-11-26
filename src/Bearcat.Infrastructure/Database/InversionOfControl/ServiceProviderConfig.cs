@@ -243,6 +243,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IArchiveRestoreRepository, ArchiveRestoreRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
+            services.AddScoped<
+                IEmptyHosterFolderCleanupRepository,
+                EmptyHosterFolderCleanupRepository
+            >();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
             services.AddScoped<ITelegramConfigurationRepository, TelegramConfigurationRepository>();

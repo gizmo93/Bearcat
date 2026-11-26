@@ -426,6 +426,38 @@ public class DDownloadTest
         result.ErrorMessage.ShouldBe("login failed");
     }
 
+    [Test]
+    public async Task GetFolderContentStatesAsync_OneFolderRequestFails_OmitsFolderAndReturnsOthers()
+    {
+        // Arrange
+        var config = new DDownloadConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x => x.GetFolderContentStateAsync("api-key", "1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(HosterFolderContentState.Empty);
+
+        apiClientMock
+            .Setup(x => x.GetFolderContentStateAsync("api-key", "2", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("folder list failed"));
+
+        apiClientMock
+            .Setup(x => x.GetFolderContentStateAsync("api-key", "3", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(HosterFolderContentState.NotEmpty);
+
+        // Act
+        var result = await service.GetFolderContentStatesAsync(
+            folderIds: ["1", "2", "3"],
+            hosterConfig: config,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("1", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("3", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
     private string CreateTemporaryFile(string content)
     {
         var filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.bin");

@@ -97,6 +97,24 @@ Das [globale Limit für die Uploadgeschwindigkeit](/de/advanced-configuration/#p
 gilt zusätzlich. Uploads müssen beide Limits einhalten. Die Spalte **Parallele Uploads** zeigt
 das konfigurierte Limit an.
 
+## Leere Ordner löschen
+
+Unter **Neuer Hoster** und **Bearbeiten** ist **Leere Ordner automatisch löschen** standardmässig aktiv.
+Bearcat löscht nur selbst angelegte Ordner ohne Dateien oder Unterordner. Steht für das Release ein
+Upload an oder läuft er bereits, bleibt der Ordner bestehen. Das gilt auch für Ordner, die frühere
+Versionen pro Upload angelegt haben.
+
+Bei Hostern mit Ordnerfunktion verwendet Bearcat pro Release denselben Ordner für Uploads und Reuploads.
+Bei einem vollständigen Reupload können dort alte und neue Dateien mit demselben Namen liegen.
+Einen gelöschten Releaseordner legt Bearcat beim nächsten Upload neu an.
+
+[Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben) läuft beim
+Start und danach täglich. Pro Lauf prüft die Aufgabe bis zu 200 Ordner pro Konto.
+
+Die Option ist für Rapidgator, Alfafile, DDownload, FileQ, Turbobit, Hitfile, 1fichier, KrakenFiles,
+CloudFam.io, UploadG.com, Filer.net und FileFactory verfügbar. Bei UploadG.com landen gelöschte Ordner
+im Papierkorb. Bei FileFactory überspringt Bearcat Konten mit Unterordnern.
+
 ## Einen Proxy verwenden
 
 Unter [Proxyserver](/de/proxy-servers/) richtest du HTTP- oder SOCKS5-Proxys für Uploads und

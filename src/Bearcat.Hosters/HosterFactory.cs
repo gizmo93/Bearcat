@@ -26,7 +26,8 @@ public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
                 DefaultMaximumParallelUploads: h.DefaultMaximumParallelUploads,
                 SupportsDownload: h is IHosterWithDownload,
                 DownloadRequiresPremium: (h as IHosterWithDownload)?.DownloadRequiresPremium
-                    ?? false
+                    ?? false,
+                SupportsEmptyFolderCleanup: h is IHosterWithEmptyFolderCleanup
             ))
             .OrderBy(hoster => hoster.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();

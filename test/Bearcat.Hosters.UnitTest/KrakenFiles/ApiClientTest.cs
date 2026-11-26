@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.KrakenFiles;
 using Bearcat.Hosters.KrakenFiles.Api;
@@ -270,6 +271,138 @@ public class ApiClientTest
         // Assert
         result[fileUrl].IsOnline.ShouldBeTrue();
         result[fileUrl].DownloadCount.ShouldBe(23);
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FoldersWithFilesAndSubFolder_MapsStatesAndOmitsFailedAndUnlistedFolders()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x => x.ListFoldersAsync("api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Data =
+                    [
+                        new FolderData { Id = "empty-folder-id", Name = "Empty.Release" },
+                        new FolderData { Id = "files-folder-id", Name = "Files.Release" },
+                        new FolderData { Id = "parent-folder-id", Name = "Parent.Release" },
+                        new FolderData
+                        {
+                            Id = "child-folder-id",
+                            Name = "Child",
+                            ParentId = "parent-folder-id",
+                        },
+                        new FolderData { Id = "failing-folder-id", Name = "Failing.Release" },
+                    ],
+                }
+            );
+
+        SetupFolderFileList("empty-folder-id", totalItems: 0);
+        SetupFolderFileList("files-folder-id", totalItems: 4);
+
+        apiMock
+            .Setup(x =>
+                x.ListFilesAsync(
+                    "api-key",
+                    "failing-folder-id",
+                    1,
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("network down"));
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds:
+            [
+                "empty-folder-id",
+                "files-folder-id",
+                "parent-folder-id",
+                "failing-folder-id",
+                "unlisted-folder-id",
+            ],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("empty-folder-id", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("files-folder-id", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("parent-folder-id", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("folder-id", "api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+                    HttpStatusCode.NotFound,
+                    """{"status":404,"data":{"message":"Folder with folderId not found"}}"""
+                )
+            );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "folder-id", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync("folder-id", "api-key", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_OtherNotFoundResponse_Throws()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("folder-id", "api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+                    HttpStatusCode.NotFound,
+                    "<html>Not Found</html>"
+                )
+            );
+
+        // Act
+        var deleteFolderAsync = () =>
+            apiClient.DeleteFolderAsync(config, "folder-id", CancellationToken.None);
+
+        // Assert
+        await Should.ThrowAsync<HttpRequestException>(deleteFolderAsync);
+    }
+
+    private void SetupFolderFileList(string folderId, int totalItems)
+    {
+        apiMock
+            .Setup(x => x.ListFilesAsync("api-key", folderId, 1, 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new ListFilesResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Page = 1,
+                        PerPage = 1,
+                        TotalItems = totalItems,
+                        Data = [],
+                    }
+                )
+            );
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(

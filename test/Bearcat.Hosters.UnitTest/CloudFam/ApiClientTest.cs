@@ -569,6 +569,112 @@ public class ApiClientTest
         result.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderListWithFilesAndSubFolder_MapsStatesAndOmitsUnlistedFolders()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.ListFoldersAsync(ApiKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateEnvelope(
+                    new FolderListResponse(
+                        [
+                            new FolderResponse(
+                                2036,
+                                "Empty.Release",
+                                ParentId: null,
+                                TotalFiles: 0
+                            ),
+                            new FolderResponse(
+                                2037,
+                                "Files.Release",
+                                ParentId: null,
+                                TotalFiles: 2
+                            ),
+                            new FolderResponse(
+                                2038,
+                                "Parent.Release",
+                                ParentId: null,
+                                TotalFiles: 0
+                            ),
+                            new FolderResponse(2039, "Child", ParentId: 2038, TotalFiles: 0),
+                        ],
+                        RootFiles: 0
+                    )
+                )
+            );
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["2036", "2037", "2038", "2040"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("2036", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("2037", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("2038", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.DeleteFolderAsync(
+                    ApiKey,
+                    It.Is<DeleteFolderRequest>(request =>
+                        request.FolderId == 2036 && request.ActionOnFiles == "move_to_root"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                await CreateErrorResponseAsync<DeleteFolderResponse>(
+                    HttpStatusCode.NotFound,
+                    """{"success": false, "error": {"code": 404, "message": "Folder not found."}}"""
+                )
+            );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "2036", CancellationToken.None);
+
+        // Assert
+        apiMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_NotFoundWithOtherMessage_Throws()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.DeleteFolderAsync(
+                    ApiKey,
+                    It.IsAny<DeleteFolderRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                await CreateErrorResponseAsync<DeleteFolderResponse>(
+                    HttpStatusCode.NotFound,
+                    """{"success": false, "error": {"code": 404, "message": "Endpoint not found."}}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync(config, "2036", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("Endpoint not found.");
+    }
+
     [TestCase("https://cloudfam.io/" + FileCode, FileCode)]
     [TestCase("https://cloudfam.io/" + FileCode + ".html", FileCode)]
     [TestCase("https://cloudfam.io/", null)]
@@ -677,7 +783,15 @@ public class ApiClientTest
         );
     }
 
-    private static async Task<ApiResponse<CloudFamResponse<T>>> CreateErrorEnvelopeAsync<T>(
+    private static Task<ApiResponse<CloudFamResponse<T>>> CreateErrorEnvelopeAsync<T>(
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        return CreateErrorResponseAsync<CloudFamResponse<T>>(statusCode, content);
+    }
+
+    private static async Task<ApiResponse<T>> CreateErrorResponseAsync<T>(
         HttpStatusCode statusCode,
         string content
     )
@@ -691,7 +805,7 @@ public class ApiClientTest
         var settings = new RefitSettings();
         var error = await ApiException.Create(request, HttpMethod.Post, response, settings);
 
-        return new ApiResponse<CloudFamResponse<T>>(response, default!, settings, error);
+        return new ApiResponse<T>(response, default, settings, error);
     }
 
     private static ApiResponse<T> CreateRawResponse<T>(T content)

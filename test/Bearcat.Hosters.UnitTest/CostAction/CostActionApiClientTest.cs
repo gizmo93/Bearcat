@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
@@ -34,6 +36,15 @@ public class CostActionApiClientTest
 
     private const string RateLimitContent =
         """{"x-ratelimit-limit":60,"x-ratelimit-remaining":0,"retry-after":9,"message":"Too many attempts","status":"error"}""";
+
+    private const string EmptyFolderChildrenJson =
+        """{"current_page":1,"per_page":50,"last_page":0,"total":0,"data":[],"status":"success"}""";
+
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        PropertyNameCaseInsensitive = true,
+    };
 
     private Mock<ICostActionApi> apiMock = null!;
     private Mock<IHttpClientFactory> httpClientFactoryMock = null!;
@@ -237,9 +248,10 @@ public class CostActionApiClientTest
                     ApiKey,
                     "download_count",
                     100,
+                    null,
                     It.Is<FilesInfoRequest>(request =>
                         request.AppType == AppType
-                        && request.FileIds.SequenceEqual(ExpectedFileIdsOnlineDeletedMissing)
+                        && request.FileIds!.SequenceEqual(ExpectedFileIdsOnlineDeletedMissing)
                     ),
                     It.IsAny<CancellationToken>()
                 )
@@ -295,6 +307,7 @@ public class CostActionApiClientTest
                     ApiKey,
                     It.IsAny<string>(),
                     It.IsAny<int>(),
+                    It.IsAny<int?>(),
                     It.IsAny<FilesInfoRequest>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -324,6 +337,7 @@ public class CostActionApiClientTest
                     ApiKey,
                     It.IsAny<string>(),
                     It.IsAny<int>(),
+                    It.IsAny<int?>(),
                     It.IsAny<FilesInfoRequest>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -514,9 +528,10 @@ public class CostActionApiClientTest
                     ApiKey,
                     "download_count",
                     100,
+                    null,
                     It.Is<FilesInfoRequest>(request =>
                         request.AppType == AppType
-                        && request.FileIds.SequenceEqual(ExpectedFileIdsOnlineDeletedMissing)
+                        && request.FileIds!.SequenceEqual(ExpectedFileIdsOnlineDeletedMissing)
                     ),
                     It.IsAny<CancellationToken>()
                 )
@@ -561,6 +576,192 @@ public class CostActionApiClientTest
         result["deleted"]
             .ShouldBe(new HostedFileInfo(IsOnline: false, FileName: null, SizeBytes: null));
         result.ShouldNotContainKey("missing");
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_FilesSubFoldersAndFailingChildrenRequest_MapsStatesAndOmitsFailedFolder()
+    {
+        // Arrange
+        SetupFolderFiles(
+            folderIds: ["2481601", "2479856", "2481700", "2481800"],
+            page: 1,
+            json: """{"files":[{"id":"1nmxu832k509","name":"x.part33.rar","created_date":"2026-09-23 11:57:00","size_in_bytes":106954756,"is_deleted":true,"delete_date":"2026-10-23 13:26:31","delete_reason":"lifetime","folder_id":2479856},{"id":"2kd8wq01mz77","name":"y.part01.rar","created_date":"2026-11-20 09:00:00","size_in_bytes":104857600,"is_deleted":false,"folder_id":2481601}],"current_page":1,"per_page":100,"last_page":1,"total":2,"status":"success"}"""
+        );
+        SetupFolderChildren("2479856", EmptyFolderChildrenJson);
+        SetupFolderChildren(
+            "2481700",
+            """{"current_page":1,"per_page":50,"last_page":1,"total":1,"data":[{"id":2481701,"name":"sub-folder"}],"status":"success"}"""
+        );
+
+        var serverError = await CreateErrorResponseAsync<FolderChildrenResponse>(
+            HttpStatusCode.InternalServerError,
+            """{"message":"Server Error","status":"error"}"""
+        );
+
+        apiMock
+            .Setup(x => x.GetFolderChildrenAsync(ApiKey, "2481800", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(serverError);
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            apiKey: ApiKey,
+            appType: AppType,
+            folderIds: ["2481601", "2479856", "2481700", "2481800"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("2481601", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("2479856", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("2481700", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_NotDeletedFileOnLaterPage_PagesToEndAndReturnsNotEmpty()
+    {
+        // Arrange
+        SetupFolderFiles(
+            folderIds: ["2481601", "2479856"],
+            page: 1,
+            json: """{"files":[{"id":"1nmxu832k509","name":"x.part33.rar","created_date":"2026-09-23 11:57:00","size_in_bytes":106954756,"is_deleted":true,"delete_date":"2026-10-23 13:26:31","delete_reason":"lifetime","folder_id":2481601}],"current_page":1,"per_page":100,"last_page":2,"total":2,"status":"success"}"""
+        );
+        SetupFolderFiles(
+            folderIds: ["2481601", "2479856"],
+            page: 2,
+            json: """{"files":[{"id":"2kd8wq01mz77","name":"x.part34.rar","created_date":"2026-11-20 09:00:00","size_in_bytes":104857600,"is_deleted":false,"folder_id":2481601}],"current_page":2,"per_page":100,"last_page":2,"total":2,"status":"success"}"""
+        );
+        SetupFolderChildren("2479856", EmptyFolderChildrenJson);
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            apiKey: ApiKey,
+            appType: AppType,
+            folderIds: ["2481601", "2479856"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("2481601", HosterFolderContentState.NotEmpty),
+            new HosterFolderContentStateDto("2479856", HosterFolderContentState.Empty),
+        ]);
+    }
+
+    [Test]
+    public void FilesInfoRequest_FolderIdsOnly_SerializesWithoutFileIds()
+    {
+        // Arrange
+        var request = new FilesInfoRequest(
+            AppType: AppType,
+            FileIds: null,
+            FolderIds: ["2481601", "2479856"]
+        );
+
+        // Act
+        var json = JsonSerializer.Serialize(request);
+
+        // Assert
+        json.ShouldBe("""{"apptype":"fd1","folders_ids":["2481601","2479856"]}""");
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_Success_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.DeleteFolderAsync(ApiKey, "2479856", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateResponse(new FolderDeleteResponse("success", null)));
+
+        // Act
+        await apiClient.DeleteFolderAsync(ApiKey, "2479856", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync(ApiKey, "2479856", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_FolderNotFound_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var notFound = await CreateErrorResponseAsync<FolderDeleteResponse>(
+            HttpStatusCode.NotFound,
+            """{"status":"error","message":"Folder not found or wrong ID","errors":[]}"""
+        );
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync(ApiKey, "2479856", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(notFound);
+
+        // Act
+        await apiClient.DeleteFolderAsync(ApiKey, "2479856", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync(ApiKey, "2479856", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_ServerError_ThrowsHttpRequestException()
+    {
+        // Arrange
+        var serverError = await CreateErrorResponseAsync<FolderDeleteResponse>(
+            HttpStatusCode.InternalServerError,
+            """{"message":"Server Error","status":"error"}"""
+        );
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync(ApiKey, "2479856", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(serverError);
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DeleteFolderAsync(ApiKey, "2479856", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("Server Error");
+    }
+
+    private void SetupFolderFiles(IReadOnlyList<string> folderIds, int page, string json)
+    {
+        apiMock
+            .Setup(x =>
+                x.GetFilesInfoAsync(
+                    ApiKey,
+                    "folder_id",
+                    100,
+                    page,
+                    It.Is<FilesInfoRequest>(request =>
+                        request.AppType == AppType
+                        && request.FileIds == null
+                        && request.FolderIds!.SequenceEqual(folderIds)
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateResponse(
+                    JsonSerializer.Deserialize<FilesInfoResponse>(json, JsonSerializerOptions)!
+                )
+            );
+    }
+
+    private void SetupFolderChildren(string folderId, string json)
+    {
+        apiMock
+            .Setup(x => x.GetFolderChildrenAsync(ApiKey, folderId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateResponse(
+                    JsonSerializer.Deserialize<FolderChildrenResponse>(json, JsonSerializerOptions)!
+                )
+            );
     }
 
     private void SetupUploadUrl()

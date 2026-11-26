@@ -93,6 +93,24 @@ for this account. Decimal values such as `0.5` or `0,5` are allowed. Leave it em
 The [global speed limit](/advanced-configuration/#upload-concurrency) also applies.
 Uploads must stay within both limits. The **Parallel uploads** column shows the account's limit.
 
+## Delete empty folders
+
+**Delete empty folders automatically** is on by default in **New hoster** and **Edit**.
+Bearcat only deletes folders it created that contain no files or subfolders. It keeps the folder if
+an upload for the release is pending or running. The same rules apply to folders that earlier versions
+created for individual uploads.
+
+On hosters that support folders, Bearcat uses the same folder for a release's uploads and reuploads.
+A full reupload can leave old and new files with the same names in that folder. Bearcat recreates a
+deleted release folder on the next upload.
+
+[Empty hoster folder cleanup](/advanced-configuration/#available-background-tasks) runs at startup
+and then daily. Each run checks up to 200 folders per account.
+
+The option is available for Rapidgator, Alfafile, DDownload, FileQ, Turbobit, Hitfile, 1fichier,
+KrakenFiles, CloudFam.io, UploadG.com, Filer.net, and FileFactory. On UploadG.com, deleted folders go
+to the trash. On FileFactory, Bearcat skips accounts with subfolders.
+
 ## Use a proxy
 
 See [Proxy Servers](/proxy-servers/) to set up HTTP or SOCKS5 proxies for uploads and mirror

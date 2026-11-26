@@ -30,6 +30,10 @@ public class ApiClient(
 
     private const int FinalizationRecoveryAttempts = 10;
 
+    private const string MoveFilesToRootAction = "move_to_root";
+
+    private const string FolderNotFoundMessage = "Folder not found.";
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
@@ -116,6 +120,76 @@ public class ApiClient(
         );
 
         return created.FolderId.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        CloudFamConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var folders =
+            ReadContent(
+                await api.ListFoldersAsync(config.ApiKey, cancellationToken),
+                "CloudFam folder list"
+            ).Folders
+            ?? [];
+
+        var folderPerId = folders.ToDictionary(folder =>
+            folder.Id.ToString(CultureInfo.InvariantCulture)
+        );
+
+        var parentFolderIds = folders
+            .Where(folder => folder.ParentId is not null)
+            .Select(folder => folder.ParentId!.Value.ToString(CultureInfo.InvariantCulture))
+            .ToHashSet();
+
+        return folderIds
+            .Where(folderPerId.ContainsKey)
+            .Select(folderId => new HosterFolderContentStateDto(
+                folderId,
+                folderPerId[folderId].TotalFiles == 0 && !parentFolderIds.Contains(folderId)
+                    ? HosterFolderContentState.Empty
+                    : HosterFolderContentState.NotEmpty
+            ))
+            .ToList();
+    }
+
+    public async Task DeleteFolderAsync(
+        CloudFamConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.DeleteFolderAsync(
+            apiKey: config.ApiKey,
+            request: new DeleteFolderRequest(
+                FolderId: long.Parse(folderId, CultureInfo.InvariantCulture),
+                ActionOnFiles: MoveFilesToRootAction
+            ),
+            cancellationToken: cancellationToken
+        );
+
+        if (response is { IsSuccessStatusCode: true, Content.Success: true })
+        {
+            return;
+        }
+
+        if (
+            response.StatusCode == HttpStatusCode.NotFound
+            && TryDeserializeErrorResponse(response)?.Error?.Message == FolderNotFoundMessage
+        )
+        {
+            return;
+        }
+
+        ThrowIfApiKeyRejected(response);
+
+        throw new HttpRequestException(
+            $"CloudFam folder deletion failed with status code {response.StatusCode}: {response.Content?.Message ?? GetErrorMessage(response)}",
+            inner: null,
+            statusCode: response.StatusCode
+        );
     }
 
     public async Task MoveFileToFolderAsync(

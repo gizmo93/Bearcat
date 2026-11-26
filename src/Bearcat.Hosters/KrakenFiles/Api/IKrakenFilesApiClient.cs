@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 
@@ -39,4 +40,16 @@ public interface IKrakenFilesApiClient
     );
 
     Task EnsureApiKeyAcceptedAsync(KrakenFilesConfig config, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        KrakenFilesConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        KrakenFilesConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }

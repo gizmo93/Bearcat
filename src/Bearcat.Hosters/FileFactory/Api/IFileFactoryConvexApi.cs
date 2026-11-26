@@ -35,4 +35,18 @@ public interface IFileFactoryConvexApi
         [Body] ConvexRequest<MoveFilesArguments> request,
         CancellationToken cancellationToken
     );
+
+    [Post("/api/query")]
+    Task<ApiResponse<ConvexResponse<FilePageResponse>>> QueryFilesAsync(
+        [Authorize("Bearer")] string token,
+        [Body] ConvexRequest<ListFilesArguments> request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/api/mutation")]
+    Task<ApiResponse<ConvexResponse<object>>> SoftDeleteFolderAsync(
+        [Authorize("Bearer")] string token,
+        [Body] ConvexRequest<FolderIdArguments> request,
+        CancellationToken cancellationToken
+    );
 }

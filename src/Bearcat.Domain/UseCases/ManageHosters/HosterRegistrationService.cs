@@ -33,6 +33,7 @@ public class HosterRegistrationService(
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         bool alwaysReuploadAllFiles = false,
+        bool deleteEmptyFolders = true,
         bool useForMirrorDownloads = false,
         int mirrorPriority = 100,
         decimal? mirrorDownloadSpeedLimitMegabytesPerSecond = null,
@@ -63,6 +64,7 @@ public class HosterRegistrationService(
             NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride,
             ReuploadTriggerOverride = reuploadTriggerOverride,
             AlwaysReuploadAllFiles = alwaysReuploadAllFiles,
+            DeleteEmptyFolders = deleteEmptyFolders,
             UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload,
             MirrorPriority = mirrorPriority,
             MirrorDownloadSpeedLimitMegabytesPerSecond = GetEffectiveMirrorDownloadSpeedLimit(
@@ -144,6 +146,7 @@ public class HosterRegistrationService(
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         bool alwaysReuploadAllFiles = false,
+        bool deleteEmptyFolders = true,
         bool useForMirrorDownloads = false,
         int mirrorPriority = 100,
         decimal? mirrorDownloadSpeedLimitMegabytesPerSecond = null,
@@ -176,6 +179,7 @@ public class HosterRegistrationService(
         registration.NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride;
         registration.ReuploadTriggerOverride = reuploadTriggerOverride;
         registration.AlwaysReuploadAllFiles = alwaysReuploadAllFiles;
+        registration.DeleteEmptyFolders = deleteEmptyFolders;
         registration.UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload;
         registration.MirrorPriority = mirrorPriority;
         registration.MirrorDownloadSpeedLimitMegabytesPerSecond =

@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
@@ -25,7 +26,11 @@ public class CostActionApiClient(
 
     private const string DownloadCountProperty = "download_count";
 
+    private const string FolderIdProperty = "folder_id";
+
     private const int MaxFileIdsPerRequest = 100;
+
+    private const int MaxFolderIdsPerRequest = 50;
 
     private const int RateLimitAttempts = 5;
 
@@ -108,6 +113,7 @@ public class CostActionApiClient(
                         apiKey,
                         DownloadCountProperty,
                         MaxFileIdsPerRequest,
+                        null,
                         new FilesInfoRequest(appType, chunk),
                         cancellationToken
                     ),
@@ -148,6 +154,7 @@ public class CostActionApiClient(
                         apiKey: apiKey,
                         properties: DownloadCountProperty,
                         perPage: MaxFileIdsPerRequest,
+                        page: null,
                         request: new FilesInfoRequest(appType, chunk),
                         cancellationToken: cancellationToken
                     ),
@@ -270,6 +277,109 @@ public class CostActionApiClient(
         }
     }
 
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        string apiKey,
+        string appType,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var chunk in folderIds.Chunk(MaxFolderIdsPerRequest))
+        {
+            HashSet<string> folderIdsWithOnlineFiles;
+
+            try
+            {
+                folderIdsWithOnlineFiles = await GetFolderIdsWithOnlineFilesAsync(
+                    apiKey: apiKey,
+                    appType: appType,
+                    folderIds: chunk,
+                    cancellationToken: cancellationToken
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to query the files of {FolderCount} CostAction folders for {AppType}",
+                    chunk.Length,
+                    appType
+                );
+
+                continue;
+            }
+
+            foreach (var folderId in chunk)
+            {
+                if (folderIdsWithOnlineFiles.Contains(folderId))
+                {
+                    folderContentStates.Add(
+                        new HosterFolderContentStateDto(folderId, HosterFolderContentState.NotEmpty)
+                    );
+
+                    continue;
+                }
+
+                try
+                {
+                    var children = await SendAsync(
+                        request: () =>
+                            api.GetFolderChildrenAsync(apiKey, folderId, cancellationToken),
+                        operationName: "Folder children request",
+                        cancellationToken: cancellationToken
+                    );
+
+                    var folderContentState =
+                        children.Total > 0 || children.Data is { Count: > 0 }
+                            ? HosterFolderContentState.NotEmpty
+                            : HosterFolderContentState.Empty;
+
+                    folderContentStates.Add(
+                        new HosterFolderContentStateDto(folderId, folderContentState)
+                    );
+                }
+                catch (Exception ex)
+                    when (ex is not HosterCredentialsRejectedException
+                        && !cancellationToken.IsCancellationRequested
+                    )
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Failed to get the sub folders of CostAction folder {FolderId} for {AppType}",
+                        folderId,
+                        appType
+                    );
+                }
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        string apiKey,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await SendRawAsync(
+            () => api.DeleteFolderAsync(apiKey, folderId, cancellationToken),
+            cancellationToken
+        );
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return;
+        }
+
+        ReadContent(response, "Folder deletion");
+    }
+
     public async Task VerifyAccessAsync(
         string apiKey,
         string appType,
@@ -312,6 +422,47 @@ public class CostActionApiClient(
                 && string.Equals(folder.Name, folderName, StringComparison.OrdinalIgnoreCase)
             )
             ?.Id;
+    }
+
+    private async Task<HashSet<string>> GetFolderIdsWithOnlineFilesAsync(
+        string apiKey,
+        string appType,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderIdsWithOnlineFiles = new HashSet<string>(StringComparer.Ordinal);
+        var request = new FilesInfoRequest(AppType: appType, FileIds: null, FolderIds: folderIds);
+        var page = 1;
+        int lastPage;
+
+        do
+        {
+            var response = await SendAsync(
+                request: () =>
+                    api.GetFilesInfoAsync(
+                        apiKey: apiKey,
+                        properties: FolderIdProperty,
+                        perPage: MaxFileIdsPerRequest,
+                        page: page,
+                        request: request,
+                        cancellationToken: cancellationToken
+                    ),
+                operationName: "Folder files request",
+                cancellationToken: cancellationToken
+            );
+
+            folderIdsWithOnlineFiles.UnionWith(
+                (response.Files ?? [])
+                    .Where(file => !file.IsDeleted && file.FolderId is not null)
+                    .Select(file => file.FolderId!.Value.ToString(CultureInfo.InvariantCulture))
+            );
+
+            lastPage = response.LastPage;
+            page++;
+        } while (page <= lastPage && folderIdsWithOnlineFiles.Count < folderIds.Count);
+
+        return folderIdsWithOnlineFiles;
     }
 
     private async Task<string> SendToStorageAsync(
@@ -476,7 +627,7 @@ public class CostActionApiClient(
 
     private static string? GetErrorContent(IApiResponse response)
     {
-        return (response.Error as ApiException)?.Content;
+        return (response.Error as ApiException)?.Content ?? response.Error?.Message;
     }
 
     private static string ExtractErrorMessage(string content)

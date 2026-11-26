@@ -44,6 +44,13 @@ public interface IXFilesharingApi
         CancellationToken cancellationToken
     );
 
+    [Get("/folder/delete")]
+    Task<StatusResponse> DeleteFolderAsync(
+        [Query] [AliasAs("key")] string apiKey,
+        [Query] [AliasAs("fld_id")] string folderId,
+        CancellationToken cancellationToken
+    );
+
     [Get("/file/set_folder")]
     Task<StatusResponse> SetFileFolderAsync(
         [Query] [AliasAs("key")] string apiKey,

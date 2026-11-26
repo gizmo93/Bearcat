@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
@@ -125,6 +126,102 @@ public class ApiClient(
 
         return createdFolder.FolderId?.ToString(CultureInfo.InvariantCulture)
             ?? throw new HttpRequestException("1fichier folder creation returned no folder id");
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        FichierConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var folderId in folderIds)
+        {
+            try
+            {
+                var folder = await SendApiRequestAsync(() =>
+                    api.GetFolderListAsync(
+                        authorization: authorization,
+                        request: new FolderListRequest
+                        {
+                            FolderId = int.Parse(folderId, CultureInfo.InvariantCulture),
+                        },
+                        cancellationToken: cancellationToken
+                    )
+                );
+
+                EnsureOk(folder.Status, folder.Message, "1fichier folder list failed");
+
+                var folderContentState =
+                    folder.Files == 0 && folder.SubFolders.Count == 0
+                        ? HosterFolderContentState.Empty
+                        : HosterFolderContentState.NotEmpty;
+
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, folderContentState)
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to get the content state of folder {FolderId} on 1fichier",
+                    folderId
+                );
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        FichierConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.DeleteFolderAsync(
+            authorization: GetAuthorizationHeader(config.ApiKey),
+            request: new DeleteFolderRequest
+            {
+                FolderId = int.Parse(folderId, CultureInfo.InvariantCulture),
+            },
+            cancellationToken: cancellationToken
+        );
+
+        if (
+            response.IsSuccessStatusCode
+            && string.Equals(response.Content?.Status, "OK", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return;
+        }
+
+        var errorContent = (response.Error as ApiException)?.Content;
+        var message =
+            response.Content?.Message ?? TryDeserializeErrorResponse(errorContent)?.Message;
+
+        if (
+            response.StatusCode == HttpStatusCode.NotFound
+            && message is not null
+            && message.StartsWith("Folder not found", StringComparison.Ordinal)
+        )
+        {
+            return;
+        }
+
+        ThrowIfApiKeyRejected(response.StatusCode, errorContent);
+
+        throw new HttpRequestException(
+            message ?? $"1fichier folder deletion failed with status code {response.StatusCode}",
+            inner: null,
+            statusCode: response.StatusCode
+        );
     }
 
     public async Task MoveFileToFolderAsync(

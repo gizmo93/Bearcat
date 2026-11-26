@@ -27,6 +27,8 @@ public class HosterFormModel
 
     public bool AlwaysReuploadAllFiles { get; set; }
 
+    public bool DeleteEmptyFolders { get; set; } = true;
+
     public bool UseForMirrorDownloads { get; set; }
 
     public int MirrorPriority { get; set; } = 100;
