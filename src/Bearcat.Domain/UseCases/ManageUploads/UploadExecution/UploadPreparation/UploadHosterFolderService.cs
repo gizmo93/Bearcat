@@ -28,7 +28,7 @@ public class UploadHosterFolderService(ILogger<UploadHosterFolderService> logger
 
         return await CreateFolderWithRetryAsync(
             folderHoster: folderHoster,
-            folderName: BuildFolderName(upload, folderHoster),
+            folderName: BuildFolderName(upload),
             hosterConfig: hosterConfig,
             uploadId: upload.Id,
             cancellationToken: cancellationToken
@@ -84,21 +84,9 @@ public class UploadHosterFolderService(ILogger<UploadHosterFolderService> logger
         }
     }
 
-    private static string BuildFolderName(Upload upload, IHosterWithFolders folderHoster)
+    private static string BuildFolderName(Upload upload)
     {
-        var releaseName = upload.UploadConfig.Release.Name;
-
-        if (folderHoster is not IHosterWithEmptyFolderCleanup)
-        {
-            return $"{releaseName}_ReleaseId_{upload.UploadConfig.ReleaseId}";
-        }
-
-        if (upload.ArchiveId is not null)
-        {
-            return $"{releaseName}_ArchiveId_{upload.ArchiveId}";
-        }
-
-        return $"{releaseName}_UploadId_{upload.Id}";
+        return $"{upload.UploadConfig.Release.Name}_ReleaseId_{upload.UploadConfig.ReleaseId}";
     }
 
     private async Task MoveUploadedFilesIntoFolderInOneRequestAsync(

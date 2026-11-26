@@ -627,7 +627,7 @@ public class CostActionApiClient(
 
     private static string? GetErrorContent(IApiResponse response)
     {
-        return (response.Error as ApiException)?.Content;
+        return (response.Error as ApiException)?.Content ?? response.Error?.Message;
     }
 
     private static string ExtractErrorMessage(string content)

@@ -24,7 +24,7 @@ public class UploadHosterFolderServiceTest
     );
 
     [Test]
-    public async Task CreateUploadFolderWhenHosterSupportsFoldersAsync_HosterWithoutEmptyFolderCleanup_UsesReleaseIdFolderName()
+    public async Task CreateUploadFolderWhenHosterSupportsFoldersAsync_UploadOfArchive_UsesReleaseIdFolderName()
     {
         // Arrange
         var hosterMock = new Mock<IHosterWithFolders>();
@@ -35,34 +35,6 @@ public class UploadHosterFolderServiceTest
 
         // Assert
         folderName.ShouldBe($"{ReleaseName}_ReleaseId_{ReleaseId}");
-    }
-
-    [Test]
-    public async Task CreateUploadFolderWhenHosterSupportsFoldersAsync_HosterWithEmptyFolderCleanupAndArchive_UsesArchiveIdFolderName()
-    {
-        // Arrange
-        var hosterMock = new Mock<IHosterWithEmptyFolderCleanup>().As<IHosterWithFolders>();
-        var upload = CreateUpload(ArchiveId);
-
-        // Act
-        var folderName = await CreateFolderAndGetFolderNameAsync(hosterMock, upload);
-
-        // Assert
-        folderName.ShouldBe($"{ReleaseName}_ArchiveId_{ArchiveId}");
-    }
-
-    [Test]
-    public async Task CreateUploadFolderWhenHosterSupportsFoldersAsync_HosterWithEmptyFolderCleanupWithoutArchive_UsesUploadIdFolderName()
-    {
-        // Arrange
-        var hosterMock = new Mock<IHosterWithEmptyFolderCleanup>().As<IHosterWithFolders>();
-        var upload = CreateUpload(archiveId: null);
-
-        // Act
-        var folderName = await CreateFolderAndGetFolderNameAsync(hosterMock, upload);
-
-        // Assert
-        folderName.ShouldBe($"{ReleaseName}_UploadId_{UploadId}");
     }
 
     private async Task<string?> CreateFolderAndGetFolderNameAsync(

@@ -224,27 +224,24 @@ public class EmptyHosterFolderCleanupRepositoryTest(DatabaseProvider databasePro
     [TestCase(UploadState.Pending)]
     [TestCase(UploadState.Uploading)]
     [TestCase(UploadState.CancellationRequested)]
-    public async Task GetFolderIdsWithoutOnlineFilesAsync_RunningUploadOfSameArchiveWithoutFolder_ExcludesFolder(
+    public async Task GetFolderIdsWithoutOnlineFilesAsync_RunningUploadOfSameReleaseWithoutFolder_ExcludesFolder(
         UploadState runningUploadState
     )
     {
         // Arrange
         var registration = await AddHosterRegistrationAsync("Hoster");
         var uploadConfig = await AddUploadConfigAsync(registration);
-        var archive = await AddArchiveAsync(uploadConfig);
         await AddUploadAsync(
             uploadConfig: uploadConfig,
             uploadState: UploadState.Completed,
             hosterFolderId: "folder",
-            files: [("folder", OnlineState.Offline)],
-            archiveId: archive.Id
+            files: [("folder", OnlineState.Offline)]
         );
         await AddUploadAsync(
             uploadConfig: uploadConfig,
             uploadState: runningUploadState,
             hosterFolderId: null,
-            files: [],
-            archiveId: archive.Id
+            files: []
         );
 
         // Act
@@ -258,26 +255,23 @@ public class EmptyHosterFolderCleanupRepositoryTest(DatabaseProvider databasePro
     }
 
     [Test]
-    public async Task GetFolderIdsWithoutOnlineFilesAsync_RunningUploadOfOtherArchiveWithoutFolder_ReturnsFolder()
+    public async Task GetFolderIdsWithoutOnlineFilesAsync_RunningUploadOfOtherReleaseWithoutFolder_ReturnsFolder()
     {
         // Arrange
         var registration = await AddHosterRegistrationAsync("Hoster");
         var uploadConfig = await AddUploadConfigAsync(registration);
-        var archive = await AddArchiveAsync(uploadConfig);
-        var otherArchive = await AddArchiveAsync(uploadConfig);
+        var uploadConfigOfOtherRelease = await AddUploadConfigAsync(registration);
         await AddUploadAsync(
             uploadConfig: uploadConfig,
             uploadState: UploadState.Completed,
             hosterFolderId: "folder",
-            files: [("folder", OnlineState.Offline)],
-            archiveId: archive.Id
+            files: [("folder", OnlineState.Offline)]
         );
         await AddUploadAsync(
-            uploadConfig: uploadConfig,
+            uploadConfig: uploadConfigOfOtherRelease,
             uploadState: UploadState.Pending,
             hosterFolderId: null,
-            files: [],
-            archiveId: otherArchive.Id
+            files: []
         );
 
         // Act
@@ -426,37 +420,16 @@ public class EmptyHosterFolderCleanupRepositoryTest(DatabaseProvider databasePro
         return uploadConfig;
     }
 
-    private async Task<Archive> AddArchiveAsync(UploadConfig uploadConfig)
-    {
-        var archive = new Archive
-        {
-            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
-            ArchiveFolderPath = "/archives/release",
-            ArchiveState = ArchiveState.Created,
-            ArchiveFileSizeMb = 512,
-            CreatedAt = LocalNow.AddDays(-6),
-            ArchiveFiles = [],
-            Uploads = [],
-        };
-
-        DbContext.Archives.Add(archive);
-        await DbContext.SaveChangesAsync();
-
-        return archive;
-    }
-
     private async Task<Upload> AddUploadAsync(
         UploadConfig uploadConfig,
         UploadState uploadState,
         string? hosterFolderId,
-        IReadOnlyList<(string? HosterFolderId, OnlineState OnlineState)> files,
-        int? archiveId = null
+        IReadOnlyList<(string? HosterFolderId, OnlineState OnlineState)> files
     )
     {
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
-            ArchiveId = archiveId,
             HosterRegistrationId = uploadConfig.HosterRegistrationId,
             HosterFolderId = hosterFolderId,
             CreatedAt = LocalNow.AddDays(-5),

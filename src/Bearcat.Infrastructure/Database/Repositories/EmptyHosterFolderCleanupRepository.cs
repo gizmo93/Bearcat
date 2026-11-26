@@ -100,12 +100,10 @@ public class EmptyHosterFolderCleanupRepository(
                     && (
                         runningUpload.HosterFolderId == folderId
                         || runningUpload.UploadedFiles.Any(file => file.HosterFolderId == folderId)
-                        || (
-                            runningUpload.ArchiveId != null
-                            && uploadsOfRegistration.Any(folderUpload =>
-                                folderUpload.HosterFolderId == folderId
-                                && folderUpload.ArchiveId == runningUpload.ArchiveId
-                            )
+                        || uploadsOfRegistration.Any(folderUpload =>
+                            folderUpload.HosterFolderId == folderId
+                            && folderUpload.UploadConfig.ReleaseId
+                                == runningUpload.UploadConfig.ReleaseId
                         )
                     )
                 )
