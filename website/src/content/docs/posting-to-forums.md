@@ -10,8 +10,8 @@ To let Bearcat submit posts for you, use [posting rules](/automatic-forum-postin
 
 ## What you need first
 
-- A distribution site, which is a forum or [WordPress](/wordpress/) account you added to Bearcat.
-- A [post template](/forum-post-templates/) in the output format of the site: BBCode for forums, HTML for WordPress.
+- A distribution site: a forum or [WordPress](/wordpress/) account added to Bearcat.
+- A [post template](/forum-post-templates/) matching the site's format: BBCode for forums, HTML for WordPress.
 - A release with completed uploads and download links.
 
 ## Setting up a distribution site
@@ -67,9 +67,9 @@ In the dialog:
    <figcaption>No existing thread found</figcaption>
    </figure>
 
-4. Pick a post template. Only templates in the site's output format are available.
-   Bearcat fills it with the release data; you can edit the result.
-   For a new thread or blog post, also set the title. On forums, you can also set an optional prefix such as 1080p or x265.
+4. Pick a post template (only templates matching the site's format appear).
+   Bearcat fills it with the release data, and you can edit the result.
+   For a new thread or blog post, set the title as well. On forums, you can optionally choose a prefix such as 1080p or x265.
 
    <figure>
 
@@ -119,5 +119,4 @@ In the dialog:
 
 **Posted locations** lists the URLs where a release or collection has been published,
 such as forum threads or WordPress posts. Confirming a post adds its URL here.
-Find the list on the **Overview** tab of the release or collection.
-You can also add or remove links there by hand.
+You can find the list on the **Overview** tab of the release or collection, and add or remove links there by hand.

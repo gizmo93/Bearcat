@@ -30,37 +30,38 @@ Set **Minimum free space** to choose how much storage must stay free on each acc
 When an upload starts, Bearcat checks the accounts in pool order and picks the first with enough space.
 These rules apply:
 
-- Bearcat skips inactive accounts and accounts with unreadable credentials or a pending captcha.
-- Bearcat subtracts the space needed for the remaining files of uploads in progress and the minimum
-  free space from the account's free storage. The rest must be enough for the new upload.
+- Inactive accounts, accounts with unreadable credentials, and accounts with a pending captcha are skipped.
+- Available space is the account's free storage minus the minimum free space and the remaining files of
+  uploads already in progress. That remainder must fit the new upload.
 - Accounts with unlimited storage always have enough space.
-- If the hoster rejects the credentials, Bearcat deactivates the account and tries the next one.
-- If Bearcat cannot check the free storage, it skips the account for 5 minutes.
+- If the hoster rejects an account's credentials, Bearcat deactivates it and tries the next one.
+- If the free storage check fails, that account is skipped for 5 minutes.
 
-Bearcat keeps the result of each storage check for 5 minutes.
+Storage check results are cached for 5 minutes.
 
 ## Pool full
 
 If no account has enough space, the upload waits. Bearcat sends an **Account pool full** notification
 once per upload. If the pool is empty or Bearcat cannot use any of its accounts, it sends
 **Account pool without usable account** instead. Check that the accounts are active, have valid
-credentials, and do not need a captcha solved.
+credentials, and do not have a pending captcha.
 
 Bearcat checks the pool again on each upload run. The upload starts automatically once an account has
 enough space. You can add an account or free up storage to make room.
 
 ## Reuploads
 
-A reupload uses the previous account as long as it is active, has readable credentials, has no pending
-captcha and is still in the pool. Bearcat does not check its free storage. Otherwise, Bearcat picks
-another account from the pool when the reupload starts. This also applies if the account becomes
-unusable before the first file is uploaded.
+A reupload reuses the previous account as long as it is still in the pool, active, has readable
+credentials, and has no pending captcha. Free storage is not checked for reuploads. Otherwise, Bearcat
+picks another account from the pool when the reupload starts, or if the account becomes unusable before
+the first file is uploaded.
 
 ## Remove an account
 
-You cannot delete an account while it stores the latest uploads of an upload configuration that targets
-a pool or another account. Bearcat would upload these releases again. Remove the account from the pool and
-deactivate it instead. It will receive no new uploads, but its existing uploads stay.
+You cannot delete an account while it still holds the latest uploads for an upload configuration
+targeting a pool or another account, because Bearcat would reupload those releases. Remove the account
+from the pool and deactivate it instead. It will receive no new uploads, and its existing uploads stay
+intact.
 
 ## Replace a pool
 

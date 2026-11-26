@@ -46,7 +46,7 @@ Niedrigere Zahlen haben Vorrang, etwa `10` vor `100`.
 
 Bearcat wählt den Mirror für jede Datei einzeln. Es berücksichtigt nur aktive Hosterregistrierungen,
 bei denen die Datei als online markiert ist. Bei gleicher Priorität gewinnt die jüngste Dateiprüfung.
-Schlägt ein Download trotz Wiederholungen fehl, versucht Bearcat den nächsten verfügbaren Mirror.
+Schlägt ein Download trotz Wiederholungen fehl, wechselt Bearcat zum nächsten verfügbaren Mirror.
 
 ### Hoster mit Unterstützung für Mirrordownloads
 
@@ -75,7 +75,7 @@ Bitte den Support, ihn freizuschalten.
 
 ## Laufenden Download abbrechen
 
-Verfolge oder beende Mirrordownloads auf der Startseite **Home** im Bereich **Downloads**. Dort siehst du Fortschritt,
+Verfolge oder stoppe Mirrordownloads auf der Startseite **Home** im Bereich **Downloads**. Dort siehst du Fortschritt,
 Geschwindigkeit, Restzeit und Dateidetails.
 
 Beim Abbrechen löscht Bearcat die unvollständigen Downloads und bricht die wartenden Uploads ab.
@@ -84,7 +84,7 @@ Sie starten beim nächsten Durchlauf nicht erneut. Der Archivstatus wird zurück
 ## Prüfung und Fehler
 
 Bearcat vergleicht heruntergeladene Dateien mit dem beim Upload gespeicherten MD5-Hash, sofern er vorhanden ist.
-Bei einem abweichenden Hash oder Downloadfehler versucht es die Datei erneut oder nutzt einen anderen Mirror.
+Bei einem abweichenden Hash oder Downloadfehler lädt es die Datei erneut herunter oder wechselt zu einem anderen Mirror.
 
 Kann Bearcat eine Datei auch danach nicht wiederherstellen, verwirft es den Download und meldet
 **Archivwiederherstellung fehlgeschlagen**. Das Archiv behält seinen bisherigen Status; die wartenden Uploads schlagen fehl.
@@ -100,8 +100,8 @@ ihn auf `1`, wenn der Hoster parallele Downloads drosselt oder ablehnt.
 
 ## Geschwindigkeitslimits
 
-- **Maximale Downloadgeschwindigkeit** (MB/s) im Abschnitt **Mirrordownloads** auf der Seite **Konfigurationen**
-  begrenzt die gemeinsame Geschwindigkeit aller laufenden Mirrordownloads.
+- **Maximale Downloadgeschwindigkeit** (MB/s) unter **Konfigurationen > Mirrordownloads** begrenzt die
+  gemeinsame Geschwindigkeit aller laufenden Mirrordownloads.
 - **Maximale Downloadgeschwindigkeit für Mirrordownloads (MB/s)** in der Hosterregistrierung begrenzt die
   gemeinsame Geschwindigkeit aller Mirrordownloads dieser Hosterregistrierung.
 
@@ -110,8 +110,8 @@ Beide Limits gelten gleichzeitig.
 
 ## Lokale Archive selbst löschen
 
-Wähle **Lokale Archive löschen** im Aktionsmenü der Releasedetailseite, um Speicherplatz freizugeben.
-Bearcat löscht die Archivdateien des Releases.
+Wähle **Lokale Archive löschen** im Aktionsmenü der Releasedetailseite, um die Archivdateien des Releases zu
+löschen und Speicherplatz freizugeben.
 
 ![delete-local-archives.png](../images/delete-local-archives.png)
 

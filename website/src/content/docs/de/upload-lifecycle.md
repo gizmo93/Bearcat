@@ -3,7 +3,7 @@ title: "Automatische Uploads, Linkprüfungen und Reuploads"
 description: "Der Ablauf vom ersten Upload bis zum Reupload: Archive, Linkcontainer, Linkprüfungen und Aufräumen."
 ---
 
-Nach dem Hinzufügen einer Uploadkonfiguration bereitet Bearcat das Archiv vor, lädt es hoch und prüft seine Links.
+Sobald du eine Uploadkonfiguration hinzufügst, bereitet Bearcat das Archiv vor, lädt es hoch und prüft die Links.
 In der Releasegruppe aktivierst du bei Bedarf automatische Reuploads für Dateien, die offline gehen.
 
 <details>
@@ -31,8 +31,8 @@ Uploadkonfiguration an. Darin wählst du die Archivkonfiguration und das Uploadz
 eine einzelne Hosterregistrierung oder einen [Accountpool](/de/account-pools/).
 Optional wählst du Linkcrypterkonfigurationen dazu.
 
-Erstelle für jeden Hoster eine eigene Uploadkonfiguration. Mehrere Konfigurationen für denselben
-Hoster sind möglich, etwa mit unterschiedlichen Partgrössen.
+Erstelle für jeden Hoster eine eigene Uploadkonfiguration. Du kannst auch mehrere Konfigurationen für
+denselben Hoster anlegen, etwa mit unterschiedlichen Partgrössen.
 
 Mit der Uploadquelle **Videodatei** lädt Bearcat das Hauptvideo direkt zu einem
 [Videohoster](/de/video-hosters/) hoch. Diese Uploads starten im Status `Pending` und überspringen
@@ -45,7 +45,7 @@ Unter **System > Konfigurationen > Initiale Uploads** stellst du die Wartezeit e
 
 Sobald der Cooldown abgelaufen ist und eine Uploadkonfiguration existiert, plant Bearcat den ersten
 Upload bei der nächsten Prüfung ein. Mit `0` Minuten entfällt die Wartezeit.
-Das Release muss auch die [Qualitätsprüfungen](/de/quality-gates/) bestehen oder manuell freigegeben sein.
+Das Release muss ausserdem die [Qualitätsprüfungen](/de/quality-gates/) bestehen oder manuell freigegeben sein.
 
 Du kannst die Wartezeit für ein Release überspringen: Klicke oben auf der Releasedetailseite auf
 **Uploads jetzt starten**. Die Schaltfläche erscheint, wenn für mindestens eine Uploadkonfiguration noch
@@ -58,8 +58,8 @@ auch über die [REST-API](/de/rest-api/) starten.
 Für jeden wartenden Upload stellt Bearcat ein Archiv bereit:
 
 1. Wenn möglich, ein fertiges Archiv derselben Archivkonfiguration wiederverwenden. Liegt das Archiv in einem
-   [Speicherordner](/de/archive-storage-folders/#reuploads), liest der Upload es dort, oder Bearcat
-   kopiert je nach Speicherordner zuerst die hochzuladenden Dateien in eine temporäre lokale Arbeitskopie.
+   [Speicherordner](/de/archive-storage-folders/#reuploads), liest Bearcat es direkt dort oder kopiert die
+   hochzuladenden Dateien je nach Einstellung zuerst in eine temporäre lokale Arbeitskopie.
 2. Fehlende lokale Dateien von einem konfigurierten [Mirrorhoster](/de/mirror-downloads/) wiederherstellen.
 3. Wenn beides nicht möglich ist, ein neues Archiv aus dem Releaseordner erstellen.
 
@@ -116,7 +116,7 @@ Die Hintergrundaufgabe **Archive upload** startet Uploads im Status `Pending` un
 | Einige Dateien fehlgeschlagen | `Failed` | `PartiallyOnline` |
 
 Bearcat speichert für erfolgreiche Uploads einen Zeitstempel. Den Fortschritt verfolgst du auf der Releasedetailseite
-unter **Uploads** > **Verlauf**. **Übersicht** zeigt den neuesten Upload jeder Uploadkonfiguration.
+unter **Uploads > Verlauf**. **Übersicht** zeigt den neuesten Upload jeder Uploadkonfiguration.
 
 ### Startreihenfolge
 
@@ -153,7 +153,7 @@ In der Linkcrypterkonfiguration wählst du unter **Container erstellen für**, w
 | --- | --- |
 | **Jedes Release einzeln** | Ein Container pro Uploadkonfiguration mit den Links ihres neuesten Uploads. |
 | **Release (alle Hoster als Mirrors)** | Ein Container pro Release und Linkcrypter. Jede Uploadkonfiguration mit dieser Einstellung fügt ihren neuesten abgeschlossenen Upload als Mirror hinzu. |
-| **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection, siehe [Releasecollections](/de/release-collections/). |
+| **Die ganze Releasecollection** | Ein Container pro Uploadslot der Collection (siehe [Releasecollections](/de/release-collections/)). |
 
 ![Container erstellen für in der Linkcrypterkonfiguration](../images/add-link-crypter-container-dialog.png)
 
@@ -185,9 +185,9 @@ Bei vielen Uploads auf einer Hosterregistrierung kann eine vollständige Runde l
 
 Schlägt eine Prüfung fehl, bleibt der bisherige Onlinestatus erhalten.
 Bei anhaltenden Fehlern erhältst du eine Benachrichtigung pro Hosterregistrierung.
-Weitere Meldungen folgen erst, wenn du sie erledigt hast.
+Weitere Meldungen folgen erst, wenn du diese erledigt hast.
 
-Bei einem Captcha benachrichtigt Bearcat dich. Bei ungültigen Zugangsdaten deaktiviert es die
+Bei einem Captcha benachrichtigt dich Bearcat. Bei ungültigen Zugangsdaten deaktiviert es die
 Hosterregistrierung. Korrigiere die Daten und aktiviere sie wieder. Das gilt auch für Fehler beim Hochladen.
 
 ## 7. Automatische Reuploads
@@ -195,7 +195,7 @@ Hosterregistrierung. Korrigiere die Daten und aktiviere sie wieder. Das gilt auc
 Bearcat erstellt einen automatischen Reupload, wenn alle diese Bedingungen erfüllt sind:
 
 - Die Releasegruppe hat automatische Reuploads aktiviert.
-- Der Upload ist gemäss dem Reuploadauslöser des Hosters offline, siehe unten.
+- Der Upload gilt gemäss dem Reuploadauslöser des Hosters als offline (siehe unten).
 - Jede hochgeladene Datei wurde mindestens einmal geprüft.
 - Die Wartezeit **Stunden bis Reupload** ist abgelaufen.
 - Für dieselbe Uploadkonfiguration gibt es keinen blockierenden Ersatzupload.
@@ -224,7 +224,7 @@ In der Hosterregistrierung kannst du [Reuploadoverrides](/de/account-settings/#r
 | --- | --- |
 | **Stunden bis Reupload** | Überschreibt die Wartezeit der Releasegruppe für diesen Hoster. |
 | **Reuploadauslöser: Teilweise oder komplett offline** (Standard) | Die Wartezeit beginnt, sobald die erste Datei offline geht. |
-| **Reuploadauslöser: Erst wenn komplett offline** | Wartet, bis alle Dateien offline sind. Kommt eine wieder online, beginnt die Frist beim nächsten vollständigen Offlinegehen neu. |
+| **Reuploadauslöser: Erst wenn komplett offline** | Wartet, bis alle Dateien offline sind. Kommt eine Datei wieder online, startet die Frist neu, sobald wieder alle Dateien offline sind. |
 | **Immer alle Dateien neu hochladen** | Lädt auch Parts erneut hoch, die noch online sind. |
 
 **Erst wenn komplett offline** vermeidet wiederholte Reuploads, wenn der Hoster einzelne Parts nach und nach löscht.
@@ -243,7 +243,7 @@ Auch hier darf es keinen [blockierenden Ersatzupload](#7-automatische-reuploads)
 Bearcat aktualisiert den bestehenden Container für dieselbe Uploadkonfiguration und Linkcrypterkonfiguration.
 Das gilt auch für Container von Releasecollections und für **Release (alle Hoster als Mirrors)**.
 Bei gemeinsamen Containern ersetzt der Reupload den Mirror seiner Uploadkonfiguration.
-Gelingt das, bleibt die URL gleich. Die Links in deinen Posts bleiben gültig.
+Gelingt das, bleibt die URL gleich und die Links in deinen Posts bleiben gültig.
 
 Schlägt die Aktualisierung fehl, behält der Container seine URL und bekommt den Status `Aktualisierung fehlgeschlagen`.
 Bearcat versucht die Aktualisierung nach 15 Minuten erneut. Bis dahin enthält der Container noch die alten Links.
@@ -274,20 +274,20 @@ wieder her oder packt sie bei Managed Releases neu. Das Aufräumen löscht keine
 ## Archivwiederverwendung und Repackaging
 
 Hoster erkennen Dateien oft an ihrem MD5-Hash. Wurde ein Archiv bereits zum gleichen Hostertyp hochgeladen,
-braucht Bearcat neue Hashes, bevor es erneut hochgeladen wird.
+braucht Bearcat neue Hashes, bevor es das Archiv erneut hochlädt.
 
 Neue Hashes brauchen nur Dateien, die erneut hochgeladen werden. Die übrigen Parts behalten ihren Hash.
 
 - **RAR:** Bearcat hängt Nullbytes an, bis jede hochzuladende Datei einen Hash hat, der für diese
   Archivkonfiguration noch nicht verwendet wurde. Das Archiv lässt sich weiterhin normal entpacken.
-  Bearcat behält die Hashhistorie auch nach dem Löschen der lokalen Dateien.
+  Bearcat behält die Hashhistorie auch dann, wenn die lokalen Dateien gelöscht wurden.
 - **7-Zip:** Die Parts lassen sich so nicht ändern, ohne das Archiv zu beschädigen. Bearcat
   erstellt deshalb ein neues Archiv. Müssen keine Dateien erneut hochgeladen werden, kann es das Archiv wiederverwenden.
 
 Bevor Bearcat ein wiederverwendetes Archiv ändert, prüft es, ob ein anderer aktiver Upload es verwendet.
 Falls ja, wartet es auf einen späteren Durchlauf. Fehlt eine hochzuladende Datei lokal, stellt Bearcat
 sie zuerst von einem [Mirrorhoster](/de/mirror-downloads/) wieder her und ändert danach die Hashes.
-Liegt das Archiv in einem Speicherordner mit aktiviertem **Lokale Arbeitskopie für Reuploads**, ändert
+Liegt das Archiv in einem Speicherordner mit aktivierter Option **Lokale Arbeitskopie für Reuploads**, ändert
 Bearcat die Hashes der lokalen Arbeitskopie. Sonst ändert es sie im Speicherordner.
 
 ### Die Noncedatei und Repackaging

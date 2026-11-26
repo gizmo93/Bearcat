@@ -59,7 +59,7 @@ the name is followed by **local working copy**.
 
 ![upload-configurations-tab.png](images/upload-configurations-tab.png)
 
-**History** lists all upload runs. Use the actions for a run to start a manual reupload, for example.
+**History** lists all upload runs, with per-run actions such as starting a manual reupload.
 
 ![release-uploads-tab.png](images/release-uploads-tab.png)
 ![upload-links-dialog.png](images/upload-links-dialog.png)
@@ -74,7 +74,7 @@ An [image upload configuration](/account-settings/#image-upload-configuration) c
 screenshots and the screenshot grid. The **Image uploads** list shows each upload's image type:
 cover, screenshot, or screenshot grid.
 
-The **Screenshots** card shows the created [screenshots](/release-templates-and-automations/#screenshots).
+The **Screenshots** card shows the generated [screenshots](/release-templates-and-automations/#screenshots).
 Click an image to open it at full size.
 
 ![release-screenshots.png](images/release-screenshots.png)

@@ -47,7 +47,7 @@ Für eine neue Installation verwendest du diese Antworten:
 | **Additional working directory** | Leer lassen, um fortzufahren. |
 | **Web port** | Behalte `17208`. |
 
-Hast du die Archivprogramme an einem anderen Ort installiert, gib deren tatsächliche Pfade ein.
+Falls du die Archivprogramme woanders installiert hast, gib die jeweiligen Pfade ein.
 Lege die SQLite-Datenbank auf ein lokales Laufwerk. Für Releases auf einer Netzwerkfreigabe siehe
 [Netzwerkfreigabe für Releases verwenden](#netzwerkfreigabe-für-releases-verwenden).
 
@@ -72,8 +72,8 @@ sc.exe query Bearcat
 
 Warte, bis `sc.exe query Bearcat` den Zustand `STOPPED` anzeigt, bevor du Dateien ersetzt.
 
-3. Ersetze alle Programmdateien im **bisherigen Installationsordner**, auch die DLLs und Unterordner,
-   durch die Dateien aus dem neuen Paket. Bewahre eine selbst gewählte Datenbankdatei in diesem Ordner auf.
+3. Ersetze alle Programmdateien im **bisherigen Installationsordner** (auch DLLs und Unterordner)
+   durch die Dateien aus dem neuen Paket. Falls deine Datenbankdatei in diesem Ordner liegt, behalte sie.
 4. Starte den Dienst wieder:
 
 ```powershell
@@ -105,7 +105,7 @@ Das Setup speichert die Einstellungen für den Rechner hier:
 %ProgramData%\Bearcat\config.json
 ```
 
-Die Datei enthält Datenbankeinstellungen, Pfade der Archivprogramme, Arbeitsverzeichnisse und Webport.
+Die Datei enthält Datenbankeinstellungen, Pfade der Archivprogramme, Arbeitsverzeichnisse und den Webport.
 Nur das Dienstkonto und Administratoren haben Zugriff auf den Ordner. PostgreSQL-Passwörter stehen im Klartext in der Datei.
 
 Den Schlüssel für deine verschlüsselten Zugangsdaten speichert Bearcat im selben Ordner:
@@ -116,8 +116,8 @@ Den Schlüssel für deine verschlüsselten Zugangsdaten speichert Bearcat im sel
 
 Sichere `bearcat.key` zusammen mit deiner Datenbank:
 
-- SQLite: die Datenbankdatei, standardmässig `%ProgramData%\Bearcat\bearcat.db`. Stoppe den Dienst, bevor du die Datei kopierst. Läuft der Dienst, verwende stattdessen `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
-- PostgreSQL: deine PostgreSQL-Datenbank.
+- **SQLite:** die Datenbankdatei, standardmässig `%ProgramData%\Bearcat\bearcat.db`. Stoppe den Dienst, bevor du die Datei kopierst. Läuft der Dienst, verwende stattdessen `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
+- **PostgreSQL:** deine PostgreSQL-Datenbank.
 
 Ohne `bearcat.key` kann Bearcat deine gespeicherten Zugangsdaten nicht mehr entschlüsseln.
 
@@ -143,7 +143,7 @@ Nach einem Absturz startet der Dienst automatisch neu.
 
 ## Logs prüfen
 
-Der Dienst schreibt in das Windows-**Ereignisprotokoll**. Öffne die **Ereignisanzeige**, gehe zu **Windows-Protokolle > Anwendung** und filtere nach der Quelle **Bearcat**.
+Der Dienst schreibt in das **Windows-Ereignisprotokoll**. Öffne die **Ereignisanzeige**, gehe zu **Windows-Protokolle > Anwendung** und filtere nach der Quelle **Bearcat**.
 
 ![Bearcat-Einträge in der Ereignisanzeige](../images/windows-event-viewer.png)
 
@@ -175,7 +175,7 @@ sc.exe start Bearcat
 
 ## Netzwerkfreigabe für Releases verwenden
 
-Der Dienst läuft standardmässig als `LocalSystem`. Dieses Konto hat keinen Zugriff auf geschützte Netzwerkfreigaben. Verbundene Laufwerke wie `Z:` sind für Dienste nicht sichtbar. Liegen deine Releasedaten auf einer Netzwerkfreigabe:
+Der Dienst läuft standardmässig als `LocalSystem` und hat damit keinen Zugriff auf geschützte Netzwerkfreigaben. Auch verbundene Laufwerke wie `Z:` sind für Windows-Dienste nicht sichtbar. Liegen deine Releasedaten auf einer Netzwerkfreigabe:
 
 1. Gib im Setup einen **UNC-Pfad** (`\\server\share\releases`) ein, keinen verbundenen Laufwerksbuchstaben.
 2. Öffne `services.msc` > **Bearcat** > **Anmelden** und wähle ein Konto mit Zugriff auf die Freigabe.
@@ -199,7 +199,7 @@ Bei SQLite bricht er mit einem Fehler ab und lässt die Konfiguration unverände
 
 ## Deinstallieren
 
-Um den Dienst zu stoppen und zu entfernen, führe (als Administrator) aus:
+Um den Dienst zu stoppen und zu entfernen, führe als Administrator aus:
 
 ```text
 .\Bearcat.Cli.exe uninstall

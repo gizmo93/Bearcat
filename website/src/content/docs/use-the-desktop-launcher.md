@@ -26,7 +26,7 @@ Bearcat needs both RAR and 7-Zip to start.
 | macOS | [RAR for macOS ARM](https://www.rarlab.com/download.htm) and the [7-Zip console version for macOS](https://www.7-zip.org/download.html). Extract both into folders you will keep. |
 | Linux (x64) | [RAR for Linux x64](https://www.rarlab.com/download.htm) and the [7-Zip console version for Linux x64](https://www.7-zip.org/download.html). Extract both into folders you will keep. |
 
-In step 3, select the tools’ executable files. On Windows, these are usually
+In step 3, select the executable file for each tool. On Windows, these are usually
 `C:\Program Files\WinRAR\Rar.exe` and `C:\Program Files\7-Zip\7z.exe`.
 On macOS and Linux, select the extracted `rar` and `7zz` files.
 
@@ -36,11 +36,11 @@ On macOS, you can also install [7-Zip via Homebrew](https://formulae.brew.sh/for
 brew install sevenzip
 ```
 
-For Homebrew, select `/opt/homebrew/bin/7zz` under **7z executable** in step 3
+If you used Homebrew, select `/opt/homebrew/bin/7zz` under **7z executable** in step 3
 (the default path on Apple Silicon).
 
-[RAR's Homebrew cask](https://formulae.brew.sh/cask/rar) (`brew install --cask rar`) is disabled.
-Use the official download above. If RAR is already installed through Homebrew,
+[RAR's Homebrew cask](https://formulae.brew.sh/cask/rar) (`brew install --cask rar`) is disabled, so use
+the official download above. If you already have RAR installed through Homebrew,
 select `/opt/homebrew/bin/rar` under **RAR executable**.
 
 ## 2. Download and open Bearcat
@@ -53,8 +53,8 @@ Download the Desktop package for your computer from [GitHub releases](https://gi
 
   | Distribution | Package |
   | --- | --- |
-  | Ubuntu, Debian | `Bearcat.Desktop-linux-x64.deb`, or run `sudo apt install ./Bearcat.Desktop-linux-x64.deb` |
-  | Fedora | `Bearcat.Desktop-linux-x64.rpm`, or run `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` |
+  | Ubuntu, Debian | Install `Bearcat.Desktop-linux-x64.deb`, or run `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. |
+  | Fedora | Install `Bearcat.Desktop-linux-x64.rpm`, or run `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm`. |
   | openSUSE | Open and install `Bearcat.Desktop-linux-x64.rpm` with your package manager. |
   | Other | Extract `Bearcat.Desktop-linux-x64.tar.gz` and run `Bearcat.Desktop` from a terminal. |
 
@@ -176,7 +176,7 @@ macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
 Linux: ~/.config/Bearcat/Desktop/settings.json
 ```
 
-It also contains any API key and PostgreSQL password you entered.
+`settings.json` also stores any API key and PostgreSQL password you entered.
 
 Bearcat also creates `bearcat.key` in `%APPDATA%\Bearcat` on Windows,
 `~/Library/Application Support/Bearcat` on macOS, or `~/.config/Bearcat` on Linux. It uses this key to decrypt your saved credentials.

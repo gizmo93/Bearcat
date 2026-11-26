@@ -25,10 +25,9 @@ Gib einen Namen ein und füge eine oder mehrere Prüfungen hinzu. Jede Prüfung 
   (zum Beispiel `*.nfo` oder `*.sfv`). Das Muster wird mit den Dateinamen verglichen, Gross- und Kleinschreibung
   spielt keine Rolle.
 - **Mindestgrösse des Ordners**: Der Releaseordner muss mindestens die eingestellte Anzahl Megabyte gross sein.
-  Bearcat misst den Ordner bei jeder Auswertung der Qualitätsprüfung neu. So werden auch noch laufende Kopiervorgänge berücksichtigt.
-- **Erforderliche Releaseinfos**: Schalte die Teile der Releaseinfo ein, die ausgefüllt sein müssen: das
-  Coverbild, die Beschreibung und/oder das NFO.
-- **MediaInfo vorhanden**: Für das Release müssen Mediendaten extrahiert worden sein.
+  Bearcat misst den Ordner bei jeder Prüfung neu, auch während noch Dateien kopiert werden.
+- **Erforderliche Releaseinfos**: Wähle, welche Angaben ausgefüllt sein müssen: Coverbild, Beschreibung und/oder NFO.
+- **MediaInfo vorhanden**: Für das Release müssen Mediendaten extrahiert sein.
 
 Die Prüfungen, die den Releaseordner betreffen (Dateimuster, Ordnergrösse, MediaInfo), werden bei
 Unmanaged Releases übersprungen.
@@ -61,9 +60,9 @@ Jedes Release hat einen aktuellen Prüfstatus:
 Bearcat prüft Releases:
 
 - vor dem Erstellen eines Uploads,
-- regelmässig im Hintergrund über die Aufgabe **"Quality gate re-evaluation"** (standardmässig alle 30 Minuten,
+- regelmässig im Hintergrund über die Aufgabe **Quality gate re-evaluation** (standardmässig alle 30 Minuten,
   das Intervall änderst du auf der Seite [Hintergrundaufgaben](/de/advanced-configuration/#hintergrundaufgaben)), und
-- auf Anforderung, wenn du bei einem Release in der Liste der Qualitätsprobleme auf **Neu prüfen** klickst.
+- manuell, wenn du bei einem Release in der Liste der Qualitätsprobleme auf **Neu prüfen** klickst.
 
 Die Hintergrundaufgabe prüft auch ältere Releases mit fehlgeschlagener oder noch ausstehender Prüfung.
 
@@ -79,13 +78,13 @@ Das Badge zeigt die Anzahl betroffener Releases und verschwindet, wenn keine meh
 
 ![quality-gate-badge.png](../images/quality-gate-badge.png)
 
-Die Liste zeigt die betroffenen Releases, ihre fehlgeschlagenen Prüfungen und den letzten Prüfzeitpunkt. 
+Die Liste zeigt die betroffenen Releases, ihre fehlgeschlagenen Prüfungen und den letzten Prüfzeitpunkt.
 Für jeden Eintrag hast du drei Aktionen:
 
 - **Öffnen** führt zum Release. Ergänze dort fehlende Angaben und klicke auf **Neu prüfen**
   oder warte auf die nächste Hintergrundprüfung.
 - **Neu prüfen** wertet das Release sofort erneut aus.
-- **Manuell freigeben** markiert das Release als **manuell freigegeben**. Damit sind Uploads trotz fehlgeschlagener Prüfungen erlaubt,
+- **Manuell freigeben** markiert das Release als **Manuell freigegeben**. Damit sind Uploads trotz fehlgeschlagener Prüfungen erlaubt,
   und weitere Prüfungen entfallen.
 
 ![quality-gate-list.png](../images/quality-gate-list.png)

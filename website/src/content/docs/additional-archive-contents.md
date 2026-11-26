@@ -21,8 +21,8 @@ Click **New additional archive content**, give the entry a unique name, and choo
 Enter the full **Source path** to an existing file or folder on the machine running Bearcat.
 Folders are copied with their contents and keep their folder name.
 
-Use **Browse** to select a path inside your working directories. Paths outside those directories
-can be entered manually.
+Use **Browse** to select a path inside your working directories. You can also enter paths outside those
+directories manually.
 
 In Docker, enter the path inside the container. Make the file or folder available there through a bind mount.
 
@@ -46,13 +46,12 @@ To include an entry in an archive, select it under **Additional archive contents
 
 You can select multiple entries and reuse an entry across templates and releases.
 
-Each selected entry needs a different file or folder name. For example,
-`/extras/Premium.txt` conflicts with a text file named `premium.txt`. Bearcat ignores case
-when checking these names.
+Each selected entry needs a unique file or folder name (case-insensitive). For example,
+`/extras/Premium.txt` conflicts with a text file named `premium.txt`.
 
 ![additional-archive-content-assign-to-archive-config.png](images/additional-archive-content-assign-to-archive-config.png)
 
-## Where the contents are within an archive
+## Where the contents are in the archive
 
 The contents sit directly inside the release folder in the archive, next to the release files:
 
@@ -77,7 +76,7 @@ Bearcat stops packing and creates an error notification for these problems:
 | Problem | What to check |
 | --- | --- |
 | A source file or folder is missing | Check the source path and any Docker bind mount. |
-| The release folder already contains the same name | Rename the additional file or folder, or remove its assignment. Bearcat never overwrites your existing files. |
+| The release folder already has a file or folder with the same name | Rename the additional file or folder, or remove its assignment. Bearcat never overwrites your existing files. |
 | A file or folder cannot be copied | Check that Bearcat can read the source and write to the release folder. |
 
 ## Edit or delete an entry

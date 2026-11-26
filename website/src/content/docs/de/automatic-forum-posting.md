@@ -53,8 +53,8 @@ Für jede der drei Kategorien gibt es zwei Listen:
 - **Erforderlich**: Der Post muss mindestens einen der gewählten Anbieter enthalten.
 - **Verboten**: Bearcat entfernt Uploads, Container und Bilder dieser Anbieter aus dem Post.
 
-Eine leere Liste schränkt die Auswahl nicht ein. Ist eine Anforderung unter **Erforderlich** nicht erfüllt oder wurden
-alle Uploads, alle Container oder alle Bilder entfernt, überspringt Bearcat die Seite beim automatischen Posten.
+Eine leere Liste schränkt die Auswahl nicht ein. Ist keine der Angaben unter **Erforderlich** im Post enthalten oder wurden
+alle Uploads, Container oder Bilder herausgefiltert, überspringt Bearcat die Seite beim automatischen Posten.
 
 Bearcat prüft alle Uploads, Uploadslots und enthaltenen Releases zusammen.
 Container mit mehreren Hostern, etwa für alle Hoster eines Releases oder für Uploadslots einer Collection,
@@ -71,16 +71,16 @@ Bei einem [manuellen Entwurf](/de/posting-to-forums/) erscheint eine Warnung. Du
 Klicke auf **Neue Postingregel**. Fülle die folgenden Felder aus:
 
 - **Gilt für**: wähle oben im Dialog **Release** oder **Collection**. Jede Regel gilt für einen Typ.
-- **Name**: dein eigener Name für die Regel
+- **Name**: dein eigener Name für die Regel.
 - **Ziel**: ein Unterforum oder eine Blogkategorie.
   Klicke auf **Ziele laden** und wähle eines aus. Das Laden kann einige Sekunden dauern.
-- **Präfixe**: nur bei Foren. In manchen Unterforen kannst du Präfixe für neue Themen setzen
+- **Präfixe**: nur bei Foren. In manchen Unterforen kannst du Präfixe für neue Themen setzen.
 - **Postvorlage**: die Vorlage für den Posttext. Releaseregeln verwenden Releasevorlagen,
   Collectionregeln verwenden Collectionvorlagen. Die Vorlage bestimmt den Regeltyp.
   Du kannst nur Vorlagen im passenden Ausgabeformat auswählen: BBCode für Foren, HTML für WordPress.
 - **Postingmodus**: nur bei Foren. Entweder *Auf bestehendes Thema antworten, sonst neues Thema* oder *Immer ein neues
   Thema erstellen*. In Blogs entsteht immer ein neuer Post.
-- **Aktiviert**: deaktivierte Regeln werden beim Abgleich übersprungen
+- **Aktiviert**: deaktivierte Regeln werden beim Abgleich übersprungen.
 
 ![add-or-edit-rule.png](../images/add-or-edit-rule.png)
 
@@ -208,7 +208,7 @@ Nach einem Reupload kann Bearcat bestehende Posts mit den neuen Downloadlinks ak
 Das gilt auch, wenn du eine neue Folge einer Collection hochlädst. Bearcat aktualisiert den bestehenden Post,
 statt eine neue Antwort zu posten.
 Dazu füllt es die Vorlage mit den aktuellen Daten und **ersetzt den gesamten Post, einschliesslich deiner Änderungen auf der Seite**.
-Verwende das für Posts mit direkten Downloadlinks statt eines Linkcryptercontainers.
+Das ist besonders nützlich für Posts mit direkten Downloadlinks statt eines Linkcryptercontainers.
 
 ### Aus der Warteschlange aktualisieren
 
@@ -220,7 +220,7 @@ Vorlage und Aktualisierungszeit werden mit der URL unter **Veröffentlichungsort
 Bei Seiten mit aktiviertem **Automatisches Posten** aktualisiert die Hintergrundaufgabe Posts automatisch,
 sofern eine Vorlage verfügbar ist. Das Release oder die Collection verlässt die Warteschlange, sobald alle Posts und Aktualisierungen abgeschlossen sind.
 
-### Template wählen
+### Vorlage wählen
 
 Bearcat verwendet die erste verfügbare Vorlage in dieser Reihenfolge:
 
@@ -239,7 +239,7 @@ Der Eintrag muss mit einer Verteilungsseite verknüpft sein; auch von Hand best�
 ## Bestehendes Thema finden
 
 In Foren durchsucht Bearcat im Postingmodus *Auf bestehendes Thema antworten, sonst neues Thema* das Unterforum und vergleicht die
-Thementitel mit dem Release- oder Collectionnamen. Dabei ignoriert Bearcat Themenpräfixe, Gross- und Kleinschreibung sowie Satzzeichen.
+Thementitel mit dem Release- oder Collectionnamen. Dabei ignoriert es Themenpräfixe, Gross- und Kleinschreibung sowie Satzzeichen.
 
 - Themen mit genau übereinstimmendem Titel haben Vorrang.
 - Gibt es keine genaue Übereinstimmung, sucht Bearcat nach Titeln, die alle Wörter des Namens in derselben Reihenfolge enthalten.

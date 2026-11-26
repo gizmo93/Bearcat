@@ -23,8 +23,8 @@ The badge disappears when all entries are done.
 A release shows up in the queue once it has a finished upload that you have not marked as posted.
 Bearcat uses the latest completed upload per upload configuration. Older uploads are not listed separately.
 
-Bearcat waits until no image uploads are pending or running. If screenshots are configured for upload,
-it also waits for them to be created and uploaded. Failed image uploads do not block the queue.
+Bearcat waits until all pending image uploads finish. If screenshots are configured for upload,
+it waits for them to be created and uploaded too. Failed image uploads do not block the queue.
 
 The queue has two sections:
 
@@ -41,7 +41,7 @@ for single releases and collections shows the matching rule and target for each 
 Click **Post** to submit the post. **Post to all matched sites** posts to every remaining site with a matching rule.
 The **Auto** badge shows that Bearcat posts to this site automatically.
 
-After a reupload or the upload of a new episode to a collection, existing posts show
+After a reupload, or when you upload a new episode to a collection, existing posts show
 **Post content is outdated**. Click **Update post** to replace the post. If automatic posting is blocked,
 the section shows the reason instead of the site list.
 
@@ -52,7 +52,7 @@ and removes it from the queue.
 
 ## Marking something as posted
 
-When you have posted a release somewhere, click **Mark as posted** on its entry. The entry is then removed from the list.
+Once you have posted a release, click **Mark as posted** on its entry to remove it from the list.
 
 ## The guided workflow
 

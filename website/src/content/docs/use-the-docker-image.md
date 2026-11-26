@@ -13,8 +13,8 @@ next:
 [Go to the update instructions](#updating-bearcat).
 :::
 
-The Docker image includes RAR and 7-Zip and uses **SQLite**, so you only need one container.
-You need Docker with Docker Compose. The image supports `linux/amd64` only. Raspberry Pi is not supported.
+The Docker image includes RAR and 7-Zip and uses **SQLite**, so a single container is enough.
+It requires Docker with Docker Compose and supports `linux/amd64` only (Raspberry Pi is not supported).
 
 For Windows or an Apple Silicon Mac, you can use the
 [native Desktop app](/use-the-desktop-launcher/).
@@ -52,8 +52,8 @@ RELEASES_DIR=/srv/releases
 BEARCAT_DATA_DIR=./bearcat-data
 ```
 
-Replace `/srv/releases` with your own path. You can leave the other settings unchanged.
-Docker does not create a missing release folder. If the folder does not exist, the container does not start.
+Replace `/srv/releases` with your own path and leave the other settings as they are.
+Make sure the folder already exists; Docker will not create it, and the container will fail to start if it is missing.
 
 `BEARCAT_DATA_DIR` stores the database and encryption key in `bearcat-data` next to your Compose
 file by default. Keep this data folder on local storage. Release files can be on an NFS or SMB share.

@@ -29,7 +29,7 @@ Jede Archivkonfiguration verweist direkt auf einen Archivordner. Bearcat erkennt
 
 Fehlen Archivdateien, kehrt der Upload zu `WaitingForArchive` zurück. Bearcat lädt sie von einem
 aktivierten [Mirrorhoster](/de/mirror-downloads/) herunter, auf dem sie noch online sind. Ohne Mirror
-musst du die Archive selbst bereitstellen. Ein Unmanaged Release hat keine Rohdateien zum Neupacken.
+musst du die Archive selbst bereitstellen, da ein Unmanaged Release keine Rohdateien zum Neupacken hat.
 
 Nach einem Mirrordownload läuft der Upload automatisch weiter. Stellst du die Dateien selbst bereit,
 aktualisiere die Unmanaged Archive im Aktionsmenü. Ändere den Archivordner, wenn du die Dateien woanders ablegst.
@@ -43,12 +43,12 @@ Die Prüfungen des Releaseordners entfallen.
 
 Über das Aktionsmenü auf der Releasedetailseite wandelst du zwischen den Typen um.
 
-- **In Unmanaged umwandeln** setzt ein erstelltes Archiv für jede Archivkonfiguration voraus.
+- **In Unmanaged umwandeln** setzt ein vorhandenes Archiv für jede Archivkonfiguration voraus.
   Releases mit einer [Videouploadkonfiguration](/de/video-hosters/#releaseordner) kannst du nicht umwandeln.
-  Bearcat entfernt den gespeicherten Pfad zum Releaseordner. Archive und Uploads bleiben erhalten.
+  Bearcat entfernt den gespeicherten Pfad zum Releaseordner, behält aber Archive und Uploads.
   Die Rohdateien kannst du danach selbst löschen.
-- **In Managed umwandeln** lässt dich einen Releaseordner mit den Rohdateien wählen. Archivkonfigurationen und Uploads bleiben erhalten.
-  Bearcat kann das Release danach wieder neu packen.
+- **In Managed umwandeln** lässt dich einen Releaseordner mit den Rohdateien wählen. Archivkonfigurationen
+  und Uploads bleiben erhalten, und Bearcat kann das Release danach wieder neu packen.
 
 Bei Releases, die per FTP oder FTPS heruntergeladen wurden, kannst du in der Remoteautomatisierung auch **Rohdateien behalten**
 deaktivieren. Bearcat wandelt sie dann in Unmanaged Releases um und entfernt den heruntergeladenen Ordner nach den

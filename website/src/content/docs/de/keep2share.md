@@ -3,11 +3,11 @@ title: "Keep2Share: Captchas lösen"
 description: "Ein Keep2Share-Captcha lösen und die Hosterregistrierung wieder aktivieren."
 ---
 
-## Captcha Challenge
+## "Unicorn"-Captchas
 
 Keep2Share verlangt manchmal ein Captcha, wenn es deiner IP-Adresse nicht vertraut.
 Bis du es löst, schlagen API-Aufrufe fehl. Bearcat deaktiviert die Hosterregistrierung und benachrichtigt
-dich. So verhindert es weitere Anfragen, die eine IP-Sperre auslösen könnten.
+dich. Das verhindert weitere Anfragen, die eine IP-Sperre auslösen könnten.
 
 ![Benachrichtigung über eine Captchaanfrage von Keep2Share](../images/keep2share-captcha-challenge.png)
 

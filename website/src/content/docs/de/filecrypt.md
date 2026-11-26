@@ -5,11 +5,11 @@ title: "Filecrypt-API-Zugang für Bearcat"
 ## API-Schlüssel
 
 Für einen API-Schlüssel brauchst du ein Konto bei [filecrypt.cc](https://www.filecrypt.cc/).
-Die Registrierung geht nur mit Einladung. Auf der Website erfährst du, wo du eine Einladung anfragen kannst.
+Die Registrierung erfordert eine Einladung; auf der Website erfährst du, wo du sie anfragen kannst.
 
 Öffne in Bearcat **Registrierungen > Crypter > Crypterregistrierungen**, füge filecrypt.cc hinzu
-und trage deinen API-Schlüssel ein. Verbinde den Account danach mit einer
+und trage deinen API-Schlüssel ein. Verbinde das Konto danach mit einer
 [Uploadkonfiguration](/de/account-settings/#linkcrypter-und-metadatenquellen-einrichten).
 
-Um bestehende Ordner zu übernehmen, folge [Linkcrypterordner importieren](/de/import-link-crypter-folders/).
+Siehe [Linkcrypterordner importieren](/de/import-link-crypter-folders/), um bestehende Ordner zu übernehmen.
 Dafür braucht der API-Schlüssel das Recht `LIST`.

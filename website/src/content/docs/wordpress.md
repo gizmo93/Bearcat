@@ -115,8 +115,8 @@ in the repository.
 
 Link images from your image hoster in the template with `imagelinks`.
 
-With **Upload cover as featured image** on, Bearcat downloads the cover of the release or collection,
-uploads it to the WordPress media library and sets it as the featured image of the new post or draft.
+With **Upload cover as featured image** enabled, Bearcat downloads the release or collection cover,
+uploads it to the WordPress media library, and sets it as the featured image of the new post or draft.
 Without a cover, the post gets no featured image. Bearcat does not upload screenshots to the media library.
 
 - The account must be allowed to upload files. Otherwise **Try login** fails.

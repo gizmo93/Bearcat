@@ -64,7 +64,7 @@ Starte den Dienst mit `sc.exe stop Bearcat` und `sc.exe start Bearcat` neu.
 
 ### Desktopanwendung
 
-Gib den Schlüssel im Feld **API key** der [Desktopanwendung](/de/use-the-desktop-launcher/) ein und klicke auf **Save**. Läuft Bearcat, klicke auf **Stop** und **Start Bearcat**.
+Gib den Schlüssel im Feld **API key** der [Desktopanwendung](/de/use-the-desktop-launcher/) ein und klicke auf **Save**. Wenn Bearcat läuft, klicke auf **Stop** und danach auf **Start Bearcat**.
 
 ### Direkt gestarteter Bearcat.Host
 
@@ -81,13 +81,13 @@ Setze die Umgebungsvariable `Bearcat__ApiKey` oder erstelle `appsettings.user.js
 ### Netzwerk
 
 Betreibe Bearcat in einem vertrauenswürdigen Netzwerk. Der Schlüssel schützt Befehle, aber jeder,
-der Bearcat erreichen kann, kann Releases, Uploads und Downloadlinks lesen.
+der Bearcat erreicht, kann Releases, Uploads und Downloadlinks lesen.
 
-Die Desktopanwendung und der Windows-Dienst lauschen nur auf `127.0.0.1:17208`, das aufrufende Tool muss also auf demselben Rechner laufen. Docker veröffentlicht Port `8080`.
+Die Desktopanwendung und der Windows-Dienst lauschen nur auf `127.0.0.1:17208`. Das aufrufende Tool muss also auf demselben Rechner laufen. Docker gibt Port `8080` frei.
 
 ## Beispielablauf
 
-Die folgenden Befehle sind für eine Bash-Shell. Ersetze Adresse, API-Schlüssel und Beispiel-IDs
+Die folgenden Beispiele verwenden Bash. Ersetze Adresse, API-Schlüssel und Beispiel-IDs
 (`3`, `42`, `1234`) durch die Werte deiner Installation. Die Release-ID erhältst du beim Erstellen,
 die Upload-ID beim Abfragen der Uploads.
 
@@ -110,8 +110,8 @@ curl -X POST "$BEARCAT/api/v1/releases" \
 - `name`: optional, standardmässig der Ordnername.
 - `primaryLanguageCode`: optional, zwei Buchstaben, zum Beispiel `de`.
 
-Warte mit dem Aufruf, bis alle Dateien im Ordner sind. Bearcat wartet nicht, bis Dateien fertig
-kopiert sind. Die Anfrage kann einige Sekunden dauern, während Bearcat die Releaseinformationen abruft.
+Rufe diesen Endpunkt erst auf, wenn alle Dateien im Ordner liegen. Bearcat wartet nicht, bis
+Kopiervorgänge abgeschlossen sind. Die Anfrage kann einige Sekunden dauern, während Bearcat die Releaseinformationen abruft.
 
 Antwort: `201 Created` mit dem Release.
 
@@ -176,7 +176,7 @@ Antwort: `204 No Content`. Das Release kommt zurück in die Postwarteschlange, w
 
 | Code | Bedeutung |
 | --- | --- |
-| `400` | Ungültige Anfrage, zum Beispiel ein relativer `folderPath`, ein fehlender Ordner oder ein unbekanntes Template. `errors` listet die Felder. |
+| `400` | Ungültige Anfrage, zum Beispiel ein relativer `folderPath`, ein fehlender Ordner oder ein unbekanntes Template. `errors` nennt die betroffenen Felder. |
 | `401` | `X-Api-Key` fehlt oder ist falsch. |
 | `403` | Kein API-Schlüssel konfiguriert. |
 | `404` | Release oder Upload nicht gefunden. |

@@ -16,7 +16,7 @@ Open **Configuration > Release settings > Archive storage folders** and click **
 | **Name** | Unique name for the storage folder. |
 | **Path** | Absolute path of an existing folder. Each path can only be registered once. |
 | **Minimum free space (GB)** | Space that must remain free after the move. Set `0` for no minimum. |
-| **Parallel file copies** | How many files of one archive are copied at the same time, both when moving into the folder and when copying into a local working copy. Raise it for network mounts (SMB, rclone), keep `1` for local hard disks. |
+| **Parallel file copies** | Number of files per archive copied at once, both when moving into the folder and when copying into a local working copy. Raise it for network mounts (SMB, rclone); keep `1` for local hard disks. |
 | **Priority** | Lower values take priority. |
 | **Local working copy for reuploads** | Copy the files a reupload needs into a temporary local working copy. When off, read them directly from the storage folder. |
 
@@ -32,7 +32,7 @@ In Docker, make it accessible through a bind mount and enter its path inside the
 
 ## Overview
 
-The list shows free space and its required minimum, the number of stored archives, priority, and active status.
+The list shows free space, the required minimum, the number of stored archives, priority, and active status.
 If free space cannot be read, it shows **Unavailable**.
 Only current, complete archives count as stored. Bearcat excludes archives that were deleted,
 replaced by a re-import, or have missing files.
@@ -67,7 +67,7 @@ files copied so far and keeps the archive at its original location.
 
 If no folder fits or copying fails, the archive stays at its original location.
 Bearcat notifies you and retries on the next run.
-Further notifications for the same error wait until you resolve the current one.
+No further notifications are sent for the same error until you resolve the current one.
 
 Archives in storage folders are never deleted automatically.
 **Delete local archives** on the release detail page skips them as well.
@@ -89,7 +89,7 @@ are reused.
 - The upload waits until the copy has finished.
 - Hash changes and the upload use the local files.
 - The storage folder is never written to by a reupload. The archive stays assigned to its storage folder.
-- After the uploads of the archive configuration have finished, the
+- After all uploads for that archive configuration finish, the
   [Auto cleanup](/advanced-configuration/#available-background-tasks) task points the archive
   back to the storage folder and deletes the working copy. This runs regardless of the cleanup rules.
   Failed uploads do not delay it.
@@ -97,12 +97,12 @@ are reused.
 Under **Home**, **Copying into local working copies** shows the progress.
 **Cancel copying** removes the files copied so far and the upload reads the archive from the storage folder.
 
-If copying fails, Bearcat removes the copied files and the upload reads the archive from the storage
-folder. This also applies when the **Archive files base path** does not exist: Bearcat never creates
-it, only the subfolder inside it. Bearcat notifies you once per archive until you resolve the notification.
+If copying fails, Bearcat removes any copied files and falls back to reading the archive from the storage
+folder. This also applies if the **Archive files base path** does not exist: Bearcat creates only the
+subfolder inside it, never the base path itself. You get one notification per archive until you resolve it.
 
 If archive files are missing in the storage folder, Bearcat downloads only the missing files from a
-[mirror](/mirror-downloads/) and puts them back into the archive's folder in the storage folder.
+[mirror](/mirror-downloads/) and puts them back into the archive's subfolder there.
 Without a mirror, it repacks managed releases. If the storage folder is not available, the restore fails
 with a notification instead of downloading. Bearcat never creates the storage folder.
 
@@ -142,5 +142,5 @@ The **Archives** tab of the release detail page and the **Archives** list show t
 next to archives stored there. Unmanaged releases also show it next to the archive folder in the header.
 While an archive has a local working copy, the name is followed by **local working copy**.
 
-When you change the archive folder of an unmanaged release, the archive belongs to the storage folder
-that contains the new folder, or to none.
+When you change the archive folder of an unmanaged release, Bearcat assigns the archive to whichever
+storage folder contains the new path, or to none if it lies outside all storage folders.

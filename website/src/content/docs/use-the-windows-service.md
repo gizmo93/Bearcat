@@ -116,8 +116,8 @@ Bearcat stores the key for your encrypted credentials in the same folder:
 
 Back up `bearcat.key` together with your database:
 
-- SQLite: the database file, by default `%ProgramData%\Bearcat\bearcat.db`. Stop the service before copying the file. While the service runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"` instead.
-- PostgreSQL: your PostgreSQL database.
+- **SQLite:** the database file, by default `%ProgramData%\Bearcat\bearcat.db`. Stop the service before copying the file. While the service runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"` instead.
+- **PostgreSQL:** your PostgreSQL database.
 
 Without `bearcat.key`, Bearcat cannot decrypt your saved credentials.
 
@@ -175,8 +175,8 @@ sc.exe start Bearcat
 
 ## Using a network share for releases
 
-The service runs as `LocalSystem` by default. This account cannot access protected network shares.
-Mapped drives such as `Z:` are not visible to services. If your release data lives on a network share:
+By default, the service runs as `LocalSystem`, which cannot access protected network shares.
+Mapped drive letters such as `Z:` are also invisible to Windows services. If your release files are on a network share:
 
 1. Enter it as a **UNC path** (`\\server\share\releases`) during setup, not a mapped drive letter.
 2. Open `services.msc` > **Bearcat** > **Log On**, and set an account that has access to the share.

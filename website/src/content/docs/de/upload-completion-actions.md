@@ -10,7 +10,7 @@ Eine solche Aktion ist der [XML-Export für IntelligeN](/de/intelligen-xml-expor
 
 1. Öffne **Automatisierung > Aktionen nach dem Upload** und klicke auf **Neue Aktion**.
 2. Wähle den **Aktionstyp** und gib der Aktion einen Namen.
-3. Wähle, wann die Aktion laufen soll. Du kannst **Nach dem ersten Upload**, **Nach einem Reupload** oder beides aktivieren.
+3. Aktiviere **Nach dem ersten Upload**, **Nach einem Reupload** oder beides.
 4. Fülle die Felder für den gewählten Aktionstyp aus und klicke auf **Speichern**.
 
 Neue Aktionen sind sofort aktiv. Über **Deaktivieren** im Aktionsmenü kannst du sie pausieren.
@@ -31,7 +31,7 @@ Nutzt eine [Releasecollection](/de/release-collections/) [Uploadslots](/de/relea
 läuft die Aktion für die ganze Collection. Bearcat wartet, bis alle Uploads in den Slots, die Linkcontainer und die Bilder
 der Collection fertig sind. Ausserdem muss jedes Release das [Quality Gate](/de/quality-gates/) bestanden haben oder manuell freigegeben sein.
 
-Kommt eine neue Folge hinzu, gilt für ihren Upload **Nach dem ersten Upload**. **Nach einem Reupload** gilt nur,
+Kommt eine neue Folge hinzu, löst ihr Upload **Nach dem ersten Upload** aus. Der Auslöser **Nach einem Reupload** greift nur,
 wenn alle neuen Uploads in den Slots Reuploads sind. Uploads ausserhalb der Slots lösen die Aktion für das einzelne Release aus.
 
 ## Ergebnis prüfen oder Aktion manuell starten

@@ -28,26 +28,26 @@ Each archive configuration points to an archive folder. Bearcat detects the arch
 
 If archive files are missing, the upload returns to `WaitingForArchive`. Bearcat downloads them
 from an enabled [mirror hoster](/mirror-downloads/) that still has them online. Without a mirror,
-you must provide the archives yourself. An unmanaged release has no raw files to repack.
+you have to provide the archives yourself, since an unmanaged release has no raw files to repack.
 
 After a mirror download, the upload continues automatically. If you provide the files yourself,
 refresh the unmanaged archives from the actions menu. Change the archive folder if you put the files elsewhere.
 
 ![unmanaged-releases-refresh-folder.png](images/unmanaged-releases-refresh-folder.png)
 
-[Quality gates](/quality-gates/) only check the release infos (cover, description, NFO) of
-unmanaged releases. Release folder checks are skipped.
+[Quality gates](/quality-gates/) only check release info (cover, description, NFO) on
+unmanaged releases and skip release folder checks.
 
 ## Converting between types
 
 Use the actions menu on the release detail page to convert between types.
 
-- **Convert to unmanaged** requires a created archive for every archive configuration.
+- **Convert to unmanaged** requires an existing archive for every archive configuration.
   You cannot convert releases with a [video upload configuration](/video-hosters/#release-folder).
-  Bearcat removes the stored release folder path. Archives and uploads are kept.
-  You can then delete the raw files yourself.
-- **Convert to managed** lets you choose a release folder with the raw files. Archive configurations and uploads are kept.
-  Bearcat can then repack the release.
+  Bearcat removes the stored release folder path while keeping archives and uploads, so you can
+  delete the raw files yourself.
+- **Convert to managed** lets you choose a release folder with the raw files. Archive configurations
+  and uploads are kept, and Bearcat can repack the release again.
 
 For releases downloaded from FTP or FTPS, you can also turn off **Keep raw files** in the remote
 automation. Bearcat then converts them to unmanaged and removes the downloaded folder after the

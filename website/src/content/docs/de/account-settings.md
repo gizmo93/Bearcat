@@ -12,7 +12,7 @@ Hier richtest du weitere Dienste, Reuploads und Uploadlimits ein.
 - Öffne **Registrierungen > Crypter > Crypterregistrierungen** und füge deinen Account hinzu.
   Öffne danach ein Release, gehe zu **Uploads > Konfiguration** und klappe die gespeicherte
   Uploadkonfiguration auf. Füge dort den Linkcrypter hinzu, bei Bedarf mit einem Containerpasswort.
-- Öffne **Registrierungen > NFO-Datenbankregistrierungen**, um NFOs automatisch abzurufen.
+- Öffne **Registrierungen > NFO-Datenbankregistrierungen**, um Quellen für Releaseinformationen und NFOs zu aktivieren.
 - Öffne **Registrierungen > Metadatenquellen**, um Quellen für Titel, Beschreibungen, Genres und Coverbilder hinzuzufügen.
 
 Details findest du unter [Releaseinformationen und Metadaten](/de/release-information-and-metadata/).
@@ -24,8 +24,8 @@ Wähle den Hoster und gib die nötigen Zugangsdaten ein.
 
 ## Bilduploadkonfiguration
 
-Klicke im Tab **Bilder** eines Releases unter **Bilduploadkonfigurationen** auf **Hinzufügen**. Wähle einen
-Namen und eine Bildhosterregistrierung. Wähle dann, welche Bilder Bearcat hochladen soll:
+Klicke im Tab **Bilder** eines Releases unter **Bilduploadkonfigurationen** auf **Hinzufügen**. Gib einen
+Namen ein, wähle eine Bildhosterregistrierung und lege fest, welche Bilder hochgeladen werden sollen:
 
 ![Bilduploadkonfiguration](../images/image-upload-config-dialog.png)
 
@@ -49,7 +49,7 @@ Upload im Tab **Bilder**, um ihn erneut zu starten.
 
 Öffne **Releaseeinstellungen > Releasegruppen** und bearbeite die Gruppe.
 Aktiviere automatische Reuploads und setze **Stunden bis Reupload**.
-Mit `24` wartet Bearcat mindestens 24 Stunden, nachdem es die Links als offline erkannt hat.
+Mit `24` wartet Bearcat mindestens 24 Stunden, nachdem Dateien als offline erkannt wurden, bevor es einen Reupload einplant.
 Mit `0` kann es sofort einen Reupload einplanen.
 
 Wähle die Releasegruppe beim Erstellen oder Bearbeiten eines Releases. Um mehrere Releases gemeinsam zu ändern,
@@ -59,7 +59,7 @@ Details findest du unter [Automatische Reuploads](/de/upload-lifecycle/#7-automa
 ## Reuploadoverrides pro Hoster
 
 Öffne in **Hosterregistrierungen** den Dialog **Neuer Hoster** oder **Bearbeiten**, um die
-Reuploadeinstellungen für einen Account zu überschreiben. Lass die Felder für abweichende Werte leer, um die Einstellungen
+Reuploadeinstellungen für einen Account zu überschreiben. Lass die Felder leer, um die Einstellungen
 der Releasegruppe zu verwenden.
 
 | Einstellung | Wirkung |
@@ -67,7 +67,7 @@ der Releasegruppe zu verwenden.
 | **Stunden bis Reupload (Override)** | Überschreibt die Wartezeit der Releasegruppe für diesen Hoster. |
 | **Reuploadauslöser: Teilweise oder komplett offline** | Startet die Wartezeit, sobald irgendein Link offline geht. |
 | **Reuploadauslöser: Erst wenn komplett offline** | Wartet, bis alle Links offline sind. Die Wartezeit startet, wenn der letzte Link offline geht. |
-| **Immer alle Dateien neu hochladen** | Lädt alle Dateien erneut hoch, auch diejenigen, die noch online sind. |
+| **Immer alle Dateien neu hochladen** | Lädt alle Dateien erneut hoch, auch Dateien, die noch online sind. |
 
 ![Reuploadoverrides eines Hosters](../images/edit-hoster-reupload-overrides.png)
 

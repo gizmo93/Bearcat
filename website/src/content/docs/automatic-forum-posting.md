@@ -53,8 +53,8 @@ Each of the three categories has two lists:
 - **Required**: the post must include at least one selected provider.
 - **Forbidden**: Bearcat removes uploads, containers and images from these providers.
 
-An empty list adds no restrictions. Automatic posting skips the site if a **Required** list has no provider left in the post
-or if all uploads, all containers or all images were removed.
+An empty list adds no restrictions. Automatic posting skips the site if none of the **Required** providers are in the post,
+or if all uploads, containers, or images were filtered out.
 
 Bearcat checks all uploads, upload slots and member releases together.
 Containers with several hosters, such as those for all hosters of a release or for collection upload slots,
@@ -72,16 +72,16 @@ Click **New posting rule** and fill in these fields:
 
 - **Applies to**: choose **Release** or **Release collection** at the top of the dialog.
   Each rule applies to one type.
-- **Name**: your own name for that rule
+- **Name**: your own name for that rule.
 - **Target**: a subforum or blog category.
   Click **Load targets** and select one. Loading can take a few seconds.
-- **Prefixes**: forums only. Some subforums allow you to set prefixes on new threads
+- **Prefixes**: forums only. Some subforums allow you to set prefixes on new threads.
 - **Post template**: the template for the post body. Release rules use release templates;
   collection rules use release collection templates. The template determines the rule type.
   Only templates in the matching output format are available: BBCode for forums, HTML for WordPress.
 - **Posting mode**: forums only. Either *Reply to an existing thread, otherwise start a new one*, or *Always start
   a new thread*. Blogs always get a new post.
-- **Enabled**: disabled rules are skipped while matching
+- **Enabled**: disabled rules are skipped while matching.
 
 ![add-or-edit-rule.png](images/add-or-edit-rule.png)
 
@@ -141,8 +141,8 @@ For collections, the name, content type, release group and language come from th
 If language or content type is not set, Bearcat falls back to the member releases.
 Resolution, source, platform, year, season, multi-language and release group tag come from the classifications
 of the releases in the collection. Bearcat uses a value only when it is the same across all classified releases.
-Otherwise, it is unknown or not set. Releases without a classification do not count into these values.
-The genre comes from the media data of the member releases and is used only when it is the same across all
+Otherwise, it is unknown or not set. Unclassified releases are ignored here.
+Genre comes from the member releases' media data and is only used when it is the same across all
 releases that have one.
 
 ## Ordering the rules
@@ -208,7 +208,7 @@ After a reupload, Bearcat can update existing posts with the new download links.
 This also applies when you upload a new episode to a collection. Bearcat updates the existing post
 instead of adding a new reply.
 It fills the template with the current data and **replaces the entire post, including any edits you made on the site**.
-Use this for posts with direct download links instead of a link crypter container.
+This is especially useful for posts with direct download links instead of a link crypter container.
 
 ### Updating from the queue
 

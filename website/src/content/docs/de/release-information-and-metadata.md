@@ -7,7 +7,7 @@ Bearcat speichert drei Arten von Informationen zu einem Release:
 
 - **Releaseinformationen** stammen aus Scenedatenbanken: Releasename, Grösse, Video- und Audiotyp,
   Datenbanklinks und weitere Angaben zum Release.
-- **Metadaten** beschreiben den Film oder die Serie: Titel, Genre, Beschreibung, Coverbild und Anbieterlink.
+- **Metadaten** beschreiben den Film, die Serie oder das Spiel: Titel, Genre, Beschreibung, Coverbild und Anbieterlink.
 - **Mediendaten** werden mit MediaInfo aus den lokalen Videodateien gelesen. Sie enthalten Codecs,
   Auflösung, Laufzeit, Audiospuren und Untertitelspuren.
 
@@ -16,14 +16,14 @@ aufgelösten Cover von TMDB.
 
 ## Quellen konfigurieren
 
-Öffne **Registrierungen > NFO-Datenbankregistrierungen** in der Seitenleiste, um Quellen für Scenereleaseinformationen
+Öffne **Registrierungen > NFO-Datenbankregistrierungen** in der Seitenleiste, um Quellen für Sceneinfos
 und NFO-Dateien zu aktivieren:
 
 - **xREL** deckt deutsche Scenereleases gut ab.
 - **SRRDB** deckt auch viele englische und internationale Scenereleases ab und kann NFO-Dateien
   und IMDb-IDs liefern.
 - **PreDB** hat eine ähnliche Abdeckung wie SRRDB, aber strengere API-Limits. Sind beide aktiviert,
-  fragt Bearcat für NFO-Dateien zuerst SRRDB.
+  fragt Bearcat für NFO-Dateien zuerst SRRDB ab.
 
 ![nfo-database-setup.png](../images/nfo-database-setup.png)
 
@@ -69,22 +69,21 @@ Du kannst auch mehrere Releases auswählen und ihre Sprache gemeinsam setzen ode
 1. NFO aus dem Releaseordner lesen oder aus einer aktiven NFO-Datenbank laden.
 2. Sceneinfos aus den aktiven NFO-Datenbanken abrufen.
 3. IMDb-IDs aus dem NFO und den Ergebnissen von xREL oder SRRDB auslesen.
-4. Metadaten über eine IMDb-ID suchen. Ohne passende ID verwendet Bearcat den Titel und weitere Angaben aus dem Releasenamen.
-5. Die Primärsprache an den Metadatenanbieter übergeben.
+4. Metadaten über eine IMDb-ID und (falls gesetzt) die Primärsprache suchen. Ohne passende ID sucht Bearcat nach dem Titel und weiteren Angaben aus dem Releasenamen.
 
-Bei Collections sucht Bearcat nach einer TV-Serie. Dafür verwendet es eine manuelle ID von TMDB oder
-TVDB oder eine IMDb-ID aus den enthaltenen Releases. Ohne passende ID sucht es nach dem Collectionnamen.
+Bei Collections sucht Bearcat nach einer TV-Serie über eine manuelle TMDB- oder TVDB-ID oder eine
+IMDb-ID aus den enthaltenen Releases. Ohne passende ID sucht Bearcat nach dem Collectionnamen.
 
-Die Hintergrundaufgabe **Release info resolution** ergänzt fehlende Daten automatisch. Du kannst die
-entsprechenden Aktionen auch im Tab **Releaseinfo** auslösen.
+Die Hintergrundaufgabe **Release info resolution** ergänzt fehlende Daten automatisch. Du kannst diese
+Aktionen auch manuell im Tab **Releaseinfo** starten.
 
 ## Der Tab Releaseinfo
 
 ![release-info-tab-and-settings.png](../images/release-info-tab-and-settings.png)
 
-Der Tab zeigt Metadaten und Sceneinfos getrennt. Diese Aktionen stehen zur Verfügung:
+Der Tab zeigt Metadaten und Sceneinfos getrennt. Verfügbare Aktionen:
 
-- **Aktualisieren** lädt die aktuellen Daten neu aus der Datenbank von Bearcat.
+- **Aktualisieren** lädt die aktuellen Daten aus Bearcats Datenbank neu.
 - **Metadaten abrufen** fragt die aktiven Metadatenquellen erneut ab.
 - **Releaseinfo bearbeiten** öffnet den manuellen Editor.
 - **Jetzt auflösen** erscheint, wenn die Sceneinfos fehlen.
@@ -99,7 +98,7 @@ Jede externe IMDb-ID erscheint einmal mit allen Quellen, die sie gefunden haben.
 
 Hat Bearcat den falschen Film, die falsche Serie oder das falsche Spiel gefunden, wähle
 **Metadatenzuordnung korrigieren** und gib die ID oder den Link zum richtigen Eintrag ein. Bearcat zeigt
-eine Vorschau. Klicke auf **Übernehmen**, um die Metadaten durch den gewählten Eintrag zu ersetzen.
+eine Vorschau. Klicke auf **Übernehmen**, um die Metadaten zu ersetzen.
 
 ![correct-metadata-match-dialog.png](../images/correct-metadata-match-dialog.png)
 
@@ -112,10 +111,10 @@ Der Link muss zum Inhaltstyp passen. Verwende bei TMDB einen Filmlink für Filme
 für Folgen oder Collections. Für Spiele verwendest du einen Link von Steam oder SteamDB.
 
 Bearcat speichert die ID aus deiner Eingabe und die IMDb-ID des Anbieters als manuelle IDs.
-Diese haben Vorrang vor IDs aus dem NFO, von xREL, SRRDB oder einem Anbieter.
+Diese haben Vorrang vor IDs aus dem NFO, von xREL, SRRDB oder einem Metadatenanbieter.
 
-Bei einer Collection speichert Bearcat die korrigierten IDs bei allen enthaltenen Releases. Dabei
-ersetzt es deren bisherige manuelle IDs von IMDb, TMDB und TVDB. Die Collection muss dafür mindestens
+Bei einer Collection speichert Bearcat die korrigierten IDs bei allen enthaltenen Releases und
+ersetzt dabei deren bisherige manuelle IDs von IMDb, TMDB und TVDB. Die Collection muss dafür mindestens
 ein Release enthalten.
 
 Um eine Korrektur rückgängig zu machen, öffne den Dialog erneut und wähle **Korrektur entfernen**.
@@ -131,6 +130,6 @@ Mit **NFO hinzufügen** oder **NFO bearbeiten** gibst du NFO-Inhalt manuell ein.
 bei jeder Änderung nach IMDb-IDs. Bei Managed Releases wird das bearbeitete NFO auch in den Releaseordner
 geschrieben.
 
-Manuell eingegebene Metadaten werden von einer automatischen Metadatenaktualisierung nicht überschrieben. Für eine neue Suche
+Eine automatische Aktualisierung überschreibt manuell eingegebene Metadaten nicht. Für eine neue Suche
 klicke auf **Releaseinfos und Metadaten löschen** und rufe die Daten erneut ab. Das gespeicherte NFO
 und die extrahierten externen IDs bleiben für die nächste Suche erhalten.

@@ -21,14 +21,13 @@ You can assign the same profile to several release groups.
 Open **Release settings > Quality profiles** in the sidebar and click **New quality
 profile**. Give it a name and add one or more checks. Each check has its own settings:
 
-- **File with pattern present**: a file matching the pattern you enter (for example `*.nfo` or
-  `*.sfv`) has to exist somewhere in the release folder. The pattern is matched against file names
-  and is case-insensitive.
-- **Minimum folder size**: the release folder has to be at least the number of megabytes you set.
-  Bearcat measures the folder on each check, including when files are still being copied.
-- **Required release infos**: switch on the parts of the release info that must be filled in: the
-  cover image, the description, and/or the NFO.
-- **Media info present**: media info has to have been extracted for the release.
+- **File with pattern present**: a file matching the pattern (for example `*.nfo` or
+  `*.sfv`) must exist anywhere in the release folder. Matching checks filenames and ignores case.
+- **Minimum folder size**: the release folder must be at least the configured size in megabytes.
+  Bearcat measures the folder on each check, including while files are still copying.
+- **Required release infos**: choose which release info fields must be filled in: cover image,
+  description, and/or NFO.
+- **Media info present**: media info must be extracted for the release.
 
 The checks that look at the release folder (file pattern, folder size, media info) are skipped for
 unmanaged releases.
@@ -61,10 +60,10 @@ Each release has a check status:
 Bearcat checks releases:
 
 - before creating an upload,
-- periodically in the background through the **"Quality gate re-evaluation"** task (every 30 minutes
+- periodically in the background through the **Quality gate re-evaluation** task (every 30 minutes
   by default; you can change the interval on the [Background Tasks](/advanced-configuration/#background-tasks)
   page), and
-- on demand when you press **Recheck** on a release in the quality issues list.
+- on demand when you click **Recheck** on a release in the quality issues list.
 
 The background task also checks older releases with failed or pending checks.
 
@@ -85,7 +84,7 @@ Each entry has three actions:
 
 - **Open** takes you to the release. Add missing details, then click **Recheck** or wait for the next background check.
 - **Recheck** evaluates the release again immediately.
-- **Approve manually** marks the release as **manually approved**. This allows uploads despite failed checks
+- **Approve manually** marks the release as **Manually approved**. This allows uploads despite failed checks
   and stops further checks.
 
 ![quality-gate-list.png](images/quality-gate-list.png)

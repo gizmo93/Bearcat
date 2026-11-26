@@ -1,6 +1,6 @@
 ---
 title: "Control Bearcat from External Tools"
-description: "Create releases, control uploads and record posts through the REST API."
+description: "Create releases, control uploads, and record posts through the REST API."
 ---
 
 Use the [REST API](/rest-api/) to create releases, control uploads, and record posts.
@@ -19,7 +19,7 @@ See the [API reference](/api/) for parameters and response fields.
 | `POST /api/v1/releases/{releaseId}/posted-locations` | Save the URL where the release was posted. |
 | `POST /api/v1/releases/{releaseId}/mark-posted` | Remove the release from the [post queue](/post-queue/). |
 
-The API cannot change hosters, templates, rules, or credentials, or delete data.
+The API cannot delete data or change hosters, templates, rules, or credentials.
 
 ## API key
 
@@ -64,7 +64,7 @@ Restart the service with `sc.exe stop Bearcat` and `sc.exe start Bearcat`.
 
 ### Desktop app
 
-Enter the key in the **API key** field of the [Desktop app](/use-the-desktop-launcher/) and click **Save**. If Bearcat is running, click **Stop** and **Start Bearcat**.
+Enter the key in the **API key** field of the [Desktop app](/use-the-desktop-launcher/) and click **Save**. If Bearcat is running, click **Stop** and then **Start Bearcat**.
 
 ### Bearcat.Host started directly
 
@@ -176,10 +176,10 @@ Response: `204 No Content`. The release returns to the post queue when a newer u
 
 | Code | Meaning |
 | --- | --- |
-| `400` | Invalid request, for example a relative `folderPath`, a missing folder or an unknown template. `errors` lists the fields. |
+| `400` | Invalid request, for example a relative `folderPath`, a missing folder, or an unknown template. `errors` lists the invalid fields. |
 | `401` | `X-Api-Key` is missing or wrong. |
 | `403` | No API key configured. |
 | `404` | Release or upload not found. |
-| `409` | The command is not allowed in the current state, for example the folder is already used or the upload is not canceled. |
+| `409` | The command is not allowed in the current state (for example, the folder is already in use or the upload is not canceled). |
 
 Error responses use the Problem Details JSON format. The message is in `detail`.

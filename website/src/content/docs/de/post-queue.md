@@ -23,8 +23,8 @@ Sind alle Einträge erledigt, verschwindet das Badge.
 Ein Release erscheint in der Warteschlange, sobald es einen fertigen Upload hat, den du nicht als gepostet
 markiert hast. Bearcat betrachtet pro Uploadkonfiguration den neuesten fertigen Upload. Ältere Uploads werden nicht einzeln aufgeführt.
 
-Bearcat wartet, bis keine Bilduploads mehr ausstehen oder laufen. Sollen Screenshots hochgeladen werden,
-wartet es auch auf deren Erstellung und Upload. Fehlgeschlagene Bilduploads blockieren die Warteschlange nicht.
+Bearcat wartet, bis alle laufenden und ausstehenden Bilduploads fertig sind. Sollen Screenshots hochgeladen werden,
+wartet es auch, bis sie erstellt und hochgeladen sind. Fehlgeschlagene Bilduploads blockieren die Warteschlange nicht.
 
 Die Warteschlange hat zwei Bereiche:
 
@@ -41,7 +41,7 @@ bei Einzelreleases und Collections die passende Regel und das Ziel pro Verteilun
 Mit **Posten** sendest du den Post ab. **Auf allen passenden Seiten posten** postet auf allen übrigen Seiten mit passender Regel.
 Das Badge **Auto** zeigt, dass Bearcat auf dieser Seite automatisch postet.
 
-Nach einem Reupload oder dem Upload einer neuen Folge in einer Collection steht bei bestehenden Posts
+Nach einem Reupload oder wenn du eine neue Folge in eine Collection hochlädst, steht bei bestehenden Posts
 **Postinhalt ist veraltet**. Mit **Post aktualisieren** ersetzt du den Post.
 Ist automatisches Posten blockiert, zeigt der Abschnitt den Grund statt der Seitenliste.
 
@@ -52,7 +52,7 @@ als gepostet und entfernt den Eintrag aus der Warteschlange.
 
 ## Als gepostet markieren
 
-Wenn du ein Release irgendwo gepostet hast, klicke in seinem Eintrag auf **Als gepostet markieren**. Der Eintrag wird dann aus der Liste entfernt.
+Sobald du ein Release gepostet hast, klicke in seinem Eintrag auf **Als gepostet markieren**, um es aus der Liste zu entfernen.
 
 ## Der geführte Workflow
 

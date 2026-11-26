@@ -51,7 +51,7 @@ Um ein Managed Release als Archiv hochzuladen, füge hier eine Archivkonfigurati
 
 Archive in einem [Speicherordner](/de/archive-storage-folders/) zeigen den Namen des Speicherordners
 neben ihrem Status. Solange ein Reupload eine [lokale Arbeitskopie](/de/archive-storage-folders/#reuploads)
-verwendet, folgt dem Namen **lokale Arbeitskopie**.
+verwendet, steht hinter dem Namen **lokale Arbeitskopie**.
 
 ## Uploads
 
@@ -59,7 +59,7 @@ verwendet, folgt dem Namen **lokale Arbeitskopie**.
 
 ![Tab Uploadkonfigurationen](../images/upload-configurations-tab.png)
 
-**Verlauf** listet alle Uploaddurchläufe. Über die Aktionen eines Durchlaufs startest du zum Beispiel einen manuellen Reupload.
+**Verlauf** listet alle Uploaddurchläufe auf. Über die Aktionen eines Durchlaufs startest du zum Beispiel einen manuellen Reupload.
 
 ![Tab Uploadverlauf](../images/release-uploads-tab.png)
 ![Dialog mit Uploadlinks](../images/upload-links-dialog.png)

@@ -10,7 +10,7 @@ Damit Bearcat Posts für dich absendet, verwende [Postingregeln](/de/automatic-f
 
 ## Voraussetzungen
 
-- Ein in Bearcat hinzugefügtes Konto für ein Forum oder [WordPress](/de/wordpress/).
+- Eine Verteilungsseite: ein Konto für ein Forum oder [WordPress](/de/wordpress/) in Bearcat.
 - Eine [Postvorlage](/de/forum-post-templates/) im Ausgabeformat der Seite: BBCode für Foren, HTML für WordPress.
 - Ein Release mit abgeschlossenen Uploads und Downloadlinks.
 
@@ -23,7 +23,7 @@ ob die Anmeldung funktioniert.
 Wähle für boerse.cx und data-load.me den jeweiligen Foreneintrag.
 
 Für andere XenForo-Foren wählst du **XenForo**. Gib Benutzername, Passwort und unter **Adresse** die Startseite des Forums
-ein, einschliesslich eines Installationsordners, zum Beispiel `https://example.org/community/`. Verwende die
+ein, einschliesslich eines eventuellen Installationsordners, zum Beispiel `https://example.org/community/`. Verwende die
 Adresse, die dein Browser nach Weiterleitungen anzeigt. Füge jedes Forum einzeln hinzu.
 
 Der XenForo-Eintrag braucht Friendly URLs und die Standardformulare von XenForo für Login, Post und Entwurf.
@@ -67,9 +67,9 @@ Im Dialog:
    <figcaption>Kein bestehender Thread gefunden</figcaption>
    </figure>
 
-4. Wähle eine Postvorlage. Die Liste zeigt nur Vorlagen im Ausgabeformat der Seite. Bearcat füllt sie mit den
-   Releasedaten aus. Den fertigen Text kannst du noch bearbeiten. Für einen neuen Thread oder Blogpost legst du auch den Titel fest.
-   In Foren kannst du zusätzlich ein Präfix wie 1080p oder x265 setzen.
+4. Wähle eine Postvorlage (es erscheinen nur Vorlagen im Ausgabeformat der Seite). Bearcat füllt sie mit den
+   Releasedaten aus; den fertigen Text kannst du noch bearbeiten. Für einen neuen Thread oder Blogpost legst du ausserdem den Titel fest.
+   In Foren kannst du optional ein Präfix wie 1080p oder x265 setzen.
 
    <figure>
 
@@ -95,7 +95,7 @@ Im Dialog:
    zeigt der Editor den Entwurf nicht an.
 2. Prüfe Titel und Text und nutze bei Bedarf die Vorschau. Sende den Post ab oder veröffentliche ihn im Blog.
 3. Klicke zurück in Bearcat auf **Ich habe gepostet**, um die URL des Posts unter **Veröffentlichungsorte** zu speichern.
-   Findet Bearcat einen Forenpost noch nicht, füge seine URL ein. Es kann einige Sekunden dauern, bis die Forensuche ihn findet.
+   Findet Bearcat einen Forenpost noch nicht, füge die URL von Hand ein. Es kann einige Sekunden dauern, bis der Post in der Forensuche auftaucht.
    Bei WordPress speichert Bearcat die URL ohne Suche.
 
 <figure>

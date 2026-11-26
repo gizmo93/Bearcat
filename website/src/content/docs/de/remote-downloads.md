@@ -40,7 +40,7 @@ Wähle **Managed**, um die heruntergeladenen Dateien zu packen, oder **Unmanaged
 3. Setze **Remoteordner** auf den Ordner, der die Releases enthält. Mit **Durchsuchen** wählst du ihn auf dem Server aus.
 4. Wähle einen lokalen **Downloadordner**. Bearcat legt dort für jedes Release einen Unterordner an.
 5. Gib optional ein **Muster für Ordnernamen** ein, zum Beispiel `*1080p*`. Lass es leer, um alle Ordner einzuschliessen.
-   Der Abgleich ignoriert Gross- und Kleinschreibung und nutzt Platzhalter, keine regulären Ausdrücke.
+   Der Abgleich ignoriert Gross- und Kleinschreibung und unterstützt Wildcards, aber keine regulären Ausdrücke.
 6. Wähle das **Releasetemplate** und optional eine **Primärsprache** für Metadaten.
 7. Entscheide, ob du **Vorhandene Ordner ignorieren** willst, und speichere. Die Automatisierung ist standardmässig aktiviert.
 
@@ -75,7 +75,7 @@ mit ihrem gesamten Inhalt heruntergeladen. Eine separate lokale Ordnerautomatisi
 Für andere Muster, Templates oder Downloadordner legst du weitere Automatisierungen an.
 Passen mehrere Automatisierungen auf denselben Ordner einer Quelle, gilt diejenige mit der niedrigsten
 **Priorität**. Zum Beispiel hat `10` Vorrang vor dem Standardwert `100`. Jeder Remoteordner wird pro Quelle nur einmal heruntergeladen.
-Eine Änderung der Prioritäten ordnet bereits gefundene Ordner nicht neu zu.
+Änderst du später die Prioritäten, werden bereits gefundene Ordner nicht neu zugeordnet.
 
 ### Doppelte Ordner
 
@@ -104,16 +104,16 @@ Unter **Aktivität > Remotedownloads** siehst du Ordner, Status und Fehler. Der 
 
 ![remote-downloads-page.png](../images/remote-downloads-page.png)
 
+Laufende Downloads siehst du auch auf der Startseite **Home** im Bereich **Downloads**, mit Fortschritt,
+Geschwindigkeit, Restzeit, Phase und Dateidetails. Die Releasedetailseite zeigt die Remotequelle.
+
+![running-remote-download.png](../images/running-remote-download.png)
+
 ### SFV-Prüfung
 
 Nach jedem Download sucht Bearcat im Releaseordner und seinen Unterordnern nach `.sfv`-Dateien und
 vergleicht die CRC32-Prüfsumme jeder aufgeführten Datei. Fehlt eine aufgeführte Datei oder stimmt ihre
 Prüfsumme nicht, schlägt der Download fehl, und die Dateien bleiben auf der Festplatte.
-
-Laufende Downloads siehst du auch auf der Startseite **Home** im Bereich **Downloads**, mit Fortschritt,
-Geschwindigkeit, Restzeit, Phase und Dateidetails. Die Releasedetailseite zeigt die Remotequelle.
-
-![running-remote-download.png](../images/running-remote-download.png)
 
 ### Ordner abbrechen, wiederholen oder überspringen
 
@@ -126,14 +126,14 @@ Nutze das Aktionsmenü unter **Remotedownloads**:
   Releaseerstellung zu wiederholen. Behebe zuerst den gemeldeten Fehler. Sind die Archive bereits
   entpackt, erstellt Bearcat nur das Release.
 - **Ignorieren** überspringt einen Ordner, dessen Download noch nicht begonnen hat, oder einen fehlgeschlagenen,
-  abgebrochenen oder doppelten Download. Ignorierte und doppelte Ordner blendet der Standardfilter für den Status aus,
-  und sie werden nicht erneut vorgemerkt.
+  abgebrochenen oder doppelten Download. Der Standardfilter für den Status blendet ignorierte und doppelte
+  Ordner aus, und sie werden nicht erneut vorgemerkt.
 
 Ist der lokale Releaseordner vor dem Download nicht leer, bricht Bearcat mit einem Fehler ab.
 Die vorhandenen Dateien bleiben erhalten. Verschiebe sie, bevor du den Download neu startest.
 
-Eine deaktivierte Automatisierung scannt nicht mehr. Bereits vorgemerkte Downloads bleiben vorgemerkt.
-Um einen davon zu stoppen, brich ihn unter **Remotedownloads** ab.
+Eine deaktivierte Automatisierung scannt nicht mehr, bereits vorgemerkte Downloads bleiben aber in der
+Warteschlange. Um einen davon zu stoppen, brich ihn unter **Remotedownloads** ab.
 
 ## Archive vor der Releaseerstellung entpacken
 
@@ -141,7 +141,7 @@ Aktiviere bei einem Managed Template **Archive vor der Releaseerstellung entpack
 Automatisierung, um RAR- oder 7z-Archive zu entpacken, bevor Bearcat das Release packt.
 
 Nach der SFV-Prüfung entpackt Bearcat alle RAR- und 7z-Archive im Releaseordner und seinen Unterordnern,
-jeweils in den Ordner, in dem sie liegen. Nach erfolgreichem Entpacken löscht es die Archivparts und
+jeweils in den Ordner, in dem sie liegen. Nach erfolgreichem Entpacken löscht Bearcat die Archivparts und
 `.sfv`-Dateien, die nur diese Parts aufführen, und erstellt das Release aus den entpackten Dateien.
 
 Bearcat bricht das Entpacken ab und behält die Archive, wenn:
@@ -163,11 +163,11 @@ Bearcat wartet, bis:
 - keine Uploads warten oder laufen und keine Archive erstellt werden.
 - jede Archivkonfiguration ein erstelltes Archiv oder einen [Mirror](/de/mirror-downloads/) hat, der online ist.
 
-Dann wandelt es das Release in ein [Unmanaged Release](/de/release-types/#unmanaged-releases) um und löscht
+Dann wandelt Bearcat das Release in ein [Unmanaged Release](/de/release-types/#unmanaged-releases) um und löscht
 den heruntergeladenen Ordner. Künftige Reuploads nutzen die vorhandenen Archive oder Mirrors.
 
-Speichere Archive ausserhalb des heruntergeladenen Releaseordners. Enthält er Archive, behält Bearcat
-den Ordner und benachrichtigt dich. Diese Option gilt nicht für Unmanaged Templates.
+Speichere Archive ausserhalb des heruntergeladenen Releaseordners. Enthält der Ordner Archive, behält Bearcat
+ihn und benachrichtigt dich. Diese Option gilt nicht für Unmanaged Templates.
 
 Bei Releases mit einer [Videouploadkonfiguration](/de/video-hosters/#releaseordner) behält Bearcat
 den heruntergeladenen Ordner.

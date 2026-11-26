@@ -15,7 +15,7 @@ Bearcat verwendet dafür die REST-API von WordPress.
 - Ein Konto mit der Rolle Redakteur oder Administrator. **Login testen** schlägt fehl, wenn das Konto
   keine Beiträge veröffentlichen darf. WordPress filtert das HTML von Rollen unterhalb von Redakteur
   (Berechtigung `unfiltered_html`), dabei können Tags aus deiner Vorlage entfernt werden.
-- Keine Cloudflare- oder andere Botprüfung vor der Seite.
+- Kein Cloudflare und keine andere Botprüfung vor der Seite.
 
 Bearcat ruft die REST-API über `index.php?rest_route=` auf. Jede Permalinkeinstellung funktioniert.
 
@@ -115,8 +115,8 @@ im Repository.
 
 Verlinke Bilder deines Bildhosters in der Vorlage mit `imagelinks`.
 
-Ist **Cover als Beitragsbild hochladen** an, übernimmt Bearcat das Cover des Releases oder der Collection
-in die Mediathek von WordPress und setzt es als Beitragsbild des neuen Posts oder Entwurfs.
+Ist **Cover als Beitragsbild hochladen** aktiviert, lädt Bearcat das Cover des Releases oder der Collection
+in die Mediathek von WordPress hoch und setzt es als Beitragsbild des neuen Posts oder Entwurfs.
 Ohne Cover erhält der Post kein Beitragsbild. Screenshots lädt Bearcat nicht in die Mediathek hoch.
 
 - Das Konto muss Dateien hochladen dürfen. Sonst schlägt **Login testen** fehl.

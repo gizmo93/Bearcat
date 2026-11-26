@@ -4,7 +4,7 @@ description: "Change the part size of many archive configurations and release te
 ---
 
 Open **Uploads and archives > Archives** and click **Change part size**. Select the current part size, enter the
-new one and click **Change part size**. The preview updates with every change.
+new one, and click **Change part size**. The preview updates with every change.
 
 The part size uses the global [part size unit](/advanced-configuration/#part-size-unit).
 
@@ -22,5 +22,5 @@ part size until they are packed again.
 The new part size must fit every target hoster of an archive. If it exceeds any hoster's file size limit,
 Bearcat skips that archive configuration. This also applies to release templates.
 
-The preview lists each skipped configuration with the hoster, its limit and a link to the release or
+The preview lists each skipped configuration with the hoster, its limit, and a link to the release or
 release template.

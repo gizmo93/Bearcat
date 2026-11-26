@@ -27,24 +27,24 @@ You can also [set up Bearcat manually](#set-up-manually).
 
 ### Working directories
 
-Choose release folders inside the configured working directories. Setup shows each directory as **OK**,
+Release folders must be inside a configured working directory. Setup shows each directory as **OK**,
 **Missing**, or **Not writable**. At least one must exist and be writable before you can click **Next**.
 
+You cannot change working directories in the wizard. Depending on your setup:
+
 - **Docker:** the host folder `RELEASES_DIR` from your `.env` file appears as `/mnt/data/releases`.
-- **Desktop app:** change **Working directories** in the settings and restart Bearcat.
+- **Desktop app:** change **Working directories** in the Desktop app settings and restart Bearcat.
 - **Windows service:** run `Bearcat.Cli.exe setup` again as Administrator and change the working directories.
   See [Change the setup later](/use-the-windows-service/#change-the-setup-later).
 
 Then click **Check again** in the web interface.
-
-You cannot change working directories in the wizard.
 
 ### Hoster
 
 1. Click **Add hoster**, choose your hoster, and enter its username and password or API key.
    Leave upload limits and reupload settings at their defaults.
 2. Select the hoster registrations Bearcat should use for uploads.
-3. Click **Try login** for each selected hoster registration.
+3. Click **Try login** for each selected hoster.
 
 Once at least one login test succeeds, you can click **Next**.
 
@@ -85,7 +85,7 @@ Choose an archive output folder separate from your source folders. If it does no
 The new template is **Managed** and contains one archive configuration and one upload configuration per
 selected hoster. If you have not selected a hoster, add the upload configurations later under **Release templates**.
 
-Archives get a random name. To use the release name, edit the archive configuration under **Release templates**.
+Archives get a random name by default. To use the release name instead, edit the archive configuration under **Release templates**.
 
 <details>
 <summary>Show template step</summary>
@@ -140,12 +140,10 @@ Click **Open release** to view the test release or **Go to activity** to return 
 ## What happens next
 
 - **Test release:** packing starts shortly after you click **Create source**.
-- **New local folders:** Bearcat scans about every two minutes. A folder must remain unchanged for the
-  [stability period](/advanced-configuration/#folder-automation) (default: 5 minutes).
-  Bearcat then creates the release.
-- **New folders on the server:** Bearcat also waits until the folder has remained unchanged for the
-  [stability period](/advanced-configuration/#remote-downloads) (default: 5 minutes).
-  It then downloads the folder and creates the release.
+- **New local folders:** Bearcat scans roughly every two minutes. Once a folder stays unchanged for the
+  [stability period](/advanced-configuration/#folder-automation) (default: 5 minutes), Bearcat creates the release.
+- **New folders on the server:** Bearcat also waits until a folder stays unchanged for the
+  [stability period](/advanced-configuration/#remote-downloads) (default: 5 minutes), then downloads it and creates the release.
 - **Uploads** start after the [initial upload cooldown](/advanced-configuration/#initial-upload-cooldown)
   (default: 5 minutes). To skip the wait for one release, click **Start uploads now** on its detail page.
 
@@ -157,7 +155,7 @@ links from **Overview**.
 
 If the upload fails or does not start, check the notification bell for errors. Make sure **Try login**
 succeeds and the archive output folder is writable. See [Upload lifecycle](/upload-lifecycle/)
-for the stages.
+for how each stage works.
 
 ### Start page
 

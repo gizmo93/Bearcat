@@ -20,7 +20,7 @@ Without a proxy, Bearcat connects directly.
 4. Enter **Username** and **Password** if the proxy requires them.
 5. Click **Save**, then **Test connection**.
 
-The test checks the proxy connection. Assign the proxy to a category or account to use it.
+The test only checks the connection. Assign the proxy to a category or account so Bearcat uses it.
 
 ## Choose which requests use the proxy
 

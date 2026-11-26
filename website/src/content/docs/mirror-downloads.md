@@ -12,11 +12,11 @@ This works for both [managed and unmanaged releases](/release-types/).
 
 ## When Bearcat downloads from a mirror
 
-When an upload needs an existing archive, Bearcat first uses the files on disk.
-It downloads missing files from active mirror hosters. The required parts can come from several mirrors.
+When an upload needs an existing archive, Bearcat uses any files already on disk and downloads missing
+parts from active mirror hosters. Parts can come from multiple mirrors.
 
-Bearcat keeps links still online from the previous upload to the same hoster.
-It only downloads files needed for the reupload.
+Links that are still online from the previous upload to the same hoster are kept, so Bearcat only
+downloads files actually needed for the reupload.
 
 If no suitable mirror is available, Bearcat can repack [managed releases](/release-types/)
 from the release folder. For unmanaged releases, you need to provide the missing archive files yourself.
@@ -43,9 +43,9 @@ to follow the global **Hoster mirror downloads** setting. See [Proxy Servers](/p
 **Mirror priority** appears when you enable mirror downloads. Default: `100`.
 Lower numbers take priority, such as `10` before `100`.
 
-Bearcat chooses a mirror for each file. Only active hoster registrations with that file marked online
-are considered. At the same priority, the most recent file check wins.
-If a download still fails after retries, Bearcat tries the next available mirror.
+Bearcat picks a mirror for each file separately, considering only active hoster registrations where that
+file is online. At the same priority, the most recently checked file wins.
+If a download fails after retries, Bearcat falls back to the next available mirror.
 
 ### Hosters that support mirror downloads
 
@@ -94,7 +94,7 @@ Fix the cause, then create a manual reupload.
 Under **Configurations > Mirror downloads**, set **Max parallel downloads** to limit how many
 archive files are downloaded at once. Default: `2`.
 
-Raise it if your line is fast and your hoster account allows several connections. Lower it to `1` if
+Raise it if your connection is fast and your hoster account allows multiple connections. Lower it to `1` if
 the hoster throttles or rejects parallel downloads.
 
 ## Speed limits
@@ -108,12 +108,12 @@ Both limits apply at the same time.
 
 ## Delete local archives yourself
 
-Choose **Delete local archives** in the release detail page's action menu to free disk space.
-Bearcat deletes the release's archive files.
+Choose **Delete local archives** in the action menu on the release detail page to delete the release's
+archive files and free disk space.
 
 ![delete-local-archives.png](images/delete-local-archives.png)
 
-Bearcat only offers this when the release stays recoverable:
+Bearcat only offers this action when the release remains recoverable:
 
 - No upload of the release is running.
 - Every archive configuration has a fully online upload on a hoster that is enabled for mirror

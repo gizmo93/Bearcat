@@ -50,7 +50,7 @@ Choose **managed** to pack the downloaded files or **unmanaged** to upload the p
 Turn it off **before saving** to include existing releases. Changing it later does not affect folders
 already marked as ignored.
 
-The download folder must be writable by Bearcat. In Docker, choose a path inside a mounted volume
+Bearcat must be able to write to the download folder. In Docker, choose a path inside a mounted volume
 so the downloads survive container replacement.
 
 ### Example
@@ -104,16 +104,16 @@ Open **Activity > Remote downloads** to see folders, status, and errors. The usu
 
 ![remote-downloads-page.png](images/remote-downloads-page.png)
 
+You can also follow running downloads in the **Downloads** section on **Home**. It shows
+progress, speed, remaining time, phase, and file details. The release detail page shows the remote source.
+
+![running-remote-download.png](images/running-remote-download.png)
+
 ### SFV verification
 
 After every download, Bearcat looks for `.sfv` files in the release folder and its subfolders and
 compares the CRC32 checksum of each listed file. If a listed file is missing or its checksum does not
 match, the download fails and the files stay on disk.
-
-You can also follow running downloads in the **Downloads** section on **Home**. It shows
-progress, speed, remaining time, phase, and file details. The release detail page shows the remote source.
-
-![running-remote-download.png](images/running-remote-download.png)
 
 ### Cancel, retry, or skip a folder
 
@@ -131,8 +131,8 @@ Use the action menu in **Remote downloads**:
 If the local release folder is not empty before downloading, Bearcat stops with an error.
 Existing files are kept. Move them elsewhere before restarting the download.
 
-Disabling an automation stops it from scanning. Already queued downloads stay queued.
-To stop one of those, cancel it on **Remote downloads**.
+Disabling an automation stops future scans, but already queued downloads stay in the queue.
+To stop one, cancel it on **Remote downloads**.
 
 ## Extract archives before release creation
 
@@ -165,8 +165,8 @@ Bearcat waits until:
 It then converts the release to [unmanaged](/release-types/#unmanaged-releases) and deletes
 the downloaded folder. Future reuploads use the existing archives or mirrors.
 
-Store archives outside the downloaded release folder. If it contains archives, Bearcat keeps
-the folder and notifies you. This option does not apply to unmanaged templates.
+Store archives outside the downloaded release folder. If the folder contains archives, Bearcat keeps
+it and notifies you. This option does not apply to unmanaged templates.
 
 For releases with a [video upload configuration](/video-hosters/#release-folder), Bearcat keeps
 the downloaded folder.

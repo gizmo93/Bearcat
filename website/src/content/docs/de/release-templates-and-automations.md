@@ -21,8 +21,8 @@ Siehe [Linkcryptercontainer](/de/upload-lifecycle/#5-linkcryptercontainer).
 
 ![Releasetemplates](../images/release-templates-page.png)
 
-Wähle auf **Releases** den Eintrag **Neu aus Template**. Das neue Release übernimmt normalerweise
-den Ordnernamen, ebenso die Archivkonfigurationen, die den Releasenamen verwenden.
+Wähle auf **Releases** den Eintrag **Neu aus Template**. Standardmässig übernimmt das neue Release
+den Ordnernamen, ebenso Archivkonfigurationen, die den Releasenamen verwenden.
 
 Aktiviere **Ein Release pro Unterordner**, um für jeden direkten Unterordner des gewählten Ordners
 ein Release zu erstellen. Wähle die Unterordner ab, die du nicht willst. Bereits verwendete
@@ -42,7 +42,7 @@ Unter **Screenshots** im Template und in den Releaseeinstellungen findest du zwe
 | **Screenshots erstellen** | Aus, 6 Screenshots | 1 bis 20 einzelne Screenshots in gleichmässigen Abständen. |
 | **Screenshotraster erstellen** | Aus, 4 Spalten × 4 Zeilen | Ein 1920 Pixel breites Bild mit bis zu 8 Spalten und 10 Zeilen. Die Kopfzeile enthält Angaben zu Datei, Video und Audio. |
 
-- Screenshots lassen sich nur für Releases vom Typ Managed erstellen, deren Releaseordner noch existiert.
+- Screenshots lassen sich nur für Managed Releases erstellen, deren Releaseordner noch existiert.
 - Bearcat verwendet die grösste Videodatei im Releaseordner.
 - Videos mit HDR10 oder HLG werden auf SDR umgerechnet. Dolby Vision ohne Basisschicht in HDR10 oder HLG wird nicht unterstützt.
 - Die Hintergrundaufgabe **Screenshot creation** erstellt die Bilder. ffmpeg wird [bei Bedarf heruntergeladen](/de/advanced-configuration/#ffmpeg).
@@ -50,12 +50,12 @@ Unter **Screenshots** im Template und in den Releaseeinstellungen findest du zwe
   **Screenshotraster** in einer [Bilduploadkonfiguration](/de/account-settings/#bilduploadkonfiguration) mit aktivem Bildhoster.
 
 Im Tab **Bilder** siehst du das Ergebnis oder eine Fehlermeldung. Mit **Neu erstellen** ersetzt du die
-Screenshots und ihre Bilduploads, etwa nachdem du die Einstellungen geändert hast. Dafür muss der
-Releaseordner noch existieren und das Release vom Typ Managed sein.
+Screenshots und ihre Bilduploads, etwa nachdem du die Einstellungen geändert hast. Dafür muss es noch
+ein Managed Release sein, und der Releaseordner muss existieren.
 
 Du kannst die hochgeladenen Bilder in [Postvorlagen verwenden](/de/forum-post-templates/#screenshots).
-Bearcat löscht die lokalen Screenshotdateien, sobald alle dafür eingerichteten Bilduploadkonfigurationen
-sie hochgeladen haben. Ist kein Upload mehr dafür eingerichtet, löscht es sie sofort.
+Sobald alle eingerichteten Bilduploads abgeschlossen sind, löscht Bearcat die lokalen Screenshotdateien.
+Ist kein Bildupload mehr eingerichtet, löscht Bearcat sie sofort.
 Der Tab **Bilder** zeigt danach die Bilder vom Bildhoster.
 
 ## Ordnerautomatisierungen einrichten
@@ -96,15 +96,15 @@ lädt sie mit den Einstellungen des Templates hoch.
 passenden Ordner und ignoriert sie dauerhaft für diese Automatisierung. Nur neue Ordner werden zu Releases.
 Schalte die Option aus, um auch vorhandene Ordner ohne Release zu importieren.
 
-Änderst du **Releasebasispfad** oder **Muster für Ordnernamen**, gilt die Einstellung erneut für die Ordner,
-die Bearcat mit den neuen Einstellungen findet.
+Änderst du **Releasebasispfad** oder **Muster für Ordnernamen**, gilt diese Option erneut für alle Ordner,
+die mit dem neuen Pfad oder Muster gefunden werden.
 
 Die **Ordnervorschau** zeigt, welche Ordner zum Basispfad und Muster passen. Ordner mit einem Release und
 Archivausgabeordner sind als **Bereits verwendet** markiert.
 
 Beim Anlegen oder Ändern von Basispfad oder Muster zeigt die Vorschau auch, was mit den übrigen Ordnern
-passiert: Bearcat ignoriert sie oder zeigt eine Warnung mit der Anzahl der Ordner, die importiert und
-hochgeladen werden. Mit der Schaltfläche zum Aktualisieren lädst du die Vorschau neu.
+passiert: Entweder ignoriert Bearcat sie, oder es erscheint eine Warnung mit der Anzahl der Ordner, die
+importiert und hochgeladen werden. Mit der Schaltfläche zum Aktualisieren lädst du die Vorschau neu.
 
 ### Archive vor der Releaseerstellung entpacken
 
@@ -112,9 +112,8 @@ Aktiviere bei Managed Templates in der Ordnerautomatisierung **Archive vor der R
 wenn die Ordner RAR- oder 7z-Archive enthalten und Bearcat das Release selbst packen soll. Die Option ist
 standardmässig deaktiviert und gilt nicht für Unmanaged Templates.
 
-Bevor das Release erstellt wird, prüft Bearcat den Ordner anhand seiner `.sfv`-Dateien, falls vorhanden,
-und entpackt alle RAR- und 7z-Archive im Ordner und in seinen Unterordnern. Nach erfolgreichem Entpacken
-löscht es die Archivparts und die `.sfv`-Dateien, die nur diese Parts auflisten. Es gelten dieselben
+Vor der Releaseerstellung prüft Bearcat vorhandene `.sfv`-Dateien im Ordner und entpackt alle RAR- und
+7z-Archive im Ordner und seinen Unterordnern. Nach erfolgreichem Entpacken löscht Bearcat die Archivparts und die `.sfv`-Dateien, die nur diese Parts auflisten. Es gelten dieselben
 Regeln wie bei [Remotedownloads](/de/remote-downloads/#archive-vor-der-releaseerstellung-entpacken).
 
 Laufende Prüfungen und Entpackvorgänge erscheinen auf der Seite **Home** unter **Ordnerautomatisierungen**.

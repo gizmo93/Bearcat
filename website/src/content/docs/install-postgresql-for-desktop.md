@@ -10,7 +10,7 @@ For Docker, `docker-compose.postgres.yml` starts PostgreSQL in its own container
 
 Use PostgreSQL 18. Older PostgreSQL versions are currently untested.
 
-## Recommended Settings
+## Recommended settings
 
 Use these connection settings in Bearcat:
 
@@ -24,7 +24,7 @@ Password: choose-a-password
 
 Choose your own password. If you change any other values, enter them in Bearcat too.
 
-## PostgreSQL In Docker
+## PostgreSQL in Docker
 
 On Windows, Docker is the recommended way to run PostgreSQL. Bearcat can still run as the Desktop app or Windows service.
 
@@ -94,13 +94,13 @@ Download the PostgreSQL 18 Windows installer from [postgresql.org/download/windo
 During installation:
 
 - Choose PostgreSQL 18.
-- Keep the default port `5432` unless it is already used.
+- Keep the default port `5432` unless it is already in use.
 - Set a password for the `postgres` superuser created by the installer.
-- Stack Builder is optional and not required by Bearcat.
+- Stack Builder is optional; Bearcat does not need it.
 
 Choose the account Bearcat should use:
 
-- **Installer account:** Enter `postgres` and the password you chose during installation in Bearcat. This uses the PostgreSQL superuser.
+- **Installer account:** In Bearcat, enter `postgres` and the password you set during installation. This uses the PostgreSQL superuser.
 - **Separate account:** Open **pgAdmin 4**, connect as `postgres`, and create a login role named `bearcat`. Set a password and enable **Can create databases?** Then enter this account in Bearcat.
 
 Set the database name to `bearcat`. Bearcat creates it and sets up the required tables on first start.
@@ -109,10 +109,10 @@ Set the database name to `bearcat`. Bearcat creates it and sets up the required 
 
 Download Postgres.app from [postgresapp.com](https://postgresapp.com).
 
-Install and start Postgres.app, then create or start a PostgreSQL 18 server. Keep the default port `5432` unless it is already used.
+Install and start Postgres.app, then create or start a PostgreSQL 18 server. Keep the default port `5432` unless it is already in use.
 
-Use Postgres.app’s `psql` command in a terminal. If your shell cannot find it, follow the
-Postgres.app instructions to add its command line tools to `PATH` or use the full path.
+Use Postgres.app's `psql` command in a terminal. If your shell cannot find it, follow the
+Postgres.app instructions to add its command-line tools to `PATH` or use the full path.
 
 Create an account with permission to create the database:
 
@@ -125,7 +125,7 @@ CREATE USER bearcat WITH PASSWORD 'choose-a-password';
 ALTER USER bearcat CREATEDB;
 ```
 
-To create the database yourself, use these commands instead. Choose only one of the two options:
+If you prefer to create the database yourself, run these commands instead (pick one option, not both):
 
 ```bash
 psql postgres

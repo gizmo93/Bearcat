@@ -34,7 +34,7 @@ Die CSV-Datei verwendet UTF-8 ohne BOM und Kommas als Trennzeichen. Werte stehen
 | --- | --- |
 | `Release` | Releasename |
 | `ReleaseGroup` | Releasegruppe |
-| `Hoster` | Hosterkonto des Uploads, falls nicht vorhanden: Konto oder Accountpool der Uploadkonfiguration |
+| `Hoster` | Hosteraccount des Uploads, falls nicht vorhanden: Account oder Accountpool der Uploadkonfiguration |
 | `UploadId` | Upload-ID |
 | `UploadOnlineState` | Onlinestatus des Uploads |
 | `FileName` | Name der Archiv- oder Videodatei ohne Ordnerpfad |

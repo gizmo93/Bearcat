@@ -7,7 +7,7 @@ Bearcat stores three kinds of information for a release:
 
 - **Release information** comes from scene databases: release name, size, video and audio type,
   database links, and other release details.
-- **Metadata** describes the movie or TV show: title, genre, description, cover image, and provider link.
+- **Metadata** describes the movie, TV show, or game: title, genre, description, cover image, and provider link.
 - **Media data** is read from the local video files with MediaInfo. It contains codecs,
   resolution, duration, audio tracks, and subtitle tracks.
 
@@ -27,9 +27,9 @@ information and NFO files:
 
 ![nfo-database-setup.png](images/nfo-database-setup.png)
 
-xREL, SRRDB and PreDB do not require account credentials.
+xREL, SRRDB, and PreDB do not require account credentials.
 
-Open **Registrations > Metadata sources** to register providers for movie, TV and game metadata:
+Open **Registrations > Metadata sources** to register providers for movie, TV, and game metadata:
 
 | Provider | Metadata | Credentials |
 | --- | --- | --- |
@@ -68,14 +68,13 @@ or clear their language together.
 1. Read the NFO from the release folder or fetch one from an active NFO database.
 2. Fetch scene information from active NFO databases.
 3. Extract IMDb IDs from the NFO and the xREL or SRRDB results.
-4. Look up metadata using an IMDb ID. Without a suitable ID, use the title and other details from the release name.
-5. Pass the primary language to the metadata provider.
+4. Look up metadata using an IMDb ID and the primary language (if set). Without a matching ID, Bearcat searches using the title and other details from the release name.
 
 For collections, Bearcat looks up a TV series using a manual TMDB or TVDB ID, or an IMDb ID from the
-included releases. Without a suitable ID, it searches by the collection name.
+included releases. Without a matching ID, it searches by the collection name.
 
 The **Release info resolution** background task handles missing data automatically. You can also
-trigger the relevant actions from the **Release Info** tab.
+run these actions manually from the **Release Info** tab.
 
 ## The Release Info tab
 
@@ -96,9 +95,8 @@ Each external IMDb ID appears once, with all sources that found it.
 
 ## Correct a wrong match
 
-If Bearcat found the wrong movie, series or game, select **Correct metadata match** and enter the
-correct entry's ID or link. Bearcat shows a preview. Click **Apply** to replace the metadata with the
-selected entry.
+If Bearcat found the wrong movie, series, or game, select **Correct metadata match** and enter the
+right ID or link. Bearcat shows a preview. Click **Apply** to replace the metadata.
 
 ![correct-metadata-match-dialog.png](images/correct-metadata-match-dialog.png)
 
@@ -110,8 +108,8 @@ selected entry.
 The link must match the content type. For TMDB, use a movie link for movies and a series link for
 episodes or collections. For games, use a Steam or SteamDB link.
 
-Bearcat saves the ID you entered or linked to and the provider's IMDb ID as manual IDs. These take
-priority over IDs from the NFO, xREL, SRRDB, or a provider.
+Bearcat saves the ID from your input and the provider's IMDb ID as manual IDs. Manual IDs take
+priority over IDs from the NFO, xREL, SRRDB, or metadata providers.
 
 For a collection, Bearcat saves the corrected IDs for every included release, replacing their previous
 manual IMDb, TMDB, and TVDB IDs. The collection must contain at least one release.
@@ -129,6 +127,6 @@ Use **Add NFO** or **Edit NFO** to enter NFO content manually. Bearcat scans the
 IMDb IDs every time it changes. For managed releases, the edited NFO is also written to the release
 folder.
 
-Metadata entered manually is not overwritten by an automatic metadata refresh. To start a new lookup,
+Automatic metadata refreshes do not overwrite manually entered metadata. To start a new lookup,
 use **Delete release info and metadata**, then fetch the data again. The stored NFO
 and extracted external IDs remain available for the next lookup.

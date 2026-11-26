@@ -3,7 +3,7 @@ title: "Hintergrundaufgaben und erweiterte Einstellungen"
 description: "Hintergrundaufgaben, Aufräumregeln, Uploadlimits, Datenbank und Zeitzone einstellen."
 ---
 
-Bearcat packt, lädt und prüft Dateien im Hintergrund. Die Aufgaben findest du unter
+Bearcat packt, prüft und lädt Dateien im Hintergrund hoch. Die Aufgaben findest du unter
 **Aktivität > Hintergrundaufgaben**, ihre Einstellungen unter **System > Konfigurationen**.
 
 ## Hintergrundaufgaben
@@ -28,11 +28,11 @@ Standardmässig sind alle Aufgaben aktiv.
 | Remote download release creation | Alle 20 Sekunden | Erstellt Releases aus abgeschlossenen Downloads mit den jeweils gewählten Templates. |
 | Remote download raw file cleanup | Alle 2 Minuten | Wandelt heruntergeladene Releases in Unmanaged um und entfernt ihre Rohdateien, wenn [Rohdateien behalten](/de/remote-downloads/#rohdateien-nach-dem-upload-löschen) ausgeschaltet ist und die Bedingungen für das Löschen erfüllt sind. |
 | Release info resolution | Alle 10 Minuten | Ergänzt fehlende Sceneinfos, NFOs, externe IDs und Metadaten aus den aktiven Quellen. |
-| Archive creation & restore | Alle 20 Sekunden | Verwendet Archive wieder, stellt sie wieder her oder erstellt neue für wartende Uploads. |
+| Archive creation & restore | Alle 20 Sekunden | Erstellt Archive für wartende Uploads, stellt sie wieder her oder verwendet bestehende wieder. |
 | Auto cleanup | Alle 30 Minuten | Wendet aktivierte [Aufräumregeln](#automatisches-aufräumen) nach Ablauf ihrer Aufbewahrungsfristen an. Löscht [lokale Arbeitskopien](/de/archive-storage-folders/#reuploads) gespeicherter Archive, sobald ihre Uploads abgeschlossen sind. |
 | Archive upload | Alle 20 Sekunden | Lädt Archive zu den konfigurierten Hostern hoch. |
 | Image upload | Alle 30 Sekunden | Lädt Coverbilder von Releases zu konfigurierten Bildhostern hoch, wenn eine Cover-URL vorhanden ist. |
-| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, wenn die entsprechenden Optionen aktiv sind. |
+| Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/de/release-templates-and-automations/#screenshots) für Managed Releases, wenn diese Optionen aktiv sind. |
 | Upload state check | Alle 20 Sekunden | Prüft Links und plant erste Uploads sowie automatische Reuploads. |
 | Empty hoster folder cleanup | Beim Start, dann täglich | Löscht [leere Hosterordner](/de/account-settings/#leere-ordner-löschen) für Konten mit aktivierter Option **Leere Ordner automatisch löschen**. |
 | Link crypter container creation | Alle 20 Sekunden | Erstellt Linkcryptercontainer für abgeschlossene Uploads. |
@@ -64,11 +64,11 @@ kannst du zwei unabhängige Regeln aktivieren:
 
 Nach der Umwandlung lädt Bearcat vorhandene Archive erneut hoch, statt die Releasedateien neu zu packen.
 Die Frist beginnt mit dem Postingdatum oder dem ersten abgeschlossenen Upload, wenn das Release nie
-als gepostet markiert wurde. Ohne eines dieser Daten bleibt es managed.
+als gepostet markiert wurde. Fehlen beide Zeitpunkte, bleibt es Managed.
 
 Bearcat wandelt das Release nur um, wenn kein Upload läuft und jede Archivkonfiguration ein lokales
 Archiv oder einen vollständig verfügbaren [Mirror](/de/mirror-downloads/) hat. Releases mit einer
-[Videouploadkonfiguration](/de/video-hosters/#releaseordner) bleiben managed.
+[Videouploadkonfiguration](/de/video-hosters/#releaseordner) bleiben Managed.
 
 Standardmässig bleibt der Releaseordner erhalten. Eine Benachrichtigung enthält seinen Pfad.
 Du kannst die Releasedateien selbst löschen. Liegen dort auch Archive, behalte diese Dateien.
@@ -77,7 +77,7 @@ Mit **Releaseordner beim Umwandeln löschen** löscht Bearcat auch den Ordner, a
 
 - Jede Archivkonfiguration ein vollständiges Archiv auf der Festplatte hat. Ein Mirror allein reicht nicht.
 - Kein Archiv im Releaseordner liegt.
-- Der Ordner weder ein Laufwerksstamm noch ein Arbeitsverzeichnis ist und kein Arbeitsverzeichnis enthält.
+- Der Ordner weder das Stammverzeichnis eines Laufwerks noch ein Arbeitsverzeichnis ist und kein Arbeitsverzeichnis enthält.
 
 Sind diese Bedingungen nicht erfüllt oder schlägt das Löschen fehl, wird das Release trotzdem Unmanaged.
 Der Ordner bleibt erhalten und die Benachrichtigung nennt den Grund.
@@ -134,9 +134,8 @@ Lass **Rohdateien behalten** in der Automatisierung aktiviert, wenn du den herun
 ### Einheit der Partgrösse
 
 Wähle **Einheit der Partgrösse** unter **Konfigurationen > Archiverstellung**.
-Die Einstellung gilt für alle Archivkonfigurationen.
+Die Einstellung gilt für alle Archivkonfigurationen (RAR und 7-Zip).
 **Megabytes** (Standard) bedeutet 1 MB = `1.000.000` Bytes, **Mebibytes** bedeutet 1 MB = `1.048.576` Bytes.
-Das gilt für RAR und 7-Zip.
 Um die Partgrösse vieler Archivkonfigurationen auf einmal zu ändern, siehe [Partgrösse ändern](/de/change-archive-part-size/).
 
 ![archive-part-size-unit.png](../images/archive-part-size-unit.png)
@@ -188,8 +187,8 @@ Die Standardstrategie erhöht sie beim Neupacken um `1` MB.
 Unter **Konfigurationen > Ordnerautomation** stellst du ein, wann Bearcat einen Ordner als Release übernimmt.
 Beide Bedingungen müssen erfüllt sein:
 
-- Anzahl und Gesamtgrösse der Dateien bleiben für die Dauer von **Ordnerstabilität** unverändert, Standard `5` Minuten.
-- Der Ordner erreicht die **Minimale Ordnergrösse**, Standard `1` MB.
+- Anzahl und Gesamtgrösse der Dateien bleiben für die Dauer von **Ordnerstabilität** unverändert (Standard: `5` Minuten).
+- Der Ordner erreicht die **Minimale Ordnergrösse** (Standard: `1` MB).
 
 Das verringert das Risiko, dass Bearcat noch unvollständige Ordner als Release übernimmt.
 
@@ -210,7 +209,7 @@ Die Einstellungen für [FTP-/FTPS-Downloads](/de/remote-downloads/) findest du u
 
 Erhöhe die Stabilitätsdauer, wenn Dateien langsam eintreffen oder Uploads auf den FTP-Server oft pausieren.
 Bearcat lädt jeweils einen Releaseordner herunter, mit mehreren Dateien parallel. Senke das Verbindungslimit,
-wenn der Server gleichzeitige Übertragungen verbietet.
+wenn der Server gleichzeitige Übertragungen ablehnt.
 
 ### Cooldown für initiale Uploads
 
@@ -241,10 +240,9 @@ Unter **Startreihenfolge der Uploads** wählst du, welche wartenden Uploads zuer
 
 ### ffmpeg
 
-Bearcat erstellt mit ffmpeg Screenshots und Screenshotraster aus Videodateien. ffmpeg wird nicht mitgeliefert.
-Bearcat lädt es bei Bedarf herunter und speichert es unter `tools/ffmpeg` im [Datenverzeichnis](#datenbank).
-Die Karte **ffmpeg** unten auf der Seite **Konfigurationen** zeigt die installierte Version.
-Dort kannst du ffmpeg herunterladen oder aktualisieren.
+Bearcat erstellt mit ffmpeg Screenshots und Screenshotraster aus Videodateien. ffmpeg wird nicht mitgeliefert,
+sondern bei Bedarf heruntergeladen und unter `tools/ffmpeg` im [Datenverzeichnis](#datenbank) gespeichert.
+Die Karte **ffmpeg** unten auf der Seite **Konfigurationen** zeigt die installierte Version; dort kannst du ffmpeg auch herunterladen oder aktualisieren.
 
 ![Karte ffmpeg](../images/ffmpeg-tool-card.png)
 
@@ -253,13 +251,13 @@ Dort kannst du ffmpeg herunterladen oder aktualisieren.
 | Windows x64, Linux x64 (auch Docker) | [BtbN FFmpeg Builds](https://github.com/BtbN/FFmpeg-Builds) |
 | macOS mit Apple Silicon | [martin-riedl.de](https://ffmpeg.martin-riedl.de) |
 
-Gib unter `Media:FfmpegPath` (Umgebungsvariable `Media__FfmpegPath`) den Pfad zu deiner eigenen
-Installation von ffmpeg an, wenn du diese verwenden möchtest. Auf anderen Plattformen, etwa Linux ARM64,
+Wenn du deine eigene Installation von ffmpeg verwenden möchtest, gib ihren Pfad unter `Media:FfmpegPath`
+(Umgebungsvariable `Media__FfmpegPath`) an. Auf anderen Plattformen, etwa Linux ARM64,
 musst du ffmpeg selbst installieren und diesen Pfad setzen.
 
 ## Datenbank
 
-Neue Installationen als Desktopanwendung, Windows-Dienst oder Docker verwenden SQLite. Bestehende PostgreSQL-Installationen verwenden weiterhin PostgreSQL.
+Neue Installationen (Desktopanwendung, Windows-Dienst und Docker) verwenden SQLite. Bestehende PostgreSQL-Installationen verwenden weiterhin PostgreSQL.
 
 Die Datenbankeinstellungen werden beim Start aus Umgebungsvariablen oder einer Einstellungsdatei gelesen:
 
@@ -271,8 +269,8 @@ Die Datenbankeinstellungen werden beim Start aus Umgebungsvariablen oder einer E
 
 | Einstellung | Umgebungsvariable | Wert |
 | --- | --- | --- |
-| `Database:Provider` | `Database__Provider` | `Sqlite` oder `Postgres`, ohne Beachtung der Gross- und Kleinschreibung. Nicht gesetzt: `Postgres`. |
-| `Database:SqliteFilePath` | `Database__SqliteFilePath` | Pfad zur SQLite-Datenbankdatei. Nicht gesetzt: `bearcat.db` im Datenverzeichnis. |
+| `Database:Provider` | `Database__Provider` | `Sqlite` oder `Postgres` (Gross- und Kleinschreibung wird ignoriert). Wenn nicht gesetzt: `Postgres`. |
+| `Database:SqliteFilePath` | `Database__SqliteFilePath` | Pfad zur SQLite-Datenbankdatei. Wenn nicht gesetzt: `bearcat.db` im Datenverzeichnis. |
 | `Database:ConnectionString` | `Database__ConnectionString` | PostgreSQL-Verbindungsdaten, zum Beispiel `Host=localhost;Database=bearcat;Username=bearcat;Password=...`. Wird nur mit `Postgres` verwendet. |
 
 Bearcat bestimmt das Datenverzeichnis in dieser Reihenfolge:
@@ -291,7 +289,7 @@ Hinweise zu SQLite:
   Für eine Sicherung bei laufendem Bearcat verwende `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
 - Die Aufgabe **SQLite query planner statistics** hält die Abfragestatistiken aktuell. PostgreSQL erledigt das selbst.
 
-Eine Änderung von `Database:Provider` überträgt keine vorhandenen Daten. Eine neue Datenbank startet leer.
+Wenn du `Database:Provider` änderst, werden bestehende Daten nicht übernommen. Eine neue Datenbank startet leer.
 Ohne `Database:Provider` verwendet Bearcat weiterhin PostgreSQL, damit ältere Konfigurationen funktionieren.
 
 ## Zeitzone
@@ -305,5 +303,5 @@ Standardmässig gilt die Zeitzone des Betriebssystems.
 | Windows-Dienst | Zeitzone des Windows-Servers | Füge `"LocalTimezone": "Europe/Berlin"` zu `%ProgramData%\Bearcat\config.json` hinzu und starte den Dienst neu. |
 | Docker | UTC | Setze `BEARCAT_TIMEZONE` in `.env`. Siehe [Dockereinstellungen](/de/use-the-docker-image/#docker-einstellungen). |
 
-Der Wert ist eine Zeitzonen-ID wie `Europe/Berlin` oder `America/New_York`.
+Der Wert ist eine IANA-Zeitzonen-ID wie `Europe/Berlin` oder `America/New_York`.
 Bei einer unbekannten ID bricht Bearcat den Start ab.

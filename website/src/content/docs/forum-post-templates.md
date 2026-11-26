@@ -28,7 +28,7 @@ You can copy the result by hand or let [posting rules](/automatic-forum-posting/
 
 ## Use the editor
 
-The editor has three parts: your templates and variables on the left, the template in the middle
+The editor has three panels: your template list and variables on the left, the editor in the middle,
 and a live preview on the right.
 
 - **Insert variables:** click a variable under **Available variables** to insert it at the cursor.
@@ -37,7 +37,7 @@ and a live preview on the right.
   ![Available variables](images/forum-post-templates-variables-box.png)
 
 - **Preview:** choose a release under **Preview with**. The preview updates while you type.
-  **Output** shows the finished post, **Data** shows all values of that release.
+  **Output** shows the finished post, and **Data** shows all values for that release.
 - **Errors:** the status bar shows syntax errors. Click them to jump to the line.
 
 If a placeholder stays empty in the preview, check the **Data** tab. It shows what the release
@@ -90,14 +90,16 @@ A complete example with NFO and link crypter links:
 ```
 
 In collection templates, loop over the releases with `{{~ for release in releases ~}}`.
-Use `release.name`, `release.nfo` and the other release fields just as you would in release templates.
+Use `release.name`, `release.nfo`, and the other release fields just as you would in release templates.
+The rest of each release's data also lives under `release`: `release.release_info`, `release.classification`,
+`release.uploads`, `release.link_crypters`, and `release.imagelinks`.
 
-The remaining release data is also under `release`: `release.release_info`, `release.classification`,
-`release.uploads`, `release.link_crypters` and `release.imagelinks`.
-`imagelinks` without `release.` contains the collection's image links.
-`collection.main_video_total_size_bytes` is the sum of `release.main_video.size_bytes` over all releases.
-`collection.imdb_id`, `collection.tmdb_id` and `collection.tvdb_id` contain the series IDs from the
-releases. Manual IDs take priority. The matching `_url` variables contain the links.
+Collection-level variables:
+
+- `imagelinks` (without `release.`): the collection's own image links.
+- `collection.main_video_total_size_bytes`: the sum of `release.main_video.size_bytes` across all releases.
+- `collection.imdb_id`, `collection.tmdb_id`, and `collection.tvdb_id`: series IDs taken from the
+  releases (manual IDs take priority). The matching `_url` variables hold the links.
 
 ```text
 {{~ for release in releases ~}}
@@ -111,7 +113,7 @@ releases. Manual IDs take priority. The matching `_url` variables contain the li
 
 Loop over `upload_slots` to access the collection's upload slots.
 `upload_slot.name` and `upload_slot.key` give you each slot's name and key.
-Use `upload_slot.link_crypters` to access its containers. They contain the links of all releases
+Use `upload_slot.link_crypters` for its containers, which hold the links of all releases
 in that slot.
 
 ```text
@@ -179,7 +181,7 @@ Each image upload configuration has these fields:
 ## Render a post
 
 Open a release or release collection and click **Render post** in the arrow menu of
-**Post to site**. Without an active distribution site, it is a separate button. Choose a template and click
+**Post to site**. If you have no active distribution site, it appears as a standalone button. Choose a template and click
 **Copy post**, then paste the result into your forum or blog.
 
 ![Render a post](images/render-template.png)

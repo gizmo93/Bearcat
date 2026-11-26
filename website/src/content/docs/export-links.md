@@ -3,7 +3,7 @@ title: "Export Links"
 description: "Download hoster links for all releases as a CSV file."
 ---
 
-Open **Releases**, click **Export links** and select a filter. The browser downloads a CSV file with one row per uploaded file.
+Open **Releases**, click **Export links**, and select a filter. The browser downloads a CSV file with one row per uploaded file.
 
 ![Export links menu on the releases page](images/export-links-menu.png)
 
@@ -44,4 +44,4 @@ The CSV file uses UTF-8 without a BOM and commas as separators. Values are quote
 | `CheckedAt` | Time of the last check in `yyyy-MM-dd HH:mm:ss` format; empty if never checked |
 | `ArchivePassword` | Archive password; empty if none is set |
 
-Bearcat exports values unchanged. Spreadsheet programs may interpret values that start with `=`, `+`, `-` or `@` as formulas.
+Bearcat exports values unchanged. Spreadsheet programs may interpret values that start with `=`, `+`, `-`, or `@` as formulas.

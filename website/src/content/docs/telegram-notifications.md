@@ -4,7 +4,7 @@ description: "Send upload completions, errors, and other Bearcat notifications t
 ---
 
 Bearcat can send upload completions, errors, and other notifications to your Telegram chat.
-Each message identifies the release, upload or archive and links to its notification in Bearcat.
+Each message identifies the release, upload, or archive and links to its notification in Bearcat.
 
 ![telegram-forwarded-message.png](images/telegram-forwarded-message.png)
 
@@ -33,7 +33,7 @@ First, create your own Telegram bot:
 ![telegram-bot-setup.png](images/telegram-bot-setup.png)
 
 Bearcat stores the token encrypted. Leave the field empty when editing other settings to keep
-the current bot. Entering a new token replaces the bot and disconnects the chat; you must connect it again.
+the current bot. Entering a new token replaces the bot and disconnects the chat, so you will need to connect it again.
 
 ## Connecting a chat
 
@@ -54,7 +54,7 @@ If you reload the page during setup, use **Check connection** or generate a new 
 
 ## Choosing which notifications get forwarded
 
-Under **Forwarded notification types**, select **Info**, **Warning** and/or **Error**, then click **Save**.
+Under **Forwarded notification types**, select **Info**, **Warning**, and/or **Error**, then click **Save**.
 Uncheck a type to stop forwarding it.
 
 Only notifications created after you connect the chat are forwarded.

@@ -31,9 +31,10 @@ Find them under **Release collections**.
 
 To add a release manually, open a collection and select **Add release**.
 
-Existing uploads to the hoster account or pool of a slot move into that slot, and their links are added
-to its container. If the release has an archive configuration with the same name as in the slot, only
-uploads using it count, and Bearcat uploads the release with it if there are none.
+When a release is added, any existing uploads to a slot's hoster account or pool move into that slot,
+and their links are added to its container. If the release already has an archive configuration with the
+same name as the slot's, only uploads from that archive configuration count. If none exist yet, Bearcat
+uploads the release using it.
 
 ## Upload slots
 
@@ -59,7 +60,7 @@ whole season. The password and other crypter settings apply to all uploads in th
 
 ### Header
 
-The header shows the cover, the series title from the metadata source, the collection key and the
+The header shows the cover, the series title from the metadata source, the collection key, and the
 series description. **Show more** expands a long description.
 
 **Post to site** opens the [posting dialog](/posting-to-forums/). It is highlighted
@@ -67,7 +68,7 @@ while at least one release has an online hoster and the collection is not posted
 active distribution site, only **Render post** is shown.
 
 The `...` menu contains **Edit collection settings** for the content type and primary language,
-**Edit metadata**, **Resolve metadata** and **Correct metadata match**.
+**Edit metadata**, **Resolve metadata**, and **Correct metadata match**.
 
 The status display shows progress for metadata, uploads, link containers, images, and posting.
 Red marks a problem or an unfinished step. Click a step to open its tab.
@@ -79,7 +80,7 @@ description, and cover. Select **Resolve metadata** in the `...` menu to search 
 changing the name or language.
 
 The primary language sets the language for titles and descriptions. Without a selection, the
-provider's default applies. Bearcat searches using an IMDb ID from an included release or the title.
+provider's default applies. Bearcat searches using an IMDb ID from one of the releases, or by title.
 
 If Bearcat found the wrong series, select **Correct metadata match** in the `...` menu.
 Bearcat saves the corrected IDs as manual IDs for every release in the collection.

@@ -21,10 +21,10 @@ All tasks are enabled by default.
 | Task | Runs | What it does |
 | --- | ---: | --- |
 | Configuration cache refresh | Every 5 minutes | Refreshes cached settings. Changes made in the UI apply immediately. |
-| Release folder automation | Every 2 minutes | Creates releases from matching direct subfolders using the selected template, once the [folder checks](#folder-automation) pass. |
+| Release folder automation | Every 2 minutes | Creates releases from matching direct subfolders using the selected template once the [folder checks](#folder-automation) pass. |
 | Remote source scan | Every 2 minutes | Finds matching folders on FTP or FTPS servers and queues them once the [remote folder checks](#remote-downloads) pass. |
 | Remote source download | Every 20 seconds | Downloads queued remote folders. |
-| Remote download verification and extraction | Every 20 seconds | Checks completed downloads against their SFV files and extracts archives when the automation is set to do so. |
+| Remote download verification and extraction | Every 20 seconds | Checks completed downloads against their SFV files and extracts archives if configured. |
 | Remote download release creation | Every 20 seconds | Creates releases from completed downloads using their selected templates. |
 | Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
 | Release info resolution | Every 10 minutes | Fills in missing scene information, NFOs, external IDs, and metadata from active sources. |
@@ -32,11 +32,11 @@ All tasks are enabled by default.
 | Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. Deletes [local working copies](/archive-storage-folders/#reuploads) of stored archives once their uploads have finished. |
 | Archive upload | Every 20 seconds | Uploads archives to the configured hosters. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
-| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/release-templates-and-automations/#screenshots) for managed releases when the corresponding options are enabled. |
+| Screenshot creation | Every minute | Creates [screenshots and screenshot grids](/release-templates-and-automations/#screenshots) for managed releases when those options are enabled. |
 | Upload state check | Every 20 seconds | Checks links and schedules first uploads and automatic reuploads. |
 | Empty hoster folder cleanup | At startup, then daily | Deletes [empty hoster folders](/account-settings/#delete-empty-folders) for accounts with **Delete empty folders automatically** enabled. |
 | Link crypter container creation | Every 20 seconds | Creates link crypter containers for completed uploads. |
-| SQLite query planner statistics | At startup, then daily | Only with SQLite. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. Also compacts the database file (`VACUUM`) when at least 20 % of it is unused, for example after deleting many releases. Writes wait while this runs. |
+| SQLite query planner statistics | At startup, then daily | SQLite only. Updates the statistics SQLite uses to choose indexes. The first run on a large database can take several seconds. Also compacts the database file (`VACUUM`) when at least 20% of it is unused, for example after deleting many releases. Writes wait while this runs. |
 
 ## Configurations
 
@@ -62,7 +62,7 @@ Auto cleanup is off by default. Under **Configurations > Auto cleanup**, you can
 #### Convert releases to unmanaged automatically
 
 After conversion, Bearcat reuploads existing archives instead of repacking the release files.
-The period starts at the posting date, or the first completed upload if the release was never marked
+The period starts from the posting date, or from the first completed upload if the release was never marked
 as posted. Without either date, it stays managed.
 
 Bearcat converts the release only when no upload is running and every archive configuration has
@@ -83,7 +83,7 @@ The folder is kept, and the notification tells you why.
 
 #### Local archives after retention
 
-The period starts at the last completed upload of the archive configuration. Every reupload restarts it.
+The retention period starts from the last completed upload of the archive configuration. Every reupload resets it.
 With `0` days, the action can run on the next cleanup after uploading.
 Bearcat skips archives while an upload of that archive configuration is waiting, pending, or running.
 
@@ -106,7 +106,7 @@ The limit is off by default (`0`) and applies regardless of the retention period
 Before writing a local archive, Bearcat deletes other local archives as needed to make room within the limit.
 This applies when packing, restoring from a mirror, or creating a
 [local working copy](/archive-storage-folders/#reuploads).
-Bearcat sorts archives by their archive configuration's last upload, oldest first.
+Bearcat deletes the oldest archives first, based on each archive configuration's last upload.
 
 The same conditions apply as for the **Delete** action:
 
@@ -118,7 +118,7 @@ Archives in storage folders are kept and do not count toward the total.
 If Bearcat cannot free enough space, it writes the archive anyway and notifies you.
 The limit does not apply when **Local archives after retention** is set to **Move to storage folder**.
 
-Allow for extra free disk space: Bearcat only checks the limit before writing and may exceed it.
+Leave extra free disk space: Bearcat only checks the limit before writing and may exceed it.
 
 #### Exclude single releases
 
@@ -132,9 +132,8 @@ Leave **Keep raw files** enabled in the automation if you want to keep the downl
 ### Part size unit
 
 Choose **Part size unit** under **Configurations > Archive creation**.
-This setting applies to all archive configurations.
-**Megabytes** (default) means 1 MB = `1,000,000` bytes, **Mebibytes** means 1 MB = `1,048,576` bytes.
-This applies to RAR and 7-Zip.
+It applies to all archive configurations (RAR and 7-Zip).
+**Megabytes** (default) means 1 MB = `1,000,000` bytes; **Mebibytes** means 1 MB = `1,048,576` bytes.
 To change the part size of many archive configurations at once, see [Change part size](/change-archive-part-size/).
 
 ![archive-part-size-unit.png](images/archive-part-size-unit.png)
@@ -160,7 +159,7 @@ If no files in the release folder are left to pack, archive creation fails.
 
 ### Archive repackaging
 
-Hosters can recognise files by their MD5 hash. Before reuploading to the same hoster type, Bearcat
+Hosters can recognize files by their MD5 hash. Before reuploading to the same hoster type, Bearcat
 gives the files being uploaded new hashes. Parts not uploaded again keep their hashes and links.
 
 - **RAR:** Bearcat appends zero bytes until each file's hash is new. It keeps the hash history even
@@ -186,8 +185,8 @@ The default strategy increases it by `1` MB when repacking.
 Under **Configurations > Folder automation**, set when Bearcat turns a watched folder into a release.
 Both conditions must be met:
 
-- Its total file count and size stay unchanged for **Folder stability**, default `5` minutes.
-- It reaches **Minimum folder size**, default `1` MB.
+- Its total file count and size stay unchanged for **Folder stability** (default: `5` minutes).
+- It reaches **Minimum folder size** (default: `1` MB).
 
 This helps avoid creating releases while files are still being copied.
 
@@ -239,10 +238,9 @@ Under **Upload start order**, choose which waiting uploads start first: **Oldest
 
 ### ffmpeg
 
-Bearcat uses ffmpeg to create screenshots and screenshot grids from video files. ffmpeg is not bundled.
-Bearcat downloads it when needed and stores it in `tools/ffmpeg` in the [data directory](#database).
-The **ffmpeg** card at the bottom of **Configurations** shows the installed version.
-You can download or update ffmpeg there.
+Bearcat uses ffmpeg to create screenshots and screenshot grids from video files. It is not bundled;
+Bearcat downloads it when needed and stores it in `tools/ffmpeg` inside the [data directory](#database).
+The **ffmpeg** card at the bottom of **Configurations** shows the installed version and lets you download or update it.
 
 ![ffmpeg card](images/ffmpeg-tool-card.png)
 
@@ -269,8 +267,8 @@ Database settings are read at startup from environment variables or a settings f
 
 | Setting | Environment variable | Value |
 | --- | --- | --- |
-| `Database:Provider` | `Database__Provider` | `Sqlite` or `Postgres`, case-insensitive. Not set: `Postgres`. |
-| `Database:SqliteFilePath` | `Database__SqliteFilePath` | Path to the SQLite database file. Not set: `bearcat.db` in the data directory. |
+| `Database:Provider` | `Database__Provider` | `Sqlite` or `Postgres`, case-insensitive. If unset: `Postgres`. |
+| `Database:SqliteFilePath` | `Database__SqliteFilePath` | Path to the SQLite database file. If unset: `bearcat.db` in the data directory. |
 | `Database:ConnectionString` | `Database__ConnectionString` | PostgreSQL connection string, for example `Host=localhost;Database=bearcat;Username=bearcat;Password=...`. Only used with `Postgres`. |
 
 Bearcat checks these locations in order to find its data directory:
@@ -304,4 +302,4 @@ By default, it uses the operating system's time zone.
 | Docker | UTC | Set `BEARCAT_TIMEZONE` in `.env`. See [Docker settings](/use-the-docker-image/#docker-settings). |
 
 The value is an IANA time zone ID such as `Europe/Berlin` or `America/New_York`.
-An unknown ID stops Bearcat on startup.
+An unknown ID prevents Bearcat from starting.

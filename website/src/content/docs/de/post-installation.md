@@ -14,7 +14,7 @@ Falls du den Webport geändert hast, verwende diesen Port.
 
 ## Einrichtung öffnen
 
-Nach der Installation öffnet sich die **Erste Einrichtung** einmalig beim ersten Aufruf der Startseite.
+Nach der Installation öffnet sich die **Erste Einrichtung** automatisch beim ersten Aufruf der Startseite.
 Später findest du sie unter **System > Erste Einrichtung**.
 
 Du kannst Schritte überspringen und alle Einstellungen später ändern. Menüpfade wie
@@ -28,25 +28,25 @@ Du kannst Bearcat auch [manuell einrichten](#manuell-einrichten).
 
 ### Arbeitsverzeichnisse
 
-Wähle deine Releaseordner innerhalb der konfigurierten Arbeitsverzeichnisse. Die Einrichtung zeigt für jedes
-Arbeitsverzeichnis den Status **OK**, **Fehlt** oder **Nicht beschreibbar**. Für **Weiter** muss mindestens
-eines vorhanden und beschreibbar sein.
+Releaseordner müssen innerhalb eines konfigurierten Arbeitsverzeichnisses liegen. Die Einrichtung zeigt für jedes
+Arbeitsverzeichnis den Status **OK**, **Fehlt** oder **Nicht beschreibbar**. Mindestens eines muss vorhanden und
+beschreibbar sein, bevor du auf **Weiter** klicken kannst.
+
+In der Einrichtung lassen sich die Arbeitsverzeichnisse nicht ändern:
 
 - **Docker:** Der Hostordner `RELEASES_DIR` aus deiner Datei `.env` erscheint als `/mnt/data/releases`.
-- **Desktopanwendung:** Ändere **Working directories** in den Einstellungen und starte Bearcat neu.
+- **Desktopanwendung:** Ändere **Working directories** in den Einstellungen der Desktopanwendung und starte Bearcat neu.
 - **Windows-Dienst:** Führe `Bearcat.Cli.exe setup` erneut als Administrator aus und ändere die Arbeitsverzeichnisse.
   Siehe [Setup später ändern](/de/use-the-windows-service/#setup-später-ändern).
 
 Klicke danach in der Weboberfläche auf **Erneut prüfen**.
-
-In der Einrichtung lassen sich die Arbeitsverzeichnisse nicht ändern.
 
 ### Hoster
 
 1. Klicke auf **Hoster hinzufügen**, wähle deinen Hoster und gib Benutzername und Passwort oder API-Schlüssel ein.
    Lass Uploadlimits und Reuploadeinstellungen auf den Standardwerten.
 2. Wähle die Hosterregistrierungen aus, die Bearcat für Uploads verwenden soll.
-3. Klicke bei jeder ausgewählten Hosterregistrierung auf **Login testen**.
+3. Klicke bei jeder ausgewählten Registrierung auf **Login testen**.
 
 Sobald mindestens ein Logintest erfolgreich war, kannst du auf **Weiter** klicken.
 
@@ -89,7 +89,7 @@ Das neue Template hat den Typ **Managed** und enthält eine Archivkonfiguration 
 pro ausgewähltem Hoster. Hast du keinen Hoster ausgewählt, musst du die Uploadkonfigurationen später unter
 **Releasetemplates** ergänzen.
 
-Archive erhalten einen zufälligen Namen. Wenn du den Releasenamen verwenden möchtest, ändere die
+Archive erhalten standardmässig einen zufälligen Namen. Wenn du stattdessen den Releasenamen verwenden möchtest, ändere die
 Archivkonfiguration unter **Releasetemplates**.
 
 <details>
@@ -146,12 +146,12 @@ zur Startseite.
 ## Wie es weitergeht
 
 - **Testrelease:** Das Packen startet kurz nach dem Klick auf **Quelle anlegen**.
-- **Neue lokale Ordner:** Bearcat scannt etwa alle zwei Minuten. Ein Ordner muss für die eingestellte
-  [Stabilitätsdauer](/de/advanced-configuration/#ordnerautomatisierung) unverändert bleiben
-  (Standard: 5 Minuten). Danach erstellt Bearcat das Release.
+- **Neue lokale Ordner:** Bearcat scannt etwa alle zwei Minuten. Bleibt ein Ordner für die eingestellte
+  [Stabilitätsdauer](/de/advanced-configuration/#ordnerautomatisierung) unverändert (Standard: 5 Minuten),
+  erstellt Bearcat das Release.
 - **Neue Ordner auf dem Server:** Auch hier wartet Bearcat, bis der Ordner für die eingestellte
-  [Stabilitätsdauer](/de/advanced-configuration/#remotedownloads) unverändert bleibt
-  (Standard: 5 Minuten). Dann lädt es ihn herunter und erstellt das Release.
+  [Stabilitätsdauer](/de/advanced-configuration/#remotedownloads) unverändert bleibt (Standard: 5 Minuten),
+  lädt ihn herunter und erstellt dann das Release.
 - **Uploads** starten nach dem [Cooldown für initiale Uploads](/de/advanced-configuration/#cooldown-für-initiale-uploads)
   (Standard: 5 Minuten). Um die Wartezeit für ein Release zu überspringen, klicke auf seiner Detailseite auf **Uploads jetzt starten**.
 
@@ -162,7 +162,7 @@ Downloadlinks aus der **Übersicht**.
 ![Uploads eines Releases](../images/release-uploads-tab.png)
 
 Schlägt der Upload fehl oder startet er nicht, prüfe die Fehler unter der Benachrichtigungsglocke.
-Stelle sicher, dass **Login testen** erfolgreich ist und der Archivausgabeordner beschreibbar ist.
+Prüfe, ob **Login testen** funktioniert und der Archivausgabeordner beschreibbar ist.
 Mehr dazu findest du unter [Ablauf eines Uploads](/de/upload-lifecycle/).
 
 ### Startseite
@@ -220,5 +220,5 @@ Für weitere Uploads kannst du:
 - [Template speichern und Ordner überwachen](/de/release-templates-and-automations/), um diese Einstellungen wiederzuverwenden.
 - [Reuploads aktivieren oder Linkcrypter hinzufügen](/de/account-settings/), um deine Uploadlinks zu verwalten.
 - [Von FTP oder FTPS herunterladen](/de/remote-downloads/), um Releases automatisch abzurufen.
-- [Metadaten und Coverbilder hinzufügen](/de/release-information-and-metadata/) für deine Releases.
+- [Metadaten und Coverbilder für deine Releases hinzufügen](/de/release-information-and-metadata/).
 - [Die Releasedetailseite ansehen](/de/release-detail-page/), um weitere Einstellungen zu finden.

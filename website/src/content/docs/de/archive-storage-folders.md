@@ -16,7 +16,7 @@ ob dort das erwartete Laufwerk eingebunden ist.
 | **Name** | Eindeutiger Name für den Speicherordner. |
 | **Pfad** | Absoluter Pfad eines vorhandenen Ordners. Jeder Pfad kann nur einmal registriert werden. |
 | **Freizuhaltender Speicherplatz (GB)** | So viel Platz muss nach dem Verschieben noch frei sein. Mit `0` gilt kein Mindestwert. |
-| **Parallele Dateikopien** | So viele Dateien eines Archivs werden gleichzeitig kopiert, sowohl beim Verschieben in den Ordner als auch beim Kopieren in eine lokale Arbeitskopie. Erhöhe den Wert für Netzwerkmounts (SMB, rclone), für lokale Festplatten lässt du `1`. |
+| **Parallele Dateikopien** | So viele Dateien eines Archivs werden gleichzeitig kopiert, sowohl beim Verschieben in den Ordner als auch beim Kopieren in eine lokale Arbeitskopie. Erhöhe den Wert für Netzwerkmounts (SMB, rclone); für lokale Festplatten lass `1` stehen. |
 | **Priorität** | Niedrigere Werte haben Vorrang. |
 | **Lokale Arbeitskopie für Reuploads** | Kopiert die Dateien, die ein Reupload braucht, in eine temporäre lokale Arbeitskopie. Wenn ausgeschaltet, liest der Reupload direkt aus dem Speicherordner. |
 
@@ -78,7 +78,7 @@ Braucht ein Reupload ein Archiv aus einem Speicherordner, entscheidet **Lokale A
 wie Bearcat es verwendet.
 
 **Aus:** Der Upload liest die Archivdateien direkt aus dem Speicherordner. Auch Hashänderungen für den
-Reupload schreibt Bearcat dort, der Speicherordner muss also beschreibbar sein.
+Reupload schreibt Bearcat dorthin; der Speicherordner muss also beschreibbar sein.
 
 **Ein:** Bearcat kopiert nur die Archivdateien, die hochgeladen werden, in eine temporäre lokale Arbeitskopie.
 Die Arbeitskopie liegt im **Basispfad der Archivdateien** aus der Archivkonfiguration.
@@ -89,7 +89,7 @@ verwendet Bearcat wieder.
 - Der Upload wartet, bis das Kopieren abgeschlossen ist.
 - Hashänderungen und der Upload verwenden die lokalen Dateien.
 - Ein Reupload schreibt nie in den Speicherordner. Das Archiv bleibt seinem Speicherordner zugeordnet.
-- Sind die Uploads der Archivkonfiguration abgeschlossen, stellt die Aufgabe
+- Sind alle Uploads dieser Archivkonfiguration abgeschlossen, stellt die Aufgabe
   [Auto cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben) das Archiv wieder auf
   den Speicherordner um und löscht die Arbeitskopie. Das passiert unabhängig von den Aufräumregeln.
   Fehlgeschlagene Uploads verzögern es nicht.
@@ -98,13 +98,13 @@ Auf der Startseite **Home** zeigt **Kopieren in lokale Arbeitskopien** den Forts
 Mit **Kopieren abbrechen** entfernst du die bisher kopierten Dateien und der Upload liest das Archiv aus dem
 Speicherordner.
 
-Schlägt das Kopieren fehl, entfernt Bearcat die kopierten Dateien und der Upload liest das Archiv aus dem
-Speicherordner. Das gilt auch, wenn der **Basispfad der Archivdateien** nicht existiert: Bearcat legt ihn nie
-an, nur den Unterordner darin. Bearcat benachrichtigt dich pro Archiv einmal, bis du die Benachrichtigung
+Schlägt das Kopieren fehl, löscht Bearcat die bisher kopierten Dateien und liest das Archiv direkt aus dem
+Speicherordner. Das gilt auch, wenn der **Basispfad der Archivdateien** nicht existiert: Bearcat legt nur den
+Unterordner darin an, nie den Basispfad selbst. Du erhältst eine Benachrichtigung pro Archiv, bis du diese
 erledigt hast.
 
 Fehlen Archivdateien im Speicherordner, lädt Bearcat nur die fehlenden Dateien von einem
-[Mirror](/de/mirror-downloads/) herunter und legt sie wieder in den Ordner des Archivs im Speicherordner.
+[Mirror](/de/mirror-downloads/) herunter und legt sie wieder im dortigen Archivordner ab.
 Ohne Mirror packt Bearcat Managed Releases neu. Ist der Speicherordner nicht erreichbar, schlägt die
 Wiederherstellung mit einer Benachrichtigung fehl, statt Dateien herunterzuladen. Bearcat legt den
 Speicherordner nie an.
@@ -145,5 +145,5 @@ Der Tab **Archive** der Releasedetailseite und die Liste **Archive** zeigen den 
 neben Archiven, die dort liegen. Bei Unmanaged Releases steht er zusätzlich neben dem Archivordner im Kopfbereich.
 Solange ein Archiv eine lokale Arbeitskopie hat, folgt dem Namen **lokale Arbeitskopie**.
 
-Änderst du den Archivordner eines Unmanaged Release, gehört das Archiv zu dem Speicherordner, der den
-neuen Ordner enthält, oder zu keinem.
+Änderst du den Archivordner eines Unmanaged Release, ordnet Bearcat das Archiv dem Speicherordner zu,
+der den neuen Pfad enthält, oder keinem, wenn er ausserhalb aller Speicherordner liegt.

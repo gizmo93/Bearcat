@@ -31,8 +31,8 @@ configuration, then choose its archive configuration and upload target:
 a single hoster registration or an [account pool](/account-pools/).
 You can also choose link crypter configurations.
 
-Create an upload configuration for each hoster. Several configurations for the same hoster are
-possible, for example with different part sizes.
+Create an upload configuration for each hoster. You can also create multiple configurations for the
+same hoster, for example with different part sizes.
 
 With the upload source **Video file**, Bearcat uploads the main video directly to a
 [video hoster](/video-hosters/). These uploads start as `Pending` and skip `WaitingForArchive`
@@ -56,9 +56,9 @@ You can also start these uploads through the [REST API](/rest-api/).
 
 For each waiting upload, Bearcat prepares an archive:
 
-1. Reuse a finished archive for the same archive configuration, if possible. If the archive lies in a
-   [storage folder](/archive-storage-folders/#reuploads), the upload reads it there, or Bearcat
-   first copies the files to upload into a temporary local working copy, depending on the storage folder.
+1. Reuse a finished archive for the same archive configuration, if possible. If the archive is in a
+   [storage folder](/archive-storage-folders/#reuploads), Bearcat either reads it directly from there
+   or copies the files to upload into a temporary local working copy, depending on the folder's setting.
 2. Restore missing local files from a configured [mirror hoster](/mirror-downloads/).
 3. If neither is possible, create a new archive from the release folder.
 
@@ -101,7 +101,7 @@ MD5 calculation or hash changes to a reused archive.
 - **Reused archive:** the archive is kept. Files whose hash change did not finish get new hashes
   before the archive is assigned to the next upload.
 
-In both cases the uploads waiting for that archive become `Canceled`. Create a manual reupload when
+In both cases, any uploads waiting for that archive become `Canceled`. Create a manual reupload when
 you want to try again. If you stop Bearcat, an interrupted archive creation
 continues or the archive is repacked on the next start.
 
@@ -115,13 +115,13 @@ The **Archive upload** background task starts `Pending` uploads and changes thei
 | Some files failed | `Failed` | `PartiallyOnline` |
 
 Bearcat records a timestamp for successful uploads. Follow progress on the release detail page
-under **Uploads** > **History**. **Overview** shows the latest upload for each upload configuration.
+under **Uploads > History**. **Overview** shows the latest upload for each upload configuration.
 
 ### Start order
 
 When an upload slot becomes free, Bearcat uploads the next file in this order:
 
-1. Manually prioritized uploads, the most recently prioritized first.
+1. Manually prioritized uploads, most recently prioritized first.
 2. Uploads already transferring files.
 3. The remaining uploads, based on **Configurations > Upload start order**:
    - **Oldest first** (default): uploads start in the order they were created.
@@ -152,14 +152,14 @@ In the link crypter configuration, use **Create container for** to choose which 
 | --- | --- |
 | **Each release separately** | One container per upload configuration with the links of its latest upload. |
 | **Release (all hosters as mirrors)** | One container per release and link crypter. Each upload configuration with this setting adds its latest completed upload as a mirror. |
-| **The whole release collection** | One container per collection upload slot, see [release collections](/release-collections/). |
+| **The whole release collection** | One container per collection upload slot (see [release collections](/release-collections/)). |
 
 ![Create container for in the link crypter configuration](images/add-link-crypter-container-dialog.png)
 
-To create releases from existing FileCrypt, Hide.cx or ToLink folders, see
+To create releases from existing FileCrypt, Hide.cx, or ToLink folders, see
 [Import existing link crypter folders](/import-link-crypter-folders/).
 
-For **Release (all hosters as mirrors)**, the password, captcha, container download and Click'n'Load settings
+For **Release (all hosters as mirrors)**, the password, captcha, container download, and Click'n'Load settings
 must be the same in all upload configurations of the release. Otherwise Bearcat marks the container as failed
 and sends a notification. FileCrypt and Hide.cx support mirrors. ToLink groups the links by the hosters it recognizes
 and shows other hosters as `unknown`. KeepLinks lists all links together.
@@ -173,7 +173,7 @@ and shows other hosters as `unknown`. KeepLinks lists all links together.
 ## 6. Online checks
 
 Bearcat checks uploaded files regularly, at intervals of at least 30 minutes.
-Each run checks up to 100 uploads per hoster registration, starting with the uploads checked longest ago.
+Each run checks up to 100 uploads per hoster registration, starting with those checked longest ago.
 With many uploads on one hoster registration, a full round can take longer than 30 minutes.
 
 | Online state | Meaning |
@@ -183,18 +183,18 @@ With many uploads on one hoster registration, a full round can take longer than 
 | `Offline` | All files are offline. |
 
 If a check fails, the previous online state is kept.
-Persistent errors cause one notification per hoster registration.
-Further notifications wait until you resolve it.
+Persistent errors trigger one notification per hoster registration; no further notifications are sent
+until you resolve it.
 
-Bearcat notifies you if a captcha is required. Invalid credentials disable the hoster registration.
-Correct them and enable the registration again. This also applies to errors during uploading.
+Bearcat notifies you if a captcha is required. If credentials are invalid, Bearcat disables the hoster
+registration; fix the credentials and re-enable it. The same applies to errors during uploading.
 
 ## 7. Automatic reuploads
 
 Bearcat creates an automatic reupload when all of these conditions are met:
 
 - its release group has automatic reuploads enabled
-- the upload is offline according to the hoster's reupload trigger, see below
+- the upload counts as offline according to the hoster's reupload trigger (see below)
 - every uploaded file has been checked at least once
 - the **Hours until reupload** waiting time has passed
 - no replacement upload blocks a reupload for the same upload configuration
@@ -203,7 +203,7 @@ Bearcat creates an automatic reupload when all of these conditions are met:
 A replacement upload blocks another reupload if it is `Online` or has the state `Pending`,
 `Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
 
-Each run creates up to 100 automatic reuploads. Further due reuploads follow in the next runs.
+Each run creates up to 100 automatic reuploads; any remaining ones follow in subsequent runs.
 
 When a reupload is due, Bearcat creates a new upload record for the same upload configuration:
 
@@ -211,7 +211,7 @@ When a reupload is due, Bearcat creates a new upload record for the same upload 
 WaitingForArchive -> Pending -> Uploading -> Completed
 ```
 
-When reusing an archive, Bearcat keeps the links still online and uploads only the missing files.
+When reusing an archive, Bearcat keeps the links that are still online and uploads only the missing files.
 A newly packed archive must be uploaded in full because its parts cannot be mixed with those from older archives.
 
 ### Per-hoster overrides
@@ -222,7 +222,7 @@ Set [reupload overrides](/account-settings/#reupload-overrides-per-hoster) in th
 | --- | --- |
 | **Hours until reupload** | Overrides the release group's waiting time for this hoster. |
 | **Reupload trigger: Partially or fully offline** (default) | Starts the wait when the first file goes offline. |
-| **Reupload trigger: Only when fully offline** | Waits until all files are offline. If one comes back online, the period starts again the next time all files are offline. |
+| **Reupload trigger: Only when fully offline** | Waits until all files are offline. If a file comes back online, the waiting period resets and starts again the next time all files are offline. |
 | **Always reupload all files** | Reuploads parts that are still online as well. |
 
 **Only when fully offline** avoids repeated reuploads when a hoster deletes parts one at a time.
@@ -271,7 +271,7 @@ or repacks them for managed releases. Cleanup never deletes files from the hoste
 
 ## Archive reuse and repackaging
 
-Hosters often recognise files by their MD5 hash. If an archive was previously uploaded to the same
+Hosters often recognize files by their MD5 hash. If an archive was previously uploaded to the same
 type of hoster, Bearcat needs new hashes before uploading it again.
 
 Only files that are uploaded again need new hashes. The other parts keep their hash.
@@ -294,7 +294,7 @@ changes the hashes of the local working copy. Otherwise it changes them in the s
 Bearcat removes it from the release folder after packing, even if packing fails.
 
 RAR gets new hashes from appended zero bytes, with or without the nonce file.
-These bytes count towards the hoster's file size limit.
+These bytes count toward the hoster's file size limit.
 
 7-Zip relies on repacking with a changed nonce, compression, or a larger part size.
 See [Archive repackaging](/advanced-configuration/#archive-repackaging) for the strategies

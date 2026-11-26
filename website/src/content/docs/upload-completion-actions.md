@@ -30,7 +30,7 @@ If a [release collection](/release-collections/) uses [upload slots](/release-co
 the action runs for the whole collection. Bearcat waits until all uploads in the slots are complete and the collection's link containers and images are ready.
 Every release must also pass the [quality gate](/quality-gates/) or have manual approval.
 
-Uploading a new episode triggers **After the first upload**. **After a reupload** applies only if all new uploads in the slots are reuploads.
+Uploading a new episode triggers **After the first upload**. The **After a reupload** trigger applies only if all new uploads in the slots are reuploads.
 Uploads outside the slots trigger the action for the individual release.
 
 ## Check the result or run an action manually

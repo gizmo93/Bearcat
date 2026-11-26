@@ -6,7 +6,7 @@ description: "Upload videos directly to DoodStream, MixDrop, Playmate, Streamtap
 Bearcat can upload a release's main video file directly to a video hoster without packing it first.
 Choose **Video file** as the **Upload source** in the upload configuration.
 
-After the upload, you get a file link and an embed link. Use the embed link to add the video player to
+After the upload, you get a file link and an embed link. Use the embed link to embed the video player on
 another page.
 
 ## Supported video hosters
@@ -34,7 +34,7 @@ that file. If the media data is missing or no file has a video stream, the uploa
 1. Open the release and click **Add** under **Uploads > Configuration**.
 2. Choose **Video file** under **Upload source**. The field only appears when the release meets the
    requirements for video uploads.
-3. Choose an account or [account pool](/account-pools/) of a video hoster as **Upload target**.
+3. Choose a video hoster account or [account pool](/account-pools/) as **Upload target**.
 
 With **Video file**, you do not need an archive configuration. The upload targets only include video
 hoster accounts and pools. With **Archive files**, you only see the other hosters.
@@ -48,10 +48,10 @@ the video upload configuration, including those from folder automations and FTP 
 
 ## Limits
 
-- Video uploads do not support link crypters. Templates with the upload source **Video file** therefore
-  have no link crypter templates to choose from.
+- Video uploads do not support link crypters, so templates with **Video file** as the upload source do
+  not show link crypter options.
 - Video upload configurations cannot be assigned to [release collection](/release-collections/)
-  upload slots. The collection slot fields are also absent from these templates.
+  upload slots, and those slot fields are hidden in the template.
 
 ## Release folder
 

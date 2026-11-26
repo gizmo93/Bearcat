@@ -9,7 +9,7 @@ Ohne Proxy verbindet sich Bearcat direkt.
 
 ![example-upload-with-proxy.png](../images/example-upload-with-proxy.png)
 
-## Einen Proxy hinzufügen
+## Proxy hinzufügen
 
 ![proxy-servers-page.png](../images/proxy-servers-page.png)
 
@@ -20,7 +20,7 @@ Ohne Proxy verbindet sich Bearcat direkt.
 4. Gib **Benutzername** und **Passwort** ein, falls der Proxy sie verlangt.
 5. Klicke auf **Speichern**, dann auf **Verbindung testen**.
 
-Der Test prüft die Proxyverbindung. Weise den Proxy einer Kategorie oder einem Konto zu, um ihn zu verwenden.
+Der Test prüft nur die Verbindung. Weise den Proxy einer Kategorie oder einem Konto zu, damit Bearcat ihn verwendet.
 
 ## Festlegen, welche Anfragen den Proxy verwenden
 
@@ -36,15 +36,15 @@ Wähle unter **Standardproxy pro Kategorie** einen Proxy für jede Kategorie, di
 | **NFO-Datenbanken** | Abrufen von Releaseinformationen, NFO-Dateien und Covern. |
 | **Mediendatenbanken** | Abrufen von Metadaten zu Filmen, Serien und Spielen. |
 
-Wähle **Direkte Verbindung**, um keinen Proxy zu verwenden. Für denselben Standard in allen Kategorien
-wählst du ihn neben **Für alle Kategorien übernehmen** und klickst auf den Button. Abweichende
-Kontoeinstellungen haben weiterhin Vorrang.
+Wähle **Direkte Verbindung**, um keinen Proxy zu verwenden. Möchtest du denselben Standard für alle
+Kategorien setzen, wähle ihn neben **Für alle Kategorien übernehmen** aus und klicke auf den Button.
+Abweichende Kontoeinstellungen haben weiterhin Vorrang.
 
 ![default-proxies-by-category.png](../images/default-proxies-by-category.png)
 
 Foren, Verteilungsseiten und FTP/FTPS-Remotequellen verwenden diese Proxyeinstellungen nicht.
 
-## Den Proxy für ein Konto überschreiben
+## Proxy für ein Konto überschreiben
 
 Bearbeite eine Registrierung und wähle eine dieser Optionen:
 
@@ -69,7 +69,7 @@ Um über einen Proxy hochzuladen und Archive direkt herunterzuladen, setze **Upl
 auf deinen Proxy und **Mirrordownloads von Hostern** auf **Direkte Verbindung**. Lass beide Felder
 in der Hosterregistrierung auf **Kategoriestandard**.
 
-## Einen Proxy ändern oder entfernen
+## Proxy ändern oder entfernen
 
 Mit **Bearbeiten** im Aktionsmenü des Proxys änderst du Adresse oder Zugangsdaten.
 Lass das Passwortfeld leer, um das gespeicherte Passwort zu behalten, oder aktiviere

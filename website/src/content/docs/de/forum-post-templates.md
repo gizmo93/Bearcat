@@ -28,7 +28,7 @@ Du kannst das Ergebnis von Hand kopieren oder es von [Postingregeln](/de/automat
 
 ## Den Editor verwenden
 
-Der Editor hat drei Bereiche: links deine Vorlagen und Variablen, in der Mitte die Vorlage und rechts
+Der Editor hat drei Bereiche: links deine Vorlagenliste und Variablen, in der Mitte der Editor und rechts
 eine Livevorschau.
 
 - **Variablen einfügen:** Klicke unter **Verfügbare Variablen** auf eine Variable, um sie an der Cursorposition einzufügen.
@@ -91,13 +91,15 @@ Ein vollständiges Beispiel mit NFO und Links von Linkcryptern:
 
 In Collectionvorlagen durchläufst du die Releases mit `{{~ for release in releases ~}}`.
 `release.name`, `release.nfo` und die anderen Releasefelder verwendest du wie in Releasevorlagen.
-
-Auch die weiteren Releasedaten erreichst du hier über `release`: `release.release_info`,
+Auch die übrigen Daten jedes Releases erreichst du über `release`: `release.release_info`,
 `release.classification`, `release.uploads`, `release.link_crypters` und `release.imagelinks`.
-`imagelinks` ohne `release.` enthält die Bildlinks der Collection.
-`collection.main_video_total_size_bytes` ist die Summe von `release.main_video.size_bytes` über alle Releases.
-`collection.imdb_id`, `collection.tmdb_id` und `collection.tvdb_id` enthalten die Serien-IDs aus den
-Releases. Manuelle IDs haben Vorrang. Die zugehörigen `_url`-Variablen enthalten die Links.
+
+Variablen für die Collection:
+
+- `imagelinks` (ohne `release.`): die eigenen Bildlinks der Collection.
+- `collection.main_video_total_size_bytes`: die Summe von `release.main_video.size_bytes` über alle Releases.
+- `collection.imdb_id`, `collection.tmdb_id` und `collection.tvdb_id`: die Serien-IDs aus den
+  Releases (manuelle IDs haben Vorrang). Die zugehörigen `_url`-Variablen enthalten die Links.
 
 ```text
 {{~ for release in releases ~}}
@@ -111,8 +113,8 @@ Releases. Manuelle IDs haben Vorrang. Die zugehörigen `_url`-Variablen enthalte
 
 Mit einer Schleife über `upload_slots` durchläufst du die Uploadslots der Collection.
 `upload_slot.name` und `upload_slot.key` geben den Namen und Schlüssel des Slots aus.
-Über `upload_slot.link_crypters` greifst du auf seine Container zu. Sie enthalten die Links aller
-Releases in diesem Slot.
+Über `upload_slot.link_crypters` greifst du auf seine Container zu, die die Links aller
+Releases in diesem Slot enthalten.
 
 ```text
 {{~ for upload_slot in upload_slots ~}}
@@ -179,7 +181,7 @@ Jede Bilduploadkonfiguration hat dafür diese Felder:
 ## Post rendern
 
 Öffne ein Release oder eine Releasecollection und klicke im Pfeilmenü von **Auf Seite posten** auf
-**Post rendern**. Ohne aktive Verteilungsseite ist es ein eigener Button. Wähle eine
+**Post rendern**. Ohne aktive Verteilungsseite erscheint **Post rendern** als eigener Button. Wähle eine
 Vorlage, klicke auf **Post kopieren** und füge das Ergebnis in deinem Forum oder Blog ein.
 
 ![Einen Post rendern](../images/render-template.png)

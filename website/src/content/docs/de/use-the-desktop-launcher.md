@@ -36,11 +36,11 @@ Unter macOS kannst du [7-Zip auch über Homebrew](https://formulae.brew.sh/formu
 brew install sevenzip
 ```
 
-Wähle bei Homebrew in Schritt 3 unter **7z executable** den Pfad `/opt/homebrew/bin/7zz`
-(der Standardpfad auf Apple Silicon).
+Hast du 7-Zip über Homebrew installiert, wähle in Schritt 3 unter **7z executable** den Pfad `/opt/homebrew/bin/7zz`
+(den Standardpfad auf Apple Silicon).
 
-[Der Homebrew-Cask für RAR](https://formulae.brew.sh/cask/rar) (`brew install --cask rar`) ist deaktiviert.
-Verwende den offiziellen Download oben. Ist RAR bereits über Homebrew installiert,
+[Der Homebrew-Cask für RAR](https://formulae.brew.sh/cask/rar) (`brew install --cask rar`) ist deaktiviert;
+verwende stattdessen den offiziellen Download oben. Ist RAR bereits über Homebrew installiert,
 wähle unter **RAR executable** den Pfad `/opt/homebrew/bin/rar`.
 
 ## 2. Bearcat herunterladen und öffnen
@@ -53,8 +53,8 @@ Lade das Desktoppaket für deinen Rechner von [GitHub Releases](https://github.c
 
   | Distribution | Paket |
   | --- | --- |
-  | Ubuntu, Debian | `Bearcat.Desktop-linux-x64.deb`, im Terminal mit `sudo apt install ./Bearcat.Desktop-linux-x64.deb` |
-  | Fedora | `Bearcat.Desktop-linux-x64.rpm`, im Terminal mit `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm` |
+  | Ubuntu, Debian | Installiere `Bearcat.Desktop-linux-x64.deb`, im Terminal mit `sudo apt install ./Bearcat.Desktop-linux-x64.deb`. |
+  | Fedora | Installiere `Bearcat.Desktop-linux-x64.rpm`, im Terminal mit `sudo dnf install ./Bearcat.Desktop-linux-x64.rpm`. |
   | openSUSE | Öffne und installiere `Bearcat.Desktop-linux-x64.rpm` mit der Paketverwaltung. |
   | Andere | Entpacke `Bearcat.Desktop-linux-x64.tar.gz` und starte `Bearcat.Desktop` aus einem Terminal. |
 
@@ -115,7 +115,7 @@ Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Die
 ## Bearcat aktualisieren
 
 1. Beende die Desktopanwendung mit **Quit** oder im Infobereich mit **Quit Bearcat**.
-   Das Schliessen des Fensters reicht nicht, Bearcat läuft dabei weiter.
+   Das Fenster nur zu schliessen reicht nicht; Bearcat läuft weiter.
 2. Lade das neue Desktoppaket für dein System von [GitHub Releases](https://github.com/gizmo93/Bearcat/releases)
    herunter und installiere es:
 
@@ -129,8 +129,8 @@ Soll Bearcat unter Windows auch ohne Anmeldung laufen, verwende den [Windows-Die
 3. Öffne die Desktopanwendung und klicke auf **Start Bearcat**. Lade die Weboberfläche neu und
    prüfe die angezeigte Version in der Seitenleiste unter dem Logo.
 
-Deine Einstellungen und Daten bleiben an ihren bisherigen Speicherorten. Bewahre eine selbst gewählte
-Datenbankdatei im Installationsordner beim Ersetzen der Programmdateien auf.
+Deine Einstellungen und Daten bleiben an ihren bisherigen Speicherorten. Falls deine Datenbankdatei im
+Installationsordner liegt, behalte sie beim Ersetzen der Programmdateien.
 Ist **Bearcat Host** manuell gesetzt, muss der Pfad auf den Host aus dem neuen Paket zeigen.
 Bearcat aktualisiert die Datenbank beim Start automatisch.
 
@@ -176,7 +176,7 @@ macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
 Linux: ~/.config/Bearcat/Desktop/settings.json
 ```
 
-Die Datei enthält auch einen API-Schlüssel und ein PostgreSQL-Passwort, falls du diese eingegeben hast.
+`settings.json` enthält auch deinen API-Schlüssel und dein PostgreSQL-Passwort, falls du sie eingetragen hast.
 
 Bearcat erstellt ausserdem `bearcat.key` in `%APPDATA%\Bearcat` unter Windows,
 `~/Library/Application Support/Bearcat` unter macOS bzw. `~/.config/Bearcat` unter Linux. Damit entschlüsselt Bearcat deine gespeicherten Zugangsdaten.

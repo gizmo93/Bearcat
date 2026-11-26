@@ -8,7 +8,7 @@ Use it to create more releases manually or automatically from new folders.
 
 ## Setting up release templates
 
-A release template stores the release group and settings for archives, uploads, images, and link crypters
+A release template stores the release group along with archive, upload, image, and link crypter settings
 for new releases. You can create one in three ways:
 
 - Open **Release settings > Release templates**, click **New release template**, and add the configurations.
@@ -21,7 +21,7 @@ See [link crypter containers](/upload-lifecycle/#5-link-crypter-containers).
 
 ![Release templates](images/release-templates-page.png)
 
-On **Releases**, choose **New from template**. The new release normally takes the folder name,
+On **Releases**, choose **New from template**. By default, the new release uses the folder name,
 as do archive configurations set to use the release name.
 
 Enable **One release per subfolder** to create a release for every direct subfolder of the selected
@@ -53,8 +53,8 @@ and their image uploads, for example after changing the settings. The release mu
 and its release folder must exist.
 
 You can use the uploaded images in [post templates](/forum-post-templates/#screenshots).
-Bearcat deletes the local screenshot files once every image upload configuration set up for them has
-uploaded them. If no upload is configured for them any more, it deletes them immediately.
+Bearcat deletes the local screenshot files once every configured image upload has finished.
+If no image upload is configured anymore, Bearcat deletes them right away.
 The **Images** tab then shows the images from the image hoster.
 
 ## Setting up folder automations
@@ -92,14 +92,14 @@ Bearcat creates the release, looks up its metadata, and packs and uploads it usi
 and permanently ignores them for this automation. Only new folders become releases. Turn the option off
 to also import existing folders that do not have a release yet.
 
-If you change **Release base path** or **Folder name pattern**, this setting applies again to the folders
-Bearcat finds with the new settings.
+If you change **Release base path** or **Folder name pattern**, this option applies again to the folders
+found under the new path or pattern.
 
 The **Folder preview** lists folders that match the base path and pattern. Folders with a release and
 archive output folders are marked **Already in use**.
 
 When you create an automation or change its base path or pattern, the preview also shows what will happen
-to the remaining folders: Bearcat ignores them or shows a warning with the number of folders that will be
+to the remaining folders: either that Bearcat will ignore them, or a warning with how many folders will be
 imported and uploaded. Use the refresh button to reload the preview.
 
 ### Extract archives before release creation
@@ -108,16 +108,16 @@ For managed templates, turn on **Extract archives before release creation** in t
 if the folders contain RAR or 7z archives and you want Bearcat to pack the release itself. The option
 is off by default and does not apply to unmanaged templates.
 
-Before the release is created, Bearcat checks the folder against its `.sfv` files, if there are any,
-and extracts every RAR and 7z archive in the folder and its subfolders. After a successful extraction,
+Before creating the release, Bearcat verifies any `.sfv` files in the folder and extracts every RAR and 7z
+archive in the folder and its subfolders. After a successful extraction,
 it deletes the archive volumes and `.sfv` files that only list those volumes. The extraction rules are
 the same as for [remote downloads](/remote-downloads/#extract-archives-before-release-creation).
 
 Running checks and extractions appear on the **Home** page under **Folder automations**.
 
-If verification or extraction fails, Bearcat keeps the files and creates no release. Find the error
-under **Failed extractions** on **Folder automations**. Fix the cause, then click **Retry** to process
-the folder on the next scan. Bearcat also retries when the folder's files change.
+If verification or extraction fails, Bearcat keeps the files and does not create a release. You can see
+the error under **Failed extractions** on **Folder automations**. Fix the cause, then click **Retry** to
+process the folder on the next scan. Bearcat also retries when the folder's files change.
 
 ### Download releases from FTP or FTPS
 

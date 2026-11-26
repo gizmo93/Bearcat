@@ -3,9 +3,9 @@ title: "Import Existing Link Crypter Folders"
 description: "Import releases from FileCrypt, Hide.cx or ToLink and keep the existing links."
 ---
 
-Bearcat imports valid mirrors as completed uploads. If a release already exists, Bearcat adds the folders to it. For new releases, Bearcat also uploads the files to the remaining hosters in the template.
+Bearcat imports valid mirrors as completed uploads. If a release already exists, the folders are added to it; for new releases, Bearcat also uploads the files to any remaining hosters in the template.
 
-Bearcat supports **FileCrypt**, **Hide.cx** and **ToLink**. FileCrypt requires an API key with the `LIST` permission. For ToLink, Bearcat groups links by hoster domain.
+Supported crypters are **FileCrypt**, **Hide.cx**, and **ToLink**. FileCrypt requires an API key with the `LIST` permission. For ToLink, links are grouped by hoster domain.
 
 ## Steps
 
@@ -27,25 +27,25 @@ Bearcat groups folders by release name. Use **Rename release** to change the nam
 
 Search for part of a release or folder name, or use the status filter. Search ignores case. Use `*` to match any part of a name, as in `Show.S01*-GRP`.
 
-The file check selects all importable folders. A release's checkbox applies to all its folders. **Select all matches** applies to every page of filtered results. Template and primary language changes apply to the selected matches. **Start import** also includes selected importable folders hidden by the filters.
+After the file check, all importable folders are selected automatically. Checking a release selects all of its folders, and **Select all matches** covers every page of the filtered results. Changing the template or primary language updates all selected matches. **Start import** also includes selected importable folders that are currently hidden by a filter.
 
 ### Template and language
 
-Bearcat uses the **default release template**. If you chose a **series template**, Bearcat uses it when a folder contains several releases, the release name includes a season number or the name matches the template's episode pattern.
+By default, imports use the **default release template**. If you set a **series template**, it is used whenever a folder contains multiple releases, the release name includes a season number, or the name matches the template's episode pattern.
 
-Bearcat reads the **primary language** from the release name. If needed, it also checks the first archive name in folders with several releases. If neither name gives a language, Bearcat uses the default language. You can change the template and language in the preview.
+The **primary language** is detected from the release name, or from the first archive name in multi-release folders. If neither yields a language, the default language is used. You can change both template and language in the preview.
 
 ## Mirrors and local files
 
-Each mirror needs an upload configuration for its hoster. For new releases, the configuration comes from the template. A mirror is valid when all its files are online and use a supported archive format (`.rar`, `.r00`, `.7z`, `.7z.001`). Additional mirrors must have the same file names as the first mirror Bearcat imports.
+Each mirror needs an upload configuration for its hoster (for new releases, this comes from the template). A mirror is valid when all its files are online and use a supported archive format (`.rar`, `.r00`, `.7z`, `.7z.001`). Additional mirrors must have the exact same file names as the first imported mirror.
 
-A folder needs at least one hoster that matches the release. A new release also needs a local release folder or a valid mirror. Without a release folder, Bearcat also needs an existing archive or an archive base folder.
+To be imported, a folder needs at least one hoster that matches the release. A new release also needs either a local release folder or a valid mirror. Without a local release folder, it also needs an existing archive or an archive base folder.
 
-With a managed template, Bearcat looks for an unused folder named after the release in the working directories and folder automation paths. If it finds none, it creates an unmanaged release. Bearcat looks for existing archives in the archive storage folders, working directories, archive base folder and their direct subfolders. It reuses the archive if the file names exactly match the first imported mirror.
+With a managed template, Bearcat searches the working directories and folder automation paths for an unused folder matching the release name. If none is found, it creates an unmanaged release instead. Existing archives are searched in the archive storage folders, working directories, archive base folder, and their direct subfolders, and reused if the file names exactly match the first imported mirror.
 
 ## Existing releases
 
-Bearcat matches existing releases by the name in the preview, ignoring case. If a mirror has the same links as an existing upload, Bearcat links the two. If the hoster has a newer upload, the container takes its links on the next update.
+Bearcat matches existing releases by the name shown in the preview (case-insensitive). If a mirror has the same links as an existing upload, they are linked together. If the hoster already has a newer upload, the container picks up its links on the next update.
 
 The import fails if the release already has a container from the same crypter account for one of the folder's hosters.
 
@@ -55,13 +55,15 @@ If a mirror contains several episodes, Bearcat creates one release per episode b
 
 If archives for several episodes share a local folder, Bearcat moves the archive parts into one subfolder per episode. The preview and completion notification show these moves.
 
-The crypter folder becomes the container for the collection's [upload slot](/release-collections/#upload-slots). The mirrors must belong to the same slot. Bearcat skips mirrors it cannot match to an episode. The import fails if the slot already has another container from the same crypter account or a release in the collection uses that account for its own containers. When importing a single episode, Bearcat can add its links to the existing collection container for that account.
+The crypter folder becomes the container for the collection's [upload slot](/release-collections/#upload-slots), and all mirrors must belong to that same slot. Mirrors that cannot be matched to an episode are skipped.
+
+The import fails if the slot already has another container from the same crypter account, or if a release in the collection uses that account for its own containers. When importing a single episode, Bearcat can add its links to the existing collection container for that account.
 
 ## After the import
 
 A folder with one mirror becomes the [link crypter container](/upload-lifecycle/#5-link-crypter-containers) for that hoster. A folder with several mirrors becomes the container for all hosters on the release.
 
-Bearcat fetches release information in the background. New releases use the language from the preview. Existing releases keep their language. Imported releases and collections count as posted and stay out of the [post queue](/post-queue/).
+Release information is fetched in the background. New releases use the language from the preview, while existing releases keep theirs. Imported releases and collections count as already posted and stay out of the [post queue](/post-queue/).
 
 ## Assign archive folders after import
 

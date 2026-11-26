@@ -3,7 +3,7 @@ title: "Accounts and Reupload Settings"
 description: "Add link crypters and image hosters, enable reuploads, and set upload limits."
 ---
 
-Find hoster accounts under **Registrations > Hosters > Hoster registrations**.
+Hoster accounts are managed under **Registrations > Hosters > Hoster registrations**.
 See [Your first upload](/post-installation/#set-up-manually) to add your first account.
 This page covers other services, reuploads, and upload limits.
 
@@ -24,8 +24,8 @@ the required credentials.
 
 ## Image upload configuration
 
-On a release's **Images** tab, click **Add** under **Image upload configurations**. Choose a name and an
-image hoster registration. Then choose which images Bearcat should upload:
+On a release's **Images** tab, click **Add** under **Image upload configurations**. Pick a name,
+select an image hoster registration, and choose which images to upload:
 
 ![Image upload configuration](images/image-upload-config-dialog.png)
 
@@ -82,7 +82,7 @@ For other hosters, **New hoster** and **Edit** offer a **Maximum parallel upload
 field. Leave it empty to use the default shown in the field, or enter your own limit.
 
 The **Parallel uploads** column shows the effective limit and an **Override** badge for custom values.
-The [global upload limit](/advanced-configuration/#upload-concurrency) also applies:
+The [global upload limit](/advanced-configuration/#upload-concurrency) also applies.
 Uploads must stay within both limits.
 
 ## Upload speed limit per hoster

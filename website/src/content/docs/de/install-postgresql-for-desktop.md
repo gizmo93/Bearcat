@@ -102,7 +102,7 @@ Während der Installation:
 Wähle das Konto, das Bearcat verwenden soll:
 
 - **Installationskonto:** Gib in Bearcat `postgres` und das bei der Installation gewählte Passwort ein. Damit verwendet Bearcat den PostgreSQL-Superuser.
-- **Separates Konto:** Öffne **pgAdmin 4**, verbinde dich als `postgres` und erstelle eine Loginrolle namens `bearcat`. Setze ein Passwort und aktiviere **Can create databases?**. Trage dieses Konto dann in Bearcat ein.
+- **Separates Konto:** Öffne **pgAdmin 4**, verbinde dich als `postgres` und erstelle eine Loginrolle namens `bearcat`. Setze ein Passwort, aktiviere **Can create databases?** und trage dieses Konto dann in Bearcat ein.
 
 Setze den Datenbanknamen auf `bearcat`. Bearcat legt die Datenbank beim ersten Start an und richtet die benötigten Tabellen ein.
 
@@ -110,7 +110,7 @@ Setze den Datenbanknamen auf `bearcat`. Bearcat legt die Datenbank beim ersten S
 
 Lade Postgres.app von [postgresapp.com](https://postgresapp.com) herunter.
 
-Installiere und starte Postgres.app, erstelle oder starte dann einen PostgreSQL-18-Server. Behalte den Standardport `5432`, sofern er nicht bereits belegt ist.
+Installiere und starte Postgres.app und erstelle oder starte dort einen PostgreSQL-18-Server. Behalte den Standardport `5432`, sofern er nicht bereits belegt ist.
 
 Verwende den Befehl `psql` von Postgres.app im Terminal. Findet deine Shell ihn nicht, folge der
 Anleitung von Postgres.app: Füge die Kommandozeilentools zu `PATH` hinzu oder verwende den vollständigen Pfad.

@@ -3,7 +3,7 @@ title: "IntelligeN XML export"
 description: "Export releases and download links from Bearcat as IntelligeN XML files and import them automatically with DirWatch."
 ---
 
-After upload, Bearcat writes a release’s download links and metadata to an XML file for IntelligeN.
+After upload, Bearcat writes a release's download links and metadata to an XML file for IntelligeN.
 For a collection, the file contains links for all episodes. Within each upload slot, Bearcat groups links from the same hoster into one mirror.
 
 ## Set up the export
@@ -29,7 +29,7 @@ IntelligeN only imports crypters it recognizes. For fields such as genre, langua
 
 ## File path template
 
-The file path template uses [Scriban](https://github.com/scriban/scriban). The default template, `{{ release.name }}.xml`, uses the release name as the filename.
+The file path template uses [Scriban](https://github.com/scriban/scriban). The default template, `{{ release.name }}.xml`, uses the release or collection name as the filename.
 
 | Variable | Value |
 | --- | --- |

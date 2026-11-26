@@ -13,8 +13,8 @@ next:
 [Direkt zur Updateanleitung](#bearcat-aktualisieren).
 :::
 
-Das Docker-Image enthält RAR und 7-Zip und verwendet **SQLite**. Du brauchst daher nur einen Container.
-Du brauchst Docker mit Docker Compose. Das Image unterstützt nur `linux/amd64`. Raspberry Pi wird nicht unterstützt.
+Das Docker-Image enthält RAR und 7-Zip und verwendet **SQLite**, daher reicht ein einzelner Container.
+Du brauchst Docker mit Docker Compose. Das Image unterstützt nur `linux/amd64` (Raspberry Pi wird nicht unterstützt).
 
 Unter Windows oder auf einem Mac mit Apple Silicon kannst du die
 [native Desktopanwendung](/de/use-the-desktop-launcher/) verwenden.
@@ -35,7 +35,7 @@ Sie läuft direkt auf dem Host und vermeidet die zusätzliche Dateifreigabe zwis
 Du kannst Docker Desktop oder Rancher Desktop verwenden. Unter macOS empfehle ich
 [OrbStack](https://orbstack.dev), besonders wegen der schnellen Dateizugriffe über Bindmounts.
 
-## 1. Compose-Datei herunterladen
+## 1. Composedatei herunterladen
 
 Erstelle einen Ordner und lade diese Dateien über **Download raw file** auf GitHub herunter:
 
@@ -52,8 +52,8 @@ RELEASES_DIR=/srv/releases
 BEARCAT_DATA_DIR=./bearcat-data
 ```
 
-Ersetze `/srv/releases` durch deinen eigenen Pfad. Die übrigen Einstellungen kannst du unverändert lassen.
-Docker legt einen fehlenden Releaseordner nicht an. Existiert der Ordner nicht, startet der Container nicht.
+Ersetze `/srv/releases` durch deinen eigenen Pfad; die übrigen Einstellungen kannst du unverändert lassen.
+Der Ordner muss bereits existieren, denn Docker legt ihn nicht an und der Container startet sonst nicht.
 
 `BEARCAT_DATA_DIR` speichert die Datenbank und den Verschlüsselungsschlüssel, standardmässig in
 `bearcat-data` neben deiner Composedatei. Lege diesen Datenordner auf lokalen Speicher.
@@ -101,14 +101,15 @@ In Bearcats Ordnerauswahl erscheint dein Releaseordner als `/mnt/data/releases`.
 
 ## Bearcat aktualisieren
 
-1. Öffne ein Terminal im Ordner deiner bestehenden Composedatei und führe aus:
+1. Sichere die Datenbank und `bearcat.key`. Siehe [Backups](#backups).
+2. Öffne ein Terminal im Ordner deiner bestehenden Composedatei und führe aus:
 
 ```bash
 docker compose pull bearcat
 docker compose up -d bearcat
 ```
 
-2. Lade die Weboberfläche neu und prüfe die angezeigte Version in der Seitenleiste unter dem Logo.
+3. Lade die Weboberfläche neu und prüfe die angezeigte Version in der Seitenleiste unter dem Logo.
 
 Mit `latest` lädt `pull` das aktuelle Image für Bearcat. Hast du in `.env` unter `BEARCAT_IMAGE` eine feste
 Version eingetragen, ändere zuerst den Versionstag auf die gewünschte Version.
@@ -172,7 +173,7 @@ docker compose start
 ```
 
 Für ein Backup bei laufendem Bearcat verwende auf dem Host `sqlite3 bearcat-data/bearcat.db ".backup bearcat-backup.db"`.
-Das Kopieren der verwendeten Datenbankdatei ergibt kein konsistentes Backup.
+Kopierst du die Datenbankdatei im laufenden Betrieb, ist das Backup nicht konsistent.
 
 Bei PostgreSQL stoppst du beide Container, kopierst `BEARCAT_DATA_DIR` und `POSTGRES_DATA_DIR` und
 startest sie wieder. Sichere Releasedateien separat.

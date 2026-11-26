@@ -22,8 +22,8 @@ Die [API-Referenz](/api/) listet ebenfalls die Endpunkte, Parameter und Schemas 
 
 ## Authentifizierung
 
-Wer Bearcat erreichen kann, kann Daten über `GET`-Endpunkte lesen. Betreibe Bearcat in einem privaten
-Netzwerk oder beschränke den Zugriff mit einem Reverse Proxy mit Basic Auth oder einem VPN.
+Wer Bearcat erreicht, kann Daten über `GET`-Endpunkte lesen. Betreibe Bearcat in einem privaten
+Netzwerk oder beschränke den Zugriff über ein VPN oder einen Reverse Proxy mit Basic Auth.
 
 Befehle (`POST`) brauchen einen API-Schlüssel im Header `X-Api-Key`.
 Einrichtung und Beispiele findest du unter [Bearcat mit externen Tools steuern](/de/external-orchestration/).
