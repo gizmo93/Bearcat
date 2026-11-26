@@ -95,10 +95,13 @@ Uploads must stay within both limits. The **Parallel uploads** column shows the 
 
 ## Delete empty folders
 
-Bearcat creates a folder on the hoster for each archive or upload. Files in it can later be moved
-or expire, which leaves the folder empty. **Delete empty folders automatically** in **New hoster**
-or **Edit** deletes such folders. It only deletes folders that Bearcat created and that no running
-upload uses. Folders that still contain files or subfolders are kept.
+Bearcat creates one folder per release on the hoster and puts all uploads of the release into it.
+After a full reupload the folder holds the new files next to the older ones with the same names.
+Files can later be moved or expire, which leaves the folder empty. **Delete empty folders
+automatically** in **New hoster** or **Edit** deletes such folders, including the folders that
+earlier versions created per upload. It only deletes folders that Bearcat created and that no
+running upload of the release uses. Folders that still contain files or subfolders are kept.
+Bearcat creates the folder again with the next upload of the release.
 
 The option is on by default and is currently available for Rapidgator, Alfafile, DDownload,
 FileQ, Turbobit, Hitfile, 1fichier, KrakenFiles, CloudFam.io, UploadG.com, Filer.net and FileFactory.

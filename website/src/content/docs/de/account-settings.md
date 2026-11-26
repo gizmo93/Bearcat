@@ -99,11 +99,14 @@ das konfigurierte Limit an.
 
 ## Leere Ordner löschen
 
-Bearcat legt auf dem Hoster für jedes Archiv oder jeden Upload einen Ordner an. Dateien darin
-können später verschoben werden oder ablaufen, dann bleibt der Ordner leer. **Leere Ordner automatisch
-löschen** unter **Neuer Hoster** oder **Bearbeiten** löscht solche Ordner. Gelöscht werden nur Ordner,
-die Bearcat angelegt hat und die kein laufender Upload verwendet. Ordner, die noch Dateien oder
-Unterordner enthalten, bleiben erhalten.
+Bearcat legt auf dem Hoster einen Ordner pro Release an und lädt alle Uploads des Releases hinein.
+Nach einem vollständigen Reupload liegen die neuen Dateien neben den älteren mit denselben Namen.
+Dateien können später verschoben werden oder ablaufen, dann bleibt der Ordner leer. **Leere Ordner
+automatisch löschen** unter **Neuer Hoster** oder **Bearbeiten** löscht solche Ordner, auch die
+Ordner, die frühere Versionen pro Upload angelegt haben. Gelöscht werden nur Ordner, die Bearcat
+angelegt hat und die kein laufender Upload des Releases verwendet. Ordner, die noch Dateien oder
+Unterordner enthalten, bleiben erhalten. Beim nächsten Upload des Releases legt Bearcat den Ordner
+neu an.
 
 Die Option ist standardmässig aktiviert und derzeit für Rapidgator, Alfafile, DDownload, FileQ,
 Turbobit, Hitfile, 1fichier, KrakenFiles, CloudFam.io, UploadG.com, Filer.net und FileFactory verfügbar.
