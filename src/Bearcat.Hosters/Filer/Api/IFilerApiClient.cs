@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 
@@ -50,4 +51,16 @@ public interface IFilerApiClient
     );
 
     Task EnsureCredentialsAcceptedAsync(FilerConfig config, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        FilerConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        FilerConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }

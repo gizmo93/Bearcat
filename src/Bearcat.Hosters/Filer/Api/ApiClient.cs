@@ -1,9 +1,11 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
@@ -36,9 +38,17 @@ public partial class ApiClient(
 
     private const int FileNotFoundCode = 505;
 
+    private const int FolderListPageSize = 50;
+
+    private const string FolderNotFoundMessage = "Folder not found";
+
     private static readonly Uri ApiBaseUri = new(ApiBaseUrl);
 
     private readonly KeyedAuthTokenCache sessionCookieCache = new(TimeSpan.FromDays(1));
+
+    private readonly ConcurrentDictionary<string, string> editCodePerEmptyFolderHash = new(
+        StringComparer.Ordinal
+    );
 
     public async Task<FilerUploadResult> UploadFileAsync(
         FilerConfig config,
@@ -139,6 +149,83 @@ public partial class ApiClient(
 
         throw new HttpRequestException(
             $"Filer folder creation failed with status code {response.StatusCode}: {ReadErrorMessage(response) ?? response.Content?.Message}"
+        );
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        FilerConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderPerHash = await GetFoldersAsync(
+            config: config,
+            folderHashes: folderIds.ToHashSet(StringComparer.Ordinal),
+            cancellationToken: cancellationToken
+        );
+
+        var folderContentStates = folderIds
+            .Where(folderPerHash.ContainsKey)
+            .Select(folderId => new HosterFolderContentStateDto(
+                folderId,
+                GetFolderContentState(folderPerHash[folderId])
+            ))
+            .ToList();
+
+        foreach (
+            var emptyFolder in folderContentStates.Where(folderContentState =>
+                folderContentState.State == HosterFolderContentState.Empty
+            )
+        )
+        {
+            editCodePerEmptyFolderHash[emptyFolder.FolderId] = folderPerHash[
+                emptyFolder.FolderId
+            ].EditCode;
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        FilerConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!editCodePerEmptyFolderHash.TryRemove(folderId, out var editCode))
+        {
+            editCode = await GetEditCodeOfEmptyFolderAsync(config, folderId, cancellationToken);
+        }
+
+        var response = await SendWithSessionCookieAsync(
+            config: config,
+            sendRequestAsync: cookie =>
+                api.DeleteFolderAsync(
+                    cookie: cookie,
+                    folderHash: folderId,
+                    editCode: editCode,
+                    cancellationToken: cancellationToken
+                ),
+            isSessionGone: IsUnauthorized,
+            cancellationToken: cancellationToken
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var message = ReadErrorMessage(response);
+
+        if (response.StatusCode == HttpStatusCode.NotFound && message == FolderNotFoundMessage)
+        {
+            return;
+        }
+
+        throw new HttpRequestException(
+            $"Filer folder deletion failed with status code {response.StatusCode}: {message}",
+            inner: null,
+            statusCode: response.StatusCode
         );
     }
 
@@ -379,6 +466,92 @@ public partial class ApiClient(
         }
 
         return uploadedFile;
+    }
+
+    private async Task<string> GetEditCodeOfEmptyFolderAsync(
+        FilerConfig config,
+        string folderHash,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderPerHash = await GetFoldersAsync(
+            config: config,
+            folderHashes: new HashSet<string>(StringComparer.Ordinal) { folderHash },
+            cancellationToken: cancellationToken
+        );
+
+        if (!folderPerHash.TryGetValue(folderHash, out var folder))
+        {
+            throw new HttpRequestException(
+                $"Filer folder {folderHash} is not in the folder list, so its edit code is unknown"
+            );
+        }
+
+        if (GetFolderContentState(folder) is not HosterFolderContentState.Empty)
+        {
+            throw new HttpRequestException($"Filer folder {folderHash} is no longer empty");
+        }
+
+        return folder.EditCode;
+    }
+
+    private async Task<Dictionary<string, ListedFolderResponse>> GetFoldersAsync(
+        FilerConfig config,
+        IReadOnlySet<string> folderHashes,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderPerHash = new Dictionary<string, ListedFolderResponse>(StringComparer.Ordinal);
+        var offset = 0;
+
+        while (folderPerHash.Count < folderHashes.Count)
+        {
+            var response = await SendWithSessionCookieAsync(
+                config: config,
+                sendRequestAsync: cookie =>
+                    api.ListFoldersAsync(
+                        cookie: cookie,
+                        limit: FolderListPageSize,
+                        offset: offset,
+                        sort: "createdAt",
+                        order: "DESC",
+                        cancellationToken: cancellationToken
+                    ),
+                isSessionGone: IsUnauthorized,
+                cancellationToken: cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode || response.Content is null)
+            {
+                throw new HttpRequestException(
+                    $"Filer folder list failed with status code {response.StatusCode}: {ReadErrorMessage(response)}"
+                );
+            }
+
+            foreach (var folder in response.Content.Folders)
+            {
+                if (folderHashes.Contains(folder.Hash))
+                {
+                    folderPerHash[folder.Hash] = folder;
+                }
+            }
+
+            if (!response.Content.HasMore || response.Content.Folders.Count == 0)
+            {
+                break;
+            }
+
+            offset += response.Content.Folders.Count;
+        }
+
+        return folderPerHash;
+    }
+
+    private static HosterFolderContentState GetFolderContentState(ListedFolderResponse folder)
+    {
+        return folder is { FileCount: 0, ActualFileCount: 0, Children.Count: 0 }
+            ? HosterFolderContentState.Empty
+            : HosterFolderContentState.NotEmpty;
     }
 
     private async Task<string> GetExistingFolderHashAsync(

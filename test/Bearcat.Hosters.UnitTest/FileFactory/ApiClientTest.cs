@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.FileFactory;
 using Bearcat.Hosters.FileFactory.Api;
@@ -498,6 +499,72 @@ public class ApiClientTest
         exception.Message.ShouldContain("[Request ID: 5f1c2a] Server Error");
     }
 
+    [Test]
+    public async Task GetFolderContentStatesAsync_RootFolders_MapsFilePagesAndOmitsUnlistedFolders()
+    {
+        // Arrange
+        SetupLogin(FirstToken);
+        SetupConvexResponse("users:me", CurrentUserResponse);
+        SetupConvexResponse(
+            "file_manager/folders:getFolderSelectOptions",
+            """{"status":"success","value":[{"hash":"bcsubmwjvxb6u","id":"empty-folder-id","level":0.0,"name":"Empty.Release"},{"hash":"bcsubmwjvxb6v","id":"files-folder-id","level":0.0,"name":"Files.Release"}]}"""
+        );
+        var filePagePerFolderId = new Dictionary<string, string>
+        {
+            ["empty-folder-id"] =
+                """{"status":"success","value":{"page":[],"isDone":true,"continueCursor":"cursor-1"}}""",
+            ["files-folder-id"] =
+                $$$"""{"status":"success","value":{"page":[{"_id":"{{{FileId}}}","fname":"archive.part1.rar","folderId":"files-folder-id","statushash":"active"}],"isDone":false,"continueCursor":"cursor-2"}}""",
+        };
+        httpMessageHandler.Respond(
+            "/api/query",
+            request =>
+                RespondToFileListRequest(request: request, filePagePerFolderId: filePagePerFolderId)
+        );
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["empty-folder-id", "files-folder-id", "unlisted-folder-id"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("empty-folder-id", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("files-folder-id", HosterFolderContentState.NotEmpty),
+        ]);
+        httpMessageHandler
+            .Requests("/api/query")
+            .Select(request => request.Body)
+            .ShouldContain(
+                $$$"""{"path":"file_manager/files:listFiles","args":{"userId":"{{{UserId}}}","folderId":"empty-folder-id","paginationOpts":{"numItems":1,"cursor":null}},"format":"json"}"""
+            );
+    }
+
+    [Test]
+    public async Task GetFolderContentStatesAsync_AccountContainsSubfolder_ReturnsNoStatesWithoutListingFiles()
+    {
+        // Arrange
+        SetupLogin(FirstToken);
+        SetupConvexResponse("users:me", CurrentUserResponse);
+        SetupConvexResponse(
+            "file_manager/folders:getFolderSelectOptions",
+            """{"status":"success","value":[{"hash":"bcsubmwjvxb6u","id":"empty-folder-id","level":0.0,"name":"Empty.Release"},{"hash":"bcsubmwjvxb6w","id":"subfolder-id","level":1.0,"name":"Sub"}]}"""
+        );
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["empty-folder-id"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+        httpMessageHandler.CountRequests("/api/query").ShouldBe(2);
+    }
+
     private void SetupLogin(params string[] tokens)
     {
         var tokenQueue = new Queue<string>(tokens);
@@ -524,6 +591,23 @@ public class ApiClientTest
         var convexPath = body.RootElement.GetProperty("path").GetString()!;
 
         return CreateJsonResponse(HttpStatusCode.OK, convexResponsePerPath[convexPath]);
+    }
+
+    private HttpResponseMessage RespondToFileListRequest(
+        RecordedRequest request,
+        Dictionary<string, string> filePagePerFolderId
+    )
+    {
+        using var body = JsonDocument.Parse(request.Body);
+
+        if (body.RootElement.GetProperty("path").GetString() != "file_manager/files:listFiles")
+        {
+            return RespondToConvexRequest(request);
+        }
+
+        var folderId = body.RootElement.GetProperty("args").GetProperty("folderId").GetString()!;
+
+        return CreateJsonResponse(HttpStatusCode.OK, filePagePerFolderId[folderId]);
     }
 
     private void SetupSignUpload()

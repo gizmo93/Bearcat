@@ -48,6 +48,16 @@ public interface IUploadGApi
         CancellationToken cancellationToken
     );
 
+    [Get("/drive/file-entries")]
+    Task<FolderEntriesResponse> ListFolderEntriesAsync(
+        [Header("Authorization")] string authorization,
+        [Query] string section,
+        [Query] string folderId,
+        [Query] int page,
+        [Query] int perPage,
+        CancellationToken cancellationToken
+    );
+
     [Post("/folders")]
     Task<CreateFolderResponse> CreateFolderAsync(
         [Header("Authorization")] string authorization,
@@ -74,6 +84,13 @@ public interface IUploadGApi
     Task<StatusResponse> MoveEntriesAsync(
         [Header("Authorization")] string authorization,
         [Body] MoveEntriesRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/file-entries/delete")]
+    Task<StatusResponse> DeleteEntriesAsync(
+        [Header("Authorization")] string authorization,
+        [Body] DeleteEntriesRequest request,
         CancellationToken cancellationToken
     );
 }

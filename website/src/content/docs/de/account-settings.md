@@ -106,7 +106,9 @@ die Bearcat angelegt hat und die kein laufender Upload verwendet. Ordner, die no
 Unterordner enthalten, bleiben erhalten.
 
 Die Option ist standardmässig aktiviert und derzeit für Rapidgator, Alfafile, DDownload, FileQ,
-Turbobit, Hitfile und 1fichier verfügbar. Schalte sie aus, um die Ordner dieses Accounts zu behalten. Die Aufgabe [Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben)
+Turbobit, Hitfile, 1fichier, KrakenFiles, CloudFam.io, UploadG.com, Filer.net und FileFactory verfügbar.
+Bei UploadG.com landen gelöschte Ordner im Papierkorb. Bei FileFactory wird kein Ordner gelöscht,
+solange der Account Unterordner enthält. Schalte die Option aus, um die Ordner dieses Accounts zu behalten. Die Aufgabe [Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben)
 läuft beim Start und danach täglich und prüft bis zu 200 Ordner pro Account.
 
 ## Einen Proxy verwenden

@@ -218,6 +218,86 @@ public class ApiClient(
         return response.Folder.Id.ToString(CultureInfo.InvariantCulture);
     }
 
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        UploadGConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var folderId in folderIds)
+        {
+            try
+            {
+                var response = await ExecuteFastApiRequestAsync(
+                    operationName: "folder entry list",
+                    action: token =>
+                        api.ListFolderEntriesAsync(
+                            authorization: authorization,
+                            section: "folder",
+                            folderId: folderId,
+                            page: 1,
+                            perPage: 1,
+                            cancellationToken: token
+                        ),
+                    cancellationToken: cancellationToken
+                );
+
+                var folderContentState =
+                    response.Total == 0
+                        ? HosterFolderContentState.Empty
+                        : HosterFolderContentState.NotEmpty;
+
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, folderContentState)
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to get the content state of folder {FolderId} on UploadG",
+                    folderId
+                );
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        UploadGConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await ExecuteFastApiRequestAsync(
+            operationName: "folder deletion",
+            action: token =>
+                api.DeleteEntriesAsync(
+                    authorization: GetAuthorizationHeader(config.ApiKey),
+                    request: new DeleteEntriesRequest(
+                        EntryIds: [long.Parse(folderId, CultureInfo.InvariantCulture)],
+                        DeleteForever: false
+                    ),
+                    cancellationToken: token
+                ),
+            cancellationToken: cancellationToken
+        );
+
+        if (!IsSuccess(response.Status))
+        {
+            throw new HttpRequestException(
+                $"UploadG folder deletion failed with status {response.Status}"
+            );
+        }
+    }
+
     public async Task MoveFileToFolderAsync(
         UploadGConfig config,
         string externalId,

@@ -14,6 +14,7 @@ namespace Bearcat.Hosters.FileFactory;
 
 public class FileFactory(IFileFactoryApiClient apiClient, ILogger<FileFactory> logger)
     : IHosterWithBatchFileMove,
+        IHosterWithEmptyFolderCleanup,
         IHosterWithFileInfo,
         IHosterWithFileSizeLimit
 {
@@ -188,6 +189,32 @@ public class FileFactory(IFileFactoryApiClient apiClient, ILogger<FileFactory> l
         var config = hosterConfig.As<FileFactoryConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<FileFactoryConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<FileFactoryConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

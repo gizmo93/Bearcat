@@ -13,7 +13,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.UploadG;
 
-public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHosterWithFolders
+public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger)
+    : IHosterWithEmptyFolderCleanup
 {
     private const int MaxParallelUploads = 10;
 
@@ -177,6 +178,32 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
         var config = hosterConfig.As<UploadGConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<UploadGConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<UploadGConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

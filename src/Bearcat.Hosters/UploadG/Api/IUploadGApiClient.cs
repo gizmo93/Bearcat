@@ -39,4 +39,16 @@ public interface IUploadGApiClient
         long entryId,
         CancellationToken cancellationToken
     );
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        UploadGConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        UploadGConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }

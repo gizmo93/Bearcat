@@ -101,7 +101,9 @@ or **Edit** deletes such folders. It only deletes folders that Bearcat created a
 upload uses. Folders that still contain files or subfolders are kept.
 
 The option is on by default and is currently available for Rapidgator, Alfafile, DDownload,
-FileQ, Turbobit, Hitfile and 1fichier. Switch it off to keep the folders of this account. The [Empty hoster folder cleanup](/advanced-configuration/#available-background-tasks)
+FileQ, Turbobit, Hitfile, 1fichier, KrakenFiles, CloudFam.io, UploadG.com, Filer.net and FileFactory.
+On UploadG.com deleted folders go to the trash. On FileFactory no folder is deleted while the account
+contains subfolders. Switch the option off to keep the folders of this account. The [Empty hoster folder cleanup](/advanced-configuration/#available-background-tasks)
 task runs at startup and then daily, checking up to 200 folders per account.
 
 ## Use a proxy

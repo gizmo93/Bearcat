@@ -14,6 +14,7 @@ namespace Bearcat.Hosters.Filer;
 
 public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
     : IHosterWithBatchFileMove,
+        IHosterWithEmptyFolderCleanup,
         IHosterWithFileInfo,
         IHosterWithDownload
 {
@@ -186,6 +187,32 @@ public class Filer(IFilerApiClient apiClient, ILogger<Filer> logger)
         var config = hosterConfig.As<FilerConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<FilerConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<FilerConfig>(),
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task MoveFileToFolderAsync(

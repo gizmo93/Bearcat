@@ -36,6 +36,13 @@ public interface ICloudFamApi
         CancellationToken cancellationToken
     );
 
+    [Post("/api/v3/folders/delete")]
+    Task<ApiResponse<DeleteFolderResponse>> DeleteFolderAsync(
+        [Header("X-API-Key")] string apiKey,
+        [Body] DeleteFolderRequest request,
+        CancellationToken cancellationToken
+    );
+
     [Post("/api/v3/files/move")]
     Task<ApiResponse<CloudFamResponse<MoveFilesResponse>>> MoveFilesAsync(
         [Header("X-API-Key")] string apiKey,

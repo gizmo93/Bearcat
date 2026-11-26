@@ -42,6 +42,18 @@ public interface ICloudFamApiClient
     );
 
     Task EnsureApiKeyAcceptedAsync(CloudFamConfig config, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        CloudFamConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        CloudFamConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }
 
 public record CloudFamUploadResult(string FileId, string FileUrl);

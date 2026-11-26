@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
@@ -142,6 +143,85 @@ public class ApiClient(
 
         return createdFolderId
             ?? throw new HttpRequestException("KrakenFiles folder creation returned no folder id");
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        KrakenFilesConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var folders = await GetFoldersAsync(config.ApiKey, cancellationToken);
+        var listedFolderIds = folders.Select(folder => folder.Id).ToHashSet();
+        var parentFolderIds = folders.Select(folder => folder.ParentId).ToHashSet();
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var folderId in folderIds.Where(listedFolderIds.Contains))
+        {
+            if (parentFolderIds.Contains(folderId))
+            {
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, HosterFolderContentState.NotEmpty)
+                );
+
+                continue;
+            }
+
+            try
+            {
+                var fileCount = await GetFileCountAsync(
+                    apiKey: config.ApiKey,
+                    folderId: folderId,
+                    cancellationToken: cancellationToken
+                );
+
+                var folderContentState =
+                    fileCount == 0
+                        ? HosterFolderContentState.Empty
+                        : HosterFolderContentState.NotEmpty;
+
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, folderContentState)
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to get the content state of folder {FolderId} on KrakenFiles",
+                    folderId
+                );
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        KrakenFilesConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.DeleteFolderAsync(folderId, config.ApiKey, cancellationToken);
+
+        if (response is { IsSuccessStatusCode: true, Content.Status: (int)HttpStatusCode.OK })
+        {
+            return;
+        }
+
+        var errorContent = (response.Error as ApiException)?.Content;
+
+        ThrowIfApiKeyRejected(response.StatusCode, errorContent);
+
+        throw new HttpRequestException(
+            $"KrakenFiles folder deletion failed with status code {response.StatusCode}: {response.Content?.Data?.Message ?? errorContent}",
+            inner: null,
+            statusCode: response.StatusCode
+        );
     }
 
     public async Task MoveFileToFolderAsync(
@@ -325,6 +405,22 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        var folders = await GetFoldersAsync(apiKey, cancellationToken);
+
+        return folders
+            .FirstOrDefault(folder =>
+                string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+                && string.IsNullOrWhiteSpace(folder.ParentId)
+                && !string.IsNullOrWhiteSpace(folder.Id)
+            )
+            ?.Id;
+    }
+
+    private async Task<IReadOnlyList<FolderData>> GetFoldersAsync(
+        string apiKey,
+        CancellationToken cancellationToken
+    )
+    {
         var folderList = await SendApiRequestAsync(() =>
             api.ListFoldersAsync(apiKey, cancellationToken)
         );
@@ -337,13 +433,40 @@ public class ApiClient(
             );
         }
 
-        return folderList
-            .Data?.FirstOrDefault(folder =>
-                string.Equals(folder.Name, folderName, StringComparison.Ordinal)
-                && string.IsNullOrWhiteSpace(folder.ParentId)
-                && !string.IsNullOrWhiteSpace(folder.Id)
-            )
-            ?.Id;
+        return folderList.Data ?? [];
+    }
+
+    private async Task<int?> GetFileCountAsync(
+        string apiKey,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.ListFilesAsync(
+            apiToken: apiKey,
+            folderId: folderId,
+            page: 1,
+            perPage: 1,
+            cancellationToken: cancellationToken
+        );
+
+        if (
+            !response.IsSuccessStatusCode
+            || response.Content is not { Status: (int)HttpStatusCode.OK }
+        )
+        {
+            var errorContent = (response.Error as ApiException)?.Content;
+
+            ThrowIfApiKeyRejected(response.StatusCode, errorContent);
+
+            throw new HttpRequestException(
+                $"KrakenFiles file list for folder {folderId} failed with status code {response.StatusCode}: {response.Content?.Message ?? errorContent}",
+                inner: null,
+                statusCode: response.StatusCode
+            );
+        }
+
+        return response.Content.TotalItems;
     }
 
     private static async Task<TResponse> SendApiRequestAsync<TResponse>(

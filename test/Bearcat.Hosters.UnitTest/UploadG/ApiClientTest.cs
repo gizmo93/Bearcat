@@ -393,6 +393,82 @@ public class ApiClientTest
         exception.Message.ShouldBe("Unauthenticated.");
     }
 
+    [Test]
+    public async Task GetFolderContentStatesAsync_FolderTotals_MapsStatesAndOmitsFailedFolder()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+        SetupFolderEntries("101", new FolderEntriesResponse(Total: 0));
+        SetupFolderEntries("102", new FolderEntriesResponse(Total: 3));
+
+        apiMock
+            .Setup(x =>
+                x.ListFolderEntriesAsync(
+                    "Bearer api-key",
+                    "folder",
+                    "103",
+                    1,
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("network down"));
+
+        // Act
+        var result = await apiClient.GetFolderContentStatesAsync(
+            config: config,
+            folderIds: ["101", "102", "103"],
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe([
+            new HosterFolderContentStateDto("101", HosterFolderContentState.Empty),
+            new HosterFolderContentStateDto("102", HosterFolderContentState.NotEmpty),
+        ]);
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_Folder_MovesFolderToTrashWithoutDeletingForever()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.DeleteEntriesAsync(
+                    "Bearer api-key",
+                    It.Is<DeleteEntriesRequest>(request =>
+                        request.EntryIds.SequenceEqual(new long[] { 101 }) && !request.DeleteForever
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new StatusResponse("success"));
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "101", CancellationToken.None);
+
+        // Assert
+        apiMock.VerifyAll();
+    }
+
+    private void SetupFolderEntries(string folderId, FolderEntriesResponse response)
+    {
+        apiMock
+            .Setup(x =>
+                x.ListFolderEntriesAsync(
+                    "Bearer api-key",
+                    "folder",
+                    folderId,
+                    1,
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(response);
+    }
+
     private static async Task<ApiException> CreateUnauthorizedExceptionAsync(string content)
     {
         var (request, response) = CreateUnauthorizedHttpResponse(content);
