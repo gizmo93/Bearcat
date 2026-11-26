@@ -39,6 +39,16 @@ public class EmptyHosterFolderCleanupServiceTest
             )
             .ReturnsAsync([registration]);
 
+        repositoryMock
+            .Setup(x =>
+                x.IsFolderWithoutOnlineFilesAsync(
+                    registration.Id,
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(true);
+
         hosterMock = new Mock<IHosterWithEmptyFolderCleanup>();
 
         hosterMock
@@ -47,6 +57,52 @@ public class EmptyHosterFolderCleanupServiceTest
 
         hosterFactoryMock = new Mock<IHosterFactory>();
         hosterFactoryMock.Setup(x => x.GetByName(HosterClassName)).Returns(hosterMock.Object);
+    }
+
+    [Test]
+    public async Task DeleteEmptyFoldersAsync_UploadStartedUsingEmptyFolderAfterSelection_KeepsFolder()
+    {
+        // Arrange
+        SetUpFolderContentStates(
+            new Dictionary<string, HosterFolderContentState>
+            {
+                ["empty"] = HosterFolderContentState.Empty,
+            }
+        );
+
+        repositoryMock
+            .Setup(x =>
+                x.IsFolderWithoutOnlineFilesAsync(
+                    registration.Id,
+                    "empty",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(false);
+
+        // Act
+        await CreateService().DeleteEmptyFoldersAsync(CancellationToken.None);
+
+        // Assert
+        hosterMock.Verify(
+            x =>
+                x.DeleteFolderAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+
+        repositoryMock.Verify(
+            x =>
+                x.ClearFolderIdAsync(
+                    It.IsAny<int>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 
     [Test]

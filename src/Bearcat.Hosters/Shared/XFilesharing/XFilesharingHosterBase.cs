@@ -412,6 +412,61 @@ public abstract class XFilesharingHosterBase<TConfig>(
         );
     }
 
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+        var folderContentStates = new List<HosterFolderContentStateDto>();
+
+        foreach (var folderId in folderIds)
+        {
+            try
+            {
+                var folderContentState = await apiClient.GetFolderContentStateAsync(
+                    apiKey: config.ApiKey,
+                    folderId: folderId,
+                    cancellationToken: cancellationToken
+                );
+
+                folderContentStates.Add(
+                    new HosterFolderContentStateDto(folderId, folderContentState)
+                );
+            }
+            catch (Exception ex)
+                when (ex is not HosterCredentialsRejectedException
+                    && !cancellationToken.IsCancellationRequested
+                )
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to get the content state of folder {FolderId} on {HosterName}",
+                    folderId,
+                    Name
+                );
+            }
+        }
+
+        return folderContentStates;
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        await apiClient.DeleteFolderAsync(
+            apiKey: config.ApiKey,
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task MoveFileToFolderAsync(
         string fileUrl,
         string? externalId,

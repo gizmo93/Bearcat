@@ -13,6 +13,8 @@ public class FolderListResponse
     public class ResultObject
     {
         public List<Folder> Folders { get; set; } = [];
+
+        public List<File> Files { get; set; } = [];
     }
 
     public class Folder
@@ -22,5 +24,11 @@ public class FolderListResponse
         [JsonPropertyName("fld_id")]
         [JsonConverter(typeof(StringOrNumberJsonConverter))]
         public string FolderId { get; set; } = null!;
+    }
+
+    public class File
+    {
+        [JsonPropertyName("file_code")]
+        public string? FileCode { get; set; }
     }
 }

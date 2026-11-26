@@ -13,6 +13,12 @@ public interface IEmptyHosterFolderCleanupRepository
         CancellationToken cancellationToken
     );
 
+    Task<bool> IsFolderWithoutOnlineFilesAsync(
+        int hosterRegistrationId,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task ClearFolderIdAsync(
         int hosterRegistrationId,
         string folderId,

@@ -7,6 +7,7 @@ namespace Bearcat.Hosters.DDownload;
 
 public class DDownload(IDDownloadApiClient apiClient, ILogger<DDownload> logger)
     : XFilesharingHosterBase<DDownloadConfig>(apiClient, logger),
+        IHosterWithEmptyFolderCleanup,
         IHosterWithDownload
 {
     public override string Name => "ddownload";

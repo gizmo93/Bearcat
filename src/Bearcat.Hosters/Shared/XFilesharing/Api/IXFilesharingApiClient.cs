@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 
@@ -56,6 +57,14 @@ public interface IXFilesharingApiClient
         string folderName,
         CancellationToken cancellationToken
     );
+
+    Task<HosterFolderContentState> GetFolderContentStateAsync(
+        string apiKey,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(string apiKey, string folderId, CancellationToken cancellationToken);
 
     Task SetFileFolderAsync(
         string apiKey,

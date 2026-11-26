@@ -133,6 +133,23 @@ public class EmptyHosterFolderCleanupService(
                 continue;
             }
 
+            var isStillWithoutOnlineFiles = await repository.IsFolderWithoutOnlineFilesAsync(
+                registration.Id,
+                folderContentState.FolderId,
+                cancellationToken
+            );
+
+            if (!isStillWithoutOnlineFiles)
+            {
+                logger.LogInformation(
+                    "Kept empty folder {FolderId} of hoster registration {HosterRegistration} because an upload started using it",
+                    folderContentState.FolderId,
+                    registration.Name
+                );
+
+                continue;
+            }
+
             var isDeleted = await TryDeleteFolderAsync(
                 registration: registration,
                 hoster: hoster,

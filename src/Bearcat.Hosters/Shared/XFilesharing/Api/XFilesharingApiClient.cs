@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
@@ -341,6 +342,60 @@ public abstract class XFilesharingApiClient<TApi>(
         }
 
         return createdFolder.Result.FolderId;
+    }
+
+    public async Task<HosterFolderContentState> GetFolderContentStateAsync(
+        string apiKey,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await SendApiRequestAsync(() =>
+            api.GetFolderListAsync(
+                apiKey: apiKey,
+                folderId: folderId,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        if (response.Status != (int)HttpStatusCode.OK)
+        {
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
+            throw new HttpRequestException(
+                $"XFilesharing folder list for folder {folderId} failed with status {response.Status}: {response.Msg}"
+            );
+        }
+
+        return response.Result!.Files.Count == 0 && response.Result.Folders.Count == 0
+            ? HosterFolderContentState.Empty
+            : HosterFolderContentState.NotEmpty;
+    }
+
+    public async Task DeleteFolderAsync(
+        string apiKey,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await SendApiRequestAsync(() =>
+            api.DeleteFolderAsync(
+                apiKey: apiKey,
+                folderId: folderId,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        if (response.Status is (int)HttpStatusCode.OK or (int)HttpStatusCode.NotFound)
+        {
+            return;
+        }
+
+        XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
+        throw new HttpRequestException(
+            $"XFilesharing folder deletion for folder {folderId} failed with status {response.Status}: {response.Msg}"
+        );
     }
 
     public async Task SetFileFolderAsync(

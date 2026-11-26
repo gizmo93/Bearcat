@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier.Api.Upload;
@@ -19,6 +20,18 @@ public interface IFichierApiClient
     Task<string> CreateFolderAsync(
         FichierConfig config,
         string folderName,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        FichierConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        FichierConfig config,
+        string folderId,
         CancellationToken cancellationToken
     );
 

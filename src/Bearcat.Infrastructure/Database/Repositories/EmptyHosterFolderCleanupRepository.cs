@@ -30,42 +30,18 @@ public class EmptyHosterFolderCleanupRepository(
         CancellationToken cancellationToken
     )
     {
-        List<UploadState> runningUploadStates =
-        [
-            UploadState.Pending,
-            UploadState.Uploading,
-            UploadState.CancellationRequested,
-        ];
-
-        var uploadsOfRegistration = dbRead.Uploads.Where(upload =>
-            upload.HosterRegistrationId == hosterRegistrationId
-        );
-
-        return await uploadsOfRegistration
-            .Where(upload => upload.HosterFolderId != null && upload.HosterFolderId != "")
-            .Select(upload => upload.HosterFolderId!)
-            .Distinct()
-            .Where(folderId =>
-                !uploadsOfRegistration.Any(runningUpload =>
-                    runningUploadStates.Contains(runningUpload.UploadState)
-                    && (
-                        runningUpload.HosterFolderId == folderId
-                        || runningUpload.UploadedFiles.Any(file => file.HosterFolderId == folderId)
-                    )
-                )
-                && !dbRead.UploadedFiles.Any(file =>
-                    file.HosterFolderId == folderId
-                    && file.OnlineState != OnlineState.Offline
-                    && file.Upload.HosterRegistrationId == hosterRegistrationId
-                    && file.Upload.UploadState == UploadState.Completed
-                    && !dbRead.Uploads.Any(newerUpload =>
-                        newerUpload.UploadConfigId == file.Upload.UploadConfigId
-                        && newerUpload.Id > file.UploadId
-                        && newerUpload.UploadState == UploadState.Completed
-                    )
-                )
-            )
+        return await BuildFolderIdsWithoutOnlineFilesQuery(hosterRegistrationId)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> IsFolderWithoutOnlineFilesAsync(
+        int hosterRegistrationId,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await BuildFolderIdsWithoutOnlineFilesQuery(hosterRegistrationId)
+            .AnyAsync(candidateFolderId => candidateFolderId == folderId, cancellationToken);
     }
 
     public async Task ClearFolderIdAsync(
@@ -99,5 +75,51 @@ public class EmptyHosterFolderCleanupRepository(
             );
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    private IQueryable<string> BuildFolderIdsWithoutOnlineFilesQuery(int hosterRegistrationId)
+    {
+        List<UploadState> runningUploadStates =
+        [
+            UploadState.Pending,
+            UploadState.Uploading,
+            UploadState.CancellationRequested,
+        ];
+
+        var uploadsOfRegistration = dbRead.Uploads.Where(upload =>
+            upload.HosterRegistrationId == hosterRegistrationId
+        );
+
+        return uploadsOfRegistration
+            .Where(upload => upload.HosterFolderId != null && upload.HosterFolderId != "")
+            .Select(upload => upload.HosterFolderId!)
+            .Distinct()
+            .Where(folderId =>
+                !uploadsOfRegistration.Any(runningUpload =>
+                    runningUploadStates.Contains(runningUpload.UploadState)
+                    && (
+                        runningUpload.HosterFolderId == folderId
+                        || runningUpload.UploadedFiles.Any(file => file.HosterFolderId == folderId)
+                        || (
+                            runningUpload.ArchiveId != null
+                            && uploadsOfRegistration.Any(folderUpload =>
+                                folderUpload.HosterFolderId == folderId
+                                && folderUpload.ArchiveId == runningUpload.ArchiveId
+                            )
+                        )
+                    )
+                )
+                && !dbRead.UploadedFiles.Any(file =>
+                    file.HosterFolderId == folderId
+                    && file.OnlineState != OnlineState.Offline
+                    && file.Upload.HosterRegistrationId == hosterRegistrationId
+                    && file.Upload.UploadState == UploadState.Completed
+                    && !dbRead.Uploads.Any(newerUpload =>
+                        newerUpload.UploadConfigId == file.Upload.UploadConfigId
+                        && newerUpload.Id > file.UploadId
+                        && newerUpload.UploadState == UploadState.Completed
+                    )
+                )
+            );
     }
 }

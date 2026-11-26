@@ -25,6 +25,7 @@ public interface ICostActionApi
         [Authorize] string apiKey,
         [AliasAs("properties")] string properties,
         [AliasAs("per_page")] int perPage,
+        [AliasAs("page")] int? page,
         [Body] FilesInfoRequest request,
         CancellationToken cancellationToken
     );
@@ -40,6 +41,20 @@ public interface ICostActionApi
     Task<ApiResponse<FolderSearchResponse>> SearchFoldersAsync(
         [Authorize] string apiKey,
         [Body] FolderSearchRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Get("/v1/folder/{id}/childs")]
+    Task<ApiResponse<FolderChildrenResponse>> GetFolderChildrenAsync(
+        [Authorize] string apiKey,
+        string id,
+        CancellationToken cancellationToken
+    );
+
+    [Delete("/v1/folder/{id}")]
+    Task<ApiResponse<FolderDeleteResponse>> DeleteFolderAsync(
+        [Authorize] string apiKey,
+        string id,
         CancellationToken cancellationToken
     );
 

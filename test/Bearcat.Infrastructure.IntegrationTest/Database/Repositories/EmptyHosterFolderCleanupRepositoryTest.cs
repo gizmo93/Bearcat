@@ -221,6 +221,110 @@ public class EmptyHosterFolderCleanupRepositoryTest(DatabaseProvider databasePro
         result.ShouldBe(["folder"]);
     }
 
+    [TestCase(UploadState.Pending)]
+    [TestCase(UploadState.Uploading)]
+    [TestCase(UploadState.CancellationRequested)]
+    public async Task GetFolderIdsWithoutOnlineFilesAsync_RunningUploadOfSameArchiveWithoutFolder_ExcludesFolder(
+        UploadState runningUploadState
+    )
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync("Hoster");
+        var uploadConfig = await AddUploadConfigAsync(registration);
+        var archive = await AddArchiveAsync(uploadConfig);
+        await AddUploadAsync(
+            uploadConfig: uploadConfig,
+            uploadState: UploadState.Completed,
+            hosterFolderId: "folder",
+            files: [("folder", OnlineState.Offline)],
+            archiveId: archive.Id
+        );
+        await AddUploadAsync(
+            uploadConfig: uploadConfig,
+            uploadState: runningUploadState,
+            hosterFolderId: null,
+            files: [],
+            archiveId: archive.Id
+        );
+
+        // Act
+        var result = await repository.GetFolderIdsWithoutOnlineFilesAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetFolderIdsWithoutOnlineFilesAsync_RunningUploadOfOtherArchiveWithoutFolder_ReturnsFolder()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync("Hoster");
+        var uploadConfig = await AddUploadConfigAsync(registration);
+        var archive = await AddArchiveAsync(uploadConfig);
+        var otherArchive = await AddArchiveAsync(uploadConfig);
+        await AddUploadAsync(
+            uploadConfig: uploadConfig,
+            uploadState: UploadState.Completed,
+            hosterFolderId: "folder",
+            files: [("folder", OnlineState.Offline)],
+            archiveId: archive.Id
+        );
+        await AddUploadAsync(
+            uploadConfig: uploadConfig,
+            uploadState: UploadState.Pending,
+            hosterFolderId: null,
+            files: [],
+            archiveId: otherArchive.Id
+        );
+
+        // Act
+        var result = await repository.GetFolderIdsWithoutOnlineFilesAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(["folder"]);
+    }
+
+    [Test]
+    public async Task IsFolderWithoutOnlineFilesAsync_FolderWithOfflineFilesAndFolderWithOnlineFile_ReturnsTrueOnlyForOfflineFolder()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync("Hoster");
+        await AddUploadAsync(
+            uploadConfig: await AddUploadConfigAsync(registration),
+            uploadState: UploadState.Completed,
+            hosterFolderId: "offline-folder",
+            files: [("offline-folder", OnlineState.Offline)]
+        );
+        await AddUploadAsync(
+            uploadConfig: await AddUploadConfigAsync(registration),
+            uploadState: UploadState.Completed,
+            hosterFolderId: "online-folder",
+            files: [("online-folder", OnlineState.Online)]
+        );
+
+        // Act
+        var isOfflineFolderWithoutOnlineFiles = await repository.IsFolderWithoutOnlineFilesAsync(
+            registration.Id,
+            "offline-folder",
+            CancellationToken.None
+        );
+        var isOnlineFolderWithoutOnlineFiles = await repository.IsFolderWithoutOnlineFilesAsync(
+            registration.Id,
+            "online-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        isOfflineFolderWithoutOnlineFiles.ShouldBeTrue();
+        isOnlineFolderWithoutOnlineFiles.ShouldBeFalse();
+    }
+
     [Test]
     public async Task ClearFolderIdAsync_FolderUsedOnSeveralHosterRegistrations_ClearsFolderIdOnlyOnUploadsAndFilesOfGivenRegistration()
     {
@@ -322,16 +426,37 @@ public class EmptyHosterFolderCleanupRepositoryTest(DatabaseProvider databasePro
         return uploadConfig;
     }
 
+    private async Task<Archive> AddArchiveAsync(UploadConfig uploadConfig)
+    {
+        var archive = new Archive
+        {
+            ArchiveConfigId = uploadConfig.ArchiveConfigId!.Value,
+            ArchiveFolderPath = "/archives/release",
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = LocalNow.AddDays(-6),
+            ArchiveFiles = [],
+            Uploads = [],
+        };
+
+        DbContext.Archives.Add(archive);
+        await DbContext.SaveChangesAsync();
+
+        return archive;
+    }
+
     private async Task<Upload> AddUploadAsync(
         UploadConfig uploadConfig,
         UploadState uploadState,
         string? hosterFolderId,
-        IReadOnlyList<(string? HosterFolderId, OnlineState OnlineState)> files
+        IReadOnlyList<(string? HosterFolderId, OnlineState OnlineState)> files,
+        int? archiveId = null
     )
     {
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
+            ArchiveId = archiveId,
             HosterRegistrationId = uploadConfig.HosterRegistrationId,
             HosterFolderId = hosterFolderId,
             CreatedAt = LocalNow.AddDays(-5),

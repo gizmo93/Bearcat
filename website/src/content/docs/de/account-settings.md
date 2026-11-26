@@ -105,8 +105,8 @@ löschen** unter **Neuer Hoster** oder **Bearbeiten** löscht solche Ordner. Gel
 die Bearcat angelegt hat und die kein laufender Upload verwendet. Ordner, die noch Dateien oder
 Unterordner enthalten, bleiben erhalten.
 
-Die Option ist standardmässig aktiviert und derzeit für Rapidgator und Alfafile verfügbar. Schalte sie
-aus, um die Ordner dieses Accounts zu behalten. Die Aufgabe [Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben)
+Die Option ist standardmässig aktiviert und derzeit für Rapidgator, Alfafile, DDownload, FileQ,
+Turbobit, Hitfile und 1fichier verfügbar. Schalte sie aus, um die Ordner dieses Accounts zu behalten. Die Aufgabe [Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben)
 läuft beim Start und danach täglich und prüft bis zu 200 Ordner pro Account.
 
 ## Einen Proxy verwenden

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Shared.CostAction;
 
 public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClient, ILogger logger)
-    : IHosterWithFolders,
+    : IHosterWithEmptyFolderCleanup,
         IHosterWithFileInfo
     where TConfig : ICostActionHosterConfig
 {
@@ -308,6 +308,33 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
             ?? throw new InvalidOperationException($"Could not extract file id from URL {fileUrl}");
 
         await apiClient.MoveFileToFolderAsync(config.ApiKey, fileId, folderId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        return await apiClient.GetFolderContentStatesAsync(
+            apiKey: config.ApiKey,
+            appType: AppType,
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        await apiClient.DeleteFolderAsync(config.ApiKey, folderId, cancellationToken);
     }
 
     public static string? ExtractFileId(string fileUrl)

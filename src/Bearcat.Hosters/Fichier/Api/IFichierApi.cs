@@ -36,6 +36,13 @@ public interface IFichierApi
         CancellationToken cancellationToken
     );
 
+    [Post("/folder/rm.cgi")]
+    Task<ApiResponse<DeleteFolderResponse>> DeleteFolderAsync(
+        [Header("Authorization")] string authorization,
+        [Body] DeleteFolderRequest request,
+        CancellationToken cancellationToken
+    );
+
     [Post("/file/mv.cgi")]
     Task<MoveFileResponse> MoveFilesAsync(
         [Header("Authorization")] string authorization,

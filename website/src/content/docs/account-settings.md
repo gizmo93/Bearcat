@@ -100,8 +100,8 @@ or expire, which leaves the folder empty. **Delete empty folders automatically**
 or **Edit** deletes such folders. It only deletes folders that Bearcat created and that no running
 upload uses. Folders that still contain files or subfolders are kept.
 
-The option is on by default and is currently available for Rapidgator and Alfafile. Switch it off
-to keep the folders of this account. The [Empty hoster folder cleanup](/advanced-configuration/#available-background-tasks)
+The option is on by default and is currently available for Rapidgator, Alfafile, DDownload,
+FileQ, Turbobit, Hitfile and 1fichier. Switch it off to keep the folders of this account. The [Empty hoster folder cleanup](/advanced-configuration/#available-background-tasks)
 task runs at startup and then daily, checking up to 200 folders per account.
 
 ## Use a proxy
