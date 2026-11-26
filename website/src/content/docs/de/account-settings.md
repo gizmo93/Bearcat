@@ -99,20 +99,21 @@ das konfigurierte Limit an.
 
 ## Leere Ordner löschen
 
-Bearcat legt auf dem Hoster einen Ordner pro Release an und lädt alle Uploads des Releases hinein.
-Nach einem vollständigen Reupload liegen die neuen Dateien neben den älteren mit denselben Namen.
-Dateien können später verschoben werden oder ablaufen, dann bleibt der Ordner leer. **Leere Ordner
-automatisch löschen** unter **Neuer Hoster** oder **Bearbeiten** löscht solche Ordner, auch die
-Ordner, die frühere Versionen pro Upload angelegt haben. Gelöscht werden nur Ordner, die Bearcat
-angelegt hat und die kein laufender Upload des Releases verwendet. Ordner, die noch Dateien oder
-Unterordner enthalten, bleiben erhalten. Beim nächsten Upload des Releases legt Bearcat den Ordner
-neu an.
+Unter **Neuer Hoster** und **Bearbeiten** ist **Leere Ordner automatisch löschen** standardmässig aktiv.
+Bearcat löscht nur selbst angelegte Ordner ohne Dateien oder Unterordner. Steht für das Release ein
+Upload an oder läuft er bereits, bleibt der Ordner bestehen. Das gilt auch für Ordner, die frühere
+Versionen pro Upload angelegt haben.
 
-Die Option ist standardmässig aktiviert und derzeit für Rapidgator, Alfafile, DDownload, FileQ,
-Turbobit, Hitfile, 1fichier, KrakenFiles, CloudFam.io, UploadG.com, Filer.net und FileFactory verfügbar.
-Bei UploadG.com landen gelöschte Ordner im Papierkorb. Bei FileFactory wird kein Ordner gelöscht,
-solange der Account Unterordner enthält. Schalte die Option aus, um die Ordner dieses Accounts zu behalten. Die Aufgabe [Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben)
-läuft beim Start und danach täglich und prüft bis zu 200 Ordner pro Account.
+Bei Hostern mit Ordnerfunktion verwendet Bearcat pro Release denselben Ordner für Uploads und Reuploads.
+Bei einem vollständigen Reupload können dort alte und neue Dateien mit demselben Namen liegen.
+Einen gelöschten Releaseordner legt Bearcat beim nächsten Upload neu an.
+
+[Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben) läuft beim
+Start und danach täglich. Pro Lauf prüft die Aufgabe bis zu 200 Ordner pro Konto.
+
+Die Option ist für Rapidgator, Alfafile, DDownload, FileQ, Turbobit, Hitfile, 1fichier, KrakenFiles,
+CloudFam.io, UploadG.com, Filer.net und FileFactory verfügbar. Bei UploadG.com landen gelöschte Ordner
+im Papierkorb. Bei FileFactory überspringt Bearcat Konten mit Unterordnern.
 
 ## Einen Proxy verwenden
 
