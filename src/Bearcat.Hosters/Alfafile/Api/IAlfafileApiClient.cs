@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
@@ -21,6 +22,18 @@ public interface IAlfafileApiClient
     Task<string> CreateFolderAsync(
         AlfafileConfig config,
         string folderName,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        AlfafileConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        AlfafileConfig config,
+        string folderId,
         CancellationToken cancellationToken
     );
 

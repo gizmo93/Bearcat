@@ -722,6 +722,8 @@
   <data name="AlwaysReuploadAllFiles" xml:space="preserve"><value>Always reupload all files</value></data>
   <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>Reupload every file, including those still online. For hosters that delete inactive files, this restarts the retention period for all files together.</value></data>
   <data name="AlwaysReuploadAllFilesShort" xml:space="preserve"><value>Full reuploads</value></data>
+  <data name="DeleteEmptyFolders" xml:space="preserve"><value>Delete empty folders automatically</value></data>
+  <data name="DeleteEmptyFoldersHelp" xml:space="preserve"><value>Regularly deletes empty folders on this account that Bearcat created and that no running upload uses.</value></data>
   <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Partially or fully offline</value></data>
   <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Only when fully offline</value></data>
   <data name="ParallelUploads" xml:space="preserve"><value>Parallel uploads</value></data>

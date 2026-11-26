@@ -113,6 +113,62 @@ public class ApiClient(
         return createdFolder.Response!.Folder!.FolderId;
     }
 
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var rootFolder = await api.GetFolderInfoAsync(
+            token: token,
+            folderId: null,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureFolderResponseSucceeded(rootFolder, "Rapidgator root folder lookup failed");
+
+        var subFoldersById = rootFolder.Response!.Folder!.Folders.ToDictionary(folder =>
+            folder.FolderId
+        );
+
+        return folderIds
+            .Where(subFoldersById.ContainsKey)
+            .Select(folderId => new HosterFolderContentStateDto(
+                folderId,
+                GetFolderContentState(subFoldersById[folderId])
+            ))
+            .ToList();
+    }
+
+    public async Task DeleteFolderAsync(
+        RapidgatorConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.DeleteFolderAsync(token, folderId, cancellationToken);
+        var result = response.Response?.Result;
+
+        if (
+            !((HttpStatusCode)response.Status).IsSuccessStatusCode
+            || result is null
+            || result.Fail > 0
+            || !result.SuccessIds.Contains(folderId)
+        )
+        {
+            throw new HttpRequestException(
+                result?.Errors.Count > 0
+                    ? $"Rapidgator folder deletion failed: {string.Join(", ", result.Errors)}"
+                    : response.Details
+                        ?? $"Rapidgator folder deletion failed with status {response.Status}"
+            );
+        }
+    }
+
     public async Task MoveFileToFolderAsync(
         RapidgatorConfig config,
         string fileUrl,
@@ -495,6 +551,13 @@ public class ApiClient(
             },
             cancellationToken
         );
+    }
+
+    private static HosterFolderContentState GetFolderContentState(FolderResponse.Folder folder)
+    {
+        return folder.NbFiles == 0 && folder.NbFolders == 0
+            ? HosterFolderContentState.Empty
+            : HosterFolderContentState.NotEmpty;
     }
 
     private static void EnsureFolderResponseSucceeded(FolderResponse response, string message)

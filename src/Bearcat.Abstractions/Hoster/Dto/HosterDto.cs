@@ -8,5 +8,6 @@ public record HosterDto(
     bool HasFixedParallelUploadLimit,
     int? DefaultMaximumParallelUploads,
     bool SupportsDownload,
-    bool DownloadRequiresPremium
+    bool DownloadRequiresPremium,
+    bool SupportsEmptyFolderCleanup
 );

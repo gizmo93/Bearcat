@@ -21,6 +21,7 @@ public record HosterRegistrationReadModel(
     int? NumberOfHoursUntilReuploadOverride,
     ReuploadTrigger? ReuploadTriggerOverride,
     bool AlwaysReuploadAllFiles,
+    bool DeleteEmptyFolders,
     bool SupportsDownload,
     bool DownloadRequiresPremium,
     bool UseForMirrorDownloads,

@@ -34,6 +34,7 @@ Standardmässig sind alle Aufgaben aktiv.
 | Image upload | Alle 30 Sekunden | Lädt Coverbilder von Releases zu konfigurierten Bildhostern hoch, wenn eine Cover-URL vorhanden ist. |
 | Screenshot creation | Jede Minute | Erstellt [Screenshots und Screenshotraster](/de/release-templates-and-automations/#screenshots) für Releases vom Typ Managed, wenn die entsprechenden Optionen aktiv sind. |
 | Upload state check | Alle 20 Sekunden | Prüft Links und plant erste Uploads sowie automatische Reuploads. |
+| Empty hoster folder cleanup | Beim Start, dann täglich | Löscht [leere Hosterordner](/de/account-settings/#leere-ordner-löschen) auf Accounts, bei denen **Leere Ordner automatisch löschen** aktiviert ist. |
 | Link crypter container creation | Alle 20 Sekunden | Erstellt Linkcryptercontainer für abgeschlossene Uploads. |
 | SQLite query planner statistics | Beim Start, dann täglich | Nur mit SQLite. Aktualisiert die Statistiken, mit denen SQLite Indizes auswählt. Der erste Lauf kann bei grossen Datenbanken mehrere Sekunden dauern. Verkleinert ausserdem die Datenbankdatei (`VACUUM`), wenn mindestens 20 % davon ungenutzt sind, zum Beispiel nach dem Löschen vieler Releases. Schreibzugriffe warten währenddessen. |
 

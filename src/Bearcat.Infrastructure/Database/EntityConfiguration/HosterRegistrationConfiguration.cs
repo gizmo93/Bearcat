@@ -23,6 +23,7 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.NumberOfHoursUntilReuploadOverride).IsRequired(false);
         builder.Property(h => h.ReuploadTriggerOverride).IsRequired(false);
         builder.Property(h => h.AlwaysReuploadAllFiles).IsRequired();
+        builder.Property(h => h.DeleteEmptyFolders).IsRequired();
         builder.Property(h => h.UseForMirrorDownloads).IsRequired();
         builder.Property(h => h.MirrorPriority).IsRequired().HasDefaultValue(100);
         builder

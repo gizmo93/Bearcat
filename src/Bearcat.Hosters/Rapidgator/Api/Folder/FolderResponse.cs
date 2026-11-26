@@ -26,6 +26,12 @@ public class FolderResponse
         [JsonPropertyName("created")]
         public long Created { get; set; }
 
+        [JsonPropertyName("nb_folders")]
+        public int NbFolders { get; set; }
+
+        [JsonPropertyName("nb_files")]
+        public int NbFiles { get; set; }
+
         [JsonPropertyName("folders")]
         public List<Folder> Folders { get; set; } = [];
     }

@@ -73,6 +73,18 @@ public interface IRapidgatorApiClient
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken
+    );
+
+    Task DeleteFolderAsync(
+        RapidgatorConfig config,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task MoveFileToFolderAsync(
         RapidgatorConfig config,
         string fileUrl,

@@ -23,6 +23,12 @@ public class FolderResponse : IResponseWithStatus
 
         public string? Name { get; set; }
 
+        [JsonPropertyName("nb_folders")]
+        public int NbFolders { get; set; }
+
+        [JsonPropertyName("nb_files")]
+        public int NbFiles { get; set; }
+
         public IReadOnlyList<Folder> Folders { get; set; } = [];
     }
 }

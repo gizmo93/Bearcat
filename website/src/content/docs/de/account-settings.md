@@ -97,6 +97,18 @@ Das [globale Limit für die Uploadgeschwindigkeit](/de/advanced-configuration/#p
 gilt zusätzlich. Uploads müssen beide Limits einhalten. Die Spalte **Parallele Uploads** zeigt
 das konfigurierte Limit an.
 
+## Leere Ordner löschen
+
+Bearcat legt auf dem Hoster für jedes Archiv oder jeden Upload einen Ordner an. Dateien darin
+können später verschoben werden oder ablaufen, dann bleibt der Ordner leer. **Leere Ordner automatisch
+löschen** unter **Neuer Hoster** oder **Bearbeiten** löscht solche Ordner. Gelöscht werden nur Ordner,
+die Bearcat angelegt hat und die kein laufender Upload verwendet. Ordner, die noch Dateien oder
+Unterordner enthalten, bleiben erhalten.
+
+Die Option ist standardmässig aktiviert und derzeit für Rapidgator und Alfafile verfügbar. Schalte sie
+aus, um die Ordner dieses Accounts zu behalten. Die Aufgabe [Empty hoster folder cleanup](/de/advanced-configuration/#verfügbare-hintergrundaufgaben)
+läuft beim Start und danach täglich und prüft bis zu 200 Ordner pro Account.
+
 ## Einen Proxy verwenden
 
 Unter [Proxyserver](/de/proxy-servers/) richtest du HTTP- oder SOCKS5-Proxys für Uploads und

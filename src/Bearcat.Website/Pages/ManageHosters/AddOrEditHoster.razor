@@ -108,6 +108,13 @@
                                    Label="@L["AlwaysReuploadAllFiles"]"
                                    HelperText="@L["AlwaysReuploadAllFilesHelp"]" />
 
+                @if (selectedHoster.SupportsEmptyFolderCleanup)
+                {
+                    <BbFormFieldSwitch @bind-Checked="FormModel.DeleteEmptyFolders"
+                                       Label="@L["DeleteEmptyFolders"]"
+                                       HelperText="@L["DeleteEmptyFoldersHelp"]" />
+                }
+
                 <ProxySelectionSelect Label="@L["ProxyForUploadsAndAccountRequests"]"
                                       ProxyCategory="ProxyCategory.HosterUploads"
                                       @bind-ProxySelection="FormModel.UploadProxySelection"

@@ -17,7 +17,7 @@ using Refit;
 namespace Bearcat.Hosters.Rapidgator;
 
 public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logger)
-    : IHosterWithFolders,
+    : IHosterWithEmptyFolderCleanup,
         IHosterWithDownload,
         IHosterWithStorageQuota,
         IHosterWithFileInfo
@@ -292,6 +292,32 @@ public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logg
         return await apiClient.CreateFolderAsync(
             folderName: folderName,
             config: config,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyList<HosterFolderContentStateDto>> GetFolderContentStatesAsync(
+        IReadOnlyList<string> folderIds,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFolderContentStatesAsync(
+            config: hosterConfig.As<RapidgatorConfig>(),
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task DeleteFolderAsync(
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        await apiClient.DeleteFolderAsync(
+            config: hosterConfig.As<RapidgatorConfig>(),
+            folderId: folderId,
             cancellationToken: cancellationToken
         );
     }

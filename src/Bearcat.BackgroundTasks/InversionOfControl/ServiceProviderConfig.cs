@@ -23,6 +23,7 @@ public static class ServiceProviderConfig
             services.AddHostedService<ImageUploadBackgroundTask>();
             services.AddHostedService<ReleaseScreenshotGenerationBackgroundTask>();
             services.AddHostedService<CheckUploadStateBackgroundTask>();
+            services.AddHostedService<EmptyHosterFolderCleanupBackgroundTask>();
             services.AddHostedService<LinkCrypterContainerBackgroundTask>();
             services.AddHostedService<LinkCrypterImportBackgroundTask>();
             services.AddHostedService<QualityGateReevaluationBackgroundTask>();

@@ -93,6 +93,17 @@ for this account. Decimal values such as `0.5` or `0,5` are allowed. Leave it em
 The [global speed limit](/advanced-configuration/#upload-concurrency) also applies.
 Uploads must stay within both limits. The **Parallel uploads** column shows the account's limit.
 
+## Delete empty folders
+
+Bearcat creates a folder on the hoster for each archive or upload. Files in it can later be moved
+or expire, which leaves the folder empty. **Delete empty folders automatically** in **New hoster**
+or **Edit** deletes such folders. It only deletes folders that Bearcat created and that no running
+upload uses. Folders that still contain files or subfolders are kept.
+
+The option is on by default and is currently available for Rapidgator and Alfafile. Switch it off
+to keep the folders of this account. The [Empty hoster folder cleanup](/advanced-configuration/#available-background-tasks)
+task runs at startup and then daily, checking up to 200 folders per account.
+
 ## Use a proxy
 
 See [Proxy Servers](/proxy-servers/) to set up HTTP or SOCKS5 proxies for uploads and mirror
