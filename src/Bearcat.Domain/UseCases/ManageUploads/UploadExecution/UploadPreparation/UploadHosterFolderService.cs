@@ -86,7 +86,7 @@ public class UploadHosterFolderService(ILogger<UploadHosterFolderService> logger
 
     private static string BuildFolderName(Upload upload)
     {
-        return $"{upload.UploadConfig.Release.Name}_ReleaseId_{upload.UploadConfig.ReleaseId}";
+        return upload.UploadConfig.Release.Name;
     }
 
     private async Task MoveUploadedFilesIntoFolderInOneRequestAsync(

@@ -29,6 +29,8 @@ public abstract class XFilesharingApiClient<TApi>(
 
     private const int RateLimitRetryAttempts = 5;
 
+    private const int MaxFolderNameLength = 128;
+
     private const string FolderNotExistingMessage = "Folder not exist or not yours";
 
     public TimeSpan RateLimitRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
@@ -313,8 +315,13 @@ public abstract class XFilesharingApiClient<TApi>(
 
         EnsureSuccess(rootFolder.Status, rootFolder.Msg, "XFilesharing folder list failed");
 
+        var truncatedFolderName =
+            folderName.Length > MaxFolderNameLength
+                ? folderName[..MaxFolderNameLength]
+                : folderName;
+
         var existingFolder = rootFolder.Result?.Folders.FirstOrDefault(folder =>
-            string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+            string.Equals(folder.Name, truncatedFolderName, StringComparison.Ordinal)
         );
 
         if (existingFolder is not null)
@@ -325,7 +332,7 @@ public abstract class XFilesharingApiClient<TApi>(
         var createdFolder = await SendApiRequestAsync(() =>
             api.CreateFolderAsync(
                 apiKey: apiKey,
-                name: folderName,
+                name: truncatedFolderName,
                 cancellationToken: cancellationToken
             )
         );

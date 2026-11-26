@@ -24,7 +24,7 @@ public class UploadHosterFolderServiceTest
     );
 
     [Test]
-    public async Task CreateUploadFolderWhenHosterSupportsFoldersAsync_UploadOfArchive_UsesReleaseIdFolderName()
+    public async Task CreateUploadFolderWhenHosterSupportsFoldersAsync_UploadOfArchive_UsesReleaseNameAsFolderName()
     {
         // Arrange
         var hosterMock = new Mock<IHosterWithFolders>();
@@ -34,7 +34,7 @@ public class UploadHosterFolderServiceTest
         var folderName = await CreateFolderAndGetFolderNameAsync(hosterMock, upload);
 
         // Assert
-        folderName.ShouldBe($"{ReleaseName}_ReleaseId_{ReleaseId}");
+        folderName.ShouldBe(ReleaseName);
     }
 
     private async Task<string?> CreateFolderAndGetFolderNameAsync(

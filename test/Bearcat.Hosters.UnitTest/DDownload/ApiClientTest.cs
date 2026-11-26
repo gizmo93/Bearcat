@@ -362,6 +362,82 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task CreateFolderAsync_FolderNameLongerThan128Characters_FindsAndCreatesFolderWithTruncatedName()
+    {
+        // Arrange
+        var folderName = new string('a', 128) + "-cut-off";
+        var truncatedFolderName = new string('a', 128);
+        var xfilesharingApiMock = apiMock.As<IXFilesharingApi>();
+        xfilesharingApiMock
+            .SetupSequence(x =>
+                x.GetFolderListAsync("api-key", null, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Result = new FolderListResponse.ResultObject { Folders = [] },
+                }
+            )
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Result = new FolderListResponse.ResultObject
+                    {
+                        Folders =
+                        [
+                            new FolderListResponse.Folder
+                            {
+                                FolderId = "created-folder-id",
+                                Name = truncatedFolderName,
+                            },
+                        ],
+                    },
+                }
+            );
+        xfilesharingApiMock
+            .Setup(x =>
+                x.CreateFolderAsync("api-key", truncatedFolderName, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new FolderCreateResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Result = new FolderCreateResponse.ResultObject
+                    {
+                        FolderId = "created-folder-id",
+                    },
+                }
+            );
+
+        // Act
+        var createdFolderId = await apiClient.CreateFolderAsync(
+            "api-key",
+            folderName,
+            CancellationToken.None
+        );
+        var existingFolderId = await apiClient.CreateFolderAsync(
+            "api-key",
+            folderName,
+            CancellationToken.None
+        );
+
+        // Assert
+        createdFolderId.ShouldBe("created-folder-id");
+        existingFolderId.ShouldBe("created-folder-id");
+        xfilesharingApiMock.Verify(
+            x =>
+                x.CreateFolderAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task CreateFolderAsync_NoExistingRootFolderWithName_CreatesFolder()
     {
         // Arrange
