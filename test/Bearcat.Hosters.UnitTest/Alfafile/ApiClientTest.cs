@@ -754,6 +754,28 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var json = """
+            {"response":{"result":{"success":0,"success_ids":[],"fail":1,"fail_ids":["Ge35"],"errors":["Folder with folder_id: 'Ge35' doesn't exist"]}},"status":200,"details":null}
+            """;
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("auth-token", "Ge35", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(DeserializeResponse<DeleteFolderResponse>(json));
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "Ge35", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync("auth-token", "Ge35", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task DeleteFolderAsync_ApiReportsFailedId_ThrowsWithErrors()
     {
         // Arrange

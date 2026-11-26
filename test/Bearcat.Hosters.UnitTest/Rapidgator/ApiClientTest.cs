@@ -823,11 +823,38 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task DeleteFolderAsync_ApiReportsFailedId_ThrowsWithErrors()
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_ReturnsWithoutThrowing()
     {
         // Arrange
         var json = """
             {"response":{"result":{"success":0,"success_ids":[],"fail":1,"fail_ids":["564"],"errors":["Error: Folder not found"]}},"status":200,"details":null}
+            """;
+
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        SetupLogin();
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("token", "564", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                JsonSerializer.Deserialize<DeleteFolderResponse>(json, JsonSerializerOptions)!
+            );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "564", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync("token", "564", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_ApiReportsFailedIdWithOtherError_ThrowsWithErrors()
+    {
+        // Arrange
+        var json = """
+            {"response":{"result":{"success":0,"success_ids":[],"fail":1,"fail_ids":["564"],"errors":["Error: Other failure"]}},"status":200,"details":null}
             """;
 
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
@@ -845,7 +872,7 @@ public class ApiClientTest
         );
 
         // Assert
-        exception.Message.ShouldContain("Error: Folder not found");
+        exception.Message.ShouldContain("Error: Other failure");
     }
 
     private void SetupLogin()

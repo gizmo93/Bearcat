@@ -26,6 +26,8 @@ public class ApiClient(
 
     private const string FileNotFoundMessage = "File not found";
 
+    private const string FolderNotFoundMessage = "Folder with folderId not found";
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
@@ -214,6 +216,14 @@ public class ApiClient(
         }
 
         var errorContent = (response.Error as ApiException)?.Content;
+
+        if (
+            response.StatusCode == HttpStatusCode.NotFound
+            && errorContent?.Contains(FolderNotFoundMessage, StringComparison.Ordinal) == true
+        )
+        {
+            return;
+        }
 
         ThrowIfApiKeyRejected(response.StatusCode, errorContent);
 

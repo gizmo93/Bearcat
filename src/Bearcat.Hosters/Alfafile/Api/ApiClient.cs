@@ -159,6 +159,15 @@ public class ApiClient(
         var result = response.Response?.Result;
 
         if (
+            result is { Success: 0, Fail: 1, Errors: [var error] }
+            && result.FailIds.Contains(folderId)
+            && error == $"Folder with folder_id: '{folderId}' doesn't exist"
+        )
+        {
+            return;
+        }
+
+        if (
             !((HttpStatusCode)response.Status).IsSuccessStatusCode
             || result is null
             || result.Fail > 0

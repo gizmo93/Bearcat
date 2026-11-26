@@ -6,20 +6,21 @@ public record MultipartCreateRequest(
     [property: JsonPropertyName("filename")] string Filename,
     [property: JsonPropertyName("mime")] string Mime,
     [property: JsonPropertyName("size")] long Size,
-    [property: JsonPropertyName("extension")] string Extension
+    [property: JsonPropertyName("extension")] string Extension,
+    [property: JsonPropertyName("parentId")] long? ParentId
 );
 
 public record BatchSignPartUrlsRequest(
     [property: JsonPropertyName("partNumbers")] IReadOnlyList<int> PartNumbers,
     [property: JsonPropertyName("uploadId")] string UploadId,
     [property: JsonPropertyName("key")] string Key,
-    [property: JsonPropertyName("storageBucket")] string StorageBucket
+    [property: JsonPropertyName("uploadToken")] string UploadToken
 );
 
 public record MultipartCompleteRequest(
     [property: JsonPropertyName("key")] string Key,
     [property: JsonPropertyName("uploadId")] string UploadId,
-    [property: JsonPropertyName("storageBucket")] string StorageBucket,
+    [property: JsonPropertyName("uploadToken")] string UploadToken,
     [property: JsonPropertyName("parts")] IReadOnlyList<UploadedPart> Parts
 );
 
@@ -30,7 +31,9 @@ public record CreateS3EntryRequest(
     [property: JsonPropertyName("filename")] string Filename,
     [property: JsonPropertyName("size")] long Size,
     [property: JsonPropertyName("parentId")] long? ParentId,
-    [property: JsonPropertyName("storageBucket")] string StorageBucket
+    [property: JsonPropertyName("key")] string Key,
+    [property: JsonPropertyName("uploadId")] string UploadId,
+    [property: JsonPropertyName("uploadToken")] string UploadToken
 );
 
 public record CreateFolderRequest(

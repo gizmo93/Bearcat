@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageUploads.EmptyFolderCleanup;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Shouldly;
 
 namespace Bearcat.Domain.UnitTest.UseCases.ManageUploads.EmptyFolderCleanup;
 
@@ -278,6 +279,67 @@ public class EmptyHosterFolderCleanupServiceTest
                 ),
             Times.Exactly(3)
         );
+    }
+
+    [Test]
+    public async Task DeleteEmptyFoldersAsync_MoreFoldersThanOneChunk_DeletesEmptyFoldersOfChunkBeforeCheckingNextChunk()
+    {
+        // Arrange
+        var hosterCalls = new List<string>();
+
+        SetUpFolderContentStates(
+            Enumerable
+                .Range(1, 25)
+                .ToDictionary(
+                    folderNumber => $"folder-{folderNumber}",
+                    _ => HosterFolderContentState.Empty
+                )
+        );
+
+        hosterMock
+            .Setup(x =>
+                x.GetFolderContentStatesAsync(
+                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (IReadOnlyList<string> folderIds, IHosterConfig _, CancellationToken _) =>
+                {
+                    hosterCalls.Add($"check {folderIds.Count}");
+
+                    return folderIds
+                        .Select(folderId => new HosterFolderContentStateDto(
+                            folderId,
+                            HosterFolderContentState.Empty
+                        ))
+                        .ToList();
+                }
+            );
+
+        hosterMock
+            .Setup(x =>
+                x.DeleteFolderAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => hosterCalls.Add("delete"))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await CreateService().DeleteEmptyFoldersAsync(CancellationToken.None);
+
+        // Assert
+        var expectedHosterCalls = new List<string> { "check 20" }
+            .Concat(Enumerable.Repeat("delete", 20))
+            .Concat(["check 5"])
+            .Concat(Enumerable.Repeat("delete", 5))
+            .ToList();
+
+        hosterCalls.ShouldBe(expectedHosterCalls);
     }
 
     [Test]

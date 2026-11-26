@@ -20,6 +20,7 @@ public class EmptyHosterFolderCleanupService(
 )
 {
     private const int MaximumFoldersToCheckPerHosterRegistrationPerRun = 200;
+    private const int FoldersToCheckPerChunk = 20;
     private const int MaximumConsecutiveDeleteFailures = 3;
 
     public async Task DeleteEmptyFoldersAsync(CancellationToken cancellationToken)
@@ -101,80 +102,83 @@ public class EmptyHosterFolderCleanupService(
 
         using var proxyScope = RegistrationProxyScope.EnterForHosterUpload(registration);
 
-        var folderContentStates = await hoster.GetFolderContentStatesAsync(
-            folderIdsToCheck,
-            hosterConfig,
-            cancellationToken
-        );
-
         var consecutiveDeleteFailures = 0;
 
-        foreach (var folderContentState in folderContentStates)
+        foreach (var folderIdsOfChunk in folderIdsToCheck.Chunk(FoldersToCheckPerChunk))
         {
-            if (folderContentState.State is HosterFolderContentState.NotEmpty)
-            {
-                continue;
-            }
+            var folderContentStates = await hoster.GetFolderContentStatesAsync(
+                folderIdsOfChunk,
+                hosterConfig,
+                cancellationToken
+            );
 
-            if (folderContentState.State is HosterFolderContentState.NotFound)
+            foreach (var folderContentState in folderContentStates)
             {
-                await repository.ClearFolderIdAsync(
+                if (folderContentState.State is HosterFolderContentState.NotEmpty)
+                {
+                    continue;
+                }
+
+                if (folderContentState.State is HosterFolderContentState.NotFound)
+                {
+                    await repository.ClearFolderIdAsync(
+                        registration.Id,
+                        folderContentState.FolderId,
+                        cancellationToken
+                    );
+
+                    logger.LogInformation(
+                        "Cleared folder id {FolderId} of hoster registration {HosterRegistration} because the folder no longer exists on the hoster",
+                        folderContentState.FolderId,
+                        registration.Name
+                    );
+
+                    continue;
+                }
+
+                var isStillWithoutOnlineFiles = await repository.IsFolderWithoutOnlineFilesAsync(
                     registration.Id,
                     folderContentState.FolderId,
                     cancellationToken
                 );
 
-                logger.LogInformation(
-                    "Cleared folder id {FolderId} of hoster registration {HosterRegistration} because the folder no longer exists on the hoster",
-                    folderContentState.FolderId,
-                    registration.Name
+                if (!isStillWithoutOnlineFiles)
+                {
+                    logger.LogInformation(
+                        "Kept empty folder {FolderId} of hoster registration {HosterRegistration} because an upload started using it",
+                        folderContentState.FolderId,
+                        registration.Name
+                    );
+
+                    continue;
+                }
+
+                var isDeleted = await TryDeleteFolderAsync(
+                    registration: registration,
+                    hoster: hoster,
+                    hosterConfig: hosterConfig,
+                    folderId: folderContentState.FolderId,
+                    cancellationToken: cancellationToken
                 );
 
-                continue;
-            }
+                if (isDeleted)
+                {
+                    consecutiveDeleteFailures = 0;
+                    continue;
+                }
 
-            var isStillWithoutOnlineFiles = await repository.IsFolderWithoutOnlineFilesAsync(
-                registration.Id,
-                folderContentState.FolderId,
-                cancellationToken
-            );
+                consecutiveDeleteFailures++;
 
-            if (!isStillWithoutOnlineFiles)
-            {
-                logger.LogInformation(
-                    "Kept empty folder {FolderId} of hoster registration {HosterRegistration} because an upload started using it",
-                    folderContentState.FolderId,
-                    registration.Name
-                );
+                if (consecutiveDeleteFailures >= MaximumConsecutiveDeleteFailures)
+                {
+                    logger.LogWarning(
+                        "Stopped deleting empty folders on hoster registration {HosterRegistration} for this run after {FailureCount} consecutive failed deletions",
+                        registration.Name,
+                        consecutiveDeleteFailures
+                    );
 
-                continue;
-            }
-
-            var isDeleted = await TryDeleteFolderAsync(
-                registration: registration,
-                hoster: hoster,
-                hosterConfig: hosterConfig,
-                folderId: folderContentState.FolderId,
-                cancellationToken: cancellationToken
-            );
-
-            if (isDeleted)
-            {
-                consecutiveDeleteFailures = 0;
-                continue;
-            }
-
-            consecutiveDeleteFailures++;
-
-            if (consecutiveDeleteFailures >= MaximumConsecutiveDeleteFailures)
-            {
-                logger.LogWarning(
-                    "Stopped deleting empty folders on hoster registration {HosterRegistration} for this run after {FailureCount} consecutive failed deletions",
-                    registration.Name,
-                    consecutiveDeleteFailures
-                );
-
-                return;
+                    return;
+                }
             }
         }
     }

@@ -338,6 +338,54 @@ public class ApiClientTest
         ]);
     }
 
+    [Test]
+    public async Task DeleteFolderAsync_FolderAlreadyDeleted_ReturnsWithoutThrowing()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("folder-id", "api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+                    HttpStatusCode.NotFound,
+                    """{"status":404,"data":{"message":"Folder with folderId not found"}}"""
+                )
+            );
+
+        // Act
+        await apiClient.DeleteFolderAsync(config, "folder-id", CancellationToken.None);
+
+        // Assert
+        apiMock.Verify(
+            x => x.DeleteFolderAsync("folder-id", "api-key", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteFolderAsync_OtherNotFoundResponse_Throws()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x => x.DeleteFolderAsync("folder-id", "api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<DeleteFolderResponse>(
+                    HttpStatusCode.NotFound,
+                    "<html>Not Found</html>"
+                )
+            );
+
+        // Act
+        var deleteFolderAsync = () =>
+            apiClient.DeleteFolderAsync(config, "folder-id", CancellationToken.None);
+
+        // Assert
+        await Should.ThrowAsync<HttpRequestException>(deleteFolderAsync);
+    }
+
     private void SetupFolderFileList(string folderId, int totalItems)
     {
         apiMock

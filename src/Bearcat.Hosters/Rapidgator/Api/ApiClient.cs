@@ -28,6 +28,8 @@ public class ApiClient(
 
     private const string NoAccessStatus = "NO ACCESS";
 
+    private const string FolderNotFoundError = "Error: Folder not found";
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
@@ -152,6 +154,14 @@ public class ApiClient(
 
         var response = await api.DeleteFolderAsync(token, folderId, cancellationToken);
         var result = response.Response?.Result;
+
+        if (
+            result is { Success: 0, Fail: 1, Errors: [FolderNotFoundError] }
+            && result.FailIds.Contains(folderId)
+        )
+        {
+            return;
+        }
 
         if (
             !((HttpStatusCode)response.Status).IsSuccessStatusCode
