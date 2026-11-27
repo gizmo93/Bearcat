@@ -43,10 +43,7 @@ public abstract class XFilesharingApiClient<TApi>(
         CancellationToken cancellationToken
     )
     {
-        var result = fileCodes.ToDictionary(
-            fileCode => fileCode,
-            _ => new XFilesharingFileStatus(Exists: false, DownloadCount: null)
-        );
+        var result = new Dictionary<string, XFilesharingFileStatus>();
 
         foreach (var batch in fileCodes.Chunk(50))
         {
@@ -54,7 +51,14 @@ public abstract class XFilesharingApiClient<TApi>(
                 api.GetFileInfoAsync(apiKey, string.Join(',', batch), cancellationToken)
             );
 
-            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+            if (response.Status != (int)HttpStatusCode.OK)
+            {
+                XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
+                throw new HttpRequestException(
+                    $"XFilesharing file info request failed with status {response.Status}: {response.Msg}"
+                );
+            }
 
             foreach (var file in response.Results.Where(file => file.FileCode is not null))
             {

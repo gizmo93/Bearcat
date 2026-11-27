@@ -31,10 +31,7 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var result = fileCodes.ToDictionary(
-            fileCode => fileCode,
-            _ => new XFilesharingFileStatus(Exists: false, DownloadCount: null)
-        );
+        var result = new Dictionary<string, XFilesharingFileStatus>();
 
         foreach (var batch in fileCodes.Chunk(FileCheckBatchSize))
         {
@@ -46,7 +43,14 @@ public class ApiClient(
                 )
             );
 
-            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+            if (response.Status != (int)HttpStatusCode.OK)
+            {
+                XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
+                throw new HttpRequestException(
+                    $"DDownload file check request failed with status {response.Status}: {response.Msg}"
+                );
+            }
 
             foreach (var file in response.Result.Files.Where(file => file.FileCode is not null))
             {

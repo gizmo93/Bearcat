@@ -317,6 +317,70 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task FilesExistAsync_ApiAnswersErrorStatusWithoutFiles_ThrowsInsteadOfReportingFilesOffline()
+    {
+        // Arrange
+        var response = JsonSerializer.Deserialize<FileCheckResponse>(
+            """{"status":401,"msg":"Access denied"}"""
+        )!;
+        apiMock
+            .Setup(x =>
+                x.CheckFilesAsync("api-key", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(response);
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.FilesExistAsync(
+                "api-key",
+                new HashSet<string> { "file-code" },
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldContain("401");
+    }
+
+    [Test]
+    public async Task FilesExistAsync_ApiOmitsRequestedFileCode_ReturnsNoStatusForThatFile()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.CheckFilesAsync("api-key", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new FileCheckResponse
+                {
+                    Msg = "OK",
+                    Status = (int)HttpStatusCode.OK,
+                    Result = new FileCheckResult
+                    {
+                        Files =
+                        [
+                            new FileCheckFile
+                            {
+                                FileCode = "online-code",
+                                Status = (int)HttpStatusCode.OK,
+                            },
+                        ],
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.FilesExistAsync(
+            "api-key",
+            new HashSet<string> { "online-code", "omitted-code" },
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Keys.ShouldBe(["online-code"]);
+    }
+
+    [Test]
     public async Task CreateFolderAsync_ExistingRootFolderWithName_ReturnsExistingFolderId()
     {
         // Arrange
