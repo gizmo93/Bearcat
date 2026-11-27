@@ -28,6 +28,8 @@ public class ApiClient(
 
     private const int MaxParallelLinkChecks = 10;
 
+    private const int MaxFolderNameLength = 255;
+
     private const int MaxLinkCheckAttempts = 3;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
@@ -68,12 +70,17 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        var truncatedFolderName =
+            folderName.Length > MaxFolderNameLength
+                ? folderName[..MaxFolderNameLength]
+                : folderName;
+
         var createdFolder = await SendWithAuthTokenAsync(
             config,
             token =>
                 api.CreateFolderAsync(
                     token: token,
-                    name: folderName,
+                    name: truncatedFolderName,
                     folderId: null,
                     cancellationToken: cancellationToken
                 ),
@@ -82,11 +89,15 @@ public class ApiClient(
 
         if (createdFolder.Status == (int)HttpStatusCode.Conflict)
         {
-            var existingFolderId = await GetFolderIdAsync(config, folderName, cancellationToken);
+            var existingFolderId = await GetFolderIdAsync(
+                config,
+                truncatedFolderName,
+                cancellationToken
+            );
 
             return existingFolderId
                 ?? throw new HttpRequestException(
-                    $"Alfafile folder already exists but was not found in root folder: {folderName}"
+                    $"Alfafile folder already exists but was not found in root folder: {truncatedFolderName}"
                 );
         }
 

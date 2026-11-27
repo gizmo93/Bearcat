@@ -24,6 +24,8 @@ public class ApiClient(
 {
     private const int CheckLinkBatchSize = 25;
 
+    private const int MaxFolderNameLength = 255;
+
     private const string AccessStatus = "ACCESS";
 
     private const string NoAccessStatus = "NO ACCESS";
@@ -90,9 +92,14 @@ public class ApiClient(
 
         EnsureFolderResponseSucceeded(rootFolder, "Rapidgator root folder lookup failed");
 
+        var truncatedFolderName =
+            folderName.Length > MaxFolderNameLength
+                ? folderName[..MaxFolderNameLength]
+                : folderName;
+
         var existingFolder = rootFolder
             .Response!.Folder!.Folders.Where(folder =>
-                string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+                string.Equals(folder.Name, truncatedFolderName, StringComparison.Ordinal)
             )
             .OrderBy(folder => folder.Created)
             .ThenBy(folder => folder.FolderId, StringComparer.Ordinal)
@@ -105,7 +112,7 @@ public class ApiClient(
 
         var createdFolder = await api.CreateFolderAsync(
             token: token,
-            name: folderName,
+            name: truncatedFolderName,
             folderId: rootFolder.Response.Folder.FolderId,
             cancellationToken: cancellationToken
         );

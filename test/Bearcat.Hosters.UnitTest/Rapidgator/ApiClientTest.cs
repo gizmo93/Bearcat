@@ -94,6 +94,90 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task CreateFolderAsync_FolderNameLongerThan255Characters_FindsAndCreatesFolderWithTruncatedName()
+    {
+        // Arrange
+        var folderName = new string('a', 255) + "-cut-off";
+        var truncatedFolderName = new string('a', 255);
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        SetupLogin();
+        apiMock
+            .SetupSequence(x => x.GetFolderInfoAsync("token", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateFolderResponse(
+                    new FolderResponse.Folder
+                    {
+                        FolderId = "root-folder-id",
+                        Name = "root",
+                        Folders = [],
+                    }
+                )
+            )
+            .ReturnsAsync(
+                CreateFolderResponse(
+                    new FolderResponse.Folder
+                    {
+                        FolderId = "root-folder-id",
+                        Name = "root",
+                        Folders =
+                        [
+                            new FolderResponse.Folder
+                            {
+                                FolderId = "created-folder-id",
+                                Name = truncatedFolderName,
+                                Created = 1,
+                            },
+                        ],
+                    }
+                )
+            );
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "token",
+                    truncatedFolderName,
+                    "root-folder-id",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateFolderResponse(
+                    new FolderResponse.Folder
+                    {
+                        FolderId = "created-folder-id",
+                        Name = truncatedFolderName,
+                    }
+                )
+            );
+
+        // Act
+        var createdFolderId = await apiClient.CreateFolderAsync(
+            folderName,
+            config,
+            CancellationToken.None
+        );
+        var existingFolderId = await apiClient.CreateFolderAsync(
+            folderName,
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        createdFolderId.ShouldBe("created-folder-id");
+        existingFolderId.ShouldBe("created-folder-id");
+        apiMock.Verify(
+            x =>
+                x.CreateFolderAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task CreateFolderAsync_NoExistingRootFolderWithName_CreatesFolder()
     {
         // Arrange

@@ -231,6 +231,60 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task CreateFolderAsync_FolderNameLongerThan255Characters_CreatesAndFindsFolderWithTruncatedName()
+    {
+        // Arrange
+        var folderName = new string('a', 255) + "-cut-off";
+        var truncatedFolderName = new string('a', 255);
+
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "auth-token",
+                    truncatedFolderName,
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.Conflict,
+                    Details = "Conflict. Folder with the same name already exists",
+                }
+            );
+
+        apiMock
+            .Setup(x => x.GetFolderInfoAsync("auth-token", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new FolderResponse.ResponseObject
+                    {
+                        Folder = new FolderResponse.Folder
+                        {
+                            Folders =
+                            [
+                                new FolderResponse.Folder
+                                {
+                                    FolderId = "existing-folder-id",
+                                    Name = truncatedFolderName,
+                                },
+                            ],
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(config, folderName, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe("existing-folder-id");
+    }
+
+    [Test]
     public async Task CreateFolderAsync_FolderNameConflict_ReturnsExistingRootFolderId()
     {
         // Arrange
